@@ -1,5 +1,5 @@
 import { AccessToken } from 'livekit-server-sdk';
-import { IssueMeetTokenResult } from './LivekitEvents';
+import type { IssueMeetTokenResult } from './LivekitEvents';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 

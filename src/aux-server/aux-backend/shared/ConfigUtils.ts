@@ -1,5 +1,5 @@
+import type { ServerConfig } from '@casual-simulation/aux-records';
 import {
-    ServerConfig,
     serverConfigSchema,
     tryParseJson,
 } from '@casual-simulation/aux-records';

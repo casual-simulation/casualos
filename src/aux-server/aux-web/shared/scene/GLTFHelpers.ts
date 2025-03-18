@@ -1,7 +1,5 @@
-import {
-    GLTFLoader,
-    GLTF,
-} from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
+import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { LegacyGLTFLoader } from 'three-legacy-gltf-loader';
 import {
     Scene,

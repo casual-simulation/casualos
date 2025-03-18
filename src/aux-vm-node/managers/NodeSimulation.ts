@@ -1,11 +1,8 @@
-import {
-    BaseSimulation,
-    AuxChannel,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import { AuxVM } from '@casual-simulation/aux-vm/vm/AuxVM';
+import type { AuxChannel } from '@casual-simulation/aux-vm/vm';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
+import { BaseSimulation } from '@casual-simulation/aux-vm';
+import type { AuxVM } from '@casual-simulation/aux-vm/vm/AuxVM';
 import { AuxVMNode } from '../vm/AuxVMNode';
-import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 export class NodeSimulation extends BaseSimulation {
     get channel() {

@@ -1,18 +1,20 @@
 import { hex } from './Hex';
-import {
-    Mesh,
+import type {
     BufferGeometry,
-    ExtrudeBufferGeometry,
-    Shape,
     Material,
     MeshStandardMaterial,
+    Color,
+    MeshToonMaterial,
+} from '@casual-simulation/three';
+import {
+    Mesh,
+    ExtrudeBufferGeometry,
+    Shape,
     Matrix4,
     Vector3,
     MeshBasicMaterial,
-    Color,
     Box3,
     Sphere,
-    MeshToonMaterial,
 } from '@casual-simulation/three';
 import { Axial } from './Axial';
 import { gridPosToRealPos } from './HexGrid';

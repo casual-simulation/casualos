@@ -1,5 +1,5 @@
-import { TunnelClient } from '../TunnelClient';
-import { Observable } from 'rxjs';
+import type { TunnelClient } from '../TunnelClient';
+import type { Observable } from 'rxjs';
 import {
     map,
     mergeMap,
@@ -9,8 +9,8 @@ import {
     share,
     startWith,
 } from 'rxjs/operators';
-import { TunnelMessage } from '../TunnelResponse';
-import {
+import type { TunnelMessage } from '../TunnelResponse';
+import type {
     TunnelRequest,
     ForwardTunnelRequest,
     ReverseTunnelRequest,

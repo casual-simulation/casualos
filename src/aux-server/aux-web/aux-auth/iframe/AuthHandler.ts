@@ -1,14 +1,13 @@
-import {
+import type {
     AuxAuth,
     LoginHint,
     LoginStatus,
-    LoginUIAddressStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
     PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
-import {
+import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
@@ -20,28 +19,30 @@ import {
     waitForLoad,
 } from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
-import {
-    CompleteOpenIDLoginSuccess,
+import type {
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
-    getFormErrors,
-    CODE_FIELD,
-    DATE_OF_BIRTH_FIELD,
-    DISPLAY_NAME_FIELD,
-    EMAIL_FIELD,
     FormError,
-    TERMS_OF_SERVICE_FIELD,
-    NAME_FIELD,
-    PARENT_EMAIL_FIELD,
-    ADDRESS_FIELD,
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
+} from '@casual-simulation/aux-records';
+import {
+    CompleteOpenIDLoginSuccess,
+    getFormErrors,
+    CODE_FIELD,
+    DATE_OF_BIRTH_FIELD,
+    DISPLAY_NAME_FIELD,
+    EMAIL_FIELD,
+    TERMS_OF_SERVICE_FIELD,
+    NAME_FIELD,
+    PARENT_EMAIL_FIELD,
+    ADDRESS_FIELD,
 } from '@casual-simulation/aux-records';
 import {
     canExpire,

@@ -1,11 +1,12 @@
-import {
+import type {
     SystemNotificationMessenger,
     SlackOptions,
     UserInstReportNotification,
-    formatNotificationAsString,
 } from '@casual-simulation/aux-records';
+import { formatNotificationAsString } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 import axios from 'axios';
 
 const TRACE_NAME = 'SlackNotificationMessenger';

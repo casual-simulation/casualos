@@ -1,4 +1,4 @@
-import { CameraType } from '@casual-simulation/aux-common';
+import type { CameraType } from '@casual-simulation/aux-common';
 
 export type ParsedCasualOSUrl = CasualOSCameraFeedUrl | CasualOSVideoElementUrl;
 

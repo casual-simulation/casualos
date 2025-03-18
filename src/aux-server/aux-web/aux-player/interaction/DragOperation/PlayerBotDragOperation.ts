@@ -1,8 +1,12 @@
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
-import {
+import type {
     Bot,
     BotCalculationContext,
     BotTags,
+    SnapAxis,
+    SnapGrid,
+} from '@casual-simulation/aux-common';
+import {
     getBotPosition,
     getBotTransformer,
     hasValue,
@@ -10,29 +14,27 @@ import {
     getBotScale,
     getAnchorPointOffset,
     getBotRotation,
-    SnapAxis,
-    SnapGrid,
     realNumberOrDefault,
     getBotShape,
 } from '@casual-simulation/aux-common';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { Intersection, Object3D } from '@casual-simulation/three';
 import {
-    Intersection,
     Vector2,
     Ray,
     Vector3,
     Quaternion,
     Matrix4,
     Group,
-    Object3D,
 } from '@casual-simulation/three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Input, InputMethod, InputModality } from '../../../shared/scene/Input';
-import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
-import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { PlayerGame } from '../../scene/PlayerGame';
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
+import { Input } from '../../../shared/scene/Input';
+import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
+import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
+import type { PlayerGame } from '../../scene/PlayerGame';
 import { take, drop } from 'lodash';
-import { IOperation } from '../../../shared/interaction/IOperation';
+import type { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {
     calculateHitFace,
@@ -41,19 +43,19 @@ import {
     safeSetParent,
 } from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
-import {
+import type { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
+import type {
     SnapBotsInterface,
     SnapOptions,
 } from '../../../shared/interaction/DragOperation/SnapInterface';
-import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import type { MapSimulation3D } from '../../scene/MapSimulation3D';
 import { ExternalRenderers, SpatialReference } from '../../MapUtils';
 import { PriorityGrid3D } from '../../../shared/scene/PriorityGrid3D';
 import { BoundedGrid3D } from '../../../shared/scene/BoundedGrid3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { first } from '@casual-simulation/aux-common';
 import { convertCasualOSPositionToThreePosition } from '../../../shared/scene/grid/Grid';
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import type { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { SphereGrid3D } from '../../../shared/scene/SphereGrid3D';
 
 const INTERNAL_GRID_FLAG = Symbol('internal_grid');

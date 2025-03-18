@@ -1,20 +1,21 @@
+import type {
+    BotCalculationContext,
+    PrecalculatedBot,
+} from '@casual-simulation/aux-common';
 import {
     hasValue,
     calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
     getBotPortalAnchorPoint,
     calculateStringTagValue,
     BOT_PORTAL,
 } from '@casual-simulation/aux-common';
-import {
-    BrowserSimulation,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
+import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { merge } from 'lodash';
 
 /**
@@ -23,13 +24,13 @@ import { merge } from 'lodash';
 export class BotPortalConfig implements SubscriptionLike {
     private _sub: Subscription;
     private _portalTag: string;
-    private _style: Object;
+    private _style: object;
     private _updated: Subject<void>;
 
     /**
      * Gets the CSS style that should be applied.
      */
-    get style(): Object {
+    get style(): object {
         if (hasValue(this._style)) {
             return this._style;
         }

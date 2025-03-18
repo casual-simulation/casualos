@@ -1,4 +1,4 @@
-import { Bot, PrecalculatedBot } from './Bot';
+import type { Bot, PrecalculatedBot } from './Bot';
 
 /**
  * Defines an interface for objects that are able to provide the necessary information required to calculate

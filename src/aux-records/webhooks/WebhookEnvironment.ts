@@ -1,4 +1,4 @@
-import {
+import type {
     BotsState,
     GenericHttpRequest,
     GenericHttpResponse,

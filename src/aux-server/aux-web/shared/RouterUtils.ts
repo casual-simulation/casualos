@@ -1,4 +1,4 @@
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 export interface SimulationInfo {
     id: string;

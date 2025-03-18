@@ -1,6 +1,10 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
+import type {
+    UpdateHtmlAppAction,
+    SerializableMutationRecord,
+} from '@casual-simulation/aux-common';
 import {
     Bot,
     getShortId,
@@ -8,8 +12,6 @@ import {
     tagsOnBot,
     hasValue,
     runScript,
-    UpdateHtmlAppAction,
-    SerializableMutationRecord,
     asyncResult,
     htmlAppEvent,
     RegisterHtmlAppAction,
@@ -17,14 +19,14 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import { BrowserSimulation } from '../../../../../aux-vm-browser';
+import type { BrowserSimulation } from '../../../../../aux-vm-browser';
+import type { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import {
-    ELEMENT_SPECIFIC_PROPERTIES,
-    HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
-} from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
+    ELEMENT_SPECIFIC_PROPERTIES,
+} from '@casual-simulation/aux-vm/portals/HtmlAppConsts';
 import { eventNames } from './Util';
-import { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import type { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
 import { getMediaForCasualOSUrl } from '../../MediaUtils';
 import { parseCasualOSUrl } from '../../UrlUtils';
 
@@ -215,7 +217,7 @@ export default class HtmlApp extends Vue {
                 typeof value !== 'object' &&
                 typeof value !== 'function' &&
                 prop !== prop.toUpperCase() &&
-                !e.hasOwnProperty(prop)
+                !Object.prototype.hasOwnProperty.call(e, prop)
             ) {
                 e[prop] = value;
             }
@@ -245,7 +247,12 @@ export default class HtmlApp extends Vue {
 
             if (skeleton.style) {
                 for (let prop in skeleton.style) {
-                    if (skeleton.style.hasOwnProperty(prop)) {
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            skeleton.style,
+                            prop
+                        )
+                    ) {
                         el.style[prop] = skeleton.style[prop];
                     }
                 }
@@ -420,7 +427,7 @@ export default class HtmlApp extends Vue {
     ) {
         if (attributeName === 'style' && typeof value === 'object') {
             for (let prop in value) {
-                if (value.hasOwnProperty(prop)) {
+                if (Object.prototype.hasOwnProperty.call(value, prop)) {
                     (<any>node).style[prop] = value[prop];
                 }
             }

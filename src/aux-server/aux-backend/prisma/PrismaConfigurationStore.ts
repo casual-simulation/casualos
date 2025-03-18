@@ -1,17 +1,17 @@
-import {
+import type {
     ConfigurationStore,
-    MODERATION_CONFIG_KEY,
     MemoryConfiguration,
-    PRIVO_CONFIG_KEY,
-    SUBSCRIPTIONS_CONFIG_KEY,
     SubscriptionConfiguration,
-    parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import {
-    PrivoConfiguration,
-    parsePrivoConfiguration,
-} from '@casual-simulation/aux-records/PrivoConfiguration';
-import { PrismaClient } from './generated';
+    MODERATION_CONFIG_KEY,
+    PRIVO_CONFIG_KEY,
+    SUBSCRIPTIONS_CONFIG_KEY,
+    parseSubscriptionConfig,
+} from '@casual-simulation/aux-records';
+import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { PrismaClient } from './generated';
 import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

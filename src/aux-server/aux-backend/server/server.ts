@@ -1,18 +1,20 @@
 import * as Http from 'http';
 import * as Https from 'https';
-import express, { Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { Config, DRIVES_URL } from './config';
-import {
-    hasValue,
+import type { Config } from './config';
+import { DRIVES_URL } from './config';
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
 } from '@casual-simulation/aux-common';
-import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import { hasValue } from '@casual-simulation/aux-common';
+import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
 import { getStatusCode } from '@casual-simulation/aux-common';

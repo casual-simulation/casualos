@@ -1,31 +1,33 @@
+import type {
+    ConnectionClient,
+    PartitionAuthSource,
+} from '@casual-simulation/aux-common';
 import {
     AuthenticatedConnectionClient,
-    ConnectionClient,
     ConnectionIndicator,
     InstRecordsClient,
     InstRecordsClientTimeSyncConnection,
-    PartitionAuthSource,
     connectionCountMessageSchema,
 } from '@casual-simulation/aux-common';
 import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
 import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
-import {
+import type {
     PartitionConfig,
-    RemoteCausalRepoPartition,
-    BotPartition,
     OtherPlayersPartition,
-    OtherPlayersPartitionImpl,
     RemoteCausalRepoProtocol,
-    RemoteYjsPartitionImpl,
     YjsPartition,
 } from '@casual-simulation/aux-common';
-import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
-import { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
-import { TimeSyncController } from '@casual-simulation/timesync';
 import {
-    RemoteSharedDocumentConfig,
-    SharedDocumentConfig,
-} from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+    RemoteCausalRepoPartition,
+    BotPartition,
+    OtherPlayersPartitionImpl,
+    RemoteYjsPartitionImpl,
+} from '@casual-simulation/aux-common';
+import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
+import type { AuxTimeSyncConfiguration } from '@casual-simulation/aux-vm';
+import { TimeSyncController } from '@casual-simulation/timesync';
+import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
 import { RemoteYjsSharedDocument } from '@casual-simulation/aux-common/documents/RemoteYjsSharedDocument';
 
 const DEFAULT_RESEND_UPDATES_INTERVAL_MS = 1000;

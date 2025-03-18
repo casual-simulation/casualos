@@ -1,48 +1,45 @@
-import {
+import type {
     Bot,
     UpdatedBot,
     BotAction,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    botAdded,
-    botRemoved,
-    botUpdated,
-    breakIntoIndividualEvents,
     BotsState,
-    getActiveObjects,
-    tagsOnBot,
-    hasValue,
     LocalStoragePartition,
     LocalStoragePartitionConfig,
     AuxPartitionRealtimeStrategy,
-    stateUpdatedEvent,
     StateUpdatedEvent,
     PartialBotsState,
     BotSpace,
-    merge,
     BotTagMasks,
     BotTags,
 } from '@casual-simulation/aux-common';
 import {
+    botAdded,
+    botRemoved,
+    botUpdated,
+    breakIntoIndividualEvents,
+    getActiveObjects,
+    tagsOnBot,
+    hasValue,
+    stateUpdatedEvent,
+    merge,
+} from '@casual-simulation/aux-common';
+import type {
     StatusUpdate,
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
 import { flatMap, union } from 'lodash';
-import {
-    Subject,
-    Subscription,
-    Observable,
-    fromEventPattern,
-    BehaviorSubject,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subject, Subscription, fromEventPattern, BehaviorSubject } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
+import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
     applyTagEdit,
     edits,
     isTagEdit,
-    TagEditOp,
 } from '@casual-simulation/aux-common/bots';
 import {
     ensureBotIsSerializable,

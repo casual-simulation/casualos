@@ -752,7 +752,7 @@ describe('undom', () => {
         const functionCases = [['focus'], ['blur'], ['click']];
 
         describe.each(functionCases)('%s()', (func) => {
-            let cleanup: Function;
+            let cleanup: () => void;
             beforeEach(() => {
                 cleanup = registerMethodHandler(
                     document,
@@ -810,7 +810,7 @@ describe('undom', () => {
         ];
 
         describe.each(functionCases)('%s()', (func) => {
-            let cleanup: Function;
+            let cleanup: () => void;
             beforeEach(() => {
                 cleanup = registerMethodHandler(
                     document,
@@ -862,7 +862,7 @@ describe('undom', () => {
         ];
 
         describe.each(functionCases)('%s()', (func) => {
-            let cleanup: Function;
+            let cleanup: () => void;
             beforeEach(() => {
                 cleanup = registerMethodHandler(
                     document,
@@ -918,7 +918,7 @@ describe('undom', () => {
         ];
 
         describe.each(functionCases)('%s.%s()', ($class, func) => {
-            let cleanup: Function;
+            let cleanup: () => void;
             beforeEach(() => {
                 cleanup = registerMethodHandler(
                     document,

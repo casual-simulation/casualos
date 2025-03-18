@@ -1,24 +1,37 @@
-import {
-    Observable,
-    Subject,
-    Subscription,
-    SubscriptionLike,
-    firstValueFrom,
-} from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription, firstValueFrom } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
-import { AuxChannel, AuxSubChannel, ChannelActionResult } from './AuxChannel';
-import {
+import type {
+    AuxChannel,
+    AuxSubChannel,
+    ChannelActionResult,
+} from './AuxChannel';
+import type {
     LocalActions,
     BotAction,
     BotsState,
-    BOT_SPACE_TAG,
     StateUpdatedEvent,
     AuxPartitions,
     AuxPartition,
     PartitionConfig,
-    iteratePartitions,
     BotSpace,
     LoadSpaceAction,
+    BotTagMasks,
+    PrecalculatedBot,
+    StoredAux,
+    ConnectionInfo,
+    DeviceAction,
+    StatusUpdate,
+    Action,
+    RemoteActions,
+    EnableCollaborationAction,
+    PartitionAuthMessage,
+    AuxPartitionServices,
+    LoadSharedDocumentAction,
+} from '@casual-simulation/aux-common';
+import {
+    BOT_SPACE_TAG,
+    iteratePartitions,
     hasValue,
     asyncResult,
     addDebugApi,
@@ -27,37 +40,21 @@ import {
     defineGlobalBot,
     createPrecalculatedBot,
     merge,
-    BotTagMasks,
-    PrecalculatedBot,
     asyncError,
     botAdded,
     botUpdated,
     createBot,
     getBotSpace,
-    StoredAux,
-    ConnectionInfo,
-    DeviceAction,
-    StatusUpdate,
     remapProgressPercent,
-    Action,
-    RemoteActions,
     ConnectionIndicator,
     getConnectionId,
-    EnableCollaborationAction,
-    PartitionAuthMessage,
-    AuxPartitionServices,
     PartitionAuthSource,
     action,
     ON_COLLABORATION_ENABLED,
     ON_ALLOW_COLLABORATION_UPGRADE,
     ON_DISALLOW_COLLABORATION_UPGRADE,
-    LoadSharedDocumentAction,
 } from '@casual-simulation/aux-common';
-import {
-    realtimeStrategyToRealtimeEditMode,
-    AuxPartitionRealtimeEditModeProvider,
-    AuxRuntime,
-    isPromise,
+import type {
     AttachRuntimeAction,
     DetachRuntimeAction,
     TagMapper,
@@ -65,9 +62,16 @@ import {
     RuntimeActions,
     AuxDevice,
 } from '@casual-simulation/aux-runtime';
+import {
+    realtimeStrategyToRealtimeEditMode,
+    AuxPartitionRealtimeEditModeProvider,
+    AuxRuntime,
+    isPromise,
+} from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig, buildVersionNumber } from './AuxConfig';
-import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import type { AuxConfig } from './AuxConfig';
+import { buildVersionNumber } from './AuxConfig';
+import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import {
     flatMap,
@@ -79,10 +83,10 @@ import {
 } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
-import { TimeSyncController } from '@casual-simulation/timesync';
-import { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
-import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
-import { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import type { TimeSyncController } from '@casual-simulation/timesync';
+import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 
 export interface AuxChannelOptions {}
 
@@ -424,7 +428,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let [key, partitionConfig] of iteratePartitions(
             this._config.partitions
         )) {
-            if (!this._config.partitions.hasOwnProperty(key)) {
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    this._config.partitions,
+                    key
+                )
+            ) {
                 continue;
             }
             const partition = await this._createPartition(

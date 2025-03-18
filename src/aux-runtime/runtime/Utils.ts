@@ -1,6 +1,6 @@
 import { RealtimeEditMode } from './RuntimeBot';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
-import { AuxPartitionRealtimeStrategy } from '@casual-simulation/aux-common/partitions/AuxPartition';
+import type { AuxPartitionRealtimeStrategy } from '@casual-simulation/aux-common/partitions/AuxPartition';
 import { forOwn } from 'lodash';
 import {
     Easing,

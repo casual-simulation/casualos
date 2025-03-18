@@ -2,10 +2,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import {
-    AuthHelperInterface,
-    LoginUIHandleLoginMetadata,
-} from '@casual-simulation/aux-vm';
+import type { LoginUIHandleLoginMetadata } from '@casual-simulation/aux-vm';
+import { AuthHelperInterface } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
 import {
     browserSupportsWebAuthn,

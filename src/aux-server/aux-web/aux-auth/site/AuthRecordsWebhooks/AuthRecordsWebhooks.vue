@@ -11,32 +11,36 @@
             >
             </md-table-empty-state>
 
-            <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
-                <md-table-cell md-label="Address" md-sort-by="address">{{
-                    item.address
-                }}</md-table-cell>
-                <md-table-cell md-label="URL">{{ getWebhookUrl(item) }}</md-table-cell>
-                <md-table-cell md-label="Markers" md-sort-by="markers">
-                    <auth-marker
-                        v-for="marker in item.markers"
-                        :key="marker"
-                        :marker="marker"
-                        @click="onMarkerClick(marker)"
-                    ></auth-marker>
-                </md-table-cell>
-                <md-table-cell md-label="Options">
-                    <md-menu md-align-trigger>
-                        <md-button md-menu-trigger class="md-icon-button">
-                            <md-icon>more_vert</md-icon>
-                            <span class="sr-only">Webhook Options</span>
-                            <md-tooltip>Webhook Options</md-tooltip>
-                        </md-button>
-                        <md-menu-content>
-                            <md-menu-item @click="deleteWebhook(item)">Delete Webhook</md-menu-item>
-                        </md-menu-content>
-                    </md-menu>
-                </md-table-cell>
-            </md-table-row>
+            <template v-slot:md-table-row="{ item }">
+                <md-table-row md-selectable="single">
+                    <md-table-cell md-label="Address" md-sort-by="address">{{
+                        item.address
+                    }}</md-table-cell>
+                    <md-table-cell md-label="URL">{{ getWebhookUrl(item) }}</md-table-cell>
+                    <md-table-cell md-label="Markers" md-sort-by="markers">
+                        <auth-marker
+                            v-for="marker in item.markers"
+                            :key="marker"
+                            :marker="marker"
+                            @click="onMarkerClick(marker)"
+                        ></auth-marker>
+                    </md-table-cell>
+                    <md-table-cell md-label="Options">
+                        <md-menu md-align-trigger>
+                            <md-button md-menu-trigger class="md-icon-button">
+                                <md-icon>more_vert</md-icon>
+                                <span class="sr-only">Webhook Options</span>
+                                <md-tooltip>Webhook Options</md-tooltip>
+                            </md-button>
+                            <md-menu-content>
+                                <md-menu-item @click="deleteWebhook(item)"
+                                    >Delete Webhook</md-menu-item
+                                >
+                            </md-menu-content>
+                        </md-menu>
+                    </md-table-cell>
+                </md-table-row>
+            </template>
 
             <template v-slot:md-table-pagination v-if="items.mdData.length > 0">
                 <div class="md-table-pagination">

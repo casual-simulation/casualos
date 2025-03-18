@@ -1,23 +1,21 @@
-import {
+import type {
     ActionKinds,
     KnownErrorCodes,
-    PRIVATE_MARKER,
-    ServerError,
 } from '@casual-simulation/aux-common';
-import {
+import { PRIVATE_MARKER, ServerError } from '@casual-simulation/aux-common';
+import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
-    AuthorizeSubjectFailure,
 } from '../PolicyController';
-import {
-    CheckSubscriptionMetricsResult,
+import { AuthorizeSubjectFailure } from '../PolicyController';
+import type {
     CrudRecordsConfiguration,
-    CrudRecordsController,
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
 } from '../crud';
-import {
+import { CheckSubscriptionMetricsResult, CrudRecordsController } from '../crud';
+import type {
     NotificationAction,
     NotificationActionUI,
     NotificationRecord,
@@ -27,21 +25,21 @@ import {
     SentPushNotification,
     UserPushSubscription,
 } from './NotificationRecordsStore';
-import {
-    getNotificationFeatures,
+import type {
     NotificationFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
+import { getNotificationFeatures } from '../SubscriptionConfiguration';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { v7 as uuidv7, v5 as uuidv5 } from 'uuid';
-import {
+import type {
     PushNotificationPayload,
     PushSubscriptionType,
     SendPushNotificationResult,
-    SUBSCRIPTION_ID_NAMESPACE,
     WebPushInterface,
 } from './WebPushInterface';
+import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
 
 const TRACE_NAME = 'NotificationRecordsController';
 

@@ -4,10 +4,8 @@ import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import {
-    CreateRecordRequest,
-    ListedStudio,
-} from '@casual-simulation/aux-records';
+import type { CreateRecordRequest } from '@casual-simulation/aux-records';
+import { ListedStudio } from '@casual-simulation/aux-records';
 import { distinctUntilChanged } from 'rxjs';
 
 const comId = authManager.getComIdFromUrl();

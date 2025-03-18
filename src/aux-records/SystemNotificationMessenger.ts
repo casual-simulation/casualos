@@ -1,9 +1,9 @@
-import { StudioComIdRequest } from './RecordsStore';
-import { UserInstReport } from './ModerationStore';
+import type { StudioComIdRequest } from './RecordsStore';
+import type { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
-import { ModerationFileScanLabel } from './ModerationJobProvider';
-import { ResourceKinds } from '@casual-simulation/aux-common';
+import type { ModerationFileScanLabel } from './ModerationJobProvider';
+import type { ResourceKinds } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for a class that is able to send records notifications.

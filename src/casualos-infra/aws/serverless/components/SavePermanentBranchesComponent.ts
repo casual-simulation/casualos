@@ -1,10 +1,8 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
 import { s3CrudPolicy, sesCrudPolicy } from '../../policies';
-import {
-    FunctionEnvironmentInputs,
-    functionEnvironmentVariables,
-} from '../../helpers';
+import type { FunctionEnvironmentInputs } from '../../helpers';
+import { functionEnvironmentVariables } from '../../helpers';
 
 export interface SavePermanentBranchesInputs {
     /**

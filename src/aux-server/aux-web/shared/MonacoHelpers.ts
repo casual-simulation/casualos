@@ -1,6 +1,6 @@
 import * as monaco from './MonacoLibs';
+import type { Bot, BotsState } from '@casual-simulation/aux-common';
 import {
-    Bot,
     tagsOnBot,
     isFormula,
     KNOWN_TAGS,
@@ -8,7 +8,6 @@ import {
     hasValue,
     getTagValueForSpace,
     calculateBotValue,
-    BotsState,
     calculateBooleanTagValue,
     isBotInDimension,
     getBotShape,
@@ -37,8 +36,8 @@ import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import TypescriptWorker from './monaco/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
+import type { SubscriptionLike } from 'rxjs';
 import {
-    SubscriptionLike,
     Subscription,
     Observable,
     NEVER,
@@ -63,20 +62,21 @@ import {
     distinctUntilChanged,
     finalize,
 } from 'rxjs/operators';
-import {
+import type {
     BotTagChange,
     BotTagEdit,
     BotTagUpdate,
     Simulation,
 } from '@casual-simulation/aux-vm';
-import {
-    BrowserSimulation,
-    userBotTagsChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotTagsChanged } from '@casual-simulation/aux-vm-browser';
 import { union, sortBy } from 'lodash';
 import { propertyInsertText } from './CompletionHelpers';
-import {
+import type {
     BotCalculationContext,
+    TagEditOp,
+} from '@casual-simulation/aux-common/bots';
+import {
     del,
     edit,
     edits,
@@ -85,7 +85,6 @@ import {
     mergeVersions,
     preserve,
     SHOW_SCRIPT_ISSUES,
-    TagEditOp,
 } from '@casual-simulation/aux-common/bots';
 import { Color } from '@casual-simulation/three';
 import { invertColor } from './scene/ColorUtils';

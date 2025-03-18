@@ -3,7 +3,7 @@ import type {
     AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,

@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { Observable, Subject, Subscription } from 'rxjs';
-import { SimulationManager, SubSimEmitter } from './SimulationManager';
-import { Initable } from './Initable';
-import { Simulation } from './Simulation';
+import type { SubSimEmitter } from './SimulationManager';
+import { SimulationManager } from './SimulationManager';
+import type { Initable } from './Initable';
+import type { Simulation } from './Simulation';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 console.error = jest.fn();

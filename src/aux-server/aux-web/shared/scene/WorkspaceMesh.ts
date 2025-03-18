@@ -1,4 +1,5 @@
-import { Object3D, Vector3, Color, Vector2 } from '@casual-simulation/three';
+import type { Vector3, Color } from '@casual-simulation/three';
+import { Object3D, Vector2 } from '@casual-simulation/three';
 import {
     HexGridMesh,
     HexGrid,
@@ -8,13 +9,16 @@ import {
     realPosToGridPos,
 } from './hex';
 import { GridMesh } from './grid/GridMesh';
+import type {
+    AuxDomain,
+    BotCalculationContext,
+    Bot,
+} from '@casual-simulation/aux-common';
 import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_MINI_WORKSPACE_SCALE,
-    AuxDomain,
-    BotCalculationContext,
     calculateBotValue,
     getDimensionSize,
     getDimensionDefaultHeight,
@@ -29,12 +33,12 @@ import {
     getDimensionGridHeight,
     calculateGridScale,
     getDimensionVisualizeMode,
-    Bot,
 } from '@casual-simulation/aux-common';
 import { minBy, isEqual } from 'lodash';
-import { GridChecker, GridCheckResults } from './grid/GridChecker';
+import type { GridCheckResults } from './grid/GridChecker';
+import { GridChecker } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { AuxBot3D } from './AuxBot3D';
+import type { AuxBot3D } from './AuxBot3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
 import { buildSRGBColor } from './SceneUtils';
 

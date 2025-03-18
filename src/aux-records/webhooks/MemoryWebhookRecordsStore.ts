@@ -1,14 +1,14 @@
-import { SubscriptionFilter } from '../MetricsStore';
-import { MemoryStore } from '../MemoryStore';
+import type { SubscriptionFilter } from '../MetricsStore';
+import type { MemoryStore } from '../MemoryStore';
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
-import {
+import type {
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
     WebhookRunInfoWithWebhook,
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
-import { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
+import type { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
 import { sortBy } from 'lodash';
 
 export class MemoryWebhookRecordsStore

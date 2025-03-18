@@ -1,8 +1,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
+import type { Bot } from '@casual-simulation/aux-common';
 import {
-    Bot,
     getShortId,
     formatValue,
     tagsOnBot,
@@ -10,9 +10,10 @@ import {
     runScript,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
 import MiniBot from '../MiniBot/MiniBot';
-import { BotRenderer, getRenderer } from '../../scene/BotRenderer';
+import type { BotRenderer } from '../../scene/BotRenderer';
+import { getRenderer } from '../../scene/BotRenderer';
 import { SvgIcon } from '@casual-simulation/aux-components';
 
 @Component({

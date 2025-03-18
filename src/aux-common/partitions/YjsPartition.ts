@@ -1,65 +1,66 @@
-import {
-    isTagEdit,
+import type {
     TagEditOp,
-    preserve,
-    del,
-    insert,
-    edit,
     TagEdit,
-    GetRemoteCountAction,
-    asyncResult,
     GetInstStateFromUpdatesAction,
-    asyncError,
     CreateInitializationUpdateAction,
     InstUpdate,
     ApplyUpdatesToInstAction,
     GetCurrentInstUpdateAction,
 } from '../bots';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
-    CausalRepoPartition,
+    isTagEdit,
+    preserve,
+    del,
+    insert,
+    edit,
+    GetRemoteCountAction,
+    asyncResult,
+    asyncError,
+} from '../bots';
+import type { Observable } from 'rxjs';
+import { Subscription, Subject, BehaviorSubject } from 'rxjs';
+import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
-    MemoryPartition,
 } from './AuxPartition';
-import {
+import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
+import type {
     BotAction,
     Bot,
     UpdatedBot,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     BotsState,
+    BotTags,
+} from '../bots';
+import {
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
     PartialBotsState,
     botAdded,
-    BotTags,
     createBot,
     botRemoved,
     hasValue,
     botUpdated,
     convertToString,
 } from '../bots';
-import {
+import type {
     PartitionConfig,
     PartitionRemoteEvents,
     YjsPartitionConfig,
 } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
+import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
-    Doc,
     Text,
     Map,
     applyUpdate,
-    Transaction,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    AbstractType,
-    YEvent,
     encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
@@ -69,13 +70,8 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
-import {
-    Action,
-    CurrentVersion,
-    RemoteActions,
-    StatusUpdate,
-    VersionVector,
-} from '../common';
+import type { RemoteActions, VersionVector } from '../common';
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { YjsSharedDocument } from '../documents/YjsSharedDocument';
 

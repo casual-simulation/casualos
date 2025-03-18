@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 // Copied from https://github.com/microsoft/vscode/blob/42cdda5ab0f45bf472204d3d1175dcd581492dd5/src/vs/workbench/services/extensions/worker/polyfillNestedWorker.ts
 
-import { NewWorkerMessage, TerminateWorkerMessage } from './NestedWorkerEvents';
+import type {
+    NewWorkerMessage,
+    TerminateWorkerMessage,
+} from './NestedWorkerEvents';
 
 declare function postMessage(data: any, transferables?: Transferable[]): void;
 declare function importScripts(url: string): Promise<void>;
@@ -62,9 +65,8 @@ const _bootstrapFnSource = function _bootstrapFn(workerUrl: string) {
 
 export class NestedWorker extends EventTarget implements Worker {
     onmessage: ((this: Worker, ev: MessageEvent<any>) => any) | null = null;
-    onmessageerror:
-        | ((this: Worker, ev: MessageEvent<any>) => any)
-        | null = null;
+    onmessageerror: ((this: Worker, ev: MessageEvent<any>) => any) | null =
+        null;
     onerror: ((this: AbstractWorker, ev: ErrorEvent) => any) | null = null;
 
     readonly terminate: () => void;

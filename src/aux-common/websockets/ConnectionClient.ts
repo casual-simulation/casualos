@@ -1,11 +1,9 @@
-import { Observable } from 'rxjs';
-import { ConnectionInfo } from '../common/ConnectionInfo';
-import {
-    WebsocketErrorCode,
-    WebsocketErrorInfo,
-    WebsocketMessage,
-} from './WebsocketEvents';
-import { ConnectionIndicator, DenialReason } from '../common';
+import type { Observable } from 'rxjs';
+import type { ConnectionInfo } from '../common/ConnectionInfo';
+import type { WebsocketErrorInfo, WebsocketMessage } from './WebsocketEvents';
+import { WebsocketErrorCode } from './WebsocketEvents';
+import type { ConnectionIndicator } from '../common';
+import { DenialReason } from '../common';
 
 /**
  * Defines an interface that contains connection state info.

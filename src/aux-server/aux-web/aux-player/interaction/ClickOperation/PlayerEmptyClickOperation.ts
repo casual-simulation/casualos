@@ -1,31 +1,30 @@
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
 import {
     getModalityButtonId,
     getModalityFinger,
     getModalityHand,
     getModalityKey,
     Input,
-    InputMethod,
-    InputModality,
 } from '../../../shared/scene/Input';
-import { Ray } from '@casual-simulation/three';
+import type { Ray } from '@casual-simulation/three';
 import { appManager } from '../../../shared/AppManager';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
-import { PlayerGame } from '../../scene/PlayerGame';
+import type { PlayerGame } from '../../scene/PlayerGame';
 import { BaseEmptyClickOperation } from '../../../shared/interaction/ClickOperation/BaseEmptyClickOperation';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
     onGridClickArg,
 } from '@casual-simulation/aux-common';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { Grid3D } from '../../../shared/scene/Grid3D';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { Grid3D } from '../../../shared/scene/Grid3D';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.

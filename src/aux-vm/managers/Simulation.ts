@@ -1,21 +1,23 @@
-import {
-    SimulationIdParseSuccess,
-    LocalActions,
+import type {
     BotIndex,
     StoredAux,
     PartitionAuthMessage,
+} from '@casual-simulation/aux-common';
+import {
+    SimulationIdParseSuccess,
+    LocalActions,
     BotsState,
 } from '@casual-simulation/aux-common';
-import { BotWatcher } from './BotWatcher';
-import { Observable } from 'rxjs';
-import { DeviceAction } from '@casual-simulation/aux-common';
-import { Initable } from './Initable';
-import { BotHelper } from './BotHelper';
-import { ConnectionManager } from './ConnectionManager';
-import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import { CodeLanguageManager } from './CodeLanguageManager';
-import { BotDimensionManager } from './BotDimensionManager';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { BotWatcher } from './BotWatcher';
+import type { Observable } from 'rxjs';
+import type { DeviceAction } from '@casual-simulation/aux-common';
+import type { Initable } from './Initable';
+import type { BotHelper } from './BotHelper';
+import type { ConnectionManager } from './ConnectionManager';
+import type { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
+import type { CodeLanguageManager } from './CodeLanguageManager';
+import type { BotDimensionManager } from './BotDimensionManager';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 export interface SimulationOrigin {
     /**

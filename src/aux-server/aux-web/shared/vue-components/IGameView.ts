@@ -1,6 +1,6 @@
-import { BotCursorType } from '@casual-simulation/aux-common';
-import Vue from 'vue';
-import { Game } from '../scene/Game';
+import type { BotCursorType } from '@casual-simulation/aux-common';
+import type Vue from 'vue';
+import type { Game } from '../scene/Game';
 
 /**
  * Interface that described what properties and functions should be available to a GameView class/component implementation.

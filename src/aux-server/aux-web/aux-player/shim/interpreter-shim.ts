@@ -9,6 +9,7 @@ import {
 import type { InterpreterTypes } from '@casual-simulation/aux-runtime/runtime/AuxRuntimeDynamicImports';
 
 declare global {
+    // eslint-disable-next-line no-var
     var AuxRuntimeDynamicImports: InterpreterTypes;
 }
 

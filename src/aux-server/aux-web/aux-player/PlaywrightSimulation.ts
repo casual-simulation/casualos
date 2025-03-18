@@ -1,5 +1,11 @@
-import {
+import type {
     Bot,
+    BotTags,
+    AuxPartitionConfig,
+    BotAction,
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import {
     merge,
     parseSimulationId,
     createBot,
@@ -9,10 +15,8 @@ import {
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
     COOKIE_BOT_ID,
-    BotTags,
     isBotTags,
     isBot,
-    AuxPartitionConfig,
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
     TEMPORARY_SHARED_PARTITION_ID,
@@ -20,24 +24,21 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
-    BotAction,
-    ConnectionIndicator,
     getConnectionId,
     hasValue,
 } from '@casual-simulation/aux-common';
 
+import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
-    AuxVM,
     BaseSimulation,
     LoginManager,
     getTreeName,
     Simulation,
-    AuxConfig,
     RecordsManager,
 } from '@casual-simulation/aux-vm';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     BotPanelManager,
-    BrowserSimulation,
     LocalStoragePartitionImpl,
     IdePortalManager,
     AuthHelper,
@@ -45,10 +46,11 @@ import {
 } from '@casual-simulation/aux-vm-browser';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, tap } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/aux-common';
-import { Observable, fromEventPattern, Subscription } from 'rxjs';
+import type { ConsoleMessages } from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
+import { fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
-import {
+import type {
     AuthHelperInterface,
     RecordsEndpointInfo,
     SimulationOrigin,

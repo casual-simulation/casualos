@@ -1,11 +1,10 @@
-import { Ray, Vector3 } from '@casual-simulation/three';
-import { Grid3D, GridTile } from './Grid3D';
+import type { Ray, Vector3 } from '@casual-simulation/three';
+import type { Grid3D, GridTile } from './Grid3D';
 
 /**
  * Defines a class that provides an implementation of Grid3D that is able to represent multiple grids based on their given priority.
  */
 export class PriorityGrid3D implements Grid3D {
-
     /**
      * The list of grids that this priority grid represents.
      */
@@ -66,7 +65,11 @@ export class PriorityGrid3D implements Grid3D {
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */
-    getGridWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+    getGridWorldPosition(position: {
+        x: number;
+        y: number;
+        z: number;
+    }): Vector3 {
         const grid = this.primaryGrid;
         if (!grid) {
             throw new Error(
@@ -76,5 +79,4 @@ export class PriorityGrid3D implements Grid3D {
 
         return grid.getGridWorldPosition(position);
     }
-
 }

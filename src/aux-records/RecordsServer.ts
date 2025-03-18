@@ -1,88 +1,86 @@
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
-import {
+import type {
     AuthController,
+    NoSessionKeyResult,
+    ValidateSessionKeyResult,
+} from './AuthController';
+import {
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
-    NoSessionKeyResult,
     PRIVO_OPEN_ID_PROVIDER,
     validateSessionKey,
-    ValidateSessionKeyResult,
 } from './AuthController';
 import { isSuperUserRole, parseSessionKey } from './AuthUtils';
-import { LivekitController } from './LivekitController';
-import { RecordsController } from './RecordsController';
-import { EventRecordsController } from './EventRecordsController';
-import { DataRecordsController } from './DataRecordsController';
-import { FileRecordsController } from './FileRecordsController';
-import {
+import type { LivekitController } from './LivekitController';
+import type { RecordsController } from './RecordsController';
+import type { EventRecordsController } from './EventRecordsController';
+import type { DataRecordsController } from './DataRecordsController';
+import type { FileRecordsController } from './FileRecordsController';
+import type {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
-import { ZodError, z } from 'zod';
-import {
-    HUME_CONFIG,
-    LOOM_CONFIG,
-    PublicRecordKeyPolicy,
-} from './RecordsStore';
-import { RateLimitController } from './RateLimitController';
-import {
-    AVAILABLE_PERMISSIONS_VALIDATION,
+import type { ZodError } from 'zod';
+import { z } from 'zod';
+import type { PublicRecordKeyPolicy } from './RecordsStore';
+import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
+import type { RateLimitController } from './RateLimitController';
+import type {
     DenialReason,
-    PRIVATE_MARKER,
     Procedure,
     ProcedureOutput,
     ProcedureOutputStream,
     Procedures,
-    RESOURCE_KIND_VALIDATION,
     RPCContext,
+} from '@casual-simulation/aux-common';
+import {
+    AVAILABLE_PERMISSIONS_VALIDATION,
+    PRIVATE_MARKER,
+    RESOURCE_KIND_VALIDATION,
     getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
-import {
-    GrantResourcePermissionRequest,
-    PolicyController,
-} from './PolicyController';
-import { AIController } from './AIController';
-import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
-import { WebsocketController } from './websockets/WebsocketController';
-import {
+import type { PolicyController } from './PolicyController';
+import { GrantResourcePermissionRequest } from './PolicyController';
+import type { AIController } from './AIController';
+import type { AIChatMessage } from './AIChatInterface';
+import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
+import type { WebsocketController } from './websockets/WebsocketController';
+import type {
     AddUpdatesMessage,
     LoginMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
-    UnwatchBranchMessage,
     WatchBranchMessage,
+    WebsocketRequestMessage,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import {
+    UnwatchBranchMessage,
     WebsocketErrorEvent,
     WebsocketEventTypes,
     WebsocketMessage,
-    WebsocketRequestMessage,
     websocketEventSchema,
     websocketRequestMessageSchema,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
-import {
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
     GenericWebsocketRequest,
     KnownErrorCodes,
-    getStatusCode,
 } from '@casual-simulation/aux-common';
-import { ModerationController } from './ModerationController';
+import { getStatusCode } from '@casual-simulation/aux-common';
+import type { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
-import { LoomController } from './LoomController';
-import {
-    SpanKind,
-    Tracer,
-    ValueType,
-    metrics,
-    trace,
-} from '@opentelemetry/api';
+import type { LoomController } from './LoomController';
+import type { Tracer } from '@opentelemetry/api';
+import { SpanKind, ValueType, metrics, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -116,7 +114,7 @@ import {
     STUDIO_ID_VALIDATION,
     UPDATE_FILE_SCHEMA,
 } from './Validations';
-import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import type { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import {
     eraseItemProcedure,
     getItemProcedure,
@@ -124,7 +122,7 @@ import {
     recordItemProcedure,
 } from './crud/CrudHelpers';
 import { merge, omit } from 'lodash';
-import { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import type { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
@@ -548,7 +546,7 @@ export class RecordsServer {
                 .origins('account')
                 .http('POST', '/api/v2/createAccount')
                 .inputs(z.object({}))
-                .handler(async ({}, context) => {
+                .handler(async (_, context) => {
                     const validation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -3809,7 +3807,7 @@ export class RecordsServer {
                 .origins(true)
                 .http('GET', '/api/v2/procedures')
                 .inputs(z.object({}))
-                .handler(async ({}, context) => {
+                .handler(async (_, context) => {
                     const procedures = this._procedures;
                     const metadata = getProcedureMetadata(procedures);
                     return {
@@ -3827,7 +3825,7 @@ export class RecordsServer {
     private _setupRoutes() {
         const procs = this._procedures;
         for (let procedureName of Object.keys(procs)) {
-            if (procs.hasOwnProperty(procedureName)) {
+            if (Object.prototype.hasOwnProperty.call(procs, procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
                     this._addProcedureRoute(procedure, procedureName);

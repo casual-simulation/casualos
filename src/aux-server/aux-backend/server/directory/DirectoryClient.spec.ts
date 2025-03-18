@@ -1,8 +1,9 @@
 import { DirectoryClient } from './DirectoryClient';
-import { DirectoryStore } from './DirectoryStore';
+import type { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DEFAULT_PING_INTERVAL } from './DirectoryClientSettings';
-import { TestClient, TestRequest } from '@casual-simulation/tunnel';
+import type { TestRequest } from '@casual-simulation/tunnel';
+import { TestClient } from '@casual-simulation/tunnel';
 
 console.error = jest.fn();
 console.log = jest.fn();

@@ -1,5 +1,5 @@
 import { flatMap } from 'lodash';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
     AIGeneratedImage,

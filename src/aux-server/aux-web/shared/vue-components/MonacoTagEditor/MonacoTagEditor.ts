@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
+import type { Bot } from '@casual-simulation/aux-common';
 import {
-    Bot,
     isScript,
     isFormula,
     hasValue,
@@ -22,7 +22,7 @@ import {
     parseModuleSafe,
     tweenTo,
 } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
@@ -40,7 +40,7 @@ import {
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
 import { filter, mergeMap, tap } from 'rxjs/operators';
-import { ScriptPrefix } from '@casual-simulation/aux-vm';
+import type { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
 import CodeToolsPortal from '../CodeToolsPortal/CodeToolsPortal';
 import { union } from 'lodash';
@@ -93,9 +93,7 @@ export default class MonacoTagEditor extends Vue {
 
     get docsLink() {
         if (this.isListenTag) {
-            const tagLink = this.tag
-                .replace(/[\.\(\)\@\[\]]/g, '')
-                .toLowerCase();
+            const tagLink = this.tag.replace(/[.()@[\]]/g, '').toLowerCase();
             return `https://docs.casualos.com/listen-tags#${encodeURIComponent(
                 tagLink
             )}`;

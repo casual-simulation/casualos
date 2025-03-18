@@ -1,18 +1,104 @@
-import {
+import type {
     AuxGlobalContext,
     AsyncTask,
-    BotTimer,
     TimeoutOrIntervalTimer,
-    DEBUG_STRING,
-    debugStringifyFunction,
     AsyncIterableTask,
 } from './AuxGlobalContext';
+import {
+    BotTimer,
+    DEBUG_STRING,
+    debugStringifyFunction,
+} from './AuxGlobalContext';
+import type {
+    BotTags,
+    Bot,
+    ShowChatOptions,
+    BotAction,
+    BotsState,
+    CameraType,
+    BarcodeFormat,
+    PortalType,
+    ShowInputOptions,
+    LocalFormAnimationAction,
+    AsyncActions,
+    ShareOptions,
+    Easing,
+    BotAnchorPoint,
+    RuntimeBot,
+    BotSpace,
+    EaseType,
+    RegisterPrefixOptions,
+    OpenCircleWipeOptions,
+    SuperShoutAction,
+    ShowToastAction,
+    ShowJoinCodeAction,
+    RequestFullscreenAction,
+    ExitFullscreenAction,
+    ShowHtmlAction,
+    HideHtmlAction,
+    SetClipboardAction,
+    FocusOnBotAction,
+    ShowChatBarAction,
+    EnableARAction,
+    EnableVRAction,
+    DownloadAction,
+    ShowUploadAuxFileAction,
+    OpenQRCodeScannerAction,
+    ShowQRCodeAction,
+    OpenBarcodeScannerAction,
+    ShowBarcodeAction,
+    LoadServerAction,
+    UnloadServerAction,
+    ReplaceDragBotAction,
+    ShowInputForTagAction,
+    GoToDimensionAction,
+    GoToURLAction,
+    OpenURLAction,
+    OpenConsoleAction,
+    RejectAction,
+    FocusOnOptions,
+    SnapTarget,
+    AddDropSnapTargetsAction,
+    RecordingOptions,
+    Recording,
+    SyntheticVoice,
+    EnablePOVAction,
+    EnableCustomDraggingAction,
+    SetAppOutputAction,
+    AuthData,
+    PartialBotsState,
+    PartialBot,
+    ParsedBotLink,
+    ConvertGeolocationToWhat3WordsOptions,
+    BeginAudioRecordingAction,
+    MediaPermssionOptions,
+    ImageClassifierOptions,
+    ClassifyImagesOptions,
+    ClassifyImagesResult,
+    SnapGrid,
+    AddDropGridTargetsAction,
+    InstUpdate,
+    StartFormAnimationOptions,
+    StopFormAnimationOptions,
+    FormAnimationData,
+    WakeLockConfiguration,
+    EnableXROptions,
+    ShowConfirmOptions,
+    StoredAux,
+    StoredAuxVersion2,
+    StoredAuxVersion1,
+    Geolocation,
+    OpenPhotoCameraOptions,
+    Photo,
+    Point2D,
+    RecordLoomOptions,
+    LoomVideo,
+    LoomVideoEmbedMetadata,
+} from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
     trimTag,
     isBot,
-    BotTags,
-    Bot,
     BOT_SPACE_TAG,
     toast as toastMessage,
     getScriptIssues as scriptIssues,
@@ -27,7 +113,6 @@ import {
     tweenTo as calcTweenTo,
     showChat as calcShowChat,
     hideChat as calcHideChat,
-    ShowChatOptions,
     runScript,
     getMediaPermission as calcGetMediaPermission,
     getAverageFrameRate as calcGetAverageFrameRate,
@@ -64,18 +149,12 @@ import {
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
     showUploadFiles as calcShowUploadFiles,
-    BotAction,
     download,
-    BotsState,
-    CameraType,
-    BarcodeFormat,
     loadSimulation,
     unloadSimulation,
     getUploadState,
     addState,
-    PortalType,
     getPortalTag,
-    ShowInputOptions,
     KNOWN_PORTALS,
     openConsole,
     tagsOnBot,
@@ -85,67 +164,29 @@ import {
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
-    LocalFormAnimationAction,
     ORIGINAL_OBJECT,
-    AsyncActions,
-    ShareOptions,
     getRemoteCount,
     getRemotes,
     listInstUpdates as calcListInstUpdates,
     getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
-    Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
-    BotAnchorPoint,
     calculateAnchorPoint,
     calculateAnchorPointOffset,
     getBotPosition as calcGetBotPosition,
     getBotRotation as calcGetBotRotation,
-    RuntimeBot,
     isRuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     getBotScale,
     EDIT_TAG_SYMBOL,
-    BotSpace,
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
-    EaseType,
-    RegisterPrefixOptions,
-    OpenCircleWipeOptions,
     circleWipe,
     addDropSnap as calcAddDropSnap,
     addDropGrid as calcAddDropGrid,
-    SuperShoutAction,
-    ShowToastAction,
-    ShowJoinCodeAction,
-    RequestFullscreenAction,
-    ExitFullscreenAction,
-    ShowHtmlAction,
-    HideHtmlAction,
-    SetClipboardAction,
-    FocusOnBotAction,
-    ShowChatBarAction,
-    EnableARAction,
-    EnableVRAction,
-    DownloadAction,
-    ShowUploadAuxFileAction,
-    OpenQRCodeScannerAction,
-    ShowQRCodeAction,
-    OpenBarcodeScannerAction,
-    ShowBarcodeAction,
-    LoadServerAction,
-    UnloadServerAction,
     ImportAUXAction,
-    ReplaceDragBotAction,
-    ShowInputForTagAction,
-    GoToDimensionAction,
-    GoToURLAction,
-    OpenURLAction,
-    OpenConsoleAction,
-    RejectAction,
-    FocusOnOptions,
     animateToPosition,
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
@@ -155,85 +196,52 @@ import {
     getVoices as calcGetVoices,
     getGeolocation as calcGetGeolocation,
     cancelAnimation,
-    SnapTarget,
-    AddDropSnapTargetsAction,
-    RecordingOptions,
-    Recording,
-    SyntheticVoice,
     SpeakTextOptions,
-    EnablePOVAction,
     disablePOV,
     enablePOV,
-    EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
     MINI_PORTAL,
     registerCustomApp,
     setAppOutput,
-    SetAppOutputAction,
     unregisterCustomApp,
     requestAuthData as calcRequestAuthData,
-    AuthData,
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
     convertToString,
     GET_TAG_MASKS_SYMBOL,
-    PartialBotsState,
-    PartialBot,
     isBotLink,
     parseBotLink,
     createBotLink,
-    ParsedBotLink,
     convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
-    ConvertGeolocationToWhat3WordsOptions,
-    BeginAudioRecordingAction,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
     meetFunction as calcMeetFunction,
-    MediaPermssionOptions,
     MediaPermissionAction,
     openImageClassifier as calcOpenImageClassifier,
     classifyImages as calcOpenClassifyImages,
     OpenImageClassifierAction,
-    ImageClassifierOptions,
-    ClassifyImagesOptions,
-    ClassifyImagesResult,
     isBotDate,
     DATE_TAG_PREFIX,
     parseBotDate,
-    SnapGrid,
-    AddDropGridTargetsAction,
     realNumberOrDefault,
-    InstUpdate,
     raycastFromCamera as calcRaycastFromCamera,
     raycastInPortal as calcRaycastInPortal,
     calculateRayFromCamera as calcCalculateRayFromCamera,
     bufferFormAddressGltf,
-    StartFormAnimationOptions,
     startFormAnimation as calcStartFormAnimation,
     stopFormAnimation as calcStopFormAnimation,
     listFormAnimations as calcListFormAnimations,
-    StopFormAnimationOptions,
-    FormAnimationData,
     calculateStringTagValue,
     createInitializationUpdate as calcCreateInitalizationUpdate,
     applyUpdatesToInst as calcApplyUpdatesToInst,
     configureWakeLock,
     getWakeLockConfiguration as calcGetWakeLockConfiguration,
-    WakeLockConfiguration,
-    EnableXROptions,
     analyticsRecordEvent as calcAnalyticsRecordEvent,
     KNOWN_TAGS,
-    ShowConfirmOptions,
     isStoredVersion2,
-    StoredAux,
-    StoredAuxVersion2,
-    StoredAuxVersion1,
     getCurrentInstUpdate as calcGetCurrentInstUpdate,
-    Geolocation,
     openPhotoCamera as calcOpenPhotoCamera,
-    OpenPhotoCameraOptions,
-    Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
     showAccountInfo as calcShowAccountInfo,
@@ -244,30 +252,40 @@ import {
     calculateViewportCoordinatesFromPosition as calcCalculateViewportCoordinatesFromPosition,
     calculateScreenCoordinatesFromViewportCoordinates as calcCalculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates as calcCalculateViewportCoordinatesFromScreenCoordinates,
-    Point2D,
     CameraPortal,
     capturePortalScreenshot as calcCapturePortalScreenshot,
     createStaticHtml as calcCreateStaticHtmlFromBots,
-    RecordLoomOptions,
     recordLoom,
-    LoomVideo,
     watchLoom,
-    LoomVideoEmbedMetadata,
     getLoomMetadata,
     loadSharedDocument,
     LoadSharedDocumentAction,
 } from '@casual-simulation/aux-common/bots';
-import {
+import type {
     AIChatOptions,
-    aiChat,
-    aiChatStream,
     AIGenerateSkyboxOptions,
-    aiGenerateSkybox,
     AIGenerateSkyboxAction,
     AIGenerateImageOptions,
     AIGenerateImageAction,
-    aiGenerateImage,
     RecordFileActionOptions,
+    JoinRoomActionOptions,
+    RoomOptions,
+    RoomTrackOptions,
+    SetRoomTrackOptions,
+    RoomRemoteOptions,
+    DataRecordOptions,
+    RecordActionOptions,
+    ListDataOptions,
+    AISloydGenerateModelOptions,
+    ListWebhooksOptions,
+    ListNotificationsOptions,
+    SendNotificationOptions,
+} from './RecordsEvents';
+import {
+    aiChat,
+    aiChatStream,
+    aiGenerateSkybox,
+    aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
     revokeRecordPermission as calcRevokeRecordPermission,
     grantInstAdminPermission as calcGrantInstAdminPermission,
@@ -283,13 +301,6 @@ import {
     getRoomTrackOptions as calcGetRoomTrackOptions,
     setRoomTrackOptions as calcSetRoomTrackOptions,
     getRoomRemoteOptions as calcGetRoomRemoteOptions,
-    JoinRoomActionOptions,
-    RoomOptions,
-    RoomTrackOptions,
-    SetRoomTrackOptions,
-    RoomRemoteOptions,
-    DataRecordOptions,
-    RecordActionOptions,
     listDataRecord,
     recordEvent as calcRecordEvent,
     getEventCount as calcGetEventCount,
@@ -300,10 +311,8 @@ import {
     getRecordData,
     eraseRecordData,
     recordFile as calcRecordFile,
-    ListDataOptions,
     listDataRecordByMarker,
     aiHumeGetAccessToken,
-    AISloydGenerateModelOptions,
     aiSloydGenerateModel,
     recordWebhook as calcRecordWebhook,
     getWebhook as calcGetWebhook,
@@ -311,8 +320,6 @@ import {
     listWebhooksByMarker as calcListWebhooksByMarker,
     eraseWebhook as calcEraseWebhook,
     runWebhook as calcRunWebhook,
-    ListWebhooksOptions,
-    ListNotificationsOptions,
     recordNotification as calcRecordNotification,
     getNotification as calcGetNotification,
     listNotifications as calcListNotifications,
@@ -321,7 +328,6 @@ import {
     subscribeToNotification as calcSubscribeToNotification,
     unsubscribeFromNotification as calcUnsubscribeFromNotification,
     sendNotification as calcSendNotification,
-    SendNotificationOptions,
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
 } from './RecordsEvents';
@@ -334,13 +340,15 @@ import {
     flatMap,
     indexOf,
 } from 'lodash';
+import type {
+    DeviceSelector,
+    RemoteAction,
+    AvailablePermissions,
+} from '@casual-simulation/aux-common';
 import {
     Action,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
-    DeviceSelector,
-    RemoteAction,
-    AvailablePermissions,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
@@ -390,8 +398,8 @@ import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
-import { AuxDevice } from './AuxDevice';
-import { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
+import type { AuxVersion } from './AuxVersion';
 import {
     Vector3,
     Vector2,
@@ -401,24 +409,13 @@ import {
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
-import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
+import type { Tester } from '@casual-simulation/expect';
+import expect, { iterableEquality } from '@casual-simulation/expect';
 import {
-    CreatePublicRecordKeyResult,
-    GetDataResult,
     parseRecordKey,
-    RecordDataResult,
-    RecordFileFailure,
     RecordFileResult,
     isRecordKey as calcIsRecordKey,
-    EraseDataResult,
-    EraseFileResult,
-    ListDataResult,
-    AddCountResult,
-    GetCountResult,
-    GrantMarkerPermissionResult,
     RevokeMarkerPermissionResult,
-    GrantRoleResult,
-    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import type {
     AIChatInterfaceStreamResponse,
@@ -435,6 +432,18 @@ import type {
     SubscribeToNotificationResult,
     UnsubscribeToNotificationResult,
     WebhookRecord,
+    CreatePublicRecordKeyResult,
+    GetDataResult,
+    RecordDataResult,
+    RecordFileFailure,
+    EraseDataResult,
+    EraseFileResult,
+    ListDataResult,
+    AddCountResult,
+    GetCountResult,
+    GrantMarkerPermissionResult,
+    GrantRoleResult,
+    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -459,19 +468,18 @@ import {
 } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { CasualOSError } from './CasualOSError';
-import {
-    AIGenerateImageResponse,
+import type {
     AIGenerateImageSuccess,
     AIHumeGetAccessTokenResult,
     AISloydGenerateModelResponse,
 } from '@casual-simulation/aux-records/AIController';
-import {
+import { AIGenerateImageResponse } from '@casual-simulation/aux-records/AIController';
+import type {
     RuntimeActions,
     RuntimeAsyncActions,
     TagMapper,
-    attachRuntime,
-    detachRuntime,
 } from './RuntimeEvents';
+import { attachRuntime, detachRuntime } from './RuntimeEvents';
 import type {
     CrudEraseItemResult,
     CrudGetItemResult,
@@ -479,7 +487,7 @@ import type {
     CrudRecordItemResult,
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
-import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -494,6 +502,7 @@ const html: HtmlFunction = ((...args: any[]) => {
  */
 export interface HtmlFunction {
     (...args: any[]): any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     h: (name: string | Function, props: any, ...children: any[]) => any;
     f: any;
 }
@@ -1213,6 +1222,7 @@ export interface DebuggerBase {
      * @docreferenceactions ^web\.
      * @docsource WebActions
      */
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     web: {};
 
     /**
@@ -1221,6 +1231,7 @@ export interface DebuggerBase {
      * @docreferenceactions ^os\.
      * @docsource OSActions
      */
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     os: {};
 
     // /**
@@ -1235,6 +1246,7 @@ export interface DebuggerBase {
      * @docreferenceactions ^action\.
      * @docsource ActionActions
      */
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     action: {};
 
     // /**
@@ -3516,6 +3528,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function botTimer(
         type: TimeoutOrIntervalTimer['type'],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         func: (handler: Function, timeout: number, ...args: any[]) => number,
         clearAfterHandlerIsRun: boolean
     ) {
@@ -3547,6 +3560,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         function () {
                             let result: ReturnType<typeof handler>;
                             try {
+                                // eslint-disable-next-line prefer-rest-params
                                 result = handler(...arguments);
                             } finally {
                                 context.removeBotTimer(
@@ -3565,6 +3579,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     timer = func(
                         function () {
                             context.processBotTimerResult(
+                                // eslint-disable-next-line prefer-rest-params
                                 handler(...arguments)
                             );
                         },
@@ -3878,7 +3893,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return [];
         }
         tag = trimTag(tag);
-        const filter = arguments[1];
+        const filter = filters[1];
 
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
@@ -6089,6 +6104,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
+            supportsDOM: null as boolean,
             isCollaborative: null as boolean,
             allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
@@ -7045,7 +7061,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     }
                 }
             }
-        } catch {}
+        } catch {
+            // Ignore errors
+        }
         const task = context.createTask();
         const event = calcImportAUX(urlOrJSON, task.taskId);
         return addAsyncAction(task, event);

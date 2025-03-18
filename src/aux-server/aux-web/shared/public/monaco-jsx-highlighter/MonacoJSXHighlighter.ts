@@ -1,7 +1,8 @@
 import * as monaco from '../../MonacoLibs';
 import { reject } from 'lodash';
 import estraverse from 'estraverse';
-import { Transpiler, TypeScriptVisistorKeys } from '@casual-simulation/aux-runtime';
+import type { Transpiler} from '@casual-simulation/aux-runtime';
+import { TypeScriptVisistorKeys } from '@casual-simulation/aux-runtime';
 
 const defaultOptions = {
     isHighlightGlyph: false,

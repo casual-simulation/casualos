@@ -1,9 +1,8 @@
 import { hasValue } from '@casual-simulation/aux-common';
-import {
+import type {
     Record,
     RecordsStore,
     RecordKey,
-    cleanupObject,
     ListedRecord,
     Studio,
     StudioAssignment,
@@ -13,16 +12,19 @@ import {
     ListStudioAssignmentFilters,
     StudioAssignmentRole,
     CountRecordsFilter,
+    StudioComIdRequest,
+    LoomConfig,
+    HumeConfig,
+} from '@casual-simulation/aux-records';
+import {
+    cleanupObject,
     ComIdPlayerConfig,
     COM_ID_PLAYER_CONFIG,
     COM_ID_CONFIG_SCHEMA,
-    StudioComIdRequest,
-    LoomConfig,
     LOOM_CONFIG,
-    HumeConfig,
     HUME_CONFIG,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from './generated';
+import type { PrismaClient, Prisma } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

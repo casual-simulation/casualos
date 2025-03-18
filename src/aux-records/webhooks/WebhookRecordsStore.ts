@@ -1,16 +1,16 @@
-import {
+import type {
     GenericHttpRequest,
     GenericHttpResponse,
 } from '@casual-simulation/aux-common';
-import { SubscriptionFilter } from '../MetricsStore';
-import {
+import type { SubscriptionFilter } from '../MetricsStore';
+import type {
     CrudRecord,
     CrudRecordsStore,
     CrudSubscriptionMetrics,
     ListCrudStoreSuccess,
 } from '../crud/CrudRecordsStore';
-import { HandleWebhookOptions, WebhookState } from './WebhookEnvironment';
-import { AuthorizeUserAndInstancesForResourcesResult } from '../PolicyController';
+import type { HandleWebhookOptions, WebhookState } from './WebhookEnvironment';
+import type { AuthorizeUserAndInstancesForResourcesResult } from '../PolicyController';
 
 /**
  * Defines a store that is able to store and retrieve information about webhooks.

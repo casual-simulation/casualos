@@ -1,11 +1,13 @@
+import type {
+    BotCalculationContext,
+    PrecalculatedBot,
+} from '@casual-simulation/aux-common';
 import {
     isDimensionLocked,
     DEFAULT_PORTAL_ZOOMABLE,
     DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
     calculateGridScale,
     calculateBooleanTagValue,
     calculateNumericalTagValue,

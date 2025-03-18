@@ -33,6 +33,7 @@ const webConfig = {
     allowedBiosOptions: process.env.BIOS_OPTIONS?.split(',') || null,
     defaultBiosOption: process.env.DEFAULT_BIOS_OPTION || null,
     automaticBiosOption: process.env.AUTOMATIC_BIOS_OPTION || null,
+    enableDom: process.env.ENABLE_DOM === 'true',
 };
 
 // Creates /tmp/a/apple, regardless of whether `/tmp` and /tmp/a exist.

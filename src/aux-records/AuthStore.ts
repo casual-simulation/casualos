@@ -1,7 +1,7 @@
-import { PrivacyFeatures } from '@casual-simulation/aux-common';
-import { RegexRule } from './Utils';
-import { ServerError } from '@casual-simulation/aux-common/Errors';
-import {
+import type { PrivacyFeatures } from '@casual-simulation/aux-common';
+import type { RegexRule } from './Utils';
+import type { ServerError } from '@casual-simulation/aux-common/Errors';
+import type {
     AuthenticatorTransportFuture,
     CredentialDeviceType,
 } from '@simplewebauthn/types';

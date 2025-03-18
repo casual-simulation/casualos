@@ -1,12 +1,8 @@
-import { IncomingMessage } from 'http';
-import { Observable, Observer, fromEventPattern } from 'rxjs';
-import {
-    Socket,
-    createServer,
-    Server,
-    NetConnectOpts,
-    connect as netConnect,
-} from 'net';
+import type { IncomingMessage } from 'http';
+import type { Observer } from 'rxjs';
+import { Observable, fromEventPattern } from 'rxjs';
+import type { Socket, Server, NetConnectOpts } from 'net';
+import { createServer, connect as netConnect } from 'net';
 import WebSocket from 'ws';
 import { takeUntil, last } from 'rxjs/operators';
 

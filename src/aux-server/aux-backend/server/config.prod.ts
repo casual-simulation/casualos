@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as process from 'process';
-import { Config } from './config';
+import type { Config } from './config';
 import playerConfig from './player.config';
 import { loadConfig } from '../shared/ConfigUtils';
 

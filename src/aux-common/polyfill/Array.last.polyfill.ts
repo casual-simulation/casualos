@@ -4,16 +4,16 @@ interface Array<T> {
 
 if (!Array.prototype['last']) {
     Object.defineProperty(Array.prototype, 'last', {
-        value: function() {
+        value: function () {
             // 1. Let O be ? ToObject(this value).
             if (this == null) {
                 throw new TypeError('"this" is null or not defined');
             }
 
-            var o = Object(this);
+            const o = Object(this);
 
             // 2. Let len be ? ToLength(? Get(O, "length")).
-            var len = o.length >>> 0;
+            const len = o.length >>> 0;
 
             // 3. Check if we have at least one element
             if (len > 0) {

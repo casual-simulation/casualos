@@ -1,20 +1,20 @@
-import {
+import type {
     MeshBasicMaterial,
     Texture,
     MeshStandardMaterial,
     SpriteMaterial,
-    sRGBEncoding,
     MeshToonMaterial,
 } from '@casual-simulation/three';
+import { sRGBEncoding } from '@casual-simulation/three';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     calculateBotValue,
     hasValue,
     getBotShape,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import { IMeshDecorator } from './IMeshDecorator';
+import type { AuxBot3D } from '../AuxBot3D';
+import type { IMeshDecorator } from './IMeshDecorator';
 import { AuxTextureLoader } from '../AuxTextureLoader';
 import { EventBus } from '@casual-simulation/aux-components';
 
@@ -35,9 +35,8 @@ export class TextureDecorator extends AuxBot3DDecoratorBase {
 
         this._targetMeshDecorator = targetMeshDecorator;
 
-        this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
-            this
-        );
+        this._handleTargetMeshUpdated =
+            this._handleTargetMeshUpdated.bind(this);
         this._handleTextureLoaded = this._handleTextureLoaded.bind(this);
         this._handleTextureError = this._handleTextureError.bind(this);
 

@@ -1,12 +1,11 @@
-import { Object3D, Color, Vector3, Sphere } from '@casual-simulation/three';
+import type { Color, Sphere } from '@casual-simulation/three';
+import { Object3D, Vector3 } from '@casual-simulation/three';
 import { ArrowHelper } from './ArrowHelper';
 
-import {
-    isMinimized,
-    BotCalculationContext,
-} from '@casual-simulation/aux-common';
-import { AuxBot3D } from './AuxBot3D';
-import { DimensionGroup3D } from './DimensionGroup3D';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
+import { isMinimized } from '@casual-simulation/aux-common';
+import type { AuxBot3D } from './AuxBot3D';
+import type { DimensionGroup3D } from './DimensionGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial, buildSRGBColor } from './SceneUtils';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';

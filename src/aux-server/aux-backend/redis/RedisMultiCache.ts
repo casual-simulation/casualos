@@ -1,11 +1,12 @@
-import { Cache, MultiCache } from '@casual-simulation/aux-records';
+import type { Cache, MultiCache } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 import {
     SEMATTRS_DB_NAME,
     SEMRESATTRS_SERVICE_NAME,
 } from '@opentelemetry/semantic-conventions';
-import { RedisClientType } from 'redis';
+import type { RedisClientType } from 'redis';
 
 const TRACE_NAME = 'RedisCache';
 const SPAN_OPTIONS: SpanOptions = {

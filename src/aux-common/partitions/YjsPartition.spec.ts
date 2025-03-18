@@ -1,6 +1,7 @@
-import { Subscription, firstValueFrom } from 'rxjs';
+import type { Subscription } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import type { InstUpdate } from '../bots';
 import {
-    InstUpdate,
     applyUpdatesToInst,
     asyncResult,
     botAdded,
@@ -13,8 +14,10 @@ import {
     getRemotes,
     listInstUpdates,
 } from '../bots';
-import { Map as YMap, Text as YText } from 'yjs';
-import { Action, remote } from '../common';
+import type { Map as YMap } from 'yjs';
+import { Text as YText } from 'yjs';
+import type { Action } from '../common';
+import { remote } from '../common';
 import { testPartitionImplementation } from './test/PartitionTests';
 import { createYjsPartition, YjsPartitionImpl } from './YjsPartition';
 import { first } from 'rxjs/operators';

@@ -1,8 +1,9 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import { tagsOnBot, botTags, Bot } from '@casual-simulation/aux-common';
-import { BotRenderer } from '../../scene/BotRenderer';
+import type { Bot } from '@casual-simulation/aux-common';
+import { tagsOnBot, botTags } from '@casual-simulation/aux-common';
+import type { BotRenderer } from '../../scene/BotRenderer';
 import { appManager } from '../../AppManager';
 import TagColor from '../TagColor/TagColor';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -76,15 +77,17 @@ export default class MiniBot extends Vue {
 
         this.isEmpty = tagsOnBot(this.bot).length === 0;
 
-        this.label = appManager.simulationManager.primary.helper.calculateFormattedBotValue(
-            this.bot,
-            'auxLabel'
-        );
-        if (this.label) {
-            this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedBotValue(
+        this.label =
+            appManager.simulationManager.primary.helper.calculateFormattedBotValue(
                 this.bot,
-                'auxLabelColor'
+                'auxLabel'
             );
+        if (this.label) {
+            this.labelColor =
+                appManager.simulationManager.primary.helper.calculateFormattedBotValue(
+                    this.bot,
+                    'auxLabelColor'
+                );
             if (!this.labelColor) {
                 this.labelColor = '#000';
             }

@@ -1,25 +1,24 @@
-import {
+import type {
     PrecalculatedBot,
     BotTags,
     BotSpace,
     Bot,
     BotSignatures,
+    RuntimeBot,
+} from '@casual-simulation/aux-common/bots';
+import {
     botsFromShortIds,
     TAG_MASK_SPACE_PRIORITIES,
-    RuntimeBot,
     hasValue,
     BotAction,
 } from '@casual-simulation/aux-common/bots';
-import {
-    createRuntimeBot,
-    RuntimeBotInterface,
-    RuntimeBotFactory,
-    RealtimeEditMode,
-} from '../RuntimeBot';
-import { createCompiledBot, CompiledBot } from '../CompiledBot';
+import type { RuntimeBotInterface, RuntimeBotFactory } from '../RuntimeBot';
+import { createRuntimeBot, RealtimeEditMode } from '../RuntimeBot';
+import type { CompiledBot } from '../CompiledBot';
+import { createCompiledBot } from '../CompiledBot';
 import { pickBy } from 'lodash';
 import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
-import { RuntimeActions } from '../RuntimeEvents';
+import type { RuntimeActions } from '../RuntimeEvents';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
     createRuntimeBot(bot: Bot): RuntimeBot {

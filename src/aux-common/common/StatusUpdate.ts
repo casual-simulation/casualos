@@ -1,8 +1,8 @@
-import {
+import type {
     WebsocketErrorCode,
     WebsocketErrorInfo,
 } from '../websockets/WebsocketEvents';
-import { ConnectionInfo } from './ConnectionInfo';
+import type { ConnectionInfo } from './ConnectionInfo';
 
 export type StatusUpdate =
     | StatusMessage

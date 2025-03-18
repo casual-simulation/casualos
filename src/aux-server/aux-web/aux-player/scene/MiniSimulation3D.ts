@@ -1,3 +1,4 @@
+import type { Bot } from '@casual-simulation/aux-common';
 import {
     BotCalculationContext,
     PrecalculatedBot,
@@ -13,22 +14,21 @@ import {
     DEFAULT_PORTAL_PANNABLE,
     DEFAULT_MINI_PORTAL_RESIZABLE,
     DEFAULT_MINI_PORTAL_HEIGHT,
-    Bot,
     MINI_PORTAL,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    BrowserSimulation,
     userBotChanged,
     watchPortalConfigBot,
 } from '@casual-simulation/aux-vm-browser';
 import { tap, filter } from 'rxjs/operators';
 import { MiniPortalContextGroup3D } from './MiniPortalContextGroup3D';
-import { CameraRig } from '../../shared/scene/CameraRigFactory';
-import { Game } from '../../shared/scene/Game';
+import type { CameraRig } from '../../shared/scene/CameraRigFactory';
+import type { Game } from '../../shared/scene/Game';
 import { BotDimensionEvent } from '@casual-simulation/aux-vm';
 import { Color, Texture } from '@casual-simulation/three';
-import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
+import type { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { MiniPortalConfig } from './MiniPortalConfig';
 

@@ -1,7 +1,7 @@
-import { ClientError } from '../websockets';
-import { Action, CurrentVersion, StatusUpdate } from '../common';
-import { Observable, SubscriptionLike } from 'rxjs';
-import { InstUpdate } from '../bots';
+import type { ClientError } from '../websockets';
+import type { Action, CurrentVersion, StatusUpdate } from '../common';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import type { InstUpdate } from '../bots';
 
 /**
  * Defines an interface for objects that are able to synchronize data between multiple clients.

@@ -1,5 +1,5 @@
-import { RateLimiter } from '@casual-simulation/rate-limit-redis';
-import { ServerError } from '@casual-simulation/aux-common/Errors';
+import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import type { ServerError } from '@casual-simulation/aux-common/Errors';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 

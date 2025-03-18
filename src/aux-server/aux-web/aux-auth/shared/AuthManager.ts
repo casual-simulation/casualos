@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { Subject, BehaviorSubject, Observable, from } from 'rxjs';
-import { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
+import type { Subject, Observable } from 'rxjs';
+import { BehaviorSubject, from } from 'rxjs';
+import type { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
 import type {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
@@ -66,7 +67,7 @@ import type {
     ValidateSessionKeyFailure,
     RevokeSessionSuccess,
 } from '@casual-simulation/aux-records/AuthController';
-import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import type { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
     GetSubscriptionStatusResult,
     SubscriptionStatus,
@@ -76,7 +77,7 @@ import type {
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
-import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
+import type { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 import type {
     AvailablePermissions,
     RemoteCausalRepoProtocol,

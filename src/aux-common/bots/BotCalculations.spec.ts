@@ -1,3 +1,4 @@
+import type { SimulationIdParseSuccess } from './BotCalculations';
 import {
     isFormula,
     isNumber,
@@ -16,7 +17,6 @@ import {
     createDimensionId,
     formatValue,
     parseSimulationId,
-    SimulationIdParseSuccess,
     simulationIdToString,
     normalizeAUXBotURL,
     cleanBot,
@@ -62,11 +62,12 @@ import {
     isModule,
     parseModule,
 } from './BotCalculations';
-import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
+import type { Bot, BotsState } from './Bot';
+import { DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
-import { BotCalculationContext } from './BotCalculationContext';
+import type { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
 import { DateTime, FixedOffsetZone, Zone } from 'luxon';
 import { Vector2, Vector3, Rotation, Quaternion } from '../math';

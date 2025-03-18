@@ -1,9 +1,6 @@
-import { PortalData, PortalUpdate } from '@casual-simulation/aux-vm';
-import {
-    BrowserSimulation,
-    loadScript,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { PortalData, PortalUpdate } from '@casual-simulation/aux-vm';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { loadScript, userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { concatMap, tap } from 'rxjs/operators';

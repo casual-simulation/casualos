@@ -1,4 +1,5 @@
-import { Vector2, Object3D, Sphere } from '@casual-simulation/three';
+import type { Vector2, Object3D } from '@casual-simulation/three';
+import { Sphere } from '@casual-simulation/three';
 import { MouseButtonId } from '../../scene/Input';
 
 export const DragThreshold: number = 0.03;

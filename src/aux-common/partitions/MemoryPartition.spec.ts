@@ -1,6 +1,7 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { createMemoryPartition } from './MemoryPartition';
-import { Bot, createBot } from '../bots';
+import type { Bot } from '../bots';
+import { createBot } from '../bots';
 import { first } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 

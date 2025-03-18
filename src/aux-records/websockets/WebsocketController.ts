@@ -1,32 +1,36 @@
+import type {
+    BotAction,
+    InstUpdate,
+    StoredAux,
+} from '@casual-simulation/aux-common/bots';
 import {
     action,
-    BotAction,
     botAdded,
     createBot,
     hasValue,
-    InstUpdate,
     isBot,
     ON_WEBHOOK_ACTION_NAME,
-    StoredAux,
 } from '@casual-simulation/aux-common/bots';
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
-import { WebsocketMessenger } from './WebsocketMessenger';
-import {
-    device,
-    deviceError,
-    deviceResult,
+import type { WebsocketMessenger } from './WebsocketMessenger';
+import type {
     DeviceSelector,
     RemoteAction,
     RemoteActionError,
     RemoteActionResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
+import {
+    device,
+    deviceError,
+    deviceResult,
+} from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
-import {
+import type {
     DeviceConnection,
     WebsocketConnectionStore,
 } from './WebsocketConnectionStore';
-import {
+import type {
     AddUpdatesMessage,
     LoginMessage,
     RequestMissingPermissionMessage,
@@ -35,54 +39,58 @@ import {
     TimeSyncRequestMessage,
     UploadHttpHeaders,
     WatchBranchMessage,
-    WebsocketErrorEvent,
     WebsocketErrorInfo,
     WebsocketEvent,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import {
+    WebsocketErrorEvent,
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
-import { AuthController } from '../AuthController';
-import {
+import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
+import type { AuthController } from '../AuthController';
+import type {
     CurrentUpdates,
     InstRecord,
     InstRecordsStore,
     InstWithSubscriptionInfo,
     SaveInstFailure,
-    StoredUpdates,
 } from './InstRecordsStore';
-import {
+import { StoredUpdates } from './InstRecordsStore';
+import type {
     BranchName,
     TemporaryInstRecordsStore,
 } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
+import type {
+    DenialReason,
+    ServerError,
+    NotSupportedError,
+    PublicUserInfo,
+} from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    DenialReason,
-    ServerError,
-    NotSupportedError,
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
-    PublicUserInfo,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     AuthorizationContext,
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from '../PolicyController';
-import { ConfigurationStore } from '../ConfigurationStore';
-import {
+import type { ConfigurationStore } from '../ConfigurationStore';
+import type {
     FeaturesConfiguration,
-    getSubscriptionFeatures,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
-import { MetricsStore } from '../MetricsStore';
-import { AuthStore } from '../AuthStore';
+import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
+import type { MetricsStore } from '../MetricsStore';
+import type { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';

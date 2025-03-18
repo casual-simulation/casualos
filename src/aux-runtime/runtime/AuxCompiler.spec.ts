@@ -1,6 +1,9 @@
+// Disable global assignments because this is a test file
+// and we need to test that it handles promises correctly.
+/* eslint-disable no-global-assign */
+
+import type { AuxCompiledScript, AuxCompileOptions } from './AuxCompiler';
 import {
-    AuxCompiledScript,
-    AuxCompileOptions,
     AuxCompiler,
     createInterpretableFunction,
     EXPORT_FACTORY,
@@ -21,9 +24,9 @@ import {
     runJobQueue,
     Value,
 } from '@casual-simulation/engine262';
+import type { InterpreterStop } from '@casual-simulation/js-interpreter';
 import {
     Interpreter,
-    InterpreterStop,
     isGenerator,
     unwind,
     unwindAndCapture,

@@ -1,4 +1,4 @@
-import { KnownErrorCodes } from '@casual-simulation/aux-common';
+import type { KnownErrorCodes } from '@casual-simulation/aux-common';
 import {
     ADDRESS_FIELD,
     CODE_FIELD,

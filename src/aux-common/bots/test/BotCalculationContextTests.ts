@@ -80,13 +80,11 @@ import {
     getMenuBotSubtype,
     getBotMeshPositioningMode,
 } from '../BotCalculations';
+import type { Bot, AuxDomain, BotCursorType } from '../Bot';
 import {
-    Bot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
-    AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
-    BotCursorType,
     SYSTEM_PORTAL,
     SHEET_PORTAL,
     SYSTEM_PORTAL_DIFF,
@@ -107,7 +105,7 @@ import {
     calculateDestroyBotEvents,
     resolveRejectedActions,
 } from '../BotActions';
-import { BotCalculationContext } from '../BotCalculationContext';
+import type { BotCalculationContext } from '../BotCalculationContext';
 import { Quaternion, Rotation, Vector3 } from '../../math';
 
 export function botCalculationContextTests(

@@ -14,7 +14,7 @@ import {
     ON_CHAT_TYPING_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
 
 @Component({
     components: {},

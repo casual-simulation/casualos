@@ -1,5 +1,5 @@
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
-import {
+import type {
     NotificationRecord,
     NotificationRecordsStore,
     NotificationSubscription,
@@ -11,7 +11,7 @@ import {
     PushSubscriptionUser,
     UserPushSubscription,
 } from './NotificationRecordsStore';
-import { SubscriptionFilter } from '../MetricsStore';
+import type { SubscriptionFilter } from '../MetricsStore';
 import { uniqBy } from 'lodash';
 
 /**

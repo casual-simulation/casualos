@@ -1,4 +1,4 @@
-import { RemoteCausalRepoProtocol } from '../partitions/AuxPartitionConfig';
+import type { RemoteCausalRepoProtocol } from '../partitions/AuxPartitionConfig';
 
 /**
  * Defines a config for a shared document that is stored locally.

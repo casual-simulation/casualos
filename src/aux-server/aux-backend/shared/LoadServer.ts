@@ -2,10 +2,10 @@ import { ServerBuilder } from './ServerBuilder';
 import { getAllowedAPIOrigins, allowedOrigins } from './EnvUtils';
 import { merge } from 'lodash';
 import { loadConfig } from './ConfigUtils';
-import { ServerConfig } from '@casual-simulation/aux-records';
+import type { ServerConfig } from '@casual-simulation/aux-records';
 
-declare var S3_ENDPOINT: string;
-declare var DEVELOPMENT: boolean;
+declare let S3_ENDPOINT: string;
+declare let DEVELOPMENT: boolean;
 
 // Get the DynamoDB table name from environment variables
 export const MESSAGES_BUCKET_NAME = process.env.MESSAGES_BUCKET;

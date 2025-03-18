@@ -1,6 +1,6 @@
-import { TunnelRequest } from './ClientTunnelRequest';
-import { Observable } from 'rxjs';
-import { TunnelMessage } from './TunnelResponse';
+import type { TunnelRequest } from './ClientTunnelRequest';
+import type { Observable } from 'rxjs';
+import type { TunnelMessage } from './TunnelResponse';
 
 /**
  * Defines a tunnel client. That is, a service that is able to route traffic from a remote endpoint to a local port.

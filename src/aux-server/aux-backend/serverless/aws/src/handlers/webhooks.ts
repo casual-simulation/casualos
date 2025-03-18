@@ -1,17 +1,15 @@
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { SimulationWebhookEnvironment } from '../../../../shared/webhooks/SimulationWebhookEnvironment';
-import { GenericHttpRequest } from '@casual-simulation/aux-common';
-import {
+import type { GenericHttpRequest } from '@casual-simulation/aux-common';
+import type {
     HandleWebhookOptions,
-    WEBHOOK_STATE_SCHEMA,
     WebhookState,
 } from '@casual-simulation/aux-records';
+import { WEBHOOK_STATE_SCHEMA } from '@casual-simulation/aux-records';
 import { resolve } from 'path';
-import {
-    HANDLE_WEBHOOK_PAYLOAD_SCHEMA,
-    HandleWebhookPayload,
-} from '../../../../shared/webhooks/LambdaWebhookPayload';
+import type { HandleWebhookPayload } from '../../../../shared/webhooks/LambdaWebhookPayload';
+import { HANDLE_WEBHOOK_PAYLOAD_SCHEMA } from '../../../../shared/webhooks/LambdaWebhookPayload';
 import { statSync } from 'fs';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 

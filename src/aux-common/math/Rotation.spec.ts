@@ -1,5 +1,6 @@
 import { Vector3 } from './Vector3';
-import { copySign, LookRotation, Rotation } from './Rotation';
+import type { LookRotation } from './Rotation';
+import { copySign, Rotation } from './Rotation';
 import { Quaternion } from './Quaternion';
 import { Vector2 } from './Vector2';
 import { Euler, Quaternion as ThreeQuaternion } from '@casual-simulation/three';

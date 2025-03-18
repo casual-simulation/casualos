@@ -1,5 +1,5 @@
 import 'platform';
-import Benchmark from 'benchmark';
+import type Benchmark from 'benchmark';
 import RuntimeBenchmarks from '@casual-simulation/aux-common/benchmarks';
 
 run([...RuntimeBenchmarks]);

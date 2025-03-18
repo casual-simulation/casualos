@@ -1,8 +1,22 @@
+import type {
+    Object3D,
+    BufferGeometry,
+    Material,
+    Sprite,
+    Camera,
+    Sphere,
+    Group,
+    LineSegments as ThreeLineSegments,
+    LineBasicMaterial,
+    Intersection,
+    Float32BufferAttribute,
+    Texture,
+    SpotLight,
+} from '@casual-simulation/three';
 import {
     Vector3,
     SphereBufferGeometry,
     Mesh,
-    Object3D,
     Scene,
     Matrix4,
     Box2,
@@ -10,9 +24,7 @@ import {
     Box3,
     Layers,
     BoxBufferGeometry,
-    BufferGeometry,
     BufferAttribute,
-    Material,
     ConeGeometry,
     DoubleSide,
     AmbientLight,
@@ -20,25 +32,16 @@ import {
     MathUtils as ThreeMath,
     Euler,
     SpriteMaterial,
-    Sprite,
     PlaneBufferGeometry,
     Color,
     MeshStandardMaterial,
     Ray,
     Quaternion,
     MeshBasicMaterial,
-    Camera,
-    Sphere,
     PerspectiveCamera,
-    Group,
-    LineSegments as ThreeLineSegments,
-    LineBasicMaterial,
     MeshToonMaterial,
-    Intersection,
     CircleBufferGeometry,
-    Float32BufferAttribute,
     MeshNormalMaterial,
-    Texture,
     Cache,
     PointLight,
     WebGLRenderer,
@@ -47,21 +50,22 @@ import {
     SphereGeometry,
     CameraHelper,
     Light,
-    SpotLight,
     HemisphereLight,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
-import {
+import type {
     BotCalculationContext,
     Bot,
     BotLabelAnchor,
+} from '@casual-simulation/aux-common';
+import {
     getBotScale,
     getBotTransformer,
     CameraType,
     clamp,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { BackSide, PCFShadowMap } from 'three';
 
 /**
@@ -1303,6 +1307,7 @@ export function getThreeJSQuaternionFromBotRotation(rotation: {
     w?: number;
 }) {
     if ('w' in rotation) {
+        /* empty */
     } else {
         return new Quaternion().setFromEuler(
             new Euler(rotation.x, rotation.z, rotation.y, 'XYZ')

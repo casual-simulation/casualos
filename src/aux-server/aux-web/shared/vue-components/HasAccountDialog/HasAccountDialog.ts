@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import {
+import type {
     AuthHelperInterface,
     LoginUIHasAccount,
 } from '@casual-simulation/aux-vm';

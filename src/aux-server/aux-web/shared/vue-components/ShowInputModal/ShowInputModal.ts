@@ -3,19 +3,21 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { wrapHtmlWithSandboxContentSecurityPolicy } from '../../../shared/SharedUtils';
-import {
+import type {
     ShowInputType,
     ShowInputSubtype,
     ShowInputOptions,
     BotCalculationContext,
-    calculateFormattedBotValue,
     Bot,
     ShowInputForTagAction,
     ShowInputAction,
-    asyncResult,
     ShowInputItem,
+} from '@casual-simulation/aux-common';
+import {
+    calculateFormattedBotValue,
+    asyncResult,
 } from '@casual-simulation/aux-common';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import { getCurrentTheme } from '../../StyleHelpers';

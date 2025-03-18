@@ -1,16 +1,14 @@
-import { Bot, BotsState } from './Bot';
+import type { Bot, BotsState } from './Bot';
 import { calculateBotValue, isDestroyable } from './BotCalculations';
-import { BotCalculationContext } from './BotCalculationContext';
-import {
-    botRemoved,
+import type { BotCalculationContext } from './BotCalculationContext';
+import type {
     BotAction,
     ApplyStateAction,
-    botAdded,
-    botUpdated,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
 } from './BotEvents';
+import { botRemoved, botAdded, botUpdated } from './BotEvents';
 import { uniq } from 'lodash';
 
 /**

@@ -1,8 +1,7 @@
+import type { Completion, ObjectValue } from '@casual-simulation/engine262';
 import {
     BooleanValue,
-    Completion,
     Get,
-    ObjectValue,
     Type,
     Value,
     Set,
@@ -21,12 +20,12 @@ import {
     markWithRegularObject,
     unwind,
 } from './InterpreterUtils';
-import { Interpreter } from './Interpreter';
+import type { Interpreter } from './Interpreter';
 
 export type TransformObjectFunc = (obj: object) => void;
 export type CopyFromValueConstructor<T extends Value> = (
     val: T,
-    proto: Object,
+    proto: object,
     interpreter: Interpreter,
     transformObject?: TransformObjectFunc
 ) => any;
@@ -37,14 +36,14 @@ export type CopyToValueConstructor<T> = (
 ) => Completion<Value>;
 export type KnownPrototype = [
     interpreterPrototype: string,
-    realPrototype: Object,
+    realPrototype: object,
     copyToValue: CopyToValueConstructor<any>,
     CopyFromValueConstructor: CopyFromValueConstructor<Value>
 ];
 
 const copyPropertiesFromObject = (
     source: ObjectValue,
-    target: Object,
+    target: object,
     interpreter: Interpreter,
     transformObject: TransformObjectFunc,
     disallowedProps: Set<string | symbol>
@@ -88,7 +87,7 @@ const copyPropertiesFromObject = (
 };
 
 const copyPropertiesToObject = (
-    source: Object,
+    source: object,
     target: ObjectValue,
     interpreter: Interpreter,
     disallowedProps: Set<string | symbol>
@@ -143,7 +142,7 @@ const copyFromObjectFunc: (
 
 const copyToObjectFunc: (
     disallowedProps?: Set<string | symbol>
-) => CopyToValueConstructor<Object> = (disallowedProps) => {
+) => CopyToValueConstructor<object> = (disallowedProps) => {
     return (value, proto, interpreter) => {
         const obj = OrdinaryObjectCreate(proto, []);
         return copyPropertiesToObject(value, obj, interpreter, disallowedProps);
@@ -154,7 +153,7 @@ const copyFromArrayFunc: (
     disallowedProps?: Set<string | symbol>
 ) => CopyFromValueConstructor<ObjectValue> = (disallowedProps) => {
     return (value, proto, interpreter, transformObject) => {
-        const obj = new Array();
+        const obj = [] as any[];
         copyPropertiesFromObject(
             value,
             obj,
@@ -291,6 +290,7 @@ const copyFromFunction: CopyFromValueConstructor<ObjectValue> = (
 ) => {
     return interpreter.reverseProxyObject(val);
 };
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const copyToFunction: CopyToValueConstructor<Function> = (
     val,
     proto,

@@ -1,6 +1,6 @@
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { ModerationConfiguration } from './ModerationConfiguration';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { ModerationConfiguration } from './ModerationConfiguration';
 
 export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 

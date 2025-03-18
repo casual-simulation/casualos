@@ -28,35 +28,40 @@
                         <md-icon>description</md-icon>
                         <span class="md-list-item-text">Player Studio</span>
 
-                        <md-list slot="md-expand">
-                            <md-list-item
-                                v-for="record in records"
-                                :key="record.name"
-                                class="md-inset record-item"
-                                :to="{ name: 'records-insts', params: { recordName: record.name } }"
-                            >
-                                <md-icon>description</md-icon>
-                                <span v-if="record.name !== userId">{{ record.label }}</span>
-                                <span v-else>User Record ({{ record.name }})</span>
-                            </md-list-item>
-                            <md-list-item v-if="loadingRecords" class="md-inset">
-                                <md-progress-spinner
-                                    md-mode="indeterminate"
-                                    :md-diameter="20"
-                                    :md-stroke="2"
-                                    >Loading...</md-progress-spinner
+                        <template v-slot:md-expand>
+                            <md-list>
+                                <md-list-item
+                                    v-for="record in records"
+                                    :key="record.name"
+                                    class="md-inset record-item"
+                                    :to="{
+                                        name: 'records-insts',
+                                        params: { recordName: record.name },
+                                    }"
                                 >
-                            </md-list-item>
-                            <md-list-item
-                                v-else-if="!records || records.length === 0"
-                                class="md-inset"
-                            >
-                                <strong class="md-list-item-text">No Records</strong>
-                            </md-list-item>
-                            <md-button class="md-raised md-primary" @click="startCreateRecord()"
-                                >Add Record</md-button
-                            >
-                        </md-list>
+                                    <md-icon>description</md-icon>
+                                    <span v-if="record.name !== userId">{{ record.label }}</span>
+                                    <span v-else>User Record ({{ record.name }})</span>
+                                </md-list-item>
+                                <md-list-item v-if="loadingRecords" class="md-inset">
+                                    <md-progress-spinner
+                                        md-mode="indeterminate"
+                                        :md-diameter="20"
+                                        :md-stroke="2"
+                                        >Loading...</md-progress-spinner
+                                    >
+                                </md-list-item>
+                                <md-list-item
+                                    v-else-if="!records || records.length === 0"
+                                    class="md-inset"
+                                >
+                                    <strong class="md-list-item-text">No Records</strong>
+                                </md-list-item>
+                                <md-button class="md-raised md-primary" @click="startCreateRecord()"
+                                    >Add Record</md-button
+                                >
+                            </md-list>
+                        </template>
                     </md-list-item>
                     <md-list-item
                         v-for="studio of studios"
@@ -68,64 +73,69 @@
                         <md-icon>description</md-icon>
                         <span class="md-list-item-text">{{ studio.displayName }}</span>
 
-                        <md-list slot="md-expand">
-                            <md-list-item
-                                class="md-inset"
-                                v-if="studio.comId"
-                                :to="{ name: 'home', query: { comId: studio.comId } }"
-                                target="_blank"
-                            >
-                                <md-icon>open_in_new</md-icon>
-                                <span class="md-list-item-text">Go to site</span>
-                            </md-list-item>
-                            <md-list-item
-                                class="md-inset"
-                                v-if="studio.role === 'admin'"
-                                :to="{
-                                    name: 'studio',
-                                    params: {
-                                        studioId: studio.studioId,
-                                        studioName: studio.displayName,
-                                    },
-                                }"
-                            >
-                                <md-icon>settings</md-icon>
-                                <span class="md-list-item-text">Settings</span>
-                            </md-list-item>
-                            <md-list-item
-                                v-for="record in studio.records"
-                                :key="record.name"
-                                class="md-inset record-item"
-                                :to="{ name: 'records-data', params: { recordName: record.name } }"
-                            >
-                                <md-icon>description</md-icon>
-                                <span class="md-list-item-text">
-                                    <span v-if="record.name !== studio.studioId">
-                                        {{ record.label }}
-                                    </span>
-                                    <span v-else> Studio Record ({{ record.name }}) </span>
-                                </span>
-                            </md-list-item>
-                            <md-list-item v-if="studio.loading" class="md-inset">
-                                <md-progress-spinner
-                                    md-mode="indeterminate"
-                                    :md-diameter="20"
-                                    :md-stroke="2"
-                                    >Loading...</md-progress-spinner
+                        <template v-slot:md-expand>
+                            <md-list>
+                                <md-list-item
+                                    class="md-inset"
+                                    v-if="studio.comId"
+                                    :to="{ name: 'home', query: { comId: studio.comId } }"
+                                    target="_blank"
                                 >
-                            </md-list-item>
-                            <md-list-item
-                                v-else-if="!studio.records || studio.records.length === 0"
-                                class="md-inset"
-                            >
-                                <strong class="md-list-item-text">No Records</strong>
-                            </md-list-item>
-                            <md-button
-                                class="md-raised md-primary"
-                                @click="startCreateRecord(studio.studioId)"
-                                >Add Record</md-button
-                            >
-                        </md-list>
+                                    <md-icon>open_in_new</md-icon>
+                                    <span class="md-list-item-text">Go to site</span>
+                                </md-list-item>
+                                <md-list-item
+                                    class="md-inset"
+                                    v-if="studio.role === 'admin'"
+                                    :to="{
+                                        name: 'studio',
+                                        params: {
+                                            studioId: studio.studioId,
+                                            studioName: studio.displayName,
+                                        },
+                                    }"
+                                >
+                                    <md-icon>settings</md-icon>
+                                    <span class="md-list-item-text">Settings</span>
+                                </md-list-item>
+                                <md-list-item
+                                    v-for="record in studio.records"
+                                    :key="record.name"
+                                    class="md-inset record-item"
+                                    :to="{
+                                        name: 'records-data',
+                                        params: { recordName: record.name },
+                                    }"
+                                >
+                                    <md-icon>description</md-icon>
+                                    <span class="md-list-item-text">
+                                        <span v-if="record.name !== studio.studioId">
+                                            {{ record.label }}
+                                        </span>
+                                        <span v-else> Studio Record ({{ record.name }}) </span>
+                                    </span>
+                                </md-list-item>
+                                <md-list-item v-if="studio.loading" class="md-inset">
+                                    <md-progress-spinner
+                                        md-mode="indeterminate"
+                                        :md-diameter="20"
+                                        :md-stroke="2"
+                                        >Loading...</md-progress-spinner
+                                    >
+                                </md-list-item>
+                                <md-list-item
+                                    v-else-if="!studio.records || studio.records.length === 0"
+                                    class="md-inset"
+                                >
+                                    <strong class="md-list-item-text">No Records</strong>
+                                </md-list-item>
+                                <md-button
+                                    class="md-raised md-primary"
+                                    @click="startCreateRecord(studio.studioId)"
+                                    >Add Record</md-button
+                                >
+                            </md-list>
+                        </template>
                     </md-list-item>
                     <md-list-item>
                         <md-button

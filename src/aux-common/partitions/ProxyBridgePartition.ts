@@ -1,11 +1,17 @@
-import {
+import type {
     ProxyBridgePartition,
     AuxPartitionBase,
     AuxPartitionRealtimeStrategy,
 } from './AuxPartition';
-import { Bot, UpdatedBot, BotAction, StateUpdatedEvent } from '../bots';
-import { Observable, Subscription } from 'rxjs';
-import { Action, CurrentVersion, RemoteActions, StatusUpdate } from '../common';
+import type { Bot, UpdatedBot, BotAction, StateUpdatedEvent } from '../bots';
+import type { Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
+import type {
+    Action,
+    CurrentVersion,
+    RemoteActions,
+    StatusUpdate,
+} from '../common';
 
 export class ProxyBridgePartitionImpl implements ProxyBridgePartition {
     get private(): boolean {

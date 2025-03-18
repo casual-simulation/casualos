@@ -3,13 +3,12 @@ import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { AsyncAction, BotAction } from '@casual-simulation/aux-common';
 import {
     ON_PASTE_ACTION_NAME,
     onPasteArg,
-    AsyncAction,
     enqueueAsyncResult,
-    BotAction,
     enqueueAsyncError,
     hasValue,
 } from '@casual-simulation/aux-common';

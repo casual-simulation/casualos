@@ -1,5 +1,5 @@
 import { sortedIndexBy } from 'lodash';
-import {
+import type {
     BranchConnectionMode,
     DeviceBranchConnection,
     DeviceConnection,

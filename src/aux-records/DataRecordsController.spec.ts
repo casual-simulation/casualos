@@ -1,17 +1,17 @@
 import { RecordsStore } from './RecordsStore';
-import { RecordsController } from './RecordsController';
-import {
-    DataRecordsController,
+import type { RecordsController } from './RecordsController';
+import type {
     EraseDataFailure,
     EraseDataSuccess,
     GetDataFailure,
-    GetDataResult,
     GetDataSuccess,
     RecordDataFailure,
     RecordDataSuccess,
 } from './DataRecordsController';
-import { DataRecordsStore, UserPolicy } from './DataRecordsStore';
-import { PolicyController } from './PolicyController';
+import { DataRecordsController, GetDataResult } from './DataRecordsController';
+import type { UserPolicy } from './DataRecordsStore';
+import { DataRecordsStore } from './DataRecordsStore';
+import type { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
@@ -22,7 +22,7 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { MemoryStore } from './MemoryStore';
+import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();

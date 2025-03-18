@@ -1,5 +1,5 @@
 import prompts from 'prompts';
-import repl from 'node:repl';
+import type repl from 'node:repl';
 import type {
     ArraySchemaMetadata,
     DiscriminatedUnionSchemaMetadata,

@@ -1,5 +1,6 @@
 import faker from 'faker';
-import { applyEdit, del, edit, insert, preserve, TagEdit } from '../bots';
+import type { TagEdit } from '../bots';
+import { applyEdit, del, edit, insert, preserve } from '../bots';
 
 /**
  * Generates a set of random edit test cases that can be used to help fuzz test edit systems.

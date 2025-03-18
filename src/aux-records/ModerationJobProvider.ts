@@ -1,4 +1,4 @@
-import { ModerationJob } from './ModerationStore';
+import type { ModerationJob } from './ModerationStore';
 
 /**
  * Defines a class that is able to start moderation jobs.

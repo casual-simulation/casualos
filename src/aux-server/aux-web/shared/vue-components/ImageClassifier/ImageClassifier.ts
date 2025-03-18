@@ -1,14 +1,16 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import type {
+    CameraType,
+    OpenImageClassifierAction,
+    Image,
+} from '@casual-simulation/aux-common';
 import {
     hasValue,
-    CameraType,
     ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME,
     ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
     ON_IMAGE_CLASSIFIED_ACTION_NAME,
-    OpenImageClassifierAction,
     ClassifyImagesAction,
-    Image,
     action,
     asyncResult,
     asyncError,
@@ -16,13 +18,11 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { getImageClassifierUrls } from './ImageClassifierUtils';
 import { pick } from 'lodash';
-import {
+import type {
     ClassificationEvent,
     ModelLoadedEvent,
     ModelLoadError,

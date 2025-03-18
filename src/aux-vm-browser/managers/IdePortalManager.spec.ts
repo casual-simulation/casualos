@@ -1,5 +1,7 @@
-import { IdeNode, IdePortalManager } from './IdePortalManager';
+import type { IdeNode } from './IdePortalManager';
+import { IdePortalManager } from './IdePortalManager';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import type { BotAction } from '@casual-simulation/aux-common';
 import {
     createBot,
     createPrecalculatedBot,
@@ -10,7 +12,6 @@ import {
     botRemoved,
     registerPrefix,
     BotsState,
-    BotAction,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject } from 'rxjs';

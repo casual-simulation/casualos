@@ -1,4 +1,4 @@
-import { Config } from './config';
+import type { Config } from './config';
 
 const config: Config = {
     secret: 'test',

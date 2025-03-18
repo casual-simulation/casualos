@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
 import { StatusHelper } from './StatusHelper';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { StatusUpdate } from '@casual-simulation/aux-common';
+import type { StatusUpdate } from '@casual-simulation/aux-common';
 
 describe('StatusHelper', () => {
     describe('progress', () => {

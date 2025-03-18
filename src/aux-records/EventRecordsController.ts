@@ -1,24 +1,24 @@
-import {
+import type {
     AuthorizeSubjectFailure,
     PolicyController,
-    getMarkerResourcesForUpdate,
 } from './PolicyController';
-import {
+import { getMarkerResourcesForUpdate } from './PolicyController';
+import type {
     NotLoggedInError,
     NotSupportedError,
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
-import {
+import type {
     EventRecordsStore,
-    AddEventCountStoreResult,
-    GetEventCountStoreResult,
     AddEventCountStoreFailure,
     GetEventCountStoreFailure,
 } from './EventRecordsStore';
 import {
-    RecordsController,
-    ValidatePublicRecordKeyFailure,
-} from './RecordsController';
+    AddEventCountStoreResult,
+    GetEventCountStoreResult,
+} from './EventRecordsStore';
+import type { ValidatePublicRecordKeyFailure } from './RecordsController';
+import { RecordsController } from './RecordsController';
 import { cleanupObject, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import {
@@ -26,8 +26,8 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { MetricsStore } from './MetricsStore';
-import { ConfigurationStore } from './ConfigurationStore';
+import type { MetricsStore } from './MetricsStore';
+import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

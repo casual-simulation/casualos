@@ -1,10 +1,10 @@
 import { BotPanelManager } from './BotPanelManager';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import type { PrecalculatedBot } from '@casual-simulation/aux-common';
 import {
     createBot,
     createPrecalculatedBot,
     botAdded,
-    PrecalculatedBot,
     BotIndex,
     botUpdated,
     botRemoved,

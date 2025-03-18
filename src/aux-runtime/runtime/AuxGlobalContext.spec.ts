@@ -1,5 +1,5 @@
+import type { AuxGlobalContext } from './AuxGlobalContext';
 import {
-    AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
@@ -15,11 +15,11 @@ import {
     botRemoved,
     toast,
 } from '@casual-simulation/aux-common/bots';
-import {
-    RealtimeEditMode,
+import type {
     RuntimeBatcher,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
+import { RealtimeEditMode } from './RuntimeBot';
 import {
     waitAsync,
     allDataTypeCases,
@@ -67,6 +67,7 @@ describe('AuxGlobalContext', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',

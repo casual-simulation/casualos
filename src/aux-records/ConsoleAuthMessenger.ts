@@ -1,5 +1,5 @@
-import { AddressType } from './AuthStore';
-import { AuthMessenger, SendCodeResult } from './AuthMessenger';
+import type { AddressType } from './AuthStore';
+import type { AuthMessenger, SendCodeResult } from './AuthMessenger';
 
 /**
  * Defines a class that defines a auth messenger which sends login request codes via console.log().

@@ -1,21 +1,19 @@
-import {
+import type {
     ConfigurationStore,
-    MODERATION_CONFIG_KEY,
     MemoryConfiguration,
+} from '@casual-simulation/aux-records';
+import {
+    MODERATION_CONFIG_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
-import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
-import {
-    PrivoConfiguration,
-    parsePrivoConfiguration,
-} from '@casual-simulation/aux-records/PrivoConfiguration';
-import { Collection } from 'mongodb';
-import {
-    ModerationConfiguration,
-    parseModerationConfiguration,
-} from '@casual-simulation/aux-records/ModerationConfiguration';
+import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { Collection } from 'mongodb';
+import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 
 export class MongoDBConfigurationStore implements ConfigurationStore {
     private _defaultConfiguration: MemoryConfiguration;

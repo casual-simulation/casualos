@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Subscription } from 'rxjs';
+import type { Subscription } from 'rxjs';
 import { messages } from '../../Console';
-import { ConsoleMessages } from '@casual-simulation/aux-common';
+import type { ConsoleMessages } from '@casual-simulation/aux-common';
 import ConsoleMessage from '../ConsoleMessage/ConsoleMessage';
 import { Prop } from 'vue-property-decorator';
 

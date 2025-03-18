@@ -1,16 +1,18 @@
-import { Config } from './config';
-import express, { Handler } from 'express';
+import type { Config } from './config';
+import type { Handler } from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
 import { promisify } from 'util';
 import { verify } from 'jsonwebtoken';
 import { WebSocketServer, requestUrl } from '@casual-simulation/tunnel';
-import { Server as HttpServer, IncomingMessage } from 'http';
-import { Socket } from 'net';
+import type { IncomingMessage } from 'http';
+import { Server as HttpServer } from 'http';
+import type { Socket } from 'net';
 import HttpProxy from 'http-proxy';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(er => {
+        Promise.resolve(fn(req, res, next)).catch((er) => {
             next(er);
         });
     };
@@ -49,7 +51,7 @@ export class Server {
             autoUpgrade: false,
         });
 
-        server.acceptTunnel = r => {
+        server.acceptTunnel = (r) => {
             if (r.direction === 'reverse') {
                 const token = r.authorization;
                 try {
@@ -58,7 +60,6 @@ export class Server {
                     return true;
                 } catch (e) {
                     return false;
-                    e;
                 }
             } else if (r.direction === 'connect') {
                 return true;
@@ -67,7 +68,7 @@ export class Server {
             }
         };
 
-        server.tunnelAccepted.subscribe(r => {
+        server.tunnelAccepted.subscribe((r) => {
             if (r.direction === 'reverse') {
                 console.log('Reverse tunnel accepted!');
                 const decoded: { key: string } = <any>(
@@ -81,7 +82,7 @@ export class Server {
             }
         });
 
-        server.tunnelDropped.subscribe(r => {
+        server.tunnelDropped.subscribe((r) => {
             if (r.direction === 'reverse') {
                 console.log('Reverse tunnel closed!');
                 const decoded: { key: string } = <any>(

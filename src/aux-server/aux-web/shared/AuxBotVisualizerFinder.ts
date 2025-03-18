@@ -1,4 +1,4 @@
-import { AuxBotVisualizer } from './scene/AuxBotVisualizer';
+import type { AuxBotVisualizer } from './scene/AuxBotVisualizer';
 
 /**
  * Defines an interface for objects that can find AuxBot3D instances.

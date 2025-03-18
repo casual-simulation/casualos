@@ -1,17 +1,16 @@
+import type { ClientError, SyncUpdatesEvent } from './InstRecordsClient';
 import {
     InstRecordsClient,
-    ClientError,
     isClientError,
     isClientEvent,
     isClientUpdates,
     DEFAULT_BRANCH_NAME,
     isWatchBranchResult,
-    SyncUpdatesEvent,
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
-import {
+import type {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
     ConnectionCountMessage,
@@ -23,15 +22,14 @@ import {
     WatchBranchResultMessage,
 } from './WebsocketEvents';
 import { filter, map } from 'rxjs/operators';
-import {
+import type {
     DeviceAction,
-    device,
-    remote,
     DeviceActionResult,
     DeviceActionError,
 } from '../common/RemoteActions';
+import { device, remote } from '../common/RemoteActions';
 import { ConnectionInfo, connectionInfo } from '../common/ConnectionInfo';
-import { TimeSample } from '@casual-simulation/timesync';
+import type { TimeSample } from '@casual-simulation/timesync';
 
 describe('InstRecordsClient', () => {
     let client: InstRecordsClient;

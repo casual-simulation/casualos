@@ -1,11 +1,7 @@
-import { ProgressMessage } from '@casual-simulation/aux-common';
-import { AuxVM } from '../vm/AuxVM';
-import {
-    BehaviorSubject,
-    SubscriptionLike,
-    Subscription,
-    Observable,
-} from 'rxjs';
+import type { ProgressMessage } from '@casual-simulation/aux-common';
+import type { AuxVM } from '../vm/AuxVM';
+import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { tap, takeWhile } from 'rxjs/operators';
 
 /**

@@ -1,4 +1,4 @@
-import {
+import type {
     BotCalculationContext,
     BotMeshPositioningMode,
     BotScaleMode,
@@ -6,6 +6,8 @@ import {
     BotSubShape,
     LocalActions,
     StartFormAnimationAction,
+} from '@casual-simulation/aux-common';
+import {
     calculateBooleanTagValue,
     calculateBotIds,
     calculateBotValue,
@@ -19,8 +21,8 @@ import {
     isBotPointable,
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
+import type { AnimationAction } from '@casual-simulation/three';
 import {
-    AnimationAction,
     AnimationMixer,
     Box3,
     Color,
@@ -40,18 +42,18 @@ import {
     Material,
     ObjectLoader,
 } from '@casual-simulation/three';
-import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
+import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
-import { SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { AuxBot3D } from '../AuxBot3D';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { getGLTFPool } from '../GLTFHelpers';
-import { Game } from '../Game';
+import type { Game } from '../Game';
 import { GameObject } from '../GameObject';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
-import { LineSegments } from '../LineSegments';
+import type { LineSegments } from '../LineSegments';
 import { createCubeStroke } from '../MeshUtils';
 import {
     DEFAULT_COLOR,
@@ -84,9 +86,9 @@ import {
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
-import { IMeshDecorator } from './IMeshDecorator';
+import type { IMeshDecorator } from './IMeshDecorator';
 // import { MeshLineMaterial } from 'three.meshline';
-import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
+import type { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
 import { Block, Keyboard, update as updateMeshUI } from 'three-mesh-ui';
@@ -95,8 +97,8 @@ import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
-import { AnimationMixerHandle } from '../AnimationHelper';
-import { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
+import type { AnimationMixerHandle } from '../AnimationHelper';
+import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 
 export const gltfPool = getGLTFPool('main');
@@ -460,6 +462,7 @@ export class BotShapeDecorator
 
         const noAnimation = animation === false;
         if (noAnimation) {
+            /* empty */
         } else if (hasValue(this._animation)) {
             let clips = this._getClips(this._animation);
 

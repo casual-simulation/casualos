@@ -4,11 +4,11 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import UpdatePasswordCard from '../UpdatePasswordCard/UpdatePasswordCard';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
+import type { FormError } from '@casual-simulation/aux-records';
 import {
     DATE_OF_BIRTH_FIELD,
     DISPLAY_NAME_FIELD,
     EMAIL_FIELD,
-    FormError,
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
     getFormErrors,

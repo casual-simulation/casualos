@@ -1,18 +1,15 @@
-import {
-    InputType,
-    InputMethod,
-    InputModality,
-} from '../../../shared/scene/Input';
-import { Vector2 } from '@casual-simulation/three';
-import { IOperation } from '../IOperation';
-import { BaseInteractionManager } from '../BaseInteractionManager';
-import {
-    Bot,
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
+import { InputType } from '../../../shared/scene/Input';
+import type { Vector2 } from '@casual-simulation/three';
+import type { IOperation } from '../IOperation';
+import type { BaseInteractionManager } from '../BaseInteractionManager';
+import type {
     BotCalculationContext,
     BotTags,
 } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
-import { Simulation3D } from '../../scene/Simulation3D';
+import type { Simulation3D } from '../../scene/Simulation3D';
 import { BaseClickOperation } from './BaseClickOperation';
 
 /**

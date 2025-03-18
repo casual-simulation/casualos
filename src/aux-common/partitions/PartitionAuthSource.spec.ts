@@ -1,8 +1,6 @@
 import { waitAsync } from '../test/TestHelpers';
-import {
-    PartitionAuthRequest,
-    PartitionAuthSource,
-} from './PartitionAuthSource';
+import type { PartitionAuthRequest } from './PartitionAuthSource';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 describe('PartitionAuthSource', () => {
     let source: PartitionAuthSource;

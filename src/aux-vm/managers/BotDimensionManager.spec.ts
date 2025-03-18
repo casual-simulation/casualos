@@ -3,11 +3,8 @@ import {
     createPrecalculatedBot,
     createPrecalculatedContext,
 } from '@casual-simulation/aux-common';
-import {
-    BotDimensionManager,
-    BotDimensionsUpdate,
-    processIndexEvents,
-} from './BotDimensionManager';
+import type { BotDimensionsUpdate } from './BotDimensionManager';
+import { BotDimensionManager, processIndexEvents } from './BotDimensionManager';
 import { BotHelper } from '.';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 

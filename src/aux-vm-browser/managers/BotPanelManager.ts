@@ -1,16 +1,10 @@
-import {
-    Subject,
-    Observable,
-    BehaviorSubject,
-    merge,
-    from,
-    SubscriptionLike,
-} from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, BehaviorSubject, merge, from } from 'rxjs';
 import { mergeMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
-import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import type { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
+import type { PrecalculatedBot } from '@casual-simulation/aux-common';
 import {
     isBot,
-    PrecalculatedBot,
     isPrecalculated,
     isExistingBot,
     createPrecalculatedBot,

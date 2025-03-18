@@ -1,5 +1,5 @@
 import { firstValueFrom } from 'rxjs';
-import { Simulation } from './Simulation';
+import type { Simulation } from './Simulation';
 import { first } from 'rxjs/operators';
 
 /**

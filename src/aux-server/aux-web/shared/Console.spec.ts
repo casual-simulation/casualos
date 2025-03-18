@@ -1,6 +1,6 @@
-import { SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
 import { messages } from './Console';
-import { ConsoleMessages } from '@casual-simulation/aux-common';
+import type { ConsoleMessages } from '@casual-simulation/aux-common';
 
 let logMock = (console.log = jest.fn());
 let warnMock = (console.warn = jest.fn());

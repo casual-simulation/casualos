@@ -1,4 +1,4 @@
-import {
+import type {
     FileRecordsStore,
     PresignFileUploadRequest,
     PresignFileUploadResult,
@@ -18,7 +18,7 @@ import {
     ListAllFilesFilter,
     ListAllFilesResult,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery } from 'mongodb';
+import type { Collection, FilterQuery } from 'mongodb';
 
 /**
  * Defines a file records store that can store data in MongoDB.

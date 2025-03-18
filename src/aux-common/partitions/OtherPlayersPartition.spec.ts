@@ -1,9 +1,8 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { OtherPlayersPartitionImpl } from './OtherPlayersPartition';
 import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
+import type { Bot, UpdatedBot, StateUpdatedEvent } from '../bots';
 import {
-    Bot,
-    UpdatedBot,
     createBot,
     botAdded,
     getRemotes,
@@ -11,13 +10,12 @@ import {
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
-    StateUpdatedEvent,
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
     botRemoved,
     botUpdated,
 } from '../bots';
-import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
+import type { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync, wait } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
@@ -25,15 +23,15 @@ import { YjsPartitionImpl } from './YjsPartition';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import { cloneDeep } from 'lodash';
-import { Action, connectionInfo, remote } from '../common';
-import {
+import type { Action } from '../common';
+import { connectionInfo, remote } from '../common';
+import type {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
-    InstRecordsClient,
-    MemoryConnectionClient,
     ReceiveDeviceActionMessage,
 } from '../websockets';
+import { InstRecordsClient, MemoryConnectionClient } from '../websockets';
 import { PartitionAuthSource } from './PartitionAuthSource';
 
 console.log = jest.fn();
