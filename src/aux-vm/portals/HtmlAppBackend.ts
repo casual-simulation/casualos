@@ -101,6 +101,7 @@ export class HtmlAppBackend implements AppBackend {
     private _instanceId: string;
     private _document: Document;
     private _body: Node;
+    private _usingBrowserDocument: boolean;
     private _mutationObserver: MutationObserver;
     private _nodes: Map<string, RootNode | Node> = new Map<
         string,
@@ -191,7 +192,7 @@ export class HtmlAppBackend implements AppBackend {
                 if (event.appId === this.appId) {
                     let target = this._getNode(event.event.target);
                     if (target && target.dispatchEvent) {
-                        let finalEvent = Event
+                        let finalEvent = this._usingBrowserDocument
                             ? new Event(event.event.type, {
                                   bubbles: true,
                                   cancelable: event.event.cancelable,
@@ -256,10 +257,9 @@ export class HtmlAppBackend implements AppBackend {
     private _renderContent(content: any) {
         // TODO: Remove all custom document filler when we have a proper document
         // implementation
-        const isBrowser = isBrowserDocument();
         let prevDocument = globalThis.document;
         try {
-            if (!isBrowser) {
+            if (!this._usingBrowserDocument) {
                 globalThis.document = this._document;
             }
             if (this._document) {
@@ -268,7 +268,7 @@ export class HtmlAppBackend implements AppBackend {
         } catch (err) {
             console.error(err);
         } finally {
-            if (!isBrowser) {
+            if (!this._usingBrowserDocument) {
                 globalThis.document = prevDocument;
             }
         }
@@ -293,7 +293,8 @@ export class HtmlAppBackend implements AppBackend {
 
     private _setupApp(result: HtmlPortalSetupResult) {
         try {
-            if (isBrowserDocument()) {
+            this._usingBrowserDocument = isBrowserDocument();
+            if (this._usingBrowserDocument) {
                 this._document = globalThis.document;
                 this._body = this._document.createElement('body');
             } else {
