@@ -1,11 +1,13 @@
-import { DirectoryEntry } from './DirectoryEntry';
-import { DirectoryStore } from './DirectoryStore';
+import type { DirectoryEntry } from './DirectoryEntry';
+import type { DirectoryStore } from './DirectoryStore';
 import { sortBy } from 'lodash';
-import { DirectoryUpdate, DirectoryUpdateSchema } from './DirectoryUpdate';
-import { DirectoryResult } from './DirectoryResult';
+import type { DirectoryUpdate } from './DirectoryUpdate';
+import { DirectoryUpdateSchema } from './DirectoryUpdate';
+import type { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
-import { DirectoryConfig, DirectoryServerConfig } from '../config';
+import type { DirectoryServerConfig } from '../config';
+import { DirectoryConfig } from '../config';
 import axios from 'axios';
 
 /**

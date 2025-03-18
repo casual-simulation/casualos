@@ -1,16 +1,19 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Watch, Prop } from 'vue-property-decorator';
+import type {
+    BotTags,
+    PrecalculatedBot,
+    BotAction,
+    BiosOption,
+} from '@casual-simulation/aux-common';
 import {
     goToDimension,
     calculateBotValue,
-    BotTags,
-    PrecalculatedBot,
     hasValue,
     BotCalculationContext,
     QUERY_PORTALS,
     KNOWN_PORTALS,
-    BotAction,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     calculateStringTagValue,
     calculateStringListTagValue,
@@ -18,7 +21,6 @@ import {
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
     getBotTheme,
-    BiosOption,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
@@ -27,23 +29,24 @@ import {
     appManager,
 } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
-import { Dictionary } from 'vue-router/types/router';
+import type { Dictionary } from 'vue-router/types/router';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    BrowserSimulation,
     userBotChanged,
     getUserBotAsync,
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
+import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import { intersection, isEqual, sortBy } from 'lodash';
-import { Subscription } from 'rxjs';
-import { uniqueNamesGenerator, Config } from 'unique-names-generator';
+import type { Subscription } from 'rxjs';
+import type { Config } from 'unique-names-generator';
+import { uniqueNamesGenerator } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
 import { sortInsts } from '../PlayerUtils';
@@ -332,6 +335,16 @@ export default class PlayerHome extends Vue {
             }
         });
 
+        await this._executeOrShowBios();
+
+        appManager.auth.primary.getPolicyUrls().then((urls) => {
+            this.privacyPolicyUrl = urls.privacyPolicyUrl;
+            this.termsOfServiceUrl = urls.termsOfServiceUrl;
+            this.codeOfConductUrl = urls.codeOfConductUrl;
+        });
+    }
+
+    private async _executeOrShowBios() {
         if (import.meta.env.MODE === 'static') {
             this.executeBiosOption('local inst', null, null, null);
         } else if (this.query) {
@@ -398,12 +411,6 @@ export default class PlayerHome extends Vue {
                 }
             }
         }
-
-        appManager.auth.primary.getPolicyUrls().then((urls) => {
-            this.privacyPolicyUrl = urls.privacyPolicyUrl;
-            this.termsOfServiceUrl = urls.termsOfServiceUrl;
-            this.codeOfConductUrl = urls.codeOfConductUrl;
-        });
     }
 
     private async _showBiosOptions() {
@@ -432,6 +439,15 @@ export default class PlayerHome extends Vue {
         return isJoinCode(option);
     }
 
+    private async _deleteInst(inst: string) {
+        if (window.confirm(`Are you sure you want to delete ${inst}?`)) {
+            await appManager.deleteStaticInst(inst);
+            this.instSelection = 'new-inst';
+            this.instOptions = await appManager.listStaticInsts();
+        }
+        this.showBios = true;
+    }
+
     async executeBiosOption(
         option: BiosOption,
         recordName: string,
@@ -449,7 +465,7 @@ export default class PlayerHome extends Vue {
             } finally {
                 this.showLoggingIn = false;
                 this.biosSelection = null;
-                this._showBiosOptions();
+                await this._executeOrShowBios();
             }
         } else if (option === 'sign out') {
             await appManager.auth.primary.logout();
@@ -463,6 +479,8 @@ export default class PlayerHome extends Vue {
             this._loadPublicInst();
         } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
+        } else if (option === 'delete inst') {
+            this._deleteInst(inst);
         } else {
             this.showBios = true;
         }

@@ -1,8 +1,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Provide, Watch } from 'vue-property-decorator';
+import type { Bot } from '@casual-simulation/aux-common';
 import {
-    Bot,
     isFormula,
     merge,
     hasValue,

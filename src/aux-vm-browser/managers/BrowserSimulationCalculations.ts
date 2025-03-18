@@ -1,12 +1,15 @@
-import {
+import type {
     PrecalculatedBot,
     PortalType,
+} from '@casual-simulation/aux-common';
+import {
     getPortalConfigBotID,
     Bot,
     registerBuiltinPortal,
 } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from './BrowserSimulation';
-import { NEVER, Observable, of } from 'rxjs';
+import type { BrowserSimulation } from './BrowserSimulation';
+import type { Observable } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import {
     switchMap,
     first,
@@ -15,14 +18,14 @@ import {
     filter,
     mergeMap,
 } from 'rxjs/operators';
-import {
-    LoginManager,
+import type {
     BotWatcher,
     UpdatedBotInfo,
     BotHelper,
 } from '@casual-simulation/aux-vm';
-import { PortalManager } from '@casual-simulation/aux-vm/managers';
-import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
+import { LoginManager } from '@casual-simulation/aux-vm';
+import type { PortalManager } from '@casual-simulation/aux-vm/managers';
+import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 /**
  * Gets an observable that resolves whenever the user bot for the given simulation changes.

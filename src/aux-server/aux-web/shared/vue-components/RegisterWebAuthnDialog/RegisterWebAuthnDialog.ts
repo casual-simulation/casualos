@@ -2,23 +2,25 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import {
+import type {
     AuthHelperInterface,
-    LoginUIRegisterWebAuthn,
-    LoginUIUpdatePasswordLink,
+    LoginUIHandleLoginMetadata,
 } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
-import {
+import type {
     CompleteWebAuthnRegistrationResult,
     FormError,
     RequestWebAuthnRegistrationResult,
-    getFormErrors,
 } from '@casual-simulation/aux-records';
-import { RegistrationResponseJSON } from '@simplewebauthn/types';
+import { getFormErrors } from '@casual-simulation/aux-records';
+import type { RegistrationResponseJSON } from '@simplewebauthn/types';
 import { startRegistration } from '@simplewebauthn/browser';
+import FieldErrors from '../FieldErrors/FieldErrors';
 
 @Component({
-    components: {},
+    components: {
+        'field-errors': FieldErrors,
+    },
 })
 export default class RegisterWebAuthnDialog extends Vue {
     private _sub: Subscription;
@@ -28,7 +30,7 @@ export default class RegisterWebAuthnDialog extends Vue {
     endpoint: string;
 
     @Prop()
-    status: LoginUIRegisterWebAuthn;
+    status: LoginUIHandleLoginMetadata;
 
     errors: FormError[] = [];
     processing: boolean = false;

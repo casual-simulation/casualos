@@ -1,4 +1,4 @@
-import { KnownErrorCodes } from '@casual-simulation/aux-common';
+import type { KnownErrorCodes } from '@casual-simulation/aux-common';
 import {
     ADDRESS_FIELD,
     CODE_FIELD,
@@ -12,6 +12,7 @@ import {
 describe('getFormErrors()', () => {
     const fieldCases: [KnownErrorCodes, string | null][] = [
         ['email_already_exists', EMAIL_FIELD],
+        ['child_email_already_exists', EMAIL_FIELD],
         ['parent_email_already_exists', PARENT_EMAIL_FIELD],
         ['parent_email_required', PARENT_EMAIL_FIELD],
         ['unacceptable_address', ADDRESS_FIELD],

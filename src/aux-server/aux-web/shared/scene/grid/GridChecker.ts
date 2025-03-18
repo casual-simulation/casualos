@@ -13,11 +13,11 @@ import {
     Box3Helper,
 } from '@casual-simulation/three';
 import { groupBy, keys } from 'lodash';
-import { HexGridMesh, HexMesh } from '../hex';
-import { GridLevel } from './GridLevel';
-import { GridTile } from './GridTile';
+import type { HexGridMesh, HexMesh } from '../hex';
+import type { GridLevel } from './GridLevel';
+import type { GridTile } from './GridTile';
 import { calculateTilePoints, calculateGridTileLocalPositions } from './Grid';
-import { WorkspaceMesh } from '../WorkspaceMesh';
+import type { WorkspaceMesh } from '../WorkspaceMesh';
 import { createSphere, disposeMaterial } from '../SceneUtils';
 
 /**

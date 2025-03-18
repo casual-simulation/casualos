@@ -1,20 +1,18 @@
-import {
+import type {
     Vector2,
     Camera,
-    Vector3,
     Ray,
-    Raycaster,
     Object3D,
     Intersection,
-    Mesh,
-    Plane,
     Sphere,
 } from '@casual-simulation/three';
+import { Vector3, Raycaster, Mesh, Plane } from '@casual-simulation/three';
 import { calculateCubeSphereIntersection } from './SceneUtils';
 
 /**
  * Container for all custom physics functions for game engine.
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Physics {
     /**
      * Infinite mathematical plane whos normal points up towards the sky.

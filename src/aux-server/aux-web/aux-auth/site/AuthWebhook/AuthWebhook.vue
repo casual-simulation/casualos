@@ -56,20 +56,22 @@
             >
             </md-table-empty-state>
 
-            <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
-                <md-table-cell md-label="ID" md-sort-by="runId">{{
-                    item.runId.substring(0, 8)
-                }}</md-table-cell>
-                <md-table-cell md-label="Request Time" md-sort-by="requestTimeMs">
-                    <relative-time :millis="item.requestTimeMs"></relative-time>
-                </md-table-cell>
-                <md-table-cell md-label="Response Time" md-sort-by="responseTimeMs">
-                    <relative-time :millis="item.responseTimeMs"></relative-time>
-                </md-table-cell>
-                <md-table-cell md-label="Status Code" md-sort-by="statusCode">{{
-                    item.statusCode
-                }}</md-table-cell>
-            </md-table-row>
+            <template v-slot:md-table-row="{ item }">
+                <md-table-row md-selectable="single">
+                    <md-table-cell md-label="ID" md-sort-by="runId">{{
+                        item.runId.substring(0, 8)
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Request Time" md-sort-by="requestTimeMs">
+                        <relative-time :millis="item.requestTimeMs"></relative-time>
+                    </md-table-cell>
+                    <md-table-cell md-label="Response Time" md-sort-by="responseTimeMs">
+                        <relative-time :millis="item.responseTimeMs"></relative-time>
+                    </md-table-cell>
+                    <md-table-cell md-label="Status Code" md-sort-by="statusCode">{{
+                        item.statusCode
+                    }}</md-table-cell>
+                </md-table-row>
+            </template>
 
             <template v-slot:md-table-pagination v-if="items.mdData.length > 0">
                 <div class="md-table-pagination">

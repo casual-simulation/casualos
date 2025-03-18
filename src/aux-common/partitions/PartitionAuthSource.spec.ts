@@ -1,8 +1,6 @@
 import { waitAsync } from '../test/TestHelpers';
-import {
-    PartitionAuthRequest,
-    PartitionAuthSource,
-} from './PartitionAuthSource';
+import type { PartitionAuthRequest } from './PartitionAuthSource';
+import { PartitionAuthSource } from './PartitionAuthSource';
 
 describe('PartitionAuthSource', () => {
     let source: PartitionAuthSource;
@@ -27,6 +25,7 @@ describe('PartitionAuthSource', () => {
                 type: 'inst',
                 inst: 'my-inst',
                 recordName: 'my-record',
+                branch: 'my-branch',
             },
         });
 
@@ -43,6 +42,7 @@ describe('PartitionAuthSource', () => {
                     type: 'inst',
                     inst: 'my-inst',
                     recordName: 'my-record',
+                    branch: 'my-branch',
                 },
             },
         ]);
@@ -57,6 +57,7 @@ describe('PartitionAuthSource', () => {
                 type: 'inst',
                 inst: 'my-inst',
                 recordName: 'my-record',
+                branch: 'my-branch',
             },
         });
 
@@ -81,6 +82,7 @@ describe('PartitionAuthSource', () => {
                 type: 'inst',
                 inst: 'my-inst',
                 recordName: 'my-record',
+                branch: 'my-branch',
             },
         });
 
@@ -97,6 +99,7 @@ describe('PartitionAuthSource', () => {
                     type: 'inst',
                     inst: 'my-inst',
                     recordName: 'my-record',
+                    branch: 'my-branch',
                 },
             },
         ]);
@@ -122,6 +125,7 @@ describe('PartitionAuthSource', () => {
                 type: 'inst',
                 inst: 'my-inst',
                 recordName: 'my-record',
+                branch: 'my-branch',
             },
         });
 
@@ -136,6 +140,7 @@ describe('PartitionAuthSource', () => {
                     type: 'inst',
                     inst: 'my-inst',
                     recordName: 'my-record',
+                    branch: 'my-branch',
                 },
             },
         ]);
@@ -157,6 +162,7 @@ describe('PartitionAuthSource', () => {
                 type: 'inst',
                 inst: 'my-inst',
                 recordName: 'my-record',
+                branch: 'my-branch',
             },
         });
 
@@ -173,6 +179,7 @@ describe('PartitionAuthSource', () => {
                     type: 'inst',
                     inst: 'my-inst',
                     recordName: 'my-record',
+                    branch: 'my-branch',
                 },
             },
         ]);
@@ -187,6 +194,7 @@ describe('PartitionAuthSource', () => {
                 type: 'inst',
                 inst: 'my-inst',
                 recordName: 'my-record',
+                branch: 'my-branch',
             },
         });
 
@@ -201,6 +209,7 @@ describe('PartitionAuthSource', () => {
                     type: 'inst',
                     inst: 'my-inst',
                     recordName: 'my-record',
+                    branch: 'my-branch',
                 },
             },
         ]);

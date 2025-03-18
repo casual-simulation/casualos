@@ -1,10 +1,9 @@
 import { createHash } from 'crypto';
+import type { Redis } from 'ioredis-mock';
+import MockRedisClient from 'ioredis-mock';
 
-// import { jest as Jest } from '@jest/globals';
-import { Options } from 'express-rate-limit';
-import MockRedisClient, { Redis } from 'ioredis-mock';
-
-import RedisStore, { RedisReply } from './index';
+import type { RedisReply } from './index';
+import RedisStore from './index';
 
 // The SHA of the script to evaluate
 let scriptSha: string | undefined;
@@ -66,7 +65,7 @@ describe('redis store test', () => {
             sendCommand: async (...args: string[]) => sendCommand(client, args),
             prefix: 'test-',
         });
-        store.init({ windowMs: 10 } as Options);
+        store.init({ windowMs: 10 });
 
         const key = 'store';
 
@@ -83,7 +82,7 @@ describe('redis store test', () => {
         const store = new RedisStore({
             sendCommand: async (...args: string[]) => sendCommand(client, args),
         });
-        store.init({ windowMs: 10 } as Options);
+        store.init({ windowMs: 10 });
 
         const key = 'test-store';
 
@@ -101,7 +100,7 @@ describe('redis store test', () => {
         const store = new RedisStore({
             sendCommand: async (...args: string[]) => sendCommand(client, args),
         });
-        store.init({ windowMs: 10 } as Options);
+        store.init({ windowMs: 10 });
 
         const key = 'test-store';
 
@@ -120,7 +119,7 @@ describe('redis store test', () => {
         const store = new RedisStore({
             sendCommand: async (...args: string[]) => sendCommand(client, args),
         });
-        store.init({ windowMs: 10 } as Options);
+        store.init({ windowMs: 10 });
 
         const key = 'test-store';
 
@@ -141,7 +140,7 @@ describe('redis store test', () => {
         const store = new RedisStore({
             sendCommand: async (...args: string[]) => sendCommand(client, args),
         });
-        store.init({ windowMs: 10 } as Options);
+        store.init({ windowMs: 10 });
 
         const key = 'test-store';
 
@@ -163,7 +162,7 @@ describe('redis store test', () => {
             sendCommand: async (...args: string[]) => sendCommand(client, args),
             resetExpiryOnChange: true,
         });
-        store.init({ windowMs: 60 } as Options);
+        store.init({ windowMs: 60 });
 
         const key = 'test-store';
 
@@ -192,7 +191,7 @@ describe('redis store test', () => {
                 sendCommand: async (...args: string[]) =>
                     sendCommand(client, args),
             });
-            store.init({ windowMs: 50 } as Options);
+            store.init({ windowMs: 50 });
 
             const keyOne = 'test-store-one';
             const keyTwo = 'test-store-two';

@@ -1,18 +1,20 @@
+import type {
+    ConnectionClient,
+    RemoteCausalRepoProtocol,
+    GenericHttpRequest,
+    GetRecordsEndpointAction,
+} from '@casual-simulation/aux-common';
 import {
     BotAction,
     hasValue,
     asyncResult,
     asyncError,
     APPROVED_SYMBOL,
-    ConnectionClient,
-    RemoteCausalRepoProtocol,
-    GenericHttpRequest,
-    GetRecordsEndpointAction,
     iterableNext,
     iterableThrow,
     iterableComplete,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     ListRecordDataAction,
     RecordEventAction,
     GetEventCountAction,
@@ -45,39 +47,41 @@ import {
     AISloydGenerateModelAction,
     RecordsCallProcedureAction,
 } from '@casual-simulation/aux-runtime';
-import { AuxConfigParameters } from '../vm/AuxConfig';
+import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
-import { BotHelper } from './BotHelper';
-import {
+import type { BotHelper } from './BotHelper';
+import type {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
     IssueMeetTokenResult,
-    isRecordKey,
     GrantMarkerPermissionResult,
-    RevokeMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
-    GetFileRecordResult,
     ReadFileResult,
     ReadFileFailure,
     ReportInstRequest,
     ReportInstResult,
     GrantResourcePermissionResult,
     RevokePermissionResult,
-    formatInstId,
     PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
+import {
+    isRecordKey,
+    RevokeMarkerPermissionResult,
+    GetFileRecordResult,
+    formatInstId,
     parseRecordKey,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
+import type { Observable } from 'rxjs';
 import {
-    Observable,
     ReplaySubject,
     Subject,
     connectable,
@@ -89,16 +93,16 @@ import {
     takeWhile,
 } from 'rxjs';
 import { DateTime } from 'luxon';
-import {
+import type {
     AIChatResponse,
     AIGenerateImageResponse,
     AIGenerateSkyboxResponse,
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import {
     RecordsClientInputs,
-    RecordsClientActions,
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
 
@@ -197,6 +201,15 @@ export class RecordsManager {
         'listWebhooks',
         'eraseWebhook',
         'runWebhook',
+        'recordNotification',
+        'getNotification',
+        'listNotifications',
+        'eraseNotification',
+        'subscribeToNotification',
+        'unsubscribeFromNotification',
+        'sendNotification',
+        'listNotificationSubscriptions',
+        'listUserNotificationSubscriptions',
     ]);
 
     /**
@@ -225,6 +238,13 @@ export class RecordsManager {
      */
     get onGetRoomOptions(): Observable<GetRoomOptions> {
         return this._onGetRoomOptions;
+    }
+
+    /**
+     * Gets a records client that can be used to make records requests.
+     */
+    get client(): ReturnType<typeof createRecordsClient> {
+        return this._client;
     }
 
     /**
@@ -1134,7 +1154,7 @@ export class RecordsManager {
 
     private async _joinRoom(event: JoinRoomAction) {
         try {
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(event, false);
 
             if (info.error) {
                 // if (hasValue(event.taskId)) {
@@ -2402,14 +2422,16 @@ export class RecordsManager {
         return info;
     }
 
-    private _getInfoFromEvent(
-        event: {
-            endpoint?: string;
-        },
+    /**
+     * Gets the information needed to call an API on the given endpoint.
+     * Returns a promise that resolves with the information. Resolves with null if there is no configured endpoint and one is not provided.
+     * @param endpoint The endpoint. If not specifed, then the default one will be used.
+     * @param authenticateIfNotLoggedIn Whether to authenticate the user if not logged in.
+     */
+    getInfoForEndpoint(
+        endpoint: string | null,
         authenticateIfNotLoggedIn: boolean
     ): Promise<RecordsEndpointInfo | null> {
-        let endpoint: string = event.endpoint;
-
         if (!endpoint) {
             endpoint = this._config.authOrigin;
             if (!endpoint) {
@@ -2418,6 +2440,16 @@ export class RecordsManager {
         }
 
         return this._getEndpointInfo(endpoint, authenticateIfNotLoggedIn);
+    }
+
+    private _getInfoFromEvent(
+        event: {
+            endpoint?: string;
+        },
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<RecordsEndpointInfo | null> {
+        let endpoint: string = event.endpoint;
+        return this.getInfoForEndpoint(endpoint, authenticateIfNotLoggedIn);
     }
 
     private async _publishUrl(

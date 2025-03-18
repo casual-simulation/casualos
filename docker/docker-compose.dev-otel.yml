@@ -23,7 +23,7 @@ services:
         ports:
             - '6379:6379'
     livekit:
-        image: livekit/livekit-server:v1.6.1
+        image: livekit/livekit-server:v1.8.0
         command: --config /etc/livekit.yaml
         restart: always
         depends_on:

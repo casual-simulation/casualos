@@ -1,4 +1,4 @@
-import { GenericQueryStringParameters } from '@casual-simulation/aux-common';
+import type { GenericQueryStringParameters } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface that represents an OpenID provider.

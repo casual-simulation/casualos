@@ -1,7 +1,9 @@
-import { Options as RateLimitConfiguration } from 'express-rate-limit';
-import { Options, RedisReply, SendCommandFn } from './types';
-
-import { RateLimiter, RateLimiterIncrementResult } from './RateLimiter';
+import type { Options, RedisReply, SendCommandFn } from './types';
+import type {
+    RateLimiter,
+    RateLimiterIncrementResult,
+    RateLimiterOptions,
+} from './RateLimiter';
 
 /**
  * A `Store` for the `express-rate-limit` package that stores hit counts in
@@ -103,7 +105,7 @@ class RedisStore implements RateLimiter {
      *
      * @param options {RateLimitConfiguration} - The options used to setup the middleware.
      */
-    init(options: RateLimitConfiguration) {
+    init(options: RateLimiterOptions) {
         this.windowMs = options.windowMs;
     }
 

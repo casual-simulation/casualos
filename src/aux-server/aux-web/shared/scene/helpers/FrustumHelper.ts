@@ -1,8 +1,8 @@
+import type { BufferAttribute } from '@casual-simulation/three';
 import {
     BufferGeometry,
     LineBasicMaterial,
     Color,
-    BufferAttribute,
     Vector3,
     Line,
     DynamicDrawUsage,

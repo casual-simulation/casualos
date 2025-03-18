@@ -1,16 +1,17 @@
+import type { Vector2 } from '@casual-simulation/three';
 import {
     Mesh,
     Object3D,
     Line,
     Vector3,
-    Vector2,
     BufferGeometry,
     Float32BufferAttribute,
     LineBasicMaterial,
     LineSegments,
 } from '@casual-simulation/three';
-import { GridLevel } from './GridLevel';
-import { Dictionary, flatMap, groupBy, minBy, sortBy } from 'lodash';
+import type { GridLevel } from './GridLevel';
+import type { Dictionary } from 'lodash';
+import { flatMap, groupBy, minBy, sortBy } from 'lodash';
 import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;

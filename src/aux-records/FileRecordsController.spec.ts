@@ -1,9 +1,8 @@
 import { RecordsStore } from './RecordsStore';
-import { RecordsController } from './RecordsController';
-import {
+import type { RecordsController } from './RecordsController';
+import type {
     EraseFileFailure,
     EraseFileSuccess,
-    FileRecordsController,
     ListedFile,
     ReadFileFailure,
     ReadFileSuccess,
@@ -11,12 +10,13 @@ import {
     RecordFileSuccess,
     UpdateFileRecordSuccess,
 } from './FileRecordsController';
-import {
-    FileRecordsStore,
+import { FileRecordsController } from './FileRecordsController';
+import type {
     GetFileRecordSuccess,
     UpdateFileFailure,
 } from './FileRecordsStore';
-import { PolicyController } from './PolicyController';
+import { FileRecordsStore } from './FileRecordsStore';
+import type { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
@@ -28,7 +28,7 @@ import {
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import { sortBy } from 'lodash';
-import { MemoryStore } from './MemoryStore';
+import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();

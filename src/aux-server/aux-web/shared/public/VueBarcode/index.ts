@@ -22,7 +22,7 @@
 
 import JsBarcode from 'jsbarcode';
 
-var VueBarcode = {
+let VueBarcode = {
    render: function (createElement: any) {
     return createElement('div', [
       createElement(this.elementTag, {
@@ -75,9 +75,9 @@ var VueBarcode = {
 };
 
 function render(){
-  var that = this;
+  let that = this;
 
-  var settings = {
+  let settings = {
     format: this.format,
     height: this.height,
     width: this.width,
@@ -108,8 +108,8 @@ function render(){
 }
 
 function removeUndefinedProps(obj: any) {
-  for (var prop in obj) {
-    if (obj.hasOwnProperty(prop) && obj[prop] === undefined) {
+  for (let prop in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, prop) && obj[prop] === undefined) {
       delete obj[prop];
     }
   }

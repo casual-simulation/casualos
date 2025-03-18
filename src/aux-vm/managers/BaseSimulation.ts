@@ -1,3 +1,7 @@
+import type {
+    StoredAux,
+    PartitionAuthMessage,
+} from '@casual-simulation/aux-common';
 import {
     botRemoved,
     parseSimulationId,
@@ -5,23 +9,23 @@ import {
     BotIndex,
     AuxPartitionConfig,
     LocalActions,
-    StoredAux,
     ConnectionIndicator,
-    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
-import { AuxVM } from '../vm/AuxVM';
+import type { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
-import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import { DeviceAction } from '@casual-simulation/aux-common';
-import { Simulation, SimulationOrigin } from './Simulation';
+import type { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
+import type { DeviceAction } from '@casual-simulation/aux-common';
+import type { Simulation } from './Simulation';
+import { SimulationOrigin } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.

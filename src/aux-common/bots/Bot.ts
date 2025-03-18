@@ -1,7 +1,7 @@
 import { type } from 'os';
-import { TagEditOp } from './AuxStateHelpers';
-import { BotModule, BotModuleResult } from './BotModule';
-import { Point2D } from './BotEvents';
+import type { TagEditOp } from './AuxStateHelpers';
+import type { BotModule, BotModuleResult } from './BotModule';
+import type { Point2D } from './BotEvents';
 
 export type PartialBot = Partial<Bot>;
 

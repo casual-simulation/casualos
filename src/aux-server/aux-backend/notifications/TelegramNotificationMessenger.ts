@@ -1,12 +1,15 @@
-import {
-    NotificationMessenger,
-    SlackOptions,
+import type {
+    SystemNotificationMessenger,
     TelegramOptions,
     UserInstReportNotification,
+} from '@casual-simulation/aux-records';
+import {
+    SlackOptions,
     formatNotificationAsString,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 import axios from 'axios';
 
 const TRACE_NAME = 'TelegramNotificationMessenger';
@@ -21,7 +24,9 @@ const SPAN_OPTIONS: SpanOptions = {
 /**
  * Defines a class that implements a notification messenger that sends notifications to Telegram.
  */
-export class TelegramNotificationMessenger implements NotificationMessenger {
+export class TelegramNotificationMessenger
+    implements SystemNotificationMessenger
+{
     private _options: TelegramOptions;
 
     constructor(options: TelegramOptions) {

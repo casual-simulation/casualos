@@ -1,11 +1,10 @@
 import { first } from '../common';
+import type { Transaction, YEvent } from 'yjs';
 import {
     applyUpdate,
     createRelativePositionFromTypeIndex,
     Doc,
     encodeStateAsUpdate,
-    Transaction,
-    YEvent,
     YTextEvent,
 } from 'yjs';
 import {

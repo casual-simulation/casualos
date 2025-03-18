@@ -1,5 +1,6 @@
 import { Vector2 } from '@casual-simulation/three';
-import { Subject, Observable, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 
 export class Viewport {
     /**

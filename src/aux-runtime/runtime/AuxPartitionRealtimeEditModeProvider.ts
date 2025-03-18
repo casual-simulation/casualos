@@ -1,8 +1,6 @@
-import {
-    AuxRealtimeEditModeProvider,
-    DEFAULT_REALTIME_EDIT_MODE,
-} from './AuxRealtimeEditModeProvider';
-import { AuxPartitions } from '@casual-simulation/aux-common';
+import type { AuxRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
+import { DEFAULT_REALTIME_EDIT_MODE } from './AuxRealtimeEditModeProvider';
+import type { AuxPartitions } from '@casual-simulation/aux-common';
 import { realtimeStrategyToRealtimeEditMode } from './Utils';
 import { RealtimeEditMode } from './RuntimeBot';
 

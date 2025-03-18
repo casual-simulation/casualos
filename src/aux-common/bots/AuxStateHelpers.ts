@@ -1,4 +1,4 @@
-import {
+import type {
     BotsState,
     PartialBotsState,
     Bot,
@@ -6,7 +6,7 @@ import {
 } from '../bots/Bot';
 import { splice } from '../utils';
 import { hasValue, convertToString } from '../bots/BotCalculations';
-import { VersionVector } from '../common';
+import type { VersionVector } from '../common';
 
 /**
  * The name of the property that indicates an object represents a tag edit.

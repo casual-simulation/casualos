@@ -1,7 +1,7 @@
 import { MAP_PORTAL } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { CameraRig } from '../../shared/scene/CameraRigFactory';
-import { Game } from '../../shared/scene/Game';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { CameraRig } from '../../shared/scene/CameraRigFactory';
+import type { Game } from '../../shared/scene/Game';
 import { MapSimulation3D } from './MapSimulation3D';
 
 export class PlayerMapSimulation3D extends MapSimulation3D {

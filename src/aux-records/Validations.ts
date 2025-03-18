@@ -81,7 +81,7 @@ export const NO_WHITESPACE_REGEX = /^\S*$/g;
 export const NO_SPECIAL_CHARACTERS_MESSAGE =
     'The value cannot not contain special characters.';
 export const NO_SPECIAL_CHARACTERS_REGEX =
-    /^[^!@#$%\^&*()\[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
+    /^[^!@#$%^&*()[\]{}\-_=+`~,./?;:'"\\<>|]*$/g;
 
 export const DISPLAY_NAME_VALIDATION = z
     .string()

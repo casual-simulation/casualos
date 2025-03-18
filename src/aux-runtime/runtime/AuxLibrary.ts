@@ -1,18 +1,104 @@
-import {
+import type {
     AuxGlobalContext,
     AsyncTask,
-    BotTimer,
     TimeoutOrIntervalTimer,
-    DEBUG_STRING,
-    debugStringifyFunction,
     AsyncIterableTask,
 } from './AuxGlobalContext';
+import {
+    BotTimer,
+    DEBUG_STRING,
+    debugStringifyFunction,
+} from './AuxGlobalContext';
+import type {
+    BotTags,
+    Bot,
+    ShowChatOptions,
+    BotAction,
+    BotsState,
+    CameraType,
+    BarcodeFormat,
+    PortalType,
+    ShowInputOptions,
+    LocalFormAnimationAction,
+    AsyncActions,
+    ShareOptions,
+    Easing,
+    BotAnchorPoint,
+    RuntimeBot,
+    BotSpace,
+    EaseType,
+    RegisterPrefixOptions,
+    OpenCircleWipeOptions,
+    SuperShoutAction,
+    ShowToastAction,
+    ShowJoinCodeAction,
+    RequestFullscreenAction,
+    ExitFullscreenAction,
+    ShowHtmlAction,
+    HideHtmlAction,
+    SetClipboardAction,
+    FocusOnBotAction,
+    ShowChatBarAction,
+    EnableARAction,
+    EnableVRAction,
+    DownloadAction,
+    ShowUploadAuxFileAction,
+    OpenQRCodeScannerAction,
+    ShowQRCodeAction,
+    OpenBarcodeScannerAction,
+    ShowBarcodeAction,
+    LoadServerAction,
+    UnloadServerAction,
+    ReplaceDragBotAction,
+    ShowInputForTagAction,
+    GoToDimensionAction,
+    GoToURLAction,
+    OpenURLAction,
+    OpenConsoleAction,
+    RejectAction,
+    FocusOnOptions,
+    SnapTarget,
+    AddDropSnapTargetsAction,
+    RecordingOptions,
+    Recording,
+    SyntheticVoice,
+    EnablePOVAction,
+    EnableCustomDraggingAction,
+    SetAppOutputAction,
+    AuthData,
+    PartialBotsState,
+    PartialBot,
+    ParsedBotLink,
+    ConvertGeolocationToWhat3WordsOptions,
+    BeginAudioRecordingAction,
+    MediaPermssionOptions,
+    ImageClassifierOptions,
+    ClassifyImagesOptions,
+    ClassifyImagesResult,
+    SnapGrid,
+    AddDropGridTargetsAction,
+    InstUpdate,
+    StartFormAnimationOptions,
+    StopFormAnimationOptions,
+    FormAnimationData,
+    WakeLockConfiguration,
+    EnableXROptions,
+    ShowConfirmOptions,
+    StoredAux,
+    StoredAuxVersion2,
+    StoredAuxVersion1,
+    Geolocation,
+    OpenPhotoCameraOptions,
+    Photo,
+    Point2D,
+    RecordLoomOptions,
+    LoomVideo,
+    LoomVideoEmbedMetadata,
+} from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
     trimTag,
     isBot,
-    BotTags,
-    Bot,
     BOT_SPACE_TAG,
     toast as toastMessage,
     getScriptIssues as scriptIssues,
@@ -27,7 +113,6 @@ import {
     tweenTo as calcTweenTo,
     showChat as calcShowChat,
     hideChat as calcHideChat,
-    ShowChatOptions,
     runScript,
     getMediaPermission as calcGetMediaPermission,
     getAverageFrameRate as calcGetAverageFrameRate,
@@ -64,18 +149,12 @@ import {
     localRotationTween as calcLocalRotationTween,
     animateTag as calcAnimateTag,
     showUploadFiles as calcShowUploadFiles,
-    BotAction,
     download,
-    BotsState,
-    CameraType,
-    BarcodeFormat,
     loadSimulation,
     unloadSimulation,
     getUploadState,
     addState,
-    PortalType,
     getPortalTag,
-    ShowInputOptions,
     KNOWN_PORTALS,
     openConsole,
     tagsOnBot,
@@ -85,67 +164,29 @@ import {
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
     DESTROY_ACTION_NAME,
-    LocalFormAnimationAction,
     ORIGINAL_OBJECT,
-    AsyncActions,
-    ShareOptions,
     getRemoteCount,
     getRemotes,
     listInstUpdates as calcListInstUpdates,
     getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
-    Easing,
     LocalPositionTweenAction,
     LocalRotationTweenAction,
-    BotAnchorPoint,
     calculateAnchorPoint,
     calculateAnchorPointOffset,
     getBotPosition as calcGetBotPosition,
     getBotRotation as calcGetBotRotation,
-    RuntimeBot,
     isRuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
     getBotScale,
     EDIT_TAG_SYMBOL,
-    BotSpace,
     EDIT_TAG_MASK_SYMBOL,
     AnimateTagOptions,
-    EaseType,
-    RegisterPrefixOptions,
-    OpenCircleWipeOptions,
     circleWipe,
     addDropSnap as calcAddDropSnap,
     addDropGrid as calcAddDropGrid,
-    SuperShoutAction,
-    ShowToastAction,
-    ShowJoinCodeAction,
-    RequestFullscreenAction,
-    ExitFullscreenAction,
-    ShowHtmlAction,
-    HideHtmlAction,
-    SetClipboardAction,
-    FocusOnBotAction,
-    ShowChatBarAction,
-    EnableARAction,
-    EnableVRAction,
-    DownloadAction,
-    ShowUploadAuxFileAction,
-    OpenQRCodeScannerAction,
-    ShowQRCodeAction,
-    OpenBarcodeScannerAction,
-    ShowBarcodeAction,
-    LoadServerAction,
-    UnloadServerAction,
     ImportAUXAction,
-    ReplaceDragBotAction,
-    ShowInputForTagAction,
-    GoToDimensionAction,
-    GoToURLAction,
-    OpenURLAction,
-    OpenConsoleAction,
-    RejectAction,
-    FocusOnOptions,
     animateToPosition,
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
@@ -155,85 +196,52 @@ import {
     getVoices as calcGetVoices,
     getGeolocation as calcGetGeolocation,
     cancelAnimation,
-    SnapTarget,
-    AddDropSnapTargetsAction,
-    RecordingOptions,
-    Recording,
-    SyntheticVoice,
     SpeakTextOptions,
-    EnablePOVAction,
     disablePOV,
     enablePOV,
-    EnableCustomDraggingAction,
     enableCustomDragging as calcEnableCustomDragging,
     MINI_PORTAL,
     registerCustomApp,
     setAppOutput,
-    SetAppOutputAction,
     unregisterCustomApp,
     requestAuthData as calcRequestAuthData,
-    AuthData,
     createBot,
     defineGlobalBot as calcDefineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
     convertToString,
     GET_TAG_MASKS_SYMBOL,
-    PartialBotsState,
-    PartialBot,
     isBotLink,
     parseBotLink,
     createBotLink,
-    ParsedBotLink,
     convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
-    ConvertGeolocationToWhat3WordsOptions,
-    BeginAudioRecordingAction,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
     meetFunction as calcMeetFunction,
-    MediaPermssionOptions,
     MediaPermissionAction,
     openImageClassifier as calcOpenImageClassifier,
     classifyImages as calcOpenClassifyImages,
     OpenImageClassifierAction,
-    ImageClassifierOptions,
-    ClassifyImagesOptions,
-    ClassifyImagesResult,
     isBotDate,
     DATE_TAG_PREFIX,
     parseBotDate,
-    SnapGrid,
-    AddDropGridTargetsAction,
     realNumberOrDefault,
-    InstUpdate,
     raycastFromCamera as calcRaycastFromCamera,
     raycastInPortal as calcRaycastInPortal,
     calculateRayFromCamera as calcCalculateRayFromCamera,
     bufferFormAddressGltf,
-    StartFormAnimationOptions,
     startFormAnimation as calcStartFormAnimation,
     stopFormAnimation as calcStopFormAnimation,
     listFormAnimations as calcListFormAnimations,
-    StopFormAnimationOptions,
-    FormAnimationData,
     calculateStringTagValue,
     createInitializationUpdate as calcCreateInitalizationUpdate,
     applyUpdatesToInst as calcApplyUpdatesToInst,
     configureWakeLock,
     getWakeLockConfiguration as calcGetWakeLockConfiguration,
-    WakeLockConfiguration,
-    EnableXROptions,
     analyticsRecordEvent as calcAnalyticsRecordEvent,
     KNOWN_TAGS,
-    ShowConfirmOptions,
     isStoredVersion2,
-    StoredAux,
-    StoredAuxVersion2,
-    StoredAuxVersion1,
     getCurrentInstUpdate as calcGetCurrentInstUpdate,
-    Geolocation,
     openPhotoCamera as calcOpenPhotoCamera,
-    OpenPhotoCameraOptions,
-    Photo,
     getEasing,
     enableCollaboration as calcEnableCollaboration,
     showAccountInfo as calcShowAccountInfo,
@@ -244,28 +252,40 @@ import {
     calculateViewportCoordinatesFromPosition as calcCalculateViewportCoordinatesFromPosition,
     calculateScreenCoordinatesFromViewportCoordinates as calcCalculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates as calcCalculateViewportCoordinatesFromScreenCoordinates,
-    Point2D,
     CameraPortal,
     capturePortalScreenshot as calcCapturePortalScreenshot,
     createStaticHtml as calcCreateStaticHtmlFromBots,
-    RecordLoomOptions,
     recordLoom,
-    LoomVideo,
     watchLoom,
-    LoomVideoEmbedMetadata,
     getLoomMetadata,
+    loadSharedDocument,
+    LoadSharedDocumentAction,
 } from '@casual-simulation/aux-common/bots';
-import {
+import type {
     AIChatOptions,
-    aiChat,
-    aiChatStream,
     AIGenerateSkyboxOptions,
-    aiGenerateSkybox,
     AIGenerateSkyboxAction,
     AIGenerateImageOptions,
     AIGenerateImageAction,
-    aiGenerateImage,
     RecordFileActionOptions,
+    JoinRoomActionOptions,
+    RoomOptions,
+    RoomTrackOptions,
+    SetRoomTrackOptions,
+    RoomRemoteOptions,
+    DataRecordOptions,
+    RecordActionOptions,
+    ListDataOptions,
+    AISloydGenerateModelOptions,
+    ListWebhooksOptions,
+    ListNotificationsOptions,
+    SendNotificationOptions,
+} from './RecordsEvents';
+import {
+    aiChat,
+    aiChatStream,
+    aiGenerateSkybox,
+    aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
     revokeRecordPermission as calcRevokeRecordPermission,
     grantInstAdminPermission as calcGrantInstAdminPermission,
@@ -281,13 +301,6 @@ import {
     getRoomTrackOptions as calcGetRoomTrackOptions,
     setRoomTrackOptions as calcSetRoomTrackOptions,
     getRoomRemoteOptions as calcGetRoomRemoteOptions,
-    JoinRoomActionOptions,
-    RoomOptions,
-    RoomTrackOptions,
-    SetRoomTrackOptions,
-    RoomRemoteOptions,
-    DataRecordOptions,
-    RecordActionOptions,
     listDataRecord,
     recordEvent as calcRecordEvent,
     getEventCount as calcGetEventCount,
@@ -298,10 +311,8 @@ import {
     getRecordData,
     eraseRecordData,
     recordFile as calcRecordFile,
-    ListDataOptions,
     listDataRecordByMarker,
     aiHumeGetAccessToken,
-    AISloydGenerateModelOptions,
     aiSloydGenerateModel,
     recordWebhook as calcRecordWebhook,
     getWebhook as calcGetWebhook,
@@ -309,7 +320,16 @@ import {
     listWebhooksByMarker as calcListWebhooksByMarker,
     eraseWebhook as calcEraseWebhook,
     runWebhook as calcRunWebhook,
-    ListWebhooksOptions,
+    recordNotification as calcRecordNotification,
+    getNotification as calcGetNotification,
+    listNotifications as calcListNotifications,
+    listNotificationsByMarker as calcListNotificationsByMarker,
+    eraseNotification as calcEraseNotification,
+    subscribeToNotification as calcSubscribeToNotification,
+    unsubscribeFromNotification as calcUnsubscribeFromNotification,
+    sendNotification as calcSendNotification,
+    listNotificationSubscriptions as calcListNotificationSubscriptions,
+    listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -320,13 +340,15 @@ import {
     flatMap,
     indexOf,
 } from 'lodash';
+import type {
+    DeviceSelector,
+    RemoteAction,
+    AvailablePermissions,
+} from '@casual-simulation/aux-common';
 import {
     Action,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
-    DeviceSelector,
-    RemoteAction,
-    AvailablePermissions,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
@@ -376,8 +398,8 @@ import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
-import { AuxDevice } from './AuxDevice';
-import { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
+import type { AuxVersion } from './AuxVersion';
 import {
     Vector3,
     Vector2,
@@ -387,33 +409,41 @@ import {
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
-import expect, { iterableEquality, Tester } from '@casual-simulation/expect';
+import type { Tester } from '@casual-simulation/expect';
+import expect, { iterableEquality } from '@casual-simulation/expect';
 import {
-    CreatePublicRecordKeyResult,
-    GetDataResult,
     parseRecordKey,
-    RecordDataResult,
-    RecordFileFailure,
     RecordFileResult,
     isRecordKey as calcIsRecordKey,
-    EraseDataResult,
-    EraseFileResult,
-    ListDataResult,
-    AddCountResult,
-    GetCountResult,
-    GrantMarkerPermissionResult,
     RevokeMarkerPermissionResult,
-    GrantRoleResult,
-    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import type {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
     GrantResourcePermissionResult,
     ListStudiosResult,
+    ListSubscriptionsResult,
+    NotificationRecord,
+    PushNotificationPayload,
+    PushSubscriptionType,
     ReportInstResult,
     RevokePermissionResult,
+    SendNotificationResult,
+    SubscribeToNotificationResult,
+    UnsubscribeToNotificationResult,
     WebhookRecord,
+    CreatePublicRecordKeyResult,
+    GetDataResult,
+    RecordDataResult,
+    RecordFileFailure,
+    EraseDataResult,
+    EraseFileResult,
+    ListDataResult,
+    AddCountResult,
+    GetCountResult,
+    GrantMarkerPermissionResult,
+    GrantRoleResult,
+    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -438,19 +468,18 @@ import {
 } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { CasualOSError } from './CasualOSError';
-import {
-    AIGenerateImageResponse,
+import type {
     AIGenerateImageSuccess,
     AIHumeGetAccessTokenResult,
     AISloydGenerateModelResponse,
 } from '@casual-simulation/aux-records/AIController';
-import {
+import { AIGenerateImageResponse } from '@casual-simulation/aux-records/AIController';
+import type {
     RuntimeActions,
     RuntimeAsyncActions,
     TagMapper,
-    attachRuntime,
-    detachRuntime,
 } from './RuntimeEvents';
+import { attachRuntime, detachRuntime } from './RuntimeEvents';
 import type {
     CrudEraseItemResult,
     CrudGetItemResult,
@@ -458,6 +487,7 @@ import type {
     CrudRecordItemResult,
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -472,6 +502,7 @@ const html: HtmlFunction = ((...args: any[]) => {
  */
 export interface HtmlFunction {
     (...args: any[]): any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     h: (name: string | Function, props: any, ...children: any[]) => any;
     f: any;
 }
@@ -1191,6 +1222,7 @@ export interface DebuggerBase {
      * @docreferenceactions ^web\.
      * @docsource WebActions
      */
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     web: {};
 
     /**
@@ -1199,6 +1231,7 @@ export interface DebuggerBase {
      * @docreferenceactions ^os\.
      * @docsource OSActions
      */
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     os: {};
 
     // /**
@@ -1213,6 +1246,7 @@ export interface DebuggerBase {
      * @docreferenceactions ^action\.
      * @docsource ActionActions
      */
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     action: {};
 
     // /**
@@ -3194,6 +3228,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getCurrentDimension,
                 getCurrentServer,
                 getCurrentInst: getCurrentServer,
+                getCurrentInstRecord,
                 getMenuDimension,
                 getMiniPortalDimension,
                 getPortalDimension,
@@ -3279,6 +3314,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listWebhooks,
                 listWebhooksByMarker,
 
+                recordNotification,
+                getNotification,
+                eraseNotification,
+                listNotifications,
+                listNotificationsByMarker,
+                subscribeToNotification,
+                unsubscribeFromNotification,
+                sendNotification,
+                listNotificationSubscriptions,
+                listUserNotificationSubscriptions,
+
                 recordFile,
                 getFile,
                 getPublicFile,
@@ -3318,6 +3364,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 mergeInstUpdates,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
+
+                getSharedDocument,
+                getLocalDocument,
+                getMemoryDocument,
 
                 beginAudioRecording,
                 endAudioRecording,
@@ -3478,6 +3528,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function botTimer(
         type: TimeoutOrIntervalTimer['type'],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         func: (handler: Function, timeout: number, ...args: any[]) => number,
         clearAfterHandlerIsRun: boolean
     ) {
@@ -3509,6 +3560,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         function () {
                             let result: ReturnType<typeof handler>;
                             try {
+                                // eslint-disable-next-line prefer-rest-params
                                 result = handler(...arguments);
                             } finally {
                                 context.removeBotTimer(
@@ -3527,6 +3579,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     timer = func(
                         function () {
                             context.processBotTimerResult(
+                                // eslint-disable-next-line prefer-rest-params
                                 handler(...arguments)
                             );
                         },
@@ -3840,7 +3893,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return [];
         }
         tag = trimTag(tag);
-        const filter = arguments[1];
+        const filter = filters[1];
 
         if (hasValue(filter)) {
             if (typeof filter === 'function') {
@@ -6051,6 +6104,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return {
             supportsAR: null as boolean,
             supportsVR: null as boolean,
+            supportsDOM: null as boolean,
             isCollaborative: null as boolean,
             allowCollaborationUpgrade: null as boolean,
             ab1BootstrapUrl: null as string,
@@ -7007,7 +7061,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     }
                 }
             }
-        } catch {}
+        } catch {
+            // Ignore errors
+        }
         const task = context.createTask();
         const event = calcImportAUX(urlOrJSON, task.taskId);
         return addAsyncAction(task, event);
@@ -7210,6 +7266,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return undefined;
         }
         return undefined;
+    }
+
+    /**
+     * Gets the record that the inst was loaded from.
+     * Null if the inst is local or public.
+     *
+     * @dochash actions/os/portals
+     * @docname os.getCurrentInstRecord
+     * @docgroup 10-config-values
+     */
+    function getCurrentInstRecord(): string | null {
+        const user = context.playerBot;
+        if (user) {
+            return getTag(user, 'record') ?? null;
+        }
+
+        return null;
     }
 
     /**
@@ -9489,6 +9562,324 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates or updates a [notification](glossary:notification-record) in the given record using the given options.
+     *
+     * Returns a promise that resolves with an object that contains whether the operation succeeded.
+     *
+     * @param recordName the name of the record.
+     * @param notification the notification that should be created or updated.
+     * @param options the options that should be used.
+     *
+     * @example Create a notification that anyone can subscribe to.
+     * await os.recordNotification('myRecord', {
+     *   address: 'notificationAddress',
+     *   description: 'my notification',
+     *   markers: ['publicRead']
+     * });
+     *
+     * @example Create a private notification.
+     * await os.recordNotification('myRecord', {
+     *   address: 'notificationAddress',
+     *   description: 'my notification',
+     *   markers: ['private']
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.recordNotification
+     */
+    function recordNotification(
+        recordName: string,
+        notification: NotificationRecord,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordNotification(
+            recordName,
+            notification,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the [notification](glossary:notification-record) from the given record.
+     *
+     * Returns a promise that resolves with the notification data.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.getWebhook
+     */
+    function getNotification(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<NotificationRecord>> {
+        const task = context.createTask();
+        const event = calcGetNotification(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Deletes the [notification](glossary:notification-record) from the given record.
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.eraseNotification
+     */
+    function eraseNotification(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcEraseNotification(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the notifications that are in the given record.
+     * @param recordName the name of the record.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotifications
+     */
+    function listNotifications(
+        recordName: string,
+        startingAddress: string = null,
+        options?: ListNotificationsOptions
+    ): Promise<CrudListItemsResult<NotificationRecord>> {
+        const task = context.createTask();
+        const event = calcListNotifications(
+            recordName,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Lists the webhooks that are in the given record.
+     * @param recordName the name of the record.
+     * @param marker The marker that needs to be assigned to the data items that should be included in the list.
+     * e.g. Using "publicRead" will return all data items with the "publicRead" marker.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the webhooks items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotificationsByMarker
+     */
+    function listNotificationsByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress: string = null,
+        options?: ListNotificationsOptions
+    ): Promise<CrudListItemsResult<NotificationRecord>> {
+        const task = context.createTask();
+        const event = calcListNotificationsByMarker(
+            recordName,
+            marker,
+            startingAddress,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Subscribes to the given notification in the given record.
+     *
+     * Returns a promise that resolves when the operation is complete.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification that should be subscribed to.
+     * @param options the options to use.
+     *
+     * @example Subscribe to a notification.
+     * await os.subscribeToNotification('myRecord', 'myNotificationAddress');
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.subscribeToNotification
+     */
+    function subscribeToNotification(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<SubscribeToNotificationResult> {
+        const task = context.createTask();
+        const event = calcSubscribeToNotification(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Unsubscribes from the given notification subscription.
+     *
+     * Returns a promise that resolves when the operation is complete.
+     *
+     * @param subscriptionId the ID of the subscription.
+     * @param options the options to use.
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.unsubscribeFromNotification
+     */
+    function unsubscribeFromNotification(
+        subscriptionId: string,
+        options?: RecordActionOptions
+    ): Promise<UnsubscribeToNotificationResult> {
+        const task = context.createTask();
+        const event = calcUnsubscribeFromNotification(
+            subscriptionId,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Sends a notification to all subscribers of the given notification in the given record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param payload the payload to send.
+     * @param options the options to use.
+     *
+     * @example Send a notification.
+     * await os.sendNotification('myRecord', 'myNotificationAddress', {
+     *     title: 'Hello',
+     *     body: 'This is your first notification!',
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.sendNotification
+     */
+    function sendNotification(
+        recordName: string,
+        address: string,
+        payload: PushNotificationPayload,
+        options?: SendNotificationOptions
+    ): Promise<SendNotificationResult> {
+        const task = context.createTask();
+        const event = calcSendNotification(
+            recordName,
+            address,
+            payload,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the list of subscriptions for the given notification in the given record.
+     *
+     * @param recordName the name of the record.
+     * @param address the address of the notification.
+     * @param options the options to use.
+     *
+     * @example List notification subscriptions.
+     * const result = await os.listNotificationSubscriptions('myRecord', 'myNotificationAddress');
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listNotificationSubscriptions
+     */
+    function listNotificationSubscriptions(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult> {
+        const task = context.createTask();
+        const event = calcListNotificationSubscriptions(
+            recordName,
+            address,
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
+     * Gets the list of notification subscriptions for the current user.
+     *
+     * @param options the options to use.
+     *
+     * @example List the current user's notification subscriptions.
+     * const result = await os.listUserNotificationSubscriptions();
+     *
+     * @dochash actions/os/records
+     * @docgroup 06-records
+     * @docname os.listUserNotificationSubscriptions
+     */
+    function listUserNotificationSubscriptions(
+        options?: RecordActionOptions
+    ): Promise<ListSubscriptionsResult> {
+        const task = context.createTask();
+        const event = calcListUserNotificationSubscriptions(
+            options ?? {},
+            task.taskId
+        );
+        const final = addAsyncResultAction(task, event);
+        (final as any)[ORIGINAL_OBJECT] = event;
+        return final;
+    }
+
+    /**
      * Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).
      *
      * Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
@@ -10757,6 +11148,90 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             undefined,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a shared document record from this inst by its name.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     *
+     * @param name The name of the shared document.
+     *
+     * @example Get a shared document from the current inst by name.
+     * const sharedDocument = await os.getSharedDocument('myDocument');
+     */
+    function getSharedDocument(name: string): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document record from the given inst by its name.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param recordName The name of the record. If null, then a public inst will be used.
+     * @param inst The name of the inst that the shared document is in.
+     * @param branch The name of the branch that the shared document is in.
+     */
+    function getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string
+    ): Promise<SharedDocument>;
+
+    function getSharedDocument(
+        recordOrName: string,
+        inst?: string,
+        name?: string
+    ): Promise<SharedDocument> {
+        const task = context.createTask();
+        let recordName: string;
+        let instName: string;
+        let branchName: string;
+
+        if (!inst && !name) {
+            instName = getCurrentServer();
+            recordName = getCurrentInstRecord();
+            branchName = recordOrName;
+        } else {
+            recordName = recordOrName;
+            instName = inst;
+            branchName = name;
+        }
+
+        const event = loadSharedDocument(
+            recordName,
+            instName,
+            `doc/${branchName}`,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a shared document that is only stored locally on this device.
+     * @param name The name of the document.
+     */
+    function getLocalDocument(name: string): Promise<SharedDocument> {
+        const task = context.createTask();
+        const event = loadSharedDocument(
+            null,
+            null,
+            `doc/${name}`,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a document that is not shared or saved to the device.
+     */
+    function getMemoryDocument(): Promise<SharedDocument> {
+        const task = context.createTask();
+        const event = loadSharedDocument(null, null, null, task.taskId);
         return addAsyncAction(task, event);
     }
 

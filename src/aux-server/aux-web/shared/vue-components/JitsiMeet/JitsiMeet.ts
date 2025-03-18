@@ -2,16 +2,16 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { EventBus } from '@casual-simulation/aux-components';
-import {
+import type {
     JitsiMeetExternalAPIOptions,
     JitsiApi,
-    JitsiParticipant,
     JitsiVideoConferenceJoinedEvent,
     JitsiVideoConferenceLeftEvent,
     JistiRecordingLinkAvailableEvent,
 } from './JitsiTypes';
+import { JitsiParticipant } from './JitsiTypes';
 
-declare var JitsiMeetExternalAPI: {
+declare let JitsiMeetExternalAPI: {
     new (domain: string, options: JitsiMeetExternalAPIOptions): JitsiApi;
 };
 

@@ -1,6 +1,6 @@
-import { UserInstReport } from './ModerationStore';
-import { formatNotificationAsString } from './NotificationMessenger';
-import { StudioComIdRequest } from './RecordsStore';
+import type { UserInstReport } from './ModerationStore';
+import { formatNotificationAsString } from './SystemNotificationMessenger';
+import type { StudioComIdRequest } from './RecordsStore';
 
 describe('formatNotificationAsString()', () => {
     it('should consistently format user inst report notifications', () => {

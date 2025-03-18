@@ -1,13 +1,13 @@
-import { FocusOnOptions } from '@casual-simulation/aux-common';
+import type { FocusOnOptions } from '@casual-simulation/aux-common';
+import type { Scene } from '@casual-simulation/three';
 import {
     PerspectiveCamera,
     OrthographicCamera,
-    Scene,
     Vector3,
     Group,
 } from '@casual-simulation/three';
-import { TweenCameraPosition } from './SceneUtils';
-import { Viewport } from './Viewport';
+import type { TweenCameraPosition } from './SceneUtils';
+import type { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;
 export const Orthographic_DefaultZoom: number = 8;

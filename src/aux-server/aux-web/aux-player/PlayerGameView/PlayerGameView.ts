@@ -1,14 +1,14 @@
 import Component from 'vue-class-component';
 import { Inject, Prop } from 'vue-property-decorator';
 
-import PlayerApp from '../PlayerApp/PlayerApp';
-import { IGameView } from '../../shared/vue-components/IGameView';
+import type PlayerApp from '../PlayerApp/PlayerApp';
+import type { IGameView } from '../../shared/vue-components/IGameView';
 import MenuBot from '../MenuBot/MenuBot';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { PlayerGame } from '../scene/PlayerGame';
-import { Game } from '../../shared/scene/Game';
+import type { Game } from '../../shared/scene/Game';
 import { map, tap, combineLatestWith } from 'rxjs/operators';
-import { DimensionItem } from '../DimensionItem';
+import type { DimensionItem } from '../DimensionItem';
 import { MenuPortal } from '../MenuPortal';
 import { appManager } from '../../shared/AppManager';
 import CircleWipe from '../../shared/vue-components/CircleWipe/CircleWipe';

@@ -9,10 +9,8 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { Input } from '../../scene/Input';
 import { Vector2 } from '@casual-simulation/three';
 import Tooltip from '../Tooltip/Tooltip';
@@ -31,7 +29,7 @@ export default class Tooltips extends Vue {
     private _hasCheckLoop: boolean = false;
 
     tooltips: TooltipInfo[] = [];
-    extraStyle: Object = {};
+    extraStyle: object = {};
 
     constructor() {
         super();

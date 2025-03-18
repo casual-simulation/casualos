@@ -1,4 +1,4 @@
-import {
+import type {
     AIChatInterface,
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
@@ -6,18 +6,11 @@ import {
     AIChatMessage,
 } from './AIChatInterface';
 import { traced } from './tracing/TracingDecorators';
-import {
-    SpanKind,
-    SpanOptions,
-    SpanStatusCode,
-    trace,
-} from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 import Anthropic from '@anthropic-ai/sdk';
-import {
-    ImageBlockParam,
-    Message,
-    TextBlockParam,
-} from '@anthropic-ai/sdk/resources';
+import type { Message } from '@anthropic-ai/sdk/resources';
+import { ImageBlockParam, TextBlockParam } from '@anthropic-ai/sdk/resources';
 
 const TRACE_NAME = 'AnthropicAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {

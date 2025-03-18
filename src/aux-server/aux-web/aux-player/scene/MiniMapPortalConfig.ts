@@ -1,11 +1,13 @@
+import type {
+    BotCalculationContext,
+    PrecalculatedBot,
+} from '@casual-simulation/aux-common';
 import {
     isDimensionLocked,
     DEFAULT_PORTAL_ZOOMABLE,
     DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
     calculateGridScale,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
@@ -18,14 +20,12 @@ import {
     calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
-import {
-    BrowserSimulation,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { PortalConfig } from './PortalConfig';
-import { TileableGrid3D } from '../../shared/scene/Grid3D';
+import type { TileableGrid3D } from '../../shared/scene/Grid3D';
 import { MapPortalConfig } from './MapPortalConfig';
 import { MiniPortalConfigHelper } from './MiniPortalConfigHelper';
 

@@ -1,5 +1,5 @@
 import { moderationSchema } from './ModerationConfiguration';
-import { notificationsSchema } from './NotificationMessenger';
+import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
 import { subscriptionConfigSchema } from './SubscriptionConfiguration';
 import { z } from 'zod';
@@ -602,6 +602,13 @@ const aiSchema = z.object({
                 .describe(
                     'The subscription tiers that are allowed to use Chat AI. If true, then all tiers are allowed.'
                 ),
+            tokenModifierRatio: z
+                .record(z.string(), z.number().positive())
+                .describe(
+                    'Custom token modifier ratio per model. The key is the model name and the value is the cost multiplier.'
+                )
+                .optional()
+                .default({}),
         })
         .describe('Options for Chat AI. If omitted, then chat AI is disabled.')
         .optional(),
@@ -695,6 +702,12 @@ const aiSchema = z.object({
                 .describe(
                     'The subscription tiers that are allowed to use Image AI. If true, then all tiers are allowed.'
                 ),
+            tokenModifierRatio: z
+                .record(z.string(), z.number().positive())
+                .describe(
+                    'Custom token modifier ratio per model. The key is the model name and the value is the cost multiplier.'
+                )
+                .optional(),
         })
         .describe(
             'Options for Image AI. If omitted, then Image AI is disabled.'
@@ -1063,11 +1076,6 @@ export const serverConfigSchema = z.object({
         )
         .optional(),
 
-    // auth: authSchema
-    //     .describe('Authentication configuration options.')
-    //     .optional()
-    //     .default({}),
-
     subscriptions: subscriptionConfigSchema
         .describe(
             'The default subscription configuration. If omitted, then subscription features will be disabled.'
@@ -1080,7 +1088,7 @@ export const serverConfigSchema = z.object({
         .optional(),
     notifications: notificationsSchema
         .describe(
-            'Notification configuration options. If omitted, then server notifications will be disabled.'
+            'System notification configuration options. Used to send messages for various events like user inst reports and com ID requests. If omitted, then server notifications will be disabled.'
         )
         .optional(),
     moderation: moderationSchema
@@ -1092,6 +1100,32 @@ export const serverConfigSchema = z.object({
     webhooks: webhooksSchema
         .describe(
             'Webhook configuration options. If omitted, then webhook features will be disabled.'
+        )
+        .optional(),
+
+    webPush: z
+        .object({
+            vapidSubject: z
+                .string()
+                .describe(
+                    'The subject that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+            vapidPublicKey: z
+                .string()
+                .describe(
+                    'The public key that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+            vapidPrivateKey: z
+                .string()
+                .describe(
+                    'The private key that should be used for sending web push notifications. You can generate VAPID keys using https://www.npmjs.com/package/web-push'
+                )
+                .min(1),
+        })
+        .describe(
+            'Web Push configuration options. If omitted, then web push notifications will be disabled.'
         )
         .optional(),
 

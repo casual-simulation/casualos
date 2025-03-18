@@ -1,24 +1,21 @@
 import { Physics } from '../../../shared/scene/Physics';
-import {
-    Bot,
-    BotTags,
-    getDropBotFromGridPosition,
-} from '@casual-simulation/aux-common/bots';
-import {
-    BotCalculationContext,
-    getBotPosition,
-} from '@casual-simulation/aux-common';
+import type { Bot, BotTags } from '@casual-simulation/aux-common/bots';
+import { getDropBotFromGridPosition } from '@casual-simulation/aux-common/bots';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
+import { getBotPosition } from '@casual-simulation/aux-common';
 import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/BaseModDragOperation';
-import { Vector2, Ray } from '@casual-simulation/three';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
-import { PlayerGame } from '../../scene/PlayerGame';
-import { Input, InputMethod } from '../../../shared/scene/Input';
+import type { Ray } from '@casual-simulation/three';
+import { Vector2 } from '@casual-simulation/three';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
+import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
+import type { PlayerGame } from '../../scene/PlayerGame';
+import type { InputMethod } from '../../../shared/scene/Input';
+import { Input } from '../../../shared/scene/Input';
 import { objectForwardRay } from '../../../shared/scene/SceneUtils';
-import { GridTile } from '../../../shared/scene/Grid3D';
+import type { GridTile } from '../../../shared/scene/Grid3D';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { SnapBotsInterface } from '../../../shared/interaction/DragOperation/SnapInterface';
+import type { SnapBotsInterface } from '../../../shared/interaction/DragOperation/SnapInterface';
 
 /**
  * Mod drag operation handles dragging mods

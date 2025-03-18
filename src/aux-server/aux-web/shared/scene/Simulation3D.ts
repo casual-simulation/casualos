@@ -1,36 +1,38 @@
+import type { Texture, Color } from '@casual-simulation/three';
 import {
     Object3D,
-    Texture,
-    Color,
     Vector2,
     Scene,
     Vector3,
     Matrix4,
     Quaternion,
 } from '@casual-simulation/three';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import {
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type {
     Bot,
     BotCalculationContext,
-    hasValue,
     PrecalculatedBot,
     BotIndexEvent,
     LocalActions,
     PortalCameraControlsMode,
+} from '@casual-simulation/aux-common';
+import {
+    hasValue,
     DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
     asyncResult,
     getBotShape,
 } from '@casual-simulation/aux-common';
-import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
-import { CameraRig } from './CameraRigFactory';
-import { Game } from './Game';
-import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { CameraRig } from './CameraRigFactory';
+import type { Game } from './Game';
+import type { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
-import {
+import type {
     UpdatedBotInfo,
     BotDimensionsUpdate,
     DimensionAddedEvent,
@@ -39,17 +41,18 @@ import {
     BotRemovedFromDimensionEvent,
     BotDimensionEvent,
 } from '@casual-simulation/aux-vm';
-import { DimensionGroup } from './DimensionGroup';
+import type { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
-import { Grid3D } from './Grid3D';
-import { CoordinateTransformer, latLonToCartesian } from './CoordinateSystem';
+import type { Grid3D } from './Grid3D';
+import type { CoordinateTransformer } from './CoordinateSystem';
+import { latLonToCartesian } from './CoordinateSystem';
 import { AnimationHelper } from './AnimationHelper';
 import {
     Rotation,
     Vector3 as CasualOSVector3,
 } from '@casual-simulation/aux-common/math';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that is able to render a simulation.

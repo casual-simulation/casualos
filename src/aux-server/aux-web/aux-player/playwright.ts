@@ -1,5 +1,5 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
-import { BotManager } from '@casual-simulation/aux-vm-browser';
+import type { BotManager } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
 import { Subscription } from 'rxjs';
 import { appManager } from '../shared/AppManager';

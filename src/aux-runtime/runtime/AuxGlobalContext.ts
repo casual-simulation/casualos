@@ -1,28 +1,31 @@
-import {
-    BotAction,
+import type {
     Bot,
     BotTags,
+    RuntimeBot,
+} from '@casual-simulation/aux-common/bots';
+import {
+    BotAction,
     isBot,
     PrecalculatedBot,
     botAdded,
     botRemoved,
     DEFAULT_ENERGY,
-    RuntimeBot,
     getOriginalObject,
     ORIGINAL_OBJECT,
     ImportFunc,
     ExportFunc,
 } from '@casual-simulation/aux-common/bots';
-import {
+import type {
     RuntimeBotFactory,
     RuntimeBotsState,
-    RealtimeEditMode,
     RuntimeBatcher,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import { AuxVersion } from './AuxVersion';
-import { AuxDevice } from './AuxDevice';
-import { ScriptError, RanOutOfEnergyError } from './AuxResults';
+import { RealtimeEditMode } from './RuntimeBot';
+import type { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
+import type { ScriptError } from './AuxResults';
+import { RanOutOfEnergyError } from './AuxResults';
 import {
     sortBy,
     sortedIndex,
@@ -31,13 +34,8 @@ import {
     transform,
 } from 'lodash';
 import './PerformanceNowPolyfill';
-import {
-    Observable,
-    ReplaySubject,
-    Subject,
-    Subscription,
-    SubscriptionLike,
-} from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -48,8 +46,8 @@ import type {
     InterpreterStop,
 } from '@casual-simulation/js-interpreter';
 import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
-import { RuntimeActions } from './RuntimeEvents';
-import seedrandom from 'seedrandom';
+import type { RuntimeActions } from './RuntimeEvents';
+import type seedrandom from 'seedrandom';
 import { GenericError } from './CasualOSError';
 
 /**

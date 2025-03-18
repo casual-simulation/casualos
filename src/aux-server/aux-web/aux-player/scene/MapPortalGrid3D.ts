@@ -1,12 +1,7 @@
-import { Grid3D, GridTile } from '../../shared/scene/Grid3D';
-import {
-    MathUtils,
-    Ray,
-    Sphere,
-    Vector2,
-    Vector3,
-} from '@casual-simulation/three';
-import { MapSimulation3D } from './MapSimulation3D';
+import type { Grid3D, GridTile } from '../../shared/scene/Grid3D';
+import type { Ray } from '@casual-simulation/three';
+import { MathUtils, Sphere, Vector2, Vector3 } from '@casual-simulation/three';
+import type { MapSimulation3D } from './MapSimulation3D';
 import { Input } from '../../shared/scene/Input';
 import {
     calculateGridTilePoints,

@@ -1,22 +1,21 @@
+import type { Matrix4, Camera } from '@casual-simulation/three';
 import {
     PerspectiveCamera,
     Vector3,
     Spherical,
     Vector2,
     Quaternion,
-    Matrix4,
     MathUtils as ThreeMath,
     OrthographicCamera,
     Plane,
-    Camera,
     Color,
     Euler,
     Matrix3,
 } from '@casual-simulation/three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
 import { clamp, lerp } from '@casual-simulation/aux-common';
-import { Viewport } from '../scene/Viewport';
-import { Game } from '../scene/Game';
+import type { Viewport } from '../scene/Viewport';
+import type { Game } from '../scene/Game';
 import {
     cameraForwardRay,
     cameraUpwardRay,
@@ -267,7 +266,7 @@ export class CameraControls {
         return Math.pow(0.95, this.zoomSpeed);
     }
 
-    public isEmptyState(): Boolean {
+    public isEmptyState(): boolean {
         return this.state === STATE.NONE || this.state === STATE.PASSTHROUGH;
     }
 

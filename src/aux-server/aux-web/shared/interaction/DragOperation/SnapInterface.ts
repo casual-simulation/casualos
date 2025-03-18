@@ -1,4 +1,9 @@
-import { SnapAxis, SnapPoint, SnapTarget, SnapGrid } from '@casual-simulation/aux-common';
+import type {
+    SnapAxis,
+    SnapPoint,
+    SnapTarget,
+    SnapGrid,
+} from '@casual-simulation/aux-common';
 import { sortBy } from 'lodash';
 
 export interface SnapOptions {
@@ -96,13 +101,16 @@ export class SnapBotsHelper implements SnapBotsInterface {
                 snapPoints: [],
                 snapAxes: [],
                 botId: botId,
-                snapGrids: sortBy(grids, g => -(g.priority ?? 0))
+                snapGrids: sortBy(grids, (g) => -(g.priority ?? 0)),
             };
 
             this._snapOptions.set(botId ?? null, options);
         } else {
             options.snapGrids.push(...grids);
-            options.snapGrids = sortBy(options.snapGrids, g => -(g.priority ?? 0));
+            options.snapGrids = sortBy(
+                options.snapGrids,
+                (g) => -(g.priority ?? 0)
+            );
         }
     }
 

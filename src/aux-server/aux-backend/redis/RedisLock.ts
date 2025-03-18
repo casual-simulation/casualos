@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
-import { RedisClientType, defineScript } from 'redis';
+import type { RedisClientType } from 'redis';
+import { defineScript } from 'redis';
 
 const releaseLock = defineScript({
     NUMBER_OF_KEYS: 1,

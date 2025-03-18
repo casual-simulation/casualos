@@ -1,5 +1,8 @@
-import { NotLoggedInError, ServerError } from '@casual-simulation/aux-common';
-import {
+import type {
+    NotLoggedInError,
+    ServerError,
+} from '@casual-simulation/aux-common';
+import type {
     ModerationFileScanResultLabel,
     ModerationFileScanResult,
     ModerationJob,
@@ -7,16 +10,14 @@ import {
     ReportReason,
     UserInstReport,
 } from './ModerationStore';
-import { ZodIssue } from 'zod';
+import type { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
-import {
-    NotificationMessenger,
-    RecordsNotification,
-} from './NotificationMessenger';
-import { ConfigurationStore } from './ConfigurationStore';
+import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
+import { RecordsNotification } from './SystemNotificationMessenger';
+import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import {
+import type {
     ModerationJobFilesFilter,
     ModerationJobProvider,
 } from './ModerationJobProvider';
@@ -29,13 +30,13 @@ const TRACE_NAME = 'ModerationController';
 export class ModerationController {
     private _store: ModerationStore;
     private _config: ConfigurationStore;
-    private _messenger: NotificationMessenger | null;
+    private _messenger: SystemNotificationMessenger | null;
     private _jobProvider: ModerationJobProvider;
 
     constructor(
         store: ModerationStore,
         config: ConfigurationStore,
-        messenger: NotificationMessenger | null,
+        messenger: SystemNotificationMessenger | null,
         jobProvider: ModerationJobProvider | null
     ) {
         this._store = store;

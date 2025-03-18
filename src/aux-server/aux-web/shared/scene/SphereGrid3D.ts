@@ -1,4 +1,4 @@
-import { Grid3D, GridTile } from '../../shared/scene/Grid3D';
+import type { Grid3D, GridTile } from '../../shared/scene/Grid3D';
 import {
     Color,
     EdgesGeometry,

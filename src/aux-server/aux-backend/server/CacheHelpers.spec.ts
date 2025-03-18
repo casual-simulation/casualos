@@ -1,6 +1,6 @@
+import type { CacheControlHeaderValues } from './CacheHelpers';
 import {
     parseCacheControlHeader,
-    CacheControlHeaderValues,
     formatCacheControlHeader,
 } from './CacheHelpers';
 

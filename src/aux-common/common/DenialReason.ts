@@ -1,15 +1,16 @@
-import {
+import type {
     ActionKinds,
-    AvailablePermissions,
     ResourceKinds,
     SubjectType,
 } from './PolicyPermissions';
-import { PrivacyFeatures } from './PrivacyFeatures';
+import { AvailablePermissions } from './PolicyPermissions';
+import type { PrivacyFeatures } from './PrivacyFeatures';
 
 export type DenialReason =
     | AuthorizeActionMissingPermission
     | AuthorizeActionTooManyMarkers
-    | AuthorizeActionDisabledPrivacyFeature;
+    | AuthorizeActionDisabledPrivacyFeature
+    | AuthorizeActionInvalidToken;
 
 export interface AuthorizeActionMissingPermission {
     type: 'missing_permission';
@@ -86,4 +87,8 @@ export interface AuthorizeActionDisabledPrivacyFeature {
 
 export interface AuthorizeActionTooManyMarkers {
     type: 'too_many_markers';
+}
+
+export interface AuthorizeActionInvalidToken {
+    type: 'invalid_token';
 }

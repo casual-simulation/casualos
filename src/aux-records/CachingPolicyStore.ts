@@ -1,11 +1,11 @@
-import {
+import type {
     ActionKinds,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerResult,
     AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
@@ -18,9 +18,10 @@ import {
     PolicyStore,
     ResourcePermissionAssignment,
     UpdateUserRolesResult,
-    getExpireTime,
+    UserPrivacyFeatures,
 } from './PolicyStore';
-import { Cache } from './Cache';
+import { getExpireTime } from './PolicyStore';
+import type { Cache } from './Cache';
 
 /**
  * Defines a policy store that uses a cache.
@@ -43,7 +44,7 @@ export class CachingPolicyStore implements PolicyStore {
     }
 
     // TODO: Add caching for these methods when needed.
-    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+    async getUserPrivacyFeatures(userId: string): Promise<UserPrivacyFeatures> {
         return await this._store.getUserPrivacyFeatures(userId);
     }
 

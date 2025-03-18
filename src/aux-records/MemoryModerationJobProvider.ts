@@ -1,10 +1,10 @@
-import {
+import type {
     ModerationFileScan,
     ModerationJobFilesFilter,
     ModerationJobProvider,
     ScanFileOptions,
 } from './ModerationJobProvider';
-import { ModerationJob } from './ModerationStore';
+import type { ModerationJob } from './ModerationStore';
 import { v4 as uuid } from 'uuid';
 
 /**

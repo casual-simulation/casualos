@@ -1,36 +1,37 @@
-import {
-    LocalActions,
+import type {
     BotAction,
     StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
     StoredAux,
-    AsyncResultAction,
-    ConnectionIndicator,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
+    LocalActions,
+    ProxyBridgePartitionImpl,
+    AsyncResultAction,
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Remote } from 'comlink';
+import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-vm/vm';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import {
-    StatusUpdate,
     remapProgressPercent,
-    DeviceAction,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import {
+import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm/RemoteAuxVM';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
@@ -150,13 +151,33 @@ export default class AuxVMImpl implements AuxVM {
             location.origin,
             this._id
         );
+
+        let enableDom = this._config.config.enableDom;
+        if (
+            enableDom &&
+            location.origin === origin &&
+            !this._config.config.debug
+        ) {
+            console.error(
+                '[AuxVMImpl] Cannot use DOM when origin is the same as the VM origin.'
+            );
+            console.error('[AuxVMImpl] Using WebWorker isolated VM.');
+            console.error(
+                '[AuxVMImpl] To use DOM, enable debug mode or use a separate VM origin.'
+            );
+            enableDom = false;
+        }
+
         if (this._relaxOrigin) {
             const baseOrigin = getBaseOrigin(origin);
             console.log('[AuxVMImpl] Relaxing origin to:', baseOrigin);
             origin = baseOrigin;
         }
         console.log('origin', origin);
-        const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
+        const iframeUrl = new URL(
+            enableDom ? '/aux-vm-iframe-dom.html' : '/aux-vm-iframe.html',
+            origin
+        ).href;
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -171,12 +192,22 @@ export default class AuxVMImpl implements AuxVM {
         });
         this._iframe = document.createElement('iframe');
         this._iframe.src = iframeUrl;
-        this._iframe.style.display = 'none';
+        if (!enableDom) {
+            this._iframe.style.display = 'none';
+        }
+        this._iframe.style.position = 'absolute';
+        this._iframe.style.height = '100%';
+        this._iframe.style.width = '100%';
         this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
         this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
 
         let promise = waitForLoad(this._iframe);
-        document.body.insertBefore(this._iframe, document.body.firstChild);
+        const iframeContainer = document.querySelector('.vm-iframe-container');
+        if (iframeContainer) {
+            iframeContainer.appendChild(this._iframe);
+        } else {
+            document.body.insertBefore(this._iframe, document.body.firstChild);
+        }
 
         await promise;
 
@@ -333,8 +364,12 @@ export default class AuxVMImpl implements AuxVM {
         this.closed = true;
         this._channel = null;
         this._proxy = null;
-        document.body.removeChild(this._iframe);
-        this._iframe = null;
+        if (this._iframe) {
+            if (this._iframe.parentNode) {
+                this._iframe.parentNode.removeChild(this._iframe);
+            }
+            this._iframe = null;
+        }
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();

@@ -1,3 +1,9 @@
+import type {
+    ManagedRealmOptions,
+    SourceTextModuleRecord,
+    Completion,
+    FunctionBody,
+} from '@casual-simulation/engine262';
 import {
     Agent,
     ManagedRealm,
@@ -15,8 +21,6 @@ import {
     // unwind,
     Evaluate,
     ScriptEvaluation,
-    ManagedRealmOptions,
-    SourceTextModuleRecord,
     ObjectValue,
     Call,
     IsCallable,
@@ -24,12 +28,10 @@ import {
     Get,
     Type,
     NullValue,
-    Completion,
     MakeBasicObject,
     OrdinaryObjectCreate,
     Construct,
     ECMAScriptNode,
-    FunctionBody,
     SameValue,
     CreateBuiltinFunction,
     runJobQueue,
@@ -50,17 +52,16 @@ import {
     CreateArrayFromList,
     wellKnownSymbols,
 } from '@casual-simulation/engine262';
-import {
+import type {
     Breakpoint,
     PossibleBreakpointLocation,
-    Interpreter,
-    traverse,
     VisitedNode,
     InterpreterAfterStop,
     InterpreterStop,
     InterpreterContinuation,
     InterpreterBeforeStop,
 } from './Interpreter';
+import { Interpreter, traverse } from './Interpreter';
 import {
     getInterpreterObject,
     getRegularObject,
@@ -1675,6 +1676,7 @@ describe('Interpreter', () => {
 
         it('should yield functions that return generators', () => {
             let abc = 'def';
+            // eslint-disable-next-line require-yield
             let obj = function* (value: any) {
                 abc = value;
                 return 999;

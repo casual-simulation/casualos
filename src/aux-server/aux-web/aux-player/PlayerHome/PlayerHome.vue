@@ -104,6 +104,17 @@
                 <span class="spacer"></span>
 
                 <md-button
+                    v-if="
+                        instSelection !== 'new-inst' &&
+                        ['local inst', 'local', 'static inst'].includes(biosSelection)
+                    "
+                    @click="
+                        executeBiosOption('delete inst', recordSelection, instSelection, joinCode)
+                    "
+                    >delete</md-button
+                >
+
+                <md-button
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
                     "

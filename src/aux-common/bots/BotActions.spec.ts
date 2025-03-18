@@ -1,12 +1,7 @@
-import {
-    goToDimension,
-    ApplyStateAction,
-    botAdded,
-    botRemoved,
-    botUpdated,
-} from './BotEvents';
+import type { ApplyStateAction } from './BotEvents';
+import { goToDimension, botAdded, botRemoved, botUpdated } from './BotEvents';
 import { v4 as uuid } from 'uuid';
-import { BotsState } from './Bot';
+import type { BotsState } from './Bot';
 import { createBot } from './BotCalculations';
 import { breakIntoIndividualEvents } from './BotActions';
 

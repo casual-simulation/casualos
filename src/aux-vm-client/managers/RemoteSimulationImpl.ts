@@ -1,9 +1,8 @@
-import { AuxVM, BaseSimulation, LoginManager } from '@casual-simulation/aux-vm';
-import { RemoteSimulation } from './RemoteSimulation';
-import {
-    PortalManager,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm/managers';
+import type { AuxVM } from '@casual-simulation/aux-vm/vm';
+import { BaseSimulation, LoginManager } from '@casual-simulation/aux-vm';
+import type { RemoteSimulation } from './RemoteSimulation';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
+import { PortalManager } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that provides an implementation of RemoteSimulation.

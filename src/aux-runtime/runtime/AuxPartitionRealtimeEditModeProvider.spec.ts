@@ -1,8 +1,8 @@
 import { AuxPartitionRealtimeEditModeProvider } from './AuxPartitionRealtimeEditModeProvider';
 import { RealtimeEditMode } from './RuntimeBot';
+import type { AuxPartitions } from '@casual-simulation/aux-common';
 import {
     createBot,
-    AuxPartitions,
     createMemoryPartition,
 } from '@casual-simulation/aux-common';
 

@@ -6,8 +6,9 @@ import {
     Loader,
     VideoTexture,
 } from '@casual-simulation/three';
-import { parseCasualOSUrl, addCorsQueryParam } from './SceneUtils';
+import { addCorsQueryParam } from './SceneUtils';
 import { appManager } from '../AppManager';
+import { parseCasualOSUrl } from '../UrlUtils';
 
 // TODO: Put a max size on the cache.
 const cache = new Map<string, Promise<Texture>>();
@@ -63,7 +64,7 @@ export class AuxTextureLoader {
                 // JPEGs can't have an alpha channel, so memory can be saved by storing them as RGB.
                 let isJPEG =
                     url.search(/\.jpe?g($|\?)/i) > 0 ||
-                    url.search(/^data\:image\/jpeg/) === 0;
+                    url.search(/^data:image\/jpeg/) === 0;
 
                 texture.format = isJPEG ? RGBFormat : RGBAFormat;
                 texture.needsUpdate = true;

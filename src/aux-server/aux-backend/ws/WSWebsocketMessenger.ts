@@ -1,14 +1,14 @@
-import {
+import type {
     PresignFileUploadResult,
     WebsocketMessenger,
 } from '@casual-simulation/aux-records';
-import {
+import type {
     UploadHttpHeaders,
     WebsocketEvent,
-    WebsocketEventTypes,
     WebsocketMessage,
 } from '@casual-simulation/aux-common';
-import { WebSocket } from 'ws';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common';
+import type { WebSocket } from 'ws';
 import { v4 as uuid } from 'uuid';
 
 export class WSWebsocketMessenger implements WebsocketMessenger {

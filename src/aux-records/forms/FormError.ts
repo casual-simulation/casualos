@@ -1,5 +1,5 @@
-import { KnownErrorCodes } from '@casual-simulation/aux-common';
-import { ZodIssue } from 'zod';
+import type { KnownErrorCodes } from '@casual-simulation/aux-common';
+import type { ZodIssue } from 'zod';
 
 export const EMAIL_FIELD = 'email';
 export const PARENT_EMAIL_FIELD = 'parentEmail';
@@ -43,6 +43,7 @@ export interface GenericResponse {
 
 const fieldMap: Map<KnownErrorCodes, string | null> = new Map([
     ['email_already_exists', EMAIL_FIELD],
+    ['child_email_already_exists', EMAIL_FIELD],
     ['parent_email_already_exists', PARENT_EMAIL_FIELD],
     ['parent_email_required', PARENT_EMAIL_FIELD],
     ['unacceptable_address', ADDRESS_FIELD],

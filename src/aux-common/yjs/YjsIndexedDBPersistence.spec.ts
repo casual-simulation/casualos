@@ -24,7 +24,8 @@
 // SOFTWARE.
 
 import { IDBFactory } from 'fake-indexeddb';
-import { Doc, Transaction, YEvent } from 'yjs';
+import type { Transaction, YEvent } from 'yjs';
+import { Doc } from 'yjs';
 import {
     YjsIndexedDBPersistence,
     PREFERRED_TRIM_SIZE,
@@ -140,7 +141,6 @@ describe('YjsIndexedDBPersistence', () => {
         const persistence = new YjsIndexedDBPersistence('test3', ydoc);
         persistence.set('a', 4);
         persistence.set(4, 'meta!');
-        // @ts-ignore
         persistence.set('obj', { a: 4 });
         const resA = await runTask(() => persistence.get('a'));
 

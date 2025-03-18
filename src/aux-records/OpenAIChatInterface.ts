@@ -1,5 +1,5 @@
 import { handleAxiosErrors } from './Utils';
-import {
+import type {
     AIChatInterface,
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
@@ -11,12 +11,8 @@ import {
 import axios from 'axios';
 import OpenAI from 'openai';
 import { traced } from './tracing/TracingDecorators';
-import {
-    SpanKind,
-    SpanOptions,
-    SpanStatusCode,
-    trace,
-} from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'OpenAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {

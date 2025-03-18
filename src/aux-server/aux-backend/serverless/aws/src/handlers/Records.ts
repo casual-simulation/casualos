@@ -1,6 +1,6 @@
 // Create clients and set shared const values outside of the handler.
 import '../Instrumentation';
-import {
+import type {
     GenericHttpRequest,
     GenericHttpHeaders,
 } from '@casual-simulation/aux-common';
@@ -15,7 +15,7 @@ import {
     FILES_BUCKET,
 } from '../../../../shared/LoadServer';
 import { S3FileRecordsStore } from '@casual-simulation/aux-records-aws';
-import { S3BatchEvent } from './S3Batch';
+import type { S3BatchEvent } from './S3Batch';
 import { z } from 'zod';
 
 const builder = constructServerlessAwsServerBuilder();

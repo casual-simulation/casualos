@@ -1,7 +1,8 @@
-import { Initable } from './Initable';
-import { Subject, Observable, Subscription, SubscriptionLike } from 'rxjs';
+import type { Initable } from './Initable';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
-import { Simulation } from './Simulation';
+import type { Simulation } from './Simulation';
 import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 export type SubSimEmitter = Pick<

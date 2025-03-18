@@ -20,11 +20,12 @@ import {
     takeUntil,
     tap,
 } from 'rxjs';
-import {
+import type {
     ClientConnectionState,
     ConnectionClient,
     WebsocketType,
 } from './ConnectionClient';
+import type { WebsocketMessage } from './WebsocketEvents';
 import {
     LoginMessage,
     WatchBranchMessage,
@@ -43,10 +44,9 @@ import {
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
     RateLimitExceededMessage,
-    WebsocketMessage,
 } from './WebsocketEvents';
-import { ConnectionIndicator } from '../common';
-import {
+import type { ConnectionIndicator } from '../common';
+import type {
     PartitionAuthResponse,
     PartitionAuthResponseSuccess,
     PartitionAuthSource,

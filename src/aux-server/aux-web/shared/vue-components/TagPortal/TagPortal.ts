@@ -1,11 +1,13 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import {
+import type {
     Bot,
-    hasValue,
     BotTags,
     PrecalculatedBot,
+} from '@casual-simulation/aux-common';
+import {
+    hasValue,
     calculateBotValue,
     calculateStringTagValue,
     TAG_PORTAL,
@@ -21,12 +23,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike, Subscription, Observable } from 'rxjs';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { tap } from 'rxjs/operators';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     BotManager,
     watchPortalConfigBot,
-    BrowserSimulation,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { TagPortalConfig } from './TagPortalConfig';
@@ -62,7 +64,7 @@ export default class TagPortal extends Vue {
     currentBot: Bot = null;
     currentSpace: string = null;
     currentTag: string = null;
-    extraStyle: Object = {};
+    extraStyle: object = {};
 
     private _tagSelectionEvents: Map<
         string,

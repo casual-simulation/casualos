@@ -1,4 +1,4 @@
-import {
+import type {
     AssignPermissionToSubjectAndMarkerResult,
     AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
@@ -10,20 +10,24 @@ import {
     MarkerPermissionAssignment,
     PolicyStore,
     ResourcePermissionAssignment,
-    RoleAssignment,
     UpdateUserRolesResult,
-    getExpireTime,
+    UserPrivacyFeatures,
+    UserRole,
 } from '@casual-simulation/aux-records';
-import { Prisma, PrismaClient } from './generated';
+import { RoleAssignment, getExpireTime } from '@casual-simulation/aux-records';
+import type { PrismaClient } from './generated';
+import { Prisma } from './generated';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
-import {
+import type {
     ActionKinds,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
+} from '@casual-simulation/aux-common';
+import {
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
@@ -41,7 +45,7 @@ export class PrismaPolicyStore implements PolicyStore {
     }
 
     @traced(TRACE_NAME)
-    async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {
+    async getUserPrivacyFeatures(userId: string): Promise<UserPrivacyFeatures> {
         const user = await this._client.user.findUnique({
             where: {
                 id: userId,
@@ -51,6 +55,7 @@ export class PrismaPolicyStore implements PolicyStore {
                 allowPublicData: true,
                 allowPublicInsts: true,
                 allowPublishData: true,
+                role: true,
             },
         });
 
@@ -60,6 +65,7 @@ export class PrismaPolicyStore implements PolicyStore {
                 allowPublicData: user.allowPublicData ?? true,
                 allowAI: user.allowAI ?? true,
                 allowPublicInsts: user.allowPublicInsts ?? true,
+                userRole: user.role as UserRole,
             };
         }
 

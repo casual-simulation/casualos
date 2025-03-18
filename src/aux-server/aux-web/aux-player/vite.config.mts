@@ -18,8 +18,11 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
+
+const ENABLE_DOM_ACCESS = process.env.ENABLE_DOM_ACCESS === 'true';
 
 const distDir = path.resolve(__dirname, '..', 'dist');
 const webxrProfilesDir = path.posix.resolve(
@@ -62,6 +65,10 @@ export default defineConfig(({ command, mode }) => ({
                           main: path.resolve(__dirname, 'index.html'),
                           player: path.resolve(__dirname, 'player.html'),
                           vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
+                          vmDom: path.resolve(
+                              __dirname,
+                              'aux-vm-iframe-dom.html'
+                          ),
                           playwright: path.resolve(
                               __dirname,
                               'playwright.html'
@@ -137,6 +144,10 @@ export default defineConfig(({ command, mode }) => ({
                               '**/NotoSansKR*',
                               '**/*.md',
                           ],
+                      },
+                      devOptions: {
+                          enabled: true,
+                          type: 'module',
                       },
                   }),
                   writeFilesPlugin({
@@ -269,7 +280,7 @@ export default defineConfig(({ command, mode }) => ({
     },
     server: {
         port: 3000,
-        host: '0.0.0.0',
+        host: '::',
         watch: {
             ignored: [
                 ...casualOsPackages.map((p) => `!**/node_modules/${p}/**`),

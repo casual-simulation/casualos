@@ -18,12 +18,13 @@
                                 ></bot-chat>
                             </div>
                         </md-toolbar>
+                        <div class="vm-iframe-container"></div>
                         <bot-sheet></bot-sheet>
                         <ide-portal></ide-portal>
                         <system-portal></system-portal>
-                        <md-content id="app-game-container">
-                            <router-view></router-view>
-                        </md-content>
+                        <router-view></router-view>
+                        <!-- <md-content id="app-game-container">
+                        </md-content> -->
                     </tag-portal>
                 </meet-portal>
             </bot-portal>
@@ -140,6 +141,17 @@
                 :md-active.sync="showAlertDialog"
                 v-bind:md-content="alertDialogOptions.body"
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
+            />
+
+            <md-dialog-confirm
+                :md-active.sync="showNotificationPermissionDialog"
+                class="confirm-dialog"
+                md-title="Allow notifications?"
+                v-bind:md-content="showNotificationPermissionMessage"
+                md-confirm-text="Allow"
+                md-cancel-text="Reject"
+                @md-confirm="onNotificationDialogConfirm()"
+                @md-cancel="onNotificationDialogCancel()"
             />
 
             <!-- <md-dialog

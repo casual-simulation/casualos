@@ -1,6 +1,6 @@
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import { BotCalculationContext } from '@casual-simulation/aux-common';
+import type { AuxBot3D } from '../AuxBot3D';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 
 /**
  * Defines a AuxBot3D decorator that updates the bot's world matrix.

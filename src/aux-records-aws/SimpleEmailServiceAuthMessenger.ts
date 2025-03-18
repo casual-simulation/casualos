@@ -1,9 +1,12 @@
-import {
+import type {
     AuthMessenger,
     SendCodeResult,
 } from '@casual-simulation/aux-records/AuthMessenger';
-import { AddressType } from '@casual-simulation/aux-records/AuthStore';
-import { SESv2, EmailContent as SESEmailContent } from '@aws-sdk/client-sesv2';
+import type { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import type {
+    SESv2,
+    EmailContent as SESEmailContent,
+} from '@aws-sdk/client-sesv2';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
 const TRACE_NAME = 'SimpleEmailServiceAuthMessenger';
@@ -128,7 +131,7 @@ export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
  */
 export function renderString(str: string, obj: any): string {
     return str.replace(
-        /\{\{[^\{\}]+\}\}/g,
+        /\{\{[^{}]+\}\}/g,
         (match) => obj[match.substring(2, match.length - 2)]
     );
 }

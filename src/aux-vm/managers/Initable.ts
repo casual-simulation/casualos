@@ -1,4 +1,4 @@
-import { Observable, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
 
 /**
  * Defines an interface for any object that can be initialized.

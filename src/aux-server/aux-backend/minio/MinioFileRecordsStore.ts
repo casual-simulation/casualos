@@ -1,5 +1,5 @@
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import {
+import type {
     AddFileResult,
     EraseFileStoreResult,
     FileRecordsLookup,
@@ -13,11 +13,12 @@ import {
     PresignFileReadResult,
     PresignFileUploadRequest,
     PresignFileUploadResult,
-    signRequest,
     UpdateFileResult,
 } from '@casual-simulation/aux-records';
+import { signRequest } from '@casual-simulation/aux-records';
 import * as Minio from 'minio';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { z } from 'zod';
 
 export const EMPTY_STRING_SHA256_HASH_HEX =

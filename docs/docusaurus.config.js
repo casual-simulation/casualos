@@ -66,11 +66,11 @@ export default {
             },
             {
                 label: 'Actions',
-                to: 'actions',
+                to: 'actions/ai',
             },
             {
                 label: 'Listen Tags',
-                to: 'listen-tags',
+                to: 'tags/listen',
             },
             {
                 label: 'Variables',

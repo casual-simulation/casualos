@@ -1,19 +1,15 @@
+import type { Mesh, MeshToonMaterial } from '@casual-simulation/three';
+import { Group, MathUtils as ThreeMath } from '@casual-simulation/three';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    Group,
-    Mesh,
-    MathUtils as ThreeMath,
-    MeshToonMaterial,
-} from '@casual-simulation/three';
-import {
-    BotCalculationContext,
     isUserActive,
     calculateBooleanTagValue,
     DEFAULT_PLAYER_USER_COLOR,
 } from '@casual-simulation/aux-common';
 import { disposeMesh, createUserCone, buildSRGBColor } from '../SceneUtils';
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import { IMeshDecorator } from './IMeshDecorator';
+import type { AuxBot3D } from '../AuxBot3D';
+import type { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 /**
  * Defines a class that represents a mesh for an "user" bot.

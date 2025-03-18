@@ -1,8 +1,8 @@
-import {
+import type {
     PrivoClientCredentials,
     PrivoStore,
 } from '@casual-simulation/aux-records/PrivoStore';
-import { PrismaClient } from './generated';
+import type { PrismaClient } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
 const TRACE_NAME = 'PrismaPrivoStore';

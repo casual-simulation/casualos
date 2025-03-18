@@ -1,28 +1,32 @@
 import prompts from 'prompts';
 import { Command } from 'commander';
-import {
-    RecordsClient,
-    createRecordsClient,
-} from '@casual-simulation/aux-records/RecordsClient';
+import type { RecordsClient } from '@casual-simulation/aux-records/RecordsClient';
+import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 import { askForInputs, onState } from './schema';
 import repl from 'node:repl';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Conf from 'conf';
 
-import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import {
+    getSessionKeyExpiration,
+    isExpired,
+    parseSessionKey,
+    willExpire,
+} from '@casual-simulation/aux-records/AuthUtils';
+import type {
     AddressType,
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
-    serverConfigSchema,
 } from '@casual-simulation/aux-records';
+import { serverConfigSchema } from '@casual-simulation/aux-records';
 import { PassThrough } from 'node:stream';
 import { getSchemaMetadata } from '@casual-simulation/aux-common';
 import path from 'path';
 import { readFile } from 'fs/promises';
 import { setupInfraCommands } from 'infra';
-import { CliConfig } from './config';
+import type { CliConfig } from './config';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -417,9 +421,10 @@ async function getClient(endpoint: string, key: string) {
 async function getOrRefreshSessionKey(endpoint: string) {
     const key = getSessionKey(endpoint);
 
-    if (isExpired(key)) {
+    const expiration = getSessionKeyExpiration(key);
+    if (isExpired(expiration)) {
         return null;
-    } else if (willExpire(key)) {
+    } else if (willExpire(expiration)) {
         return await replaceSessionKey(endpoint, key);
     }
 
@@ -445,30 +450,6 @@ function saveLoginResult(
         saveSessionKey(client.endpoint, result.sessionKey);
         client.sessionKey = result.sessionKey;
     }
-}
-
-function getExpiration(key: string): number {
-    const parsed = parseSessionKey(key);
-
-    if (!parsed) {
-        return 0;
-    }
-
-    const [userId, sessionId, secret, expireTimeMs] = parsed;
-
-    return expireTimeMs;
-}
-
-function isExpired(key: string) {
-    const expireTimeMs = getExpiration(key);
-    return expireTimeMs < Date.now();
-}
-
-function willExpire(key: string) {
-    const expireTimeMs = getExpiration(key);
-    const lifetimeMs = expireTimeMs - Date.now();
-    const refreshTimeMs = Math.max(lifetimeMs - REFRESH_LIFETIME_MS, 0);
-    return refreshTimeMs < 0;
 }
 
 async function login(client: ReturnType<typeof createRecordsClient>) {
@@ -703,7 +684,7 @@ function printStatus(endpoint: string) {
 
     const key = getSessionKey(endpoint);
     if (key) {
-        const expire = getExpiration(key);
+        const expire = getSessionKeyExpiration(key);
         if (expire < Date.now()) {
             console.log('The current session has expired.');
         } else {

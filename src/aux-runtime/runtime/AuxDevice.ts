@@ -19,6 +19,12 @@ export interface AuxDevice {
     supportsVR: boolean;
 
     /**
+     * Whether the device supports full Document Object Model features.
+     * See https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model for more info.
+     */
+    supportsDOM: boolean;
+
+    /**
      * Whether this device has enabled collaboration features.
      *
      * When creating a simulation, this property may be used to enable or disable features that facilitate users interacting with each other.

@@ -1,65 +1,66 @@
-import {
-    isTagEdit,
+import type {
     TagEditOp,
-    preserve,
-    del,
-    insert,
-    edit,
     TagEdit,
-    GetRemoteCountAction,
-    asyncResult,
     GetInstStateFromUpdatesAction,
-    asyncError,
     CreateInitializationUpdateAction,
     InstUpdate,
     ApplyUpdatesToInstAction,
     GetCurrentInstUpdateAction,
 } from '../bots';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
-    CausalRepoPartition,
+    isTagEdit,
+    preserve,
+    del,
+    insert,
+    edit,
+    GetRemoteCountAction,
+    asyncResult,
+    asyncError,
+} from '../bots';
+import type { Observable } from 'rxjs';
+import { Subscription, Subject, BehaviorSubject } from 'rxjs';
+import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
-    MemoryPartition,
 } from './AuxPartition';
-import {
+import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
+import type {
     BotAction,
     Bot,
     UpdatedBot,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     BotsState,
+    BotTags,
+} from '../bots';
+import {
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
     PartialBotsState,
     botAdded,
-    BotTags,
     createBot,
     botRemoved,
     hasValue,
     botUpdated,
     convertToString,
 } from '../bots';
-import {
+import type {
     PartitionConfig,
     PartitionRemoteEvents,
     YjsPartitionConfig,
 } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
+import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
-    Doc,
     Text,
     Map,
     applyUpdate,
-    Transaction,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    AbstractType,
-    YEvent,
     encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
@@ -69,15 +70,10 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
-import {
-    Action,
-    CurrentVersion,
-    RemoteActions,
-    StatusUpdate,
-    VersionVector,
-} from '../common';
-import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
+import type { RemoteActions, VersionVector } from '../common';
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 import { fromByteArray, toByteArray } from 'base64-js';
+import { YjsSharedDocument } from '../documents/YjsSharedDocument';
 
 const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
 
@@ -95,27 +91,16 @@ export function createYjsPartition(config: PartitionConfig): YjsPartition {
 type MapValue = Text | object | number | boolean;
 type TagsMap = Map<MapValue>;
 
-export class YjsPartitionImpl implements YjsPartition {
-    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
-
-    protected _onError = new Subject<any>();
-    protected _onEvents = new Subject<Action[]>();
-    protected _onStatusUpdated = new Subject<StatusUpdate>();
+export class YjsPartitionImpl
+    extends YjsSharedDocument
+    implements YjsPartition
+{
     protected _hasRegisteredSubs = false;
-    private _sub = new Subscription();
 
-    private _localId: number;
-    private _remoteId: number;
-    private _doc: Doc = new Doc();
     private _bots: Map<TagsMap>;
     private _masks: Map<MapValue>;
     private _internalPartition: MemoryPartitionImpl;
-    private _currentVersion: CurrentVersion;
-    private _indexeddb: YjsIndexedDBPersistence;
-    private _persistence: YjsPartitionConfig['localPersistence'];
-    private _isRemoteUpdate: boolean = false;
 
-    private _isLocalTransaction: boolean = true;
     private _remoteEvents: PartitionRemoteEvents | boolean;
     private _connectionId: string;
 
@@ -135,29 +120,13 @@ export class YjsPartitionImpl implements YjsPartition {
         return this._internalPartition.onStateUpdated;
     }
 
-    get onVersionUpdated(): Observable<CurrentVersion> {
-        return this._onVersionUpdated;
-    }
-
-    get onError(): Observable<any> {
-        return this._onError;
-    }
-
-    get onEvents(): Observable<Action[]> {
-        return this._onEvents;
-    }
-
-    get onStatusUpdated(): Observable<StatusUpdate> {
-        return this._onStatusUpdated;
-    }
-
     unsubscribe() {
         return this._sub.unsubscribe();
     }
 
-    get closed(): boolean {
-        return this._sub.closed;
-    }
+    // get doc() {
+    //     return this._doc;
+    // }
 
     get state(): BotsState {
         return this._internalPartition.state;
@@ -165,6 +134,7 @@ export class YjsPartitionImpl implements YjsPartition {
 
     type = 'yjs' as const;
     private: boolean;
+
     get space(): string {
         return this._internalPartition.space;
     }
@@ -177,38 +147,16 @@ export class YjsPartitionImpl implements YjsPartition {
         return 'immediate';
     }
 
-    get doc() {
-        return this._doc;
-    }
-
-    private get _remoteSite() {
-        return this._remoteId.toString();
-    }
-
-    private get _currentSite() {
-        return this._localId.toString();
-    }
-
     constructor(config: YjsPartitionConfig) {
+        super(config);
         this.private = config.private || false;
-        this._persistence = config.localPersistence;
         this._remoteEvents = config.remoteEvents;
         this._connectionId = config.connectionId;
-        this._localId = this._doc.clientID;
-        this._remoteId = new Doc().clientID;
         this._bots = this._doc.getMap('bots');
         this._masks = this._doc.getMap('masks');
         this._doc.on('afterTransaction', (transaction: Transaction) => {
             this._processTransaction(transaction);
         });
-        this._currentVersion = {
-            currentSite: this._localId.toString(),
-            remoteSite: this._remoteId.toString(),
-            vector: {},
-        };
-        this._onVersionUpdated = new BehaviorSubject<CurrentVersion>(
-            this._currentVersion
-        );
         this._internalPartition = new MemoryPartitionImpl({
             type: 'memory',
             initialState: {},
@@ -388,49 +336,6 @@ export class YjsPartitionImpl implements YjsPartition {
         return [];
     }
 
-    async init(): Promise<void> {}
-
-    connect(): void {
-        if (this._persistence?.saveToIndexedDb) {
-            console.log('[YjsPartition] Using IndexedDB persistence');
-            this._indexeddb = new YjsIndexedDBPersistence(
-                this._persistence.database,
-                this._doc,
-                { broadcastChanges: true }
-            );
-        }
-
-        this._onStatusUpdated.next({
-            type: 'connection',
-            connected: true,
-        });
-
-        this._onStatusUpdated.next({
-            type: 'authentication',
-            authenticated: true,
-        });
-
-        this._onStatusUpdated.next({
-            type: 'authorization',
-            authorized: true,
-        });
-
-        if (this._indexeddb) {
-            // wait to send the initial sync event until the persistence is ready
-            this._indexeddb.waitForInit().then(() => {
-                this._onStatusUpdated.next({
-                    type: 'sync',
-                    synced: true,
-                });
-            });
-        } else {
-            this._onStatusUpdated.next({
-                type: 'sync',
-                synced: true,
-            });
-        }
-    }
-
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
@@ -521,18 +426,6 @@ export class YjsPartitionImpl implements YjsPartition {
                 }
             }
         });
-    }
-
-    private _applyUpdates(updates: string[], transactionOrigin?: string) {
-        try {
-            this._isRemoteUpdate = true;
-            for (let updateBase64 of updates) {
-                const update = toByteArray(updateBase64);
-                applyUpdate(this._doc, update, transactionOrigin);
-            }
-        } finally {
-            this._isRemoteUpdate = false;
-        }
     }
 
     private async _processTransaction(transaction: Transaction) {

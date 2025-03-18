@@ -1,12 +1,13 @@
-import WebSocket, { Server } from 'ws';
-import {
+import { Server } from 'ws';
+import type {
     TunnelServer,
     TunnelRequestMapper,
     TunnelRequestFilter,
 } from '../TunnelServer';
-import { Server as HttpServer, IncomingMessage } from 'http';
-import { Socket, createServer, AddressInfo } from 'net';
-import {
+import type { Server as HttpServer, IncomingMessage } from 'http';
+import type { Socket } from 'net';
+import { createServer, AddressInfo } from 'net';
+import type {
     TunnelRequest,
     ForwardTunnelRequest,
     ReverseTunnelRequest,
@@ -21,13 +22,8 @@ import {
     handleUpgrade,
     completeWith,
 } from './utils';
-import {
-    Observable,
-    Subject,
-    Subscription,
-    Connectable,
-    connectable,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subject, Subscription, Connectable, connectable } from 'rxjs';
 import { mergeMap, tap, finalize, map } from 'rxjs/operators';
 
 export interface ServerOptions {

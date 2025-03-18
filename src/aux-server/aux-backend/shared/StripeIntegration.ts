@@ -1,4 +1,4 @@
-import {
+import type {
     StripeCheckoutRequest,
     StripeCheckoutResponse,
     StripeCreateCustomerRequest,
@@ -14,13 +14,14 @@ import {
     StripeSubscriptionItem,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 import {
     SEMATTRS_PEER_SERVICE,
     SEMRESATTRS_SERVICE_NAME,
     SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 
 const TRACE_NAME = 'StripeIntegration';
 const SPAN_OPTIONS: SpanOptions = {

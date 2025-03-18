@@ -1,18 +1,20 @@
+import type {
+    CompleteLoginSuccess,
+    ListSessionsSuccess,
+    RelyingParty,
+    RequestWebAuthnLoginSuccess,
+    RequestWebAuthnRegistrationSuccess,
+} from './AuthController';
 import {
     AuthController,
-    CompleteLoginSuccess,
     findRelyingPartyForOrigin,
     getPrivacyFeaturesFromPermissions,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_TOKEN_ERROR_MESSAGE,
-    ListSessionsSuccess,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
     OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
     PRIVO_OPEN_ID_PROVIDER,
-    RelyingParty,
-    RequestWebAuthnLoginSuccess,
-    RequestWebAuthnRegistrationSuccess,
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
@@ -41,22 +43,25 @@ import {
 } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
-import { PrivoClientInterface } from './PrivoClient';
-import {
+import type { PrivoClientInterface } from './PrivoClient';
+import type {
     VerifiedRegistrationResponse,
     VerifyAuthenticationResponseOpts,
-    verifyRegistrationResponse,
-    generateRegistrationOptions,
     GenerateRegistrationOptionsOpts,
-    generateAuthenticationOptions,
     GenerateAuthenticationOptionsOpts,
-    verifyAuthenticationResponse,
     VerifiedAuthenticationResponse,
 } from '@simplewebauthn/server';
 import {
+    verifyRegistrationResponse,
+    generateRegistrationOptions,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse,
+} from '@simplewebauthn/server';
+import type {
     PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
+import type { UserLoginMetadata } from './AuthStore';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -279,6 +284,7 @@ describe('AuthController', () => {
                     Infinity
                 ),
                 expireTimeMs: null,
+                metadata: expect.any(Object),
             });
 
             const user = await store.findUser('uuid1');
@@ -367,6 +373,7 @@ describe('AuthController', () => {
                 sessionKey: null,
                 connectionKey: null,
                 expireTimeMs: null,
+                metadata: expect.any(Object),
             });
 
             const user = await store.findUser('uuid1');
@@ -435,6 +442,12 @@ describe('AuthController', () => {
                     150 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
         });
 
@@ -1145,6 +1158,12 @@ describe('AuthController', () => {
                         150 + SESSION_LIFETIME_MS
                     ),
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(randomBytesMock).toHaveBeenCalledTimes(3);
@@ -1504,6 +1523,132 @@ describe('AuthController', () => {
                     errorMessage: 'The login request is invalid.',
                 });
             });
+
+            it('should include metadata after login is completed', async () => {
+                const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+                const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+                const sessionId = new Uint8Array([7, 8, 9]);
+                const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
+
+                await store.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                    currentLoginRequestId: requestId,
+                    allSessionRevokeTimeMs: undefined,
+                });
+
+                const findUserLoginMeta = (store.findUserLoginMetadata =
+                    jest.fn<Promise<UserLoginMetadata>, [string]>());
+                findUserLoginMeta.mockResolvedValueOnce({
+                    hasUserAuthenticator: true,
+                    userAuthenticatorCredentialIds: ['authenticatorId'],
+                    hasPushSubscription: true,
+                    pushSubscriptionIds: ['id1', 'id2'],
+                });
+
+                await store.saveLoginRequest({
+                    userId: 'myid',
+                    requestId: requestId,
+                    secretHash: hashLowEntropyPasswordWithSalt(code, requestId),
+                    expireTimeMs: 200,
+                    requestTimeMs: 100,
+                    completedTimeMs: null,
+                    attemptCount: 0,
+                    address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                nowMock.mockReturnValue(150);
+                randomBytesMock
+                    .mockReturnValueOnce(sessionId)
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
+
+                const response = await controller.completeLogin({
+                    userId: 'myid',
+                    requestId: requestId,
+                    code: code,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: true,
+                    userId: 'myid',
+                    sessionKey: formatV1SessionKey(
+                        'myid',
+                        fromByteArray(sessionId),
+                        fromByteArray(sessionSecret),
+                        150 + SESSION_LIFETIME_MS
+                    ),
+                    connectionKey: formatV1ConnectionKey(
+                        'myid',
+                        fromByteArray(sessionId),
+                        fromByteArray(connectionSecret),
+                        150 + SESSION_LIFETIME_MS
+                    ),
+                    expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: true,
+                        userAuthenticatorCredentialIds: ['authenticatorId'],
+                        hasPushSubscription: true,
+                        pushSubscriptionIds: ['id1', 'id2'],
+                    },
+                });
+
+                expect(randomBytesMock).toHaveBeenCalledTimes(3);
+                expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
+                expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+                expect(randomBytesMock).toHaveBeenNthCalledWith(3, 16); // Should request 16 bytes (128 bits) for the connection secret
+
+                expect(store.sessions).toEqual([
+                    {
+                        userId: 'myid',
+                        sessionId: fromByteArray(sessionId),
+
+                        // It should treat session secrets as high-entropy
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            fromByteArray(sessionSecret),
+                            fromByteArray(sessionId)
+                        ),
+                        connectionSecret: fromByteArray(connectionSecret),
+                        grantedTimeMs: 150,
+                        expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                        revokeTimeMs: null,
+                        requestId: requestId,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+                expect(store.loginRequests).toEqual([
+                    {
+                        userId: 'myid',
+                        requestId: requestId,
+                        secretHash: hashLowEntropyPasswordWithSalt(
+                            code,
+                            requestId
+                        ),
+                        expireTimeMs: 200,
+                        requestTimeMs: 100,
+                        completedTimeMs: 150,
+                        attemptCount: 0,
+                        address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+                expect(store.users).toEqual([
+                    {
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: requestId,
+                    },
+                ]);
+            });
         });
 
         describe('data validation', () => {
@@ -1718,6 +1863,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
@@ -1827,6 +1973,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
@@ -1928,6 +2075,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createChildAccount).toHaveBeenCalledWith({
@@ -2015,6 +2163,38 @@ describe('AuthController', () => {
             expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
         });
 
+        it('should return a unacceptable_request error code when given a child email that matches the parent email', async () => {
+            uuidMock.mockReturnValueOnce('userId');
+
+            privoClientMock.createChildAccount.mockResolvedValueOnce({
+                success: true,
+                parentServiceId: 'parentServiceId',
+                childServiceId: 'childServiceId',
+                features: [],
+                updatePasswordLink: 'link',
+                consentUrl: 'consentUrl',
+            });
+
+            const result = await controller.requestPrivoSignUp({
+                parentEmail: 'test@example.com',
+                name: 'test name',
+                displayName: 'displayName',
+                email: 'test@example.com',
+                dateOfBirth: new Date(2010, 1, 1),
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'The parent email must be different from the child email.',
+            });
+
+            expect(privoClientMock.createChildAccount).not.toHaveBeenCalled();
+            expect(privoClientMock.createAdultAccount).not.toHaveBeenCalled();
+        });
+
         it('should return a invalid_display_name error code when the display name contains the users name', async () => {
             uuidMock.mockReturnValueOnce('userId');
 
@@ -2073,6 +2253,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
@@ -2171,6 +2352,7 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: expect.any(Object),
             });
 
             expect(privoClientMock.createAdultAccount).toHaveBeenCalledWith({
@@ -2980,6 +3162,12 @@ describe('AuthController', () => {
                     400 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 400 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: true,
+                    userAuthenticatorCredentialIds: ['authenticatorId'],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             expect(randomBytesMock).toHaveBeenCalledTimes(3);
@@ -3128,6 +3316,12 @@ describe('AuthController', () => {
                     400 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 400 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: true,
+                    userAuthenticatorCredentialIds: ['authenticatorId'],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             expect(randomBytesMock).toHaveBeenCalledTimes(3);
@@ -3805,6 +3999,12 @@ describe('AuthController', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(await store.findOpenIDLoginRequest('requestId')).toEqual(
@@ -3969,6 +4169,12 @@ describe('AuthController', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(await store.findUser('userId')).toEqual({
@@ -4086,6 +4292,12 @@ describe('AuthController', () => {
                     sessionKey: expect.any(String),
                     connectionKey: expect.any(String),
                     expireTimeMs: Date.now() + SESSION_LIFETIME_MS,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 });
 
                 expect(await store.findUser('userId')).toEqual({
@@ -5539,6 +5751,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const validateResponse = await controller.validateSessionKey(
@@ -5607,6 +5825,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const validateResponse = await controller.validateSessionKey(
@@ -6331,6 +6555,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const token = generateV1ConnectionToken(
@@ -6409,6 +6639,12 @@ describe('AuthController', () => {
                 sessionKey: expect.any(String),
                 connectionKey: expect.any(String),
                 expireTimeMs: expect.any(Number),
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             const token = generateV1ConnectionToken(
@@ -7174,6 +7410,12 @@ describe('AuthController', () => {
                     150 + SESSION_LIFETIME_MS
                 ),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
+                metadata: {
+                    hasUserAuthenticator: false,
+                    userAuthenticatorCredentialIds: [],
+                    hasPushSubscription: false,
+                    pushSubscriptionIds: [],
+                },
             });
 
             expect(await store.findSession(userId, sessionId)).toEqual({

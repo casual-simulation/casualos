@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+import type { TranspilerResult } from './Transpiler';
 import {
     calculateFinalLineLocation,
     calculateOriginalLineLocation,
     Transpiler,
-    TranspilerResult,
 } from './Transpiler';
+import type { BotModule } from '@casual-simulation/aux-common/bots';
 import {
     isFormula,
     isScript,
     parseScript,
     hasValue,
-    BotModule,
     ImportFunc,
     ExportFunc,
     isModule,
@@ -37,7 +38,7 @@ import type {
     AsyncFunctionDeclaration,
     ReturnStatement,
 } from '@casual-simulation/engine262';
-import { CodeLocation } from './TranspilerUtils';
+import type { CodeLocation } from './TranspilerUtils';
 
 /**
  * A symbol that identifies a function as having been compiled using the AuxCompiler.
@@ -847,7 +848,7 @@ export class AuxCompiler {
         if (transpiled.metadata.isModule) {
             // All modules are async
             async = true;
-        } else if (script.indexOf('await ') >= 0) {
+        } else if (transpiled.metadata.isAsync) {
             async = true;
         }
         if (options.forceSync) {

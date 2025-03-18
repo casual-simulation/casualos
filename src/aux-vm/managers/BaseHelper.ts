@@ -1,8 +1,5 @@
-import {
-    BotsState,
-    getActiveObjects,
-    Bot,
-} from '@casual-simulation/aux-common';
+import type { BotsState, Bot } from '@casual-simulation/aux-common';
+import { getActiveObjects } from '@casual-simulation/aux-common';
 
 /**
  * Defines a base class for bot helper-like managers.

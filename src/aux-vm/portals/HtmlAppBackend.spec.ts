@@ -1,13 +1,16 @@
+import type {
+    AuxPartitions,
+    MemoryPartition,
+    UpdateHtmlAppAction,
+} from '@casual-simulation/aux-common';
 import {
     asyncResult,
-    AuxPartitions,
     BotAction,
     botAdded,
     createBot,
     createMemoryPartition,
     htmlAppEvent,
     iteratePartitions,
-    MemoryPartition,
     ON_APP_SETUP_ACTION_NAME,
     registerHtmlApp,
     setAppOutput,
@@ -15,9 +18,9 @@ import {
     toast,
     unregisterHtmlApp,
     updateHtmlApp,
-    UpdateHtmlAppAction,
 } from '@casual-simulation/aux-common';
-import { AuxRuntime, RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { HtmlAppBackend } from './HtmlAppBackend';
@@ -54,6 +57,7 @@ describe('HtmlAppBackend', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
@@ -82,6 +86,7 @@ describe('HtmlAppBackend', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',

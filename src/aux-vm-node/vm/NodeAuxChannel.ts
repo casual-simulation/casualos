@@ -1,21 +1,36 @@
-import {
+import type {
     RemoteAction,
+    AuxPartitionServices,
+} from '@casual-simulation/aux-common';
+import {
     ConnectionInfo,
     ConnectionIndicator,
     createYjsPartition,
     createRemoteClientYjsPartition,
-    AuxPartitionServices,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     PartitionConfig,
     AuxPartition,
+} from '@casual-simulation/aux-common';
+import {
     createAuxPartition,
     createMemoryPartition,
 } from '@casual-simulation/aux-common';
-import { AuxConfig, BaseAuxChannel } from '@casual-simulation/aux-vm';
-import { Observable, Subject } from 'rxjs';
-import { AuxRuntime } from '@casual-simulation/aux-runtime';
-import { createRemoteYjsPartition } from '@casual-simulation/aux-vm-client';
+import type { AuxConfig } from '@casual-simulation/aux-vm';
+import { BaseAuxChannel } from '@casual-simulation/aux-vm/vm';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { AuxRuntime } from '@casual-simulation/aux-runtime';
+import {
+    createRemoteYjsPartition,
+    createRemoteYjsSharedDocument,
+} from '@casual-simulation/aux-vm-client';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import type { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import { createSharedDocument } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import { createYjsSharedDocument } from '@casual-simulation/aux-common/documents/YjsSharedDocument';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _remoteEvents: Subject<RemoteAction[]>;
@@ -41,6 +56,19 @@ export class NodeAuxChannel extends BaseAuxChannel {
             (config) => createRemoteYjsPartition(config, services.authSource),
             (config) =>
                 createRemoteClientYjsPartition(config, services.authSource)
+        );
+    }
+
+    protected async _createSharedDocument(
+        config: RemoteSharedDocumentConfig,
+        services: SharedDocumentServices
+    ): Promise<SharedDocument> {
+        return await createSharedDocument(
+            config,
+            services,
+            (config, services) =>
+                createRemoteYjsSharedDocument(config, services.authSource),
+            createYjsSharedDocument
         );
     }
 

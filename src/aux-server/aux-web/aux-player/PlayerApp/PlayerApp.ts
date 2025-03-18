@@ -5,13 +5,24 @@ import { Tagline, EventBus } from '@casual-simulation/aux-components';
 import { appManager } from '../../shared/AppManager';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
-import { SubscriptionLike, Subscription } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
+import type {
+    BarcodeFormat,
+    CameraType,
+    SyntheticVoice,
+    Geolocation,
+    CreateStaticHtmlAction,
+    RecordLoomAction,
+    WatchLoomAction,
+    GetLoomMetadataAction,
+    GetScriptIssuesAction,
+} from '@casual-simulation/aux-common';
 import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
     calculateBotValue,
-    BarcodeFormat,
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
@@ -19,7 +30,6 @@ import {
     ON_SERVER_STREAMING_ACTION_NAME,
     ON_SERVER_STREAM_LOST_ACTION_NAME,
     ON_SERVER_UNSUBSCRIBED_ACTION_NAME,
-    CameraType,
     onServerStreamingArg,
     onServerStreamLostArg,
     onServerSubscribedArg,
@@ -29,9 +39,7 @@ import {
     asyncResult,
     ON_SERVER_JOINED_ACTION_NAME,
     ON_SERVER_LEAVE_ACTION_NAME,
-    SyntheticVoice,
     hasValue,
-    Geolocation,
     ON_INST_JOINED_ACTION_NAME,
     ON_INST_LEAVE_ACTION_NAME,
     ON_INST_STREAMING_ACTION_NAME,
@@ -40,23 +48,18 @@ import {
     ON_BEGIN_AUDIO_RECORDING,
     ON_END_AUDIO_RECORDING,
     action,
-    CreateStaticHtmlAction,
-    RecordLoomAction,
-    WatchLoomAction,
-    GetLoomMetadataAction,
-    GetScriptIssuesAction,
 } from '@casual-simulation/aux-common';
-import SnackbarOptions from '../../shared/SnackbarOptions';
+import type SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import { findIndex, merge } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
-import { Simulation, LoginState } from '@casual-simulation/aux-vm';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { SidebarItem } from '../../shared/vue-components/BaseGameView';
-import { ConnectionInfo } from '@casual-simulation/aux-common';
+import type { Simulation, LoginState } from '@casual-simulation/aux-vm';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { SidebarItem } from '../../shared/vue-components/BaseGameView';
+import type { ConnectionInfo } from '@casual-simulation/aux-common';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import VueBarcode from '../../shared/public/VueBarcode';
@@ -67,9 +70,11 @@ import ClipboardModal from '../../shared/vue-components/ClipboardModal/Clipboard
 import UploadServerModal from '../../shared/vue-components/UploadServerModal/UploadServerModal';
 import download from 'downloadjs';
 import BotChat from '../../shared/vue-components/BotChat/BotChat';
-import { SimulationInfo, createSimulationInfo } from '../../shared/RouterUtils';
+import type { SimulationInfo } from '../../shared/RouterUtils';
+import { createSimulationInfo } from '../../shared/RouterUtils';
 import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
-import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
+import type { BotRenderer } from '../../shared/scene/BotRenderer';
+import { getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import ShowConfirmModal from '../../shared/vue-components/ShowConfirmModal/ShowConfirmModal';
@@ -77,12 +82,10 @@ import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
 import IdePortal from '../../shared/vue-components/IdePortal/IdePortal';
-import {
-    AudioRecorder,
-    AudioRecording,
-    createDefaultAudioRecorder,
-} from '../../shared/AudioRecorder';
-import { MediaRecording, Recorder } from '../../shared/Recorder';
+import type { AudioRecorder, AudioRecording } from '../../shared/AudioRecorder';
+import { createDefaultAudioRecorder } from '../../shared/AudioRecorder';
+import type { MediaRecording } from '../../shared/Recorder';
+import { Recorder } from '../../shared/Recorder';
 import ImuPortal from '../../shared/vue-components/ImuPortal/ImuPortal';
 import HtmlAppContainer from '../../shared/vue-components/HtmlAppContainer/HtmlAppContainer';
 import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal';
@@ -98,11 +101,12 @@ import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
 import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRModal';
 import { oembed } from '@loomhq/loom-embed';
-import {
-    createInstance as createLoomInstance,
-    SDKResult as LoomSDKResult,
-} from '@loomhq/record-sdk';
+import type { SDKResult as LoomSDKResult } from '@loomhq/record-sdk';
+import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
+import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
+import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
+import type { NotificationRecord } from '@casual-simulation/aux-records';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -122,9 +126,9 @@ if (window.speechSynthesis) {
 declare function sa_event(
     name: string,
     metadata: any,
-    callback: Function
+    callback: () => void
 ): void;
-declare function sa_event(name: string, callback: Function): void;
+declare function sa_event(name: string, callback: () => void): void;
 
 @Component({
     components: {
@@ -314,6 +318,12 @@ export default class PlayerApp extends Vue {
     private _notAuthorizedSimulationId: string;
     showChangeLogin: boolean = false;
     private _isLoggingIn: boolean = false;
+
+    showNotificationPermissionDialog: boolean = false;
+    showNotificationPermissionMessage: string =
+        'Do you want to allow notifications?';
+    private _showNotificationPermissionResolve: (result: boolean) => void =
+        null;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -934,6 +944,8 @@ export default class PlayerApp extends Vue {
                                     stream: e.stream,
                                     compileFullAudioBuffer: !e.stream,
                                     sampleRate: e.sampleRate,
+                                    bufferRateMiliseconds:
+                                        e.bufferRateMilliseconds,
                                 });
 
                             if (e.stream) {
@@ -1250,6 +1262,8 @@ export default class PlayerApp extends Vue {
                     this._getLoomMetadata(e, simulation);
                 } else if (e.type === 'get_script_issues') {
                     this._getScriptIssues(e, simulation);
+                } else if (e.type === 'subscribe_to_notification') {
+                    this._subscribeToNotification(e, simulation);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
@@ -1402,6 +1416,169 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this.setTitleToID();
+    }
+
+    private async _subscribeToNotification(
+        event: SubscribeToNotificationAction,
+        simulation: BrowserSimulation
+    ) {
+        try {
+            const endpoint =
+                event.options?.endpoint ?? appManager.config.authOrigin;
+            if (endpoint !== appManager.config.authOrigin) {
+                sendNotSupported(
+                    'Push notifications are only supported for the default auth server.'
+                );
+                return;
+            }
+            if (!('serviceWorker' in navigator)) {
+                sendNotSupported(
+                    'Push notifications are not supported on this device.'
+                );
+                return;
+            }
+            appManager.updateServiceWorker();
+
+            const registration = (await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Service worker not ready.'));
+                    }, 15000);
+                }),
+            ])) as ServiceWorkerRegistration;
+
+            if (!registration.pushManager) {
+                sendNotSupported(
+                    'Push notifications are not supported on this device.'
+                );
+                return;
+            }
+
+            const info = await simulation.records.getInfoForEndpoint(
+                event.options?.endpoint,
+                false
+            );
+
+            if (!info) {
+                sendNotSupported('Records are not supported on this inst.');
+                return;
+            }
+
+            let sub = await registration.pushManager.getSubscription();
+
+            if (!sub) {
+                const granted = await this._requestNotificationPermission(
+                    `Do you want to allow notifications?`
+                );
+                if (!granted) {
+                    sendNotSupported(
+                        'The user denied permission to send notifications.'
+                    );
+                    return;
+                }
+
+                const key =
+                    await simulation.records.client.getNotificationsApplicationServerKey(
+                        undefined,
+                        {
+                            sessionKey: info.token,
+                            endpoint: info.recordsOrigin,
+                        }
+                    );
+
+                if (key.success === false) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, key)
+                    );
+                    return;
+                }
+
+                sub = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: key.key,
+                });
+            }
+
+            const notification =
+                await simulation.records.client.getNotification(
+                    {
+                        recordName: event.recordName,
+                        address: event.address,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+            if (notification.success === false) {
+                if (hasValue(event.taskId)) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, notification)
+                    );
+                }
+                return;
+            }
+
+            const granted = await this._requestNotificationPermission(
+                `Do you want to subscribe to notifications for ${notification.item.address}?`
+            );
+            if (!granted) {
+                sendNotSupported(
+                    'The user denied permission to send notifications.'
+                );
+                return;
+            }
+
+            simulation.records.handleEvents([
+                recordsCallProcedure(
+                    {
+                        subscribeToNotification: {
+                            input: {
+                                recordName: event.recordName,
+                                address: event.address,
+                                pushSubscription: sub.toJSON(),
+                            },
+                        },
+                    },
+                    event.options,
+                    event.taskId
+                ),
+            ]);
+
+            function sendNotSupported(message: string) {
+                if (hasValue(event.taskId)) {
+                    simulation.helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: message,
+                        })
+                    );
+                }
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                simulation.helper.transaction(
+                    asyncError(event.taskId, err.toString())
+                );
+            }
+            console.error('Error subscribing to notification:', err);
+        }
+    }
+
+    /**
+     * Requests that the user grant permission to send notifications.
+     * @param message The message to show the user.
+     * @returns A promise that resolves to true if the user granted permission.
+     */
+    private async _requestNotificationPermission(message: string) {
+        this.showNotificationPermissionMessage = message;
+        this.showNotificationPermissionDialog = true;
+        return new Promise<boolean>((resolve, reject) => {
+            this._showNotificationPermissionResolve = resolve;
+        });
     }
 
     private async _getScriptIssues(
@@ -1758,6 +1935,20 @@ export default class PlayerApp extends Vue {
 
         console.log('[PlayerApp] handleShowNavigation: ' + show);
         this.showNavigation = show;
+    }
+
+    async onNotificationDialogConfirm() {
+        let resolve = this._showNotificationPermissionResolve;
+        if (resolve) {
+            const result = await Notification.requestPermission();
+            resolve(result === 'granted');
+        }
+    }
+
+    onNotificationDialogCancel() {
+        if (this._showNotificationPermissionResolve) {
+            this._showNotificationPermissionResolve(false);
+        }
     }
 
     private onShowConfirmDialog(options: ConfirmDialogOptions) {

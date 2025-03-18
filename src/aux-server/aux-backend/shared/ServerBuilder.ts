@@ -1,93 +1,92 @@
+import type {
+    AuthStore,
+    DataRecordsStore,
+    EventRecordsStore,
+    FileRecordsStore,
+    PolicyStore,
+    RecordsStore,
+    Record,
+    AIChatInterface,
+    MetricsStore,
+    WebsocketConnectionStore,
+    InstRecordsStore,
+    WebsocketMessenger,
+    TemporaryInstRecordsStore,
+    MultiCache,
+    ModerationStore,
+    RelyingParty,
+    ServerConfig,
+    RedisServerOptions,
+    ModerationJobProvider,
+    WebhookRecordsStore,
+    WebhookEnvironment,
+    NotificationRecordsStore,
+    WebPushInterface,
+} from '@casual-simulation/aux-records';
 import {
     AuthController,
-    AuthStore,
     DataRecordsController,
-    DataRecordsStore,
     EventRecordsController,
-    EventRecordsStore,
     FileRecordsController,
-    FileRecordsStore,
     PolicyController,
-    PolicyStore,
     RateLimitController,
     RecordKey,
     RecordsController,
     RecordsServer,
-    RecordsStore,
     SubscriptionController,
-    Record,
     OpenAIChatInterface,
-    AIChatInterface,
     BlockadeLabsGenerateSkyboxInterface,
     OpenAIImageInterface,
     StabilityAIImageInterface,
-    MetricsStore,
     WebsocketController,
-    WebsocketConnectionStore,
-    InstRecordsStore,
-    WebsocketMessenger,
     SplitInstRecordsStore,
-    TemporaryInstRecordsStore,
-    MultiCache,
     CachingPolicyStore,
     CachingConfigStore,
     notificationsSchema,
-    NotificationMessenger,
+    SystemNotificationMessenger,
     MultiNotificationMessenger,
     ModerationController,
-    ModerationStore,
     GoogleAIChatInterface,
-    RelyingParty,
     LoomController,
-    ServerConfig,
-    RedisServerOptions,
     AnthropicAIChatInterface,
-    ModerationJobProvider,
     WebhookRecordsController,
-    WebhookRecordsStore,
-    WebhookEnvironment,
     cleanupObject,
+    NotificationRecordsController,
 } from '@casual-simulation/aux-records';
+import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
     RekognitionModerationJobProvider,
     S3FileRecordsStore,
     SimpleEmailServiceAuthMessenger,
-    SimpleEmailServiceAuthMessengerOptions,
     TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
-import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
+import type { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
-import {
-    SubscriptionConfiguration,
-    subscriptionConfigSchema,
-} from '@casual-simulation/aux-records/SubscriptionConfiguration';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import { subscriptionConfigSchema } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESv2 } from '@aws-sdk/client-sesv2';
-import {
-    RedisClientOptions,
-    RedisClientType,
-    createClient as createRedisClient,
-} from 'redis';
+import type { RedisClientType } from 'redis';
+import { RedisClientOptions, createClient as createRedisClient } from 'redis';
 import { TracedRedisRateLimitStore } from '../redis/TracedRedisRateLimitStore';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
 import Stripe from 'stripe';
+import type { Db } from 'mongodb';
 import {
     Binary,
     Collection,
     Cursor,
-    Db,
     MongoClient,
     MongoClientOptions,
     ObjectId,
 } from 'mongodb';
 import pify from 'pify';
+import type { MongoDBAuthUser, DataRecord, MongoDBStudio } from '../mongo';
 import {
-    MongoDBAuthUser,
     MongoDBLoginRequest,
     MongoDBAuthSession,
-    DataRecord,
     MongoDBAuthStore,
     MongoDBFileRecordsStore,
     MongoDBRateLimiter,
@@ -95,7 +94,6 @@ import {
     MongoDBDataRecordsStore,
     MongoDBPolicyStore,
     MongoDBFileRecordsLookup,
-    MongoDBStudio,
     MongoDBConfigurationStore,
     MongoDBMetricsStore,
     USERS_COLLECTION_NAME,
@@ -117,38 +115,37 @@ import {
     PrismaPolicyStore,
     PrismaRecordsStore,
 } from '../prisma';
-import {
+import type {
     AIConfiguration,
-    AIController,
     AIGenerateImageConfiguration,
 } from '@casual-simulation/aux-records/AIController';
-import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
+import { AIController } from '@casual-simulation/aux-records/AIController';
+import type { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
 import { PrismaMetricsStore } from '../prisma/PrismaMetricsStore';
 import { S3 } from '@aws-sdk/client-s3';
 import { RedisTempInstRecordsStore } from '../redis/RedisTempInstRecordsStore';
 import { RedisWebsocketConnectionStore } from '../redis/RedisWebsocketConnectionStore';
 import { ApiGatewayWebsocketMessenger } from '../serverless/aws/src/ApiGatewayWebsocketMessenger';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
 import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
-import {
-    PrivoConfiguration,
-    privoSchema,
-} from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { privoSchema } from '@casual-simulation/aux-records/PrivoConfiguration';
 import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
 import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
-import {
-    ModerationConfiguration,
-    moderationSchema,
-} from '@casual-simulation/aux-records/ModerationConfiguration';
+import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { moderationSchema } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
@@ -181,11 +178,11 @@ import {
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
 import { getConnectionId } from '@casual-simulation/aux-common';
-import {
-    RemoteAuxChannel,
-    RemoteSimulationImpl,
-} from '@casual-simulation/aux-vm-client';
-import { AuxConfigParameters } from '@casual-simulation/aux-vm';
+import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
+import { WebPushImpl } from '../notifications/WebPushImpl';
+import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -280,6 +277,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _webhooksStore: WebhookRecordsStore;
     private _webhookEnvironment: WebhookEnvironment;
     private _webhooksController: WebhookRecordsController;
+
+    private _notificationsStore: NotificationRecordsStore;
+    private _pushInterface: WebPushInterface;
+    private _notificationsController: NotificationRecordsController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -665,6 +666,10 @@ export class ServerBuilder implements SubscriptionLike {
         this._eventsStore = new PrismaEventRecordsStore(prismaClient);
         this._moderationStore = new PrismaModerationStore(prismaClient);
         this._webhooksStore = new PrismaWebhookRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._notificationsStore = new PrismaNotificationRecordsStore(
             prismaClient,
             metricsStore
         );
@@ -1161,12 +1166,12 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
-    useNotifications(
+    useSystemNotifications(
         options: Pick<ServerConfig, 'notifications'> = this._options
     ): this {
-        console.log('[ServerBuilder] Using notifications.');
+        console.log('[ServerBuilder] Using system notifications.');
         if (!options.notifications) {
-            throw new Error('Notifications options must be provided.');
+            throw new Error('System notifications options must be provided.');
         }
 
         const notifications = options.notifications;
@@ -1175,18 +1180,36 @@ export class ServerBuilder implements SubscriptionLike {
         );
 
         if (notifications.slack) {
-            console.log('[ServerBuilder] Using Slack notifications.');
+            console.log('[ServerBuilder] Using Slack system notifications.');
             this._notificationMessenger.addMessenger(
                 new SlackNotificationMessenger(notifications.slack)
             );
         }
 
         if (notifications.telegram) {
-            console.log('[ServerBuilder] Using Telegram notifications.');
+            console.log('[ServerBuilder] Using Telegram system notifications.');
             this._notificationMessenger.addMessenger(
                 new TelegramNotificationMessenger(notifications.telegram)
             );
         }
+
+        return this;
+    }
+
+    useWebPushNotifications(
+        options: Pick<ServerConfig, 'webPush'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Web Push notifications.');
+
+        if (!options.webPush) {
+            throw new Error('Web Push options must be provided.');
+        }
+
+        this._pushInterface = new WebPushImpl({
+            vapidSubject: options.webPush.vapidSubject,
+            vapidPublicKey: options.webPush.vapidPublicKey,
+            vapidPrivateKey: options.webPush.vapidPrivateKey,
+        });
 
         return this;
     }
@@ -1337,6 +1360,7 @@ export class ServerBuilder implements SubscriptionLike {
                     ),
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
+                    tokenModifierRatio: options.ai.chat.tokenModifierRatio,
                 },
             };
         }
@@ -1415,6 +1439,7 @@ export class ServerBuilder implements SubscriptionLike {
                 isCollaborative: false,
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
             },
@@ -1673,6 +1698,15 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._notificationsStore && this._pushInterface) {
+            this._notificationsController = new NotificationRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._notificationsStore,
+                pushInterface: this._pushInterface,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1692,6 +1726,7 @@ export class ServerBuilder implements SubscriptionLike {
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
+            notificationsController: this._notificationsController,
         });
 
         const buildReturn: BuildReturn = {

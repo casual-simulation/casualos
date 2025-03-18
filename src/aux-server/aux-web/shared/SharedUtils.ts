@@ -1,16 +1,13 @@
-import {
-    applyUpdatesToInst,
-    Bot,
-    StoredAuxVersion2,
-} from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Bot, StoredAuxVersion2 } from '@casual-simulation/aux-common';
+import { applyUpdatesToInst } from '@casual-simulation/aux-common';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { remote } from '@casual-simulation/aux-common';
 
 /**
  * Pads the given string with zeros up to the given length.
  */
 export function padZero(str: string, len: number = 2) {
-    var zeros = new Array(len).join('0');
+    let zeros = new Array(len).join('0');
     return (zeros + str).slice(-len);
 }
 

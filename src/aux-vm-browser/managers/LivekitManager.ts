@@ -1,6 +1,6 @@
+import type { Bot } from '@casual-simulation/aux-common';
 import {
     asyncResult,
-    Bot,
     BotAction,
     hasValue,
     ON_ROOM_JOINED,
@@ -14,17 +14,17 @@ import {
     ON_ROOM_TRACK_SUBSCRIBED,
     ON_ROOM_TRACK_UNSUBSCRIBED,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     GetRoomRemoteOptionsAction,
     GetRoomTrackOptionsAction,
-    RoomJoinOptions,
     RoomOptions,
     RoomRemoteOptions,
     RuntimeActions,
     SetRoomTrackOptionsAction,
     TrackVideoQuality,
 } from '@casual-simulation/aux-runtime';
-import {
+import { RoomJoinOptions } from '@casual-simulation/aux-runtime';
+import type {
     BotHelper,
     GetRoomOptions,
     RoomJoin,
@@ -43,8 +43,9 @@ import type {
     TrackPublication,
     VideoQuality,
 } from 'livekit-client';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-type LivekitModule = typeof import('livekit-client');
+import type Livekit from 'livekit-client';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 /**
  * Defines a class that is able to manage Livekit rooms and make streams available to scripts.
@@ -62,7 +63,7 @@ export class LivekitManager implements SubscriptionLike {
 
     private _onTrackNeedsAttachment = new Subject<Track>();
     private _onTrackNeedsDetachment = new Subject<Track>();
-    private _livekit: LivekitModule;
+    private _livekit: typeof Livekit;
 
     /**
      * Gets an observable that resolves whenever a track needs to be attached to the document.
@@ -98,9 +99,24 @@ export class LivekitManager implements SubscriptionLike {
         this._addressToTrack = null;
         this._trackToAddress = null;
     }
+    private async _requestMediaPermissions(): Promise<void> {
+        // Request audio and video permission (required)
+        try {
+            await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true,
+            });
+            console.log('[LivekitManager] Media permissions granted.');
+        } catch (error) {
+            console.error('[LivekitManager] Media permissions denied:', error);
+            throw new Error('Media permissions are required to join the room.');
+        }
+    }
 
     async joinRoom(join: RoomJoin): Promise<void> {
         try {
+            await this._requestMediaPermissions();
+
             this._livekit = await import('livekit-client');
             const room = new this._livekit.Room({
                 adaptiveStream: false,

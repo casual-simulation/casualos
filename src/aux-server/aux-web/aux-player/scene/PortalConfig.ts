@@ -1,36 +1,38 @@
+import type {
+    BotCalculationContext,
+    PrecalculatedBot,
+    PortalCameraControlsMode,
+    PortalCameraType,
+    BotCursorType,
+} from '@casual-simulation/aux-common';
 import {
     isDimensionLocked,
     DEFAULT_PORTAL_ZOOMABLE,
     DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
     calculateGridScale,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
     DEFAULT_PORTAL_ROTATABLE,
     calculateStringTagValue,
-    PortalCameraControlsMode,
     calculatePortalCameraControlsMode,
-    PortalCameraType,
     getCameraType,
-    BotCursorType,
     getPortalCursor,
     getTagPosition,
     getTagRotation,
     DEFAULT_GRID_PORTAL_LIGHTING,
 } from '@casual-simulation/aux-common';
 import { Color, Texture } from '@casual-simulation/three';
-import {
-    BrowserSimulation,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
+import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { BoundedGrid3D } from '../../shared/scene/BoundedGrid3D';
 import { AuxTextureLoader } from '../../shared/scene/AuxTextureLoader';
-import { Grid3D, TileableGrid3D } from '../../shared/scene/Grid3D';
+import type { TileableGrid3D } from '../../shared/scene/Grid3D';
+import { Grid3D } from '../../shared/scene/Grid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.

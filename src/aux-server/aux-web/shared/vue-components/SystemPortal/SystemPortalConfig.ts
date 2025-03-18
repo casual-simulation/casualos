@@ -1,11 +1,14 @@
+import type {
+    BotCalculationContext,
+    PrecalculatedBot,
+    Bot,
+} from '@casual-simulation/aux-common';
 import {
     isDimensionLocked,
     DEFAULT_PORTAL_ZOOMABLE,
     DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
     calculateGridScale,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
@@ -16,16 +19,14 @@ import {
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     getBotTagPortalAnchorPointOffset,
     calculateStringTagValue,
-    Bot,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
-import {
-    BrowserSimulation,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Simulation } from '@casual-simulation/aux-vm';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.

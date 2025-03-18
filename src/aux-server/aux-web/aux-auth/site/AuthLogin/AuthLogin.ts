@@ -6,11 +6,11 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
-import {
+import type {
     CompleteOpenIDLoginSuccess,
     FormError,
-    getFormErrors,
 } from '@casual-simulation/aux-records';
+import { getFormErrors } from '@casual-simulation/aux-records';
 import HasAccountCard from '../HasAccountCard/HasAccountCard';
 import {
     browserSupportsWebAuthnAutofill,
@@ -152,6 +152,7 @@ export default class AuthLogin extends Vue {
                 this.$router.push({ name: 'home' });
             }
         } else if (authManager.usePrivoLogin) {
+            /* empty */
         } else if (await browserSupportsWebAuthnAutofill()) {
             const result = await authManager.loginWithWebAuthn(true);
             if (result.success === true) {

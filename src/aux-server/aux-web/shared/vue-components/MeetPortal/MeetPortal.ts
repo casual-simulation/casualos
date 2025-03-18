@@ -1,33 +1,33 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import type {
+    PrecalculatedBot,
+    MeetFunctionAction,
+    MeetCommandAction,
+} from '@casual-simulation/aux-common';
 import {
     hasValue,
     MEET_PORTAL,
-    PrecalculatedBot,
     calculateStringTagValue,
     calculateMeetPortalAnchorPointOffset,
     ON_MEET_LEAVE,
     ON_MEET_LOADED,
     asyncError,
-    MeetFunctionAction,
     asyncResult,
     action,
     ON_MEET_ENTERED,
     ON_MEET_EXITED,
-    MeetCommandAction,
     ON_MEET_RECORDING_LINK_AVAILABLE,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import JitsiMeet from '../JitsiMeet/JitsiMeet';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { MeetPortalConfig } from './MeetPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
-import {
+import type {
     JistiRecordingLinkAvailableEvent,
     JitsiVideoConferenceJoinedEvent,
     JitsiVideoConferenceLeftEvent,
@@ -46,7 +46,7 @@ export default class MeetPortal extends Vue {
     private _currentSim: BrowserSimulation;
 
     currentMeet: string = null;
-    extraStyle: Object = {};
+    extraStyle: object = {};
     portalVisible: boolean = true;
     meetJwt: string = null;
 
@@ -372,7 +372,10 @@ export default class MeetPortal extends Vue {
             const jitsiPrototype = Object.getPrototypeOf(jitsi);
             const prop = (jitsi as any)[event.functionName];
             if (
-                jitsiPrototype.hasOwnProperty(event.functionName) &&
+                Object.prototype.hasOwnProperty.call(
+                    jitsiPrototype,
+                    event.functionName
+                ) &&
                 typeof prop === 'function'
             ) {
                 try {

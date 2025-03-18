@@ -1,20 +1,20 @@
-import {
-    AIChatInterface,
+import type {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
-import {
+import { AIChatInterface } from './AIChatInterface';
+import type {
     AIGenerateSkyboxInterfaceResponse,
     AIGenerateSkyboxInterfaceRequest,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
 import { AIController } from './AIController';
-import { MemoryStore } from './MemoryStore';
+import type { MemoryStore } from './MemoryStore';
 import {
     asyncIterable,
     asyncIterator,
@@ -28,14 +28,14 @@ import {
 } from './SubscriptionConfiguration';
 import { merge } from 'lodash';
 import { unwind } from '../js-interpreter/InterpreterUtils';
-import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
-import {
+import type { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import type {
     AISloydInterfaceCreateModelRequest,
     AISloydInterfaceCreateModelResponse,
     AISloydInterfaceEditModelRequest,
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
-import { PolicyController } from './PolicyController';
+import type { PolicyController } from './PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
@@ -150,8 +150,13 @@ describe('AIController', () => {
                             provider: 'provider2',
                             model: 'test-model3',
                         },
+                        {
+                            provider: 'provider1',
+                            model: 'test-model-token-ratio',
+                        },
                     ],
                     allowedChatSubscriptionTiers: ['test-tier'],
+                    tokenModifierRatio: { 'test-model-token-ratio': 2.0 },
                 },
             },
             generateSkybox: {
@@ -474,6 +479,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: true,
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: null,
@@ -621,6 +627,70 @@ describe('AIController', () => {
             });
         });
 
+        it('should use configure token ratio', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 123,
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model-token-ratio',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                        finishReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface.chat).toBeCalledWith({
+                model: 'test-model-token-ratio',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                subscriptionType: 'user',
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 246,
+            });
+        });
+
         describe('subscriptions', () => {
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
@@ -647,6 +717,163 @@ describe('AIController', () => {
                     subscriptionId: 'sub1',
                     subscriptionStatus: 'active',
                 });
+            });
+
+            it('should return success when allowedModels is not specified', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalled();
+            });
+
+            it('should return not_authorized when allowedModels does not include the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model3',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the given model for AI Chat features.',
+                });
+                expect(chatInterface.chat).not.toBeCalled();
+            });
+
+            it('should return success when allowedModels includes the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
@@ -911,6 +1138,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: {
@@ -1332,6 +1560,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: true,
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: null,
@@ -1502,6 +1731,80 @@ describe('AIController', () => {
             });
         });
 
+        it('should use configure token ratio', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 123,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model-token-ratio',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'test-model-token-ratio',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                subscriptionType: 'user',
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 246,
+            });
+        });
+
         describe('subscriptions', () => {
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
@@ -1528,6 +1831,135 @@ describe('AIController', () => {
                     subscriptionId: 'sub1',
                     subscriptionStatus: 'active',
                 });
+            });
+
+            it('should return not_authorized error when allowedModels does not include the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                chatInterface2.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model3',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the given model for AI Chat features.',
+                });
+                expect(chatInterface.chat).not.toBeCalled();
+            });
+
+            it('should return success when allowedModels includes the model', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                );
+
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 1,
+                    })
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            finishReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalled();
             });
 
             it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
@@ -1826,6 +2258,7 @@ describe('AIController', () => {
                             },
                         ],
                         allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
                     },
                 },
                 generateSkybox: {
@@ -2332,6 +2765,7 @@ describe('AIController', () => {
         it('should return the result from the generateImage interface', async () => {
             generateImageInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2427,6 +2861,7 @@ describe('AIController', () => {
 
             otherInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2546,6 +2981,7 @@ describe('AIController', () => {
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
             generateImageInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2657,6 +3093,7 @@ describe('AIController', () => {
 
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -2687,6 +3124,7 @@ describe('AIController', () => {
             it('should reject the request if it would exceed the subscription request limits', async () => {
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -2717,6 +3155,7 @@ describe('AIController', () => {
             it('should reject the request if it would exceed the subscription period limits', async () => {
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',

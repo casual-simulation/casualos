@@ -1,3 +1,13 @@
+import type {
+    InvalidSubscriptionTierError,
+    NotAuthorizedError,
+    NotLoggedInError,
+    NotSubscribedError,
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from '@casual-simulation/aux-common/Errors';
+
 /**
  * Defines an interface that is able to generate images from text prompts.
  */
@@ -79,11 +89,28 @@ export interface AIGenerateImageInterfaceRequest {
     userId?: string;
 }
 
-export interface AIGenerateImageInterfaceResponse {
-    /**
-     * The list of images that were generated.
-     */
+export type AIGenerateImageInterfaceResponse =
+    | AIGenerateImageInterfaceSuccess
+    | AIGenerateImageInterfaceFailure;
+
+export interface AIGenerateImageInterfaceSuccess {
+    success: true;
     images: AIGeneratedImage[];
+}
+
+export interface AIGenerateImageInterfaceFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
+        | 'invalid_request'
+        | 'invalid_model';
+    errorMessage: string;
 }
 
 /**

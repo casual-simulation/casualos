@@ -1,14 +1,17 @@
-import { ConfigurationStore } from './ConfigurationStore';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
-import { Client, Issuer, TokenSet, generators } from 'openid-client';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { PrivoClientCredentials, PrivoStore } from './PrivoStore';
+import type { Client, TokenSet } from 'openid-client';
+import { Issuer, generators } from 'openid-client';
 import { v4 as uuid } from 'uuid';
-import axios, { RawAxiosRequestHeaders } from 'axios';
+import type { RawAxiosRequestHeaders } from 'axios';
+import axios from 'axios';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
-import { ServerError } from '@casual-simulation/aux-common';
+import type { ServerError } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 
 /**
  * Defines an interface for objects that can interface with the Privo API.
@@ -328,6 +331,14 @@ export class PrivoClient implements PrivoClientInterface {
                 result.data
             );
 
+            if (result.status === 412) {
+                return {
+                    success: false,
+                    errorCode: 'child_email_already_exists',
+                    errorMessage: 'The child email already exists.',
+                };
+            }
+
             return {
                 success: false,
                 errorCode: 'unacceptable_request',
@@ -430,6 +441,14 @@ export class PrivoClient implements PrivoClientInterface {
                 `[PrivoClient] [createAdultAccount] Error creating adult account: ${result.status} ${result.statusText}`,
                 result.data
             );
+
+            if (result.status === 412) {
+                return {
+                    success: false,
+                    errorCode: 'email_already_exists',
+                    errorMessage: 'The email already exists.',
+                };
+            }
 
             return {
                 success: false,
@@ -823,7 +842,10 @@ export interface CreateChildAccountSuccess {
 
 export interface CreateChildAccountFailure {
     success: false;
-    errorCode: ServerError | 'unacceptable_request';
+    errorCode:
+        | ServerError
+        | 'unacceptable_request'
+        | 'child_email_already_exists';
     errorMessage: string;
 }
 
@@ -896,7 +918,7 @@ export interface CreateAdultAccountSuccess {
 
 export interface CreateAdultAccountFailure {
     success: false;
-    errorCode: ServerError | 'unacceptable_request';
+    errorCode: ServerError | 'unacceptable_request' | 'email_already_exists';
     errorMessage: string;
 }
 

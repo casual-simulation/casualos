@@ -1,14 +1,15 @@
 import Vue from 'vue';
-import { IGameView } from './IGameView';
+import type { IGameView } from './IGameView';
 import { BotRenderer } from '../scene/BotRenderer';
 import { Provide, Component, Prop } from 'vue-property-decorator';
 import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
-import { Game } from '../scene/Game';
-import { SubscriptionLike } from 'rxjs';
+import type { Game } from '../scene/Game';
+import type { SubscriptionLike } from 'rxjs';
 import { EventBus } from '@casual-simulation/aux-components';
 import { debounce } from 'lodash';
-import { BotCursorType, getCursorCSS } from '@casual-simulation/aux-common';
+import type { BotCursorType } from '@casual-simulation/aux-common';
+import { getCursorCSS } from '@casual-simulation/aux-common';
 
 export interface SidebarItem {
     id: string;
@@ -25,6 +26,7 @@ export interface SidebarItem {
     },
 })
 export default class BaseGameView extends Vue implements IGameView {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
     protected _subscriptions: SubscriptionLike[] = [];
 

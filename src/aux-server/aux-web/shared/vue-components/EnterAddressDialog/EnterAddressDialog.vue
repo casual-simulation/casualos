@@ -69,7 +69,7 @@
                 </md-button>
                 <md-button type="button" class="md-primary" @click="login()" :disabled="processing">
                     <md-progress-spinner
-                        v-if="processing && processingKind === 'email'"
+                        v-if="processing && processingKind === 'login'"
                         md-mode="indeterminate"
                         :md-diameter="20"
                         :md-stroke="2"

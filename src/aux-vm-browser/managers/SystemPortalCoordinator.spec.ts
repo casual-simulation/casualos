@@ -1,22 +1,25 @@
-import {
-    getBotTitle,
-    getSystemArea,
-    searchTag,
-    searchValue,
+import type {
     SystemPortalDiffSelectionUpdate,
     SystemPortalDiffUpdate,
     SystemPortalHasRecentsUpdate,
-    SystemPortalCoordinator,
     SystemPortalRecentsUpdate,
     SystemPortalSearchUpdate,
     SystemPortalSelectionUpdate,
     SystemPortalUpdate,
 } from './SystemPortalCoordinator';
 import {
-    AuxConfigParameters,
-    SimulationManager,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
+    getBotTitle,
+    getSystemArea,
+    searchTag,
+    searchValue,
+    SystemPortalCoordinator,
+} from './SystemPortalCoordinator';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
+import { SimulationManager, SimulationOrigin } from '@casual-simulation/aux-vm';
+import type {
+    SystemPortalPane,
+    ConnectionInfo,
+} from '@casual-simulation/aux-common';
 import {
     createBot,
     createPrecalculatedBot,
@@ -43,10 +46,8 @@ import {
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     KNOWN_TAG_PREFIXES,
     merge,
-    SystemPortalPane,
     SHEET_PORTAL,
     SYSTEM_PORTAL_PANE,
-    ConnectionInfo,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { firstValueFrom, Subject, Subscription } from 'rxjs';

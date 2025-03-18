@@ -1,19 +1,21 @@
-import {
+import type {
     DenialReason,
     GenericHttpResponse,
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
+import type {
+    SpanOptions,
+    MetricOptions as OTMetricOptions,
+    Attributes,
+} from '@opentelemetry/api';
 import {
     Counter,
     Histogram,
     SpanKind,
-    SpanOptions,
     SpanStatusCode,
     trace,
-    MetricOptions as OTMetricOptions,
     metrics,
     Meter,
-    Attributes,
 } from '@opentelemetry/api';
 import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 

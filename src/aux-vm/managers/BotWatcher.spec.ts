@@ -1,11 +1,14 @@
-import { BotTagChange, BotWatcher, UpdatedBotInfo } from './BotWatcher';
-import {
-    createPrecalculatedBot,
+import type { BotTagChange, UpdatedBotInfo } from './BotWatcher';
+import { BotWatcher } from './BotWatcher';
+import type {
     PrecalculatedBot,
     PrecalculatedBotsState,
-    BotIndex,
     Bot,
     BotIndexEvent,
+} from '@casual-simulation/aux-common';
+import {
+    createPrecalculatedBot,
+    BotIndex,
     stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { BotHelper } from './BotHelper';

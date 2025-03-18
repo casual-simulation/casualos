@@ -1,5 +1,6 @@
-import { Action } from './Action';
-import { ConnectionInfo, connectionInfoSchema } from './ConnectionInfo';
+import type { Action } from './Action';
+import type { ConnectionInfo } from './ConnectionInfo';
+import { connectionInfoSchema } from './ConnectionInfo';
 import { z } from 'zod';
 
 /**

@@ -1,3 +1,4 @@
+import type { AmbientLight, DirectionalLight } from '@casual-simulation/three';
 import {
     WebGLRenderer,
     OrthographicCamera,
@@ -7,15 +8,10 @@ import {
     MathUtils as ThreeMath,
     Color,
     Object3D,
-    AmbientLight,
-    DirectionalLight,
     sRGBEncoding,
 } from '@casual-simulation/three';
-import {
-    merge,
-    BotCalculationContext,
-    Bot,
-} from '@casual-simulation/aux-common';
+import type { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
+import { merge } from '@casual-simulation/aux-common';
 import { AuxBot3D } from './AuxBot3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';

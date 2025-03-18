@@ -155,7 +155,7 @@ function isHidden(str: string): [boolean, string] {
  */
 export function mightBeEmailAddress(value: string): boolean {
     // Test that the value ends with an @ symbol and some characters and a dot (.) and some more characters.
-    const emailTest = /\@.+\.\w{2,}$/;
+    const emailTest = /@.+\.\w{2,}$/;
     return emailTest.test(value);
 }
 

@@ -1,15 +1,17 @@
-import {
-    asyncResult,
+import type {
     BotAction,
-    approveAction,
-    asyncError,
     RemoteCausalRepoProtocol,
     ConnectionClient,
-    MemoryConnectionClient,
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
-    getRecordsEndpoint,
     WebsocketHttpPartialResponseMessage,
+} from '@casual-simulation/aux-common';
+import {
+    asyncResult,
+    approveAction,
+    asyncError,
+    MemoryConnectionClient,
+    getRecordsEndpoint,
     iterableNext,
     iterableComplete,
 } from '@casual-simulation/aux-common';
@@ -49,23 +51,23 @@ import {
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import {
+import type {
     GetEndpointInfoFunction,
     GetRoomOptions,
     RecordsEndpointInfo,
-    RecordsManager,
     RoomJoin,
     RoomLeave,
     SetRoomOptions,
 } from './RecordsManager';
-import { AuthHelperInterface } from './AuthHelperInterface';
+import { RecordsManager } from './RecordsManager';
+import type { AuthHelperInterface } from './AuthHelperInterface';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import 'aux-jest-matchers';
 import { DateTime } from 'luxon';
+import type { ListedStudio } from '@casual-simulation/aux-records';
 import {
-    ListedStudio,
     formatInstId,
     formatV2RecordKey,
 } from '@casual-simulation/aux-records';
@@ -6506,6 +6508,149 @@ describe('RecordsManager', () => {
                                     recordName: 'testRecord',
                                     address: 'test',
                                 },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'recordNotification',
+                    recordsCallProcedure(
+                        {
+                            recordNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        description: 'description',
+                                        markers: ['marker'],
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getNotification',
+                    recordsCallProcedure(
+                        {
+                            getNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'eraseNotification',
+                    recordsCallProcedure(
+                        {
+                            eraseNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listNotifications',
+                    recordsCallProcedure(
+                        {
+                            listNotifications: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'subscribeToNotification',
+                    recordsCallProcedure(
+                        {
+                            subscribeToNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    pushSubscription: {
+                                        endpoint: 'endpoint',
+                                        keys: {},
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'unsubscribeFromNotification',
+                    recordsCallProcedure(
+                        {
+                            unsubscribeFromNotification: {
+                                input: {
+                                    subscriptionId: 'subscriptionId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'sendNotification',
+                    recordsCallProcedure(
+                        {
+                            sendNotification: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    payload: {
+                                        title: 'title',
+                                    },
+                                    topic: 'topic',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listNotificationSubscriptions',
+                    recordsCallProcedure(
+                        {
+                            listNotificationSubscriptions: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listUserNotificationSubscriptions',
+                    recordsCallProcedure(
+                        {
+                            listUserNotificationSubscriptions: {
+                                input: {},
                             },
                         },
                         {},

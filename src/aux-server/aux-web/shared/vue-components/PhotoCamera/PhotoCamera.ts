@@ -1,24 +1,24 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import type {
+    CameraType,
+    OpenPhotoCameraAction,
+    Photo,
+} from '@casual-simulation/aux-common';
 import {
     hasValue,
-    CameraType,
     action,
     asyncResult,
     asyncError,
     ON_PHOTO_CAMERA_CLOSED_ACTION_NAME,
-    OpenPhotoCameraAction,
     ON_PHOTO_CAMERA_OPENED_ACTION_NAME,
     ON_PHOTO_CAPTURED_ACTION_NAME,
-    Photo,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import CameraStream from '../CameraStream/CameraStream';
 import { max } from 'lodash';
 

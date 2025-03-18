@@ -1,6 +1,6 @@
+import type { Ray } from '@casual-simulation/three';
 import {
     Object3D,
-    Ray,
     Color,
     LineBasicMaterial,
     BufferGeometry,

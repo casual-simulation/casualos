@@ -1,8 +1,11 @@
-import {
+import type {
     WebGLRenderer,
+    Object3D,
+    Vector2,
+} from '@casual-simulation/three';
+import {
     Scene,
     Camera,
-    Object3D,
     PerspectiveCamera,
     OrthographicCamera,
     Color,
@@ -13,7 +16,6 @@ import {
     Mesh,
     Vector3,
     Quaternion,
-    Vector2,
 } from '@casual-simulation/three';
 import {
     CSS3DRenderer,
@@ -27,6 +29,7 @@ import { buildSRGBColor } from './SceneUtils';
  * some other modifications and additional features.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace HtmlMixer {
     /**
      * define a context for HtmlMixer
@@ -242,7 +245,7 @@ export namespace HtmlMixer {
                 newDomElement
             );
             // remove the oldDomElement
-            var oldDomElement = this.domElement;
+            let oldDomElement = this.domElement;
             if (oldDomElement.parentNode) {
                 oldDomElement.parentNode.removeChild(oldDomElement);
             }
@@ -313,6 +316,7 @@ export namespace HtmlMixer {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace HtmlMixerHelpers {
     /**
      * create domElement for a iframe to insert in a HtmlMixed.Plane

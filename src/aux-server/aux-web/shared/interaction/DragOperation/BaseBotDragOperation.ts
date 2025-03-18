@@ -1,32 +1,33 @@
-import { IOperation } from '../IOperation';
-import { BaseInteractionManager } from '../BaseInteractionManager';
-import {
-    Vector2,
+import type { IOperation } from '../IOperation';
+import type { BaseInteractionManager } from '../BaseInteractionManager';
+import type {
     Object3D,
     Vector3,
-    Euler,
     Intersection,
     Quaternion,
 } from '@casual-simulation/three';
-import {
+import { Vector2, Euler } from '@casual-simulation/three';
+import type {
     Bot,
-    botUpdated,
     PartialBot,
     BotAction,
     BotCalculationContext,
+    BotTags,
+    ShoutAction,
+    BotDropDestination,
+    BotDropToDestination,
+} from '@casual-simulation/aux-common';
+import {
+    botUpdated,
     DROP_ACTION_NAME,
     DROP_ANY_ACTION_NAME,
     createBot,
     DRAG_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
-    BotTags,
     isBot,
-    ShoutAction,
     DROP_EXIT_ACTION_NAME,
     DROP_ENTER_ACTION_NAME,
-    BotDropDestination,
     onDropArg,
-    BotDropToDestination,
     onDragArg,
     ANY_DROP_ENTER_ACTION_NAME,
     ANY_DROP_EXIT_ACTION_NAME,
@@ -37,16 +38,17 @@ import {
     VECTOR_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import type { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { Subscription } from 'rxjs';
-import {
+import type {
     ControllerData,
     InputMethod,
     InputModality,
 } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
 import { merge } from 'lodash';
-import { SnapBotsHelper, SnapBotsInterface } from './SnapInterface';
+import type { SnapBotsInterface } from './SnapInterface';
+import { SnapBotsHelper } from './SnapInterface';
 
 /**
  * Shared class for both BotDragOperation and NewBotDragOperation.

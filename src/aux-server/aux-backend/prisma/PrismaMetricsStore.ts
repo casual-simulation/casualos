@@ -1,4 +1,4 @@
-import {
+import type {
     AIChatMetrics,
     AIChatSubscriptionMetrics,
     AIImageMetrics,
@@ -12,16 +12,18 @@ import {
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
     InstSubscriptionMetrics,
-    MemoryConfiguration,
     MetricsStore,
     RecordSubscriptionMetrics,
+    SubscriptionFilter,
+} from '@casual-simulation/aux-records';
+import {
+    MemoryConfiguration,
     SUBSCRIPTIONS_CONFIG_KEY,
     SubscriptionConfiguration,
-    SubscriptionFilter,
     isActiveSubscription,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from './generated';
+import type { PrismaClient, Prisma } from './generated';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 import { DateTime } from 'luxon';

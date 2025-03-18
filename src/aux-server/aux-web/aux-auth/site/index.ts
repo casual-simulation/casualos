@@ -24,7 +24,8 @@
  */
 
 import Vue from 'vue';
-import VueRouter, { RouteConfig } from 'vue-router';
+import type { RouteConfig } from 'vue-router';
+import VueRouter from 'vue-router';
 import {
     MdButton,
     MdContent,
@@ -91,6 +92,7 @@ import AuthChildrenPrivacyPolicy from './AuthChildrenPrivacyPolicy/AuthChildrenP
 import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
+import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -222,6 +224,11 @@ const routes: RouteConfig[] = [
                 path: 'webhooks',
                 name: 'records-webhooks',
                 component: AuthRecordsWebhooks,
+            },
+            {
+                path: 'notifications',
+                name: 'records-notifications',
+                component: AuthRecordsNotifications,
             },
         ],
     },

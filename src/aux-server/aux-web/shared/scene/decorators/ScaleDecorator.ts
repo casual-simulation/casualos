@@ -1,7 +1,7 @@
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
+import type { AuxBot3D } from '../AuxBot3D';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     calculateGridScale,
     getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,

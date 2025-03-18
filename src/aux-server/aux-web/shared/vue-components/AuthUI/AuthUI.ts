@@ -1,17 +1,17 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import {
+import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
-    Bot,
-    toast,
 } from '@casual-simulation/aux-common';
+import { Bot, toast } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
-import { LoginStatus } from '@casual-simulation/aux-vm';
+import type { LoginStatus } from '@casual-simulation/aux-vm';
 import FieldErrors from '../FieldErrors/FieldErrors';
-import { FormError, getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-records';
+import { getFormErrors } from '@casual-simulation/aux-records';
 
 @Component({
     components: {

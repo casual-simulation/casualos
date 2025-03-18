@@ -1,92 +1,86 @@
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
-import {
+import type {
     AuthController,
+    NoSessionKeyResult,
+    ValidateSessionKeyResult,
+} from './AuthController';
+import {
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
-    NoSessionKeyResult,
     PRIVO_OPEN_ID_PROVIDER,
     validateSessionKey,
-    ValidateSessionKeyResult,
 } from './AuthController';
 import { isSuperUserRole, parseSessionKey } from './AuthUtils';
-import { LivekitController } from './LivekitController';
-import { RecordsController } from './RecordsController';
-import { EventRecordsController } from './EventRecordsController';
-import { DataRecordsController } from './DataRecordsController';
-import { FileRecordsController } from './FileRecordsController';
-import {
+import type { LivekitController } from './LivekitController';
+import type { RecordsController } from './RecordsController';
+import type { EventRecordsController } from './EventRecordsController';
+import type { DataRecordsController } from './DataRecordsController';
+import type { FileRecordsController } from './FileRecordsController';
+import type {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
-import { ZodError, z } from 'zod';
-import {
-    HUME_CONFIG,
-    LOOM_CONFIG,
-    PublicRecordKeyPolicy,
-} from './RecordsStore';
-import { RateLimitController } from './RateLimitController';
-import {
-    AVAILABLE_PERMISSIONS_VALIDATION,
+import type { ZodError } from 'zod';
+import { z } from 'zod';
+import type { PublicRecordKeyPolicy } from './RecordsStore';
+import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
+import type { RateLimitController } from './RateLimitController';
+import type {
     DenialReason,
-    PRIVATE_MARKER,
     Procedure,
     ProcedureOutput,
-    ProcedureOutputError,
     ProcedureOutputStream,
-    ProcedureOutputSuccess,
     Procedures,
-    RESOURCE_KIND_VALIDATION,
     RPCContext,
-    RemoteProcedures,
-    ResourceKinds,
+} from '@casual-simulation/aux-common';
+import {
+    AVAILABLE_PERMISSIONS_VALIDATION,
+    PRIVATE_MARKER,
+    RESOURCE_KIND_VALIDATION,
     getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
-import {
-    GrantResourcePermissionRequest,
-    PolicyController,
-} from './PolicyController';
-import { AIController } from './AIController';
-import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
-import { WebsocketController } from './websockets/WebsocketController';
-import {
+import type { PolicyController } from './PolicyController';
+import { GrantResourcePermissionRequest } from './PolicyController';
+import type { AIController } from './AIController';
+import type { AIChatMessage } from './AIChatInterface';
+import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
+import type { WebsocketController } from './websockets/WebsocketController';
+import type {
     AddUpdatesMessage,
     LoginMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
-    UnwatchBranchMessage,
     WatchBranchMessage,
+    WebsocketRequestMessage,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import {
+    UnwatchBranchMessage,
     WebsocketErrorEvent,
     WebsocketEventTypes,
     WebsocketMessage,
-    WebsocketRequestMessage,
     websocketEventSchema,
     websocketRequestMessageSchema,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
-import {
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
     GenericWebsocketRequest,
     KnownErrorCodes,
-    getStatusCode,
 } from '@casual-simulation/aux-common';
-import { ModerationController } from './ModerationController';
+import { getStatusCode } from '@casual-simulation/aux-common';
+import type { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
-import { LoomController } from './LoomController';
-import {
-    SpanKind,
-    Tracer,
-    ValueType,
-    metrics,
-    trace,
-} from '@opentelemetry/api';
+import type { LoomController } from './LoomController';
+import type { Tracer } from '@opentelemetry/api';
+import { SpanKind, ValueType, metrics, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -120,7 +114,7 @@ import {
     STUDIO_ID_VALIDATION,
     UPDATE_FILE_SCHEMA,
 } from './Validations';
-import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import type { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import {
     eraseItemProcedure,
     getItemProcedure,
@@ -128,6 +122,11 @@ import {
     recordItemProcedure,
 } from './crud/CrudHelpers';
 import { merge, omit } from 'lodash';
+import type { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import {
+    PUSH_NOTIFICATION_PAYLOAD,
+    PUSH_SUBSCRIPTION_SCHEMA,
+} from './notifications';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -358,6 +357,12 @@ export interface RecordsServerOptions {
      * If null, then the default rate limit controller will be used.
      */
     websocketRateLimitController?: RateLimitController | null;
+
+    /**
+     * The controller that should be used for handling notifications.
+     * If null, then notifications are not supported.
+     */
+    notificationsController?: NotificationRecordsController | null;
 }
 
 /**
@@ -377,6 +382,7 @@ export class RecordsServer {
     private _moderationController: ModerationController | null;
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
+    private _notificationsController: NotificationRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -443,6 +449,7 @@ export class RecordsServer {
         moderationController,
         loomController,
         webhooksController,
+        notificationsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -463,6 +470,7 @@ export class RecordsServer {
         this._moderationController = moderationController;
         this._loomController = loomController;
         this._webhooksController = webhooksController;
+        this._notificationsController = notificationsController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -538,7 +546,7 @@ export class RecordsServer {
                 .origins('account')
                 .http('POST', '/api/v2/createAccount')
                 .inputs(z.object({}))
-                .handler(async ({}, context) => {
+                .handler(async (_, context) => {
                     const validation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -1751,6 +1759,331 @@ export class RecordsServer {
                             instances,
                         }
                     );
+
+                    return result;
+                }),
+
+            recordNotification: recordItemProcedure(
+                this._auth,
+                this._notificationsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    description: z.string().min(1),
+                    markers: MARKERS_VALIDATION.optional().default([
+                        PRIVATE_MARKER,
+                    ]),
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/notification')
+            ),
+
+            getNotification: getItemProcedure(
+                this._auth,
+                this._notificationsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/notification')
+            ),
+
+            listNotifications: listItemsProcedure(
+                this._auth,
+                this._notificationsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/notification/list')
+            ),
+
+            listNotificationSubscriptions: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/notification/list/subscriptions')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._notificationsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._notificationsController.listSubscriptions(
+                                {
+                                    recordName,
+                                    address,
+                                    userId: validation.userId,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
+
+            listUserNotificationSubscriptions: procedure()
+                .origins('api')
+                .http(
+                    'GET',
+                    '/api/v2/records/notification/list/user/subscriptions'
+                )
+                .inputs(
+                    z.object({
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ instances }, context) => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._notificationsController.listSubscriptionsForUser(
+                            {
+                                userId: validation.userId,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            eraseNotification: eraseItemProcedure(
+                this._auth,
+                this._notificationsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/notification')
+            ),
+
+            registerPushSubscription: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/register')
+                .inputs(
+                    z.object({
+                        pushSubscription: PUSH_SUBSCRIPTION_SCHEMA,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ pushSubscription, instances }, context) => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        validation.success === false &&
+                        validation.errorCode !== 'no_session_key'
+                    ) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._notificationsController.registerPushSubscription(
+                            {
+                                userId: validation.userId,
+                                pushSubscription,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            subscribeToNotification: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/subscribe')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        pushSubscription: PUSH_SUBSCRIPTION_SCHEMA,
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, instances, pushSubscription },
+                        context
+                    ) => {
+                        if (!this._notificationsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._notificationsController.subscribeToNotification(
+                                {
+                                    recordName,
+                                    address,
+                                    userId: validation.userId,
+                                    pushSubscription,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
+
+            unsubscribeFromNotification: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/unsubscribe')
+                .inputs(
+                    z.object({
+                        subscriptionId: z.string(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ subscriptionId, instances }, context) => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._notificationsController.unsubscribeFromNotification(
+                            {
+                                subscriptionId,
+                                userId: validation.userId,
+                                instances,
+                            }
+                        );
+
+                    return result;
+                }),
+
+            sendNotification: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/notification/send')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        payload: PUSH_NOTIFICATION_PAYLOAD,
+                        topic: z.string().optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, instances, payload, topic },
+                        context
+                    ) => {
+                        if (!this._notificationsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._notificationsController.sendNotification(
+                                {
+                                    recordName,
+                                    address,
+                                    userId: validation.userId,
+                                    payload,
+                                    topic,
+                                    instances,
+                                }
+                            );
+
+                        return result;
+                    }
+                ),
+
+            getNotificationsApplicationServerKey: procedure()
+                .origins('api')
+                .http(
+                    'GET',
+                    '/api/v2/records/notification/applicationServerKey'
+                )
+                .handler(async () => {
+                    if (!this._notificationsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const result =
+                        await this._notificationsController.getApplicationServerKey();
 
                     return result;
                 }),
@@ -3474,7 +3807,7 @@ export class RecordsServer {
                 .origins(true)
                 .http('GET', '/api/v2/procedures')
                 .inputs(z.object({}))
-                .handler(async ({}, context) => {
+                .handler(async (_, context) => {
                     const procedures = this._procedures;
                     const metadata = getProcedureMetadata(procedures);
                     return {
@@ -3492,7 +3825,7 @@ export class RecordsServer {
     private _setupRoutes() {
         const procs = this._procedures;
         for (let procedureName of Object.keys(procs)) {
-            if (procs.hasOwnProperty(procedureName)) {
+            if (Object.prototype.hasOwnProperty.call(procs, procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
                     this._addProcedureRoute(procedure, procedureName);

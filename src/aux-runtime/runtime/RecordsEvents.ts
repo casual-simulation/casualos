@@ -3,12 +3,16 @@ import type {
     PublicRecordKeyPolicy,
     RecordFileFailure,
     WebhookRecord,
+    NotificationRecord,
+    PushNotificationPayload,
 } from '@casual-simulation/aux-records';
 import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
-import {
+import type {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+} from '@casual-simulation/aux-common';
+import {
     ProcedureInputs,
     ProcedureQueries,
     Procedures,
@@ -47,7 +51,8 @@ export type RecordsAsyncActions =
     | GetRoomTrackOptionsAction
     | SetRoomTrackOptionsAction
     | GetRoomRemoteOptionsAction
-    | RecordsCallProcedureAction;
+    | RecordsCallProcedureAction
+    | SubscribeToNotificationAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -560,6 +565,23 @@ export interface RecordsCallProcedureAction extends RecordsAction {
     procedure: Partial<RecordsClientActions>;
 }
 
+/**
+ * Defines an event that attempts to subscribe to a notification.
+ */
+export interface SubscribeToNotificationAction extends RecordsAction {
+    type: 'subscribe_to_notification';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the notification.
+     */
+    address: string;
+}
+
 // /**
 //  * Defines an event that publishes data to a record.
 //  */
@@ -626,8 +648,8 @@ export interface RecordsCallProcedureAction extends RecordsAction {
 /**
  * Defines an interface that represents the options for a list data action.
  *
- * @dochash types/records/data
- * @docName ListDataOptions
+ * @dochash types/records/webhooks
+ * @docName ListWebhooksOptions
  */
 export interface ListWebhooksOptions extends RecordActionOptions {
     /**
@@ -636,6 +658,35 @@ export interface ListWebhooksOptions extends RecordActionOptions {
      * - "descending" means that the items should be sorted in alphebatically descending order by address.
      */
     sort?: 'ascending' | 'descending';
+}
+
+/**
+ * Defines an interface that represents the options for a list action.
+ *
+ * @dochash types/records/notifications
+ * @docName ListNotificationsOptions
+ */
+export interface ListNotificationsOptions extends RecordActionOptions {
+    /**
+     * The order that items should be sorted in.
+     * - "ascending" means that the items should be sorted in alphebatically ascending order by address.
+     * - "descending" means that the items should be sorted in alphebatically descending order by address.
+     */
+    sort?: 'ascending' | 'descending';
+}
+
+/**
+ * Defines an interface that represents the options for sending a notification.
+ *
+ * @dochash types/records/notifications
+ * @docName SendNotificationOptions
+ */
+export interface SendNotificationOptions extends RecordActionOptions {
+    /**
+     * The topic that the notification is for.
+     * Topics can be used to replace existing notifications with a new notification.
+     */
+    topic?: string;
 }
 
 // /**
@@ -1845,6 +1896,274 @@ export function eraseWebhook(
                     recordName,
                     address,
                 },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates a SubscribeToNotificationAction.
+ * @param recordName The name of the record.
+ * @param address The address of the notification to subscribe to.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the async task.
+ */
+export function subscribeToNotification(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): SubscribeToNotificationAction {
+    return {
+        type: 'subscribe_to_notification',
+        recordName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that is able to unsubscribe from a notification.
+ * @param subscriptionId The ID of the subscription.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the async task.
+ */
+export function unsubscribeFromNotification(
+    subscriptionId: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            unsubscribeFromNotification: {
+                input: {
+                    subscriptionId,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to record a notification.
+ * @param recordName The name of the record.
+ * @param item The item to record.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function recordNotification(
+    recordName: string,
+    item: NotificationRecord,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            recordNotification: {
+                input: {
+                    recordName,
+                    item: {
+                        address: item.address,
+                        description: item.description,
+                        markers: item.markers as any,
+                    },
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to get information about a notification.
+ * @param recordName The name of the record.
+ * @param address The address of the notification.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function getNotification(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            getNotification: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the notifications in a record.
+ * @param recordName The name of the record.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listNotifications(
+    recordName: string,
+    startingAddress: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listNotifications: {
+                input: {
+                    recordName,
+                    address: startingAddress,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the notifications in a record.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingAddress The address that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listNotificationsByMarker(
+    recordName: string,
+    marker: string,
+    startingAddress: string,
+    options: ListNotificationsOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listNotifications: {
+                input: {
+                    recordName,
+                    marker,
+                    address: startingAddress,
+                    sort: options?.sort,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to erase a notification.
+ * @param recordName The name of the record.
+ * @param address The address of the notification.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function eraseNotification(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            eraseNotification: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that can be used to send a notification.
+ * @param recordName The name of the record.
+ * @param address The address of the notification.
+ * @param payload The payload to send.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function sendNotification(
+    recordName: string,
+    address: string,
+    payload: PushNotificationPayload,
+    options: SendNotificationOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            sendNotification: {
+                input: {
+                    recordName,
+                    address,
+                    payload,
+                    topic: options?.topic,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that can be used to list the notification subscriptions for a record.
+ * @param recordName The name of the record.
+ * @param address The address of the notification.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function listNotificationSubscriptions(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listNotificationSubscriptions: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that can be used to list the notification subscriptions a user.
+ * @param userId The ID of the user.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function listUserNotificationSubscriptions(
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listUserNotificationSubscriptions: {
+                input: {},
             },
         },
         options,

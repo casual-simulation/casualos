@@ -1,6 +1,7 @@
-import { Bot } from './Bot';
+import type { Bot } from './Bot';
 import { tagsOnBot, hasValue, calculateBotValue } from './BotCalculations';
-import { Subject, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { filter, startWith, map } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 
@@ -103,7 +104,7 @@ export class BotIndex {
      * Batches all the index events during the given function.
      * @param func The function.
      */
-    batch(func: Function) {
+    batch(func: () => void) {
         let batch = [] as BotIndexEvent[];
         this._batch = batch;
         func();

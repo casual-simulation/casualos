@@ -1,24 +1,37 @@
-import {
-    Observable,
-    Subject,
-    Subscription,
-    SubscriptionLike,
-    firstValueFrom,
-} from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription, firstValueFrom } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
-import { AuxChannel, AuxSubChannel, ChannelActionResult } from './AuxChannel';
-import {
+import type {
+    AuxChannel,
+    AuxSubChannel,
+    ChannelActionResult,
+} from './AuxChannel';
+import type {
     LocalActions,
     BotAction,
     BotsState,
-    BOT_SPACE_TAG,
     StateUpdatedEvent,
     AuxPartitions,
     AuxPartition,
     PartitionConfig,
-    iteratePartitions,
     BotSpace,
     LoadSpaceAction,
+    BotTagMasks,
+    PrecalculatedBot,
+    StoredAux,
+    ConnectionInfo,
+    DeviceAction,
+    StatusUpdate,
+    Action,
+    RemoteActions,
+    EnableCollaborationAction,
+    PartitionAuthMessage,
+    AuxPartitionServices,
+    LoadSharedDocumentAction,
+} from '@casual-simulation/aux-common';
+import {
+    BOT_SPACE_TAG,
+    iteratePartitions,
     hasValue,
     asyncResult,
     addDebugApi,
@@ -27,36 +40,21 @@ import {
     defineGlobalBot,
     createPrecalculatedBot,
     merge,
-    BotTagMasks,
-    PrecalculatedBot,
     asyncError,
     botAdded,
     botUpdated,
     createBot,
     getBotSpace,
-    StoredAux,
-    ConnectionInfo,
-    DeviceAction,
-    StatusUpdate,
     remapProgressPercent,
-    Action,
-    RemoteActions,
     ConnectionIndicator,
     getConnectionId,
-    EnableCollaborationAction,
-    PartitionAuthMessage,
-    AuxPartitionServices,
     PartitionAuthSource,
     action,
     ON_COLLABORATION_ENABLED,
     ON_ALLOW_COLLABORATION_UPGRADE,
     ON_DISALLOW_COLLABORATION_UPGRADE,
 } from '@casual-simulation/aux-common';
-import {
-    realtimeStrategyToRealtimeEditMode,
-    AuxPartitionRealtimeEditModeProvider,
-    AuxRuntime,
-    isPromise,
+import type {
     AttachRuntimeAction,
     DetachRuntimeAction,
     TagMapper,
@@ -64,9 +62,16 @@ import {
     RuntimeActions,
     AuxDevice,
 } from '@casual-simulation/aux-runtime';
+import {
+    realtimeStrategyToRealtimeEditMode,
+    AuxPartitionRealtimeEditModeProvider,
+    AuxRuntime,
+    isPromise,
+} from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig, buildVersionNumber } from './AuxConfig';
-import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import type { AuxConfig } from './AuxConfig';
+import { buildVersionNumber } from './AuxConfig';
+import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import {
     flatMap,
@@ -78,7 +83,10 @@ import {
 } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
-import { TimeSyncController } from '@casual-simulation/timesync';
+import type { TimeSyncController } from '@casual-simulation/timesync';
+import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 
 export interface AuxChannelOptions {}
 
@@ -91,6 +99,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _deviceInfo: ConnectionInfo;
     protected _partitionEditModeProvider: AuxPartitionRealtimeEditModeProvider;
     protected _partitions: AuxPartitions;
+    protected _documents: Map<string, SharedDocument> = new Map();
     protected _portalHelper: CustomAppHelper;
     private _services: AuxPartitionServices;
     private _statusHelper: StatusHelper;
@@ -419,7 +428,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let [key, partitionConfig] of iteratePartitions(
             this._config.partitions
         )) {
-            if (!this._config.partitions.hasOwnProperty(key)) {
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    this._config.partitions,
+                    key
+                )
+            ) {
                 continue;
             }
             const partition = await this._createPartition(
@@ -479,6 +493,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         ];
     }
 
+    protected _getCleanupSubscriptionsForSharedDocument(
+        doc: SharedDocument
+    ): SubscriptionLike[] {
+        return [doc, doc.onError.subscribe((err) => this._handleError(err))];
+    }
+
     /**
      * Creates a partition for the given config.
      * @param config The config.
@@ -488,6 +508,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         config: PartitionConfig,
         services: AuxPartitionServices
     ): Promise<AuxPartition>;
+
+    /**
+     * Creates a shared document for the given config.
+     * @param config The config.
+     * @param services The services that should be used by the document.
+     */
+    protected abstract _createSharedDocument(
+        config: RemoteSharedDocumentConfig,
+        services: SharedDocumentServices
+    ): Promise<SharedDocument>;
 
     async sendEvents(events: RuntimeActions[]): Promise<void> {
         if (this._hasInitialState) {
@@ -846,6 +876,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._detachRuntime(event.runtime, event);
             } else if (event.type === 'enable_collaboration') {
                 this._enableCollaboration(event);
+            } else if (event.type === 'load_shared_document') {
+                this._loadSharedDocument(event);
             }
         }
         this._portalHelper.handleEvents(e);
@@ -955,6 +987,80 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._runtime
             );
         }
+    }
+
+    /**
+     * Gets the ID of the shared document that should be loaded.
+     * Returns a string that represents the ID of the document that should be reused if possible.
+     * If the document should not be reused, returns null.
+     * @param event The event that was received.
+     */
+    protected _getSharedDocId(event: LoadSharedDocumentAction): string | null {
+        if (event.branch) {
+            return `${event.recordName ?? ''}/${event.inst ?? ''}/${
+                event.branch
+            }`;
+        }
+        return null;
+    }
+
+    protected async _loadSharedDocument(event: LoadSharedDocumentAction) {
+        const id = this._getSharedDocId(event);
+        if (id) {
+            const doc = this._documents.get(id);
+            if (doc && !doc.closed) {
+                if (hasValue(event.taskId)) {
+                    this.sendEvents([
+                        asyncResult(event.taskId, doc, false, true),
+                    ]);
+                }
+                return;
+            }
+        }
+
+        const config: RemoteSharedDocumentConfig = {
+            recordName: event.recordName,
+            inst: event.inst,
+            branch: event.branch,
+            host: this._config.config.causalRepoConnectionUrl,
+            connectionProtocol:
+                this._config.config.causalRepoConnectionProtocol,
+        };
+
+        if (!hasValue(event.inst) && hasValue(event.branch)) {
+            config.localPersistence = {
+                saveToIndexedDb: true,
+            };
+        }
+
+        let doc = await this._createSharedDocument(config, this._services);
+        if (!doc) {
+            return;
+        }
+
+        if (id) {
+            this._documents.set(id, doc);
+        }
+
+        this._subs.push(...this._getCleanupSubscriptionsForSharedDocument(doc));
+
+        if (hasValue(event.taskId)) {
+            // Wait for initial connection
+            doc.onStatusUpdated
+                .pipe(
+                    first(
+                        (status) =>
+                            status.type === 'sync' && status.synced === true
+                    )
+                )
+                .subscribe(() => {
+                    this.sendEvents([
+                        asyncResult(event.taskId, doc, false, true),
+                    ]);
+                });
+        }
+
+        doc.connect();
     }
 
     /**

@@ -1,6 +1,10 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
+import type {
+    UpdateHtmlAppAction,
+    SerializableMutationRecord,
+} from '@casual-simulation/aux-common';
 import {
     Bot,
     getShortId,
@@ -8,8 +12,6 @@ import {
     tagsOnBot,
     hasValue,
     runScript,
-    UpdateHtmlAppAction,
-    SerializableMutationRecord,
     asyncResult,
     htmlAppEvent,
     RegisterHtmlAppAction,
@@ -17,14 +19,16 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import { BrowserSimulation } from '../../../../../aux-vm-browser';
+import type { BrowserSimulation } from '../../../../../aux-vm-browser';
+import type { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import {
-    ELEMENT_SPECIFIC_PROPERTIES,
-    HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
-} from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
+    ELEMENT_SPECIFIC_PROPERTIES,
+} from '@casual-simulation/aux-vm/portals/HtmlAppConsts';
 import { eventNames } from './Util';
-import { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import type { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import { getMediaForCasualOSUrl } from '../../MediaUtils';
+import { parseCasualOSUrl } from '../../UrlUtils';
 
 const DISALLOWED_NODE_NAMES = new Set(['SCRIPT']);
 const DISALLOWED_EVENTS = new Set([
@@ -59,6 +63,9 @@ const EVENT_OPTIONS = {
     passive: true,
 };
 
+const MEDIA_COUNTER_SYMBOL = Symbol('mediaObservable');
+const MEDIA_SUBSCRIPTION_SYMBOL = Symbol('mediaSubscription');
+
 // Mostly taken from https://github.com/developit/preact-worker-demo/blob/bac36d7c34b241e4c041bcbdefaef77bcc5f367e/src/renderer/dom.js#L224
 @Component({
     components: {},
@@ -75,6 +82,8 @@ export default class HtmlApp extends Vue {
     private _currentTouch: any;
     private _sub: Subscription;
     private _listeners: Map<string, number> = new Map();
+    private _isDestroyed: boolean; // Set by Vue
+    private _isBeingDestroyed: boolean; // Set by Vue
 
     constructor() {
         super();
@@ -208,7 +217,7 @@ export default class HtmlApp extends Vue {
                 typeof value !== 'object' &&
                 typeof value !== 'function' &&
                 prop !== prop.toUpperCase() &&
-                !e.hasOwnProperty(prop)
+                !Object.prototype.hasOwnProperty.call(e, prop)
             ) {
                 e[prop] = value;
             }
@@ -238,7 +247,12 @@ export default class HtmlApp extends Vue {
 
             if (skeleton.style) {
                 for (let prop in skeleton.style) {
-                    if (skeleton.style.hasOwnProperty(prop)) {
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            skeleton.style,
+                            prop
+                        )
+                    ) {
                         el.style[prop] = skeleton.style[prop];
                     }
                 }
@@ -310,6 +324,10 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyMutation(mutation: any) {
+        if (this._isDestroyed || this._isBeingDestroyed) {
+            return;
+        }
+
         if (mutation.type === 'childList') {
             this._applyChildList(mutation);
         } else if (mutation.type === 'attributes') {
@@ -409,7 +427,7 @@ export default class HtmlApp extends Vue {
     ) {
         if (attributeName === 'style' && typeof value === 'object') {
             for (let prop in value) {
-                if (value.hasOwnProperty(prop)) {
+                if (Object.prototype.hasOwnProperty.call(value, prop)) {
                     (<any>node).style[prop] = value[prop];
                 }
             }
@@ -418,6 +436,48 @@ export default class HtmlApp extends Vue {
             (attributeName === 'value' || attributeName === 'checked')
         ) {
             (<any>node)[attributeName] = value;
+        } else if (
+            node instanceof HTMLVideoElement &&
+            attributeName === 'src' &&
+            typeof value === 'string'
+        ) {
+            const anyNode: any = node;
+            const previousSub: Subscription =
+                anyNode[MEDIA_SUBSCRIPTION_SYMBOL];
+            if (previousSub) {
+                previousSub.unsubscribe();
+            }
+            const casualOsUrl = parseCasualOSUrl(value);
+            if (casualOsUrl) {
+                // Quick and dirty way to cancel previous media streams
+                const gen: number = (anyNode[MEDIA_COUNTER_SYMBOL] || 0) + 1;
+                anyNode[MEDIA_COUNTER_SYMBOL] = gen;
+                getMediaForCasualOSUrl(casualOsUrl).then((media) => {
+                    if (anyNode[MEDIA_COUNTER_SYMBOL] !== gen) {
+                        return;
+                    }
+                    if (media) {
+                        node.srcObject = media;
+                        const previousSub: Subscription =
+                            anyNode[MEDIA_SUBSCRIPTION_SYMBOL];
+                        previousSub?.unsubscribe();
+                        anyNode[MEDIA_SUBSCRIPTION_SYMBOL] = new Subscription(
+                            () => {
+                                if (media instanceof MediaStream) {
+                                    console.log('unsub');
+                                    for (let track of media.getTracks()) {
+                                        track.stop();
+                                    }
+                                }
+                            }
+                        );
+                    } else {
+                        node.setAttribute(attributeName, value);
+                    }
+                });
+            } else {
+                node.setAttribute(attributeName, value);
+            }
         } else {
             node.setAttribute(attributeName, value);
         }

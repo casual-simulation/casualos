@@ -1,50 +1,58 @@
 import { BaseAuxChannel } from './BaseAuxChannel';
-import {
+import type {
     RemoteAction,
     DeviceAction,
-    remote,
     ConnectionInfo,
     Action,
     CurrentVersion,
     StatusUpdate,
     ConnectionIndicator,
     AuxPartitionServices,
+} from '@casual-simulation/aux-common';
+import {
+    remote,
     ON_ALLOW_COLLABORATION_UPGRADE,
     ON_DISALLOW_COLLABORATION_UPGRADE,
+} from '@casual-simulation/aux-common';
+import type {
+    MemoryPartition,
+    MemoryPartitionConfig,
+    PartitionConfig,
+    AuxPartition,
+    StateUpdatedEvent,
+    AuxPartitions,
+    MemoryPartitionStateConfig,
 } from '@casual-simulation/aux-common';
 import {
     createBot,
     botAdded,
-    MemoryPartition,
     createMemoryPartition,
-    MemoryPartitionConfig,
-    PartitionConfig,
-    AuxPartition,
     createAuxPartition,
-    StateUpdatedEvent,
     createPrecalculatedBot,
     toast,
-    AuxPartitions,
     action,
     stateUpdatedEvent,
     MemoryPartitionImpl,
-    MemoryPartitionStateConfig,
     asyncResult,
     botUpdated,
 } from '@casual-simulation/aux-common';
-import {
-    AuxRuntime,
+import type {
     RuntimeActions,
     RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
+import {
+    AuxRuntime,
     attachRuntime,
     detachRuntime,
 } from '@casual-simulation/aux-runtime';
-import { AuxConfig } from './AuxConfig';
+import type { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
-import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
+import type { TimeSample } from '@casual-simulation/timesync';
+import { TimeSyncController } from '@casual-simulation/timesync';
+import type { AsyncResultAction } from '@casual-simulation/aux-common/bots';
 import {
     ON_COLLABORATION_ENABLED,
     TEMPORARY_BOT_PARTITION_ID,
@@ -53,7 +61,14 @@ import {
     insert,
     preserve,
 } from '@casual-simulation/aux-common/bots';
-import { AuxSubChannel } from './AuxChannel';
+import type { AuxSubChannel } from './AuxChannel';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import { createSharedDocument } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import {
+    createYjsSharedDocument,
+    YjsSharedDocument,
+} from '@casual-simulation/aux-common/documents/YjsSharedDocument';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -929,6 +944,215 @@ describe('BaseAuxChannel', () => {
             });
         });
 
+        describe('load_shared_document', () => {
+            let events: RuntimeActions[];
+            let sub: Subscription;
+
+            beforeEach(() => {
+                events = [];
+
+                sub = new Subscription();
+            });
+
+            afterEach(() => {
+                sub.unsubscribe();
+            });
+
+            it('should handle load_shared_document events', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await waitAsync();
+
+                const results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(1);
+
+                const result = results[0];
+                expect(result.taskId).toBe('task1');
+                expect(result.uncopiable).toBe(true);
+                expect(result.result).toBeInstanceOf(YjsSharedDocument);
+            });
+
+            it('should reuse documents when they target the same location', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                const results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(true);
+            });
+
+            it('should not reuse a document that has been disposed', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await waitAsync();
+
+                let results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(1);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                result1.result.unsubscribe();
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: 'myRecord',
+                        inst: 'myInst',
+                        branch: 'myBranch',
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(false);
+                expect(result2.result.closed).toBe(false);
+            });
+
+            it('should not reuse documents when it doesnt have a location', async () => {
+                await channel.initAndWait();
+
+                sub.add(
+                    channel.helper.localEvents.subscribe((e) =>
+                        events.push(...e)
+                    )
+                );
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        taskId: 'task1',
+                    },
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'load_shared_document',
+                        recordName: null,
+                        inst: null,
+                        branch: null,
+                        taskId: 'task2',
+                    },
+                ]);
+
+                await waitAsync();
+
+                const results = events.filter(
+                    (e) => e.type === 'async_result'
+                ) as AsyncResultAction[];
+
+                expect(results).toHaveLength(2);
+
+                const result1 = results[0];
+                expect(result1.taskId).toBe('task1');
+                expect(result1.uncopiable).toBe(true);
+                expect(result1.result).toBeInstanceOf(YjsSharedDocument);
+
+                const result2 = results[1];
+                expect(result2.taskId).toBe('task2');
+                expect(result2.uncopiable).toBe(true);
+                expect(result2.result).toBeInstanceOf(YjsSharedDocument);
+
+                expect(result1.result === result2.result).toBe(false);
+            });
+        });
+
         describe('attach_runtime', () => {
             let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
@@ -971,6 +1195,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1030,6 +1255,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1118,6 +1344,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1217,6 +1444,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1333,6 +1561,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1508,6 +1737,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1574,6 +1804,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1670,6 +1901,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1755,6 +1987,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1960,6 +2193,7 @@ describe('BaseAuxChannel', () => {
                         ab1BootstrapUrl: 'url',
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         allowCollaborationUpgrade: false,
                         isCollaborative: false,
                     },
@@ -1986,6 +2220,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'url',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
             });
@@ -1994,6 +2229,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: true,
                 supportsVR: true,
+                supportsDOM: true,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2006,6 +2242,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: true,
                 supportsVR: true,
+                supportsDOM: true,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2031,6 +2268,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2060,6 +2298,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: true,
                 isCollaborative: false,
             });
@@ -2091,6 +2330,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
             });
@@ -2139,6 +2379,13 @@ class AuxChannelImpl extends BaseAuxChannel {
             (cfg) => createMemoryPartition(cfg),
             (config) => createTestPartition(config)
         );
+    }
+
+    protected _createSharedDocument(
+        config: SharedDocumentConfig,
+        services: AuxPartitionServices
+    ): Promise<SharedDocument> {
+        return createSharedDocument(config, services, createYjsSharedDocument);
     }
 
     protected _createTimeSyncController() {

@@ -1,7 +1,7 @@
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     calculateGridScale,
     getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
@@ -22,9 +22,10 @@ export class TransformerDecorator extends AuxBot3DDecoratorBase {
     botUpdated(calc: BotCalculationContext): void {
         const transformer = getBotTransformer(calc, this.bot3D.bot);
         if (hasValue(transformer)) {
-            const bots = this.bot3D.dimensionGroup.simulation3D.findBotsById(
-                transformer
-            );
+            const bots =
+                this.bot3D.dimensionGroup.simulation3D.findBotsById(
+                    transformer
+                );
 
             if (bots.length > 0) {
                 const parentBot = bots[0];

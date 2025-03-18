@@ -20,14 +20,13 @@ import {
     calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
 import { Color } from '@casual-simulation/three';
-import {
-    BrowserSimulation,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { merge } from 'lodash';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.

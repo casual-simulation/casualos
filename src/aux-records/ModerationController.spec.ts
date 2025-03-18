@@ -3,7 +3,7 @@ import { MemoryStore } from './MemoryStore';
 import { ModerationController } from './ModerationController';
 import { v4 as uuid } from 'uuid';
 import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
-import { ModerationFileScan } from './ModerationJobProvider';
+import type { ModerationFileScan } from './ModerationJobProvider';
 
 const originalDateNow = Date.now;
 

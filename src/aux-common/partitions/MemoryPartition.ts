@@ -1,36 +1,43 @@
-import { MemoryPartition, AuxPartitionRealtimeStrategy } from './AuxPartition';
-import {
+import type {
+    MemoryPartition,
+    AuxPartitionRealtimeStrategy,
+} from './AuxPartition';
+import type {
     PartitionConfig,
     MemoryPartitionStateConfig,
 } from './AuxPartitionConfig';
-import {
+import type {
     BotsState,
     BotAction,
     Bot,
     UpdatedBot,
-    tagsOnBot,
-    hasValue,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     PartialBotsState,
     BotSpace,
 } from '../bots';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import {
+    tagsOnBot,
+    hasValue,
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
+} from '../bots';
+import type { Observable } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { flatMap, union } from 'lodash';
 import { merge } from '../utils';
-import { applyTagEdit, edits, isTagEdit, TagEdit, TagEditOp } from '../bots';
+import type { TagEdit, TagEditOp } from '../bots';
+import { applyTagEdit, edits, isTagEdit } from '../bots';
 import { v4 as uuid } from 'uuid';
 import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
 } from './PartitionUtils';
-import { Action, CurrentVersion, StatusUpdate } from '../common';
+import type { Action, CurrentVersion, StatusUpdate } from '../common';
 
 /**
  * Attempts to create a MemoryPartition from the given config.

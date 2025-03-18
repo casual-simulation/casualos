@@ -1,46 +1,52 @@
-import { AuthController } from './AuthController';
-import {
-    isRecordKey,
+import type { AuthController } from './AuthController';
+import type {
     RecordsController,
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import {
+import { isRecordKey } from './RecordsController';
+import type {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
-import {
-    ADMIN_ROLE_NAME,
+import type {
     AvailablePermissions,
     ResourceKinds,
     ActionKinds,
-    PUBLIC_READ_MARKER,
     SubjectType,
-    ACCOUNT_MARKER,
     DenialReason,
     PrivacyFeatures,
     PermissionOptions,
+} from '@casual-simulation/aux-common';
+import {
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+    ACCOUNT_MARKER,
     PUBLIC_WRITE_MARKER,
     PRIVATE_MARKER,
 } from '@casual-simulation/aux-common';
-import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
-import {
+import type {
+    ListedStudioAssignment,
+    PublicRecordKeyPolicy,
+} from './RecordsStore';
+import type {
     AssignedRole,
     AssignPermissionToSubjectAndMarkerFailure,
-    getExpireTime,
-    getPublicMarkersPermission,
     MarkerPermissionAssignment,
     PolicyStore,
     ResourcePermissionAssignment,
     RoleAssignment,
     UpdateUserRolesFailure,
+    UserPrivacyFeatures,
 } from './PolicyStore';
+import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
 import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import type { UserRole } from './AuthStore';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -83,6 +89,13 @@ const ALLOWED_STUDIO_MEMBER_RESOURCES: [ResourceKinds, ActionKinds[]][] = [
     ['loom', ['create']],
     ['webhook', ['read', 'create', 'delete', 'update', 'list', 'run']],
 ];
+
+const ALLOWED_MODERATOR_ACTIONS = new Set<string>([
+    'read',
+    'list',
+    'listSubscriptions',
+    'count',
+] as ActionKinds[]);
 
 function constructAllowedResourcesLookup(
     allowedResources: [ResourceKinds, ActionKinds[]][]
@@ -127,6 +140,18 @@ function isAllowedStudioMemberResource(
     return ALLOWED_STUDIO_MEMBER_RESOURCES_LOOKUP.has(
         `${resourceKind}.${action}`
     );
+}
+
+/**
+ * Determines if the given resource kind and action are allowed to be accessed by a moderator.
+ * @param resourceKind The kind of the resource kind.
+ * @param action The action.
+ */
+function isAllowedModeratorResource(
+    resourceKind: string,
+    action: string
+): boolean {
+    return ALLOWED_MODERATOR_ACTIONS.has(action);
 }
 
 /**
@@ -263,7 +288,7 @@ export class PolicyController {
                 : 'subjectfull';
 
         let recordOwnerPrivacyFeatures: PrivacyFeatures = null;
-        let userPrivacyFeatures: PrivacyFeatures = null;
+        let userPrivacyFeatures: UserPrivacyFeatures = null;
         if (ownerId) {
             recordOwnerPrivacyFeatures =
                 await this._policies.getUserPrivacyFeatures(ownerId);
@@ -324,6 +349,7 @@ export class PolicyController {
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
             userId: request.userId,
+            userRole: userPrivacyFeatures?.userRole ?? 'none',
             userPrivacyFeatures,
             sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };
@@ -748,6 +774,61 @@ export class PolicyController {
             }
 
             const recordName = context.recordName;
+            if (context.userRole === 'superUser') {
+                return {
+                    success: true,
+                    recordName: recordName,
+                    permission: {
+                        id: null,
+                        recordName: recordName,
+                        userId: null,
+
+                        // Record owners are treated as if they are admins in the record
+                        subjectType: 'role',
+                        subjectId: ADMIN_ROLE_NAME,
+
+                        // Admins get all access to all resources in a record
+                        resourceKind: null,
+                        action: null,
+
+                        marker: markers[0],
+                        options: {},
+                        expireTimeMs: null,
+                    },
+                    explanation: `User is a superUser.`,
+                };
+            } else if (context.userRole === 'moderator') {
+                if (
+                    isAllowedModeratorResource(
+                        request.resourceKind,
+                        request.action
+                    )
+                ) {
+                    return {
+                        success: true,
+                        recordName: recordName,
+                        permission: {
+                            id: null,
+                            recordName: recordName,
+                            userId: null,
+
+                            // Record owners are treated as if they are admins in the record
+                            subjectType: 'role',
+                            subjectId: ADMIN_ROLE_NAME,
+
+                            // Admins get all access to all resources in a record
+                            resourceKind: null,
+                            action: request.action,
+
+                            marker: markers[0],
+                            options: {},
+                            expireTimeMs: null,
+                        },
+                        explanation: `User is a moderator.`,
+                    };
+                }
+            }
+
             const subjectType = request.subjectType;
             let subjectId = request.subjectId;
 
@@ -2574,6 +2655,11 @@ export interface AuthorizationContext {
      * The ID of the user that is currently logged in.
      */
     userId: string;
+
+    /**
+     * The role of the user.
+     */
+    userRole: UserRole;
 
     /**
      * Whether to send not_logged_in results when the user has not provided any authentication mechanism, but needs to.

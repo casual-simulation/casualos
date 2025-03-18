@@ -1,4 +1,4 @@
-import {
+import type {
     PartialBot,
     BotsState,
     Bot,
@@ -8,8 +8,8 @@ import {
 } from './Bot';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import { InstUpdate } from './StoredAux';
-import {
+import type { InstUpdate } from './StoredAux';
+import type {
     DeviceAction,
     RemoteAction,
     RemoteActionError,
@@ -17,6 +17,8 @@ import {
     DeviceActionResult,
     DeviceActionError,
     Action,
+} from '../common';
+import {
     DeviceSelector,
     remoteError,
     remoteResult,
@@ -187,7 +189,8 @@ export type AsyncActions =
     | RecordLoomAction
     | WatchLoomAction
     | GetLoomMetadataAction
-    | GetScriptIssuesAction;
+    | GetScriptIssuesAction
+    | LoadSharedDocumentAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -1806,6 +1809,31 @@ export interface LoadSpaceAction extends Partial<AsyncAction> {
 }
 
 /**
+ * Defines an event that is used to load a shared document.
+ */
+export interface LoadSharedDocumentAction extends AsyncAction {
+    type: 'load_shared_document';
+
+    /**
+     * The name of the record that the document should be loaded from.
+     * If null, then the document will be loaded either from a public inst or indexeddb.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that should be loaded.
+     * If null, then the document will be loaded from indexeddb.
+     */
+    inst: string | null;
+
+    /**
+     * The branch that should be loaded.
+     * If null, then the document will not be stored in indexeddb.
+     */
+    branch: string | null;
+}
+
+/**
  * An event that is used to enable collaboration features.
  *
  * @dochash types/os/spaces
@@ -2667,6 +2695,13 @@ export interface BeginAudioRecordingAction extends AsyncAction {
      * Defaults to 44100 if not specified.
      */
     sampleRate?: number;
+
+    /**
+     * The buffer rate in milliseconds that audio recordings should use.
+     * When set, the audio will be buffered and sent in chunks at the specified rate.
+     * Defaults to 500ms.
+     */
+    bufferRateMilliseconds?: number;
 }
 
 /**
@@ -4725,6 +4760,28 @@ export function loadSpace(
         type: 'load_space',
         space,
         config,
+        taskId,
+    };
+}
+
+/**
+ * Loads a shared document.
+ * @param recordName The name of the record.
+ * @param inst The instance to load the document into.
+ * @param branch The branch to load the document from.
+ * @param taskId The ID of the async task.
+ */
+export function loadSharedDocument(
+    recordName: string | null,
+    inst: string | null,
+    branch: string,
+    taskId?: number | string
+): LoadSharedDocumentAction {
+    return {
+        type: 'load_shared_document',
+        recordName,
+        inst,
+        branch,
         taskId,
     };
 }

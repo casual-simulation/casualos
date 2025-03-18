@@ -1,5 +1,5 @@
 import { hasValue } from '@casual-simulation/aux-common';
-import { Uri } from './MonacoLibs';
+import type { Uri } from './MonacoLibs';
 
 export function getModelUriFromId(
     id: string,

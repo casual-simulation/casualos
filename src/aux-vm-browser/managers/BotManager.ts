@@ -1,5 +1,11 @@
-import {
+import type {
     Bot,
+    BotTags,
+    AuxPartitionConfig,
+    BotAction,
+    BotsState,
+} from '@casual-simulation/aux-common';
+import {
     merge,
     parseSimulationId,
     createBot,
@@ -9,10 +15,8 @@ import {
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
     COOKIE_BOT_ID,
-    BotTags,
     isBotTags,
     isBot,
-    AuxPartitionConfig,
     ADMIN_PARTITION_ID,
     ADMIN_BRANCH_NAME,
     TEMPORARY_SHARED_PARTITION_ID,
@@ -22,34 +26,30 @@ import {
     getUpdateForTagAndSpace,
     getBotsStateFromStoredAux,
     BotActions,
-    BotAction,
     ConnectionIndicator,
     getConnectionId,
     DEFAULT_BRANCH_NAME,
-    BotsState,
     hasValue,
     asyncResult,
 } from '@casual-simulation/aux-common';
+import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
-    AuxVM,
     BaseSimulation,
     LoginManager,
     getTreeName,
     Simulation,
-    AuxConfig,
     RecordsManager,
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
-import { BrowserSimulation } from './BrowserSimulation';
+import type { BrowserSimulation } from './BrowserSimulation';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, tap, map } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/aux-common';
-import { Observable, fromEventPattern, Subscription } from 'rxjs';
-import { getFinalUrl } from '@casual-simulation/aux-vm-client';
+import type { ConsoleMessages } from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
-import {
+import type {
     AuthHelperInterface,
     RecordsEndpointInfo,
     SimulationOrigin,
@@ -58,7 +58,6 @@ import { LivekitManager } from './LivekitManager';
 import { SocketManager as WebSocketManager } from '@casual-simulation/websocket';
 import { ApiGatewayWebsocketConnectionClient } from '@casual-simulation/aux-websocket-aws';
 import { WebsocketConnectionClient } from '@casual-simulation/aux-websocket';
-import { isRecordKey, RecordDataResult } from '@casual-simulation/aux-records';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -180,10 +179,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         id: string,
         configBotId: string,
         origin: SimulationOrigin,
-        config: AuxConfig['config'],
-        defaultHost: string = location.origin
+        config: AuxConfig['config']
     ): AuxPartitionConfig {
-        const host = origin.host ?? defaultHost;
+        const host = origin.host ?? config.causalRepoConnectionUrl;
+
+        if (!host) {
+            throw new Error('[BotManager] Host is required.');
+        }
+
         const protocol = config.causalRepoConnectionProtocol;
         const versions = config.sharedPartitionsVersion;
         const localPersistence =
@@ -283,11 +286,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             partitions.shared = {
                 type: 'yjs',
                 remoteEvents: true,
+                branch: `${origin.recordName ?? ''}/${
+                    origin.inst
+                }/${DEFAULT_BRANCH_NAME}`,
                 localPersistence: {
                     saveToIndexedDb: true,
-                    database: `${origin.recordName ?? ''}/${
-                        origin.inst
-                    }/${DEFAULT_BRANCH_NAME}`,
                 },
                 connectionId: configBotId,
             };

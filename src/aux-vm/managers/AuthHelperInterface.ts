@@ -15,8 +15,8 @@ import type {
     PublicRecordKeyPolicy,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
-import { Observable, SubscriptionLike } from 'rxjs';
-import {
+import type { Observable, SubscriptionLike } from 'rxjs';
+import type {
     LoginHint,
     LoginStatus,
     LoginUIStatus,

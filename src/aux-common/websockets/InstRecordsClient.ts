@@ -1,4 +1,7 @@
-import { ConnectionClient, ClientConnectionState } from './ConnectionClient';
+import type {
+    ConnectionClient,
+    ClientConnectionState,
+} from './ConnectionClient';
 import {
     filter,
     map,
@@ -9,8 +12,9 @@ import {
     first,
     scan,
 } from 'rxjs/operators';
-import { merge, Observable, of, Subject } from 'rxjs';
-import {
+import type { Observable } from 'rxjs';
+import { merge, of, Subject } from 'rxjs';
+import type {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
@@ -18,16 +22,17 @@ import {
     WatchBranchResultMessage,
     WebsocketErrorInfo,
 } from './WebsocketEvents';
-import {
+import type {
     DeviceAction,
-    RemoteAction,
     DeviceActionResult,
     DeviceActionError,
     RemoteActions,
 } from '../common/RemoteActions';
-import { ConnectionInfo } from '../common/ConnectionInfo';
+import { RemoteAction } from '../common/RemoteActions';
+import type { ConnectionInfo } from '../common/ConnectionInfo';
 import { flatMap, flatMap as lodashFlatMap, sortBy } from 'lodash';
-import { TimeSample, TimeSyncConnection } from '@casual-simulation/timesync';
+import type { TimeSample } from '@casual-simulation/timesync';
+import { TimeSyncConnection } from '@casual-simulation/timesync';
 
 export const DEFAULT_BRANCH_NAME = 'default';
 
@@ -675,6 +680,7 @@ export class InstRecordsClient {
         let count = this._timeSyncCounter + 1;
         this._timeSyncCounter = count;
         const observable = this._whenConnected().pipe(
+            first((c) => c),
             tap((connected) => {
                 this._client.send({
                     type: 'sync/time',

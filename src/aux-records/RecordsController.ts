@@ -1,4 +1,4 @@
-import {
+import type {
     ListedRecord,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
@@ -19,7 +19,7 @@ import {
 } from './InstrumentedHashHelpers';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import {
+import type {
     NotAuthorizedError,
     NotLoggedInError,
     NotSupportedError,
@@ -27,14 +27,16 @@ import {
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
-import { AuthStore } from './AuthStore';
+import type { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';
-import { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import { ConfigurationStore } from './ConfigurationStore';
-import {
+import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type {
     AIHumeFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
+} from './SubscriptionConfiguration';
+import {
     SubscriptionConfiguration,
     getComIdFeatures,
     getHumeAiFeatures,
@@ -42,9 +44,9 @@ import {
     getSubscriptionFeatures,
     getSubscriptionTier,
 } from './SubscriptionConfiguration';
-import { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
+import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
-import { NotificationMessenger } from './NotificationMessenger';
+import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -56,7 +58,7 @@ export interface RecordsControllerConfig {
     auth: AuthStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
-    messenger: NotificationMessenger | null;
+    messenger: SystemNotificationMessenger | null;
 }
 
 /**
@@ -67,7 +69,7 @@ export class RecordsController {
     private _auth: AuthStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
-    private _messenger: NotificationMessenger | null;
+    private _messenger: SystemNotificationMessenger | null;
 
     constructor(config: RecordsControllerConfig) {
         this._store = config.store;

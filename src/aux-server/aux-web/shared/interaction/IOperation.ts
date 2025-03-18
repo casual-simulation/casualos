@@ -1,5 +1,5 @@
-import { BotCalculationContext } from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
+import type { Simulation } from '@casual-simulation/aux-vm';
 
 export interface IOperation {
     simulation: Simulation;

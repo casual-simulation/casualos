@@ -1,5 +1,5 @@
+import type { ConnectionIndicator } from '../common';
 import {
-    ConnectionIndicator,
     ConnectionIndicatorId,
     ConnectionIndicatorToken,
     ConnectionInfo,
@@ -7,20 +7,20 @@ import {
 import { AuthenticatedConnectionClient } from './AuthenticatedConnectionClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { waitAsync } from '../test/TestHelpers';
-import { ClientConnectionState } from './ConnectionClient';
+import type { ClientConnectionState } from './ConnectionClient';
 import { Subject } from 'rxjs';
-import {
+import type {
     LoginResultMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
-    WebsocketMessage,
 } from './WebsocketEvents';
-import {
+import { WebsocketMessage } from './WebsocketEvents';
+import type {
     PartitionAuthExternalPermissionResult,
     PartitionAuthExternalRequestPermission,
     PartitionAuthRequest,
-    PartitionAuthSource,
 } from '../partitions';
+import { PartitionAuthSource } from '../partitions';
 
 console.log = jest.fn();
 

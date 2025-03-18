@@ -1,19 +1,18 @@
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { WorkspaceMesh } from './WorkspaceMesh';
-import { GridChecker } from './grid/GridChecker';
-import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import type { GridChecker } from './grid/GridChecker';
+import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    Bot,
     getDimensionPosition,
     TagUpdatedEvent,
-    BotCalculationContext,
     isDimension,
     getDimensionVisualizeMode,
     isMinimized,
     getDimensionRotation,
 } from '@casual-simulation/aux-common';
-import { Object3D } from '@casual-simulation/three';
-import { Simulation3D } from './Simulation3D';
+import type { Object3D } from '@casual-simulation/three';
+import type { Simulation3D } from './Simulation3D';
 
 /**
  * Defines a class that represents a builder group.

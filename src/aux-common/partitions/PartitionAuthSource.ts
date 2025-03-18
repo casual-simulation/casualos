@@ -1,5 +1,5 @@
-import { WebsocketErrorCode } from '../websockets';
-import {
+import type { WebsocketErrorCode } from '../websockets';
+import type {
     AuthorizeActionMissingPermission,
     ConnectionIndicator,
     DenialReason,
@@ -7,8 +7,9 @@ import {
     ResourceKinds,
     SubjectType,
 } from '../common';
-import { Observable, Subject, filter, first, merge } from 'rxjs';
-import { NotAuthorizedError, ServerError } from '../Errors';
+import type { Observable } from 'rxjs';
+import { Subject, filter, first, merge } from 'rxjs';
+import type { NotAuthorizedError, ServerError } from '../Errors';
 
 /**
  * Defines an interface that is able to provide events for when authentication information is requested or provided to partitions.
@@ -273,6 +274,11 @@ export interface PartitionInstResource {
      * The name of the inst.
      */
     inst: string;
+
+    /**
+     * The branch that is being loaded.
+     */
+    branch: string;
 }
 
 export type PartitionAuthResponse =

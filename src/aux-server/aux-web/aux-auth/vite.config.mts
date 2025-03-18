@@ -18,6 +18,7 @@ import z from 'zod';
 import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
 
@@ -193,7 +194,7 @@ export default defineConfig(({ command, mode }) => {
             alias: {},
         },
         server: {
-            host: '0.0.0.0',
+            host: '::',
             port: 3002,
             watch: {
                 ignored: [

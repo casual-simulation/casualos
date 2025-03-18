@@ -1,5 +1,6 @@
-import { PrivacyFeatures, hasValue } from '@casual-simulation/aux-common';
-import {
+import type { PrivacyFeatures } from '@casual-simulation/aux-common';
+import { hasValue } from '@casual-simulation/aux-common';
+import type {
     RegexRule,
     Record,
     RecordsStore,
@@ -15,7 +16,7 @@ import {
     StudioComIdRequest,
     HumeConfig,
 } from '@casual-simulation/aux-records';
-import {
+import type {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
@@ -32,9 +33,10 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
     UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
-import { Db, Collection, FilterQuery } from 'mongodb';
+import type { Db, Collection, FilterQuery } from 'mongodb';
 import { v4 as uuid } from 'uuid';
 
 export const USERS_COLLECTION_NAME = 'users';
@@ -112,6 +114,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             db.collection<MongoDBWebAuthnLoginRequest>(
                 WEB_AUTHN_LOGIN_REQUESTS_COLLECTION_NAME
             );
+    }
+
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        return null;
     }
 
     getStudioHumeConfig(studioId: string): Promise<HumeConfig | null> {
@@ -502,7 +510,6 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
-        user.subscriptionStatus;
         await this._users.updateOne(
             { _id: user.id },
             {

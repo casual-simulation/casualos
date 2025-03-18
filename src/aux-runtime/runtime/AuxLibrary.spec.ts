@@ -1,21 +1,31 @@
+import type {
+    DebuggerInterface,
+    RecordFileApiSuccess,
+    TagSpecificApiOptions,
+} from './AuxLibrary';
 import {
     createDefaultLibrary,
     createInterpretableFunction,
-    DebuggerInterface,
     GET_RUNTIME,
-    RecordFileApiSuccess,
     tagAsInterpretableFunction,
-    TagSpecificApiOptions,
 } from './AuxLibrary';
+import type { WatchBotTimer, WatchPortalTimer } from './AuxGlobalContext';
 import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
-    WatchBotTimer,
     DEBUG_STRING,
-    WatchPortalTimer,
 } from './AuxGlobalContext';
+import type {
+    BotsState,
+    RuntimeBot,
+    AuthData,
+    Bot,
+    PartialBotsState,
+    StoredAuxVersion2,
+    InstUpdate,
+} from '@casual-simulation/aux-common/bots';
 import {
     toast,
     showJoinCode,
@@ -42,7 +52,6 @@ import {
     unloadSimulation,
     importAUX,
     addState,
-    BotsState,
     showInputForTag,
     KNOWN_PORTALS,
     replaceDragBot,
@@ -69,7 +78,6 @@ import {
     cancelSound,
     localPositionTween,
     localRotationTween,
-    RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
     animateTag,
@@ -94,13 +102,10 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData,
-    AuthData,
     defineGlobalBot,
-    Bot,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
-    PartialBotsState,
     convertGeolocationToWhat3Words,
     arSupported,
     vrSupported,
@@ -131,8 +136,6 @@ import {
     analyticsRecordEvent,
     KNOWN_TAGS,
     showConfirm,
-    StoredAuxVersion2,
-    InstUpdate,
     getCurrentInstUpdate,
     openPhotoCamera,
     enableCollaboration,
@@ -147,6 +150,7 @@ import {
     recordLoom,
     watchLoom,
     getLoomMetadata,
+    loadSharedDocument,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -189,6 +193,16 @@ import {
     listWebhooks,
     listWebhooksByMarker,
     runWebhook,
+    recordNotification,
+    eraseNotification,
+    getNotification,
+    listNotifications,
+    listNotificationsByMarker,
+    subscribeToNotification,
+    unsubscribeFromNotification,
+    sendNotification,
+    listNotificationSubscriptions,
+    listUserNotificationSubscriptions,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -202,12 +216,12 @@ import {
     createDummyRuntimeBot,
     testScriptBotInterface,
 } from './test/TestScriptBotFactory';
-import {
+import type {
     RuntimeBatcher,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import { AuxVersion } from './AuxVersion';
-import { AuxDevice } from './AuxDevice';
+import type { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
 import {
     asymmetricDecryptV1,
@@ -223,7 +237,8 @@ import {
     remoteEdit,
 } from '@casual-simulation/aux-common/bots';
 import { RanOutOfEnergyError } from './AuxResults';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import {
     waitAsync,
     customDataTypeCases,
@@ -233,8 +248,8 @@ import { convertErrorToCopiableValue } from '@casual-simulation/aux-common/parti
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
+import type { AIChatInterfaceStreamResponse } from '@casual-simulation/aux-records';
 import {
-    AIChatInterfaceStreamResponse,
     AIChatMessage,
     formatV1RecordKey,
     formatV2RecordKey,
@@ -295,6 +310,7 @@ describe('AuxLibrary', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            supportsDOM: false,
             isCollaborative: true,
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
@@ -3999,6 +4015,7 @@ describe('AuxLibrary', () => {
                 expect(d).toEqual({
                     supportsAR: null,
                     supportsVR: null,
+                    supportsDOM: null,
                     isCollaborative: null,
                     ab1BootstrapUrl: null,
                     allowCollaborationUpgrade: null,
@@ -4059,6 +4076,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 const expected = enableCollaboration(context.tasks.size);
@@ -4073,6 +4091,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -4090,6 +4109,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -5378,6 +5398,27 @@ describe('AuxLibrary', () => {
                     expect(result).toEqual(expected);
                 }
             );
+        });
+
+        describe('os.getCurrentInstRecord()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot('player', {}, 'tempLocal');
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should return record', () => {
+                player.tags.record = 'record';
+                const result = library.api.os.getCurrentInstRecord();
+                expect(result).toEqual('record');
+            });
+
+            it('should return null if record is not set', () => {
+                const result = library.api.os.getCurrentInstRecord();
+                expect(result).toBe(null);
+            });
         });
 
         describe('os.getMiniPortalDimension()', () => {
@@ -7637,6 +7678,186 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.recordNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.recordNotification(
+                    'recordName',
+                    {
+                        address: 'notification',
+                        description: 'description',
+                        markers: ['private'],
+                    }
+                );
+                const expected = recordNotification(
+                    'recordName',
+                    {
+                        address: 'notification',
+                        description: 'description',
+                        markers: ['private'],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.eraseNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = eraseNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.getNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = getNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotifications()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.listNotifications(
+                    'recordName',
+                    'notification'
+                );
+                const expected = listNotifications(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotificationsByMarker()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.listNotificationsByMarker(
+                    'recordName',
+                    'marker',
+                    'notification'
+                );
+                const expected = listNotificationsByMarker(
+                    'recordName',
+                    'marker',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.subscribeToNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.subscribeToNotification(
+                    'recordName',
+                    'notification'
+                );
+                const expected = subscribeToNotification(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.unsubscribeFromNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.unsubscribeFromNotification('subId');
+                const expected = unsubscribeFromNotification(
+                    'subId',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.sendNotification()', () => {
+            it('should emit an action', async () => {
+                const action: any = library.api.os.sendNotification(
+                    'recordName',
+                    'notification',
+                    {
+                        title: 'title',
+                    }
+                );
+                const expected = sendNotification(
+                    'recordName',
+                    'notification',
+                    {
+                        title: 'title',
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listNotificationSubscriptions()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.listNotificationSubscriptions(
+                        'recordName',
+                        'notification'
+                    );
+                const expected = listNotificationSubscriptions(
+                    'recordName',
+                    'notification',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listUserNotificationSubscriptions()', () => {
+            it('should emit an action', async () => {
+                const action: any =
+                    library.api.os.listUserNotificationSubscriptions();
+                const expected = listUserNotificationSubscriptions(
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.recordFile()', () => {
             it('should emit a RecordFileAction', async () => {
                 const action: any = library.api.os.recordFile(
@@ -8818,6 +9039,79 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.getSharedDocument()', () => {
+            let player: RuntimeBot;
+
+            beforeEach(() => {
+                player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        record: 'record',
+                        inst: 'inst',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+            });
+
+            it('should emit a LoadSharedDocumentAction', () => {
+                const promise: any = library.api.os.getSharedDocument('docId');
+                const expected = loadSharedDocument(
+                    'record',
+                    'inst',
+                    'doc/docId',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document from a different inst', () => {
+                const promise: any = library.api.os.getSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId'
+                );
+                const expected = loadSharedDocument(
+                    'record2',
+                    'inst2',
+                    'doc/docId',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getLocalDocument()', () => {
+            it('should emit a LoadSharedDocumentAction', () => {
+                const promise: any = library.api.os.getLocalDocument('docId');
+                const expected = loadSharedDocument(
+                    null,
+                    null,
+                    'doc/docId',
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getMemoryDocument()', () => {
+            it('should emit a LoadSharedDocumentAction', () => {
+                const promise: any = library.api.os.getMemoryDocument();
+                const expected = loadSharedDocument(
+                    null,
+                    null,
+                    null,
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('server.totalRemoteCount()', () => {
             it('should emit a remote action with a get_remote_count action', () => {
                 uuidMock.mockReturnValueOnce('uuid');
@@ -9475,6 +9769,7 @@ describe('AuxLibrary', () => {
                     device = {
                         supportsAR: true,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: true,
                         allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',
@@ -13707,7 +14002,7 @@ describe('AuxLibrary', () => {
                 });
                 context.recordListenerPresense(bot1.id, 'create', true);
 
-                let [] = handleResult(library.api.shout('create'));
+                handleResult(library.api.shout('create'));
                 handleResult(library.api.shout('abc'));
 
                 expect(abc).toBeCalledTimes(1);
@@ -19956,8 +20251,8 @@ describe('AuxLibrary', () => {
     });
 
     describe('perf.getStats()', () => {
-        let getShoutTimers: jest.Mock<{}>;
-        let getLoadTimes: jest.Mock<{}>;
+        let getShoutTimers: jest.Mock<object>;
+        let getLoadTimes: jest.Mock<object>;
 
         beforeEach(() => {
             context.getShoutTimers = getShoutTimers = jest.fn();

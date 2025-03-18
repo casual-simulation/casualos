@@ -1,25 +1,29 @@
-import {
+import type {
     BotsState,
     Bot,
     UpdatedBot,
-    merge,
     ProxyClientPartitionConfig,
     ProxyClientPartition,
     ProxyBridgePartition,
     AuxPartitionRealtimeStrategy,
     StateUpdatedEvent,
-    applyUpdates,
     PrecalculatedBotsState,
-    stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import {
-    DeviceAction,
+    merge,
+    applyUpdates,
+    stateUpdatedEvent,
+} from '@casual-simulation/aux-common';
+import type {
     StatusUpdate,
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { wrap, proxy, releaseProxy, Remote } from 'comlink';
+import { DeviceAction } from '@casual-simulation/aux-common';
+import type { Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
+import type { Remote } from 'comlink';
+import { wrap, proxy, releaseProxy } from 'comlink';
 import { startWith } from 'rxjs/operators';
 import { values } from 'lodash';
 

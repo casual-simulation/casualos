@@ -1,5 +1,5 @@
 import { sortBy } from 'lodash';
-import {
+import type {
     AddFileResult,
     EraseFileStoreResult,
     FileRecord,

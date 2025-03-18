@@ -1,11 +1,9 @@
 import { AuxVMNode } from './AuxVMNode';
-import { AuxConfig } from '@casual-simulation/aux-vm';
-import { ConnectionInfo } from '@casual-simulation/aux-common';
+import type { AuxConfig } from '@casual-simulation/aux-vm';
+import type { ConnectionInfo } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from './NodeAuxChannel';
-import {
-    MemoryPartition,
-    createMemoryPartition,
-} from '@casual-simulation/aux-common';
+import type { MemoryPartition } from '@casual-simulation/aux-common';
+import { createMemoryPartition } from '@casual-simulation/aux-common';
 
 console.log = jest.fn();
 

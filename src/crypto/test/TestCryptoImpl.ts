@@ -1,10 +1,10 @@
-import {
+import type {
     SigningCryptoImpl,
     PrivateCryptoKey,
     PublicCryptoKey,
     SigningCryptoKey,
 } from '../CryptoImpl';
-import { SignatureAlgorithmType } from '../SignatureAlgorithm';
+import type { SignatureAlgorithmType } from '../SignatureAlgorithm';
 
 export class TestCryptoImpl implements SigningCryptoImpl {
     valid: boolean = false;
@@ -36,7 +36,7 @@ export class TestCryptoImpl implements SigningCryptoImpl {
         signatures: ArrayBuffer[],
         datas: ArrayBuffer[]
     ): Promise<boolean[]> {
-        return signatures.map(s => this.valid);
+        return signatures.map((s) => this.valid);
     }
 
     exportKey(key: SigningCryptoKey): Promise<string> {

@@ -1,4 +1,4 @@
-import { Config } from './config';
+import type { Config } from './config';
 
 const domain = process.env.TARGET_DOMAIN || 'auxplayer.com';
 const port = parseInt(process.env.TARGET_PORT || '443');

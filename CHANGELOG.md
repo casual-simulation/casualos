@@ -1,8 +1,115 @@
 # CasualOS Changelog
 
+## V3.4.0
+
+#### Date: 3/18/2025
+
+### :boom: Breaking Changes
+
+-   Added full access to the [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model).
+    -   This is a breaking change because previously `globalThis.document` would refer to an automatically created custom app. Now, when `os.device().supportsDOM` is `true`, `globalThis.document` and `window` refer to the web browser's implementation.
+    -   Use `os.device().supportsDOM` to determine whether full DOM features are supported.
+    -   Requires the `ENABLE_DOM` environment variable to be set to `true` either during build or when running the server.
+    -   Additionally requires that the `VM_ORIGIN` environment variable is set to something other than where the CasualOS frontend is served from (should serve the same files, but be a different origin for security purposes).
+
+### :bug: Bug Fixes
+
+-   Improved error handling for `ai.generateImage()` requests with unacceptable parameters.
+    -   The server now returns an `invalid_request` error code when the parameters provided are not accepted by the selected model (e.g., OpenAI, Google).
+    -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
+-   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
+-   Fixed an issue where predefined `bios` values in URLs (e.g., `?bios=free`) are now preserved during authentication. Users no longer encounter the BIOS selection screen unnecessarily after signing in.
+
+## V3.3.15
+
+#### Date: 12/19/2024
+
+### :rocket: Features
+
+-   Added the ability to use CasualOS URLs in `<video>` HTML custom app elements.
+    -   This makes it possible to use LiveKit tracks in a custom app.
+    -   Tip: Utilize the `autoplay` attribute to automatically play video from a track.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue in `LivekitManager` where media permissions for the camera and microphone were not requested before joining a room. Resulting in silent fails for Google Chrome users. The `joinRoom` method now includes a preliminary step to check and request these permissions, ensuring a smoother user experience.
+
+## V3.3.14
+
+#### Date: 12/3/2024
+
+### :rocket: Features
+
+-   Added the ability to manually configure the buffer rate for `os.beginAudioRecording()`.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where bots were not removed from the sheetPortal when an inst was unloaded.
+
+## V3.3.13
+
+#### Date: 11/8/2024
+
+### :rocket: Features
+
+-   Added `ai.chat.allowedModels` feature to enforce model usage limits, restricting access to specific models based on configuration.
+-   Added shared documents.
+
+    -   Shared documents utilize insts to be able to share data without using bots and tags.
+    -   Additionally, shared documents can be loaded and unloaded at will.
+    -   The following functions have been added:
+        -   `os.getSharedDocument(name)` - Gets a document that is stored in the current inst.
+        -   `os.getSharedDocument(recordName, inst, name)` - Gets a document that is stored in the specified inst.
+        -   `os.getLocalDocument(name)` - Gets a document that is stored on this device.
+        -   `os.getMemoryDocument()` - Gets a document that is stored in memory and cleared upon refresh.
+    -   Usage:
+
+        ```typescript
+        // Get a document stored in this inst named "test"
+        const doc = await os.getSharedDocument('test');
+
+        // maps work like the Map type (see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)
+        const inventory = doc.getMap<number>('inventory');
+
+        inventory.set('spoons', 2);
+        inventory.set('forks', 3);
+        os.log('Number of spoons: ' + inventory.get('spoons'));
+
+        // arrays work like regular JavaScript arrays:
+        const shoppingList = doc.getArray<string>('shoppingList');
+        shoppingList.push('cereal', 'milk', 'eggs');
+
+        os.log('Shopping list:', inventory.toArray());
+
+        // Text is a special type that makes it easy to work with long strings
+        const blogPost = doc.getText('blogPost');
+
+        blogPost.insert(0, 'Hello, world!');
+
+        os.log('Blog Post:\n', blogPost.toString());
+        ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where CasualOS would prompt for login when trying to join a room using `os.joinRoom()`.
+
+## V3.3.12
+
+#### Date: 10/25/2024
+
+### :rocket: Features
+
+-   Added the `moderator` user role.
+    -   This will make it much easier for us to moderate content and help ensure that we're creating safe platforms.
+
+### :bug: Bug Fixes
+
+-   Better handle scenarios when an email address is already taken on Privo's side.
+-   Fixed an issue where manually setting a `sessionKey` and `connectionKey` in the URL might not actually log the user in.
+
 ## V3.3.11
 
-#### Date: 10/15/2024
+#### Date: 10/21/2024
 
 ### :rocket: Features
 
@@ -18,6 +125,13 @@
     -   Webhooks are secured by markers, just like regular records.
         -   `publicRead`: The `publicRead` marker can be used to allow anyone to execute the webhook.
         -   `private`: The `private` marker can be used to only allow the record members to execute the webhook.
+        -   The following actions are allowed for webhooks:
+            -   `create`
+            -   `read`
+            -   `update`
+            -   `delete`
+            -   `list`
+            -   `run`
     -   Webhooks have their own user ID.
         -   By default, webhooks don't have access to anything except public records.
         -   To allow webhooks to access other records, they need to be granted access to those resources.
@@ -36,10 +150,42 @@
         -   Webhooks do not automatically install abCore. They only use the bots that are stored in the target.
         -   Webhooks always act like static insts.
             -   This means that any changes made to bots in the webhook are erased after the webhook finishes.
+-   Added notification records.
+    -   When enabled, notification records make it easy to send push notifications to users.
+    -   They work based on a subscription model:
+        1.  Notifier creates a notification record.
+        2.  User subscribes to a notification with `os.subscribeToNotification(recordName, address)`.
+        3.  Notifier can send notifications to all subscriptions using `os.sendNotification()`.
+    -   Notifications are secured by markers, just like regular records.
+        -   `publicRead`: The `publicRead` marker can be used to allow anyone to read and subscribe to a notification.
+        -   The following actions are allowed for notifications:
+            -   `create`
+            -   `read`
+            -   `update`
+            -   `delete`
+            -   `list`
+            -   `subscribe`
+            -   `unsubscribe`
+            -   `listSubscriptions`
+            -   `send`
+    -   After login, if a user is subscribed to a notification but their current device is not registered for notifications, then they will be prompted to register the device for notifications.
+    -   Additionally, device registrations are stored separately from subscriptions so registering a device for an account will cause the device to receive notifications for all subscriptions the user has.
+    -   Finally, the following functions have been added:
+        -   `os.recordNotification(recordName, notification)`
+        -   `os.getNotification(recordName, address)`
+        -   `os.eraseNotification(recordName, address)`
+        -   `os.listNotifications(recordName, address?)`
+        -   `os.listNotificationsByMarker(recordName, marker, address?)`
+        -   `os.subscribeToNotification(recordName, address)`
+        -   `os.unsubscribeFromNotification(recordName, address)`
+        -   `os.sendNotification(recordName, address, payload)`
+        -   `os.listNotificationSubscriptions(recordName, address)`
+        -   `os.listUserNotificationSubscriptions()`
 -   Added the ability to request consent again so that a parent can adjust the privacy features for their child.
 -   Added the `jsonObject` form subtype.
     -   Supports loading meshes stored in the [Three.js JSON Object Scene format](https://github.com/mrdoob/three.js/wiki/JSON-Object-Scene-format-4).
     -   Works similarly to `gltf`, but it uses [ObjectLoader](https://threejs.org/docs/?q=loader#api/en/loaders/ObjectLoader) to load meshes from the URL specified in the `formAddress` tag.
+-   Improved the sheetPortal to only create bots in insts that are showing the sheetPortal.
 
 ### :bug: Bug Fixes
 

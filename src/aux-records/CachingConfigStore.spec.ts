@@ -6,9 +6,9 @@ import {
     createTestPrivoConfiguration,
     createTestSubConfiguration,
 } from './TestUtils';
-import { ModerationConfiguration } from './ModerationConfiguration';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { PrivoConfiguration } from './PrivoConfiguration';
+import type { ModerationConfiguration } from './ModerationConfiguration';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { PrivoConfiguration } from './PrivoConfiguration';
 
 describe('CachingPolicyStore', () => {
     let inner: MemoryStore;

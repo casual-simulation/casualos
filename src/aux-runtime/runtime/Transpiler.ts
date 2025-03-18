@@ -3,23 +3,23 @@ import AcornJSX from 'acorn-jsx';
 import { generate, GENERATOR } from 'astring';
 import LRUCache from 'lru-cache';
 import { traverse, VisitorKeys } from 'estraverse';
+import type { Text } from 'yjs';
 import {
     createAbsolutePositionFromRelativePosition,
     createRelativePositionFromTypeIndex,
     getItem,
     Doc,
-    Text,
 } from 'yjs';
 import {
     createAbsolutePositionFromStateVector,
     createRelativePositionFromStateVector,
     getClock,
 } from '@casual-simulation/aux-common/yjs/YjsHelpers';
-import { VersionVector } from '@casual-simulation/aux-common';
+import type { VersionVector } from '@casual-simulation/aux-common';
+import type { CodeLocation } from './TranspilerUtils';
 import {
     calculateIndexFromLocation,
     calculateLocationFromIndex,
-    CodeLocation,
 } from './TranspilerUtils';
 import { tsPlugin } from 'acorn-typescript';
 
@@ -181,10 +181,24 @@ export const TypeScriptVisistorKeys: { [nodeType: string]: string[] } = {
  */
 const MACROS: TranspilerMacro[] = [
     {
-        test: /^(?:\🧬)/g,
+        test: /^(?:🧬)/g,
         replacement: (val) => '',
     },
 ];
+
+/**
+ * The list of node types that have their own async scopes. To be ignored in _isAsyncNode.
+ */
+const asyncBoundaryNodes = new Set([
+    'FunctionDeclaration',
+    'FunctionExpression',
+    'ArrowFunctionExpression',
+    'MethodDefinition',
+    'ClassDeclaration',
+    'ClassExpression',
+    'ObjectMethod',
+    'ClassMethod',
+]);
 
 /**
  * Replaces macros in the given text.
@@ -302,6 +316,39 @@ export class Transpiler {
     }
 
     /**
+     * Determines if the given node contains any await expressions.
+     * @param node The node.
+     */
+    private _isAsyncNode(node: any): boolean {
+        if (!node || asyncBoundaryNodes.has(node.type)) {
+            return false;
+        }
+
+        if (node.type === 'AwaitExpression') {
+            return true;
+        }
+
+        for (const key in node) {
+            const child = node[key];
+            if (!child || typeof child !== 'object' || key === 'parent') {
+                continue;
+            }
+
+            if (Array.isArray(child)) {
+                for (const item of child) {
+                    if (this._isAsyncNode(item)) {
+                        return true;
+                    }
+                }
+            } else if (this._isAsyncNode(child)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Transpiles the given code into ES6 JavaScript Code.
      */
     private _transpile(code: string): TranspilerResult {
@@ -311,6 +358,7 @@ export class Transpiler {
         }
         const macroed = replaceMacros(code);
         const node = this._parse(macroed);
+        const isAsync = this._isAsyncNode(node);
 
         // we create a YJS document to track
         // text changes. This lets us use a separate client ID for each change
@@ -326,6 +374,7 @@ export class Transpiler {
         let metadata: TranspilerResult['metadata'] = {
             doc,
             text,
+            isAsync,
             isModule: false,
         };
 
@@ -2138,6 +2187,11 @@ export interface TranspilerResult {
          * Whether the code is a module (contains import or export statements).
          */
         isModule: boolean;
+
+        /**
+         * Whether the code is async (contains await expressions).
+         */
+        isAsync: boolean;
     };
 }
 

@@ -1,11 +1,12 @@
-import { Doc, Text } from 'yjs';
+import type { Text } from 'yjs';
+import { Doc } from 'yjs';
 import { DNA_TAG_PREFIX } from '@casual-simulation/aux-common';
+import type { TranspilerResult } from './Transpiler';
 import {
     Transpiler,
     anyArgument,
     replaceMacros,
     calculateOriginalLineLocation,
-    TranspilerResult,
     calculateFinalLineLocation,
 } from './Transpiler';
 import {
@@ -656,6 +657,52 @@ describe('Transpiler', () => {
                 const result = transpiler.transpile(`await test();`);
 
                 expect(result).toBe(`await test();`);
+            });
+
+            it('should identify code with a top-level await expression as async', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`await test();`);
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify code with await inside brackets as async', () => {
+                const result = transpiler.transpileWithMetadata(`{
+                    await test();
+                }`);
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify variables that await their definitions as async', () => {
+                const result = transpiler.transpileWithMetadata(
+                    `let abc = await test();`
+                );
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify await statements in function arguments as async', () => {
+                const result =
+                    transpiler.transpileWithMetadata(`abc( await test() );`);
+
+                expect(result.metadata.isAsync).toBe(true);
+            });
+
+            it('should identify code with await inside a function as synchronous', () => {
+                const result = transpiler.transpileWithMetadata(
+                    'async function abc() { await test(); }'
+                );
+
+                expect(result.metadata.isAsync).toBe(false);
+            });
+
+            it('should identify code with await inside a lambda function as synchronous', () => {
+                const result = transpiler.transpileWithMetadata(
+                    'const abc = async () => await test();'
+                );
+
+                expect(result.metadata.isAsync).toBe(false);
             });
         });
 

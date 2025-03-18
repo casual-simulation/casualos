@@ -1,5 +1,6 @@
-import { RegexRule, cleanupObject } from '@casual-simulation/aux-records';
-import {
+import type { RegexRule } from '@casual-simulation/aux-records';
+import { cleanupObject } from '@casual-simulation/aux-records';
+import type {
     AddressType,
     AuthInvoice,
     AuthLoginRequest,
@@ -16,11 +17,10 @@ import {
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
+    UserLoginMetadata,
     UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
-import {
-    LoginRequest,
-    Prisma,
+import type {
     PrismaClient,
     User,
     UserAuthenticator,
@@ -28,6 +28,7 @@ import {
     Subscription as PrismaSubscription,
     SubscriptionPeriod,
 } from './generated';
+import { LoginRequest, Prisma } from './generated';
 // import { PrismaClientKnownRequestError } from './generated/runtime';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
@@ -1216,6 +1217,38 @@ export class PrismaAuthStore implements AuthStore {
                 },
             });
         }
+    }
+
+    async findUserLoginMetadata(
+        userId: string
+    ): Promise<UserLoginMetadata | null> {
+        const [credentialIds, pushSubscriptionIds] = await Promise.all([
+            this._client.userAuthenticator.findMany({
+                where: {
+                    userId: userId,
+                },
+                select: {
+                    id: true,
+                },
+            }),
+            this._client.pushSubscriptionUser.findMany({
+                where: {
+                    userId: userId,
+                },
+                select: {
+                    pushSubscriptionId: true,
+                },
+            }),
+        ]);
+
+        return {
+            hasUserAuthenticator: credentialIds.length > 0,
+            userAuthenticatorCredentialIds: credentialIds.map((c) => c.id),
+            hasPushSubscription: pushSubscriptionIds.length > 0,
+            pushSubscriptionIds: pushSubscriptionIds.map(
+                (p) => p.pushSubscriptionId
+            ),
+        };
     }
 
     private _convertToAuthUser(user: User | null): AuthUser | null {

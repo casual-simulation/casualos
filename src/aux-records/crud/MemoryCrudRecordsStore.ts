@@ -1,6 +1,6 @@
-import { SubscriptionFilter } from '../MetricsStore';
-import { MemoryStore } from '../MemoryStore';
-import {
+import type { SubscriptionFilter } from '../MetricsStore';
+import type { MemoryStore } from '../MemoryStore';
+import type {
     CrudRecord,
     CrudRecordsStore,
     CrudSubscriptionMetrics,

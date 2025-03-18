@@ -1,4 +1,4 @@
-import {
+import type {
     AddressType,
     AuthListedUserAuthenticator,
     AuthLoginRequest,
@@ -8,9 +8,10 @@ import {
     AuthUser,
     AuthUserAuthenticator,
     SaveNewUserFailure,
+    UserLoginMetadata,
     UserRole,
 } from './AuthStore';
-import {
+import type {
     NotAuthorizedError,
     NotLoggedInError,
     NotSupportedError,
@@ -24,38 +25,34 @@ import {
     verifyPasswordAgainstHashes,
 } from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
-import { AuthMessenger } from './AuthMessenger';
-import {
-    cleanupObject,
-    isActiveSubscription,
-    isStringValid,
-    RegexRule,
-} from './Utils';
+import type { AuthMessenger } from './AuthMessenger';
+import type { RegexRule } from './Utils';
+import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
     isSuperUserRole,
     parseSessionKey,
-    randomCode,
     verifyConnectionToken,
 } from './AuthUtils';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { ConfigurationStore } from './ConfigurationStore';
-import {
-    parseConnectionToken,
+import { randomCode } from './CryptoUtils';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type {
     PrivacyFeatures,
     PublicUserInfo,
 } from '@casual-simulation/aux-common';
-import {
+import { parseConnectionToken } from '@casual-simulation/aux-common';
+import type {
     PrivoClientInterface,
     PrivoFeatureStatus,
     PrivoPermission,
     ResendConsentRequestFailure,
 } from './PrivoClient';
 import { DateTime } from 'luxon';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { ZodIssue } from 'zod';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { ZodIssue } from 'zod';
 import type {
     PublicKeyCredentialCreationOptionsJSON,
     RegistrationResponseJSON,
@@ -275,6 +272,12 @@ export class AuthController {
                     sessionKey: null,
                     connectionKey: null,
                     expireTimeMs: null,
+                    metadata: {
+                        hasUserAuthenticator: false,
+                        userAuthenticatorCredentialIds: [],
+                        hasPushSubscription: false,
+                        pushSubscriptionIds: [],
+                    },
                 };
             }
         } catch (err) {
@@ -1022,7 +1025,7 @@ export class AuthController {
                 });
             } else if (user.privoServiceId !== serviceId) {
                 console.log(
-                    `[AuthController] [completeOpenIDLogin] User\'s service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
+                    `[AuthController] [completeOpenIDLogin] User's service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
                 );
                 return {
                     success: false,
@@ -1131,6 +1134,21 @@ export class AuthController {
                     success: false,
                     errorCode: 'invalid_display_name',
                     errorMessage: 'The display name cannot contain your name.',
+                };
+            }
+
+            if (
+                request.email &&
+                request.parentEmail &&
+                request.parentEmail.localeCompare(request.email, undefined, {
+                    sensitivity: 'base',
+                }) === 0
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The parent email must be different from the child email.',
                 };
             }
 
@@ -3128,6 +3146,8 @@ export class AuthController {
             await this._store.saveSession(newSession);
         }
 
+        const metadata = await this._store.findUserLoginMetadata(userId);
+
         const info: AuthSessionInfo = {
             userId,
             sessionKey: formatV1SessionKey(
@@ -3143,6 +3163,13 @@ export class AuthController {
                 newSession.expireTimeMs
             ),
             expireTimeMs: newSession.expireTimeMs,
+            metadata: {
+                hasUserAuthenticator: metadata?.hasUserAuthenticator ?? false,
+                userAuthenticatorCredentialIds:
+                    metadata?.userAuthenticatorCredentialIds ?? [],
+                hasPushSubscription: metadata?.hasPushSubscription ?? false,
+                pushSubscriptionIds: metadata?.pushSubscriptionIds ?? [],
+            },
         };
 
         return {
@@ -3279,6 +3306,11 @@ export interface AuthSessionInfo {
      * If null, then the session will not expire.
      */
     expireTimeMs: number | null;
+
+    /**
+     * Extra metadata for the user.
+     */
+    metadata: UserLoginMetadata;
 }
 
 export interface NoSessionKeyResult {
@@ -3441,6 +3473,7 @@ export interface PrivoSignUpRequestFailure {
         | 'unacceptable_request'
         | 'email_already_exists'
         | 'parent_email_already_exists'
+        | 'child_email_already_exists'
         | 'parent_email_required'
         | 'invalid_display_name'
         | NotSupportedError

@@ -1,81 +1,74 @@
+import type {
+    TagEditOp,
+    TagEdit,
+    GetRemoteCountAction,
+    AsyncAction,
+    ShoutAction,
+} from '../bots';
 import {
     isTagEdit,
-    TagEditOp,
     preserve,
     del,
     insert,
     edit,
-    TagEdit,
-    GetRemoteCountAction,
+    ON_REMOTE_WHISPER_ACTION_NAME,
+    ON_REMOTE_DATA_ACTION_NAME,
 } from '../bots';
-import {
-    Observable,
-    Subscription,
-    Subject,
-    BehaviorSubject,
-    firstValueFrom,
-} from 'rxjs';
-import {
-    CausalRepoPartition,
+import type { Observable } from 'rxjs';
+import { Subscription, Subject, BehaviorSubject, firstValueFrom } from 'rxjs';
+import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
-    MemoryPartition,
 } from './AuxPartition';
-import {
+import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
+import type {
     BotAction,
     Bot,
     UpdatedBot,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     BotsState,
-    PartialBotsState,
-    botAdded,
     BotTags,
-    createBot,
-    botRemoved,
-    hasValue,
-    botUpdated,
-    ShoutAction,
-    action,
-    ON_REMOTE_DATA_ACTION_NAME,
-    ON_REMOTE_WHISPER_ACTION_NAME,
-    AsyncAction,
-    asyncResult,
-    asyncError,
-    convertToString,
     ListInstUpdatesAction,
     GetInstStateFromUpdatesAction,
     CreateInitializationUpdateAction,
     InstUpdate,
     ApplyUpdatesToInstAction,
-    ON_SPACE_MAX_SIZE_REACHED,
-    ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
     GetCurrentInstUpdateAction,
 } from '../bots';
 import {
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
+    PartialBotsState,
+    botAdded,
+    createBot,
+    botRemoved,
+    hasValue,
+    botUpdated,
+    action,
+    asyncResult,
+    asyncError,
+    convertToString,
+    ON_SPACE_MAX_SIZE_REACHED,
+    ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
+} from '../bots';
+import type {
     PartitionConfig,
     YjsClientPartitionConfig,
     RemoteYjsPartitionConfig,
     PartitionRemoteEvents,
 } from './AuxPartitionConfig';
-import { flatMap, random } from 'lodash';
-import { v4 as uuid } from 'uuid';
+import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
-    Doc,
     Text,
     Map,
     applyUpdate,
-    Transaction,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    AbstractType,
-    YEvent,
     encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
@@ -85,22 +78,18 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { filter, startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
 import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
-import {
-    Action,
-    ConnectionIndicator,
-    RemoteActions,
-    StatusUpdate,
-    CurrentVersion,
-    device,
-    VersionVector,
-    getConnectionId,
-} from '../common';
-import { InstRecordsClient } from '../websockets';
-import { PartitionAuthSource } from './PartitionAuthSource';
-import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
+import type { RemoteActions, CurrentVersion, VersionVector } from '../common';
+import { device } from '../common';
+import type {
+    ClientEvent,
+    InstRecordsClient,
+    MaxInstSizeReachedClientError,
+    RateLimitExceededMessage,
+} from '../websockets';
+import type { PartitionAuthSource } from './PartitionAuthSource';
+import { RemoteYjsSharedDocument } from '../documents/RemoteYjsSharedDocument';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -120,45 +109,16 @@ export function createRemoteClientYjsPartition(
 type MapValue = Text | object | number | boolean;
 type TagsMap = Map<MapValue>;
 
-const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
-
-export class RemoteYjsPartitionImpl implements YjsPartition {
-    protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
-    private _onUpdates: Subject<string[]>;
-
-    protected _onError = new Subject<any>();
-    protected _onEvents = new Subject<Action[]>();
-    protected _onStatusUpdated = new Subject<StatusUpdate>();
-    protected _hasRegisteredSubs = false;
-    private _sub = new Subscription();
-
+export class RemoteYjsPartitionImpl
+    extends RemoteYjsSharedDocument
+    implements YjsPartition
+{
     private _emittedMaxSizeReached: boolean = false;
-    private _localId: number;
-    private _remoteId: number;
-    private _doc: Doc = new Doc();
     private _bots: Map<TagsMap>;
     private _masks: Map<MapValue>;
-    private _client: InstRecordsClient;
-    private _currentVersion: CurrentVersion;
     private _internalPartition: MemoryPartitionImpl;
 
-    private _isLocalTransaction: boolean = true;
-    private _isRemoteUpdate: boolean = false;
-    private _static: boolean;
-    private _skipInitialLoad: boolean;
-    private _sendInitialUpdates: boolean = false;
-    private _watchingBranch: any;
-    private _synced: boolean;
-    private _authorized: boolean;
-    private _recordName: string | null;
-    private _inst: string;
-    private _branch: string;
-    private _temporary: boolean;
-    private _readOnly: boolean;
     private _remoteEvents: PartitionRemoteEvents | boolean;
-    private _authSource: PartitionAuthSource;
-    private _indexeddb: YjsIndexedDBPersistence;
-    private _persistence: RemoteYjsPartitionConfig['localPersistence'];
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._internalPartition.onBotsAdded;
@@ -174,22 +134,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
 
     get onStateUpdated(): Observable<StateUpdatedEvent> {
         return this._internalPartition.onStateUpdated;
-    }
-
-    get onVersionUpdated(): Observable<CurrentVersion> {
-        return this._onVersionUpdated;
-    }
-
-    get onError(): Observable<any> {
-        return this._onError;
-    }
-
-    get onEvents(): Observable<Action[]> {
-        return this._onEvents;
-    }
-
-    get onStatusUpdated(): Observable<StatusUpdate> {
-        return this._onStatusUpdated;
     }
 
     unsubscribe() {
@@ -219,53 +163,15 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         return this._static ? 'delayed' : 'immediate';
     }
 
-    get site() {
-        return this._currentSite;
-    }
-
-    get onUpdates() {
-        return this._onUpdates.pipe(
-            startWith([fromByteArray(encodeStateAsUpdate(this._doc))])
-        );
-    }
-
-    get doc() {
-        return this._doc;
-    }
-
-    private get _remoteSite() {
-        return this._remoteId.toString();
-    }
-
-    private get _currentSite() {
-        return this._localId.toString();
-    }
-
     constructor(
         client: InstRecordsClient,
         authSource: PartitionAuthSource,
         config: YjsClientPartitionConfig | RemoteYjsPartitionConfig
     ) {
+        super(client, authSource, config);
         this.private = config.private || false;
-        this._client = client;
-        this._static = config.static;
-        this._skipInitialLoad = config.skipInitialLoad;
         this._remoteEvents =
             'remoteEvents' in config ? config.remoteEvents : true;
-        this._recordName = config.recordName;
-        this._inst = config.inst;
-        this._branch = config.branch;
-        this._temporary = config.temporary;
-        this._persistence = config.localPersistence;
-        this._synced = false;
-        this._authorized = false;
-        this._authSource = authSource;
-
-        // static implies read only
-        this._readOnly = config.readOnly || this._static || false;
-
-        this._localId = this._doc.clientID;
-        this._remoteId = new Doc().clientID;
         this._bots = this._doc.getMap('bots');
         this._masks = this._doc.getMap('masks');
         this._doc.on('afterTransaction', (transaction: Transaction) => {
@@ -279,7 +185,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._onVersionUpdated = new BehaviorSubject<CurrentVersion>(
             this._currentVersion
         );
-        this._onUpdates = new Subject<string[]>();
 
         this._internalPartition = new MemoryPartitionImpl({
             type: 'memory',
@@ -341,26 +246,6 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         this._applyEvents(finalEvents);
 
         return [];
-    }
-
-    async init(): Promise<void> {}
-
-    connect(): void {
-        if (!this._temporary && this._persistence?.saveToIndexedDb) {
-            console.log('[RemoteYjsPartition] Using IndexedDB persistence');
-            const name = `${this._recordName ?? ''}/${this._inst}/${
-                this._branch
-            }`;
-            this._indexeddb = new YjsIndexedDBPersistence(name, this._doc);
-        }
-
-        if (this._skipInitialLoad) {
-            this._initializePartitionWithoutLoading();
-        } else if (this._static) {
-            this._requestBranch();
-        } else {
-            this._watchBranch();
-        }
     }
 
     async sendRemoteEvents(events: RemoteActions[]): Promise<void> {
@@ -476,10 +361,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 } else if (event.event.type === 'apply_updates_to_inst') {
                     const action = <ApplyUpdatesToInstAction>event.event;
                     try {
-                        this._applyUpdates(
-                            action.updates.map((u) => u.update),
-                            APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN
-                        );
+                        this.applyStateUpdates(action.updates);
                         this._onEvents.next([
                             asyncResult(event.taskId, null, false),
                         ]);
@@ -489,13 +371,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 } else if (event.event.type === 'get_current_inst_update') {
                     const action = <GetCurrentInstUpdateAction>event.event;
                     try {
-                        const update: InstUpdate = {
-                            id: 0,
-                            timestamp: Date.now(),
-                            update: fromByteArray(
-                                encodeStateAsUpdate(this._doc)
-                            ),
-                        };
+                        const update = this.getStateUpdate();
                         this._onEvents.next([
                             asyncResult(event.taskId, update, false),
                         ]);
@@ -521,344 +397,67 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         }
     }
 
-    async enableCollaboration() {
-        this._static = false;
-        this._skipInitialLoad = false;
-        this._sendInitialUpdates = true;
-        this._synced = false;
-        const promise = firstValueFrom(
-            this._onStatusUpdated.pipe(
-                filter((u) => u.type === 'sync' && u.synced)
-            )
-        );
-        this._watchBranch();
-        await promise;
-    }
-
-    private async _initializePartitionWithoutLoading() {
-        this._onStatusUpdated.next({
-            type: 'connection',
-            connected: true,
-        });
-        const indicator = this._client.connection.indicator;
-        const connectionId = indicator
-            ? getConnectionId(indicator)
-            : 'missing-connection-id';
-        this._onStatusUpdated.next({
-            type: 'authentication',
-            authenticated: true,
-            info: this._client.connection.info ?? {
-                connectionId: connectionId,
-                sessionId: null,
-                userId: null,
-            },
-        });
-        this._updateSynced(true);
-    }
-
-    private _requestBranch() {
-        this._client
-            .getBranchUpdates(this._recordName, this._inst, this._branch)
-            .subscribe({
-                next: (updates) => {
-                    this._onStatusUpdated.next({
-                        type: 'connection',
-                        connected: true,
-                    });
-                    this._onStatusUpdated.next({
-                        type: 'authentication',
-                        authenticated: true,
-                        info: this._client.connection.info,
-                    });
-
-                    this._updateSynced(true);
-                    this._applyUpdates(updates.updates);
-
-                    if (!this._static) {
-                        // the partition has been unlocked while getting the branch
-                        this._watchBranch();
-                    }
-                },
-                error: (err) => this._onError.next(err),
-            });
-    }
-
-    private _watchBranch() {
-        if (this._watchingBranch) {
-            return;
-        }
-        this._watchingBranch = true;
-        this._sub.add(
-            this._client.connection.connectionState.subscribe({
-                next: (state) => {
-                    const connected = state.connected;
-                    this._onStatusUpdated.next({
-                        type: 'connection',
-                        connected: !!connected,
-                    });
-                    if (connected) {
-                        this._onStatusUpdated.next({
-                            type: 'authentication',
-                            authenticated: true,
-                            info: state.info,
-                        });
-                    } else {
-                        this._updateSynced(false);
-                    }
-                },
-                error: (err) => this._onError.next(err),
-            })
-        );
-        this._sub.add(
-            this._client
-                .watchBranchUpdates({
-                    type: 'repo/watch_branch',
-                    recordName: this._recordName,
-                    inst: this._inst,
-                    branch: this._branch,
-                    temporary: this._temporary,
-                })
-                .subscribe({
-                    next: (event) => {
-                        // The partition should become synced if it was not synced
-                        // and it just got some new data.
-                        if (!this._synced && event.type === 'updates') {
-                            if (this._sendInitialUpdates) {
-                                this._sendInitialUpdates = false;
-                                const update = encodeStateAsUpdate(this._doc);
-                                const updates = [fromByteArray(update)];
-                                this._client.addUpdates(
-                                    this._recordName,
-                                    this._inst,
-                                    this._branch,
-                                    updates
-                                );
-                            }
-                            this._updateSynced(true);
-                        }
-                        if (event.type === 'updates') {
-                            this._applyUpdates(event.updates);
-                        } else if (event.type === 'event') {
-                            if (event.action.type === 'device') {
-                                if (event.action.event.type === 'action') {
-                                    const remoteAction = event.action
-                                        .event as ShoutAction;
-                                    this._onEvents.next([
-                                        action(
-                                            ON_REMOTE_DATA_ACTION_NAME,
-                                            null,
-                                            null,
-                                            {
-                                                name: remoteAction.eventName,
-                                                that: remoteAction.argument,
-                                                remoteId:
-                                                    event.action.connection
-                                                        .connectionId,
-                                            }
-                                        ),
-                                        action(
-                                            ON_REMOTE_WHISPER_ACTION_NAME,
-                                            null,
-                                            null,
-                                            {
-                                                name: remoteAction.eventName,
-                                                that: remoteAction.argument,
-                                                playerId:
-                                                    event.action.connection
-                                                        .connectionId,
-                                            }
-                                        ),
-                                    ]);
-                                } else if (hasValue(event.action.taskId)) {
-                                    const newEvent = device(
-                                        event.action.connection,
-                                        {
-                                            ...event.action.event,
-                                            taskId: event.action.taskId,
-                                            playerId:
-                                                event.action.connection
-                                                    .connectionId,
-                                        } as AsyncAction,
-                                        event.action.taskId
-                                    );
-                                    this._onEvents.next([newEvent]);
-                                } else {
-                                    this._onEvents.next([event.action]);
-                                }
-                            } else {
-                                this._onEvents.next([event.action]);
-                            }
-                        } else if (event.type === 'error') {
-                            if (event.kind === 'max_size_reached') {
-                                if (!this._emittedMaxSizeReached) {
-                                    console.log(
-                                        '[RemoteYjsPartition] Max size reached!',
-                                        this.space
-                                    );
-                                    this._emittedMaxSizeReached = true;
-                                    this._onEvents.next([
-                                        action(
-                                            ON_SPACE_MAX_SIZE_REACHED,
-                                            null,
-                                            null,
-                                            {
-                                                space: this.space,
-                                                maxSizeInBytes:
-                                                    event.maxBranchSizeInBytes,
-                                                neededSizeInBytes:
-                                                    event.neededBranchSizeInBytes,
-                                            }
-                                        ),
-                                    ]);
-                                }
-                            } else if (event.kind === 'error') {
-                                const errorCode = event.info.errorCode;
-                                if (
-                                    errorCode === 'not_authorized' ||
-                                    errorCode ===
-                                        'subscription_limit_reached' ||
-                                    errorCode === 'inst_not_found' ||
-                                    errorCode === 'record_not_found' ||
-                                    errorCode === 'invalid_record_key' ||
-                                    errorCode === 'invalid_token' ||
-                                    errorCode ===
-                                        'unacceptable_connection_id' ||
-                                    errorCode ===
-                                        'unacceptable_connection_token' ||
-                                    errorCode === 'user_is_banned' ||
-                                    errorCode === 'not_logged_in' ||
-                                    errorCode === 'session_expired'
-                                ) {
-                                    this._onStatusUpdated.next({
-                                        type: 'authorization',
-                                        authorized: false,
-                                        error: event.info,
-                                    });
-                                    this._authSource.sendAuthRequest({
-                                        type: 'request',
-                                        kind: 'not_authorized',
-                                        errorCode: event.info.errorCode,
-                                        errorMessage: event.info.errorMessage,
-                                        origin: this._client.connection.origin,
-                                        reason: event.info.reason,
-                                        resource: {
-                                            type: 'inst',
-                                            recordName: this._recordName,
-                                            inst: this._inst,
-                                        },
-                                    });
-                                }
-                            }
-                        } else if (event.type === 'repo/watch_branch_result') {
-                            if (event.success === false) {
-                                const errorCode = event.errorCode;
-                                if (
-                                    errorCode === 'not_authorized' ||
-                                    errorCode ===
-                                        'subscription_limit_reached' ||
-                                    errorCode === 'inst_not_found' ||
-                                    errorCode === 'record_not_found' ||
-                                    errorCode === 'invalid_record_key' ||
-                                    errorCode === 'invalid_token' ||
-                                    errorCode ===
-                                        'unacceptable_connection_id' ||
-                                    errorCode ===
-                                        'unacceptable_connection_token' ||
-                                    errorCode === 'user_is_banned' ||
-                                    errorCode === 'not_logged_in' ||
-                                    errorCode === 'session_expired'
-                                ) {
-                                    const { type, ...error } = event;
-                                    this._onStatusUpdated.next({
-                                        type: 'authorization',
-                                        authorized: false,
-                                        error: error,
-                                    });
-                                    this._authSource.sendAuthRequest({
-                                        type: 'request',
-                                        kind: 'not_authorized',
-                                        errorCode: event.errorCode,
-                                        errorMessage: event.errorMessage,
-                                        origin: this._client.connection.origin,
-                                        reason: event.reason,
-                                        resource: {
-                                            type: 'inst',
-                                            recordName: this._recordName,
-                                            inst: this._inst,
-                                        },
-                                    });
-                                }
-                            }
-                        }
-                    },
-                    error: (err) => this._onError.next(err),
-                })
-        );
-        this._sub.add(
-            this._client.watchRateLimitExceeded().subscribe((event) => {
-                console.error(
-                    '[RemoteYjsPartition] Rate limit exceeded!',
-                    event
-                );
+    protected _handleClientEvent(event: ClientEvent): void {
+        if (event.action.type === 'device') {
+            if (event.action.event.type === 'action') {
+                const remoteAction = event.action.event as ShoutAction;
                 this._onEvents.next([
-                    action(
-                        ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
-                        null,
-                        null,
-                        {
-                            space: this.space,
-                        }
-                    ),
+                    action(ON_REMOTE_DATA_ACTION_NAME, null, null, {
+                        name: remoteAction.eventName,
+                        that: remoteAction.argument,
+                        remoteId: event.action.connection.connectionId,
+                    }),
+                    action(ON_REMOTE_WHISPER_ACTION_NAME, null, null, {
+                        name: remoteAction.eventName,
+                        that: remoteAction.argument,
+                        playerId: event.action.connection.connectionId,
+                    }),
                 ]);
-            })
-        );
-
-        const updateHandler = (
-            update: Uint8Array,
-            origin: any,
-            doc: Doc,
-            transaction: Transaction
-        ) => {
-            if (this._readOnly) {
-                return;
-            }
-            if (
-                transaction &&
-                (transaction.local ||
-                    origin === APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN)
-            ) {
-                const updates = [fromByteArray(update)];
-                this._client.addUpdates(
-                    this._recordName,
-                    this._inst,
-                    this._branch,
-                    updates
+            } else if (hasValue(event.action.taskId)) {
+                const newEvent = device(
+                    event.action.connection,
+                    {
+                        ...event.action.event,
+                        taskId: event.action.taskId,
+                        playerId: event.action.connection.connectionId,
+                    } as AsyncAction,
+                    event.action.taskId
                 );
-                this._onUpdates.next(updates);
+                this._onEvents.next([newEvent]);
+            } else {
+                this._onEvents.next([event.action]);
             }
-        };
-        this._doc.on('update', updateHandler);
-
-        this._sub.add(
-            new Subscription(() => {
-                this._doc.off('update', updateHandler);
-            })
-        );
+        } else {
+            super._handleClientEvent(event);
+        }
     }
 
-    private _updateSynced(synced: boolean) {
-        if (synced && !this._authorized) {
-            this._authorized = true;
-            this._onStatusUpdated.next({
-                type: 'authorization',
-                authorized: true,
-            });
+    protected _onMaxSizeReached(event: MaxInstSizeReachedClientError): void {
+        super._onMaxSizeReached(event);
+        if (!this._emittedMaxSizeReached) {
+            console.log(
+                '[RemoteYjsPartition] Max size reached!',
+                this.recordName,
+                this.address
+            );
+            this._emittedMaxSizeReached = true;
+            this._onEvents.next([
+                action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                    space: this.space,
+                    maxSizeInBytes: event.maxBranchSizeInBytes,
+                    neededSizeInBytes: event.neededBranchSizeInBytes,
+                }),
+            ]);
         }
-        this._synced = synced;
-        this._onStatusUpdated.next({
-            type: 'sync',
-            synced: synced,
-        });
+    }
+
+    protected _onRateLimitExceeded(event: RateLimitExceededMessage): void {
+        super._onRateLimitExceeded(event);
+        this._onEvents.next([
+            action(ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME, null, null, {
+                space: this.space,
+            }),
+        ]);
     }
 
     private _applyEvents(
@@ -960,17 +559,17 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         }
     }
 
-    private _applyUpdates(updates: string[], transactionOrigin?: string) {
-        try {
-            this._isRemoteUpdate = true;
-            for (let updateBase64 of updates) {
-                const update = toByteArray(updateBase64);
-                applyUpdate(this._doc, update, transactionOrigin);
-            }
-        } finally {
-            this._isRemoteUpdate = false;
-        }
-    }
+    // private _applyUpdates(updates: string[], transactionOrigin?: string) {
+    //     try {
+    //         this._isRemoteUpdate = true;
+    //         for (let updateBase64 of updates) {
+    //             const update = toByteArray(updateBase64);
+    //             applyUpdate(this._doc, update, transactionOrigin);
+    //         }
+    //     } finally {
+    //         this._isRemoteUpdate = false;
+    //     }
+    // }
 
     private async _processTransaction(transaction: Transaction) {
         let memoryEvents: (AddBotAction | RemoveBotAction | UpdateBotAction)[] =

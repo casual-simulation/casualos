@@ -1,9 +1,9 @@
-import {
+import type {
     Object3D,
     PerspectiveCamera,
     OrthographicCamera,
 } from '@casual-simulation/three';
-import { Viewport } from '../scene/Viewport';
+import type { Viewport } from '../scene/Viewport';
 
 export interface DraggableGroup {
     /**

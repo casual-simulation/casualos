@@ -3,15 +3,16 @@ import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import BotTag from '../BotTag/BotTag';
 import BotValue from '../BotValue/BotValue';
+import type { SystemPortalSelectionTag } from '@casual-simulation/aux-vm-browser';
 import {
     BrowserSimulation,
     SystemPortalBot,
     SystemPortalItem,
-    SystemPortalSelectionTag,
     TagSortMode,
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { Bot, getBotTag, getShortId } from '@casual-simulation/aux-common';
+import type { Bot } from '@casual-simulation/aux-common';
+import { getBotTag, getShortId } from '@casual-simulation/aux-common';
 
 @Component({
     components: {

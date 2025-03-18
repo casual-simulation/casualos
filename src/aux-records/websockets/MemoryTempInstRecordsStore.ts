@@ -1,5 +1,6 @@
-import { CurrentUpdates, StoredUpdates } from './InstRecordsStore';
-import {
+import type { StoredUpdates } from './InstRecordsStore';
+import { CurrentUpdates } from './InstRecordsStore';
+import type {
     BranchName,
     BranchUpdates,
     TempBranchInfo,
