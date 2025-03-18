@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/fast-json-stable-stringify",
-    "version": "3.1.11",
+    "version": "3.4.0-alpha.13932534773",
     "description": "deterministic `JSON.stringify()` - a faster version of substack's json-stable-strigify without jsonify",
     "main": "index.js",
     "types": "index.d.ts",
