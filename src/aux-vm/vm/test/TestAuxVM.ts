@@ -37,14 +37,14 @@ export class TestAuxVM implements AuxVM {
     events: BotAction[];
     formulas: string[];
 
-    origin: SimulationOrigin;
+    origin!: SimulationOrigin;
     id: string;
     configBotId: string;
 
     processEvents: boolean;
     state: BotsState;
-    localEvents: Subject<LocalActions[]>;
-    deviceEvents: Observable<DeviceAction[]>;
+    localEvents!: Subject<LocalActions[]>;
+    deviceEvents!: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     versionUpdated: Subject<RuntimeStateVersion>;
     onError: Subject<AuxChannelErrorType>;
@@ -53,7 +53,7 @@ export class TestAuxVM implements AuxVM {
     onAuthMessage: Subject<PartitionAuthMessage>;
     sentAuthMessages: PartitionAuthMessage[] = [];
 
-    grant: string;
+    grant: string | undefined;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -197,5 +197,5 @@ export class TestAuxVM implements AuxVM {
     }
 
     unsubscribe(): void {}
-    closed: boolean;
+    closed: boolean = false;
 }

@@ -119,7 +119,7 @@ describe('BaseAuxChannel', () => {
         it('should create a bot for the user', async () => {
             await channel.initAndWait();
 
-            const userBot = channel.helper.userBot;
+            const userBot = channel.helper!.userBot;
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toMatchSnapshot();
         });
@@ -148,7 +148,7 @@ describe('BaseAuxChannel', () => {
             );
             await channel.initAndWait();
 
-            const builderBot = channel.helper.botsState['builder'];
+            const builderBot = channel.helper!.botsState['builder'];
             expect(builderBot).toMatchObject({
                 id: 'builder',
                 tags: {
@@ -176,7 +176,7 @@ describe('BaseAuxChannel', () => {
             );
             await channel.initAndWait();
 
-            const builderBot = channel.helper.botsState['builder'];
+            const builderBot = channel.helper!.botsState['builder'];
             expect(builderBot).toBeUndefined();
         });
 
@@ -205,7 +205,7 @@ describe('BaseAuxChannel', () => {
             );
             await channel.initAndWait();
 
-            const builderBot = channel.helper.botsState['builder'];
+            const builderBot = channel.helper!.botsState['builder'];
             expect(builderBot).toMatchObject({
                 id: 'builder',
                 tags: {
@@ -241,7 +241,7 @@ describe('BaseAuxChannel', () => {
             );
             await channel.initAndWait();
 
-            const builderBot = channel.helper.botsState['builder'];
+            const builderBot = channel.helper!.botsState['builder'];
             expect(builderBot).toMatchObject({
                 id: 'builder',
                 tags: {
@@ -278,7 +278,7 @@ describe('BaseAuxChannel', () => {
             );
             await channel.initAndWait();
 
-            const builderBot = channel.helper.botsState['builder'];
+            const builderBot = channel.helper!.botsState['builder'];
             expect(builderBot).toMatchObject({
                 id: 'builder',
                 tags: {
@@ -316,7 +316,7 @@ describe('BaseAuxChannel', () => {
             );
             await channel.initAndWait();
 
-            const builderBot = channel.helper.botsState['builder'];
+            const builderBot = channel.helper!.botsState['builder'];
             expect(builderBot).toBeUndefined();
         });
 
@@ -375,8 +375,8 @@ describe('BaseAuxChannel', () => {
 
             await channel.initAndWait();
 
-            const gridPortal = channel.helper.botsState['uuid1'];
-            const sheetPortal = channel.helper.botsState['uuid2'];
+            const gridPortal = channel.helper!.botsState['uuid1'];
+            const sheetPortal = channel.helper!.botsState['uuid2'];
             expect(gridPortal).toEqual(createBot('uuid1', {}, 'tempLocal'));
             expect(sheetPortal).toEqual(createBot('uuid2', {}, 'tempLocal'));
 
@@ -396,7 +396,7 @@ describe('BaseAuxChannel', () => {
 
             await channel.initAndWait();
 
-            const userBot = channel.helper.botsState['user1'];
+            const userBot = channel.helper!.botsState['user1'];
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toEqual({
                 auxPlayerName: 'user',
@@ -552,11 +552,11 @@ describe('BaseAuxChannel', () => {
             await channel.initAndWait();
 
             expect(!!channel.timesync).toBe(true);
-            expect(channel.timesync.initialized).toBe(true);
+            expect(channel.timesync!.initialized).toBe(true);
 
             channel.unsubscribe();
 
-            expect(channel.timesync.closed).toBe(true);
+            expect(channel.timesync!.closed).toBe(true);
         });
 
         it('should update the instLatency and instTimeOffset values in the runtime when the sync controller updates', async () => {
@@ -582,18 +582,20 @@ describe('BaseAuxChannel', () => {
                 await channel.initAndWait();
 
                 expect(!!channel.timesync).toBe(true);
-                expect(channel.timesync.initialized).toBe(true);
+                expect(channel.timesync!.initialized).toBe(true);
 
                 jest.advanceTimersByTime(1000);
                 await waitAsync();
 
-                expect(channel.timesync.sync.calculatedTimeLatencyMS).toBe(150);
-                expect(channel.runtime.context.instLatency).toBe(150);
+                expect(channel.timesync!.sync.calculatedTimeLatencyMS).toBe(
+                    150
+                );
+                expect(channel.runtime!.context.instLatency).toBe(150);
 
-                expect(channel.timesync.sync.offsetMS).toBe(49);
-                expect(channel.timesync.sync.offsetSpreadMS).toBe(0);
-                expect(channel.runtime.context.instTimeOffset).toBe(49);
-                expect(channel.runtime.context.instTimeOffsetSpread).toBe(0);
+                expect(channel.timesync!.sync.offsetMS).toBe(49);
+                expect(channel.timesync!.sync.offsetSpreadMS).toBe(0);
+                expect(channel.runtime!.context.instTimeOffset).toBe(49);
+                expect(channel.runtime!.context.instTimeOffsetSpread).toBe(0);
             } finally {
                 jest.useRealTimers();
             }
@@ -827,7 +829,7 @@ describe('BaseAuxChannel', () => {
                 }),
             ]);
 
-            const result = await channel.runtime.execute(
+            const result = await channel.runtime!.execute(
                 `return getBot("abc", "def").tags.abc`
             );
 
@@ -863,7 +865,7 @@ describe('BaseAuxChannel', () => {
 
                 await waitAsync();
 
-                const { abc } = channel.helper.botsState;
+                const { abc } = channel.helper!.botsState;
                 expect(abc).toEqual(createBot('abc', {}, 'tempLocal'));
             });
 
@@ -883,14 +885,14 @@ describe('BaseAuxChannel', () => {
                     },
                 ]);
 
-                const { abc } = channel.helper.botsState;
+                const { abc } = channel.helper!.botsState;
                 expect(abc).toBeUndefined();
             });
 
             it('should resolve load_space events that have a task id', async () => {
                 await channel.initAndWait();
 
-                const task = channel.runtime.context.createTask();
+                const task = channel.runtime!.context.createTask();
                 let resolved = false;
                 task.promise.then((val) => {
                     resolved = true;
@@ -918,7 +920,7 @@ describe('BaseAuxChannel', () => {
             it('should resolve if the space is already loaded', async () => {
                 await channel.initAndWait();
 
-                const task = channel.runtime.context.createTask();
+                const task = channel.runtime!.context.createTask();
                 let resolved = false;
                 task.promise.then((val) => {
                     resolved = true;
@@ -962,7 +964,7 @@ describe('BaseAuxChannel', () => {
                 await channel.initAndWait();
 
                 sub.add(
-                    channel.helper.localEvents.subscribe((e) =>
+                    channel.helper!.localEvents.subscribe((e) =>
                         events.push(...e)
                     )
                 );
@@ -995,7 +997,7 @@ describe('BaseAuxChannel', () => {
                 await channel.initAndWait();
 
                 sub.add(
-                    channel.helper.localEvents.subscribe((e) =>
+                    channel.helper!.localEvents.subscribe((e) =>
                         events.push(...e)
                     )
                 );
@@ -1045,7 +1047,7 @@ describe('BaseAuxChannel', () => {
                 await channel.initAndWait();
 
                 sub.add(
-                    channel.helper.localEvents.subscribe((e) =>
+                    channel.helper!.localEvents.subscribe((e) =>
                         events.push(...e)
                     )
                 );
@@ -1106,7 +1108,7 @@ describe('BaseAuxChannel', () => {
                 await channel.initAndWait();
 
                 sub.add(
-                    channel.helper.localEvents.subscribe((e) =>
+                    channel.helper!.localEvents.subscribe((e) =>
                         events.push(...e)
                     )
                 );
@@ -1842,7 +1844,7 @@ describe('BaseAuxChannel', () => {
                 let resolve2: () => void;
                 let promise2 = new Promise<void>((r) => (resolve2 = r));
 
-                const task = channel.runtime.context.createTask();
+                const task = channel.runtime!.context.createTask();
                 let resolved = false;
                 task.promise.then((val) => {
                     resolved = true;
@@ -1873,16 +1875,16 @@ describe('BaseAuxChannel', () => {
 
                 expect(resolved).toBe(false);
 
-                resolve1();
-                resolve2();
+                resolve1!();
+                resolve2!();
 
                 await waitAsync();
 
                 expect(resolved).toBe(true);
                 expect(
-                    channel.runtime.context.device.allowCollaborationUpgrade
+                    channel.runtime!.context.device.allowCollaborationUpgrade
                 ).toBe(false);
-                expect(channel.runtime.context.device.isCollaborative).toBe(
+                expect(channel.runtime!.context.device.isCollaborative).toBe(
                     true
                 );
 
@@ -1920,7 +1922,7 @@ describe('BaseAuxChannel', () => {
 
                 await channel.initAndWait();
 
-                const task = channel.runtime.context.createTask();
+                const task = channel.runtime!.context.createTask();
                 let resolved = false;
                 task.promise.then((val) => {
                     resolved = true;
@@ -1959,7 +1961,7 @@ describe('BaseAuxChannel', () => {
 
                 await channel.initAndWait();
 
-                const task = channel.runtime.context.createTask();
+                const task = channel.runtime!.context.createTask();
                 let resolved = false;
                 task.promise.then((val) => {
                     resolved = true;
@@ -2006,7 +2008,7 @@ describe('BaseAuxChannel', () => {
 
                 await channel.initAndWait();
 
-                const task = channel.runtime.context.createTask();
+                const task = channel.runtime!.context.createTask();
                 let rejectedErr: any;
                 task.promise.catch((val) => {
                     rejectedErr = val;
@@ -2212,7 +2214,7 @@ describe('BaseAuxChannel', () => {
         it('should update the device info', async () => {
             await channel.initAndWait();
 
-            const { result: device } = await channel.runtime.execute(
+            const { result: device } = await channel.runtime!.execute(
                 'return os.device()'
             );
 
@@ -2234,7 +2236,7 @@ describe('BaseAuxChannel', () => {
                 isCollaborative: true,
             });
 
-            const { result: device2 } = await channel.runtime.execute(
+            const { result: device2 } = await channel.runtime!.execute(
                 'return os.device()'
             );
 
@@ -2309,7 +2311,7 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should emit a onDisallowCollaborationUpgrade shout when allowCollaborationUpgrade is set to false', async () => {
-            config.config.device.allowCollaborationUpgrade = true;
+            config.config.device!.allowCollaborationUpgrade = true;
             await channel.initAndWait();
 
             await memory.applyEvents([

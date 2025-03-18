@@ -379,8 +379,8 @@ export class AuxRuntime
      * @param interpreter The interpreter that should be used for the runtime.
      */
     constructor(
-        version: AuxVersion,
-        device: AuxDevice,
+        version: AuxVersion | null,
+        device: AuxDevice | null,
         libraryFactory: (
             context: AuxGlobalContext
         ) => AuxLibrary = createDefaultLibrary,

@@ -12,7 +12,7 @@ export interface DeviceAction extends Action {
     /**
      * The connection which sent the event.
      */
-    connection: ConnectionInfo;
+    connection: ConnectionInfo | null;
 
     /**
      * The event.

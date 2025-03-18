@@ -893,7 +893,7 @@ export interface PrecalculatedBotsState {
  * Defines an interface for a partial set of bots that have precalculated formulas.
  */
 export interface PartialPrecalculatedBotsState {
-    [id: string]: Partial<PrecalculatedBot>;
+    [id: string]: Partial<PrecalculatedBot> | null;
 }
 
 /**

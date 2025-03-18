@@ -20,7 +20,7 @@ export interface SharedDocumentConfig {
      * The branch of the document to load.
      * If omitted, then local persistence will not be supported.
      */
-    branch?: string;
+    branch?: string | null;
 
     /**
      * Whether the doc should be loaded in read-only mode.

@@ -7,32 +7,32 @@ export interface AuxVersion {
     /**
      * The commit of the hash that AUX was built from.
      */
-    hash: string;
+    hash: string | null;
 
     /**
      * The full version number.
      */
-    version: string;
+    version: string | null;
 
     /**
      * The major portion of the version.
      */
-    major: number;
+    major: number | null;
 
     /**
      * The minor portion of the version.
      */
-    minor: number;
+    minor: number | null;
 
     /**
      * The patch portion of the version.
      */
-    patch: number;
+    patch: number | null;
 
     /**
      * Whether this version is an alpha (i.e. test) version.
      */
-    alpha: boolean | number;
+    alpha: boolean | number | null;
 
     /**
      * Gets the player mode of this CasualOS version.

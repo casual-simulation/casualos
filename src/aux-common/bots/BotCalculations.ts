@@ -142,7 +142,7 @@ export interface BotsStateDiff {
  * it represents nothing.
  * @param value The value.
  */
-export function hasValue(value: unknown) {
+export function hasValue<T>(value: T): value is NonNullable<T> {
     return !(value === null || typeof value === 'undefined' || value === '');
 }
 

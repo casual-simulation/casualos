@@ -177,7 +177,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         // We need to rebuild the entire state
         // if a single partition changes.
         // We have to do this since bots could be deleted
-        let state: BotsState = null;
+        let state: BotsState | null = null;
 
         let keys = Object.keys(this._partitions);
         let sorted = sortBy(keys, (k) => k !== '*');
@@ -211,6 +211,10 @@ export class AuxHelper extends BaseHelper<Bot> {
                     }
                 }
             }
+        }
+
+        if (!state) {
+            state = {};
         }
 
         this._stateCache.set(cacheName, state);
@@ -298,7 +302,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * @param botId The ID of the bot.
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
-    async createOrUpdateUserBot(botId: string, userBot: Bot) {
+    async createOrUpdateUserBot(botId: string, userBot: Bot | null) {
         if (!userBot) {
             this._log('[AuxHelper] Create user bot');
             await this.createBot(
@@ -360,7 +364,7 @@ export class AuxHelper extends BaseHelper<Bot> {
 
         if (needsToBeEnabled) {
             state = merge(state, {
-                [builderId]: {
+                [builderId!]: {
                     tags: {
                         builderState: 'Enabled',
                     },
@@ -413,7 +417,7 @@ export class AuxHelper extends BaseHelper<Bot> {
     }
 
     private async _sendEvents(events: RuntimeActions[]) {
-        let map = new Map<AuxPartition, BotAction[]>();
+        let map = new Map<AuxPartition | null, BotAction[]>();
         let newBotPartitions = new Map<string, AuxPartition>();
         for (let event of events) {
             let partition = this._partitionForEvent(event);
@@ -429,8 +433,8 @@ export class AuxHelper extends BaseHelper<Bot> {
                     newBotPartitions.set(event.bot.id, partition);
                 }
             }
-            let masks = null as BotTagMasks;
-            let id = null as string;
+            let masks: BotTagMasks | null = null;
+            let id: string | null = null;
             if (event.type === 'update_bot') {
                 if (event.update.masks) {
                     masks = event.update.masks;
@@ -448,6 +452,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                 this._warn('[AuxHelper] No partition for event', event);
                 if (
                     'taskId' in event &&
+                    hasValue(event.taskId) &&
                     event.type !== 'remote' &&
                     event.type !== 'device'
                 ) {
@@ -477,7 +482,7 @@ export class AuxHelper extends BaseHelper<Bot> {
                 batch.push(event as BotAction);
             }
 
-            if (masks) {
+            if (masks && id) {
                 for (let space in masks) {
                     const maskPartition = this._partitionForBotType(space);
                     if (maskPartition) {
@@ -525,7 +530,9 @@ export class AuxHelper extends BaseHelper<Bot> {
      * If undefined is returned, then the event should not be sent anywhere.
      * @param event
      */
-    private _partitionForEvent(event: RuntimeActions): AuxPartition {
+    private _partitionForEvent(
+        event: RuntimeActions
+    ): AuxPartition | null | undefined {
         if (event.type === 'remote') {
             return null;
         } else if (event.type === 'remote_result') {
@@ -551,7 +558,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         }
     }
 
-    private _partitionForBotEvent(event: BotActions): AuxPartition {
+    private _partitionForBotEvent(event: BotActions): AuxPartition | null {
         const space = this._botSpace(event);
         if (!space) {
             return null;
@@ -559,7 +566,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         return this._partitionForBotType(space);
     }
 
-    private _partitionForBotType(type: string): AuxPartition {
+    private _partitionForBotType(type: string): AuxPartition | null {
         const partitionId = type;
         const idPartition = this._partitions[partitionId];
         if (idPartition) {
@@ -570,8 +577,8 @@ export class AuxHelper extends BaseHelper<Bot> {
         return null;
     }
 
-    private _botSpace(event: BotActions): string {
-        let bot: Bot;
+    private _botSpace(event: BotActions): string | null {
+        let bot: Bot | undefined;
         if (event.type === 'add_bot') {
             bot = event.bot;
         } else if (event.type === 'remove_bot') {

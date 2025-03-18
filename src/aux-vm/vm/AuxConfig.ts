@@ -5,7 +5,7 @@ import type {
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
 import { hasValue } from '@casual-simulation/aux-common';
-import type { AuxDevice } from '@casual-simulation/aux-runtime';
+import type { AuxDevice, AuxVersion } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines the possible configuration options for a simulation.
@@ -141,7 +141,9 @@ export interface AuxTimeSyncConfiguration {
 
 export type TimeSyncProtocol = RemoteCausalRepoProtocol;
 
-export function buildVersionNumber(config: AuxConfigParameters) {
+export function buildVersionNumber(
+    config: AuxConfigParameters | null
+): AuxVersion | null {
     if (!config) {
         return null;
     }
@@ -156,7 +158,9 @@ export function buildVersionNumber(config: AuxConfigParameters) {
  * Parses the given version number.
  * @param version The version number.
  */
-export function parseVersionNumber(version: string) {
+export function parseVersionNumber(
+    version: string | null
+): Omit<AuxVersion, 'hash' | 'playerMode'> {
     if (!version) {
         return {
             version: null,
@@ -167,7 +171,17 @@ export function parseVersionNumber(version: string) {
         };
     }
     const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((:|-)\w+\.?\d*)*$/i;
-    const [str, major, minor, patch, prerelease] = versionRegex.exec(version);
+    const result = versionRegex.exec(version);
+    if (!result) {
+        return {
+            version: version,
+            major: null,
+            minor: null,
+            patch: null,
+            alpha: null,
+        };
+    }
+    const [str, major, minor, patch, prerelease] = result;
 
     let alpha: boolean | number = false;
     if (hasValue(prerelease)) {
