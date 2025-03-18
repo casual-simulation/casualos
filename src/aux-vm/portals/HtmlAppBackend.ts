@@ -100,6 +100,7 @@ export class HtmlAppBackend implements AppBackend {
     private _registerTaskId: string | number;
     private _instanceId: string;
     private _document: Document;
+    private _body: Node;
     private _mutationObserver: MutationObserver;
     private _nodes: Map<string, RootNode | Node> = new Map<
         string,
@@ -262,7 +263,7 @@ export class HtmlAppBackend implements AppBackend {
                 globalThis.document = this._document;
             }
             if (this._document) {
-                render(content, this._document.body);
+                render(content, this._body);
             }
         } catch (err) {
             console.error(err);
@@ -285,24 +286,30 @@ export class HtmlAppBackend implements AppBackend {
         }
 
         if (node.nodeName === 'BODY') {
-            return this._document.body as any;
+            return this._body as any;
         }
         return this._nodes.get(id);
     }
 
     private _setupApp(result: HtmlPortalSetupResult) {
         try {
-            let doc = (this._document = globalThis.document);
-            //     undom({
-            //     builtinEvents: result?.builtinEvents,
-            // }));
+            if (isBrowserDocument()) {
+                this._document = globalThis.document;
+                this._body = this._document.createElement('body');
+            } else {
+                this._document = undom({
+                    builtinEvents: result?.builtinEvents,
+                });
+                this._body = this._document.body;
+            }
 
-            this._registerMethodHandlers(doc);
+            this._registerMethodHandlers(this._document);
 
-            this._mutationObserver = new doc.defaultView.MutationObserver(
-                this._processMutations.bind(this)
-            );
-            this._mutationObserver.observe(doc, {
+            this._mutationObserver =
+                new this._document.defaultView.MutationObserver(
+                    this._processMutations.bind(this)
+                );
+            this._mutationObserver.observe(this._body, {
                 subtree: true,
                 attributes: true,
                 attributeOldValue: true,
@@ -344,6 +351,7 @@ export class HtmlAppBackend implements AppBackend {
             this._helper.transaction(
                 action(ON_APP_SETUP_ACTION_NAME, [this.botId], undefined, {
                     document: this._document,
+                    body: this._body,
                 })
             );
 
