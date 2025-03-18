@@ -1439,6 +1439,7 @@ export class ServerBuilder implements SubscriptionLike {
                 isCollaborative: false,
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
             },
