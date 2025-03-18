@@ -12,6 +12,7 @@
     -   The server now returns an `invalid_request` error code when the parameters provided are not accepted by the selected model (e.g., OpenAI, Google).
     -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
 -   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
+-   Fixed an issue where predefined `bios` values in URLs (e.g., `?bios=free`) are now preserved during authentication. Users no longer encounter the BIOS selection screen unnecessarily after signing in.
 
 ## V3.3.15
 
