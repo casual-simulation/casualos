@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const StripeInterface = Symbol.for('StripeInterface');
+
 /**
  * Defines an interface that represents the high-level Stripe-like functions that the SubscriptionController uses.
  */

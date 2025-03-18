@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 
+export const RecordsStore = Symbol.for('RecordsStore');
+
 /**
  * Defines an interface for objects that can store records.
  */

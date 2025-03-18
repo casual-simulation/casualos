@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import type { StoredUpdates } from './InstRecordsStore';
 import { CurrentUpdates } from './InstRecordsStore';
 import type {
@@ -10,6 +11,7 @@ import type {
 /**
  * Defines an implementation of TemporaryInstRecordsStore which keeps everything in memory.
  */
+@injectable()
 export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _branches: Map<string, TempBranchInfo> = new Map();
     private _updates: Map<string, StoredUpdates> = new Map();

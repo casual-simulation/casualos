@@ -1,5 +1,7 @@
 import type { ServerError } from '@casual-simulation/aux-common';
 
+export const AISloydInterface = Symbol.for('AISloydInterface');
+
 export interface AISloydInterface {
     /**
      * Attempts to create a new model in Sloyd.

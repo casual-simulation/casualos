@@ -1,5 +1,4 @@
 import type {
-    FileRecordsStore,
     AddFileFailure,
     MarkFileRecordAsUploadedFailure,
     EraseFileStoreResult,
@@ -7,6 +6,7 @@ import type {
     PresignFileReadFailure,
     GetFileRecordFailure,
 } from './FileRecordsStore';
+import { FileRecordsStore } from './FileRecordsStore';
 import type {
     NotLoggedInError,
     NotSupportedError,
@@ -16,10 +16,8 @@ import type {
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
 import { RecordsController } from './RecordsController';
 import { getExtension, getType } from 'mime';
-import type {
-    AuthorizeSubjectFailure,
-    PolicyController,
-} from './PolicyController';
+import type { AuthorizeSubjectFailure } from './PolicyController';
+import { PolicyController } from './PolicyController';
 import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
@@ -31,13 +29,16 @@ import {
 } from '@casual-simulation/aux-common';
 import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
-import type { MetricsStore } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'FileRecordsController';
+
+export const FileRecordsConfiguration = Symbol.for('FileRecordsConfiguration');
 
 export interface FileRecordsConfiguration {
     policies: PolicyController;
@@ -46,16 +47,29 @@ export interface FileRecordsConfiguration {
     config: ConfigurationStore;
 }
 
+@injectable()
+export class FileRecordsConfigurationImpl implements FileRecordsConfiguration {
+    constructor(
+        @inject(PolicyController) public policies: PolicyController,
+        @inject(FileRecordsStore) public store: FileRecordsStore,
+        @inject(MetricsStore) public metrics: MetricsStore,
+        @inject(ConfigurationStore) public config: ConfigurationStore
+    ) {}
+}
+
 /**
  * Defines a class that can manage file records.
  */
+@injectable()
 export class FileRecordsController {
     private _policies: PolicyController;
     private _store: FileRecordsStore;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
 
-    constructor(config: FileRecordsConfiguration) {
+    constructor(
+        @inject(FileRecordsConfiguration) config: FileRecordsConfiguration
+    ) {
         this._policies = config.policies;
         this._store = config.store;
         this._metrics = config.metrics;

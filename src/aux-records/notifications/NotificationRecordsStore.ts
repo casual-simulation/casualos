@@ -10,6 +10,8 @@ import type {
 import type { SubscriptionFilter } from '../MetricsStore';
 import { PushSubscriptionType } from './WebPushInterface';
 
+export const NotificationRecordsStore = Symbol.for('NotificationRecordsStore');
+
 /**
  * Defines a store that contains notification records.
  */

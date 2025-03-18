@@ -1,5 +1,8 @@
 import type { ServerError } from '@casual-simulation/aux-common';
+import { injectable } from 'inversify';
 import { z } from 'zod';
+
+export const AIHumeInterface = Symbol('AIHumeInterface');
 
 /**
  * Defines an interface that is able to be used to provide [hume.ai](https://www.hume.ai/) features for a server.
@@ -14,6 +17,7 @@ export interface AIHumeInterface {
     ): Promise<AIHumeInterfaceGetAccessTokenResult>;
 }
 
+@injectable()
 export class HumeInterface implements AIHumeInterface {
     constructor() {}
 

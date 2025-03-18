@@ -124,6 +124,7 @@ export const moderationSchema = z.object({
         .optional(),
 });
 
+export const ModerationConfiguration = Symbol.for('ModerationConfiguration');
 export type ModerationConfiguration = z.infer<typeof moderationSchema>;
 
 export function parseModerationConfiguration(

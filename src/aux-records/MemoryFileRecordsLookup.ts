@@ -10,7 +10,9 @@ import type {
     MarkFileRecordAsUploadedResult,
     UpdateFileResult,
 } from './FileRecordsStore';
+import { injectable } from 'inversify';
 
+@injectable()
 export class MemoryFileRecordsLookup implements FileRecordsLookup {
     private _files: Map<string, StoredFile> = new Map();
 

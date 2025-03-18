@@ -694,6 +694,10 @@ export function parseSubscriptionConfig(
     return defaultConfig;
 }
 
+export const SubscriptionConfiguration = Symbol.for(
+    'SubscriptionConfiguration'
+);
+
 export interface SubscriptionConfiguration {
     /**
      * The information that should be used for subscriptions.

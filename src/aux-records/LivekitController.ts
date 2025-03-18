@@ -2,12 +2,18 @@ import { AccessToken } from 'livekit-server-sdk';
 import type { IssueMeetTokenResult } from './LivekitEvents';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'LivekitController';
+
+export const LivekitApiKey = Symbol.for('LivekitApiKey');
+export const LivekitSecretKey = Symbol.for('LivekitSecretKey');
+export const LivekitEndpoint = Symbol.for('LivekitEndpoint');
 
 /**
  * Defines a class that is able to issue tokens for livekit based meetings.
  */
+@injectable()
 export class LivekitController {
     private _apiKey: string;
     private _secretKey: string;
@@ -19,7 +25,11 @@ export class LivekitController {
      * @param secretKey The secret key that should be used to generate tokens.
      * @param endpoint The HTTP/WebSocket endpoint that the livekit server is available at.
      */
-    constructor(apiKey: string, secretKey: string, endpoint: string) {
+    constructor(
+        @inject(LivekitApiKey) apiKey: string,
+        @inject(LivekitSecretKey) secretKey: string,
+        @inject(LivekitEndpoint) endpoint: string
+    ) {
         this._apiKey = apiKey;
         this._secretKey = secretKey;
         this._endpoint = endpoint;

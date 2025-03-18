@@ -1,20 +1,21 @@
 import type { DenialReason, ServerError } from '@casual-simulation/aux-common';
-import type {
-    AuthorizeSubjectFailure,
-    PolicyController,
-} from './PolicyController';
-import type { RecordsStore } from './RecordsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import type { AuthorizeSubjectFailure } from './PolicyController';
+import { PolicyController } from './PolicyController';
+import { RecordsStore } from './RecordsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import {
     getLoomFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
-import type { MetricsStore } from './MetricsStore';
+import { MetricsStore } from './MetricsStore';
 import * as jose from 'jose';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'LoomController';
+
+export const LoomControllerOptions = Symbol.for('LoomControllerOptions');
 
 export interface LoomControllerOptions {
     policies: PolicyController;
@@ -23,9 +24,20 @@ export interface LoomControllerOptions {
     metrics: MetricsStore;
 }
 
+@injectable()
+export class LoomControllerOptionsImpl implements LoomControllerOptions {
+    constructor(
+        @inject(PolicyController) public policies: PolicyController,
+        @inject(RecordsStore) public store: RecordsStore,
+        @inject(ConfigurationStore) public config: ConfigurationStore,
+        @inject(MetricsStore) public metrics: MetricsStore
+    ) {}
+}
+
 /**
  * Defines a class that is able to handle loom-related operations and tasks.
  */
+@injectable()
 export class LoomController {
     /**
      * The policy controller that is used to check if the user is allowed to perform certain actions.
@@ -35,7 +47,7 @@ export class LoomController {
     private _config: ConfigurationStore;
     private _metrics: MetricsStore;
 
-    constructor(options: LoomControllerOptions) {
+    constructor(@inject(LoomControllerOptions) options: LoomControllerOptions) {
         this._policies = options.policies;
         this._store = options.store;
         this._config = options.config;

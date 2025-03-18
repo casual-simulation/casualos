@@ -1,8 +1,10 @@
+import { injectable } from 'inversify';
 import type { Cache } from './Cache';
 
 /**
  * Defines a cache that stores data in memory.
  */
+@injectable()
 export class MemoryCache implements Cache {
     private _items: Map<string, CacheEntry> = new Map();
 

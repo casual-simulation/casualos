@@ -8,6 +8,7 @@ import type {
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
 } from '../PolicyController';
+import { PolicyController } from '../PolicyController';
 import { AuthorizeSubjectFailure } from '../PolicyController';
 import type {
     CrudRecordsConfiguration,
@@ -19,12 +20,12 @@ import type {
     NotificationAction,
     NotificationActionUI,
     NotificationRecord,
-    NotificationRecordsStore,
     NotificationSubscription,
     NotificationSubscriptionMetrics,
     SentPushNotification,
     UserPushSubscription,
 } from './NotificationRecordsStore';
+import { NotificationRecordsStore } from './NotificationRecordsStore';
 import type {
     NotificationFeaturesConfiguration,
     SubscriptionConfiguration,
@@ -37,11 +38,17 @@ import type {
     PushNotificationPayload,
     PushSubscriptionType,
     SendPushNotificationResult,
-    WebPushInterface,
 } from './WebPushInterface';
+import { WebPushInterface } from './WebPushInterface';
 import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
+import { inject, injectable } from 'inversify';
+import { ConfigurationStore } from 'ConfigurationStore';
 
 const TRACE_NAME = 'NotificationRecordsController';
+
+export const NotificationRecordsConfiguration = Symbol.for(
+    'NotificationRecordsConfiguration'
+);
 
 /**
  * Defines the configuration for a webhook records controller.
@@ -57,16 +64,33 @@ export interface NotificationRecordsConfiguration
     pushInterface: WebPushInterface;
 }
 
+@injectable()
+export class NotificationRecordsConfigurationImpl
+    implements NotificationRecordsConfiguration
+{
+    constructor(
+        @inject(PolicyController) public policies: PolicyController,
+        @inject(ConfigurationStore) public config: ConfigurationStore,
+        @inject(NotificationRecordsStore)
+        public store: NotificationRecordsStore,
+        @inject(WebPushInterface) public pushInterface: WebPushInterface
+    ) {}
+}
+
 /**
  * Defines a controller that can be used to interact with NotificationRecords.
  */
+@injectable()
 export class NotificationRecordsController extends CrudRecordsController<
     NotificationRecord,
     NotificationRecordsStore
 > {
     private _pushInterface: WebPushInterface;
 
-    constructor(config: NotificationRecordsConfiguration) {
+    constructor(
+        @inject(NotificationRecordsConfiguration)
+        config: NotificationRecordsConfiguration
+    ) {
         super({
             ...config,
             name: 'NotificationRecordsController',

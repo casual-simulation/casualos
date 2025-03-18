@@ -1,9 +1,9 @@
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
 import type {
-    AuthController,
     NoSessionKeyResult,
     ValidateSessionKeyResult,
 } from './AuthController';
+import { AuthController } from './AuthController';
 import {
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
@@ -14,20 +14,18 @@ import {
     validateSessionKey,
 } from './AuthController';
 import { isSuperUserRole, parseSessionKey } from './AuthUtils';
-import type { LivekitController } from './LivekitController';
-import type { RecordsController } from './RecordsController';
-import type { EventRecordsController } from './EventRecordsController';
-import type { DataRecordsController } from './DataRecordsController';
-import type { FileRecordsController } from './FileRecordsController';
-import type {
-    CreateManageSubscriptionRequest,
-    SubscriptionController,
-} from './SubscriptionController';
+import { LivekitController } from './LivekitController';
+import { RecordsController } from './RecordsController';
+import { EventRecordsController } from './EventRecordsController';
+import { DataRecordsController } from './DataRecordsController';
+import { FileRecordsController } from './FileRecordsController';
+import type { CreateManageSubscriptionRequest } from './SubscriptionController';
+import { SubscriptionController } from './SubscriptionController';
 import type { ZodError } from 'zod';
 import { z } from 'zod';
 import type { PublicRecordKeyPolicy } from './RecordsStore';
 import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
-import type { RateLimitController } from './RateLimitController';
+import { RateLimitController } from './RateLimitController';
 import type {
     DenialReason,
     Procedure,
@@ -43,12 +41,12 @@ import {
     getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
-import type { PolicyController } from './PolicyController';
+import { PolicyController } from './PolicyController';
 import { GrantResourcePermissionRequest } from './PolicyController';
-import type { AIController } from './AIController';
+import { AIController } from './AIController';
 import type { AIChatMessage } from './AIChatInterface';
 import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
-import type { WebsocketController } from './websockets/WebsocketController';
+import { WebsocketController } from './websockets/WebsocketController';
 import type {
     AddUpdatesMessage,
     LoginMessage,
@@ -76,9 +74,9 @@ import type {
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import { getStatusCode } from '@casual-simulation/aux-common';
-import type { ModerationController } from './ModerationController';
+import { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
-import type { LoomController } from './LoomController';
+import { LoomController } from './LoomController';
 import type { Tracer } from '@opentelemetry/api';
 import { SpanKind, ValueType, metrics, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
@@ -114,7 +112,7 @@ import {
     STUDIO_ID_VALIDATION,
     UPDATE_FILE_SCHEMA,
 } from './Validations';
-import type { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import {
     eraseItemProcedure,
     getItemProcedure,
@@ -122,11 +120,12 @@ import {
     recordItemProcedure,
 } from './crud/CrudHelpers';
 import { merge, omit } from 'lodash';
-import type { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
+import { inject, injectable, named, optional } from 'inversify';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -260,6 +259,9 @@ export interface Route<T, TQuery = any> {
 
 const RECORDS_SERVER_METER = 'RecordsServer';
 
+export const StringSet = Symbol.for('StringSet');
+export const RecordsServerOptions = Symbol.for('RecordsServerOptions');
+
 export interface RecordsServerOptions {
     /**
      * The set of origins that are allowed to make requests to account endpoints.
@@ -365,9 +367,80 @@ export interface RecordsServerOptions {
     notificationsController?: NotificationRecordsController | null;
 }
 
+export class RecordsServerOptionsImpl implements RecordsServerOptions {
+    @inject(StringSet)
+    @named('allowedAccountOrigins')
+    allowedAccountOrigins: Set<string>;
+
+    @inject(StringSet)
+    @named('allowedApiOrigins')
+    allowedApiOrigins: Set<string>;
+
+    @inject(AuthController)
+    authController: AuthController;
+
+    @inject(LivekitController)
+    livekitController: LivekitController;
+
+    @inject(RecordsController)
+    recordsController: RecordsController;
+
+    @inject(EventRecordsController)
+    eventsController: EventRecordsController;
+
+    @inject(DataRecordsController)
+    dataController: DataRecordsController;
+
+    @inject(DataRecordsController)
+    @named('manual')
+    manualDataController: DataRecordsController;
+
+    @inject(FileRecordsController)
+    filesController: FileRecordsController;
+
+    @inject(SubscriptionController)
+    subscriptionController?: SubscriptionController;
+
+    @inject(RateLimitController)
+    rateLimitController?: RateLimitController;
+
+    @inject(PolicyController)
+    policyController: PolicyController;
+
+    @inject(AIController)
+    @optional()
+    aiController?: AIController;
+
+    @inject(WebsocketController)
+    @optional()
+    websocketController?: WebsocketController;
+
+    @inject(ModerationController)
+    @optional()
+    moderationController?: ModerationController;
+
+    @inject(LoomController)
+    @optional()
+    loomController?: LoomController;
+
+    @inject(WebhookRecordsController)
+    @optional()
+    webhooksController?: WebhookRecordsController;
+
+    @inject(RateLimitController)
+    @named('websocket')
+    @optional()
+    websocketRateLimitController?: RateLimitController;
+
+    @inject(NotificationRecordsController)
+    @optional()
+    notificationsController?: NotificationRecordsController;
+}
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
+@injectable()
 export class RecordsServer {
     private _auth: AuthController;
     private _livekit: LivekitController;

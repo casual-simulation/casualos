@@ -11,6 +11,7 @@ import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 import Anthropic from '@anthropic-ai/sdk';
 import type { Message } from '@anthropic-ai/sdk/resources';
 import { ImageBlockParam, TextBlockParam } from '@anthropic-ai/sdk/resources';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'AnthropicAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -21,6 +22,7 @@ const SPAN_OPTIONS: SpanOptions = {
     },
 };
 
+export const AnthropicAIChatOptions = Symbol.for('AnthropicAIChatOptions');
 export interface AnthropicAIChatOptions {
     /**
      * The API key to use.
@@ -31,11 +33,14 @@ export interface AnthropicAIChatOptions {
 /**
  * Defines a class that implements {@link AIChatInterface} using the Anthropic Claude API.
  */
+@injectable()
 export class AnthropicAIChatInterface implements AIChatInterface {
     private _options: AnthropicAIChatOptions;
     private _ai: Anthropic;
 
-    constructor(options: AnthropicAIChatOptions) {
+    constructor(
+        @inject(AnthropicAIChatOptions) options: AnthropicAIChatOptions
+    ) {
         this._options = options;
         this._ai = new Anthropic({
             apiKey: options.apiKey,

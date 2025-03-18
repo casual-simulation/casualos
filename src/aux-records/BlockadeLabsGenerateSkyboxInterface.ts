@@ -9,6 +9,7 @@ import axios from 'axios';
 import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'BlockadeLabsGenerateSkyboxInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -22,12 +23,16 @@ const SPAN_OPTIONS: SpanOptions = {
 /**
  * Implements the AI generate skybox interface for Blockade Labs (https://www.blockadelabs.com/).
  */
+@injectable()
 export class BlockadeLabsGenerateSkyboxInterface
     implements AIGenerateSkyboxInterface
 {
     private _options: BlockadeLabsGenerateSkyboxInterfaceOptions;
 
-    constructor(options: BlockadeLabsGenerateSkyboxInterfaceOptions) {
+    constructor(
+        @inject(BlockadeLabsGenerateSkyboxInterfaceOptions)
+        options: BlockadeLabsGenerateSkyboxInterfaceOptions
+    ) {
         this._options = options;
     }
 
@@ -129,6 +134,10 @@ export class BlockadeLabsGenerateSkyboxInterface
         return response.data.request;
     }
 }
+
+export const BlockadeLabsGenerateSkyboxInterfaceOptions = Symbol.for(
+    'BlockadeLabsGenerateSkyboxInterfaceOptions'
+);
 
 export interface BlockadeLabsGenerateSkyboxInterfaceOptions {
     apiKey: string;

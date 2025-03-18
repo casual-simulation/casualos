@@ -1,3 +1,5 @@
+export const Cache = Symbol.for('Cache');
+
 /**
  * Defines an interface for services that can cache arbitrary data.
  */
@@ -23,6 +25,8 @@ export interface Cache {
      */
     remove(key: string): Promise<void>;
 }
+
+export const MultiCache = Symbol.for('MultiCache');
 
 /**
  * Defines an interface for services that can construct caches.

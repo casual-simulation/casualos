@@ -13,6 +13,8 @@ import OpenAI from 'openai';
 import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
+import { OpenAIApiKey } from 'OpenAI';
 
 const TRACE_NAME = 'OpenAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -23,6 +25,8 @@ const SPAN_OPTIONS: SpanOptions = {
     },
 };
 
+export const OpenAIChatOptions = Symbol.for('OpenAIChatOptions');
+
 export interface OpenAIChatOptions {
     /**
      * The API key to use.
@@ -30,14 +34,20 @@ export interface OpenAIChatOptions {
     apiKey: string;
 }
 
+@injectable()
+export class OpenAIChatOptionsImpl implements OpenAIChatOptions {
+    constructor(@inject(OpenAIApiKey) public apiKey: string) {}
+}
+
 /**
  * Defines a class that implements {@link AIChatInterface} using the OpenAI API.
  */
+@injectable()
 export class OpenAIChatInterface implements AIChatInterface {
     private _options: OpenAIChatOptions;
     private _client: OpenAI;
 
-    constructor(options: OpenAIChatOptions) {
+    constructor(@inject(OpenAIChatOptions) options: OpenAIChatOptions) {
         this._options = options;
         this._client = new OpenAI({
             apiKey: options.apiKey,

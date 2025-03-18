@@ -1,7 +1,5 @@
-import type {
-    AuthorizeSubjectFailure,
-    PolicyController,
-} from './PolicyController';
+import type { AuthorizeSubjectFailure } from './PolicyController';
+import { PolicyController } from './PolicyController';
 import { getMarkerResourcesForUpdate } from './PolicyController';
 import type {
     NotLoggedInError,
@@ -9,10 +7,10 @@ import type {
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
 import type {
-    EventRecordsStore,
     AddEventCountStoreFailure,
     GetEventCountStoreFailure,
 } from './EventRecordsStore';
+import { EventRecordsStore } from './EventRecordsStore';
 import {
     AddEventCountStoreResult,
     GetEventCountStoreResult,
@@ -26,14 +24,16 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import type { MetricsStore } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'EventRecordsController';
 
+export const EventRecordsConfiguration = Symbol('EventRecordsConfiguration');
 export interface EventRecordsConfiguration {
     policies: PolicyController;
     store: EventRecordsStore;
@@ -41,9 +41,21 @@ export interface EventRecordsConfiguration {
     config: ConfigurationStore;
 }
 
+export class EventRecordsConfigurationImpl
+    implements EventRecordsConfiguration
+{
+    constructor(
+        @inject(PolicyController) public policies: PolicyController,
+        @inject(EventRecordsStore) public store: EventRecordsStore,
+        @inject(MetricsStore) public metrics: MetricsStore,
+        @inject(ConfigurationStore) public config: ConfigurationStore
+    ) {}
+}
+
 /**
  * Defines a class that is able to manage event (count) records.
  */
+@injectable()
 export class EventRecordsController {
     private _policies: PolicyController;
     // private _manager: RecordsController;
@@ -55,7 +67,9 @@ export class EventRecordsController {
      * Creates a DataRecordsController.
      * @param config The configuration to use.
      */
-    constructor(config: EventRecordsConfiguration) {
+    constructor(
+        @inject(EventRecordsConfiguration) config: EventRecordsConfiguration
+    ) {
         this._policies = config.policies;
         this._store = config.store;
         this._metrics = config.metrics;

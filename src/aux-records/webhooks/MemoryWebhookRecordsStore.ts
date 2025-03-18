@@ -1,5 +1,5 @@
 import type { SubscriptionFilter } from '../MetricsStore';
-import type { MemoryStore } from '../MemoryStore';
+import { MemoryStore } from '../MemoryStore';
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import type {
     WebhookRecord,
@@ -10,14 +10,16 @@ import type {
 } from './WebhookRecordsStore';
 import type { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
 import { sortBy } from 'lodash';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class MemoryWebhookRecordsStore
     extends MemoryCrudRecordsStore<WebhookRecord, WebhookSubscriptionMetrics>
     implements WebhookRecordsStore
 {
     private _webhookRuns: Map<string, WebhookRunInfo> = new Map();
 
-    constructor(store: MemoryStore) {
+    constructor(@inject(MemoryStore) store: MemoryStore) {
         super(store);
     }
 

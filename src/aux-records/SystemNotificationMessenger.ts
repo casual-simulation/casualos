@@ -5,6 +5,10 @@ import { z } from 'zod';
 import type { ModerationFileScanLabel } from './ModerationJobProvider';
 import type { ResourceKinds } from '@casual-simulation/aux-common';
 
+export const SystemNotificationMessenger = Symbol.for(
+    'SystemNotificationMessenger'
+);
+
 /**
  * Defines an interface for a class that is able to send records notifications.
  */

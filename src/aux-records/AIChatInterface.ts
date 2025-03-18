@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const AIChatInterface = Symbol.for('AIChatInterface');
+
 /**
  * Defines an interface that is able to send and receive AI chat messages.
  */

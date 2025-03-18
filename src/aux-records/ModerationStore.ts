@@ -1,3 +1,4 @@
+export const ModerationStore = Symbol.for('ModerationStore');
 /**
  * Defines a class that is able to store moderation events.
  */

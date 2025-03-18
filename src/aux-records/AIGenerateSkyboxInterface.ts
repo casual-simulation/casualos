@@ -1,5 +1,9 @@
 import type { ServerError } from '@casual-simulation/aux-common/Errors';
 
+export const AIGenerateSkyboxInterface = Symbol.for(
+    'AIGenerateSkyboxInterface'
+);
+
 /**
  * Defines an interface that is able to send and receive AI chat messages.
  */

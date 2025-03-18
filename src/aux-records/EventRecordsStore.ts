@@ -1,5 +1,7 @@
 import type { ServerError } from '@casual-simulation/aux-common/Errors';
 
+export const EventRecordsStore = Symbol.for('EventRecordsStore');
+
 /**
  * Defines an interface for objects that can store event records.
  */

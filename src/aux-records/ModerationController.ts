@@ -6,27 +6,29 @@ import type {
     ModerationFileScanResultLabel,
     ModerationFileScanResult,
     ModerationJob,
-    ModerationStore,
     ReportReason,
     UserInstReport,
 } from './ModerationStore';
+import { ModerationStore } from './ModerationStore';
 import type { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
-import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
+import { SystemNotificationMessenger } from './SystemNotificationMessenger';
 import { RecordsNotification } from './SystemNotificationMessenger';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type {
     ModerationJobFilesFilter,
     ModerationJobProvider,
 } from './ModerationJobProvider';
+import { inject, injectable, optional } from 'inversify';
 
 const TRACE_NAME = 'ModerationController';
 
 /**
  * Defines a class that implements various moderation tasks.
  */
+@injectable()
 export class ModerationController {
     private _store: ModerationStore;
     private _config: ConfigurationStore;
@@ -34,9 +36,11 @@ export class ModerationController {
     private _jobProvider: ModerationJobProvider;
 
     constructor(
-        store: ModerationStore,
-        config: ConfigurationStore,
-        messenger: SystemNotificationMessenger | null,
+        @inject(ModerationStore) store: ModerationStore,
+        @inject(ConfigurationStore) config: ConfigurationStore,
+        @inject(SystemNotificationMessenger)
+        @optional()
+        messenger: SystemNotificationMessenger | null | undefined,
         jobProvider: ModerationJobProvider | null
     ) {
         this._store = store;

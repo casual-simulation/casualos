@@ -74,6 +74,8 @@ export const WEBHOOK_STATE_SCHEMA = z.discriminatedUnion('type', [
     WEBHOOK_URL_STATE_SCHEMA,
 ]);
 
+export const WebhookEnvironment = Symbol.for('WebhookEnvironment');
+
 /**
  * Defines an interface for objects that represent a webhook environment.
  * That is, they provide a way to call into the environment that the webhook is running in and shut it down.

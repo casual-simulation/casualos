@@ -1,3 +1,5 @@
+export const LockStore = Symbol.for('LockStore');
+
 /**
  * Represents a lock store.
  * Locks are used to prevent multiple processes from accessing the same resource at the same time.

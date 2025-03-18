@@ -6,10 +6,12 @@ import type {
     WebsocketConnectionStore,
 } from './WebsocketConnectionStore';
 import { branchNamespace } from './Utils';
+import { injectable } from 'inversify';
 
 /**
  * Defines a WebsocketConnectionStore that keeps all data in memory.
  */
+@injectable()
 export class MemoryWebsocketConnectionStore
     implements WebsocketConnectionStore
 {

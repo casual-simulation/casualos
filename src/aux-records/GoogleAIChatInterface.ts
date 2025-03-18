@@ -15,6 +15,7 @@ import type {
 import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'GoogleAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -24,6 +25,8 @@ const SPAN_OPTIONS: SpanOptions = {
         'service.name': 'google',
     },
 };
+
+export const GoogleAIChatOptions = Symbol.for('GoogleAIChatOptions');
 
 export interface GoogleAIChatOptions {
     /**
@@ -35,11 +38,12 @@ export interface GoogleAIChatOptions {
 /**
  * Defines a class that implements {@link AIChatInterface} using the Google Gemini API.
  */
+@injectable()
 export class GoogleAIChatInterface implements AIChatInterface {
     private _options: GoogleAIChatOptions;
     private _genAI: GoogleGenerativeAI;
 
-    constructor(options: GoogleAIChatOptions) {
+    constructor(@inject(GoogleAIChatOptions) options: GoogleAIChatOptions) {
         this._options = options;
         this._genAI = new GoogleGenerativeAI(options.apiKey);
     }

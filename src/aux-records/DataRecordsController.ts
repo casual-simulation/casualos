@@ -5,13 +5,13 @@ import type {
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type {
-    DataRecordsStore,
     EraseDataStoreResult,
     GetDataStoreResult,
     SetDataResult,
     UserPolicy,
     ListDataStoreFailure,
 } from './DataRecordsStore';
+import { DataRecordsStore } from './DataRecordsStore';
 import {
     ListDataStoreResult,
     doesSubjectMatchPolicy,
@@ -19,10 +19,8 @@ import {
 } from './DataRecordsStore';
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
 import { RecordsController } from './RecordsController';
-import type {
-    AuthorizeSubjectFailure,
-    PolicyController,
-} from './PolicyController';
+import type { AuthorizeSubjectFailure } from './PolicyController';
+import { PolicyController } from './PolicyController';
 import {
     ResourceInfo,
     getMarkerResourcesForCreation,
@@ -36,8 +34,8 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { without } from 'lodash';
-import type { MetricsStore } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { byteLengthOfString } from './Utils';
 import type { ZodIssue } from 'zod';
@@ -45,8 +43,11 @@ import { z } from 'zod';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'DataRecordsController';
+
+export const DataRecordsConfiguration = Symbol('DataRecordsConfiguration');
 
 export interface DataRecordsConfiguration {
     store: DataRecordsStore;
@@ -55,9 +56,20 @@ export interface DataRecordsConfiguration {
     config: ConfigurationStore;
 }
 
+@injectable()
+export class DataRecordsConfigurationImpl implements DataRecordsConfiguration {
+    constructor(
+        @inject(DataRecordsStore) public store: DataRecordsStore,
+        @inject(PolicyController) public policies: PolicyController,
+        @inject(MetricsStore) public metrics: MetricsStore,
+        @inject(ConfigurationStore) public config: ConfigurationStore
+    ) {}
+}
+
 /**
  * Defines a class that is able to manage data (key/value) records.
  */
+@injectable()
 export class DataRecordsController {
     private _store: DataRecordsStore;
     private _policies: PolicyController;
@@ -68,7 +80,9 @@ export class DataRecordsController {
      * Creates a DataRecordsController.
      * @param config The configuration that should be used for the data records controller.
      */
-    constructor(config: DataRecordsConfiguration) {
+    constructor(
+        @inject(DataRecordsConfiguration) config: DataRecordsConfiguration
+    ) {
         this._store = config.store;
         this._policies = config.policies;
         this._metrics = config.metrics;

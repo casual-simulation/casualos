@@ -99,6 +99,7 @@ export const privoSchema = z.object({
         .default(18),
 });
 
+export const PrivoConfiguration = Symbol.for('PrivoConfiguration');
 export type PrivoConfiguration = z.infer<typeof privoSchema>;
 
 export function parsePrivoConfiguration(

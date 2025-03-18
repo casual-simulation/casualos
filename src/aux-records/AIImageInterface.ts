@@ -8,6 +8,8 @@ import type {
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 
+export const AIImageInterface = Symbol.for('AIImageInterface');
+
 /**
  * Defines an interface that is able to generate images from text prompts.
  */

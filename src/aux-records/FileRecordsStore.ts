@@ -3,6 +3,8 @@ import type {
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
 
+export const FileRecordsLookup = Symbol.for('FileRecordsLookup');
+
 /**
  * Defines an interface for systems that are able to store info about file records.
  */
@@ -90,6 +92,8 @@ export interface FileRecordsLookup {
     ): Promise<EraseFileStoreResult>;
 }
 
+export const FileRecordsVault = Symbol.for('FileRecordsVault');
+
 export interface FileRecordsVault {
     /**
      * Presigns a request to record a file.
@@ -120,6 +124,8 @@ export interface FileRecordsVault {
      */
     getAllowedUploadHeaders(): string[];
 }
+
+export const FileRecordsStore = Symbol.for('FileRecordsStore');
 
 /**
  * Defines an interface that provides a way to store file records.

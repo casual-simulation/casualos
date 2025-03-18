@@ -18,6 +18,7 @@ import type {
     AuthorizeSubjectFailure,
     AuthorizationContext,
 } from '../PolicyController';
+import { PolicyController } from '../PolicyController';
 import { AuthorizeSubject } from '../PolicyController';
 import type {
     CheckSubscriptionMetricsFailure,
@@ -32,9 +33,9 @@ import {
 import type {
     WebhookInfoFile,
     WebhookRecord,
-    WebhookRecordsStore,
     WebhookRunInfo,
 } from './WebhookRecordsStore';
+import { WebhookRecordsStore } from './WebhookRecordsStore';
 import { WebhookSubscriptionMetrics } from './WebhookRecordsStore';
 import type { WebhooksFeaturesConfiguration } from '../SubscriptionConfiguration';
 import { getWebhookFeatures } from '../SubscriptionConfiguration';
@@ -43,37 +44,39 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type {
     HandleHttpRequestFailure,
     HandleWebhookOptions,
-    WebhookEnvironment,
     WebhookState,
 } from './WebhookEnvironment';
+import { WebhookEnvironment } from './WebhookEnvironment';
 import {
     HandleHttpRequestResult,
     STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
-import type {
-    DataRecordsController,
-    GetDataFailure,
-} from '../DataRecordsController';
+import type { GetDataFailure } from '../DataRecordsController';
+import { DataRecordsController } from '../DataRecordsController';
 import {
     DataRecordsConfiguration,
     GetDataResult,
 } from '../DataRecordsController';
-import type {
-    FileRecordsController,
-    ReadFileFailure,
-    ReadFileResult,
-} from '../FileRecordsController';
+import type { ReadFileFailure, ReadFileResult } from '../FileRecordsController';
+import { FileRecordsController } from '../FileRecordsController';
 import { tryParseJson } from '../Utils';
 import type { z } from 'zod';
 import { v7 as uuidv7 } from 'uuid';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
-import type { AuthController } from '../AuthController';
+import { AuthController } from '../AuthController';
 import { getHash } from '@casual-simulation/crypto';
-import type { GetBranchDataFailure, WebsocketController } from '../websockets';
+import type { GetBranchDataFailure } from '../websockets';
+import { WebsocketController } from '../websockets';
+import { inject, injectable, injectFromBase, optional } from 'inversify';
+import { ConfigurationStore } from 'ConfigurationStore';
 
 const TRACE_NAME = 'WebhookRecordsController';
+
+export const WebhookRecordsConfiguration = Symbol.for(
+    'WebhookRecordsConfiguration'
+);
 
 /**
  * Defines the configuration for a webhook records controller.
@@ -106,12 +109,31 @@ export interface WebhookRecordsConfiguration
     /**
      * The controller that should be used to get inst data.
      */
-    websockets: WebsocketController | null;
+    websockets: WebsocketController | null | undefined;
+}
+
+@injectable()
+export class WebhookRecordsConfigurationImpl
+    implements WebhookRecordsConfiguration
+{
+    constructor(
+        @inject(WebhookEnvironment) public environment: WebhookEnvironment,
+        @inject(DataRecordsController) public data: DataRecordsController,
+        @inject(FileRecordsController) public files: FileRecordsController,
+        @inject(AuthController) public auth: AuthController,
+        @inject(WebsocketController)
+        @optional()
+        public websockets: WebsocketController | null | undefined,
+        @inject(WebhookRecordsStore) public store: WebhookRecordsStore,
+        @inject(PolicyController) public policies: PolicyController,
+        @inject(ConfigurationStore) public config: ConfigurationStore
+    ) {}
 }
 
 /**
  * Defines a controller that is able to handle and execute webhooks.
  */
+@injectable()
 export class WebhookRecordsController extends CrudRecordsController<
     WebhookRecord,
     WebhookRecordsStore
@@ -126,7 +148,9 @@ export class WebhookRecordsController extends CrudRecordsController<
         return this._websockets;
     }
 
-    constructor(config: WebhookRecordsConfiguration) {
+    constructor(
+        @inject(WebhookRecordsConfiguration) config: WebhookRecordsConfiguration
+    ) {
         super({
             ...config,
             resourceKind: 'webhook',

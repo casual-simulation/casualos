@@ -1,5 +1,7 @@
 import type { ModerationJob } from './ModerationStore';
 
+export const ModerationJobProvider = Symbol.for('ModerationJobProvider');
+
 /**
  * Defines a class that is able to start moderation jobs.
  * This can include scanning files, messages, etc.

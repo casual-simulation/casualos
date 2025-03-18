@@ -1,6 +1,9 @@
 import type { BranchRecordWithInst, CurrentUpdates } from './InstRecordsStore';
-import { BranchRecord } from './InstRecordsStore';
 import type { LockStore } from '../LockStore';
+
+export const TemporaryInstRecordsStore = Symbol.for(
+    'TemporaryInstRecordsStore'
+);
 
 /**
  * Defines an interface for a store that keeps track of temporary inst records.

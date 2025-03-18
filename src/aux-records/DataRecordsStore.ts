@@ -1,5 +1,7 @@
 import type { ServerError } from '@casual-simulation/aux-common/Errors';
 
+export const DataRecordsStore = Symbol.for('DataRecordsStore');
+
 /**
  * Defines an interface for objects that can store data records.
  */

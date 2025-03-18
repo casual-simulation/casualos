@@ -13,10 +13,12 @@ import type {
 } from './NotificationRecordsStore';
 import type { SubscriptionFilter } from '../MetricsStore';
 import { uniqBy } from 'lodash';
+import { injectable } from 'inversify';
 
 /**
  * A Memory-based implementation of the NotificationRecordsStore.
  */
+@injectable()
 export class MemoryNotificationRecordsStore
     extends MemoryCrudRecordsStore<NotificationRecord>
     implements NotificationRecordsStore

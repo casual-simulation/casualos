@@ -5,6 +5,8 @@ import type {
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type { PresignFileUploadResult } from '../FileRecordsStore';
 
+export const WebsocketMessenger = Symbol.for('WebsocketMessenger');
+
 /**
  * Defines an interface that is capable of sending messages to connections.
  */

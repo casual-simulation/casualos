@@ -2,13 +2,13 @@ import type {
     ListedRecord,
     ListedStudioAssignment,
     PublicRecordKeyPolicy,
-    RecordsStore,
     Studio,
     StudioAssignmentRole,
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
 } from './RecordsStore';
+import { RecordsStore } from './RecordsStore';
 import {
     toBase64String,
     fromBase64String,
@@ -27,10 +27,11 @@ import type {
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
-import type { AuthStore } from './AuthStore';
+import { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';
-import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import type { SubscriptionFilter } from './MetricsStore';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import type {
     AIHumeFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
@@ -46,24 +47,41 @@ import {
 } from './SubscriptionConfiguration';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
-import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
+import { SystemNotificationMessenger } from './SystemNotificationMessenger';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable, optional } from 'inversify';
 
 const TRACE_NAME = 'RecordsController';
+
+export const RecordsControllerConfig = Symbol.for('RecordsControllerConfig');
 
 export interface RecordsControllerConfig {
     store: RecordsStore;
     auth: AuthStore;
     metrics: MetricsStore;
     config: ConfigurationStore;
-    messenger: SystemNotificationMessenger | null;
+    messenger: SystemNotificationMessenger | null | undefined;
+}
+
+@injectable()
+export class RecordsControllerConfigImpl implements RecordsControllerConfig {
+    constructor(
+        @inject(RecordsStore) public store: RecordsStore,
+        @inject(AuthStore) public auth: AuthStore,
+        @inject(MetricsStore) public metrics: MetricsStore,
+        @inject(ConfigurationStore) public config: ConfigurationStore,
+        @inject(SystemNotificationMessenger)
+        @optional()
+        public messenger: SystemNotificationMessenger | null | undefined
+    ) {}
 }
 
 /**
  * Defines a class that manages records and their keys.
  */
+@injectable()
 export class RecordsController {
     private _store: RecordsStore;
     private _auth: AuthStore;
@@ -71,7 +89,9 @@ export class RecordsController {
     private _config: ConfigurationStore;
     private _messenger: SystemNotificationMessenger | null;
 
-    constructor(config: RecordsControllerConfig) {
+    constructor(
+        @inject(RecordsControllerConfig) config: RecordsControllerConfig
+    ) {
         this._store = config.store;
         this._auth = config.auth;
         this._metrics = config.metrics;

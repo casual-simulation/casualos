@@ -1,5 +1,7 @@
 import type { GenericQueryStringParameters } from '@casual-simulation/aux-common';
 
+export const OpenIDProvider = Symbol.for('OpenIDProvider');
+
 /**
  * Defines an interface that represents an OpenID provider.
  * That is, an integration with a particular OpenID service.

@@ -9,17 +9,21 @@ import type {
 } from './AISloydInterface';
 import axios from 'axios';
 import { handleAxiosErrors } from 'Utils';
+import { inject, injectable } from 'inversify';
+
+export const SloydOptions = Symbol.for('SloydOptions');
 
 export interface SloydOptions {
     clientId: string;
     clientSecret: string;
 }
 
+@injectable()
 export class SloydInterface implements AISloydInterface {
     private _clientId: string;
     private _clientSecret: string;
 
-    constructor(options: SloydOptions) {
+    constructor(@inject(SloydOptions) options: SloydOptions) {
         this._clientId = options.clientId;
         this._clientSecret = options.clientSecret;
     }

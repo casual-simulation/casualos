@@ -2,7 +2,9 @@ import type { PresignFileUploadResult } from '../FileRecordsStore';
 import type { WebsocketEvent } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type { WebsocketMessenger } from './WebsocketMessenger';
+import { injectable } from 'inversify';
 
+@injectable()
 export class MemoryWebsocketMessenger implements WebsocketMessenger {
     private _messages = new Map<string, any[]>();
     private _events = new Map<string, WebsocketEvent[]>();

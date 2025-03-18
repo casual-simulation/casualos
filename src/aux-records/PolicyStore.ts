@@ -12,6 +12,8 @@ import {
 } from '@casual-simulation/aux-common';
 import type { UserRole } from './AuthStore';
 
+export const PolicyStore = Symbol.for('PolicyStore');
+
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.
  */

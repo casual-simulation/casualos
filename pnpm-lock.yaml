@@ -723,6 +723,9 @@ importers:
       hash.js:
         specifier: 1.1.7
         version: 1.1.7
+      inversify:
+        specifier: 7.1.0
+        version: 7.1.0(reflect-metadata@0.2.2)
       jose:
         specifier: 5.4.0
         version: 5.4.0
@@ -741,6 +744,9 @@ importers:
       openid-client:
         specifier: 5.6.1
         version: 5.6.1
+      reflect-metadata:
+        specifier: 0.2.2
+        version: 0.2.2
       tweetnacl:
         specifier: 1.0.3
         version: 1.0.3
@@ -6858,6 +6864,45 @@ packages:
     resolution: {integrity: sha512-H9XAx3hc0BQHY6l+IFSWHDySypcXsvsuLhgYLUGywmJ5pswRVQJUHpOsobnLYp2ZUaUlKiKDrgWWhosOwAEM8Q==}
     engines: {node: '>=6.9.0'}
     dev: true
+
+  /@inversifyjs/common@1.5.0:
+    resolution: {integrity: sha512-Qj5BELk11AfI2rgZEAaLPmOftmQRLLmoCXgAjmaF0IngQN5vHomVT5ML7DZ3+CA5fgGcEVMcGbUDAun+Rz+oNg==}
+    dev: false
+
+  /@inversifyjs/container@1.5.4(reflect-metadata@0.2.2):
+    resolution: {integrity: sha512-mHAaWjAQb8m6TJksm5EJXW/kPcZFVEc1UKkWv5OnLbwbU0QvxM2UbEsuXzusGVHcrNY4TQp9Uh2wkRY6TN2WJg==}
+    peerDependencies:
+      reflect-metadata: ~0.2.2
+    dependencies:
+      '@inversifyjs/common': 1.5.0
+      '@inversifyjs/core': 5.0.0(reflect-metadata@0.2.2)
+      '@inversifyjs/reflect-metadata-utils': 1.1.0(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+    dev: false
+
+  /@inversifyjs/core@5.0.0(reflect-metadata@0.2.2):
+    resolution: {integrity: sha512-axOl+VZFGVA3nAMbs6RuHhQ8HvgO6/tKjlWJk4Nt0rUqed+1ksak4p5yZNtown1Kdm0GV2Oc57qLqqWd943hgA==}
+    dependencies:
+      '@inversifyjs/common': 1.5.0
+      '@inversifyjs/prototype-utils': 0.1.0
+      '@inversifyjs/reflect-metadata-utils': 1.1.0(reflect-metadata@0.2.2)
+    transitivePeerDependencies:
+      - reflect-metadata
+    dev: false
+
+  /@inversifyjs/prototype-utils@0.1.0:
+    resolution: {integrity: sha512-lNz1yyajMRDXBHLvJsYYX81FcmeD15e5Qz1zAZ/3zeYTl+u7ZF/GxNRKJzNOloeMPMtuR8BnvzHA1SZxjR+J9w==}
+    dependencies:
+      '@inversifyjs/common': 1.5.0
+    dev: false
+
+  /@inversifyjs/reflect-metadata-utils@1.1.0(reflect-metadata@0.2.2):
+    resolution: {integrity: sha512-jmuAuC3eL1GnFAYfJGJOMKRDL9q1mgzOyrban6zxfM8Yg1FUHsj25h27bW2G7p8X1Amvhg3MLkaOuogszkrofA==}
+    peerDependencies:
+      reflect-metadata: 0.2.2
+    dependencies:
+      reflect-metadata: 0.2.2
+    dev: false
 
   /@isaacs/cliui@8.0.2:
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -18355,6 +18400,17 @@ packages:
       loose-envify: 1.4.0
     dev: false
 
+  /inversify@7.1.0(reflect-metadata@0.2.2):
+    resolution: {integrity: sha512-f8SlUTgecMZGr/rsFK36PD84/mH0+sp0/P/TuiGo3CcJywmF5kgoXeE2RW5IjaIt1SlqS5c5V9RuQc1+B8mw4Q==}
+    peerDependencies:
+      reflect-metadata: ~0.2.2
+    dependencies:
+      '@inversifyjs/common': 1.5.0
+      '@inversifyjs/container': 1.5.4(reflect-metadata@0.2.2)
+      '@inversifyjs/core': 5.0.0(reflect-metadata@0.2.2)
+      reflect-metadata: 0.2.2
+    dev: false
+
   /ioredis-mock@5.9.1(ioredis@4.28.5)(redis-commands@1.7.0):
     resolution: {integrity: sha512-ZirdGJFOqH5nP8FYXuHUJmexvtZ6r2Ybc5alaGMzt38QA0kse5/rYnBQcb4ofxkyqzhXHuaCsXiwLlfG6NyhhQ==}
     engines: {node: '>=10'}
@@ -24269,6 +24325,10 @@ packages:
       '@redis/json': 1.0.6(@redis/client@1.5.11)
       '@redis/search': 1.1.5(@redis/client@1.5.11)
       '@redis/time-series': 1.0.5(@redis/client@1.5.11)
+    dev: false
+
+  /reflect-metadata@0.2.2:
+    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
     dev: false
 
   /regenerate-unicode-properties@10.1.1:

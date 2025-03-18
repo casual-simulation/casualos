@@ -1,20 +1,15 @@
-import type {
-    AuthController,
-    ValidateSessionKeyFailure,
-} from './AuthController';
+import type { ValidateSessionKeyFailure } from './AuthController';
+import { AuthController } from './AuthController';
 import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type {
-    AuthStore,
     AuthUser,
     UpdateSubscriptionPeriodRequest,
     UserRole,
 } from './AuthStore';
+import { AuthStore } from './AuthStore';
 import { AuthInvoice, AuthSession } from './AuthStore';
-import type {
-    StripeEvent,
-    StripeInterface,
-    StripeInvoice,
-} from './StripeInterface';
+import type { StripeEvent, StripeInvoice } from './StripeInterface';
+import { StripeInterface } from './StripeInterface';
 import {
     STRIPE_EVENT_INVOICE_PAID_SCHEMA,
     StripeCheckoutResponse,
@@ -26,21 +21,20 @@ import type {
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import type {
-    ListedStudioAssignment,
-    RecordsStore,
-    Studio,
-} from './RecordsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import type { ListedStudioAssignment, Studio } from './RecordsStore';
+import { RecordsStore } from './RecordsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'SubscriptionController';
 
 /**
  * Defines a class that is able to handle subscriptions.
  */
+@injectable()
 export class SubscriptionController {
     private _stripe: StripeInterface;
     private _auth: AuthController;
@@ -49,11 +43,11 @@ export class SubscriptionController {
     private _config: ConfigurationStore;
 
     constructor(
-        stripe: StripeInterface,
-        auth: AuthController,
-        authStore: AuthStore,
-        recordsStore: RecordsStore,
-        config: ConfigurationStore
+        @inject(StripeInterface) stripe: StripeInterface,
+        @inject(AuthController) auth: AuthController,
+        @inject(AuthStore) authStore: AuthStore,
+        @inject(RecordsStore) recordsStore: RecordsStore,
+        @inject(ConfigurationStore) config: ConfigurationStore
     ) {
         this._stripe = stripe;
         this._auth = auth;

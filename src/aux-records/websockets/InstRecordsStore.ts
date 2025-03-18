@@ -1,5 +1,7 @@
 import type { ServerError } from '@casual-simulation/aux-common';
 
+export const InstRecordsStore = Symbol.for('InstRecordsStore');
+
 /**
  * Defines an interface for services which are able to store inst update data.
  *

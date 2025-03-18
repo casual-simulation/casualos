@@ -1,3 +1,5 @@
+export const PrivoStore = Symbol.for('PrivoStore');
+
 /**
  * Defines an interface for services that can store information that is needed for Privo integration.
  */

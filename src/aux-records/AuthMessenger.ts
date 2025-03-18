@@ -1,6 +1,8 @@
 import type { AddressType } from './AuthStore';
 import type { ServerError } from '@casual-simulation/aux-common/Errors';
 
+export const AuthMessenger = Symbol.for('AuthMessenger');
+
 /**
  * Defines an interface for a service that is able to send messages to addresses for login requests.
  */

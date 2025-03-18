@@ -12,7 +12,7 @@ import {
     ON_WEBHOOK_ACTION_NAME,
 } from '@casual-simulation/aux-common/bots';
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
-import type { WebsocketMessenger } from './WebsocketMessenger';
+import { WebsocketMessenger } from './WebsocketMessenger';
 import type {
     DeviceSelector,
     RemoteAction,
@@ -26,10 +26,8 @@ import {
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
-import type {
-    DeviceConnection,
-    WebsocketConnectionStore,
-} from './WebsocketConnectionStore';
+import type { DeviceConnection } from './WebsocketConnectionStore';
+import { WebsocketConnectionStore } from './WebsocketConnectionStore';
 import type {
     AddUpdatesMessage,
     LoginMessage,
@@ -47,19 +45,17 @@ import {
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
-import type { AuthController } from '../AuthController';
+import { AuthController } from '../AuthController';
 import type {
     CurrentUpdates,
     InstRecord,
-    InstRecordsStore,
     InstWithSubscriptionInfo,
     SaveInstFailure,
 } from './InstRecordsStore';
+import { InstRecordsStore } from './InstRecordsStore';
 import { StoredUpdates } from './InstRecordsStore';
-import type {
-    BranchName,
-    TemporaryInstRecordsStore,
-} from './TemporaryInstRecordsStore';
+import type { BranchName } from './TemporaryInstRecordsStore';
+import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
 import type {
     DenialReason,
@@ -74,26 +70,26 @@ import {
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
-import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid } from 'uuid';
 import type {
     AuthorizationContext,
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
-    PolicyController,
 } from '../PolicyController';
-import type { ConfigurationStore } from '../ConfigurationStore';
+import { PolicyController } from '../PolicyController';
+import { ConfigurationStore } from '../ConfigurationStore';
 import type {
     FeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
 import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
-import type { MetricsStore } from '../MetricsStore';
-import type { AuthStore } from '../AuthStore';
+import { MetricsStore } from '../MetricsStore';
+import { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -102,6 +98,7 @@ export const SAVE_PERMANENT_BRANCHES_LOCK = 'savePermanentBranches';
 /**
  * Defines a class that is able to serve causal repos in realtime.
  */
+@injectable()
 export class WebsocketController {
     private _connectionStore: WebsocketConnectionStore;
     private _messenger: WebsocketMessenger;
@@ -125,15 +122,17 @@ export class WebsocketController {
     }
 
     constructor(
+        @inject(WebsocketConnectionStore)
         connectionStore: WebsocketConnectionStore,
-        messenger: WebsocketMessenger,
-        instStore: InstRecordsStore,
+        @inject(WebsocketMessenger) messenger: WebsocketMessenger,
+        @inject(InstRecordsStore) instStore: InstRecordsStore,
+        @inject(TemporaryInstRecordsStore)
         temporaryInstStore: TemporaryInstRecordsStore,
-        auth: AuthController,
-        policies: PolicyController,
-        config: ConfigurationStore,
-        metrics: MetricsStore,
-        authStore: AuthStore
+        @inject(AuthController) auth: AuthController,
+        @inject(PolicyController) policies: PolicyController,
+        @inject(ConfigurationStore) config: ConfigurationStore,
+        @inject(MetricsStore) metrics: MetricsStore,
+        @inject(AuthStore) authStore: AuthStore
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;

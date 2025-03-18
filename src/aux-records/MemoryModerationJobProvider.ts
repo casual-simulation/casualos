@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import type {
     ModerationFileScan,
     ModerationJobFilesFilter,
@@ -10,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 /**
  * Defines a class that implements ModerationJobProvider for testing.
  */
+@injectable()
 export class MemoryModerationJobProvider implements ModerationJobProvider {
     private _jobs: MemoryModerationJob[] = [];
 

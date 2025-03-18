@@ -1,9 +1,3 @@
-import {
-    AIChatInterface,
-    AIChatInterfaceRequest,
-    AIChatInterfaceResponse,
-    AIChatMessage,
-} from './AIChatInterface';
 import axios from 'axios';
 import type {
     AIGenerateImageInterfaceRequest,
@@ -15,6 +9,8 @@ import { handleAxiosErrors } from './Utils';
 import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable, optional } from 'inversify';
+import { OpenAIApiKey } from 'OpenAI';
 
 const TRACE_NAME = 'OpenAIImageInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -24,6 +20,8 @@ const SPAN_OPTIONS: SpanOptions = {
         'service.name': 'openai',
     },
 };
+
+export const OpenAIImageOptions = Symbol.for('OpenAIImageOptions');
 
 export interface OpenAIImageOptions {
     /**
@@ -42,13 +40,23 @@ export interface OpenAIImageOptions {
     defaultHeight?: number;
 }
 
+@injectable()
+export class OpenAIImageOptionsImpl implements OpenAIImageOptions {
+    constructor(
+        @inject(OpenAIApiKey) public apiKey: string,
+        @optional() public defaultWidth?: number,
+        @optional() public defaultHeight?: number
+    ) {}
+}
+
 /**
  * Defines a class that implements AIImageInterface using the OpenAI API.
  */
+@injectable()
 export class OpenAIImageInterface implements AIImageInterface {
     private _options: OpenAIImageOptions;
 
-    constructor(options: OpenAIImageOptions) {
+    constructor(@inject(OpenAIImageOptions) options: OpenAIImageOptions) {
         this._options = options;
     }
 

@@ -1,18 +1,23 @@
-import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import type { ServerError } from '@casual-simulation/aux-common/Errors';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'RateLimitController';
 
 /**
  * Defines a controller that is able to handle rate limiting.
  */
+@injectable()
 export class RateLimitController {
     private _rateLimiter: RateLimiter;
     private _maxHits: number;
 
-    constructor(rateLimiter: RateLimiter, config: RateLimitConfig) {
+    constructor(
+        @inject(RateLimiter) rateLimiter: RateLimiter,
+        @inject(RateLimitConfig) config: RateLimitConfig
+    ) {
         this._rateLimiter = rateLimiter;
         this._rateLimiter.init({
             windowMs: config.windowMs,
@@ -67,6 +72,8 @@ export class RateLimitController {
         }
     }
 }
+
+export const RateLimitConfig = Symbol.for('RateLimitConfig');
 
 export interface RateLimitConfig {
     windowMs: number;

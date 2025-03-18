@@ -12,6 +12,8 @@ import type {
 import type { HandleWebhookOptions, WebhookState } from './WebhookEnvironment';
 import type { AuthorizeUserAndInstancesForResourcesResult } from '../PolicyController';
 
+export const WebhookRecordsStore = Symbol.for('WebhookRecordsStore');
+
 /**
  * Defines a store that is able to store and retrieve information about webhooks.
  */

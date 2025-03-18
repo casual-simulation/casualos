@@ -1,15 +1,19 @@
 import type { PrivoConfiguration } from './PrivoConfiguration';
-import type { Cache } from './Cache';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { Cache } from './Cache';
+import { ConfigurationStore } from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import { traced } from './tracing/TracingDecorators';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'CachingConfigStore';
+
+export const CacheSeconds = Symbol.for('CacheSeconds');
 
 /**
  * Defines a config store that uses a cache.
  */
+@injectable()
 export class CachingConfigStore implements ConfigurationStore {
     private _store: ConfigurationStore;
     private _cache: Cache;
@@ -21,7 +25,11 @@ export class CachingConfigStore implements ConfigurationStore {
      * @param cache The cache.
      * @param cacheSeconds The number of seconds that cache entries should be stored.
      */
-    constructor(store: ConfigurationStore, cache: Cache, cacheSeconds: number) {
+    constructor(
+        @inject(ConfigurationStore) store: ConfigurationStore,
+        @inject(Cache) cache: Cache,
+        @inject(CacheSeconds) cacheSeconds: number
+    ) {
         this._store = store;
         this._cache = cache;
         this._cacheSeconds = cacheSeconds;

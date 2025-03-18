@@ -8,6 +8,8 @@ export const PRIVO_CONFIG_KEY = 'privo';
 
 export const MODERATION_CONFIG_KEY = 'moderation';
 
+export const ConfigurationStore = Symbol.for('ConfigurationStore');
+
 /**
  * Defines an interface that is used for storing configuration data.
  */

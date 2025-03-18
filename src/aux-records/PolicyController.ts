@@ -1,9 +1,9 @@
-import type { AuthController } from './AuthController';
+import { AuthController } from './AuthController';
 import type {
-    RecordsController,
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
+import { RecordsController } from './RecordsController';
 import { isRecordKey } from './RecordsController';
 import type {
     NotSupportedError,
@@ -34,12 +34,12 @@ import type {
     AssignedRole,
     AssignPermissionToSubjectAndMarkerFailure,
     MarkerPermissionAssignment,
-    PolicyStore,
     ResourcePermissionAssignment,
     RoleAssignment,
     UpdateUserRolesFailure,
     UserPrivacyFeatures,
 } from './PolicyStore';
+import { PolicyStore } from './PolicyStore';
 import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
 import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
@@ -47,6 +47,7 @@ import { normalizeInstId, parseInstId } from './websockets';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { UserRole } from './AuthStore';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -216,15 +217,16 @@ export function getMarkerResourcesForUpdate(
 /**
  * Defines a class that is able to calculate the policies and permissions that are allowed for specific actions.
  */
+@injectable()
 export class PolicyController {
     private _auth: AuthController;
     private _records: RecordsController;
     private _policies: PolicyStore;
 
     constructor(
-        auth: AuthController,
-        records: RecordsController,
-        policies: PolicyStore
+        @inject(AuthController) auth: AuthController,
+        @inject(RecordsController) records: RecordsController,
+        @inject(PolicyStore) policies: PolicyStore
     ) {
         this._auth = auth;
         this._records = records;

@@ -1,3 +1,5 @@
+export const MetricsStore = Symbol.for('MetricsStore');
+
 /**
  * Defines an interface for services that are able to store and retrieve metrics about records and subscriptions.
  */

@@ -4,13 +4,13 @@ import type {
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
     AuthSession,
-    AuthStore,
     AuthUser,
     AuthUserAuthenticator,
     SaveNewUserFailure,
     UserLoginMetadata,
     UserRole,
 } from './AuthStore';
+import { AuthStore } from './AuthStore';
 import type {
     NotAuthorizedError,
     NotLoggedInError,
@@ -25,7 +25,7 @@ import {
     verifyPasswordAgainstHashes,
 } from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
-import type { AuthMessenger } from './AuthMessenger';
+import { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import {
@@ -38,17 +38,18 @@ import {
 } from './AuthUtils';
 import { randomCode } from './CryptoUtils';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import type { ConfigurationStore } from './ConfigurationStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import type {
     PrivacyFeatures,
     PublicUserInfo,
 } from '@casual-simulation/aux-common';
 import { parseConnectionToken } from '@casual-simulation/aux-common';
-import type {
+import {
+    PrivoClient,
     PrivoClientInterface,
-    PrivoFeatureStatus,
-    PrivoPermission,
-    ResendConsentRequestFailure,
+    type PrivoFeatureStatus,
+    type PrivoPermission,
+    type ResendConsentRequestFailure,
 } from './PrivoClient';
 import { DateTime } from 'luxon';
 import type { PrivoConfiguration } from './PrivoConfiguration';
@@ -73,6 +74,7 @@ import {
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import { injectable, inject, multiInject, unmanaged } from 'inversify';
 
 const TRACE_NAME = 'AuthController';
 
@@ -157,6 +159,8 @@ export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
  */
 export const PRIVO_OPEN_ID_PROVIDER = 'privo';
 
+export const RelyingParty = Symbol.for('RelyingParty');
+
 export interface RelyingParty {
     /**
      * The human readable name of the relying party.
@@ -177,6 +181,7 @@ export interface RelyingParty {
 /**
  * Defines a class that is able to authenticate users.
  */
+@injectable()
 export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
@@ -195,11 +200,16 @@ export class AuthController {
     }
 
     constructor(
+        @inject(AuthStore)
         authStore: AuthStore,
+        @inject(AuthMessenger)
         messenger: AuthMessenger,
+        @inject(ConfigurationStore)
         configStore: ConfigurationStore,
-        forceAllowSubscriptionFeatures: boolean = false,
+        @unmanaged() forceAllowSubscriptionFeatures: boolean = false,
+        @inject(PrivoClientInterface)
         privoClient: PrivoClientInterface = null,
+        @multiInject(RelyingParty)
         relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;

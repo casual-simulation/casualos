@@ -46,8 +46,11 @@ import type {
 } from './PolicyController';
 import type { DenialReason } from '@casual-simulation/aux-common';
 import type { HumeConfig, RecordsStore } from './RecordsStore';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'AIController';
+
+export const AIConfiguration = Symbol.for('AIConfiguration');
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
@@ -216,6 +219,7 @@ export interface AISloydConfiguration {
 /**
  * Defines a class that is able to handle AI requests.
  */
+@injectable()
 export class AIController {
     private _chatProviders: AIChatProviders | null;
     private _chatOptions: AIChatOptions;
@@ -243,7 +247,7 @@ export class AIController {
     private _policies: PolicyController;
     private _recordsStore: RecordsStore;
 
-    constructor(configuration: AIConfiguration) {
+    constructor(@inject(AIConfiguration) configuration: AIConfiguration) {
         if (configuration.chat) {
             const chat = configuration.chat;
             const options = chat.options;

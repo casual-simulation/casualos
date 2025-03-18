@@ -13,6 +13,8 @@ import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind } from '@opentelemetry/api';
 
+export const PrivoClientInterface = Symbol.for('PrivoClientInterface');
+
 /**
  * Defines an interface for objects that can interface with the Privo API.
  */

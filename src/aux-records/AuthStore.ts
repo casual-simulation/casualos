@@ -6,6 +6,8 @@ import type {
     CredentialDeviceType,
 } from '@simplewebauthn/types';
 
+export const AuthStore = Symbol.for('AuthStore');
+
 /**
  * Defines an interface that represents an auth store.
  */

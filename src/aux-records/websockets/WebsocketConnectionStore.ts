@@ -1,3 +1,5 @@
+export const WebsocketConnectionStore = Symbol.for('WebsocketConnectionStore');
+
 /**
  * Defines an interface that defines a connection store for information about available connections.
  */

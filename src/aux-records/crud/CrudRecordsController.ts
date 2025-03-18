@@ -31,6 +31,7 @@ import { ValidatePublicRecordKeyFailure } from '../RecordsController';
 import type { ZodIssue } from 'zod';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { injectable } from 'inversify';
 
 export interface CrudRecordsConfiguration<
     T extends CrudRecord,

@@ -10,8 +10,11 @@ import { handleAxiosErrors } from './Utils';
 import { traced } from './tracing/TracingDecorators';
 import { z } from 'zod';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'StabilityAIImageInterface';
+
+export const StabilityAIImageOptions = Symbol.for('StabilityAIImageOptions');
 
 export interface StabilityAIImageOptions {
     /**
@@ -33,10 +36,13 @@ export interface StabilityAIImageOptions {
 /**
  * Defines a class that implements AIImageInterface using the Stability AI API.
  */
+@injectable()
 export class StabilityAIImageInterface implements AIImageInterface {
     private _options: StabilityAIImageOptions;
 
-    constructor(options: StabilityAIImageOptions) {
+    constructor(
+        @inject(StabilityAIImageOptions) options: StabilityAIImageOptions
+    ) {
         this._options = options;
     }
 

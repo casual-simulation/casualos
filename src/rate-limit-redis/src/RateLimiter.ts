@@ -1,3 +1,5 @@
+export const RateLimiterOptions = Symbol.for('RateLimiterOptions');
+
 /**
  * Defines an interface that contains options for a rate limiter.
  */
@@ -22,6 +24,8 @@ export interface RateLimiterIncrementResult {
      */
     resetTimeMs: number;
 }
+
+export const RateLimiter = Symbol.for('RateLimiter');
 
 /**
  * Defines an interface for a rate limiter.

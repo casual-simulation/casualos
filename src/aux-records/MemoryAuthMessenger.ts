@@ -1,6 +1,8 @@
 import type { AddressType } from './AuthStore';
 import type { AuthMessenger, SendCodeResult } from './AuthMessenger';
+import { injectable } from 'inversify';
 
+@injectable()
 export class MemoryAuthMessenger implements AuthMessenger {
     private _messages: {
         address: string;

@@ -4,7 +4,6 @@ import type {
     BranchRecord,
     BranchRecordWithInst,
     CurrentUpdates,
-    InstRecordsStore,
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
@@ -13,12 +12,15 @@ import type {
     SaveInstResult,
     StoredUpdates,
 } from './InstRecordsStore';
+import { InstRecordsStore } from './InstRecordsStore';
 import { InstRecord, SaveBranchFailure } from './InstRecordsStore';
-import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import { inject, injectable, named } from 'inversify';
 
 /**
  * Defines a class that implements the InstRecordsStore interface by first storing updates in a temporary store and then sending them to a permanent store.
  */
+@injectable()
 export class SplitInstRecordsStore implements InstRecordsStore {
     private _temp: TemporaryInstRecordsStore;
     private _permanent: InstRecordsStore;
@@ -32,7 +34,9 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     constructor(
-        temporary: TemporaryInstRecordsStore,
+        @inject(TemporaryInstRecordsStore) temporary: TemporaryInstRecordsStore,
+        @inject(InstRecordsStore)
+        @named('permanent')
         permanent: InstRecordsStore
     ) {
         this._temp = temporary;

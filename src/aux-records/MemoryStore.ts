@@ -122,7 +122,7 @@ import type {
     AISloydSubscriptionMetrics,
 } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
-import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { DateTime } from 'luxon';
 import type {
     AddUpdatesResult,
@@ -139,7 +139,7 @@ import type {
     SaveInstResult,
     StoredUpdates,
 } from './websockets';
-import type { PrivoConfiguration } from './PrivoConfiguration';
+import { PrivoConfiguration } from './PrivoConfiguration';
 import type {
     ModerationFileScanResult,
     ModerationJob,
@@ -150,15 +150,28 @@ import type {
     SystemNotificationMessenger,
     RecordsNotification,
 } from './SystemNotificationMessenger';
-import type { ModerationConfiguration } from './ModerationConfiguration';
-import { uniq } from 'lodash';
+import { ModerationConfiguration } from './ModerationConfiguration';
+import { inject, injectable } from 'inversify';
 
+export const MemoryConfiguration = Symbol.for('MemoryConfiguration');
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
     privo?: PrivoConfiguration;
     moderation?: ModerationConfiguration;
 }
 
+@injectable()
+export class MemoryConfigurationImpl implements MemoryConfiguration {
+    constructor(
+        @inject(SubscriptionConfiguration)
+        public subscriptions: SubscriptionConfiguration,
+        @inject(PrivoConfiguration) public privo?: PrivoConfiguration,
+        @inject(ModerationConfiguration)
+        public moderation?: ModerationConfiguration
+    ) {}
+}
+
+@injectable()
 export class MemoryStore
     implements
         AuthStore,
@@ -345,7 +358,7 @@ export class MemoryStore
         return this._comIdRequests;
     }
 
-    constructor(config: MemoryConfiguration) {
+    constructor(@inject(MemoryConfiguration) config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
         this._moderationConfiguration = config.moderation ?? null;
