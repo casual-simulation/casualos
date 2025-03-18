@@ -99,6 +99,7 @@ describe('RuntimeBot', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            supportsDOM: false,
             isCollaborative: true,
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'ab1Bootstrap',

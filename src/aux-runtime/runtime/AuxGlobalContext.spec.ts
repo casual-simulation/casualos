@@ -67,6 +67,7 @@ describe('AuxGlobalContext', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',

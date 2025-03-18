@@ -118,6 +118,7 @@ export class AppManager {
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
     private _arSupported: boolean;
     private _vrSupported: boolean;
+    private _domSupported: boolean;
     private _ab1BootstrapUrl: string;
     private _comId: string;
     private _comIdConfig: GetPlayerConfigSuccess;
@@ -642,6 +643,7 @@ export class AppManager {
         this._arSupported = arSupported;
         this._vrSupported = vrSupported;
         this._ab1BootstrapUrl = ab1Bootstrap;
+        this._domSupported = this._config.enableDom ?? false;
 
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
     }
@@ -650,6 +652,7 @@ export class AppManager {
         return {
             supportsAR: this._arSupported,
             supportsVR: this._vrSupported,
+            supportsDOM: this._domSupported,
             isCollaborative: !isStatic,
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,

@@ -1,10 +1,6 @@
 import type { MemoryPartition } from '@casual-simulation/aux-common/partitions';
 import { createMemoryPartition } from '@casual-simulation/aux-common/partitions';
-import {
-    AuxRuntime,
-    mapLibraryFunctions,
-    registerInterpreterModule,
-} from './AuxRuntime';
+import { AuxRuntime, registerInterpreterModule } from './AuxRuntime';
 import type {
     BotAction,
     BotsState,
@@ -144,6 +140,7 @@ import type { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';
 import type { RuntimeActions } from './RuntimeEvents';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
+import { support } from 'benchmark';
 
 registerInterpreterModule(DynamicImports);
 
@@ -184,6 +181,7 @@ describe('AuxRuntime', () => {
             auxDevice = {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
@@ -13743,6 +13741,7 @@ describe('AuxRuntime', () => {
             auxDevice = {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
@@ -18210,6 +18209,7 @@ describe('original action tests', () => {
             const result = calculateActionResults(state, botAction, {
                 supportsAR: true,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'bootstrap',
@@ -18221,6 +18221,7 @@ describe('original action tests', () => {
                         device: {
                             supportsAR: true,
                             supportsVR: false,
+                            supportsDOM: false,
                             isCollaborative: true,
                             allowCollaborationUpgrade: true,
                             ab1BootstrapUrl: 'bootstrap',
@@ -18251,6 +18252,7 @@ describe('original action tests', () => {
                         device: {
                             supportsAR: null,
                             supportsVR: null,
+                            supportsDOM: null,
                             isCollaborative: null,
                             allowCollaborationUpgrade: null,
                             ab1BootstrapUrl: null,

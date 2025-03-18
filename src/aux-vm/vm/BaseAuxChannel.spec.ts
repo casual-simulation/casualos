@@ -1195,6 +1195,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1254,6 +1255,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1342,6 +1344,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1441,6 +1444,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1557,6 +1561,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1732,6 +1737,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1798,6 +1804,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1894,6 +1901,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1979,6 +1987,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -2184,6 +2193,7 @@ describe('BaseAuxChannel', () => {
                         ab1BootstrapUrl: 'url',
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         allowCollaborationUpgrade: false,
                         isCollaborative: false,
                     },
@@ -2210,6 +2220,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'url',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
             });
@@ -2218,6 +2229,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: true,
                 supportsVR: true,
+                supportsDOM: true,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2230,6 +2242,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: true,
                 supportsVR: true,
+                supportsDOM: true,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2255,6 +2268,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2284,6 +2298,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: true,
                 isCollaborative: false,
             });
@@ -2315,6 +2330,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
             });

@@ -310,6 +310,7 @@ describe('AuxLibrary', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            supportsDOM: false,
             isCollaborative: true,
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
@@ -4014,6 +4015,7 @@ describe('AuxLibrary', () => {
                 expect(d).toEqual({
                     supportsAR: null,
                     supportsVR: null,
+                    supportsDOM: null,
                     isCollaborative: null,
                     ab1BootstrapUrl: null,
                     allowCollaborationUpgrade: null,
@@ -4074,6 +4076,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 const expected = enableCollaboration(context.tasks.size);
@@ -4088,6 +4091,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -4105,6 +4109,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -9764,6 +9769,7 @@ describe('AuxLibrary', () => {
                     device = {
                         supportsAR: true,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: true,
                         allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',

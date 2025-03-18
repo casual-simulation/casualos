@@ -1512,7 +1512,6 @@ describe('RemoteYjsPartition', () => {
                     );
                     partition.onStateUpdated.subscribe((s) => states.push(s));
 
-                    // @ts-expect-error This is a hack to get the current version
                     const editVersion = { ...version.vector };
                     await partition.applyEvents([
                         botUpdated('bot1', {
@@ -1530,9 +1529,7 @@ describe('RemoteYjsPartition', () => {
                         }),
                     });
 
-                    // @ts-expect-error This is a hack to get the current version
                     expect(states[1].state.bot1.tags.tag1.version).toEqual({
-                        // @ts-expect-error This is a hack to get the current version
                         [version.currentSite]: 0,
                     });
                 });
