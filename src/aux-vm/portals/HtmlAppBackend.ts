@@ -193,6 +193,8 @@ export class HtmlAppBackend implements AppBackend {
                         let finalEvent = Event
                             ? new Event(event.event.type, {
                                   bubbles: true,
+                                  cancelable: event.event.cancelable,
+                                  composed: event.event.composed,
                               })
                             : {
                                   ...event.event,
