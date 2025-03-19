@@ -62,6 +62,7 @@ import type {
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import type { UserLoginMetadata } from './AuthStore';
+import { setupTestContainer } from './ContainerUtils';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -166,38 +167,38 @@ describe('AuthController', () => {
 
     beforeEach(() => {
         nowMock = Date.now = jest.fn();
-        store = new MemoryStore({
-            subscriptions: {
-                subscriptions: [
-                    {
-                        id: 'sub_2',
-                        product: 'product_2',
-                        eligibleProducts: ['product_2'],
-                        featureList: [],
-                        purchasable: true,
-                        tier: 'alpha',
-                    },
-                    {
-                        id: 'sub_1',
-                        product: 'product_1',
-                        eligibleProducts: ['product_1'],
-                        featureList: [],
-                        purchasable: true,
-                        tier: 'beta',
-                    },
-                ],
-                webhookSecret: 'webhook',
-                successUrl: 'success_url',
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                tiers: {},
-                defaultFeatures: {
-                    user: allowAllFeatures(),
-                    studio: allowAllFeatures(),
+
+        const container = setupTestContainer({
+            subscriptions: [
+                {
+                    id: 'sub_2',
+                    product: 'product_2',
+                    eligibleProducts: ['product_2'],
+                    featureList: [],
+                    purchasable: true,
+                    tier: 'alpha',
                 },
+                {
+                    id: 'sub_1',
+                    product: 'product_1',
+                    eligibleProducts: ['product_1'],
+                    featureList: [],
+                    purchasable: true,
+                    tier: 'beta',
+                },
+            ],
+            webhookSecret: 'webhook',
+            successUrl: 'success_url',
+            cancelUrl: 'cancel_url',
+            returnUrl: 'return_url',
+            tiers: {},
+            defaultFeatures: {
+                user: allowAllFeatures(),
+                studio: allowAllFeatures(),
             },
         });
-        messenger = new MemoryAuthMessenger();
+        store = container.get<MemoryStore>(MemoryStore);
+        messenger = container.get<MemoryAuthMessenger>(MemoryAuthMessenger);
 
         privoClient = privoClientMock = {
             createAdultAccount: jest.fn(),

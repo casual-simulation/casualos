@@ -12,6 +12,7 @@ import {
     createTestControllers,
     createTestRecordKey,
     createTestUser,
+    getTestControllers,
 } from './TestUtils';
 import type { PolicyController } from './PolicyController';
 import {
@@ -21,6 +22,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { setupTestContainer } from './ContainerUtils';
 
 console.log = jest.fn();
 
@@ -35,17 +37,13 @@ describe('EventRecordsController', () => {
     let recordName: string;
 
     beforeEach(async () => {
-        const controllers = createTestControllers();
+        const container = setupTestContainer();
+        const controllers = getTestControllers(container);
         store = controllers.store;
         records = controllers.records;
         policies = controllers.policies;
 
-        manager = new EventRecordsController({
-            policies,
-            store,
-            metrics: store,
-            config: store,
-        });
+        manager = container.get<EventRecordsController>(EventRecordsController);
 
         const owner = await createTestUser(controllers, 'owner@example.com');
         ownerId = owner.userId;

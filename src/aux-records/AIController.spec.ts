@@ -19,6 +19,7 @@ import {
     asyncIterable,
     asyncIterator,
     createTestControllers,
+    getTestControllers,
     unwindAndCaptureAsync,
 } from './TestUtils';
 import {
@@ -39,6 +40,7 @@ import type { PolicyController } from './PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { setupTestContainer } from './ContainerUtils';
 
 console.log = jest.fn();
 
@@ -124,7 +126,9 @@ describe('AIController', () => {
             editModel: jest.fn(),
         };
 
-        const services = createTestControllers(null);
+        const container = setupTestContainer();
+        const services = getTestControllers(container);
+
         store = services.store;
         policies = services.policies;
 
