@@ -2,14 +2,17 @@ import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
-import type { PublicRecordKeyPolicy } from './RecordsStore';
+import { RecordsStore, type PublicRecordKeyPolicy } from './RecordsStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { parseSessionKey } from './AuthUtils';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import type { Container } from 'inversify';
+import { AuthStore } from './AuthStore';
+import { PolicyStore } from './PolicyStore';
+import { ConfigurationStore } from './ConfigurationStore';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -55,6 +58,20 @@ export function createTestPrivoConfiguration(): PrivoConfiguration {
         // verificationSiteId: 'verificationSiteId',
         redirectUri: 'redirectUri',
         ageOfConsent: 18,
+    };
+}
+
+export function getTestControllers(container: Container) {
+    return {
+        store: container.get<MemoryStore>(MemoryStore),
+        authStore: container.get<AuthStore>(AuthStore),
+        authMessenger: container.get<MemoryAuthMessenger>(MemoryAuthMessenger),
+        auth: container.get<AuthController>(AuthController),
+        recordsStore: container.get<RecordsStore>(RecordsStore),
+        records: container.get<RecordsController>(RecordsController),
+        policyStore: container.get<PolicyStore>(PolicyStore),
+        policies: container.get<PolicyController>(PolicyController),
+        configStore: container.get<ConfigurationStore>(ConfigurationStore),
     };
 }
 

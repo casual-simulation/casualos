@@ -14,7 +14,7 @@ import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 import { inject, injectable } from 'inversify';
-import { OpenAIApiKey } from 'OpenAI';
+import { OpenAIApiKey } from './OpenAI';
 
 const TRACE_NAME = 'OpenAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {

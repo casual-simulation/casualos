@@ -503,27 +503,30 @@ export class RecordsServer {
         return this._procedures;
     }
 
-    constructor({
-        allowedAccountOrigins,
-        allowedApiOrigins,
-        authController,
-        livekitController,
-        recordsController,
-        eventsController,
-        dataController,
-        manualDataController,
-        filesController,
-        subscriptionController,
-        websocketController,
-        websocketRateLimitController,
-        rateLimitController,
-        policyController,
-        aiController,
-        moderationController,
-        loomController,
-        webhooksController,
-        notificationsController,
-    }: RecordsServerOptions) {
+    constructor(
+        @inject(RecordsServerOptions)
+        {
+            allowedAccountOrigins,
+            allowedApiOrigins,
+            authController,
+            livekitController,
+            recordsController,
+            eventsController,
+            dataController,
+            manualDataController,
+            filesController,
+            subscriptionController,
+            websocketController,
+            websocketRateLimitController,
+            rateLimitController,
+            policyController,
+            aiController,
+            moderationController,
+            loomController,
+            webhooksController,
+            notificationsController,
+        }: RecordsServerOptions
+    ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
         this._auth = authController;

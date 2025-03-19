@@ -70,7 +70,7 @@ import { getHash } from '@casual-simulation/crypto';
 import type { GetBranchDataFailure } from '../websockets';
 import { WebsocketController } from '../websockets';
 import { inject, injectable, injectFromBase, optional } from 'inversify';
-import { ConfigurationStore } from 'ConfigurationStore';
+import { ConfigurationStore } from '../ConfigurationStore';
 
 const TRACE_NAME = 'WebhookRecordsController';
 

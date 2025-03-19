@@ -74,7 +74,13 @@ import {
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
-import { injectable, inject, multiInject, unmanaged } from 'inversify';
+import {
+    injectable,
+    inject,
+    multiInject,
+    unmanaged,
+    optional,
+} from 'inversify';
 
 const TRACE_NAME = 'AuthController';
 
@@ -208,8 +214,10 @@ export class AuthController {
         configStore: ConfigurationStore,
         @unmanaged() forceAllowSubscriptionFeatures: boolean = false,
         @inject(PrivoClientInterface)
+        @optional()
         privoClient: PrivoClientInterface = null,
         @multiInject(RelyingParty)
+        @optional()
         relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;

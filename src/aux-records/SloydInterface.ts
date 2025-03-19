@@ -8,7 +8,7 @@ import type {
     SloydModelMimeTypes,
 } from './AISloydInterface';
 import axios from 'axios';
-import { handleAxiosErrors } from 'Utils';
+import { handleAxiosErrors } from './Utils';
 import { inject, injectable } from 'inversify';
 
 export const SloydOptions = Symbol.for('SloydOptions');

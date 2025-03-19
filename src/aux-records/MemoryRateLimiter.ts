@@ -2,8 +2,8 @@ import type {
     RateLimiter,
     RateLimiterIncrementResult,
 } from '@casual-simulation/rate-limit-redis';
-import { RateLimiterOptions } from '@casual-simulation/rate-limit-redis';
-import { inject, injectable } from 'inversify';
+import type { RateLimiterOptions } from '@casual-simulation/rate-limit-redis';
+import { injectable } from 'inversify';
 
 /**
  * Defines a rate limiter that stores everything in-memory.
@@ -14,7 +14,7 @@ export class MemoryRateLimiter implements RateLimiter {
 
     windowMs: number = 1000;
 
-    init(@inject(RateLimiterOptions) options: RateLimiterOptions): void {
+    init(options: RateLimiterOptions): void {
         this.windowMs = options.windowMs;
     }
 

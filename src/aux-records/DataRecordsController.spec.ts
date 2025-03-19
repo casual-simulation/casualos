@@ -16,6 +16,7 @@ import {
     createTestControllers,
     createTestRecordKey,
     createTestUser,
+    getTestControllers,
 } from './TestUtils';
 import {
     ACCOUNT_MARKER,
@@ -24,6 +25,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { bindMemoryConfiguration, setupTestContainer } from './ContainerUtils';
 
 console.log = jest.fn();
 
@@ -40,17 +42,13 @@ describe('DataRecordsController', () => {
     let otherUserId: string;
 
     beforeEach(async () => {
-        const services = createTestControllers();
+        const container = setupTestContainer();
+        const services = getTestControllers(container);
 
         store = services.store;
         policies = services.policies;
         records = services.records;
-        manager = new DataRecordsController({
-            policies,
-            store,
-            metrics: store,
-            config: store,
-        });
+        manager = container.get<DataRecordsController>(DataRecordsController);
 
         const user = await createTestUser(services, 'test@example.com');
         userId = user.userId;

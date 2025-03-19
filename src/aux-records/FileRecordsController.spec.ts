@@ -21,6 +21,7 @@ import {
     createTestControllers,
     createTestRecordKey,
     createTestUser,
+    getTestControllers,
 } from './TestUtils';
 import {
     ACCOUNT_MARKER,
@@ -30,6 +31,7 @@ import {
 import { sortBy } from 'lodash';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { setupTestContainer } from './ContainerUtils';
 
 console.log = jest.fn();
 
@@ -50,18 +52,14 @@ describe('FileRecordsController', () => {
     let ownerId: string;
 
     beforeEach(async () => {
-        const services = createTestControllers();
+        const container = setupTestContainer();
+        const services = getTestControllers(container);
 
         store = services.store;
         policies = services.policies;
         records = services.records;
 
-        manager = new FileRecordsController({
-            policies,
-            store,
-            metrics: store,
-            config: store,
-        });
+        manager = container.get<FileRecordsController>(FileRecordsController);
         presignUrlMock = store.presignFileUpload = jest.fn();
         presignReadMock = store.presignFileRead = jest.fn();
 

@@ -17,10 +17,8 @@ import { RecordsNotification } from './SystemNotificationMessenger';
 import { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import type {
-    ModerationJobFilesFilter,
-    ModerationJobProvider,
-} from './ModerationJobProvider';
+import type { ModerationJobFilesFilter } from './ModerationJobProvider';
+import { ModerationJobProvider } from './ModerationJobProvider';
 import { inject, injectable, optional } from 'inversify';
 
 const TRACE_NAME = 'ModerationController';
@@ -41,6 +39,8 @@ export class ModerationController {
         @inject(SystemNotificationMessenger)
         @optional()
         messenger: SystemNotificationMessenger | null | undefined,
+        @inject(ModerationJobProvider)
+        @optional()
         jobProvider: ModerationJobProvider | null
     ) {
         this._store = store;

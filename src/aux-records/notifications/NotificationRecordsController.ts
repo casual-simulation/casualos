@@ -42,7 +42,7 @@ import type {
 import { WebPushInterface } from './WebPushInterface';
 import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
 import { inject, injectable } from 'inversify';
-import { ConfigurationStore } from 'ConfigurationStore';
+import { ConfigurationStore } from '../ConfigurationStore';
 
 const TRACE_NAME = 'NotificationRecordsController';
 
