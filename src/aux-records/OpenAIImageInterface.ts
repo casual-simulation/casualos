@@ -10,7 +10,7 @@ import { traced } from './tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 import { inject, injectable, optional } from 'inversify';
-import { OpenAIApiKey } from './OpenAI';
+import { OpenAIApiKey } from './OpenAIUtils';
 
 const TRACE_NAME = 'OpenAIImageInterface';
 const SPAN_OPTIONS: SpanOptions = {
