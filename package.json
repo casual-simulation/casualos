@@ -138,6 +138,7 @@
         "esbuild": "^0.19.8",
         "esbuild-copy-static-files": "0.1.0",
         "eslint": "^9.22.0",
+        "eslint-plugin-header": "3.1.1",
         "eslint-plugin-vue": "^10.0.0",
         "fake-indexeddb": "5.0.1",
         "faker": "5.1.0",
@@ -155,6 +156,7 @@
         "js-yaml": "^3.13.1",
         "jszip": "3.10.1",
         "lerna": "8.0.0",
+        "lint-staged": "15.5.0",
         "lodash": "4.17.21",
         "mock-fs": "5.2.0",
         "nodemon": "^2.0.19",
@@ -176,8 +178,7 @@
         "typescript-eslint": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7",
-        "lint-staged": "15.5.0"
+        "wait-on": "7"
     },
     "engines": {
         "node": ">=18",
@@ -199,7 +200,8 @@
             "@mdx-js/mdx@3.0.0": "patches/@mdx-js/mdx@3.0.0.patch",
             "fake-indexeddb@5.0.1": "patches/fake-indexeddb@5.0.1.patch",
             "acorn-typescript@1.4.13": "patches/acorn-typescript@1.4.13.patch",
-            "deno-vm@0.12.0": "patches/deno-vm@0.12.0.patch"
+            "deno-vm@0.12.0": "patches/deno-vm@0.12.0.patch",
+            "eslint-plugin-header@3.1.1": "patches/eslint-plugin-header@3.1.1.patch"
         }
     },
     "packageManager": "pnpm@8.11.0",

@@ -2,6 +2,7 @@ import globals from 'globals';
 import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
+import header from 'eslint-plugin-header';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
@@ -77,4 +78,45 @@ export default defineConfig([
             'vue/no-deprecated-v-on-native-modifier': 'off',
         },
     },
+    {
+        files: [
+            'src/aux-common/**/*.{js,ts}',
+            'src/aux-components/**/*.{js,ts}',
+            'src/aux-proxy/**/*.{js,ts}',
+            'src/aux-records/**/*.{js,ts}',
+            'src/aux-records-aws/**/*.{js,ts}',
+            'src/aux-redirector/**/*.{js,ts}',
+            'src/aux-runtime/**/*.{js,ts}',
+            'src/aux-server/**/*.{js,ts}',
+            'src/aux-vm/**/*.{js,ts}',
+            'src/aux-vm-browser/**/*.{js,ts}',
+            'src/aux-vm-client/**/*.{js,ts}',
+            'src/aux-vm-deno/**/*.{js,ts}',
+            'src/aux-vm-node/**/*.{js,ts}',
+            'src/aux-websocket/**/*.{js,ts}',
+            'src/aux-websocket-aws/**/*.{js,ts}',
+            'src/casualos-cli/**/*.{js,ts}',
+            'src/casualos-infra/**/*.{js,ts}',
+            'src/crypto/**/*.{js,ts}',
+            'src/crypto-browser/**/*.{js,ts}',
+            'src/crypto-node/**/*.{js,ts}',
+            'src/make-github-release/**/*.{js,ts}',
+            'src/tunnel/**/*.{js,ts}',
+            'src/websocket/**/*.{js,ts}',
+        ],
+        ignores: [
+            'src/aux-server/aux-web/shared/public/**/*.{js,ts}',
+            'src/aux-server/aux-web/shared/monaco/**/*.{js,ts}',
+            'src/aux-server/aux-web/shared/static/**/*.{js,ts}',
+            'src/aux-server/aux-player/static/**/*.{js,ts}',
+            'src/aux-server/aux-player/shim/**/*.{js,ts}',
+            'src/aux-vm/globalThis-polyfill.ts',
+        ],
+        plugins: {
+            header: header
+        },
+        rules: {
+            'header/header': ['error', 'script/header.js']
+        }
+    }
 ]);
