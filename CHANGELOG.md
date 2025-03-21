@@ -19,6 +19,7 @@
     -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
 -   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
 -   Fixed an issue where predefined `bios` values in URLs (e.g., `?bios=free`) are now preserved during authentication. Users no longer encounter the BIOS selection screen unnecessarily after signing in.
+-   Fixed an issue in the documentation where links to tags and actions were completely broken.
 
 ## V3.3.15
 
