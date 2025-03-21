@@ -13,6 +13,7 @@ import type { Container } from 'inversify';
 import { AuthStore } from './AuthStore';
 import { PolicyStore } from './PolicyStore';
 import { ConfigurationStore } from './ConfigurationStore';
+import { setupTestContainer } from './ContainerUtils';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -72,40 +73,42 @@ export function getTestControllers(container: Container) {
         policyStore: container.get<PolicyStore>(PolicyStore),
         policies: container.get<PolicyController>(PolicyController),
         configStore: container.get<ConfigurationStore>(ConfigurationStore),
+        container,
     };
 }
 
 export function createTestControllers(
     config?: SubscriptionConfiguration | null
 ) {
-    const subConfig: SubscriptionConfiguration | null =
-        typeof config === 'undefined' ? createTestSubConfiguration() : null;
+    return getTestControllers(setupTestContainer(config));
+    // const subConfig: SubscriptionConfiguration | null =
+    //     typeof config === 'undefined' ? createTestSubConfiguration() : null;
 
-    const store = new MemoryStore({
-        subscriptions: subConfig,
-    });
-    const authMessenger = new MemoryAuthMessenger();
-    const auth = new AuthController(store, authMessenger, store, true);
-    const records = new RecordsController({
-        store: store,
-        auth: store,
-        config: store,
-        metrics: store,
-        messenger: store,
-    });
-    const policies = new PolicyController(auth, records, store);
+    // const store = new MemoryStore({
+    //     subscriptions: subConfig,
+    // });
+    // const authMessenger = new MemoryAuthMessenger();
+    // const auth = new AuthController(store, authMessenger, store, true);
+    // const records = new RecordsController({
+    //     store: store,
+    //     auth: store,
+    //     config: store,
+    //     metrics: store,
+    //     messenger: store,
+    // });
+    // const policies = new PolicyController(auth, records, store);
 
-    return {
-        store,
-        authStore: store,
-        authMessenger,
-        auth,
-        recordsStore: store,
-        records,
-        policyStore: store,
-        policies,
-        configStore: store,
-    };
+    // return {
+    //     store,
+    //     authStore: store,
+    //     authMessenger,
+    //     auth,
+    //     recordsStore: store,
+    //     records,
+    //     policyStore: store,
+    //     policies,
+    //     configStore: store,
+    // };
 }
 
 export async function createTestUser(

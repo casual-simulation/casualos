@@ -12,7 +12,7 @@ import {
     ON_WEBHOOK_ACTION_NAME,
 } from '@casual-simulation/aux-common/bots';
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
-import { WebsocketMessenger } from './WebsocketMessenger';
+import type { WebsocketMessenger } from './WebsocketMessenger';
 import type {
     DeviceSelector,
     RemoteAction,
@@ -27,7 +27,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
 import type { DeviceConnection } from './WebsocketConnectionStore';
-import { WebsocketConnectionStore } from './WebsocketConnectionStore';
+import type { WebsocketConnectionStore } from './WebsocketConnectionStore';
 import type {
     AddUpdatesMessage,
     LoginMessage,
@@ -45,17 +45,17 @@ import {
     WebsocketEventTypes,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
-import { AuthController } from '../AuthController';
+import type { AuthController } from '../AuthController';
 import type {
     CurrentUpdates,
     InstRecord,
     InstWithSubscriptionInfo,
     SaveInstFailure,
 } from './InstRecordsStore';
-import { InstRecordsStore } from './InstRecordsStore';
+import type { InstRecordsStore } from './InstRecordsStore';
 import { StoredUpdates } from './InstRecordsStore';
 import type { BranchName } from './TemporaryInstRecordsStore';
-import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
 import type {
     DenialReason,
@@ -77,19 +77,19 @@ import type {
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
 } from '../PolicyController';
-import { PolicyController } from '../PolicyController';
-import { ConfigurationStore } from '../ConfigurationStore';
+import type { PolicyController } from '../PolicyController';
+import type { ConfigurationStore } from '../ConfigurationStore';
 import type {
     FeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
 import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
-import { MetricsStore } from '../MetricsStore';
-import { AuthStore } from '../AuthStore';
+import type { MetricsStore } from '../MetricsStore';
+import type { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, unmanaged } from 'inversify';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -122,17 +122,17 @@ export class WebsocketController {
     }
 
     constructor(
-        @inject(WebsocketConnectionStore)
+        @unmanaged()
         connectionStore: WebsocketConnectionStore,
-        @inject(WebsocketMessenger) messenger: WebsocketMessenger,
-        @inject(InstRecordsStore) instStore: InstRecordsStore,
-        @inject(TemporaryInstRecordsStore)
+        @unmanaged() messenger: WebsocketMessenger,
+        @unmanaged() instStore: InstRecordsStore,
+        @unmanaged()
         temporaryInstStore: TemporaryInstRecordsStore,
-        @inject(AuthController) auth: AuthController,
-        @inject(PolicyController) policies: PolicyController,
-        @inject(ConfigurationStore) config: ConfigurationStore,
-        @inject(MetricsStore) metrics: MetricsStore,
-        @inject(AuthStore) authStore: AuthStore
+        @unmanaged() auth: AuthController,
+        @unmanaged() policies: PolicyController,
+        @unmanaged() config: ConfigurationStore,
+        @unmanaged() metrics: MetricsStore,
+        @unmanaged() authStore: AuthStore
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;

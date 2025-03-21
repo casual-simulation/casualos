@@ -1,4 +1,8 @@
-import { AIController } from './AIController';
+import {
+    AIConfiguration,
+    AIConfigurationImpl,
+    AIController,
+} from './AIController';
 import { AnthropicAIChatInterface } from './AnthropicAIChatInterface';
 import { AuthController } from './AuthController';
 import { AuthMessenger } from './AuthMessenger';
@@ -40,7 +44,13 @@ import { MetricsStore } from './MetricsStore';
 import { ModerationController } from './ModerationController';
 import { ModerationJobProvider } from './ModerationJobProvider';
 import { ModerationStore } from './ModerationStore';
-import { NotificationRecordsController } from './notifications';
+import {
+    MemoryNotificationRecordsStore,
+    NotificationRecordsConfiguration,
+    NotificationRecordsConfigurationImpl,
+    NotificationRecordsController,
+    NotificationRecordsStore,
+} from './notifications';
 import { OpenAIChatInterface } from './OpenAIChatInterface';
 import { OpenAIImageInterface } from './OpenAIImageInterface';
 import { PolicyController } from './PolicyController';
@@ -51,16 +61,39 @@ import {
     RecordsControllerConfig,
     RecordsControllerConfigImpl,
 } from './RecordsController';
-import { RecordsServer } from './RecordsServer';
+import {
+    RecordsServer,
+    RecordsServerOptions,
+    RecordsServerOptionsImpl,
+} from './RecordsServer';
 import { RecordsStore } from './RecordsStore';
 import { SloydInterface } from './SloydInterface';
 import { StabilityAIImageInterface } from './StabilityAIImageInterface';
 import { SystemNotificationMessenger } from './SystemNotificationMessenger';
-import { WebhookRecordsController } from './webhooks';
-import { WebsocketController } from './websockets';
+import {
+    MemoryWebhookRecordsStore,
+    WebhookRecordsConfiguration,
+    WebhookRecordsConfigurationImpl,
+    WebhookRecordsController,
+    WebhookRecordsStore,
+} from './webhooks';
+import {
+    InstRecordsStore,
+    MemoryTempInstRecordsStore,
+    MemoryWebsocketConnectionStore,
+    MemoryWebsocketMessenger,
+    SplitInstRecordsStore,
+    TemporaryInstRecordsStore,
+    WebsocketConnectionStore,
+    WebsocketController,
+    WebsocketMessenger,
+} from './websockets';
 import { Cache } from './Cache';
 import { ConsoleAuthMessenger } from './ConsoleAuthMessenger';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import { MemoryRateLimiter } from './MemoryRateLimiter';
+import { SubscriptionController } from './SubscriptionController';
 
 export function setupSelfBindings(container: Container) {
     const selfBindings = [
@@ -84,6 +117,7 @@ export function setupSelfBindings(container: Container) {
         WebsocketController,
         WebhookRecordsController,
         NotificationRecordsController,
+        SubscriptionController,
 
         // Chat interfaces
         OpenAIChatInterface,
@@ -100,14 +134,23 @@ export function setupSelfBindings(container: Container) {
     ];
 
     for (let binding of selfBindings) {
-        container.bind(binding).toSelf().inSingletonScope();
+        container.bind(binding).toSelf().inSingletonScope().whenDefault();
     }
 
     container
         .bind(DataRecordsController)
-        .toSelf()
+        .toDynamicValue((context) => {
+            return new DataRecordsController({
+                config: context.get(DataRecordsConfiguration),
+                store: context.get(DataRecordsStore, { name: 'manual' }),
+                metrics: context.get(MetricsStore),
+                policies: context.get(PolicyController),
+            });
+        })
         .inSingletonScope()
         .whenNamed('manual');
+
+    container.bind(MemoryStore).toSelf().inSingletonScope().whenNamed('manual');
 }
 
 export function setupConfigBindings(container: Container) {
@@ -117,6 +160,13 @@ export function setupConfigBindings(container: Container) {
         [FileRecordsConfiguration, FileRecordsConfigurationImpl],
         [EventRecordsConfiguration, EventRecordsConfigurationImpl],
         [LoomControllerOptions, LoomControllerOptionsImpl],
+        [RecordsServerOptions, RecordsServerOptionsImpl],
+        [AIConfiguration, AIConfigurationImpl],
+        [WebhookRecordsConfiguration, WebhookRecordsConfigurationImpl],
+        [
+            NotificationRecordsConfiguration,
+            NotificationRecordsConfigurationImpl,
+        ],
     ];
 
     for (let [binding, impl] of configBindings) {
@@ -158,6 +208,38 @@ export function setupMemoryServices(container: Container) {
         .toService(MemoryModerationJobProvider);
     container.bind(MemoryCache).toSelf().inSingletonScope();
     container.bind(Cache).toService(MemoryCache);
+    container.bind(RateLimiter).to(MemoryRateLimiter).inSingletonScope();
+    container
+        .bind(WebsocketConnectionStore)
+        .to(MemoryWebsocketConnectionStore)
+        .inSingletonScope();
+    container
+        .bind(TemporaryInstRecordsStore)
+        .to(MemoryTempInstRecordsStore)
+        .inSingletonScope();
+    container
+        .bind(InstRecordsStore)
+        .to(SplitInstRecordsStore)
+        .inSingletonScope()
+        .whenDefault();
+    container
+        .bind(InstRecordsStore)
+        .toDynamicValue((context) => {
+            return context.get(MemoryStore);
+        })
+        .whenNamed('permanent');
+    container
+        .bind(WebsocketMessenger)
+        .to(MemoryWebsocketMessenger)
+        .inSingletonScope();
+    container
+        .bind(WebhookRecordsStore)
+        .to(MemoryWebhookRecordsStore)
+        .inSingletonScope();
+    container
+        .bind(NotificationRecordsStore)
+        .to(MemoryNotificationRecordsStore)
+        .inSingletonScope();
 }
 
 export function setupTestContainer(

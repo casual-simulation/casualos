@@ -6,6 +6,8 @@ import { inject, injectable } from 'inversify';
 
 const TRACE_NAME = 'RateLimitController';
 
+export const RateLimitConfig = Symbol.for('RateLimitConfig');
+
 /**
  * Defines a controller that is able to handle rate limiting.
  */
@@ -72,8 +74,6 @@ export class RateLimitController {
         }
     }
 }
-
-export const RateLimitConfig = Symbol.for('RateLimitConfig');
 
 export interface RateLimitConfig {
     windowMs: number;

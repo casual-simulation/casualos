@@ -3,6 +3,7 @@ import {
     RecordsServer,
     validateOrigin,
     getSessionKey,
+    StringSet,
 } from './RecordsServer';
 import type {
     GenericHttpHeaders,
@@ -12,8 +13,8 @@ import type {
     GenericQueryStringParameters,
     GenericWebsocketRequest,
 } from '@casual-simulation/aux-common';
-import { DEFAULT_BRANCH_NAME, procedure } from '@casual-simulation/aux-common';
-import type { RelyingParty } from './AuthController';
+import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
+import { RelyingParty } from './AuthController';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
@@ -21,36 +22,29 @@ import {
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
-    formatV1OpenAiKey,
     formatV1SessionKey,
     generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
 import type { AuthSession, AuthUser } from './AuthStore';
-import { LivekitController } from './LivekitController';
-import type { CreateStudioSuccess } from './RecordsController';
 import {
-    CreateStudioInComIdResult,
-    isRecordKey,
-    RecordsController,
-} from './RecordsController';
+    LivekitApiKey,
+    LivekitController,
+    LivekitEndpoint,
+    LivekitSecretKey,
+} from './LivekitController';
+import type { CreateStudioSuccess } from './RecordsController';
+import { isRecordKey, RecordsController } from './RecordsController';
 import type { Studio } from './RecordsStore';
-import { RecordKey, RecordsStore } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
-import { EventRecordsStore } from './EventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
-import type { DataRecordsStore } from './DataRecordsStore';
+import { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
-import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
-import type { StripeInterface, StripeProduct } from './StripeInterface';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
-import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
+import type { StripeProduct } from './StripeInterface';
+import { StripeInterface } from './StripeInterface';
+import type { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
 import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
@@ -58,18 +52,24 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { RateLimitController } from './RateLimitController';
+import { RateLimitConfig, RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
-import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
     createTestControllers,
-    createTestRecordKey,
     createTestSubConfiguration,
     createTestUser,
     unwindAndCaptureAsync,
 } from './TestUtils';
-import { AIController } from './AIController';
+import {
+    AIChatConfiguration,
+    AIController,
+    AIGenerateImageConfiguration,
+    AIGenerateSkyboxConfiguration,
+    AIHumeConfiguration,
+    AISloydConfiguration,
+} from './AIController';
 import type {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
@@ -84,15 +84,13 @@ import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
-import { merge, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
-import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
-import { MemoryWebsocketMessenger } from './websockets/MemoryWebsocketMessenger';
-import type { InstRecordsStore } from './websockets/InstRecordsStore';
-import type { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
-import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
-import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
+import type { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
+import type { MemoryWebsocketMessenger } from './websockets/MemoryWebsocketMessenger';
+import { InstRecordsStore } from './websockets/InstRecordsStore';
+import { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
 import type {
     LoginMessage,
     WebsocketDownloadRequestEvent,
@@ -104,22 +102,14 @@ import type {
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type { StoredAuxVersion1 } from '@casual-simulation/aux-common/bots';
-import {
-    botAdded,
-    createBot,
-    StoredAux,
-    toast,
-} from '@casual-simulation/aux-common/bots';
+import { createBot, toast } from '@casual-simulation/aux-common/bots';
 import {
     device,
     remote,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
-import {
-    YjsPartitionImpl,
-    constructInitializationUpdate,
-} from '@casual-simulation/aux-common';
-import type { PrivoClientInterface } from './PrivoClient';
+import { constructInitializationUpdate } from '@casual-simulation/aux-common';
+import { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
 import type {
@@ -154,19 +144,24 @@ import type {
     AISloydInterfaceEditModelRequest,
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
-import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
+import type { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
-import { MemoryWebhookRecordsStore } from './webhooks/MemoryWebhookRecordsStore';
+import type { MemoryWebhookRecordsStore } from './webhooks/MemoryWebhookRecordsStore';
 import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
 import { tryParseJson } from './Utils';
 import { NotificationRecordsController } from './notifications/NotificationRecordsController';
-import type { WebPushInterface } from './notifications/WebPushInterface';
+import { WebPushInterface } from './notifications/WebPushInterface';
 import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
+import { setupTestContainer } from './ContainerUtils';
+import { WebsocketConnectionStore, WebsocketMessenger } from './websockets';
+import { WebhookEnvironment, WebhookRecordsStore } from './webhooks';
+import { NotificationRecordsStore } from './notifications';
+import { ModerationJobProvider } from './ModerationJobProvider';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -455,11 +450,17 @@ describe('RecordsServer', () => {
     };
 
     beforeEach(async () => {
-        allowedAccountOrigins = new Set([accountOrigin]);
+        const container = setupTestContainer();
+        container.unbind(MemoryStore);
+        container
+            .bind(MemoryStore)
+            .toConstantValue(savedMemoryStore.clone())
+            .whenDefault();
 
+        allowedAccountOrigins = new Set([accountOrigin]);
         allowedApiOrigins = new Set([apiOrigin]);
 
-        store = savedMemoryStore.clone();
+        store = container.get(MemoryStore);
         store.subscriptionConfiguration = createTestSubConfiguration((config) =>
             config
                 .addSubscription('sub_id', (sub) =>
@@ -489,11 +490,14 @@ describe('RecordsServer', () => {
         sessionSecret = savedSessionSecret;
         recordKey = savedRecordKey;
 
-        manualDataStore = new MemoryStore({
-            subscriptions: null as any,
+        manualDataStore = container.get<DataRecordsStore>(DataRecordsStore, {
+            name: 'manual',
         });
+        //  new MemoryStore({
+        //     subscriptions: null as any,
+        // });
 
-        authMessenger = new MemoryAuthMessenger();
+        authMessenger = container.get(MemoryAuthMessenger); // new MemoryAuthMessenger();
         privoClient = privoClientMock = {
             createAdultAccount: jest.fn(),
             createChildAccount: jest.fn(),
@@ -505,127 +509,161 @@ describe('RecordsServer', () => {
             generateLogoutUrl: jest.fn(),
             resendConsentRequest: jest.fn(),
         };
+        container.bind(PrivoClientInterface).toConstantValue(privoClient);
+
         relyingParty = {
             id: 'relying_party_id',
             name: 'Relying Party',
             origin: accountOrigin,
         };
-        authController = new AuthController(
-            store,
-            authMessenger,
-            store,
-            undefined,
-            privoClient,
-            [relyingParty]
-        );
+        container.bind(RelyingParty).toConstantValue(relyingParty);
+        authController = container.get(AuthController); // new AuthController(
+        //     store,
+        //     authMessenger,
+        //     store,
+        //     undefined,
+        //     privoClient,
+        //     [relyingParty]
+        // );
 
         // manually disable the Privo flag for tests
         // (it is automatically set to true because a privo client is specified, but most tests
         // assume privo isn't enabled)
         authController.privoEnabled = false;
 
-        livekitController = new LivekitController(
-            livekitApiKey,
-            livekitSecretKey,
-            livekitEndpoint
-        );
+        container.bind(LivekitApiKey).toConstantValue(livekitApiKey);
+        container.bind(LivekitSecretKey).toConstantValue(livekitSecretKey);
+        container.bind(LivekitEndpoint).toConstantValue(livekitEndpoint);
+        livekitController = container.get(LivekitController);
+        //  new LivekitController(
+        //     livekitApiKey,
+        //     livekitSecretKey,
+        //     livekitEndpoint
+        // );
 
         // const memRecordsStore = (store = new MemoryRecordsStore(
         //     store
         // ));
-        recordsController = new RecordsController({
-            auth: store,
-            store,
-            config: store,
-            metrics: store,
-            messenger: store,
+        recordsController = container.get(RecordsController);
+        // recordsController = new RecordsController({
+        //     auth: store,
+        //     store,
+        //     config: store,
+        //     metrics: store,
+        //     messenger: store,
+        // });
+
+        policyController = container.get(PolicyController);
+        // policyController = new PolicyController(
+        //     authController,
+        //     recordsController,
+        //     store
+        // );
+
+        eventsController = container.get(EventRecordsController);
+        // eventsController = new EventRecordsController({
+        //     config: store,
+        //     metrics: store,
+        //     policies: policyController,
+        //     store,
+        // });
+
+        dataController = container.get(DataRecordsController);
+        // dataController = new DataRecordsController({
+        //     config: store,
+        //     metrics: store,
+        //     policies: policyController,
+        //     store,
+        // });
+
+        manualDataController = container.get(DataRecordsController, {
+            name: 'manual',
         });
+        // manualDataController = new DataRecordsController({
+        //     config: store,
+        //     metrics: store,
+        //     policies: policyController,
+        //     store: manualDataStore,
+        // });
 
-        policyController = new PolicyController(
-            authController,
-            recordsController,
-            store
-        );
+        filesController = container.get(FileRecordsController);
+        // filesController = new FileRecordsController({
+        //     config: store,
+        //     metrics: store,
+        //     policies: policyController,
+        //     store,
+        // });
 
-        eventsController = new EventRecordsController({
-            config: store,
-            metrics: store,
-            policies: policyController,
-            store,
-        });
-
-        dataController = new DataRecordsController({
-            config: store,
-            metrics: store,
-            policies: policyController,
-            store,
-        });
-
-        manualDataController = new DataRecordsController({
-            config: store,
-            metrics: store,
-            policies: policyController,
-            store: manualDataStore,
-        });
-
-        filesController = new FileRecordsController({
-            config: store,
-            metrics: store,
-            policies: policyController,
-            store,
-        });
-
-        rateLimiter = new MemoryRateLimiter();
-        rateLimitController = new RateLimitController(rateLimiter, {
+        container.bind(RateLimitConfig).toConstantValue({
             maxHits: 5,
             windowMs: 1000,
         });
+        rateLimiter = container.get(RateLimiter);
+        rateLimitController = container.get(RateLimitController);
+        // rateLimiter = new MemoryRateLimiter();
+        // rateLimitController = new RateLimitController(rateLimiter, {
+        //     maxHits: 5,
+        //     windowMs: 1000,
+        // });
 
-        websocketConnectionStore = new MemoryWebsocketConnectionStore();
-        websocketMessenger = new MemoryWebsocketMessenger();
-        instStore = new SplitInstRecordsStore(
-            new MemoryTempInstRecordsStore(),
-            store
-        );
-        tempInstStore = new MemoryTempInstRecordsStore();
-        websocketController = new WebsocketController(
-            websocketConnectionStore,
-            websocketMessenger,
-            instStore,
-            tempInstStore,
-            authController,
-            policyController,
-            store,
-            store,
-            store
-        );
+        websocketConnectionStore = container.get(WebsocketConnectionStore);
+        websocketMessenger = container.get(WebsocketMessenger);
+        instStore = container.get(InstRecordsStore);
+        tempInstStore = container.get(TemporaryInstRecordsStore);
 
-        webhookStore = new MemoryWebhookRecordsStore(store);
+        // websocketConnectionStore = new MemoryWebsocketConnectionStore();
+        // websocketMessenger = new MemoryWebsocketMessenger();
+        // instStore = new SplitInstRecordsStore(
+        //     new MemoryTempInstRecordsStore(),
+        //     store
+        // );
+        // tempInstStore = new MemoryTempInstRecordsStore();
+        websocketController = container.get(WebsocketController);
+        // websocketController = new WebsocketController(
+        //     websocketConnectionStore,
+        //     websocketMessenger,
+        //     instStore,
+        //     tempInstStore,
+        //     authController,
+        //     policyController,
+        //     store,
+        //     store,
+        //     store
+        // );
+
+        webhookStore = container.get(WebhookRecordsStore);
+        // webhookStore = new MemoryWebhookRecordsStore(store);
         webhookEnvironment = {
             handleHttpRequest: jest.fn(),
         };
-        webhookController = new WebhookRecordsController({
-            config: store,
-            store: webhookStore,
-            data: dataController,
-            files: filesController,
-            policies: policyController,
-            environment: webhookEnvironment,
-            auth: authController,
-            websockets: websocketController,
-        });
+        container.bind(WebhookEnvironment).toConstantValue(webhookEnvironment);
+        webhookController = container.get(WebhookRecordsController);
 
-        notificationStore = new MemoryNotificationRecordsStore(store);
+        // webhookController = new WebhookRecordsController({
+        //     config: store,
+        //     store: webhookStore,
+        //     data: dataController,
+        //     files: filesController,
+        //     policies: policyController,
+        //     environment: webhookEnvironment,
+        //     auth: authController,
+        //     websockets: websocketController,
+        // });
+
+        notificationStore = container.get(NotificationRecordsStore);
+        // notificationStore = new MemoryNotificationRecordsStore(store);
         webPushInterface = {
             getServerApplicationKey: jest.fn(),
             sendNotification: jest.fn(),
         };
-        notificationController = new NotificationRecordsController({
-            config: store,
-            policies: policyController,
-            store: notificationStore,
-            pushInterface: webPushInterface,
-        });
+        container.bind(WebPushInterface).toConstantValue(webPushInterface);
+        notificationController = container.get(NotificationRecordsController);
+        // notificationController = new NotificationRecordsController({
+        //     config: store,
+        //     policies: policyController,
+        //     store: notificationStore,
+        //     pushInterface: webPushInterface,
+        // });
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -638,6 +676,7 @@ describe('RecordsServer', () => {
             constructWebhookEvent: jest.fn(),
             getSubscriptionById: jest.fn(),
         };
+        container.bind(StripeInterface).toConstantValue(stripe);
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
             if (id === 'product_id') {
@@ -659,13 +698,14 @@ describe('RecordsServer', () => {
             return null;
         });
 
-        subscriptionController = new SubscriptionController(
-            stripe,
-            authController,
-            store,
-            store,
-            store
-        );
+        subscriptionController = container.get(SubscriptionController);
+        // subscriptionController = new SubscriptionController(
+        //     stripe,
+        //     authController,
+        //     store,
+        //     store,
+        //     store
+        // );
 
         chatInterface = {
             chat: jest.fn(),
@@ -685,8 +725,10 @@ describe('RecordsServer', () => {
             createModel: jest.fn(),
             editModel: jest.fn(),
         };
-        aiController = new AIController({
-            chat: {
+
+        container
+            .bind<AIChatConfiguration>(AIChatConfiguration)
+            .toConstantValue({
                 interfaces: {
                     provider1: chatInterface,
                 },
@@ -706,14 +748,10 @@ describe('RecordsServer', () => {
                     allowedChatSubscriptionTiers: ['beta'],
                     tokenModifierRatio: { default: 1.0 },
                 },
-            },
-            generateSkybox: {
-                interface: skyboxInterface,
-                options: {
-                    allowedSubscriptionTiers: ['beta'],
-                },
-            },
-            images: {
+            });
+        container
+            .bind<AIGenerateImageConfiguration>(AIGenerateImageConfiguration)
+            .toConstantValue({
                 interfaces: {
                     openai: imageInterface,
                 },
@@ -730,58 +768,81 @@ describe('RecordsServer', () => {
                     maxImages: 3,
                     maxSteps: 50,
                 },
-            },
-            hume: {
+            });
+        container
+            .bind<AIGenerateSkyboxConfiguration>(AIGenerateSkyboxConfiguration)
+            .toConstantValue({
+                interface: skyboxInterface,
+                options: {
+                    allowedSubscriptionTiers: ['beta'],
+                },
+            });
+        container
+            .bind<AIHumeConfiguration>(AIHumeConfiguration)
+            .toConstantValue({
                 interface: humeInterface,
                 config: {
                     apiKey: 'globalApiKey',
                     secretKey: 'globalSecretKey',
                 },
-            },
-            sloyd: {
+            });
+        container
+            .bind<AISloydConfiguration>(AISloydConfiguration)
+            .toConstantValue({
                 interface: sloydInterface,
-            },
-            config: store,
-            metrics: store,
-            policies: store,
-            policyController: policyController,
-            records: store,
-        });
-        jobProvider = new MemoryModerationJobProvider();
-        moderationController = new ModerationController(
-            store,
-            store,
-            store,
-            jobProvider
-        );
-        loomController = new LoomController({
-            config: store,
-            store: store,
-            metrics: store,
-            policies: policyController,
-        });
+            });
 
-        server = new RecordsServer({
-            allowedAccountOrigins,
-            allowedApiOrigins,
-            authController,
-            livekitController,
-            recordsController,
-            eventsController,
-            dataController,
-            manualDataController,
-            filesController,
-            subscriptionController,
-            rateLimitController,
-            policyController,
-            aiController,
-            websocketController,
-            moderationController,
-            loomController,
-            websocketRateLimitController: rateLimitController,
-            webhooksController: webhookController,
-            notificationsController: notificationController,
-        });
+        aiController = container.get(AIController);
+
+        jobProvider = container.get(ModerationJobProvider);
+        // jobProvider = new MemoryModerationJobProvider();
+
+        moderationController = container.get(ModerationController);
+        // moderationController = new ModerationController(
+        //     store,
+        //     store,
+        //     store,
+        //     jobProvider
+        // );
+        loomController = container.get(LoomController);
+        // loomController = new LoomController({
+        //     config: store,
+        //     store: store,
+        //     metrics: store,
+        //     policies: policyController,
+        // });
+
+        container
+            .bind(StringSet)
+            .toConstantValue(allowedAccountOrigins)
+            .whenNamed('allowedAccountOrigins');
+        container
+            .bind(StringSet)
+            .toConstantValue(allowedApiOrigins)
+            .whenNamed('allowedApiOrigins');
+        server = container.get(RecordsServer);
+
+        // server = new RecordsServer({
+        //     allowedAccountOrigins,
+        //     allowedApiOrigins,
+        //     authController,
+        //     livekitController,
+        //     recordsController,
+        //     eventsController,
+        //     dataController,
+        //     manualDataController,
+        //     filesController,
+        //     subscriptionController,
+        //     rateLimitController,
+        //     policyController,
+        //     aiController,
+        //     websocketController,
+        //     moderationController,
+        //     loomController,
+        //     websocketRateLimitController: rateLimitController,
+        //     webhooksController: webhookController,
+        //     notificationsController: notificationController,
+        // });
         defaultHeaders = {
             origin: 'test.com',
         };
@@ -879,7 +940,7 @@ describe('RecordsServer', () => {
         });
     });
 
-    describe('GET /api/{userId}/metadata', () => {
+    describe.only('GET /api/{userId}/metadata', () => {
         it('should return the metadata for the given userId', async () => {
             const result = await server.handleHttpRequest(
                 httpGet(

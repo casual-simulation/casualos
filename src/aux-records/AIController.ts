@@ -18,14 +18,15 @@ import type {
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
 import type { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
-import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import type { ConfigurationStore } from './ConfigurationStore';
+import type { SubscriptionFilter } from './MetricsStore';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
 import {
     getHumeAiFeatures,
     getSloydAiFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
-import type { PolicyStore } from './PolicyStore';
+import { PolicyStore } from './PolicyStore';
 import type {
     AIHumeInterface,
     AIHumeInterfaceGetAccessTokenFailure,
@@ -37,16 +38,16 @@ import type {
     AISloydInterfaceCreateModelFailure,
     AISloydInterfaceCreateModelSuccess,
 } from './AISloydInterface';
-import { AISloydInterfaceEditModelSuccess } from './AISloydInterface';
 import { fromByteArray } from 'base64-js';
 import type {
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
-    PolicyController,
 } from './PolicyController';
+import { PolicyController } from './PolicyController';
 import type { DenialReason } from '@casual-simulation/aux-common';
-import type { HumeConfig, RecordsStore } from './RecordsStore';
-import { inject, injectable } from 'inversify';
+import type { HumeConfig } from './RecordsStore';
+import { RecordsStore } from './RecordsStore';
+import { inject, injectable, optional } from 'inversify';
 
 const TRACE_NAME = 'AIController';
 
@@ -64,6 +65,35 @@ export interface AIConfiguration {
     policyController: PolicyController | null;
     records: RecordsStore | null;
 }
+
+export class AIConfigurationImpl implements AIConfiguration {
+    constructor(
+        @inject(AIChatConfiguration)
+        @optional()
+        public chat: AIChatConfiguration | null,
+        @inject(AIGenerateSkyboxConfiguration)
+        @optional()
+        public generateSkybox: AIGenerateSkyboxConfiguration | null,
+        @inject(AIGenerateImageConfiguration)
+        @optional()
+        public images: AIGenerateImageConfiguration | null,
+        @inject(AIHumeConfiguration)
+        @optional()
+        public hume: AIHumeConfiguration | null,
+        @inject(AISloydConfiguration)
+        @optional()
+        public sloyd: AISloydConfiguration | null,
+        @inject(MetricsStore) public metrics: MetricsStore,
+        @inject(ConfigurationStore) public config: ConfigurationStore,
+        @inject(PolicyStore) @optional() public policies: PolicyStore | null,
+        @inject(PolicyController)
+        @optional()
+        public policyController: PolicyController | null,
+        @inject(RecordsStore) @optional() public records: RecordsStore | null
+    ) {}
+}
+
+export const AIChatConfiguration = Symbol.for('AIChatConfiguration');
 
 export interface AIChatConfiguration {
     interfaces: AIChatProviders;
@@ -114,6 +144,9 @@ export interface AllowedAIChatModel {
     model: string;
 }
 
+export const AIGenerateSkyboxConfiguration = Symbol.for(
+    'AIGenerateSkyboxConfiguration'
+);
 export interface AIGenerateSkyboxConfiguration {
     interface: AIGenerateSkyboxInterface;
     options: AIGenerateSkyboxConfigurationOptions;
@@ -129,6 +162,9 @@ export interface AIGenerateSkyboxConfigurationOptions {
     allowedSubscriptionTiers: true | string[];
 }
 
+export const AIGenerateImageConfiguration = Symbol.for(
+    'AIGenerateImageConfiguration'
+);
 export interface AIGenerateImageConfiguration {
     interfaces: {
         [provider: string]: AIImageInterface;
@@ -196,6 +232,7 @@ export interface AIChatProviders {
     [provider: string]: AIChatInterface;
 }
 
+export const AIHumeConfiguration = Symbol.for('AIHumeConfiguration');
 export interface AIHumeConfiguration {
     /**
      * The interface that should be used for Hume.
@@ -209,6 +246,7 @@ export interface AIHumeConfiguration {
     config: HumeConfig | null;
 }
 
+export const AISloydConfiguration = Symbol.for('AISloydConfiguration');
 export interface AISloydConfiguration {
     /**
      * The interface that should be used for sloyd.ai.
