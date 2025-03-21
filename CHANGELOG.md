@@ -12,6 +12,12 @@
     -   Requires the `ENABLE_DOM` environment variable to be set to `true` either during build or when running the server.
     -   Additionally requires that the `VM_ORIGIN` environment variable is set to something other than where the CasualOS frontend is served from (should serve the same files, but be a different origin for security purposes).
 
+### :rocket: Features
+
+-   Added an error dialog to display error messages when adding a record to a studio fails.
+    -   Improved the `createRecord` method to handle errors and show a dialog with the appropriate error message.
+    -   This ensures users receive clear feedback when record creation encounters issues, enhancing the overall user experience.
+
 ### :bug: Bug Fixes
 
 -   Improved error handling for `ai.generateImage()` requests with unacceptable parameters.
