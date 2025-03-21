@@ -152,7 +152,7 @@
             </md-app-content>
         </md-app>
 
-        <md-dialog :md-active.sync="showCreateStudio">
+        <md-dialog :md-active.sync="showCreateStudio" @keypress.enter="createStudio()">
             <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
@@ -167,13 +167,13 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <md-dialog :md-active.sync="showCreateRecord">
+        <md-dialog :md-active.sync="showCreateRecord" @keypress.enter="createRecord()">
             <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
                     <md-field>
                         <label>Record Name</label>
-                        <md-input v-model="recordName" required></md-input>
+                        <md-input v-model="recordName" required ref="recordInput"></md-input>
                     </md-field>
 
                     <md-field>
@@ -193,6 +193,18 @@
             </md-dialog-content>
             <md-dialog-actions>
                 <md-button class="md-primary" @click="createRecord()">Create</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showErrorDialog">
+            <md-dialog-title>Error</md-dialog-title>
+
+            <md-dialog-content>
+                <p>{{ errorMessage }}</p>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="closeErrorDialog">Close</md-button>
             </md-dialog-actions>
         </md-dialog>
 

@@ -24,9 +24,12 @@ export default class AuthApp extends Vue {
     loadingStudios: boolean = false;
     showCreateStudio: boolean = false;
     showCreateRecord: boolean = false;
+    showErrorDialog: boolean = false;
+
     records: any[] = [];
     studios: any[] = [];
 
+    errorMessage: string = '';
     recordName: string = '';
     studioName: string = '';
     userId: string = '';
@@ -85,12 +88,14 @@ export default class AuthApp extends Vue {
         this.showRecords = false;
         this.showCreateStudio = false;
         this.showCreateRecord = false;
+        this.showErrorDialog = false;
         this.loadingRecords = false;
         this.loadingStudios = false;
         this.records = [];
         this.studios = [];
         this.studioName = '';
         this.recordName = '';
+        this.errorMessage = '';
         this.userId = '';
         this.createRecordStudioId = null;
         this.logoUrl = null;
@@ -135,39 +140,61 @@ export default class AuthApp extends Vue {
         this.createRecordStudioId = studioId ?? '';
     }
 
+    showError(message: string) {
+        this.showErrorDialog = true;
+        this.errorMessage = message;
+    }
+    closeErrorDialog() {
+        this.showErrorDialog = false;
+        this.errorMessage = '';
+    }
+
     async createStudio() {
-        this.showCreateStudio = false;
-        const comId = authManager.getComIdFromUrl();
-        const result = await authManager.client.createStudio({
-            displayName: this.studioName,
-            ownerStudioComId: comId,
-        });
-        await this.loadStudios();
+        try {
+            this.showCreateStudio = false;
+            const comId = authManager.getComIdFromUrl();
+            const result = await authManager.client.createStudio({
+                displayName: this.studioName,
+                ownerStudioComId: comId,
+            });
+            await this.loadStudios();
+        } catch (error) {
+            this.showError(error.message);
+        }
     }
 
     async createRecord() {
-        this.showCreateRecord = false;
-        let request: Omit<CreateRecordRequest, 'userId'> = {
-            recordName: this.recordName,
-        };
+        try {
+            this.showCreateRecord = false;
+            let request: Omit<CreateRecordRequest, 'userId'> = {
+                recordName: this.recordName,
+            };
 
-        if (this.createRecordStudioId) {
-            request['studioId'] = this.createRecordStudioId;
-        } else {
-            request['ownerId'] = authManager.userId;
-        }
-
-        await authManager.client.createRecord(request);
-
-        if (this.createRecordStudioId) {
-            const studio = this.studios.find(
-                (s) => s.studioId === this.createRecordStudioId
-            );
-            if (studio) {
-                await this.onExpandStudio(studio);
+            if (this.createRecordStudioId) {
+                request['studioId'] = this.createRecordStudioId;
+            } else {
+                request['ownerId'] = authManager.userId;
             }
-        } else {
-            await this.loadRecords();
+
+            const response = await authManager.client.createRecord(request);
+
+            if ('errorMessage' in response && response.errorMessage) {
+                throw new Error(response.errorMessage);
+            }
+
+            if (this.createRecordStudioId) {
+                const studio = this.studios.find(
+                    (s) => s.studioId === this.createRecordStudioId
+                );
+                if (studio) {
+                    await this.onExpandStudio(studio);
+                }
+            } else {
+                await this.loadRecords();
+            }
+        } catch (error) {
+            console.error(error);
+            this.showError(error.message);
         }
     }
 
@@ -216,7 +243,7 @@ export default class AuthApp extends Vue {
             const studios = result.studios;
             this.studios = studios.map((s) => ({
                 ...s,
-                records: [],
+                records: [] as any[],
                 loading: false,
                 open:
                     this.$route.name === 'studio' &&
