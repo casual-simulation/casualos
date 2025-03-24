@@ -140,11 +140,6 @@ export default class AuthApp extends Vue {
         this.createRecordStudioId = studioId ?? '';
     }
 
-    showError(message: string) {
-        this.errorMessage = '';
-        this.errorMessage = message;
-    }
-
     async createStudio() {
         try {
             const comId = authManager.getComIdFromUrl();
@@ -162,7 +157,7 @@ export default class AuthApp extends Vue {
             await this.loadStudios();
         } catch (error) {
             console.error(error);
-            this.showError(error.message);
+            this.errorMessage = error.message;
         }
     }
 
@@ -199,7 +194,7 @@ export default class AuthApp extends Vue {
             }
         } catch (error) {
             console.error(error);
-            this.showError(error.message);
+            this.errorMessage = error.message;
         }
     }
 
