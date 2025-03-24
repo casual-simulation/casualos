@@ -1451,10 +1451,44 @@ export class RecordsController {
                 role = userAssignment.role;
             }
 
+            const resultMembers: ListedStudioMember[] = await Promise.all(
+                members.map(async (m) => {
+                    if (this._privo && m.user.privoServiceId) {
+                        const result = await this._privo.getUserInfo(
+                            m.user.privoServiceId
+                        );
+                        return {
+                            studioId: m.studioId,
+                            userId: m.userId,
+                            isPrimaryContact: m.isPrimaryContact,
+                            role: m.role,
+                            user: {
+                                id: m.user.id,
+                                name: result.givenName,
+                                displayName: result.displayName,
+                            },
+                        };
+                    } else {
+                        return {
+                            studioId: m.studioId,
+                            userId: m.userId,
+                            isPrimaryContact: m.isPrimaryContact,
+                            role: m.role,
+                            user: {
+                                id: m.user.id,
+                                name: m.user.name,
+                                email: m.user.email,
+                                phoneNumber: m.user.phoneNumber,
+                            },
+                        };
+                    }
+                })
+            );
+
             if (role === 'admin') {
                 return {
                     success: true,
-                    members: members.map((m) => ({
+                    members: resultMembers.map((m) => ({
                         studioId: m.studioId,
                         userId: m.userId,
                         isPrimaryContact: m.isPrimaryContact,
@@ -1464,6 +1498,7 @@ export class RecordsController {
                             name: m.user.name,
                             email: m.user.email,
                             phoneNumber: m.user.phoneNumber,
+                            displayName: m.user.displayName,
                         },
                     })),
                 };
@@ -1471,7 +1506,7 @@ export class RecordsController {
 
             return {
                 success: true,
-                members: members.map((m) => ({
+                members: resultMembers.map((m) => ({
                     studioId: m.studioId,
                     userId: m.userId,
                     isPrimaryContact: m.isPrimaryContact,
@@ -1479,6 +1514,7 @@ export class RecordsController {
                     user: {
                         id: m.user.id,
                         name: m.user.name,
+                        displayName: m.user.displayName,
                     },
                 })),
             };
@@ -2183,6 +2219,7 @@ export interface ListedStudioMemberUser {
     name: string;
     email?: string;
     phoneNumber?: string;
+    displayName?: string;
 }
 
 export interface ListStudioMembersFailure {

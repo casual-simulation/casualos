@@ -34,7 +34,7 @@
                 <md-table-row v-for="member of members" :key="member.userId">
                     <md-table-cell>{{ member.user.name || member.user.email }}</md-table-cell>
                     <md-table-cell>{{
-                        member.user.email || member.user.phoneNumber
+                        member.user.email || member.user.phoneNumber || member.user.displayName
                     }}</md-table-cell>
                     <md-table-cell>{{ member.role }}</md-table-cell>
                     <md-table-cell>{{ member.isPrimaryContact }}</md-table-cell>

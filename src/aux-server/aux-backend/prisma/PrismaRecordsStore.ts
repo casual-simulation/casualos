@@ -631,6 +631,7 @@ export class PrismaRecordsStore implements RecordsStore {
                         name: true,
                         email: true,
                         phoneNumber: true,
+                        privoServiceId: true,
                     },
                 },
                 role: true,
@@ -661,6 +662,7 @@ export class PrismaRecordsStore implements RecordsStore {
                     name: a.user.name,
                     email: a.user.email,
                     phoneNumber: a.user.phoneNumber,
+                    privoServiceId: a.user.privoServiceId,
                 },
             };
 

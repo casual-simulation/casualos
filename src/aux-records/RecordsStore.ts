@@ -478,6 +478,11 @@ export interface ListedStudioAssignmentUser {
      * The phone number of the user.
      */
     phoneNumber: string;
+
+    /**
+     * The ID of the privo service that the user is associated with.
+     */
+    privoServiceId: string | null;
 }
 
 /**
