@@ -153,11 +153,7 @@
         </md-app>
 
         <md-dialog :md-active.sync="showCreateStudio">
-            <md-dialog-title
-                >Add Studio<span v-if="errorMessage" class="error-text">
-                    - {{ errorMessage }}</span
-                ></md-dialog-title
-            >
+            <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>
@@ -166,17 +162,15 @@
                 </md-field>
             </md-dialog-content>
 
+            <span v-if="errorMessage" class="error-text"> - {{ errorMessage }}</span>
+
             <md-dialog-actions>
                 <md-button @click="createStudio()">Create</md-button>
             </md-dialog-actions>
         </md-dialog>
 
         <md-dialog :md-active.sync="showCreateRecord">
-            <md-dialog-title
-                >Add Record<span v-if="errorMessage" class="error-text">
-                    - {{ errorMessage }}</span
-                ></md-dialog-title
-            >
+            <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
                     <md-field>
@@ -197,6 +191,8 @@
                             </md-option>
                         </md-select>
                     </md-field>
+
+                    <span v-if="errorMessage" class="error-text"> - {{ errorMessage }}</span>
                 </form>
             </md-dialog-content>
             <md-dialog-actions>

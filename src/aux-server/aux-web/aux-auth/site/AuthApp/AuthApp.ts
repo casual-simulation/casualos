@@ -24,7 +24,6 @@ export default class AuthApp extends Vue {
     loadingStudios: boolean = false;
     showCreateStudio: boolean = false;
     showCreateRecord: boolean = false;
-    showErrorDialog: boolean = false;
 
     records: any[] = [];
     studios: any[] = [];
@@ -88,7 +87,6 @@ export default class AuthApp extends Vue {
         this.showRecords = false;
         this.showCreateStudio = false;
         this.showCreateRecord = false;
-        this.showErrorDialog = false;
         this.loadingRecords = false;
         this.loadingStudios = false;
         this.records = [];
