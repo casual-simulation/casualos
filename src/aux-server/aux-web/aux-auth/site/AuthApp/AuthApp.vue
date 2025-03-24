@@ -162,7 +162,7 @@
                 </md-field>
             </md-dialog-content>
 
-            <span v-if="errorMessage" class="error-text"> - {{ errorMessage }}</span>
+            <span v-if="errorMessage" class="md-error"> - {{ errorMessage }}</span>
 
             <md-dialog-actions>
                 <md-button @click="createStudio()">Create</md-button>
@@ -192,7 +192,7 @@
                         </md-select>
                     </md-field>
 
-                    <span v-if="errorMessage" class="error-text"> - {{ errorMessage }}</span>
+                    <span v-if="errorMessage" class="md-error"> - {{ errorMessage }}</span>
                 </form>
             </md-dialog-content>
             <md-dialog-actions>
