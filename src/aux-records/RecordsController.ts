@@ -50,6 +50,10 @@ import type { SystemNotificationMessenger } from './SystemNotificationMessenger'
 import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import type {
+    PrivoClientInterface,
+    PrivoGetUserInfoResponse,
+} from './PrivoClient';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -59,6 +63,7 @@ export interface RecordsControllerConfig {
     metrics: MetricsStore;
     config: ConfigurationStore;
     messenger: SystemNotificationMessenger | null;
+    privo: PrivoClientInterface | null;
 }
 
 /**
@@ -70,6 +75,7 @@ export class RecordsController {
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
     private _messenger: SystemNotificationMessenger | null;
+    private _privo: PrivoClientInterface | null;
 
     constructor(config: RecordsControllerConfig) {
         this._store = config.store;
@@ -77,6 +83,7 @@ export class RecordsController {
         this._metrics = config.metrics;
         this._config = config.config;
         this._messenger = config.messenger;
+        this._privo = config.privo;
     }
 
     /**
@@ -1532,21 +1539,66 @@ export class RecordsController {
                     request.addedEmail ? 'email' : 'phone'
                 );
 
-                if (!addedUser) {
+                if (addedUser) {
+                    addedUserId = addedUser.id;
+                }
+            }
+
+            if (
+                !addedUserId &&
+                this._privo &&
+                (request.addedEmail ||
+                    request.addedPhoneNumber ||
+                    request.addedDisplayName)
+            ) {
+                const privoServiceId = await this._privo.lookupServiceId({
+                    displayName: request.addedDisplayName ?? undefined,
+                    email: request.addedEmail ?? undefined,
+                    phoneNumber: request.addedPhoneNumber ?? undefined,
+                });
+
+                if (privoServiceId) {
+                    const user = await this._auth.findUserByPrivoServiceId(
+                        privoServiceId
+                    );
+                    if (user) {
+                        addedUserId = user.id;
+                    }
+                }
+            }
+
+            if (!addedUserId) {
+                if (
+                    this._privo &&
+                    !request.addedEmail &&
+                    !request.addedPhoneNumber &&
+                    !request.addedUserId &&
+                    !request.addedDisplayName
+                ) {
                     return {
                         success: false,
-                        errorCode: 'user_not_found',
-                        errorMessage: 'The user was not able to be found.',
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'You must provide a display name, email, phone number, or user ID to add a studio member.',
+                    };
+                } else if (
+                    !this._privo &&
+                    !request.addedEmail &&
+                    !request.addedPhoneNumber &&
+                    !request.addedUserId
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'You must provide an email, phone number, or user ID to add a studio member.',
                     };
                 }
 
-                addedUserId = addedUser.id;
-            } else {
                 return {
                     success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'You must provide an email, phone number, or user ID to add a studio member.',
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not able to be found.',
                 };
             }
 
@@ -2164,6 +2216,11 @@ export interface AddStudioMemberRequest {
      * The ID of the user that should be added to the studio.
      */
     addedUserId?: string;
+
+    /**
+     * The display name of the user that should be added to the studio.
+     */
+    addedDisplayName?: string;
 
     /**
      * The role that the added user should have in the studio.

@@ -3705,6 +3705,203 @@ describe('RecordsController', () => {
             ]);
         });
 
+        describe('privo', () => {
+            let privo: PrivoClientInterface;
+            let privoMock: jest.MockedObject<PrivoClientInterface>;
+
+            beforeEach(async () => {
+                privo = privoMock = {
+                    checkEmail: jest.fn(),
+                    checkDisplayName: jest.fn(),
+                    createAdultAccount: jest.fn(),
+                    createChildAccount: jest.fn(),
+                    generateAuthorizationUrl: jest.fn(),
+                    generateLogoutUrl: jest.fn(),
+                    getUserInfo: jest.fn(),
+                    processAuthorizationCallback: jest.fn(),
+                    resendConsentRequest: jest.fn(),
+                    lookupServiceId: jest.fn(),
+                };
+
+                manager = new RecordsController({
+                    store,
+                    auth: store,
+                    metrics: store,
+                    config: store,
+                    messenger: store,
+                    privo,
+                });
+            });
+
+            it('should be able to add a user by their display name', async () => {
+                await store.saveNewUser({
+                    id: 'userId4',
+                    name: 'test user 4',
+                    privoServiceId: 'serviceId',
+                    email: null,
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+                privoMock.lookupServiceId.mockResolvedValueOnce('serviceId');
+
+                const result = await manager.addStudioMember({
+                    studioId: studioId,
+                    userId: 'userId',
+                    addedDisplayName: 'testUser',
+                    role: 'member',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                const assignments = await store.listStudioAssignments(studioId);
+                expect(assignments).toEqual([
+                    {
+                        studioId: studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId: studioId,
+                        userId: 'userId4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'userId4',
+                            name: 'test user 4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoMock.lookupServiceId).toHaveBeenCalledWith({
+                    displayName: 'testUser',
+                });
+            });
+
+            it('should be able to add a privo user by their email', async () => {
+                await store.saveNewUser({
+                    id: 'userId4',
+                    name: 'test user 4',
+                    privoServiceId: 'serviceId',
+                    email: null,
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+                privoMock.lookupServiceId.mockResolvedValueOnce('serviceId');
+
+                const result = await manager.addStudioMember({
+                    studioId: studioId,
+                    userId: 'userId',
+                    addedEmail: 'test4@example.com',
+                    role: 'member',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                const assignments = await store.listStudioAssignments(studioId);
+                expect(assignments).toEqual([
+                    {
+                        studioId: studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId: studioId,
+                        userId: 'userId4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'userId4',
+                            name: 'test user 4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoMock.lookupServiceId).toHaveBeenCalledWith({
+                    email: 'test4@example.com',
+                });
+            });
+
+            it('should be able to add a privo user by their phone', async () => {
+                await store.saveNewUser({
+                    id: 'userId4',
+                    name: 'test user 4',
+                    privoServiceId: 'serviceId',
+                    email: null,
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+                privoMock.lookupServiceId.mockResolvedValueOnce('serviceId');
+
+                const result = await manager.addStudioMember({
+                    studioId: studioId,
+                    userId: 'userId',
+                    addedPhoneNumber: '+123456',
+                    role: 'member',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                const assignments = await store.listStudioAssignments(studioId);
+                expect(assignments).toEqual([
+                    {
+                        studioId: studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId: studioId,
+                        userId: 'userId4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'userId4',
+                            name: 'test user 4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoMock.lookupServiceId).toHaveBeenCalledWith({
+                    phoneNumber: '+123456',
+                });
+            });
+        });
+
         it('should return a not_authorized error if the user is not authorized', async () => {
             await store.removeStudioAssignment(studioId, 'userId');
             await store.addStudioAssignment({

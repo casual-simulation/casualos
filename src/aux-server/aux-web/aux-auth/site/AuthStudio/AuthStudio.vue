@@ -188,7 +188,7 @@
             </md-dialog-content>
             <md-dialog-content v-else>
                 <md-field :class="addressFieldClass">
-                    <label>Email</label>
+                    <label>Email <span v-if="usePrivoLogin">or Display Name</span></label>
                     <md-input v-model="addMemberEmail" />
                     <span v-if="addMemberErrorCode === 'user_not_found'" class="md-error"
                         >No user with this email was found.</span
