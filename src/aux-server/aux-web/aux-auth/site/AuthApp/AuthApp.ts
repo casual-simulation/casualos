@@ -132,40 +132,44 @@ export default class AuthApp extends Vue {
     startCreateStudio() {
         this.showCreateStudio = true;
         this.studioName = '';
+        this.errorMessage = '';
     }
 
     startCreateRecord(studioId?: string) {
         this.showCreateRecord = true;
         this.recordName = '';
+        this.errorMessage = '';
         this.createRecordStudioId = studioId ?? '';
     }
 
     showError(message: string) {
-        this.showErrorDialog = true;
-        this.errorMessage = message;
-    }
-    closeErrorDialog() {
-        this.showErrorDialog = false;
         this.errorMessage = '';
+        this.errorMessage = message;
     }
 
     async createStudio() {
         try {
-            this.showCreateStudio = false;
             const comId = authManager.getComIdFromUrl();
-            const result = await authManager.client.createStudio({
+            const response = await authManager.client.createStudio({
                 displayName: this.studioName,
                 ownerStudioComId: comId,
             });
+            if (response.success == false) {
+                throw new Error(response.errorMessage);
+            }
+
+            this.showCreateStudio = false;
+            this.errorMessage = '';
+
             await this.loadStudios();
         } catch (error) {
+            console.error(error);
             this.showError(error.message);
         }
     }
 
     async createRecord() {
         try {
-            this.showCreateRecord = false;
             let request: Omit<CreateRecordRequest, 'userId'> = {
                 recordName: this.recordName,
             };
@@ -178,9 +182,12 @@ export default class AuthApp extends Vue {
 
             const response = await authManager.client.createRecord(request);
 
-            if ('errorMessage' in response && response.errorMessage) {
+            if (response.success == false) {
                 throw new Error(response.errorMessage);
             }
+
+            this.showCreateRecord = false;
+            this.errorMessage = '';
 
             if (this.createRecordStudioId) {
                 const studio = this.studios.find(
