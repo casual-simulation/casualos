@@ -156,13 +156,18 @@
             <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
-                <md-field>
+                <md-field :class="studioNameFieldClass">
                     <label>Studio Name</label>
-                    <md-input v-model="studioName"></md-input>
+                    <md-input v-model="studioName" required></md-input>
+                    <span v-if="showEnterStudioNameError" class="md-error"
+                        >Studio name is required</span
+                    >
+                    <span v-if="showInvalidStudioNameError" class="md-error">{{
+                        errorMessage
+                    }}</span>
+                    <span v-if="showCreateStudioError" class="md-error">{{ errorMessage }}</span>
                 </md-field>
             </md-dialog-content>
-
-            <span v-if="errorMessage" class="md-error"> - {{ errorMessage }}</span>
 
             <md-dialog-actions>
                 <md-button @click="createStudio()">Create</md-button>
@@ -173,11 +178,18 @@
             <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
-                    <md-field>
+                    <md-field :class="recordNameFieldClass">
                         <label>Record Name</label>
                         <md-input v-model="recordName" required ref="recordInput"></md-input>
+                        <span v-if="showEnterRecordNameError" class="md-error"
+                            >Please enter a record name</span
+                        >
+                        <span
+                            v-if="showInvalidRecordNameError || showCreateRecordError"
+                            class="md-error"
+                            >{{ errorMessage }}</span
+                        >
                     </md-field>
-
                     <md-field>
                         <label>Studio</label>
                         <md-select v-model="createRecordStudioId">
@@ -191,8 +203,6 @@
                             </md-option>
                         </md-select>
                     </md-field>
-
-                    <span v-if="errorMessage" class="md-error"> - {{ errorMessage }}</span>
                 </form>
             </md-dialog-content>
             <md-dialog-actions>

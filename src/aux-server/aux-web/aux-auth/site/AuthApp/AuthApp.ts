@@ -28,6 +28,11 @@ export default class AuthApp extends Vue {
     records: any[] = [];
     studios: any[] = [];
 
+    showEnterStudioNameError: boolean = false;
+    showCreateStudioError: boolean = false;
+    showEnterRecordNameError: boolean = false;
+    showInvalidRecordNameError: boolean = false;
+
     errorMessage: string = '';
     recordName: string = '';
     studioName: string = '';
@@ -39,6 +44,18 @@ export default class AuthApp extends Vue {
     displayName: string = null;
     comId: string = null;
     usePrivoLogin: boolean = false;
+
+    get studioNameFieldClass() {
+        return this.showEnterStudioNameError || this.showCreateStudioError
+            ? 'md-invalid'
+            : '';
+    }
+
+    get recordNameFieldClass() {
+        return this.showEnterRecordNameError || this.showInvalidRecordNameError
+            ? 'md-invalid'
+            : '';
+    }
 
     get title() {
         return comId ?? location.hostname;
@@ -130,41 +147,68 @@ export default class AuthApp extends Vue {
     startCreateStudio() {
         this.showCreateStudio = true;
         this.studioName = '';
-        this.errorMessage = '';
+        this.showEnterStudioNameError = false;
+        this.showCreateStudioError = false;
     }
 
     startCreateRecord(studioId?: string) {
         this.showCreateRecord = true;
         this.recordName = '';
-        this.errorMessage = '';
         this.createRecordStudioId = studioId ?? '';
+        this.showEnterRecordNameError = false;
+        this.showInvalidRecordNameError = false;
     }
 
     async createStudio() {
         try {
+            this.showEnterStudioNameError = false;
+            this.showCreateStudioError = false;
+            this.errorMessage = '';
+
+            if (!this.studioName) {
+                this.showEnterStudioNameError = true;
+                return;
+            }
+
             const comId = authManager.getComIdFromUrl();
             const response = await authManager.client.createStudio({
                 displayName: this.studioName,
                 ownerStudioComId: comId,
             });
+
             if (response.success == false) {
-                throw new Error(response.errorMessage);
+                this.errorMessage = response.errorMessage;
+                if (response.errorCode === 'invalid_key') {
+                    this.showCreateStudioError = true;
+                }
+                return;
             }
 
             this.showCreateStudio = false;
-            this.errorMessage = '';
-
             await this.loadStudios();
         } catch (error) {
-            console.error(error);
+            console.error('Studio creation failed:', error);
             this.errorMessage = error.message;
+            this.showCreateStudioError = true;
         }
     }
 
     async createRecord() {
         try {
+            this.showEnterRecordNameError = false;
+            this.showInvalidRecordNameError = false;
+            this.errorMessage = '';
+
+            if (!this.recordName) {
+                this.showEnterRecordNameError = true;
+                return;
+            }
+
             let request: Omit<CreateRecordRequest, 'userId'> = {
                 recordName: this.recordName,
+                ...(this.createRecordStudioId
+                    ? { studioId: this.createRecordStudioId }
+                    : { ownerId: authManager.userId }),
             };
 
             if (this.createRecordStudioId) {
@@ -176,12 +220,17 @@ export default class AuthApp extends Vue {
             const response = await authManager.client.createRecord(request);
 
             if (response.success == false) {
-                throw new Error(response.errorMessage);
+                this.errorMessage = response.errorMessage;
+                if (response.errorCode === 'invalid_key') {
+                    this.showInvalidRecordNameError = true;
+                } else if (response.errorCode === 'record_already_exists') {
+                    this.errorMessage = 'Record name already exists';
+                    this.showInvalidRecordNameError = true;
+                }
+                return;
             }
 
             this.showCreateRecord = false;
-            this.errorMessage = '';
-
             if (this.createRecordStudioId) {
                 const studio = this.studios.find(
                     (s) => s.studioId === this.createRecordStudioId
