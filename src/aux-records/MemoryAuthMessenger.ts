@@ -1,5 +1,5 @@
-import { AddressType } from './AuthStore';
-import { AuthMessenger, SendCodeResult } from './AuthMessenger';
+import type { AddressType } from './AuthStore';
+import type { AuthMessenger, SendCodeResult } from './AuthMessenger';
 
 export class MemoryAuthMessenger implements AuthMessenger {
     private _messages: {

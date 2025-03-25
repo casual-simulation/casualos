@@ -1,4 +1,4 @@
-import {
+import type {
     InvalidSubscriptionTierError,
     NotAuthorizedError,
     NotLoggedInError,
@@ -7,45 +7,45 @@ import {
     ServerError,
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
-import {
+import type {
     AIChatInterface,
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
     AIChatMessage,
 } from './AIChatInterface';
-import {
+import type {
     AIGenerateSkyboxInterface,
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
-import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
-import { MetricsStore, SubscriptionFilter } from './MetricsStore';
-import { ConfigurationStore } from './ConfigurationStore';
+import type { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
+import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
+import type { ConfigurationStore } from './ConfigurationStore';
 import {
     getHumeAiFeatures,
     getSloydAiFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
-import { PolicyStore } from './PolicyStore';
-import {
+import type { PolicyStore } from './PolicyStore';
+import type {
     AIHumeInterface,
     AIHumeInterfaceGetAccessTokenFailure,
 } from './AIHumeInterface';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import {
+import type {
     AISloydInterface,
     AISloydInterfaceCreateModelFailure,
     AISloydInterfaceCreateModelSuccess,
-    AISloydInterfaceEditModelSuccess,
 } from './AISloydInterface';
+import { AISloydInterfaceEditModelSuccess } from './AISloydInterface';
 import { fromByteArray } from 'base64-js';
-import {
+import type {
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
-import { DenialReason } from '@casual-simulation/aux-common';
-import { HumeConfig, RecordsStore } from './RecordsStore';
+import type { DenialReason } from '@casual-simulation/aux-common';
+import type { HumeConfig, RecordsStore } from './RecordsStore';
 
 const TRACE_NAME = 'AIController';
 

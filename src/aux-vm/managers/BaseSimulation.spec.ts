@@ -1,9 +1,9 @@
 import { BaseSimulation } from './BaseSimulation';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { Subject } from 'rxjs';
+import type { LocalActions } from '@casual-simulation/aux-common';
 import {
     createPrecalculatedBot,
-    LocalActions,
     stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';

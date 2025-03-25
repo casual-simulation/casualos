@@ -1,4 +1,5 @@
-import { Observable, BehaviorSubject, Subject, pipe } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { BehaviorSubject, Subject, pipe } from 'rxjs';
 import { debounceTime, filter, tap } from 'rxjs/operators';
 import { ReconnectableSocket } from './ReconnectableSocket';
 

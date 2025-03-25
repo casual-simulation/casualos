@@ -1,9 +1,7 @@
+import type { Color, Vector3, Sphere } from '@casual-simulation/three';
 import {
     Object3D,
-    Color,
-    Vector3,
     ArrowHelper,
-    Sphere,
     Plane,
     Mesh,
     PlaneGeometry,
@@ -15,13 +13,13 @@ import {
     BufferAttribute,
 } from '@casual-simulation/three';
 
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
     isMinimized,
-    BotCalculationContext,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
-import { AuxBot3D } from './AuxBot3D';
-import { DimensionGroup3D } from './DimensionGroup3D';
+import type { AuxBot3D } from './AuxBot3D';
+import type { DimensionGroup3D } from './DimensionGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import {
     disposeMaterial,
@@ -69,7 +67,7 @@ export class Wall3D extends Object3D {
         this._sourceBot3d = sourceBot3d;
         this._targetBot3d = targetBot3d;
 
-        var geometry = new PlaneGeometry(5, 20);
+        let geometry = new PlaneGeometry(5, 20);
         let material = new MeshBasicMaterial({
             color: Wall3D.DefaultColor.getHex(),
             side: DoubleSide,
@@ -217,7 +215,7 @@ export class Wall3D extends Object3D {
             this.lastSourceWorkspace = sourceWorkspace.position.clone();
             this.lastTargetWorkspace = targetWorkspace.position.clone();
 
-            var geometry = new BufferGeometry();
+            let geometry = new BufferGeometry();
 
             if (width === undefined || width <= 0) {
                 // if width is null or 0
@@ -267,7 +265,7 @@ export class Wall3D extends Object3D {
 
                 this._wallObject.geometry = geometry;
             } else {
-                var angleDeg =
+                let angleDeg =
                     (Math.atan2(dir.y - 0, dir.x - 0) * 180) / Math.PI;
 
                 let yChange = 1 - angleDeg / 90;

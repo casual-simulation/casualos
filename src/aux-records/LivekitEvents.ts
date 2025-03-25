@@ -1,4 +1,4 @@
-import { ServerError } from '@casual-simulation/aux-common/Errors';
+import type { ServerError } from '@casual-simulation/aux-common/Errors';
 
 export type IssueMeetTokenResult =
     | IssueMeetTokenSuccess

@@ -1,10 +1,10 @@
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
-import {
+import type {
     PackageRecordsStore,
     PackageRecord,
     PackageSubscriptionMetrics,
 } from './PackageRecordsStore';
-import { SubscriptionFilter } from '../MetricsStore';
+import type { SubscriptionFilter } from '../MetricsStore';
 
 /**
  * A Memory-based implementation of the PackageRecordsStore.

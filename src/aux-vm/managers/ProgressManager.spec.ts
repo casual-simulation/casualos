@@ -1,6 +1,6 @@
 import { ProgressManager } from './ProgressManager';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { ProgressMessage } from '@casual-simulation/aux-common';
+import type { ProgressMessage } from '@casual-simulation/aux-common';
 
 describe('ProgressManager', () => {
     let subject: ProgressManager;

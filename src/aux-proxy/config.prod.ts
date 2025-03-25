@@ -1,4 +1,4 @@
-import { Config } from './config';
+import type { Config } from './config';
 
 const loginTimeout = process.env.LOGIN_TIMEOUT;
 const secret = process.env.DIRECTORY_TOKEN_SECRET;

@@ -1,10 +1,9 @@
-import {
+import type {
     NotificationPushSubscription,
     NotificationRecord,
     NotificationRecordsStore,
     NotificationSubscription,
     NotificationSubscriptionMetrics,
-    PUSH_SUBSCRIPTION_SCHEMA,
     PushSubscriptionUser,
     SaveSubscriptionResult,
     SentNotification,
@@ -12,16 +11,17 @@ import {
     SubscriptionFilter,
     UserPushSubscription,
 } from '@casual-simulation/aux-records';
-import {
+import { PUSH_SUBSCRIPTION_SCHEMA } from '@casual-simulation/aux-records';
+import type {
     ListCrudStoreSuccess,
     ListCrudStoreByMarkerRequest,
 } from '@casual-simulation/aux-records/crud';
-import {
+import type {
     Prisma,
     PrismaClient,
     NotificationSubscription as PrismaNotificationSubscription,
 } from './generated';
-import { PrismaMetricsStore } from './PrismaMetricsStore';
+import type { PrismaMetricsStore } from './PrismaMetricsStore';
 import { convertToDate } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
@@ -108,31 +108,27 @@ export class PrismaNotificationRecordsStore
     async saveSubscription(
         subscription: NotificationSubscription
     ): Promise<SaveSubscriptionResult> {
-        try {
-            await this._client.notificationSubscription.upsert({
-                where: {
-                    id: subscription.id,
-                },
-                create: {
-                    id: subscription.id,
-                    recordName: subscription.recordName,
-                    notificationAddress: subscription.notificationAddress,
-                    userId: subscription.userId,
-                    pushSubscriptionId: subscription.pushSubscriptionId,
-                },
-                update: {
-                    recordName: subscription.recordName,
-                    notificationAddress: subscription.notificationAddress,
-                    userId: subscription.userId,
-                    pushSubscriptionId: subscription.pushSubscriptionId,
-                },
-            });
-            return {
-                success: true,
-            };
-        } catch (err) {
-            throw err;
-        }
+        await this._client.notificationSubscription.upsert({
+            where: {
+                id: subscription.id,
+            },
+            create: {
+                id: subscription.id,
+                recordName: subscription.recordName,
+                notificationAddress: subscription.notificationAddress,
+                userId: subscription.userId,
+                pushSubscriptionId: subscription.pushSubscriptionId,
+            },
+            update: {
+                recordName: subscription.recordName,
+                notificationAddress: subscription.notificationAddress,
+                userId: subscription.userId,
+                pushSubscriptionId: subscription.pushSubscriptionId,
+            },
+        });
+        return {
+            success: true,
+        };
     }
 
     @traced(TRACE_NAME)

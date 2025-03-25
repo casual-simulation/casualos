@@ -1,3 +1,7 @@
+import type {
+    MemoryPartition,
+    AuxPartitions,
+} from '@casual-simulation/aux-common';
 import {
     botAdded,
     createBot,
@@ -7,22 +11,22 @@ import {
     addState,
     runScript,
     ON_RUN_ACTION_NAME,
-    MemoryPartition,
     createMemoryPartition,
-    AuxPartitions,
     iteratePartitions,
 } from '@casual-simulation/aux-common';
-import {
-    AuxRuntime,
+import type {
     RuntimeActions,
     ScriptError,
 } from '@casual-simulation/aux-runtime';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
-import {
+import type {
     DeviceAction,
+    RemoteActions,
+} from '@casual-simulation/aux-common';
+import {
     remote,
     remoteResult,
-    RemoteActions,
     remoteError,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
@@ -30,7 +34,8 @@ import {
     waitAsync,
     wait,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import { SubscriptionLike, Subject } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -90,6 +95,7 @@ describe('AuxHelper', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',

@@ -1,20 +1,20 @@
-import {
-    AIChatInterface,
+import type {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
-import {
+import { AIChatInterface } from './AIChatInterface';
+import type {
     AIGenerateSkyboxInterfaceResponse,
     AIGenerateSkyboxInterfaceRequest,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
 import { AIController } from './AIController';
-import { MemoryStore } from './MemoryStore';
+import type { MemoryStore } from './MemoryStore';
 import {
     asyncIterable,
     asyncIterator,
@@ -28,14 +28,14 @@ import {
 } from './SubscriptionConfiguration';
 import { merge } from 'lodash';
 import { unwind } from '../js-interpreter/InterpreterUtils';
-import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
-import {
+import type { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import type {
     AISloydInterfaceCreateModelRequest,
     AISloydInterfaceCreateModelResponse,
     AISloydInterfaceEditModelRequest,
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
-import { PolicyController } from './PolicyController';
+import type { PolicyController } from './PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';

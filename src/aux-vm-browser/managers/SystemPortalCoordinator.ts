@@ -1,5 +1,9 @@
-import {
+import type {
     Bot,
+    BotTags,
+    SystemPortalPane,
+} from '@casual-simulation/aux-common';
+import {
     calculateBotValue,
     calculateStringTagValue,
     getBotTag,
@@ -38,35 +42,32 @@ import {
     calculateFormattedBotValue,
     SYSTEM_PORTAL_DIFF,
     SYSTEM_PORTAL_DIFF_BOT,
-    BotTags,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     SYSTEM_PORTAL_PANE,
     SHEET_PORTAL,
-    SystemPortalPane,
     getSystemPortalPane,
     getOpenSystemPortalPane,
     isModule,
     parseModule,
 } from '@casual-simulation/aux-common';
+import type { SimulationManager } from '@casual-simulation/aux-vm';
 import {
     BotHelper,
     BotWatcher,
     PortalManager,
     Simulation,
-    SimulationManager,
     UpdatedBotInfo,
 } from '@casual-simulation/aux-vm';
 import { indexOf, isEqual, sortBy, union, unionBy } from 'lodash';
+import type { Observer, SubscriptionLike } from 'rxjs';
 import {
     BehaviorSubject,
     combineLatest,
     merge,
     Observable,
-    Observer,
     Subject,
     Subscription,
-    SubscriptionLike,
     using,
 } from 'rxjs';
 import {
@@ -84,7 +85,7 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
-import { BrowserSimulation } from './BrowserSimulation';
+import type { BrowserSimulation } from './BrowserSimulation';
 
 /**
  * The number of tags that should be processed per time that the search buffer is updated.
@@ -1591,7 +1592,7 @@ export function getSystemArea(system: string): string {
  * @param area The area for the system.
  */
 export function getBotTitle(system: string, area: string): string {
-    return (system ?? '').substring(area.length).replace(/^[\.]/, '');
+    return (system ?? '').substring(area.length).replace(/^[.]/, '');
 }
 
 /**

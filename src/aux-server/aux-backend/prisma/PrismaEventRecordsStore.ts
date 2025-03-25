@@ -1,13 +1,13 @@
-import {
+import type {
     AddEventCountStoreResult,
     EventRecordUpdate,
     EventRecordsStore,
     GetEventCountStoreResult,
     ListEventsStoreResult,
     UpdateEventResult,
-    cleanupObject,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from './generated';
+import { cleanupObject } from '@casual-simulation/aux-records';
+import type { PrismaClient, Prisma } from './generated';
 import { convertMarkers } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

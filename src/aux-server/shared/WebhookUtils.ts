@@ -1,13 +1,15 @@
-import {
+import type {
     SendWebhookAction,
     BotAction,
-    asyncResult,
-    asyncError,
-    convertErrorToCopiableValue,
     BotsState,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
+import {
+    asyncResult,
+    asyncError,
+    convertErrorToCopiableValue,
+} from '@casual-simulation/aux-common';
+import type { Simulation } from '@casual-simulation/aux-vm/managers';
 import axios from 'axios';
 
 /**

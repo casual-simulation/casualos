@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { appManager } from '../../AppManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import vueBotPond from 'vue-filepond';

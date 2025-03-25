@@ -1,4 +1,4 @@
-import {
+import type {
     FileRecordsStore,
     AddFileFailure,
     MarkFileRecordAsUploadedFailure,
@@ -7,20 +7,20 @@ import {
     PresignFileReadFailure,
     GetFileRecordFailure,
 } from './FileRecordsStore';
-import {
+import type {
     NotLoggedInError,
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
-import {
-    RecordsController,
-    ValidatePublicRecordKeyFailure,
-} from './RecordsController';
+import type { ValidatePublicRecordKeyFailure } from './RecordsController';
+import { RecordsController } from './RecordsController';
 import { getExtension, getType } from 'mime';
-import {
+import type {
     AuthorizeSubjectFailure,
     PolicyController,
+} from './PolicyController';
+import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
@@ -31,12 +31,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
-import { MetricsStore } from './MetricsStore';
-import { ConfigurationStore } from './ConfigurationStore';
+import type { MetricsStore } from './MetricsStore';
+import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { UserRole } from './AuthStore';
+import type { UserRole } from './AuthStore';
 
 const TRACE_NAME = 'FileRecordsController';
 

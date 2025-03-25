@@ -1,9 +1,13 @@
-import { ConnectionClient, ClientConnectionState } from './ConnectionClient';
-import { Observable, Subject, NEVER, BehaviorSubject } from 'rxjs';
+import type {
+    ConnectionClient,
+    ClientConnectionState,
+} from './ConnectionClient';
+import type { Observable } from 'rxjs';
+import { Subject, NEVER, BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
-import { ConnectionInfo } from '../common/ConnectionInfo';
-import { WebsocketErrorInfo, WebsocketMessage } from './WebsocketEvents';
-import { ConnectionIndicator } from '../common';
+import type { ConnectionInfo } from '../common/ConnectionInfo';
+import type { WebsocketErrorInfo, WebsocketMessage } from './WebsocketEvents';
+import type { ConnectionIndicator } from '../common';
 
 export class MemoryConnectionClient implements ConnectionClient {
     private _connectionState: BehaviorSubject<ClientConnectionState>;

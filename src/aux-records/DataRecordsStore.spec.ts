@@ -1,4 +1,5 @@
-import { doesSubjectMatchPolicy, isValidUserPolicy, UserPolicy } from './DataRecordsStore';
+import type { UserPolicy } from './DataRecordsStore';
+import { doesSubjectMatchPolicy, isValidUserPolicy } from './DataRecordsStore';
 
 describe('isValidUserPolicy()', () => {
     const cases: [boolean, any][] = [
@@ -27,10 +28,13 @@ describe('doesSubjectMatchPolicy()', () => {
         [true, ['not_subject', 'subject'], 'subject'],
         [false, [], 'subject'],
         [false, ['not_subject'], 'subject'],
-        [false, ['not_subject'], null]
+        [false, ['not_subject'], null],
     ];
 
-    it.each(cases)('should return %s when given (%s, %s)', (expected, policy, subject) => {
-        expect(doesSubjectMatchPolicy(policy, subject)).toBe(expected)
-    });
+    it.each(cases)(
+        'should return %s when given (%s, %s)',
+        (expected, policy, subject) => {
+            expect(doesSubjectMatchPolicy(policy, subject)).toBe(expected);
+        }
+    );
 });

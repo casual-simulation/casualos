@@ -27,7 +27,7 @@ import process from 'process';
 
 import prodConfig from './config.prod';
 import devConfig from './config.dev';
-import { Config } from './config';
+import type { Config } from './config';
 import { Server } from './server';
 
 const env = process.env.NODE_ENV;

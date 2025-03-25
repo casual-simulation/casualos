@@ -1,22 +1,24 @@
-import {
-    LocalActions,
+import type {
     BotAction,
     StateUpdatedEvent,
     StoredAux,
-    ConnectionIndicator,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
-import { Observable } from 'rxjs';
-import { Initable } from '../managers/Initable';
-import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { ChannelActionResult } from './AuxChannel';
 import {
+    LocalActions,
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
+import type { Initable } from '../managers/Initable';
+import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import type { ChannelActionResult } from './AuxChannel';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
-import { SimulationOrigin } from '../managers/Simulation';
+import type { SimulationOrigin } from '../managers/Simulation';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.

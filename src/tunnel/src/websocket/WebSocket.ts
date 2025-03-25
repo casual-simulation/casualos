@@ -1,5 +1,5 @@
 import { Duplex } from 'stream';
-import WebSocket from 'ws';
+import type WebSocket from 'ws';
 
 /**
  * Wraps the given websocket in a normal duplex stream.

@@ -1,5 +1,5 @@
-let loadedResolve: Function;
-let loadedReject: Function;
+let loadedResolve: () => void;
+let loadedReject: (err?: any) => void;
 
 export const onMonacoLoaded = new Promise<void>((resolve, reject) => {
     loadedResolve = resolve;

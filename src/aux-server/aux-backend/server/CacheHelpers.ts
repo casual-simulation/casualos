@@ -32,7 +32,7 @@ export function parseCacheControlHeader(
 export function formatCacheControlHeader(header: CacheControlHeaderValues) {
     let entries: string[] = [];
     for (let key in header) {
-        if (header.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(header, key)) {
             let val = (<any>header)[key];
             if (typeof val === 'boolean') {
                 entries.push(key);

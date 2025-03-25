@@ -1,21 +1,24 @@
-import {
+import type {
     BotCalculationContext,
     Bot,
     BotIndex,
+    BotIndexEvent,
+    PrecalculatedBot,
+} from '@casual-simulation/aux-common';
+import {
     calculateBotValue,
     parseBotConfigDimensions,
-    BotIndexEvent,
     isBotInDimension,
-    PrecalculatedBot,
     calculateStringTagValue,
     BotTagAddedEvent,
     BotTagRemovedEvent,
     calculateDimensions,
 } from '@casual-simulation/aux-common';
-import { UpdatedBotInfo } from './BotWatcher';
-import { Observable, Subject } from 'rxjs';
+import type { UpdatedBotInfo } from './BotWatcher';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
-import { BotHelper } from './BotHelper';
+import type { BotHelper } from './BotHelper';
 import { difference, union } from 'lodash';
 
 /**

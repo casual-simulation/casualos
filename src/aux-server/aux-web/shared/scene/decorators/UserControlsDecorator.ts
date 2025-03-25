@@ -4,8 +4,8 @@ import {
     OrthographicCamera,
     Quaternion,
 } from '@casual-simulation/three';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     calculateGridScale,
     getBotRotation,
     getBotPosition,
@@ -13,14 +13,14 @@ import {
     lerp,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
+import type { AuxBot3D } from '../AuxBot3D';
 import { calculateScale } from '../SceneUtils';
 import {
     Orthographic_DefaultZoom,
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
 } from '../CameraRigFactory';
-import { Game } from '../Game';
+import type { Game } from '../Game';
 
 /**
  * The amount of time between checking a user's mouse for activity.

@@ -1,14 +1,16 @@
-import { IOperation } from '../IOperation';
-import { BaseInteractionManager } from '../BaseInteractionManager';
-import { Vector2, Object3D } from '@casual-simulation/three';
-import {
+import type { IOperation } from '../IOperation';
+import type { BaseInteractionManager } from '../BaseInteractionManager';
+import type { Vector2, Object3D } from '@casual-simulation/three';
+import type {
     Bot,
-    botUpdated,
     BotAction,
     BotCalculationContext,
+    BotTags,
+} from '@casual-simulation/aux-common';
+import {
+    botUpdated,
     MOD_DROP_ACTION_NAME,
     createBot,
-    BotTags,
     merge,
     MOD_DROP_EXIT_ACTION_NAME,
     MOD_DROP_ENTER_ACTION_NAME,
@@ -16,12 +18,13 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import type { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { AuxBot3DDecoratorFactory } from '../../scene/decorators/AuxBot3DDecoratorFactory';
-import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
-import { ControllerData, InputMethod } from '../../../shared/scene/Input';
+import type { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
+import type { ControllerData, InputMethod } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
-import { SnapBotsHelper, SnapBotsInterface } from './SnapInterface';
+import type { SnapBotsInterface } from './SnapInterface';
+import { SnapBotsHelper } from './SnapInterface';
 import { Subscription } from 'rxjs';
 
 /**

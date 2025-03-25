@@ -1,26 +1,23 @@
-import {
-    merge,
-    Observable,
-    Subject,
-    Subscription,
-    SubscriptionLike,
-} from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { merge, Subject, Subscription } from 'rxjs';
 import { startWith, tap, map } from 'rxjs/operators';
-import { AuxVM } from '../vm/AuxVM';
-import {
+import type { AuxVM } from '../vm/AuxVM';
+import type {
     BotActions,
+    DefineGlobalBotAction,
+    RegisterPrefixOptions,
+} from '@casual-simulation/aux-common';
+import {
     DNA_TAG_PREFIX,
     enqueueAsyncError,
     enqueueAsyncResult,
     LocalActions,
-    DefineGlobalBotAction,
-    RegisterPrefixOptions,
     hasValue,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,
     LIBRARY_SCRIPT_PREFIX,
 } from '@casual-simulation/aux-common';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface that represents a script prefix.

@@ -1,4 +1,4 @@
-import {
+import type {
     SigningCryptoImpl,
     PrivateCryptoKey,
     PublicCryptoKey,
@@ -9,7 +9,8 @@ import {
     nodeSignatureToWebSignature,
     webSignatureToNodeSignature,
 } from './SubtleCryptoCompat';
-import { createSign, createVerify, generateKeyPairSync, Verify } from 'crypto';
+import type { Verify } from 'crypto';
+import { createSign, createVerify, generateKeyPairSync } from 'crypto';
 
 export class NodeSigningCryptoImpl implements SigningCryptoImpl {
     constructor(algorithm: SignatureAlgorithmType) {

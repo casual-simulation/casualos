@@ -2,13 +2,9 @@ import {
     fetchProfile,
     MotionController,
 } from '@webxr-input-profiles/motion-controllers';
-import { XRInputSource, XRPose, XRHandedness } from './WebXRTypes';
-import {
-    Matrix4,
-    Object3D,
-    Quaternion,
-    Vector3,
-} from '@casual-simulation/three';
+import type { XRInputSource, XRPose, XRHandedness } from './WebXRTypes';
+import type { Object3D } from '@casual-simulation/three';
+import { Matrix4, Quaternion, Vector3 } from '@casual-simulation/three';
 
 const uri = '/webxr-profiles';
 

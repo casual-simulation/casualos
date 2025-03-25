@@ -1,11 +1,11 @@
-import {
+import type {
     StatusUpdate,
     ConnectionInfo,
     WebsocketErrorCode,
     WebsocketErrorInfo,
 } from '@casual-simulation/aux-common';
-import { Observable, SubscriptionLike, Subscription } from 'rxjs';
-import { AuxVM } from '../vm/AuxVM';
+import type { Observable, SubscriptionLike, Subscription } from 'rxjs';
+import type { AuxVM } from '../vm/AuxVM';
 import {
     shareReplay,
     scan,

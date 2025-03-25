@@ -1,6 +1,6 @@
+import type { TestControllers } from '../../crud/sub/SubCrudRecordsControllerTests';
 import {
     setupTestContext,
-    TestControllers,
     testCrudRecordsController,
 } from '../../crud/sub/SubCrudRecordsControllerTests';
 import {
@@ -12,20 +12,19 @@ import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
 } from '../../SubscriptionConfigBuilder';
-import { MemoryStore } from '../../MemoryStore';
-import { RecordsController } from '../../RecordsController';
-import { PolicyController } from '../../PolicyController';
+import type { MemoryStore } from '../../MemoryStore';
+import type { RecordsController } from '../../RecordsController';
+import type { PolicyController } from '../../PolicyController';
+import type { Entitlement, StoredAux } from '@casual-simulation/aux-common';
 import {
     action,
     BotsState,
     createBot,
-    Entitlement,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
-    StoredAux,
 } from '@casual-simulation/aux-common';
 import { v5 as uuidv5 } from 'uuid';
-import {
+import type {
     PackageRecordVersion,
     PackageRecordVersionKey,
     PackageRecordVersionWithMetadata,
@@ -33,12 +32,12 @@ import {
 } from './PackageVersionRecordsStore';
 import { MemoryPackageVersionRecordsStore } from './MemoryPackageVersionRecordsStore';
 import { MemoryPackageRecordsStore } from '../MemoryPackageRecordsStore';
-import { PackageRecordsStore } from '../PackageRecordsStore';
+import type { PackageRecordsStore } from '../PackageRecordsStore';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
 import { v7 as uuid } from 'uuid';
-import { UserRole } from '../../AuthStore';
+import type { UserRole } from '../../AuthStore';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -1911,7 +1910,7 @@ describe('entitlementRequiresApproval()', () => {
                     feature,
                     scope,
                 })
-            ).toBe;
+            ).toBe(expected);
         });
     });
 });

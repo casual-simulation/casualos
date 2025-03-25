@@ -4,21 +4,20 @@ import {
     validateOrigin,
     getSessionKey,
 } from './RecordsServer';
-import {
-    DEFAULT_BRANCH_NAME,
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
-    procedure,
 } from '@casual-simulation/aux-common';
+import { DEFAULT_BRANCH_NAME, procedure } from '@casual-simulation/aux-common';
+import type { RelyingParty } from './AuthController';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
     PRIVO_OPEN_ID_PROVIDER,
-    RelyingParty,
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
@@ -27,24 +26,25 @@ import {
     generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
-import { AuthSession, AuthUser, UserRole } from './AuthStore';
+import type { AuthSession, AuthUser, UserRole } from './AuthStore';
 import { LivekitController } from './LivekitController';
+import type { CreateStudioSuccess } from './RecordsController';
 import {
     CreateStudioInComIdResult,
-    CreateStudioSuccess,
     isRecordKey,
     RecordsController,
 } from './RecordsController';
-import { RecordKey, RecordsStore, Studio } from './RecordsStore';
+import type { Studio } from './RecordsStore';
+import { RecordKey, RecordsStore } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
-import { DataRecordsStore } from './DataRecordsStore';
+import type { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
-import { StripeInterface, StripeProduct } from './StripeInterface';
+import type { StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -64,7 +64,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
-import { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
     createTestControllers,
@@ -74,17 +74,17 @@ import {
     unwindAndCaptureAsync,
 } from './TestUtils';
 import { AIController } from './AIController';
-import {
+import type {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
-import {
+import type {
     AIGenerateSkyboxInterfaceRequest,
     AIGenerateSkyboxInterfaceResponse,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
@@ -93,64 +93,66 @@ import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
 import { MemoryWebsocketMessenger } from './websockets/MemoryWebsocketMessenger';
-import { InstRecordsStore } from './websockets/InstRecordsStore';
-import { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
+import type { InstRecordsStore } from './websockets/InstRecordsStore';
+import type { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
 import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
-import {
+import type {
     LoginMessage,
     WebsocketDownloadRequestEvent,
-    WebsocketEventTypes,
     WebsocketHttpPartialResponseMessage,
     WebsocketHttpResponseMessage,
     WebsocketMessage,
     WebsocketMessageEvent,
     WebsocketUploadRequestEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import type { StoredAuxVersion1 } from '@casual-simulation/aux-common/bots';
 import {
     botAdded,
     createBot,
     StoredAux,
-    StoredAuxVersion1,
     toast,
 } from '@casual-simulation/aux-common/bots';
 import {
     device,
     remote,
 } from '@casual-simulation/aux-common/common/RemoteActions';
-import { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
+import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import {
     YjsPartitionImpl,
     constructInitializationUpdate,
 } from '@casual-simulation/aux-common';
-import { PrivoClientInterface } from './PrivoClient';
+import type { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerSuccess,
     AssignPermissionToSubjectAndResourceSuccess,
 } from './PolicyStore';
-import {
+import type {
     GenerateAuthenticationOptionsOpts,
     GenerateRegistrationOptionsOpts,
     VerifiedAuthenticationResponse,
     VerifiedRegistrationResponse,
     VerifyAuthenticationResponseOpts,
+} from '@simplewebauthn/server';
+import {
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
-import {
+import type {
     PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import { fromByteArray } from 'base64-js';
 import { z } from 'zod';
-import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import type { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
 import * as jose from 'jose';
 import { LoomController } from './LoomController';
-import {
+import type {
     AISloydInterfaceCreateModelRequest,
     AISloydInterfaceCreateModelResponse,
     AISloydInterfaceEditModelRequest,
@@ -160,16 +162,14 @@ import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './webhooks/MemoryWebhookRecordsStore';
-import {
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
 import { tryParseJson } from './Utils';
 import { NotificationRecordsController } from './notifications/NotificationRecordsController';
-import {
-    SUBSCRIPTION_ID_NAMESPACE,
-    WebPushInterface,
-} from './notifications/WebPushInterface';
+import type { WebPushInterface } from './notifications/WebPushInterface';
+import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 
 jest.mock('@simplewebauthn/server');
@@ -19533,7 +19533,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             it('should include default subscriptions in the list of purchasable subscriptions', async () => {
-                (store.subscriptionConfiguration.subscriptions = [
+                store.subscriptionConfiguration.subscriptions = [
                     {
                         id: 'sub_id',
                         eligibleProducts: ['product_id'],
@@ -19547,12 +19547,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
                     },
-                ]),
-                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                        {
-                            subscriptions: [],
-                        }
-                    );
+                ];
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
 
                 const result = await server.handleHttpRequest(
                     httpGet(
@@ -19900,7 +19900,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             it('should include default subscriptions in the list of purchasable subscriptions', async () => {
-                (store.subscriptionConfiguration.subscriptions = [
+                store.subscriptionConfiguration.subscriptions = [
                     {
                         id: 'sub_id',
                         eligibleProducts: ['product_id'],
@@ -19914,12 +19914,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
                     },
-                ]),
-                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                        {
-                            subscriptions: [],
-                        }
-                    );
+                ];
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
 
                 const result = await server.handleHttpRequest(
                     httpGet(

@@ -1,7 +1,9 @@
 import { createHash } from 'crypto';
-import MockRedisClient, { Redis } from 'ioredis-mock';
+import type { Redis } from 'ioredis-mock';
+import MockRedisClient from 'ioredis-mock';
 
-import RedisStore, { RedisReply } from './index';
+import type { RedisReply } from './index';
+import RedisStore from './index';
 
 // The SHA of the script to evaluate
 let scriptSha: string | undefined;

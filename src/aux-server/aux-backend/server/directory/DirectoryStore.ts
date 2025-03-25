@@ -1,5 +1,5 @@
-import { DirectoryEntry } from './DirectoryEntry';
-import { DirectoryClientSettings } from './DirectoryClientSettings';
+import type { DirectoryEntry } from './DirectoryEntry';
+import type { DirectoryClientSettings } from './DirectoryClientSettings';
 
 /**
  * Defines a store for directory values.

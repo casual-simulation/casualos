@@ -1,13 +1,18 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
-import {
+import type {
     Bot,
     BotCalculationContext,
+    BotLabelAlignment,
+    MenuBotForm,
+    MenuBotResolvedHoverStyle,
+    MenuBotSubtype,
+} from '@casual-simulation/aux-common';
+import {
     calculateFormattedBotValue,
     calculateBotValue,
     isFormula,
-    BotLabelAlignment,
     getBotLabelAlignment,
     CLICK_ACTION_NAME,
     onClickArg,
@@ -24,7 +29,6 @@ import {
     ON_POINTER_EXIT,
     ON_ANY_POINTER_EXIT,
     ON_ANY_POINTER_ENTER,
-    MenuBotForm,
     getMenuBotForm,
     ON_SUBMIT_ACTION_NAME,
     onSubmitArg,
@@ -32,7 +36,6 @@ import {
     TEMPORARY_BOT_PARTITION_ID,
     getSpaceForTag,
     getTagValueForSpace,
-    MenuBotResolvedHoverStyle,
     getMenuBotHoverStyle,
     ON_POINTER_DOWN,
     ON_POINTER_UP,
@@ -45,10 +48,9 @@ import {
     asyncError,
     calculateBooleanTagValue,
     getMenuBotSubtype,
-    MenuBotSubtype,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
-import { DimensionItem } from '../DimensionItem';
+import type { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
@@ -59,7 +61,7 @@ import {
 } from '../../shared/scene/Input';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
-import { BotManager } from '@casual-simulation/aux-vm-browser';
+import type { BotManager } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     components: {

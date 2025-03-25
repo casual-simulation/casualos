@@ -1,4 +1,4 @@
-import { Cache } from './Cache';
+import type { Cache } from './Cache';
 
 /**
  * Defines a cache that stores data in memory.

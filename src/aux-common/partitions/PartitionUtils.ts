@@ -1,17 +1,19 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, mergeUpdates } from 'yjs';
-import {
+import type {
     Bot,
-    botAdded,
     BotsState,
-    createBot,
     CreateInitializationUpdateAction,
+    GetInstStateFromUpdatesAction,
+    InstUpdate,
+} from '../bots';
+import {
+    botAdded,
+    createBot,
     formatBotDate,
     formatBotRotation,
     formatBotVector,
-    GetInstStateFromUpdatesAction,
     hasValue,
-    InstUpdate,
     isBot,
     isRuntimeBot,
     ORIGINAL_OBJECT,
@@ -21,8 +23,9 @@ import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
 import { forOwn } from 'lodash';
 import '../BlobPolyfill';
-import { PartitionRemoteEvents } from './AuxPartitionConfig';
-import { RemoteAction, RemoteActions } from '../common';
+import type { PartitionRemoteEvents } from './AuxPartitionConfig';
+import type { RemoteActions } from '../common';
+import { RemoteAction } from '../common';
 
 /**
  * Creates a new initialization update using the given action.

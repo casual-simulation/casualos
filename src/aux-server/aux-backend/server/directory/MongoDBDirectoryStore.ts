@@ -1,7 +1,7 @@
-import { DirectoryStore } from './DirectoryStore';
-import { DirectoryEntry } from './DirectoryEntry';
-import { MongoClient, Db, Collection } from 'mongodb';
-import { DirectoryClientSettings } from './DirectoryClientSettings';
+import type { DirectoryStore } from './DirectoryStore';
+import type { DirectoryEntry } from './DirectoryEntry';
+import type { MongoClient, Db, Collection } from 'mongodb';
+import type { DirectoryClientSettings } from './DirectoryClientSettings';
 
 export class MongoDBDirectoryStore implements DirectoryStore {
     private _dbName: string;

@@ -1,13 +1,7 @@
-import {
-    Observable,
-    Subscription,
-    Observer,
-    merge,
-    Subject,
-    ReplaySubject,
-} from 'rxjs';
+import type { Observer } from 'rxjs';
+import { Observable, Subscription, merge, Subject, ReplaySubject } from 'rxjs';
 import { share, shareReplay } from 'rxjs/operators';
-import { ConsoleMessages } from '@casual-simulation/aux-common';
+import type { ConsoleMessages } from '@casual-simulation/aux-common';
 
 const externalMessages = new ReplaySubject<ConsoleMessages>(1000);
 
@@ -37,10 +31,12 @@ function createMessagesObservable(
         console[type] = function () {
             observer.next(<any>{
                 type: type,
+                // eslint-disable-next-line prefer-rest-params
                 messages: [...arguments],
                 stack: new Error().stack,
                 source: 'app',
             });
+            // eslint-disable-next-line prefer-rest-params
             return prev.apply(this, arguments);
         };
 

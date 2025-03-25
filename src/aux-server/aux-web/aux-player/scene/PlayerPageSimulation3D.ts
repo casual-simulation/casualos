@@ -1,27 +1,28 @@
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     hasValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { tap, filter, map, switchMap, take } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
+import type { Object3D } from '@casual-simulation/three';
 import {
     MathUtils as ThreeMath,
-    Object3D,
     Vector3,
     Euler,
 } from '@casual-simulation/three';
-import { CameraRig } from '../../shared/scene/CameraRigFactory';
-import { Game } from '../../shared/scene/Game';
+import type { CameraRig } from '../../shared/scene/CameraRigFactory';
+import type { Game } from '../../shared/scene/Game';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { portalToHand, handToPortal } from '../../shared/scene/xr/WebXRHelpers';
-import { DimensionGroup } from '../../shared/scene/DimensionGroup';
-import { Subscription, Observable } from 'rxjs';
+import type { DimensionGroup } from '../../shared/scene/DimensionGroup';
+import type { Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { WristPortalConfig } from './WristPortalConfig';
-import { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
-import { ControllerData } from 'aux-web/shared/scene/Input';
-import { PortalConfig } from './PortalConfig';
+import type { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
+import type { ControllerData } from 'aux-web/shared/scene/Input';
+import type { PortalConfig } from './PortalConfig';
 import { merge } from 'lodash';
 import {
     objectWorldDirectionRay,

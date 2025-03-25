@@ -1,12 +1,6 @@
-import {
-    Observable,
-    fromEventPattern,
-    BehaviorSubject,
-    Subject,
-    merge,
-    of,
-} from 'rxjs';
-import { ReconnectableSocketInterface } from '@casual-simulation/websocket';
+import type { Observable } from 'rxjs';
+import { fromEventPattern, BehaviorSubject, Subject, merge, of } from 'rxjs';
+import type { ReconnectableSocketInterface } from '@casual-simulation/websocket';
 import {
     map,
     tap,
@@ -17,18 +11,20 @@ import {
     mapTo,
     share,
 } from 'rxjs/operators';
-import {
+import type {
     ConnectionClient,
     ClientConnectionState,
-    ConnectionIndicatorToken,
     WebsocketMessage,
     WebsocketMessageEvent,
-    WebsocketEventTypes,
     ConnectionInfo,
     WebsocketEvent,
     WebsocketErrorEvent,
     WebsocketErrorInfo,
     ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import {
+    ConnectionIndicatorToken,
+    WebsocketEventTypes,
 } from '@casual-simulation/aux-common';
 
 export class WebsocketConnectionClient implements ConnectionClient {

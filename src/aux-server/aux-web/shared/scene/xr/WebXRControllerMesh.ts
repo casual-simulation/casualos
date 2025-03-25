@@ -1,7 +1,5 @@
-import {
-    MotionController,
-    Constants,
-} from '@webxr-input-profiles/motion-controllers';
+import type { MotionController } from '@webxr-input-profiles/motion-controllers';
+import { Constants } from '@webxr-input-profiles/motion-controllers';
 import {
     Mesh,
     Object3D,
@@ -14,17 +12,17 @@ import {
     Matrix4,
 } from '@casual-simulation/three';
 import { getGLTFPool } from '../GLTFHelpers';
-import { SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
 import { disposeGroup, objectWorldForwardRay } from '../SceneUtils';
 import { values } from 'lodash';
-import {
+import type {
     XRFrame,
     XRPose,
     XRSpace,
     XRInputSource,
-    xrHandJoints,
     XRHandJoint,
 } from './WebXRTypes';
+import { xrHandJoints } from './WebXRTypes';
 import { copyPose, decomposePose } from './WebXRHelpers';
 import { PointerRay3D } from './PointerRay3D';
 

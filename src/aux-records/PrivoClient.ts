@@ -1,14 +1,17 @@
-import { ConfigurationStore } from './ConfigurationStore';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
-import { Client, Issuer, TokenSet, generators } from 'openid-client';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { PrivoClientCredentials, PrivoStore } from './PrivoStore';
+import type { Client, TokenSet } from 'openid-client';
+import { Issuer, generators } from 'openid-client';
 import { v4 as uuid } from 'uuid';
-import axios, { RawAxiosRequestHeaders } from 'axios';
+import type { RawAxiosRequestHeaders } from 'axios';
+import axios from 'axios';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
-import { ServerError } from '@casual-simulation/aux-common';
+import type { ServerError } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 
 /**
  * Defines an interface for objects that can interface with the Privo API.

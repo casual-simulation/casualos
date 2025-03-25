@@ -4,13 +4,13 @@ import {
     getSubHost,
     DEFAULT_TOKEN_EXPIRATION_TIME,
 } from './DirectoryService';
-import { DirectoryStore } from './DirectoryStore';
+import type { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DirectoryEntry } from './DirectoryEntry';
-import { DirectoryUpdate } from './DirectoryUpdate';
+import type { DirectoryUpdate } from './DirectoryUpdate';
 import { compareSync } from 'bcryptjs';
 import { decode, verify } from 'jsonwebtoken';
-import { EntryUpdatedResult } from './DirectoryResult';
+import type { EntryUpdatedResult } from './DirectoryResult';
 
 jest.mock('axios');
 

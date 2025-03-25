@@ -1,4 +1,4 @@
-import { Entitlement, ServerError } from '@casual-simulation/aux-common';
+import type { Entitlement, ServerError } from '@casual-simulation/aux-common';
 import { PackageRecordVersionKey } from '../packages/version';
 
 /**

@@ -1,18 +1,20 @@
 import { MemorySubCrudRecordsStore } from '../../crud/sub/MemorySubCrudRecordsStore';
-import {
-    PackageVersion,
+import type {
     PackageRecordVersion,
-    ListedPackageVersion,
     PackageVersionRecordsStore,
     PackageVersionSubscriptionMetrics,
     PackageRecordVersionKey,
     PackageVersionReview,
     GetPackageVersionByKeyResult,
 } from './PackageVersionRecordsStore';
-import { SubscriptionFilter } from '../../MetricsStore';
-import { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
+import {
+    PackageVersion,
+    ListedPackageVersion,
+} from './PackageVersionRecordsStore';
+import type { SubscriptionFilter } from '../../MetricsStore';
+import type { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
 import { isEqual, orderBy, sortBy } from 'lodash';
-import { PackageRecord } from '../PackageRecordsStore';
+import type { PackageRecord } from '../PackageRecordsStore';
 
 /**
  * A Memory-based implementation of the PackageRecordsStore.

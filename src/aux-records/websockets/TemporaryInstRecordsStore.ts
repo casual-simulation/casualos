@@ -1,10 +1,10 @@
-import {
-    BranchRecord,
+import type {
     BranchRecordWithInst,
     CurrentUpdates,
     LoadedPackage,
+    BranchRecord,
 } from './InstRecordsStore';
-import { LockStore } from '../LockStore';
+import type { LockStore } from '../LockStore';
 
 /**
  * Defines an interface for a store that keeps track of temporary inst records.

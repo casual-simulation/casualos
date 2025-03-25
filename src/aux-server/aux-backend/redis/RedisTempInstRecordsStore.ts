@@ -1,4 +1,4 @@
-import {
+import type {
     BranchName,
     BranchUpdates,
     LoadedPackage,
@@ -6,12 +6,13 @@ import {
     TemporaryInstRecordsStore,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { SpanKind, SpanOptions, trace } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, trace } from '@opentelemetry/api';
 import {
     SEMATTRS_DB_NAME,
     SEMRESATTRS_SERVICE_NAME,
 } from '@opentelemetry/semantic-conventions';
-import { RedisClientType } from 'redis';
+import type { RedisClientType } from 'redis';
 import { tryAcquireLock } from './RedisLock';
 
 const TRACE_NAME = 'RedisTempInstRecordsStore';

@@ -1,16 +1,12 @@
 import { testPartitionImplementation } from '@casual-simulation/aux-common/partitions/test/PartitionTests';
 import { LocalStoragePartitionImpl } from './LocalStoragePartition';
-import {
-    Bot,
-    botAdded,
-    botUpdated,
-    createBot,
-    StateUpdatedEvent,
-} from '@casual-simulation/aux-common';
+import type { Bot, StateUpdatedEvent } from '@casual-simulation/aux-common';
+import { botAdded, botUpdated, createBot } from '@casual-simulation/aux-common';
 import { first, skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { CurrentVersion } from '@casual-simulation/aux-common';
-import { firstValueFrom, Subscription } from 'rxjs';
+import type { CurrentVersion } from '@casual-simulation/aux-common';
+import type { Subscription } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 console.error = jest.fn();
 console.warn = jest.fn();

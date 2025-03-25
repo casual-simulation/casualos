@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const Octokit = require('@octokit/rest');
 const program = require('commander');
 const childProcess = require('child_process');

@@ -1,10 +1,16 @@
 # CasualOS Changelog
 
-## V3.3.16
+## V3.4.0
 
 #### Date: TBD
 
-### :rocket: Features
+### :boom: Breaking Changes
+
+-   Added full access to the [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model).
+    -   This is a breaking change because previously `globalThis.document` would refer to an automatically created custom app. Now, when `os.device().supportsDOM` is `true`, `globalThis.document` and `window` refer to the web browser's implementation.
+    -   Use `os.device().supportsDOM` to determine whether full DOM features are supported.
+    -   Requires the `ENABLE_DOM` environment variable to be set to `true` either during build or when running the server.
+    -   Additionally requires that the `VM_ORIGIN` environment variable is set to something other than where the CasualOS frontend is served from (should serve the same files, but be a different origin for security purposes).
 
 ### :bug: Bug Fixes
 
@@ -12,6 +18,8 @@
     -   The server now returns an `invalid_request` error code when the parameters provided are not accepted by the selected model (e.g., OpenAI, Google).
     -   This ensures that users receive clear and actionable feedback when their requests fail due to invalid parameters.
 -   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
+-   Fixed an issue where predefined `bios` values in URLs (e.g., `?bios=free`) are now preserved during authentication. Users no longer encounter the BIOS selection screen unnecessarily after signing in.
+-   Fixed an issue in the documentation where links to tags and actions were completely broken.
 
 ## V3.3.15
 

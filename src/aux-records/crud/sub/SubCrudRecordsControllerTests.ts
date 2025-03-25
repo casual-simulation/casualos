@@ -1,24 +1,23 @@
-import { MemoryStore } from '../../MemoryStore';
-import { RecordsController } from '../../RecordsController';
-import { PolicyController } from '../../PolicyController';
-import {
+import type { MemoryStore } from '../../MemoryStore';
+import type { RecordsController } from '../../RecordsController';
+import type { PolicyController } from '../../PolicyController';
+import type {
     SubCrudRecordsConfiguration,
     SubCrudRecordsController,
 } from './SubCrudRecordsController';
-import { CrudRecord, CrudRecordsStore } from '../CrudRecordsStore';
+import type { CrudRecord, CrudRecordsStore } from '../CrudRecordsStore';
 import {
     createTestControllers,
     createTestRecordKey,
     createTestUser,
 } from '../../TestUtils';
+import type { ActionKinds, ResourceKinds } from '@casual-simulation/aux-common';
 import {
-    ActionKinds,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
-    ResourceKinds,
 } from '@casual-simulation/aux-common';
-import { SubCrudRecord, SubCrudRecordsStore } from './SubCrudRecordsStore';
-import { CrudRecordItemSuccess } from '../CrudRecordsController';
+import type { SubCrudRecord, SubCrudRecordsStore } from './SubCrudRecordsStore';
+import type { CrudRecordItemSuccess } from '../CrudRecordsController';
 import { before } from 'lodash';
 
 export type TestControllers = ReturnType<typeof createTestControllers>;

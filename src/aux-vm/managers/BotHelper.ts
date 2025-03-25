@@ -1,9 +1,16 @@
-import {
+import type {
     PartialBot,
     Bot,
     BotAction,
     BotsState,
     BotCalculationContext,
+    PrecalculatedBot,
+    PrecalculatedBotsState,
+    ShoutAction,
+    BotSpace,
+    UpdateBotAction,
+} from '@casual-simulation/aux-common';
+import {
     createBot,
     action,
     addState,
@@ -11,29 +18,24 @@ import {
     calculateBotValue,
     calculateDestroyBotEvents,
     merge,
-    PrecalculatedBot,
-    PrecalculatedBotsState,
     botAdded,
-    ShoutAction,
     botUpdated,
     isPrecalculated,
     formatValue,
     createPrecalculatedContext,
     CREATE_ACTION_NAME,
     CREATE_ANY_ACTION_NAME,
-    BotSpace,
     hasValue,
     EDITING_TAG_SPACE,
     EDITING_TAG,
     EDITING_BOT,
     createBotLink,
-    UpdateBotAction,
 } from '@casual-simulation/aux-common';
 import { BaseHelper } from './BaseHelper';
-import { AuxVM } from '../vm/AuxVM';
-import { ChannelActionResult } from '../vm';
-import { AuxDevice } from '@casual-simulation/aux-runtime';
-import { SimulationOrigin } from './Simulation';
+import type { AuxVM } from '../vm/AuxVM';
+import type { ChannelActionResult } from '../vm';
+import type { AuxDevice } from '@casual-simulation/aux-runtime';
+import type { SimulationOrigin } from './Simulation';
 
 /**
  * Defines an class that contains a simple set of functions

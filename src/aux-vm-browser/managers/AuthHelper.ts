@@ -1,6 +1,7 @@
-import { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
-import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
-import { Observable, Subject } from 'rxjs';
+import type { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
+import type { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { AuthEndpointHelper } from './AuthEndpointHelper';
 

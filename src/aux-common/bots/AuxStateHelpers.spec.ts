@@ -12,7 +12,7 @@ import {
     remoteEdit,
     remoteEdits,
 } from './AuxStateHelpers';
-import { Bot } from './Bot';
+import type { Bot } from './Bot';
 
 describe('AuxStateHelpers', () => {
     describe('apply()', () => {

@@ -1,20 +1,26 @@
-import { Record, RecordKey } from './RecordsStore';
-import { MemoryStore } from './MemoryStore';
-import {
+import type { Record, RecordKey } from './RecordsStore';
+import type { MemoryStore } from './MemoryStore';
+import type {
     GrantEntitlementSuccess,
-    PolicyController,
     RevokeEntitlementSuccess,
+} from './PolicyController';
+import {
+    PolicyController,
     explainationForPermissionAssignment,
     getMarkerResourcesForCreation,
     willMarkersBeRemaining,
 } from './PolicyController';
+import type {
+    ActionKinds,
+    ResourceKinds,
+    SubjectType,
+    Entitlement,
+} from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
-    ActionKinds,
     ADMIN_ROLE_NAME,
     AvailablePermissions,
     DATA_RESOURCE_KIND,
-    Entitlement,
     EVENT_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
     INST_RESOURCE_KIND,
@@ -22,25 +28,25 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    ResourceKinds,
     ROLE_RESOURCE_KIND,
-    SubjectType,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     CreateRecordSuccess,
-    CreateStudioResult,
     CreateStudioSuccess,
+} from './RecordsController';
+import {
+    CreateStudioResult,
     formatV1RecordKey,
     parseRecordKey,
     RecordsController,
 } from './RecordsController';
+import type { TestServices } from './TestUtils';
 import {
-    TestServices,
     createTestControllers,
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerSuccess,
     AssignPermissionToSubjectAndResourceSuccess,
     MarkerPermissionAssignment,
@@ -48,7 +54,7 @@ import {
 } from './PolicyStore';
 import { formatInstId } from './websockets';
 import { AuthController } from './AuthController';
-import { PrivoClientInterface } from './PrivoClient';
+import type { PrivoClientInterface } from './PrivoClient';
 import { version } from './packages/version';
 import { error } from 'console';
 

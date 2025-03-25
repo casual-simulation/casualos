@@ -1,15 +1,13 @@
-import {
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
     WebhookEnvironment,
 } from '@casual-simulation/aux-records';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
-import {
-    HANDLE_WEBHOOK_RESULT_SCHEMA,
-    HandleWebhookPayload,
-} from './LambdaWebhookPayload';
+import type { HandleWebhookPayload } from './LambdaWebhookPayload';
+import { HANDLE_WEBHOOK_RESULT_SCHEMA } from './LambdaWebhookPayload';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { AuxConfigParameters } from '@casual-simulation/aux-vm';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 
 const TRACE_NAME = 'LambdaWebhookEnvironment';
 

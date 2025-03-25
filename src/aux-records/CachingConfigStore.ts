@@ -1,8 +1,8 @@
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { Cache } from './Cache';
-import { ConfigurationStore } from './ConfigurationStore';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { ModerationConfiguration } from './ModerationConfiguration';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { Cache } from './Cache';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { ModerationConfiguration } from './ModerationConfiguration';
 import { traced } from './tracing/TracingDecorators';
 
 const TRACE_NAME = 'CachingConfigStore';

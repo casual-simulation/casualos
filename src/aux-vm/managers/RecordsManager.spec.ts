@@ -1,15 +1,17 @@
-import {
-    asyncResult,
+import type {
     BotAction,
-    approveAction,
-    asyncError,
     RemoteCausalRepoProtocol,
     ConnectionClient,
-    MemoryConnectionClient,
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
-    getRecordsEndpoint,
     WebsocketHttpPartialResponseMessage,
+} from '@casual-simulation/aux-common';
+import {
+    asyncResult,
+    approveAction,
+    asyncError,
+    MemoryConnectionClient,
+    getRecordsEndpoint,
     iterableNext,
     iterableComplete,
 } from '@casual-simulation/aux-common';
@@ -49,23 +51,23 @@ import {
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import {
+import type {
     GetEndpointInfoFunction,
     GetRoomOptions,
     RecordsEndpointInfo,
-    RecordsManager,
     RoomJoin,
     RoomLeave,
     SetRoomOptions,
 } from './RecordsManager';
-import { AuthHelperInterface } from './AuthHelperInterface';
+import { RecordsManager } from './RecordsManager';
+import type { AuthHelperInterface } from './AuthHelperInterface';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import 'aux-jest-matchers';
 import { DateTime } from 'luxon';
+import type { ListedStudio } from '@casual-simulation/aux-records';
 import {
-    ListedStudio,
     formatInstId,
     formatV2RecordKey,
 } from '@casual-simulation/aux-records';

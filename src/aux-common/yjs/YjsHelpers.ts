@@ -1,13 +1,11 @@
-import { VersionVector } from '../common';
+import type { VersionVector } from '../common';
+import type { Doc, ID, Text } from 'yjs';
 import {
     createAbsolutePositionFromRelativePosition,
     createID,
-    Doc,
     findRootTypeKey,
-    ID,
     Item,
     RelativePosition,
-    Text,
 } from 'yjs';
 
 /**

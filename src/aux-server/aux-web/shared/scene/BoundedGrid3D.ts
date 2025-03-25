@@ -1,9 +1,9 @@
+import type { Ray } from '@casual-simulation/three';
 import {
     Vector3,
     Vector2,
     Color,
     Object3D,
-    Ray,
     LineSegments,
     BufferGeometry,
     Float32BufferAttribute,
@@ -16,8 +16,9 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Physics } from './Physics';
-import { Dictionary, groupBy, flatMap, sortBy } from 'lodash';
-import { GridTile, Grid3D } from './Grid3D';
+import type { Dictionary } from 'lodash';
+import { groupBy, flatMap, sortBy } from 'lodash';
+import type { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
 

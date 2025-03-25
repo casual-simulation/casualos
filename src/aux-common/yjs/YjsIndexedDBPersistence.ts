@@ -23,9 +23,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { Doc, applyUpdate, encodeStateAsUpdate, transact } from 'yjs';
+import type { Doc } from 'yjs';
+import { applyUpdate, encodeStateAsUpdate, transact } from 'yjs';
 import * as idb from 'lib0/indexeddb';
-import { BehaviorSubject, Observable, filter, firstValueFrom, map } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { BehaviorSubject, filter, firstValueFrom, map } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 
 const customStoreName = 'custom';

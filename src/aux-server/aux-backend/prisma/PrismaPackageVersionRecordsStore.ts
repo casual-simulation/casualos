@@ -1,9 +1,9 @@
-import { SubscriptionFilter } from '@casual-simulation/aux-records';
-import {
+import type { SubscriptionFilter } from '@casual-simulation/aux-records';
+import type {
     CrudResult,
     ListSubCrudStoreSuccess,
 } from '@casual-simulation/aux-records/crud/sub';
-import {
+import type {
     GetPackageVersionByKeyResult,
     PackageRecordVersion,
     PackageRecordVersionKey,
@@ -11,16 +11,16 @@ import {
     PackageVersionReview,
     PackageVersionSubscriptionMetrics,
 } from '@casual-simulation/aux-records/packages/version';
-import {
+import type {
     Prisma,
     PrismaClient,
     PackageRecordVersion as PrismaPackageRecordVersion,
 } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { Entitlement } from '@casual-simulation/aux-common';
+import type { Entitlement } from '@casual-simulation/aux-common';
 import { convertToDate, convertToMillis } from './Utils';
-import { PrismaMetricsStore } from './PrismaMetricsStore';
-import { JsonObject } from './generated/runtime/library';
+import type { PrismaMetricsStore } from './PrismaMetricsStore';
+import type { JsonObject } from './generated/runtime/library';
 
 const TRACE_NAME = 'PrismaPackageVersionRecordsStore';
 

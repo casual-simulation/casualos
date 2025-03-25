@@ -1,15 +1,13 @@
 import { merge } from '@casual-simulation/aux-common';
-import {
+import type {
     AIChatFeaturesConfiguration,
     AIFeaturesConfiguration,
     AIHumeFeaturesConfiguration,
     AIImageFeaturesConfiguration,
     AISkyboxFeaturesConfiguration,
     AISloydFeaturesConfiguration,
-    allowAllFeatures,
     APISubscription,
     DataFeaturesConfiguration,
-    denyAllFeatures,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
     FileFeaturesConfiguration,
@@ -24,6 +22,7 @@ import {
     TiersConfiguration,
     WebhooksFeaturesConfiguration,
 } from './SubscriptionConfiguration';
+import { allowAllFeatures, denyAllFeatures } from './SubscriptionConfiguration';
 
 export class FeaturesBuilder {
     private _features: FeaturesConfiguration = denyAllFeatures();

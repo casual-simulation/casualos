@@ -5,23 +5,21 @@ import {
     SAVE_PERMANENT_BRANCHES_LOCK,
 } from './WebsocketController';
 import { MemoryWebsocketConnectionStore } from './MemoryWebsocketConnectionStore';
-import { DeviceConnection } from './WebsocketConnectionStore';
+import type { DeviceConnection } from './WebsocketConnectionStore';
 import { MemoryWebsocketMessenger } from './MemoryWebsocketMessenger';
+import type { StoredAux } from '@casual-simulation/aux-common/bots';
 import {
     action,
     botAdded,
     ON_WEBHOOK_ACTION_NAME,
     botRemoved,
-    StoredAux,
     getInstStateFromUpdates,
     createInitializationUpdate,
 } from '@casual-simulation/aux-common/bots';
 import { createBot } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
-import {
-    createYjsPartition,
-    YjsPartitionImpl,
-} from '@casual-simulation/aux-common/partitions/YjsPartition';
+import type { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions/YjsPartition';
+import { createYjsPartition } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import {
@@ -32,19 +30,17 @@ import {
     remoteError,
     remoteResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
-import {
-    RequestMissingPermissionResponseSuccessMessage,
-    WebsocketEventTypes,
-} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import type { RequestMissingPermissionResponseSuccessMessage } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { createTestControllers, createTestUser } from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
-import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
+import type { ConnectionInfo } from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
-    ConnectionInfo,
     DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
@@ -53,14 +49,15 @@ import {
     merge,
 } from '@casual-simulation/aux-common';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
-import { MemoryStore } from '../MemoryStore';
+import type { MemoryStore } from '../MemoryStore';
+import type { SubscriptionConfiguration } from '../SubscriptionConfiguration';
 import {
     FeaturesConfiguration,
-    SubscriptionConfiguration,
     allowAllFeatures,
 } from '../SubscriptionConfiguration';
 import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
-import { PackageRecordVersionKey, version } from '../packages/version';
+import type { PackageRecordVersionKey } from '../packages/version';
+import { version } from '../packages/version';
 import { getHash } from '@casual-simulation/crypto';
 import { address } from 'faker';
 import { formatInstId } from './Utils';

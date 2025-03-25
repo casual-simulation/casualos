@@ -1,11 +1,11 @@
 import { map } from 'lodash';
-import { CurrentVersion, StatusUpdate } from '../../common';
-import {
+import type { CurrentVersion, StatusUpdate } from '../../common';
+import type {
     SharedArrayChanges,
     SharedDocument,
-    SharedMapChange,
     SharedMapChanges,
 } from '../SharedDocument';
+import { SharedMapChange } from '../SharedDocument';
 import { Subscription } from 'rxjs';
 import { waitAsync } from '../../test/TestHelpers';
 

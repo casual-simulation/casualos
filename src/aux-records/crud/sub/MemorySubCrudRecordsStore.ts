@@ -1,6 +1,6 @@
-import { SubscriptionFilter } from '../../MetricsStore';
-import { MemoryStore } from '../../MemoryStore';
-import {
+import type { SubscriptionFilter } from '../../MetricsStore';
+import type { MemoryStore } from '../../MemoryStore';
+import type {
     CrudResult,
     GetSubCrudItemResult,
     ListSubCrudStoreSuccess,
@@ -8,7 +8,7 @@ import {
     SubCrudRecordsStore,
 } from './SubCrudRecordsStore';
 import { isEqual, orderBy, sortBy } from 'lodash';
-import {
+import type {
     CrudRecord,
     CrudRecordsStore,
     CrudSubscriptionMetrics,

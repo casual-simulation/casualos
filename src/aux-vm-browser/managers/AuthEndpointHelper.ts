@@ -1,5 +1,6 @@
-import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
-import {
+import type { Remote } from 'comlink';
+import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import type {
     AuthHelperInterface,
     AuxAuth,
     LoginHint,
@@ -11,18 +12,17 @@ import {
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import {
+import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
-    hasValue,
 } from '@casual-simulation/aux-common';
-import {
+import { hasValue } from '@casual-simulation/aux-common';
+import type {
     GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    parseRecordKey,
     PublicRecordKeyPolicy,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
@@ -30,6 +30,7 @@ import {
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
+import { parseRecordKey } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;

@@ -1,20 +1,17 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
-import {
-    BotAction,
-    createAuxPartition,
+import type {
     PartitionConfig,
     AuxPartition,
-    ConnectionIndicator,
     AuxPartitionServices,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     AuxConfig,
     AuxSubChannel,
     BaseAuxChannel,
-} from '@casual-simulation/aux-vm';
-import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
+} from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { proxy } from 'comlink';
-import { AuxRuntime } from '@casual-simulation/aux-runtime';
+import type { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class DenoAuxChannel extends RemoteAuxChannel {
     constructor(defaultHost: string, config: AuxConfig) {

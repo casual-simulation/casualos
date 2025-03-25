@@ -1,28 +1,29 @@
 import { GameObject } from './GameObject';
+import type { Object3D, Matrix4 } from '@casual-simulation/three';
 import {
-    Object3D,
     Box3,
     Sphere,
     Group,
     Color,
     Vector3,
     Quaternion,
-    Matrix4,
     Euler,
 } from '@casual-simulation/three';
-import {
+import type {
     Bot,
     BotCalculationContext,
+    LocalActions,
+} from '@casual-simulation/aux-common';
+import {
     calculateGridScale,
     isBotPointable,
     isBotFocusable,
-    LocalActions,
 } from '@casual-simulation/aux-common';
-import { AuxBot3DDecorator } from './AuxBot3DDecorator';
+import type { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { DimensionGroup3D } from './DimensionGroup3D';
-import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
 import { buildSRGBColor, safeSetParent } from './SceneUtils';
 import { CoordinateSystem } from './CoordinateSystem';
 

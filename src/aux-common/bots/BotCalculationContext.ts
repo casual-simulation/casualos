@@ -1,6 +1,6 @@
 import { Bot, PrecalculatedBot } from './Bot';
-import { BotLookupTableHelper } from './BotLookupTableHelper';
-import { BotObjectsContext } from './BotObjectsContext';
+import type { BotLookupTableHelper } from './BotLookupTableHelper';
+import type { BotObjectsContext } from './BotObjectsContext';
 
 /**
  * Defines an interface for objects that are able to provide the necessary information required to calculate

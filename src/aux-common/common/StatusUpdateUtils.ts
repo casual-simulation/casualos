@@ -1,4 +1,4 @@
-import { StatusUpdate } from './StatusUpdate';
+import type { StatusUpdate } from './StatusUpdate';
 
 export function remapProgressPercent(
     start: number,

@@ -9,22 +9,24 @@ import {
     awsError,
     ConditionalCheckFailedException,
 } from './AwsTestUtils';
-import {
-    FileRecordsStore,
-    signRequest,
+import type {
     EraseFileStoreResult,
     AddFileResult,
     GetFileRecordSuccess,
-    MarkFileRecordAsUploadedFailure,
     MarkFileRecordAsUploadedSuccess,
     PresignFileUploadSuccess,
     PresignFileReadSuccess,
     UpdateFileResult,
+} from '@casual-simulation/aux-records';
+import {
+    FileRecordsStore,
+    signRequest,
+    MarkFileRecordAsUploadedFailure,
     MemoryFileRecordsLookup,
 } from '@casual-simulation/aux-records';
 import '../../jest/jest-matchers';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import {
+import type {
     AwsCredentialIdentityProvider,
     AwsCredentialIdentity,
 } from '@aws-sdk/types';

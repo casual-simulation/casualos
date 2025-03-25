@@ -1,36 +1,38 @@
-import {
+import type {
     AuthorizeActionMissingPermission,
     DenialReason,
 } from '../common/DenialReason';
-import { NotSupportedError, ServerError } from '../Errors';
-import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
-import {
+import type { NotSupportedError, ServerError } from '../Errors';
+import type { ConnectionInfo } from '../common/ConnectionInfo';
+import { connectionInfoSchema } from '../common/ConnectionInfo';
+import type {
     RemoteAction,
     DeviceAction,
     DeviceActionResult,
     RemoteActionResult,
     RemoteActionError,
     DeviceActionError,
+} from '../common/RemoteActions';
+import {
     remoteActionsSchema,
     deviceActionsSchema,
 } from '../common/RemoteActions';
-import { ZodIssue, z } from 'zod';
-import {
+import type { ZodIssue } from 'zod';
+import { z } from 'zod';
+import type {
     GenericHttpRequest,
     GenericHttpResponse,
-    genericHttpRequestSchema,
 } from '../http/GenericHttpInterface';
+import { genericHttpRequestSchema } from '../http/GenericHttpInterface';
+import type { PublicUserInfo, ResourceKinds, SubjectType } from '../common';
 import {
     ACTION_KINDS_VALIDATION,
     INST_ACTION_KINDS_VALIDATION,
-    PublicUserInfo,
     READ_ACTION,
     RESOURCE_KIND_VALIDATION,
-    ResourceKinds,
     SUBJECT_TYPE_VALIDATION,
-    SubjectType,
 } from '../common';
-import { KnownErrorCodes } from '../rpc/ErrorCodes';
+import type { KnownErrorCodes } from '../rpc/ErrorCodes';
 
 /**
  * Defines a websocket event.

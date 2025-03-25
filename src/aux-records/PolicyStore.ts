@@ -1,8 +1,6 @@
-import { ServerError } from '@casual-simulation/aux-common/Errors';
-import {
+import type { ServerError } from '@casual-simulation/aux-common/Errors';
+import type {
     ActionKinds,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
     PermissionOptions,
     ResourceKinds,
     SubjectType,
@@ -12,7 +10,11 @@ import {
     EntitlementFeature,
     GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
-import { UserRole } from './AuthStore';
+import {
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+} from '@casual-simulation/aux-common';
+import type { UserRole } from './AuthStore';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.

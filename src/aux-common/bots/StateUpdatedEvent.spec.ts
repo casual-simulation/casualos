@@ -1,10 +1,10 @@
+import type { StateUpdatedEvent } from './StateUpdatedEvent';
 import {
-    StateUpdatedEvent,
     applyUpdates,
     stateUpdatedEvent,
     updatedBot,
 } from './StateUpdatedEvent';
-import { PrecalculatedBotsState, PrecalculatedBot } from './Bot';
+import type { PrecalculatedBotsState, PrecalculatedBot } from './Bot';
 import { createBot, createPrecalculatedBot } from './BotCalculations';
 
 describe('StateUpdatedEvent', () => {

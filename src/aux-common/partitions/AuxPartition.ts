@@ -1,18 +1,25 @@
-import { Action, RemoteActions, StatusUpdate, CurrentVersion } from '../common';
-import {
+import type {
+    Action,
+    RemoteActions,
+    StatusUpdate,
+    CurrentVersion,
+} from '../common';
+import type {
     BotsState,
     BotAction,
     Bot,
     UpdatedBot,
-    PartialBotsState,
     StateUpdatedEvent,
+} from '../bots';
+import {
+    PartialBotsState,
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
     BOOTSTRAP_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
 } from '../bots';
-import { Observable, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
 import { sortBy } from 'lodash';
 
 /**
@@ -289,7 +296,7 @@ export function* iteratePartitions<T extends DictionaryLike>(
     );
 
     for (let key of sortedKeys) {
-        if (!partitions.hasOwnProperty(key)) {
+        if (!Object.prototype.hasOwnProperty.call(partitions, key)) {
             continue;
         }
 

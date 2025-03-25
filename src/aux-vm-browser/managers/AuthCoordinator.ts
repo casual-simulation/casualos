@@ -1,35 +1,37 @@
+import type { Observable, SubscriptionLike } from 'rxjs';
 import {
     BehaviorSubject,
     NEVER,
-    Observable,
     Subject,
     Subscription,
-    SubscriptionLike,
     filter,
     firstValueFrom,
     startWith,
     switchMap,
 } from 'rxjs';
-import { BrowserSimulation } from './BrowserSimulation';
-import {
+import type { BrowserSimulation } from './BrowserSimulation';
+import type {
     AuthHelperInterface,
-    Simulation,
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
-import { AuthHelper } from './AuthHelper';
+import { Simulation } from '@casual-simulation/aux-vm/managers';
+import type { AuthHelper } from './AuthHelper';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
-import {
+import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
     PartitionAuthExternalPermissionResult,
     PartitionAuthPermissionResult,
     PartitionAuthRequest,
     PublicUserInfo,
+} from '@casual-simulation/aux-common';
+import {
     asyncResult,
     hasValue,
     reportInst,
 } from '@casual-simulation/aux-common';
-import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
+import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 import type {
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,

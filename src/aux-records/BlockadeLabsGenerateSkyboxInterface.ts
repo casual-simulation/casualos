@@ -1,5 +1,5 @@
 import { handleAxiosErrors } from './Utils';
-import {
+import type {
     AIGenerateSkyboxInterface,
     AIGenerateSkyboxInterfaceRequest,
     AIGenerateSkyboxInterfaceResponse,
@@ -7,12 +7,8 @@ import {
 } from './AIGenerateSkyboxInterface';
 import axios from 'axios';
 import { traced } from './tracing/TracingDecorators';
-import {
-    SpanKind,
-    SpanOptions,
-    SpanStatusCode,
-    trace,
-} from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'BlockadeLabsGenerateSkyboxInterface';
 const SPAN_OPTIONS: SpanOptions = {

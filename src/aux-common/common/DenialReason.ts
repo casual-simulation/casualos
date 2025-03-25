@@ -1,10 +1,10 @@
-import {
+import type {
     ActionKinds,
-    AvailablePermissions,
     ResourceKinds,
     SubjectType,
 } from './PolicyPermissions';
-import { PrivacyFeatures } from './PrivacyFeatures';
+import { AvailablePermissions } from './PolicyPermissions';
+import type { PrivacyFeatures } from './PrivacyFeatures';
 
 export type DenialReason =
     | AuthorizeActionMissingPermission

@@ -9,10 +9,8 @@ import {
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import NoSleep from '@uriopass/nosleep.js';
 
 @Component({})

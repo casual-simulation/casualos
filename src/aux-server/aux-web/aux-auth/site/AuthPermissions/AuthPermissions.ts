@@ -4,17 +4,16 @@ import Component from 'vue-class-component';
 import { Provide, Watch, Prop } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
+import type { ActionKinds, ResourceKinds } from '@casual-simulation/aux-common';
 import {
     ADMIN_ROLE_NAME,
-    ActionKinds,
     DataActionKinds,
     FileActionKinds,
     MarkerPermission,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    ResourceKinds,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     MarkerPermissionAssignment,
     ResourcePermissionAssignment,
 } from '@casual-simulation/aux-records';

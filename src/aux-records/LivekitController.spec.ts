@@ -1,5 +1,8 @@
 import { LivekitController } from './LivekitController';
-import { IssueMeetTokenFailure, IssueMeetTokenSuccess } from './LivekitEvents';
+import type {
+    IssueMeetTokenFailure,
+    IssueMeetTokenSuccess,
+} from './LivekitEvents';
 import { TokenVerifier } from 'livekit-server-sdk';
 
 describe('LivekitController', () => {

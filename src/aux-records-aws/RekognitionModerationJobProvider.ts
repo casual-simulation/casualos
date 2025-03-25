@@ -1,24 +1,26 @@
-import {
+import type {
     ModerationFileScan,
     ModerationJob,
     ModerationJobFilesFilter,
     ModerationJobProvider,
     ScanFileOptions,
 } from '@casual-simulation/aux-records';
-import { S3FileRecordsStore } from './S3FileRecordsStore';
-import {
+import type { S3FileRecordsStore } from './S3FileRecordsStore';
+import type {
     DetectModerationLabelsCommandInput,
     Rekognition,
 } from '@aws-sdk/client-rekognition';
+import type {
+    CreateJobCommandInput,
+    S3ControlClient,
+} from '@aws-sdk/client-s3-control';
 import {
     CreateJobCommand,
-    CreateJobCommandInput,
     JobManifestGeneratorFilter,
-    S3ControlClient,
 } from '@aws-sdk/client-s3-control';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
-import { S3 } from '@aws-sdk/client-s3';
+import type { S3 } from '@aws-sdk/client-s3';
 
 const TRACE_NAME = 'RekognitionModerationJobProvider';
 

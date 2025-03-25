@@ -1,22 +1,22 @@
-import { MemoryStore } from '../MemoryStore';
+import type { MemoryStore } from '../MemoryStore';
 import { MemoryCrudRecordsStore } from './MemoryCrudRecordsStore';
-import { RecordsController } from '../RecordsController';
-import { PolicyController } from '../PolicyController';
-import {
+import type { RecordsController } from '../RecordsController';
+import type { PolicyController } from '../PolicyController';
+import type {
     CrudRecordItemSuccess,
     CrudRecordsConfiguration,
     CrudRecordsController,
 } from './CrudRecordsController';
-import { CrudRecord, CrudRecordsStore } from './CrudRecordsStore';
+import type { CrudRecord, CrudRecordsStore } from './CrudRecordsStore';
 import {
     createTestControllers,
     createTestRecordKey,
     createTestUser,
 } from '../TestUtils';
+import type { ResourceKinds } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
-    ResourceKinds,
 } from '@casual-simulation/aux-common';
 
 export type TestControllers = ReturnType<typeof createTestControllers>;

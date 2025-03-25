@@ -1,7 +1,7 @@
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
-import { MemoryStore } from '../MemoryStore';
-import { PolicyController } from '../PolicyController';
-import { RecordsController } from '../RecordsController';
+import type { MemoryStore } from '../MemoryStore';
+import type { PolicyController } from '../PolicyController';
+import type { RecordsController } from '../RecordsController';
 import { WebhookRecordsController } from './WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './MemoryWebhookRecordsStore';
 import {
@@ -14,12 +14,12 @@ import {
     PUBLIC_READ_MARKER,
     webhook,
 } from '@casual-simulation/aux-common';
+import type { TestControllers } from '../crud/CrudRecordsControllerTests';
 import {
     setupTestContext,
-    TestControllers,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
-import {
+import type {
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
@@ -30,11 +30,11 @@ import {
 } from '../SubscriptionConfigBuilder';
 import { DataRecordsController } from '../DataRecordsController';
 import { FileRecordsController } from '../FileRecordsController';
-import {
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
-    STORED_AUX_SCHEMA,
 } from './WebhookEnvironment';
+import { STORED_AUX_SCHEMA } from './WebhookEnvironment';
 import { getHash } from '@casual-simulation/crypto';
 import { sortBy } from 'lodash';
 import {

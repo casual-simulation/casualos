@@ -10,7 +10,8 @@
     top: 16px;
 }
 
-#app-game-container {
+#app-game-container,
+.vm-iframe-container {
     position: absolute;
     top: 0;
     width: 100%;
@@ -219,4 +220,12 @@
     min-width: min(600px, 100vw);
     max-width: 80vw;
     max-height: 80vh;
+}
+
+.vm-iframe-container iframe:first-child {
+    display: block;
+}
+
+.vm-iframe-container iframe {
+    display: none;
 }

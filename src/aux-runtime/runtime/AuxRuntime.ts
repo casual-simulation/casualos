@@ -6,12 +6,28 @@
 // 4. Partitions - These are services which manage the persistence and realtime sync of the AUX data model.
 // 5. Runtimes - These are services which manage script execution and formula precalculation.
 
-import {
-    BotAction,
+import type {
     StateUpdatedEvent,
     Bot,
     UpdatedBot,
     PrecalculatedBot,
+    BotSpace,
+    PartialBot,
+    BotTagMasks,
+    RuntimeBot,
+    CompiledBotListener,
+    UpdateBotAction,
+    BotModule,
+    IdentifiedBotModule,
+    ImportFunc,
+    ExportFunc,
+    BotModuleResult,
+    SourceModule,
+    ResolvedBotModule,
+    ImportMetadata,
+} from '@casual-simulation/aux-common/bots';
+import {
+    BotAction,
     hasValue,
     tagsOnBot,
     isFormula,
@@ -30,19 +46,13 @@ import {
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
-    BotSpace,
     getTagMask,
     hasTagOrMask,
     ON_SERVER_STREAM_LOST_ACTION_NAME,
-    PartialBot,
     updatedBot,
     TAG_MASK_SPACE_PRIORITIES,
-    BotTagMasks,
-    RuntimeBot,
     CLEAR_CHANGES_SYMBOL,
-    CompiledBotListener,
     DNA_TAG_PREFIX,
-    UpdateBotAction,
     isRuntimeBot,
     createBot,
     ON_ERROR,
@@ -70,99 +80,89 @@ import {
     formatBotRotation,
     parseTaggedNumber,
     REPLACE_BOT_SYMBOL,
-    BotModule,
-    IdentifiedBotModule,
     isModule,
-    ImportFunc,
-    ExportFunc,
     calculateStringTagValue,
-    BotModuleResult,
     ON_RESOLVE_MODULE,
-    SourceModule,
-    ResolvedBotModule,
-    ImportMetadata,
 } from '@casual-simulation/aux-common/bots';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
+import type {
+    AuxCompiledScript,
+    CompiledBotModule,
+    AuxCompileOptions,
+} from './AuxCompiler';
 import {
     AuxCompiler,
-    AuxCompiledScript,
     getInterpretableFunction,
     AuxCompilerBreakpoint,
     isInterpretableFunction,
     FUNCTION_METADATA,
     AuxScriptMetadata,
-    CompiledBotModule,
-    AuxCompileOptions,
     IMPORT_META_FACTORY,
     IMPORT_FACTORY,
     EXPORT_FACTORY,
 } from './AuxCompiler';
+import type { AuxGlobalContext } from './AuxGlobalContext';
 import {
-    AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     removeFromContext,
     isInContext,
     WatchBotTimer,
 } from './AuxGlobalContext';
-import {
+import type {
     AuxDebuggerOptions,
     AuxLibrary,
-    createDefaultLibrary,
     DebuggerCallFrame,
     DebuggerFunctionLocation,
     DebuggerPause,
     DebuggerVariable,
-    GET_RUNTIME,
     PauseTrigger,
     PauseTriggerOptions,
     TagSpecificApiOptions,
 } from './AuxLibrary';
-import {
+import { createDefaultLibrary, GET_RUNTIME } from './AuxLibrary';
+import type {
     RuntimeBotInterface,
     RuntimeBotFactory,
-    createRuntimeBot,
-    RealtimeEditMode,
     RealtimeEditConfig,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import {
+import { createRuntimeBot, RealtimeEditMode } from './RuntimeBot';
+import type {
     CompiledBot,
     CompiledBotsState,
     RuntimeBreakpoint,
     RuntimeStop,
     RuntimeStopState,
 } from './CompiledBot';
-import {
+import type {
     ScriptError,
     ActionResult,
-    RanOutOfEnergyError,
     ProcessActionResult,
 } from './AuxResults';
-import { AuxVersion } from './AuxVersion';
-import { AuxDevice } from './AuxDevice';
+import { RanOutOfEnergyError } from './AuxResults';
+import type { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
+import type { RuntimePromise } from './Utils';
 import {
     isPromise,
     isRuntimePromise,
     isUrl,
     markAsRuntimePromise,
-    RuntimePromise,
 } from './Utils';
-import {
-    AuxRealtimeEditModeProvider,
-    DefaultRealtimeEditModeProvider,
-} from './AuxRealtimeEditModeProvider';
+import type { AuxRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
+import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
 import {
     applyTagEdit,
     isTagEdit,
     mergeVersions,
 } from '@casual-simulation/aux-common/bots';
-import { CurrentVersion, VersionVector } from '@casual-simulation/aux-common';
-import {
-    RuntimeStateVersion,
-    updateRuntimeVersion,
-} from './RuntimeStateVersion';
+import type { CurrentVersion } from '@casual-simulation/aux-common';
+import { VersionVector } from '@casual-simulation/aux-common';
+import type { RuntimeStateVersion } from './RuntimeStateVersion';
+import { updateRuntimeVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '@casual-simulation/aux-common/math';
@@ -190,12 +190,14 @@ import {
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
 import { UNMAPPABLE } from '@casual-simulation/aux-common/bots/BotEvents';
-import {
-    DebuggerScriptEnterTrace,
-    DebuggerScriptExitTrace,
+import type {
     DebuggerTagMaskUpdate,
     DebuggerTagUpdate,
     RuntimeActions,
+} from './RuntimeEvents';
+import {
+    DebuggerScriptEnterTrace,
+    DebuggerScriptExitTrace,
 } from './RuntimeEvents';
 import {
     DeepObjectError,
@@ -697,7 +699,12 @@ export class AuxRuntime
                 config: null,
             };
             for (let key in this._library.tagSpecificApi) {
-                if (!this._library.tagSpecificApi.hasOwnProperty(key)) {
+                if (
+                    !Object.prototype.hasOwnProperty.call(
+                        this._library.tagSpecificApi,
+                        key
+                    )
+                ) {
                     continue;
                 }
                 const result = this._library.tagSpecificApi[key](ctx);
@@ -789,6 +796,7 @@ export class AuxRuntime
                 if (moduleName[i] === ':') {
                     split.pop();
                 } else if (moduleName[i] === '.') {
+                    /* empty */
                 } else {
                     moduleName =
                         split.join('.') + '.' + moduleName.substring(i);
@@ -1528,7 +1536,7 @@ export class AuxRuntime
                                         false
                                     );
                                 }
-                                return null;
+                                return null as any;
                             });
                         } else {
                             if (hasValue(action.taskId)) {
@@ -1543,7 +1551,7 @@ export class AuxRuntime
                                 }
                             }
                         }
-                        return null;
+                        return null as any;
                     })
                 );
             } else {
@@ -1562,7 +1570,7 @@ export class AuxRuntime
                                     this._scheduleJobQueueCheck();
                                 }
                             }
-                            return null;
+                            return null as any;
                         })
                     );
                 }
@@ -1582,7 +1590,7 @@ export class AuxRuntime
             const events = breakIntoIndividualEvents(this.currentState, action);
             const promise = this._processCore(events);
             if (isRuntimePromise(promise)) {
-                return markAsRuntimePromise(promise.then(() => null));
+                return markAsRuntimePromise(promise.then(() => null as any));
             } else {
                 return null;
             }
@@ -1689,7 +1697,9 @@ export class AuxRuntime
                     asyncResult(action.taskId, null),
                 ]);
                 if (isRuntimePromise(promise)) {
-                    return markAsRuntimePromise(promise.then(() => null));
+                    return markAsRuntimePromise(
+                        promise.then(() => null as any)
+                    );
                 } else {
                     return null;
                 }
@@ -1897,7 +1907,7 @@ export class AuxRuntime
                         actions,
                         errors,
                         results: result,
-                        listeners: [],
+                        listeners: [] as Bot[],
                     };
                 })
             );
@@ -3849,7 +3859,7 @@ export class AuxRuntime
         // this._processGenerator(state.generator, continuation).then(state.resolve, state.reject);
     }
 
-    private _scheduleJob(queueName: string, job: Function): void {
+    private _scheduleJob(queueName: string, job: () => any): void {
         if (this._interpreter) {
             this._interpreter.realm.scope(() => {
                 this._interpreter.agent.queueJob(queueName, () => {
@@ -4055,85 +4065,6 @@ interface UncompiledScript {
 }
 
 type MaybeRuntimePromise<T> = T | RuntimePromise<T>;
-
-/**
- * Recursively maps each of the given library's functions using the given map function and returns a new library that contains the converted functions.
- * The returned object will contain the same enumerable properties as the original library except that its functions have been mapped.
- * @param library The library to map.
- * @param map The function to use for mapping library functions.
- */
-export function mapLibraryFunctions<T extends AuxLibrary>(
-    library: T,
-    map: (func: Function, key: string) => any
-): T {
-    let newLibrary = {
-        ...library,
-    };
-
-    newLibrary.api = mapFunctions(newLibrary.api, map);
-
-    return newLibrary;
-}
-
-function mapFunctions(
-    obj: any,
-    map: (func: Function, key: string) => any
-): any {
-    let newObj: any = Object.create(obj);
-
-    assignFunctions(obj, newObj, map);
-
-    return newObj;
-}
-
-function assignFunctions(
-    obj: any,
-    newObj: any,
-    map: (func: Function, key: string) => any
-): void {
-    let descriptors = Object.getOwnPropertyDescriptors(obj);
-
-    for (let key in descriptors) {
-        let descriptor = descriptors[key];
-
-        if (descriptor.get || descriptor.set || !descriptor.enumerable) {
-            continue;
-        }
-
-        const val = descriptor.value;
-
-        if (typeof val === 'function') {
-            let newFunc = (newObj[key] = map(val, key));
-
-            if (newFunc) {
-                assignFunctions(val, newFunc, map);
-            }
-            continue;
-        }
-
-        if (
-            typeof val !== 'object' ||
-            val === null ||
-            Object.getPrototypeOf(val).constructor !== Object
-        ) {
-            continue;
-        }
-
-        newObj[key] = mapFunctions(val, map);
-    }
-}
-
-// function wrapGeneratorFunc<T>(
-//     func: (...args: any[]) => T
-// ): (...args: any[]) => T {
-//     return (...args: any[]) => {
-//         let res = func(...args);
-//         if (isGenerator(res)) {
-//             return unwind(res);
-//         }
-//         return res;
-//     };
-// }
 
 /**
  * Processes the given list of items in a sequential manner, calling the given function for each item.

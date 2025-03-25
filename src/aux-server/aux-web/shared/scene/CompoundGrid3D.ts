@@ -1,5 +1,5 @@
-import { Grid3D, GridTile } from './Grid3D';
-import { Ray, Vector3 } from '@casual-simulation/three';
+import type { Grid3D, GridTile } from './Grid3D';
+import type { Ray, Vector3 } from '@casual-simulation/three';
 
 /**
  * Defines a class that represents multiple grids.
@@ -74,7 +74,11 @@ export class CompoundGrid3D implements Grid3D {
      * Scales the given position by the tile scale and returns the result.
      * @param position The input position.
      */
-    getGridWorldPosition(position: { x: number; y: number; z: number }): Vector3 {
+    getGridWorldPosition(position: {
+        x: number;
+        y: number;
+        z: number;
+    }): Vector3 {
         const grid = this.primaryGrid;
         if (!grid) {
             throw new Error(

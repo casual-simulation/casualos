@@ -1,4 +1,5 @@
-import { BotsState, createBot } from '@casual-simulation/aux-common';
+import type { BotsState } from '@casual-simulation/aux-common';
+import { createBot } from '@casual-simulation/aux-common';
 import { createStaticHtml } from './WebhookUtils';
 import { JSDOM } from 'jsdom';
 

@@ -1,4 +1,4 @@
-import {
+import type {
     PrecalculatedBotsState,
     Bot,
     PartialPrecalculatedBotsState,
@@ -9,7 +9,7 @@ import { merge } from '../utils';
 import { apply } from '../bots/AuxStateHelpers';
 import { hasValue } from './BotCalculations';
 import { cloneDeep } from 'lodash';
-import { CurrentVersion } from '../common';
+import type { CurrentVersion } from '../common';
 
 /**
  * Defines an event for state updates from the VM.

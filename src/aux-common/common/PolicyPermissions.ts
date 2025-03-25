@@ -537,6 +537,8 @@ export interface Permission {
     /**
      * The options for the permission.
      */
+    // Disabled because this is mostly a placeholder for future options
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     options: {};
 
     /**

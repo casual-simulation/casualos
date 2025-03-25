@@ -1,9 +1,11 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { isFormula, Bot, isScript } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import type { Bot } from '@casual-simulation/aux-common';
+import { isFormula, isScript } from '@casual-simulation/aux-common';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
 import { isFocused } from '../VueHelpers';

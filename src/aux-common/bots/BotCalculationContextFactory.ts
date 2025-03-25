@@ -1,5 +1,5 @@
-import { Bot } from './Bot';
-import { BotCalculationContext } from './BotCalculationContext';
+import type { Bot } from './Bot';
+import type { BotCalculationContext } from './BotCalculationContext';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 export function createPrecalculatedContext(

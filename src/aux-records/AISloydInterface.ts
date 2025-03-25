@@ -1,4 +1,4 @@
-import { ServerError } from '@casual-simulation/aux-common';
+import type { ServerError } from '@casual-simulation/aux-common';
 
 export interface AISloydInterface {
     /**

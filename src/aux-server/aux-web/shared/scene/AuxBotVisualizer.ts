@@ -1,9 +1,9 @@
-import {
+import type {
     BotCalculationContext,
     Bot,
     LocalActions,
 } from '@casual-simulation/aux-common';
-import { DimensionGroup } from './DimensionGroup';
+import type { DimensionGroup } from './DimensionGroup';
 
 /**
  * Defines an interface for a visualizer for a bot.

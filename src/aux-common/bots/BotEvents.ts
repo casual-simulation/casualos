@@ -1,4 +1,4 @@
-import {
+import type {
     PartialBot,
     BotsState,
     Bot,
@@ -8,8 +8,8 @@ import {
 } from './Bot';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import { InstUpdate } from './StoredAux';
-import {
+import type { InstUpdate } from './StoredAux';
+import type {
     DeviceAction,
     RemoteAction,
     RemoteActionError,
@@ -17,6 +17,8 @@ import {
     DeviceActionResult,
     DeviceActionError,
     Action,
+} from '../common';
+import {
     DeviceSelector,
     remoteError,
     remoteResult,

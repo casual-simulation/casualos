@@ -1,10 +1,9 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
+import type { Bot, BotTags } from '@casual-simulation/aux-common';
 import {
-    Bot,
     hasValue,
-    BotTags,
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
@@ -17,17 +16,18 @@ import {
     formatValue,
     DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     BrowserSimulation,
     IdeTagNode,
-    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import { Subject, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { IdePortalConfig } from './IdePortalConfig';
-import { IdeNode } from '@casual-simulation/aux-vm-browser';
+import type { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
 import { debounce } from 'lodash';

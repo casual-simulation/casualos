@@ -1,30 +1,27 @@
-import {
-    ACCOUNT_MARKER,
+import type {
     ActionKinds,
     Entitlement,
     KnownErrorCodes,
-    PRIVATE_MARKER,
     ResourceKinds,
-    ServerError,
 } from '@casual-simulation/aux-common';
 import {
+    ACCOUNT_MARKER,
+    PRIVATE_MARKER,
+    ServerError,
+} from '@casual-simulation/aux-common';
+import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
-    AuthorizeSubjectFailure,
     PolicyController,
     AuthorizeUserAndInstancesForResourcesResult,
     ConstructAuthorizationContextRequest,
 } from '../../PolicyController';
-import {
-    CheckSubscriptionMetricsResult,
-    CrudRecordsConfiguration,
-    CrudRecordsController,
+import { AuthorizeSubjectFailure } from '../../PolicyController';
+import type {
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
-    CrudGetItemResult,
     CrudRecordItemRequest,
-    CrudRecordItemResult,
     CrudRecordItemSuccess,
     CrudRecordItemFailure,
     CrudEraseItemResult,
@@ -33,6 +30,13 @@ import {
     CrudGetItemSuccess,
 } from '../../crud';
 import {
+    CheckSubscriptionMetricsResult,
+    CrudRecordsConfiguration,
+    CrudRecordsController,
+    CrudGetItemResult,
+    CrudRecordItemResult,
+} from '../../crud';
+import type {
     PackageRecordVersion,
     PackageRecordVersionKey,
     PackageRecordVersionWithMetadata,
@@ -40,35 +44,39 @@ import {
     PackageVersionReview,
     PackageVersionSubscriptionMetrics,
 } from './PackageVersionRecordsStore';
-import {
-    getNotificationFeatures,
-    getPackageFeatures,
-    NotificationFeaturesConfiguration,
+import type {
     PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../../SubscriptionConfiguration';
 import {
+    getNotificationFeatures,
+    getPackageFeatures,
+    NotificationFeaturesConfiguration,
+} from '../../SubscriptionConfiguration';
+import type {
     SubCrudEraseItemRequest,
     SubCrudGetItemRequest,
     SubCrudListItemsRequest,
     SubCrudRecordsConfiguration,
-    SubCrudRecordsController,
 } from '../../crud/sub/SubCrudRecordsController';
-import { PackageRecordsStore } from '../PackageRecordsStore';
+import { SubCrudRecordsController } from '../../crud/sub/SubCrudRecordsController';
+import type { PackageRecordsStore } from '../PackageRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
-import {
+import type {
     FileRecordsController,
     ReadFileResult,
-    ReadFileSuccess,
     RecordFileRequest,
     RecordFileResult,
+} from '../../FileRecordsController';
+import {
+    ReadFileSuccess,
     RecordFileSuccess,
 } from '../../FileRecordsController';
-import { ConfigurationStore } from '../../ConfigurationStore';
+import type { ConfigurationStore } from '../../ConfigurationStore';
 import { traced } from '../../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
-import { UserRole } from '../../AuthStore';
+import type { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
+import type { UserRole } from '../../AuthStore';
 import { isPackageReviewerRole, isSuperUserRole } from '../../AuthUtils';
 import { v7 as uuid } from 'uuid';
 

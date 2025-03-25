@@ -1,34 +1,31 @@
-import {
+import type {
     BotAction,
-    ConnectionIndicator,
     PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, Endpoint } from 'comlink';
-import {
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Remote, Endpoint } from 'comlink';
+import { wrap, proxy, expose, transfer } from 'comlink';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
+import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
     AuxSubChannel,
     AuxSubVM,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
-import {
-    StatusUpdate,
-    remapProgressPercent,
-    DeviceAction,
-} from '@casual-simulation/aux-common';
-import { DenoWorker, DenoWorkerOptions, polyfillMessageChannel } from 'deno-vm';
+} from '@casual-simulation/aux-vm/vm';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
+import { remapProgressPercent } from '@casual-simulation/aux-common';
+import type { DenoWorkerOptions } from 'deno-vm';
+import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import {
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,

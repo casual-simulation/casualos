@@ -2,13 +2,13 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import {
+import type {
     AuthHelperInterface,
     LoginUIHandleLoginMetadata,
 } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
+import type { FormError } from '@casual-simulation/aux-records';
 import {
-    FormError,
     SUBSCRIPTION_ID_NAMESPACE,
     getFormErrors,
 } from '@casual-simulation/aux-records';

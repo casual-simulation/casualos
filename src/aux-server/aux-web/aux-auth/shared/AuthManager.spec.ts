@@ -1,6 +1,6 @@
 console.log = jest.fn();
 
-import {
+import type {
     CompleteLoginSuccess,
     LoginRequestSuccess,
 } from '@casual-simulation/aux-records/AuthController';

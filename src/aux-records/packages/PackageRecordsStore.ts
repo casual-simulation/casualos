@@ -3,8 +3,12 @@ import {
     ServerError,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { CrudRecord, CrudRecordsStore, CrudSubscriptionMetrics } from '../crud';
-import { SubscriptionFilter } from '../MetricsStore';
+import type {
+    CrudRecord,
+    CrudRecordsStore,
+    CrudSubscriptionMetrics,
+} from '../crud';
+import type { SubscriptionFilter } from '../MetricsStore';
 
 /**
  * Defines a store that contains notification records.

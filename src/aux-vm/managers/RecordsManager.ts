@@ -1,18 +1,20 @@
+import type {
+    ConnectionClient,
+    RemoteCausalRepoProtocol,
+    GenericHttpRequest,
+    GetRecordsEndpointAction,
+} from '@casual-simulation/aux-common';
 import {
     BotAction,
     hasValue,
     asyncResult,
     asyncError,
     APPROVED_SYMBOL,
-    ConnectionClient,
-    RemoteCausalRepoProtocol,
-    GenericHttpRequest,
-    GetRecordsEndpointAction,
     iterableNext,
     iterableThrow,
     iterableComplete,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     ListRecordDataAction,
     RecordEventAction,
     GetEventCountAction,
@@ -45,39 +47,41 @@ import {
     AISloydGenerateModelAction,
     RecordsCallProcedureAction,
 } from '@casual-simulation/aux-runtime';
-import { AuxConfigParameters } from '../vm/AuxConfig';
+import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
-import { BotHelper } from './BotHelper';
-import {
+import type { BotHelper } from './BotHelper';
+import type {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
     IssueMeetTokenResult,
-    isRecordKey,
     GrantMarkerPermissionResult,
-    RevokeMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
-    GetFileRecordResult,
     ReadFileResult,
     ReadFileFailure,
     ReportInstRequest,
     ReportInstResult,
     GrantResourcePermissionResult,
     RevokePermissionResult,
-    formatInstId,
     PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
+import {
+    isRecordKey,
+    RevokeMarkerPermissionResult,
+    GetFileRecordResult,
+    formatInstId,
     parseRecordKey,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
+import type { Observable } from 'rxjs';
 import {
-    Observable,
     ReplaySubject,
     Subject,
     connectable,
@@ -89,16 +93,16 @@ import {
     takeWhile,
 } from 'rxjs';
 import { DateTime } from 'luxon';
-import {
+import type {
     AIChatResponse,
     AIGenerateImageResponse,
     AIGenerateSkyboxResponse,
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import {
     RecordsClientInputs,
-    RecordsClientActions,
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
 

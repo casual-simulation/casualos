@@ -1,4 +1,4 @@
-import { Vector2 } from '@casual-simulation/three';
+import type { Vector2 } from '@casual-simulation/three';
 
 /**
  * Defines a class that contains axial coordinates.
@@ -42,16 +42,16 @@ export class Axial {
         // basically converts the axial coordinate to cube coordinates, rounds,
         // and then converts back.
 
-        var x = this._q;
-        var z = this._r;
-        var y = -x - z;
-        var rx = Math.round(x);
-        var ry = Math.round(y);
-        var rz = Math.round(z);
+        let x = this._q;
+        let z = this._r;
+        let y = -x - z;
+        let rx = Math.round(x);
+        let ry = Math.round(y);
+        let rz = Math.round(z);
 
-        var xDiff = Math.abs(rx - x);
-        var yDiff = Math.abs(ry - y);
-        var zDiff = Math.abs(rz - z);
+        let xDiff = Math.abs(rx - x);
+        let yDiff = Math.abs(ry - y);
+        let zDiff = Math.abs(rz - z);
 
         if (xDiff > yDiff && xDiff > zDiff) {
             rx = -ry - rz;

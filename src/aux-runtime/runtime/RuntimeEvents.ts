@@ -1,11 +1,11 @@
-import {
+import type {
     AsyncAction,
     AsyncActions,
     BotAction,
     LocalActions,
 } from '@casual-simulation/aux-common';
-import { AuxRuntime } from './AuxRuntime';
-import { RecordsActions, RecordsAsyncActions } from './RecordsEvents';
+import type { AuxRuntime } from './AuxRuntime';
+import type { RecordsActions, RecordsAsyncActions } from './RecordsEvents';
 
 export type RuntimeActions =
     | LocalActions

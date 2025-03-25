@@ -1,11 +1,11 @@
-import {
+import type {
     ActionKinds,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerResult,
     AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
@@ -19,9 +19,9 @@ import {
     ResourcePermissionAssignment,
     UpdateUserRolesResult,
     UserPrivacyFeatures,
-    getExpireTime,
 } from './PolicyStore';
-import { Cache } from './Cache';
+import { getExpireTime } from './PolicyStore';
+import type { Cache } from './Cache';
 
 /**
  * Defines a policy store that uses a cache.

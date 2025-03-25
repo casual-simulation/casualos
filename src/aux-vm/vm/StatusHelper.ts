@@ -1,5 +1,6 @@
-import { StatusUpdate } from '@casual-simulation/aux-common';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
+import type { StatusUpdate } from '@casual-simulation/aux-common';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 /**
  * Defines a class that helps manage status updates from multiple sources.

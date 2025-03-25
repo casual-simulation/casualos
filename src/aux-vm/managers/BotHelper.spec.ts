@@ -1,8 +1,8 @@
+import type { PrecalculatedBotsState } from '@casual-simulation/aux-common';
 import {
     botAdded,
     createBot,
     botUpdated,
-    PrecalculatedBotsState,
     createPrecalculatedBot,
     botRemoved,
     action,

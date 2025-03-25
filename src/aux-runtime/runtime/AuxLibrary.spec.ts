@@ -1,21 +1,31 @@
+import type {
+    DebuggerInterface,
+    RecordFileApiSuccess,
+    TagSpecificApiOptions,
+} from './AuxLibrary';
 import {
     createDefaultLibrary,
     createInterpretableFunction,
-    DebuggerInterface,
     GET_RUNTIME,
-    RecordFileApiSuccess,
     tagAsInterpretableFunction,
-    TagSpecificApiOptions,
 } from './AuxLibrary';
+import type { WatchBotTimer, WatchPortalTimer } from './AuxGlobalContext';
 import {
     AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
-    WatchBotTimer,
     DEBUG_STRING,
-    WatchPortalTimer,
 } from './AuxGlobalContext';
+import type {
+    BotsState,
+    RuntimeBot,
+    AuthData,
+    Bot,
+    PartialBotsState,
+    StoredAuxVersion2,
+    InstUpdate,
+} from '@casual-simulation/aux-common/bots';
 import {
     toast,
     showJoinCode,
@@ -42,7 +52,6 @@ import {
     unloadSimulation,
     importAUX,
     addState,
-    BotsState,
     showInputForTag,
     KNOWN_PORTALS,
     replaceDragBot,
@@ -69,7 +78,6 @@ import {
     cancelSound,
     localPositionTween,
     localRotationTween,
-    RuntimeBot,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
     animateTag,
@@ -94,13 +102,10 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData,
-    AuthData,
     defineGlobalBot,
-    Bot,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
-    PartialBotsState,
     convertGeolocationToWhat3Words,
     arSupported,
     vrSupported,
@@ -131,8 +136,6 @@ import {
     analyticsRecordEvent,
     KNOWN_TAGS,
     showConfirm,
-    StoredAuxVersion2,
-    InstUpdate,
     getCurrentInstUpdate,
     openPhotoCamera,
     enableCollaboration,
@@ -213,12 +216,12 @@ import {
     createDummyRuntimeBot,
     testScriptBotInterface,
 } from './test/TestScriptBotFactory';
-import {
+import type {
     RuntimeBatcher,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import { AuxVersion } from './AuxVersion';
-import { AuxDevice } from './AuxDevice';
+import type { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
 import { shuffle } from 'lodash';
 import {
     asymmetricDecryptV1,
@@ -234,7 +237,8 @@ import {
     remoteEdit,
 } from '@casual-simulation/aux-common/bots';
 import { RanOutOfEnergyError } from './AuxResults';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import {
     waitAsync,
     customDataTypeCases,
@@ -244,8 +248,8 @@ import { convertErrorToCopiableValue } from '@casual-simulation/aux-common/parti
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
+import type { AIChatInterfaceStreamResponse } from '@casual-simulation/aux-records';
 import {
-    AIChatInterfaceStreamResponse,
     AIChatMessage,
     formatV1RecordKey,
     formatV2RecordKey,
@@ -306,6 +310,7 @@ describe('AuxLibrary', () => {
         device = {
             supportsAR: true,
             supportsVR: false,
+            supportsDOM: false,
             isCollaborative: true,
             allowCollaborationUpgrade: true,
             ab1BootstrapUrl: 'bootstrapURL',
@@ -4010,6 +4015,7 @@ describe('AuxLibrary', () => {
                 expect(d).toEqual({
                     supportsAR: null,
                     supportsVR: null,
+                    supportsDOM: null,
                     isCollaborative: null,
                     ab1BootstrapUrl: null,
                     allowCollaborationUpgrade: null,
@@ -4070,6 +4076,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 const expected = enableCollaboration(context.tasks.size);
@@ -4084,6 +4091,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -4101,6 +4109,7 @@ describe('AuxLibrary', () => {
                     ab1BootstrapUrl: 'bootstrap',
                     supportsAR: true,
                     supportsVR: true,
+                    supportsDOM: false,
                 };
                 const promise: any = library.api.os.enableCollaboration();
                 expect(promise[ORIGINAL_OBJECT]).toBeUndefined();
@@ -9760,6 +9769,7 @@ describe('AuxLibrary', () => {
                     device = {
                         supportsAR: true,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: true,
                         allowCollaborationUpgrade: true,
                         ab1BootstrapUrl: 'bootstrapURL',
@@ -13992,7 +14002,7 @@ describe('AuxLibrary', () => {
                 });
                 context.recordListenerPresense(bot1.id, 'create', true);
 
-                let [] = handleResult(library.api.shout('create'));
+                handleResult(library.api.shout('create'));
                 handleResult(library.api.shout('abc'));
 
                 expect(abc).toBeCalledTimes(1);
@@ -20241,8 +20251,8 @@ describe('AuxLibrary', () => {
     });
 
     describe('perf.getStats()', () => {
-        let getShoutTimers: jest.Mock<{}>;
-        let getLoadTimes: jest.Mock<{}>;
+        let getShoutTimers: jest.Mock<object>;
+        let getLoadTimes: jest.Mock<object>;
 
         beforeEach(() => {
             context.getShoutTimers = getShoutTimers = jest.fn();

@@ -1,16 +1,18 @@
-import {
+import type {
     Bot,
     BotCalculationContext,
+    PrecalculatedBot,
+    BotIndexEvent,
+} from '@casual-simulation/aux-common';
+import {
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     isDimensionLocked,
     calculateGridScale,
-    PrecalculatedBot,
     toast,
     calculateBotValue,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
-    BotIndexEvent,
     DEFAULT_MINI_PORTAL_VISIBLE,
     getPortalConfigBotID,
     DEFAULT_PORTAL_ROTATABLE,
@@ -18,8 +20,8 @@ import {
     DEFAULT_PORTAL_ZOOMABLE,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    BrowserSimulation,
     userBotChanged,
     userBotTagsChanged,
     watchPortalConfigBot,
@@ -32,19 +34,21 @@ import {
     switchMap,
 } from 'rxjs/operators';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
-import { CameraRig } from '../../shared/scene/CameraRigFactory';
-import { Game } from '../../shared/scene/Game';
-import { PlayerGame } from './PlayerGame';
-import {
-    UpdatedBotInfo,
+import type { CameraRig } from '../../shared/scene/CameraRigFactory';
+import type { Game } from '../../shared/scene/Game';
+import type { PlayerGame } from './PlayerGame';
+import type {
     BotDimensionEvent,
     DimensionAddedEvent,
+} from '@casual-simulation/aux-vm';
+import {
+    UpdatedBotInfo,
     DimensionRemovedEvent,
 } from '@casual-simulation/aux-vm';
 import { PortalConfig } from './PortalConfig';
-import { AuxBot3D } from '../../shared/scene/AuxBot3D';
+import type { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { CompoundGrid3D } from '../../shared/scene/CompoundGrid3D';
-import { Grid3D } from '../../shared/scene/Grid3D';
+import type { Grid3D } from '../../shared/scene/Grid3D';
 import { Object3D } from '@casual-simulation/three';
 
 export abstract class PlayerSimulation3D extends Simulation3D {

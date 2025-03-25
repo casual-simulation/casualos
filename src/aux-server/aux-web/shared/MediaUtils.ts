@@ -1,6 +1,6 @@
 import { hasValue } from '@casual-simulation/aux-common';
 import { appManager } from './AppManager';
-import { ParsedCasualOSUrl } from './UrlUtils';
+import type { ParsedCasualOSUrl } from './UrlUtils';
 
 /**
  * Gets the media for the given CasualOS URL.

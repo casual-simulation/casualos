@@ -1,26 +1,23 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import type { ReportInstAction } from '@casual-simulation/aux-common';
 import {
     hasValue,
     action,
     asyncResult,
     asyncError,
-    ReportInstAction,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import FieldErrors from '../FieldErrors/FieldErrors';
 import { getPermalink } from '../../../aux-player/UrlUtils';
+import type { FormError, ReportReason } from '@casual-simulation/aux-records';
 import {
-    FormError,
     REPORT_REASON_FIELD,
     REPORT_REASON_TEXT_FIELD,
-    ReportReason,
     getFormErrors,
 } from '@casual-simulation/aux-records';
 

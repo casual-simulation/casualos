@@ -1,21 +1,23 @@
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
-import {
+import type {
     Bot,
     BotCalculationContext,
     BotAction,
+    PartialBot,
+} from '@casual-simulation/aux-common';
+import {
     merge,
     createBot,
     botAdded,
-    PartialBot,
     CREATE_ACTION_NAME,
     BotDragMode,
 } from '@casual-simulation/aux-common';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerBotDragOperation } from './PlayerBotDragOperation';
-import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { InputMethod, InputModality } from '../../../shared/scene/Input';
-import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
+import type { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
     private _botAdded: boolean;

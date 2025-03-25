@@ -1,18 +1,20 @@
+import type {
+    CompleteLoginSuccess,
+    ListSessionsSuccess,
+    RelyingParty,
+    RequestWebAuthnLoginSuccess,
+    RequestWebAuthnRegistrationSuccess,
+} from './AuthController';
 import {
     AuthController,
-    CompleteLoginSuccess,
     findRelyingPartyForOrigin,
     getPrivacyFeaturesFromPermissions,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_TOKEN_ERROR_MESSAGE,
-    ListSessionsSuccess,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
     OPEN_ID_LOGIN_REQUEST_LIFETIME_MS,
     PRIVO_OPEN_ID_PROVIDER,
-    RelyingParty,
-    RequestWebAuthnLoginSuccess,
-    RequestWebAuthnRegistrationSuccess,
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
@@ -41,23 +43,25 @@ import {
 } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
-import { PrivoClientInterface } from './PrivoClient';
-import {
+import type { PrivoClientInterface } from './PrivoClient';
+import type {
     VerifiedRegistrationResponse,
     VerifyAuthenticationResponseOpts,
-    verifyRegistrationResponse,
-    generateRegistrationOptions,
     GenerateRegistrationOptionsOpts,
-    generateAuthenticationOptions,
     GenerateAuthenticationOptionsOpts,
-    verifyAuthenticationResponse,
     VerifiedAuthenticationResponse,
 } from '@simplewebauthn/server';
 import {
+    verifyRegistrationResponse,
+    generateRegistrationOptions,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse,
+} from '@simplewebauthn/server';
+import type {
     PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
-import { UserLoginMetadata } from './AuthStore';
+import type { UserLoginMetadata } from './AuthStore';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');

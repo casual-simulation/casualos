@@ -1,5 +1,5 @@
+import type { Observable } from 'rxjs';
 import {
-    Observable,
     fromEventPattern,
     BehaviorSubject,
     Subject,
@@ -17,11 +17,9 @@ import {
     share,
     filter,
 } from 'rxjs/operators';
-import {
-    ReconnectableSocket,
-    ReconnectableSocketInterface,
-} from '@casual-simulation/websocket';
-import {
+import type { ReconnectableSocketInterface } from '@casual-simulation/websocket';
+import { ReconnectableSocket } from '@casual-simulation/websocket';
+import type {
     ClientConnectionState,
     ConnectionClient,
     ConnectionIndicator,
@@ -29,14 +27,17 @@ import {
     WebsocketDownloadRequestEvent,
     WebsocketErrorInfo,
     WebsocketEvent,
-    WebsocketEventTypes,
     WebsocketMessage,
     WebsocketMessageEvent,
-    WebsocketType,
     WebsocketUploadRequestEvent,
     WebsocketUploadResponseEvent,
 } from '@casual-simulation/aux-common';
-import axios, { Method } from 'axios';
+import {
+    WebsocketEventTypes,
+    WebsocketType,
+} from '@casual-simulation/aux-common';
+import type { Method } from 'axios';
+import axios from 'axios';
 
 export const MAX_MESSAGE_SIZE = 32_000;
 

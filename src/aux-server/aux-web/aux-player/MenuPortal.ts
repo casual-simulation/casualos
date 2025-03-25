@@ -1,26 +1,24 @@
-import { Subscription, Subject, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
-import { DimensionItem } from './DimensionItem';
-import {
+import type { DimensionItem } from './DimensionItem';
+import type {
     Simulation,
     BotDimensionsUpdate,
     SimulationManager,
 } from '@casual-simulation/aux-vm';
-import {
-    getBotIndex,
-    Bot,
-    BotCalculationContext,
-} from '@casual-simulation/aux-common';
+import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import { getBotIndex } from '@casual-simulation/aux-common';
 import { MenuPortalConfig } from './MenuPortalConfig';
-import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
+import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a dimension that watches a set of simulations for changes to items in a dimension.
  */
 export class MenuPortal implements SubscriptionLike {
     items: DimensionItem[] = [];
-    extraStyle: Object = {};
+    extraStyle: object = {};
 
     private _dimensionTags: string[] = [];
     private _itemsUpdated = new Subject<DimensionItem[]>();

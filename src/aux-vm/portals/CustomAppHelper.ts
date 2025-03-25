@@ -5,10 +5,10 @@ import {
     ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     action,
 } from '@casual-simulation/aux-common';
-import { AuxHelper } from '../vm';
-import { HtmlAppBackend } from './HtmlAppBackend';
-import { AppBackend } from './AppBackend';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { AuxHelper } from '../vm';
+import { HtmlAppBackend, isBrowserDocument } from './HtmlAppBackend';
+import type { AppBackend } from './AppBackend';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 const ROOT_APP_ID = '_root';
 
@@ -69,17 +69,33 @@ export class CustomAppHelper {
                 }
             } else if (event.type === 'custom_app_container_available') {
                 if (!this.portals.has(ROOT_APP_ID)) {
-                    const appId = ROOT_APP_ID;
-                    const botId = this.helper.userId;
-                    const backend = new HtmlAppBackend(
-                        appId,
-                        botId,
-                        this.helper
-                    );
+                    if (!isBrowserDocument()) {
+                        // document is not defined so we should make a root custom app
+                        console.log(
+                            '[CustomAppHelper] Creating root custom app'
+                        );
 
-                    this.portals.set(appId, backend);
-                    backend.onSetup.subscribe(() => {
-                        (globalThis as any).document = backend.document;
+                        const appId = ROOT_APP_ID;
+                        const botId = this.helper.userId;
+                        const backend = new HtmlAppBackend(
+                            appId,
+                            botId,
+                            this.helper
+                        );
+
+                        this.portals.set(appId, backend);
+                        backend.onSetup.subscribe(() => {
+                            (globalThis as any).document = backend.document;
+                            this.helper.transaction(
+                                action(
+                                    ON_DOCUMENT_AVAILABLE_ACTION_NAME,
+                                    null,
+                                    this.helper.userId
+                                )
+                            );
+                        });
+                    } else {
+                        // document is defined
                         this.helper.transaction(
                             action(
                                 ON_DOCUMENT_AVAILABLE_ACTION_NAME,
@@ -87,7 +103,7 @@ export class CustomAppHelper {
                                 this.helper.userId
                             )
                         );
-                    });
+                    }
                 }
             }
         }

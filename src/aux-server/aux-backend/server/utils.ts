@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as process from 'process';
-import { Handler } from 'express';
-import { AxiosError } from 'axios';
+import type { Handler } from 'express';
+import type { AxiosError } from 'axios';
 import { flatMap } from 'lodash';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {

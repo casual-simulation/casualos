@@ -1,7 +1,7 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, encodeStateAsUpdate } from 'yjs';
+import type { InstUpdate } from '../bots';
 import {
-    InstUpdate,
     ORIGINAL_OBJECT,
     action,
     botAdded,
@@ -25,7 +25,7 @@ import { customDataTypeCases, waitAsync } from '../test/TestHelpers';
 import { createDummyRuntimeBot } from '../../aux-runtime/runtime/test/TestScriptBotFactory';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import { PartitionRemoteEvents } from '.';
+import type { PartitionRemoteEvents } from '.';
 import { remote, remoteResult } from '../common';
 
 describe('constructInitializationUpdate()', () => {

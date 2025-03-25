@@ -17,7 +17,6 @@ import {
     getRootMarker,
     getPathMarker,
     parseVersionNumber,
-    getPackageVersionKey,
 } from './Utils';
 
 describe('signRequest()', () => {

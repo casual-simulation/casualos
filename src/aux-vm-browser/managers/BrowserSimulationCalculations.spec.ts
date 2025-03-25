@@ -1,16 +1,18 @@
+import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import {
     BotHelper,
     BotWatcher,
-    UpdatedBotInfo,
     PortalManager,
 } from '@casual-simulation/aux-vm';
+import type {
+    PrecalculatedBot,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 import {
     BotIndex,
     createBot,
     createPrecalculatedBot,
     Bot,
-    PrecalculatedBot,
-    LocalActions,
     registerBuiltinPortal,
     defineGlobalBot,
 } from '@casual-simulation/aux-common';

@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { Bot } from '@casual-simulation/aux-common';
+import type { Bot } from '@casual-simulation/aux-common';
 import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
 import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';

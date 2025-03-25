@@ -1,4 +1,4 @@
-import { UserRole } from './AuthStore';
+import type { UserRole } from './AuthStore';
 import {
     formatV1OpenAiKey,
     formatV1SessionKey,

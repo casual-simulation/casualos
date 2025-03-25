@@ -1,39 +1,42 @@
-import { AuthController } from './AuthController';
-import {
-    isRecordKey,
+import type { AuthController } from './AuthController';
+import type {
     RecordsController,
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import {
+import { isRecordKey } from './RecordsController';
+import type {
     NotSupportedError,
     ServerError,
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
-import {
-    ADMIN_ROLE_NAME,
+import type {
     AvailablePermissions,
     ResourceKinds,
     ActionKinds,
-    PUBLIC_READ_MARKER,
     SubjectType,
-    ACCOUNT_MARKER,
     DenialReason,
     PrivacyFeatures,
     PermissionOptions,
-    PUBLIC_WRITE_MARKER,
-    PRIVATE_MARKER,
     Entitlement,
     KnownErrorCodes,
     GrantedEntitlementScope,
     EntitlementFeature,
 } from '@casual-simulation/aux-common';
-import { ListedStudioAssignment, PublicRecordKeyPolicy } from './RecordsStore';
 import {
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+    ACCOUNT_MARKER,
+    PUBLIC_WRITE_MARKER,
+    PRIVATE_MARKER,
+} from '@casual-simulation/aux-common';
+import type {
+    ListedStudioAssignment,
+    PublicRecordKeyPolicy,
+} from './RecordsStore';
+import type {
     AssignedRole,
     AssignPermissionToSubjectAndMarkerFailure,
-    getExpireTime,
-    getPublicMarkersPermission,
     GrantedPackageEntitlement,
     MarkerPermissionAssignment,
     PolicyStore,
@@ -42,6 +45,7 @@ import {
     UpdateUserRolesFailure,
     UserPrivacyFeatures,
 } from './PolicyStore';
+import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
 import { get, sortBy, union, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets/Utils';
@@ -51,10 +55,10 @@ import type {
 } from './websockets/InstRecordsStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { UserRole } from './AuthStore';
-import { v7 as uuidv7 } from 'uuid';
-import { PackageVersionRecordsStore } from './packages/version/PackageVersionRecordsStore';
+import type { UserRole } from './AuthStore';
 import { isSuperUserRole } from './AuthUtils';
+import type { PackageVersionRecordsStore } from './packages/version';
+import { v7 as uuidv7 } from 'uuid';
 
 const TRACE_NAME = 'PolicyController';
 
@@ -1240,7 +1244,6 @@ export class PolicyController {
 
                     if (hasPackages) {
                         const firstPackage = loadedPackages[0];
-                        firstPackage.packageVersionId;
                         const pkg = await this._packageVersions?.getItemById(
                             firstPackage.packageVersionId
                         );

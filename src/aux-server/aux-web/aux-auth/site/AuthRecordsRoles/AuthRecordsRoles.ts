@@ -4,7 +4,7 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import { RoleAssignment } from '@casual-simulation/aux-records';
+import type { RoleAssignment } from '@casual-simulation/aux-records';
 import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import RelativeTime from '../RelativeTime/RelativeTime';

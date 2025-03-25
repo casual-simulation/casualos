@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import {
+import type {
     AuthController,
     ValidateSessionKeyResult,
 } from '@casual-simulation/aux-records/AuthController';

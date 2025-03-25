@@ -1,11 +1,11 @@
-import {
+import type {
     AuxPartitionConfig,
-    hasValue,
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
-import { AuxDevice } from '@casual-simulation/aux-runtime';
+import { hasValue } from '@casual-simulation/aux-common';
+import type { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines the possible configuration options for a simulation.
@@ -117,6 +117,14 @@ export interface AuxConfigParameters {
      * The comId that was specified when this config was created.
      */
     comId?: string;
+
+    /**
+     * Whether full support for the DOM should be enabled.
+     * This will run the VM without the web worker so that scripts have direct access to the iframe.
+     * May not be supported in all environments.
+     * Defaults to false.
+     */
+    enableDom?: boolean;
 }
 
 export interface AuxTimeSyncConfiguration {
@@ -158,7 +166,7 @@ export function parseVersionNumber(version: string) {
             alpha: null,
         };
     }
-    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((\:|-)\w+\.?\d*)*$/i;
+    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((:|-)\w+\.?\d*)*$/i;
     const [str, major, minor, patch, prerelease] = versionRegex.exec(version);
 
     let alpha: boolean | number = false;

@@ -1,14 +1,14 @@
-import {
+import type {
     PackageRecord,
     PackageRecordsStore,
     PackageSubscriptionMetrics,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
-import {
+import type {
     ListCrudStoreSuccess,
     ListCrudStoreByMarkerRequest,
 } from '@casual-simulation/aux-records/crud';
-import { Prisma, PrismaClient } from './generated';
+import type { Prisma, PrismaClient } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { convertMarkers } from './Utils';
 

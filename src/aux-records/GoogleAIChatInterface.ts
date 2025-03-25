@@ -1,11 +1,11 @@
-import {
-    GoogleGenerativeAI,
+import type {
     Content,
     Part,
     TextPart,
     InlineDataPart,
 } from '@google/generative-ai';
-import {
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type {
     AIChatInterface,
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
@@ -13,12 +13,8 @@ import {
     AIChatMessage,
 } from './AIChatInterface';
 import { traced } from './tracing/TracingDecorators';
-import {
-    SpanKind,
-    SpanOptions,
-    SpanStatusCode,
-    trace,
-} from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'GoogleAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {

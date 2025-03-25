@@ -1,16 +1,18 @@
-import {
+import type {
     PrecalculatedBot,
     Bot,
     PrecalculatedTags,
     BotSpace,
-    hasValue,
     BotSignatures,
     CompiledBotListeners,
     RuntimeBot,
-    BotAction,
     CompiledBotModules,
-    BotModule,
     CompiledBotExports,
+} from '@casual-simulation/aux-common/bots';
+import {
+    hasValue,
+    BotAction,
+    BotModule,
 } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import type {
@@ -20,8 +22,8 @@ import type {
     InterpreterContinuation,
     InterpreterStop,
 } from '@casual-simulation/js-interpreter';
-import { ScriptError } from './AuxResults';
-import { RuntimeActions } from './RuntimeEvents';
+import type { ScriptError } from './AuxResults';
+import type { RuntimeActions } from './RuntimeEvents';
 
 // Types of bots
 // 1. Raw bot - original data

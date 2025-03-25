@@ -1,9 +1,9 @@
-import {
+import type {
     UploadHttpHeaders,
     WebsocketEvent,
     WebsocketMessage,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import { PresignFileUploadResult } from '../FileRecordsStore';
+import type { PresignFileUploadResult } from '../FileRecordsStore';
 
 /**
  * Defines an interface that is capable of sending messages to connections.

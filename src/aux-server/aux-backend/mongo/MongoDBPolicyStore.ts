@@ -1,19 +1,20 @@
-import {
+import type {
     ActionKinds,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
 } from '@casual-simulation/aux-common';
 import {
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
+} from '@casual-simulation/aux-common';
+import type {
     AssignedRole,
     ListedRoleAssignments,
     PolicyStore,
     RoleAssignment,
     UpdateUserRolesResult,
-    getExpireTime,
     AssignPermissionToSubjectAndMarkerResult,
     AssignPermissionToSubjectAndResourceResult,
     DeletePermissionAssignmentResult,
@@ -23,8 +24,9 @@ import {
     MarkerPermissionAssignment,
     ResourcePermissionAssignment,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery } from 'mongodb';
-import { MongoDBAuthUser } from './MongoDBAuthStore';
+import { getExpireTime } from '@casual-simulation/aux-records';
+import type { Collection, FilterQuery } from 'mongodb';
+import type { MongoDBAuthUser } from './MongoDBAuthStore';
 import { v4 as uuid } from 'uuid';
 
 /**

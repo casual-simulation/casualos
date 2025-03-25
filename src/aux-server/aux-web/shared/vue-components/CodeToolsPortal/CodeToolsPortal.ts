@@ -1,7 +1,7 @@
+import type { Bot } from '@casual-simulation/aux-common';
 import {
     action,
     ANY_CLICK_ACTION_NAME,
-    Bot,
     calculateFormattedBotValue,
     calculateStringTagValue,
     CLICK_ACTION_NAME,
@@ -13,11 +13,9 @@ import {
     calculateDimensions,
     getBotIndex,
 } from '@casual-simulation/aux-common';
-import {
-    BotDimensionsUpdate,
-    DimensionAddedEvent,
-} from '@casual-simulation/aux-vm';
-import { BotManager } from '@casual-simulation/aux-vm-browser';
+import type { BotDimensionsUpdate } from '@casual-simulation/aux-vm';
+import { DimensionAddedEvent } from '@casual-simulation/aux-vm';
+import type { BotManager } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import Vue from 'vue';

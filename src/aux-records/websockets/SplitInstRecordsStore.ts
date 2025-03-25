@@ -1,23 +1,22 @@
 import { sortBy } from 'lodash';
-import {
+import type {
     AddUpdatesResult,
     BranchRecord,
     BranchRecordWithInst,
     CurrentUpdates,
-    InstRecord,
     InstRecordsStore,
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
     LoadedPackage,
     ReplaceUpdatesResult,
-    SaveBranchFailure,
     SaveBranchResult,
     SaveInstResult,
     StoredUpdates,
 } from './InstRecordsStore';
-import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
-import { Entitlement } from '@casual-simulation/aux-common';
+import type { InstRecord, SaveBranchFailure } from './InstRecordsStore';
+import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import type { Entitlement } from '@casual-simulation/aux-common';
 
 /**
  * Defines a class that implements the InstRecordsStore interface by first storing updates in a temporary store and then sending them to a permanent store.

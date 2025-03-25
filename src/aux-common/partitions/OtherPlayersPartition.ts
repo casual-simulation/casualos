@@ -1,57 +1,54 @@
-import {
+import type {
     OtherPlayersClientPartitionConfig,
     OtherPlayersRepoPartitionConfig,
     PartitionConfig,
 } from './AuxPartitionConfig';
-import {
+import type {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
     AuxPartition,
 } from './AuxPartition';
-import {
+import type {
     BotsState,
-    getActiveObjects,
     UpdatedBot,
     Bot,
     BotAction,
+    GetRemotesAction,
+    StateUpdatedEvent,
+    PrecalculatedBotsState,
+    PartialBotsState,
+} from '../bots';
+import {
+    getActiveObjects,
     breakIntoIndividualEvents,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    GetRemotesAction,
     asyncResult,
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
-    StateUpdatedEvent,
     stateUpdatedEvent,
     applyUpdates,
-    PrecalculatedBotsState,
     isBot,
-    PartialBotsState,
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
-import {
-    BehaviorSubject,
-    Observable,
-    Subject,
-    Subscription,
-    firstValueFrom,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, first, skip, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
-import { InstRecordsClient } from '../websockets';
-import {
+import type { InstRecordsClient } from '../websockets';
+import type {
     Action,
     ConnectionInfo,
     CurrentVersion,
     RemoteActions,
     StatusUpdate,
-    getConnectionId,
 } from '../common';
-import { PartitionAuthSource } from './PartitionAuthSource';
+import { getConnectionId } from '../common';
+import type { PartitionAuthSource } from './PartitionAuthSource';
 
 export async function createOtherPlayersClientPartition(
     config: PartitionConfig,

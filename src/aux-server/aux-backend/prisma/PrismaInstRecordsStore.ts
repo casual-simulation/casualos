@@ -1,9 +1,8 @@
-import {
+import type {
     AddUpdatesResult,
     BranchRecord,
     BranchRecordWithInst,
     CurrentUpdates,
-    InstRecord,
     InstRecordsStore,
     InstWithBranches,
     InstWithSubscriptionInfo,
@@ -14,7 +13,9 @@ import {
     SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from './generated';
+import { InstRecord } from '@casual-simulation/aux-records';
+import type { PrismaClient } from './generated';
+import { Prisma } from './generated';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

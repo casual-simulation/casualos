@@ -1,9 +1,9 @@
-import {
+import type {
     CurrentUpdates,
     LoadedPackage,
     StoredUpdates,
 } from './InstRecordsStore';
-import {
+import type {
     BranchName,
     BranchUpdates,
     TempBranchInfo,

@@ -2,7 +2,10 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import { AuthHelperInterface, LoginUIStatus } from '@casual-simulation/aux-vm';
+import type {
+    AuthHelperInterface,
+    LoginUIStatus,
+} from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
 import CheckAddressDialog from '../CheckAddressDialog/CheckAddressDialog';
 import EnterAddressDialog from '../EnterAddressDialog/EnterAddressDialog';

@@ -1,9 +1,9 @@
+import type { Color } from '@casual-simulation/three';
 import {
     MathUtils as ThreeMath,
     Mesh,
     Object3D,
     DoubleSide,
-    Color,
     Vector3,
     Vector2,
     Box2,

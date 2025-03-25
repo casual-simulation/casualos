@@ -1,6 +1,6 @@
 import { Bot, BotAction } from '@casual-simulation/aux-common';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
-import { Observable } from 'rxjs';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { Observable } from 'rxjs';
 
 /**
  * Defines an interface that manages the interaction between a app's runtime and how it is displayed on screen.

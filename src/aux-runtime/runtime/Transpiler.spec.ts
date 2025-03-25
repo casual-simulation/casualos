@@ -1,11 +1,12 @@
-import { Doc, Text } from 'yjs';
+import type { Text } from 'yjs';
+import { Doc } from 'yjs';
 import { DNA_TAG_PREFIX } from '@casual-simulation/aux-common';
+import type { TranspilerResult } from './Transpiler';
 import {
     Transpiler,
     anyArgument,
     replaceMacros,
     calculateOriginalLineLocation,
-    TranspilerResult,
     calculateFinalLineLocation,
 } from './Transpiler';
 import {

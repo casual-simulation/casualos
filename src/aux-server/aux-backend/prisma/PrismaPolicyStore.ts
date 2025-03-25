@@ -1,4 +1,4 @@
-import {
+import type {
     AssignPermissionToSubjectAndMarkerResult,
     AssignPermissionToSubjectAndResourceResult,
     AssignedRole,
@@ -10,22 +10,24 @@ import {
     MarkerPermissionAssignment,
     PolicyStore,
     ResourcePermissionAssignment,
-    RoleAssignment,
     UpdateUserRolesResult,
     UserPrivacyFeatures,
     UserRole,
-    getExpireTime,
 } from '@casual-simulation/aux-records';
-import { Prisma, PrismaClient } from './generated';
+import { RoleAssignment, getExpireTime } from '@casual-simulation/aux-records';
+import type { PrismaClient } from './generated';
+import { Prisma } from './generated';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
-import {
+import type {
     ActionKinds,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
+} from '@casual-simulation/aux-common';
+import {
+    PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';

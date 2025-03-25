@@ -1,5 +1,5 @@
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
-import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { MemoryStore } from '../MemoryStore';

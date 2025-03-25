@@ -95,7 +95,7 @@ export function invertColor(hex: string, useBlackAndWhite?: boolean): string {
     if (hex.length !== 6) {
         throw new Error('Invalid HEX color.');
     }
-    var r = parseInt(hex.slice(0, 2), 16),
+    let r = parseInt(hex.slice(0, 2), 16),
         g = parseInt(hex.slice(2, 4), 16),
         b = parseInt(hex.slice(4, 6), 16);
     if (useBlackAndWhite) {
@@ -144,7 +144,7 @@ export class ColorConvert {
      * @return  A valid rgba CSS color string
      */
     toRgba(color: string) {
-        var a = this.toRgbaArray(color);
+        let a = this.toRgbaArray(color);
         return (
             'rgba(' + a[0] + ',' + a[1] + ',' + a[2] + ',' + a[3] / 255 + ')'
         );
@@ -162,10 +162,10 @@ export class ColorConvert {
      * @return  A valid rgba CSS color string
      */
     toHex(color: string) {
-        var a = this.toRgbaArray(color);
+        let a = this.toRgbaArray(color);
         // Sigh, you can't map() typed arrays
-        var hex = [0, 1, 2]
-            .map(function(i) {
+        let hex = [0, 1, 2]
+            .map(function (i) {
                 return byteToHex(a[i]);
             })
             .join('');
