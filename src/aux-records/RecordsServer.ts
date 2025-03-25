@@ -3302,6 +3302,14 @@ export class RecordsServer {
                             })
                             .nonempty('addedPhoneNumber must not be empty')
                             .optional(),
+                        addedDisplayName: z
+                            .string({
+                                invalid_type_error:
+                                    'addedDisplayName must be a string.',
+                                required_error: 'addedDisplayName is required.',
+                            })
+                            .nonempty('addedDisplayName must not be empty')
+                            .optional(),
                         role: z.union([
                             z.literal('admin'),
                             z.literal('member'),
@@ -3315,6 +3323,7 @@ export class RecordsServer {
                             addedUserId,
                             addedEmail,
                             addedPhoneNumber,
+                            addedDisplayName,
                             role,
                         },
                         context
@@ -3338,6 +3347,7 @@ export class RecordsServer {
                             addedUserId,
                             addedEmail,
                             addedPhoneNumber,
+                            addedDisplayName,
                         });
                         return result;
                     }

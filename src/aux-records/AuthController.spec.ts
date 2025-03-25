@@ -136,31 +136,7 @@ describe('AuthController', () => {
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
     let privoClient: PrivoClientInterface;
-    let privoClientMock: {
-        createChildAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createChildAccount']>
-        >;
-        createAdultAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createAdultAccount']>
-        >;
-        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
-        generateAuthorizationUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
-        >;
-        processAuthorizationCallback: jest.Mock<
-            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
-        >;
-        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
-        checkDisplayName: jest.Mock<
-            ReturnType<PrivoClientInterface['checkDisplayName']>
-        >;
-        generateLogoutUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateLogoutUrl']>
-        >;
-        resendConsentRequest: jest.Mock<
-            ReturnType<PrivoClientInterface['resendConsentRequest']>
-        >;
-    };
+    let privoClientMock: jest.MockedObject<PrivoClientInterface>;
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
 
@@ -209,6 +185,7 @@ describe('AuthController', () => {
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
             resendConsentRequest: jest.fn(),
+            lookupServiceId: jest.fn(),
         };
 
         relyingParty = {

@@ -1604,6 +1604,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             metrics: this._metricsStore,
             messenger: this._notificationMessenger,
+            privo: this._privoClient ?? null,
         });
         this._policyController = new PolicyController(
             this._authController,
