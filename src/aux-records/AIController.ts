@@ -819,6 +819,21 @@ export class AIController {
                 };
             }
 
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
             const result = await this._generateSkybox.generateSkybox({
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,
@@ -904,6 +919,21 @@ export class AIController {
                                 ._allowedGenerateSkyboxSubscriptionTiers as Set<string>),
                         ],
                         currentSubscriptionTier: request.userSubscriptionTier,
+                    };
+                }
+            }
+
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
                     };
                 }
             }
@@ -1072,6 +1102,21 @@ export class AIController {
                 };
             }
 
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
             const result = await provider.generateImage({
                 model: model,
                 prompt: request.prompt,
@@ -1222,6 +1267,21 @@ export class AIController {
                 };
             }
 
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
             const result = await this._humeInterface.getAccessToken({
                 apiKey: humeConfig.apiKey,
                 secretKey: humeConfig.secretKey,
@@ -1341,6 +1401,21 @@ export class AIController {
                     errorCode: 'subscription_limit_reached',
                     errorMessage: `The request exceeds allowed subscription limits.`,
                 };
+            }
+
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
             }
 
             const result = await (request.baseModelId
@@ -1601,7 +1676,8 @@ export interface AIGetSkyboxFailure {
         | NotLoggedInError
         | NotSubscribedError
         | InvalidSubscriptionTierError
-        | NotSupportedError;
+        | NotSupportedError
+        | NotAuthorizedError;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
