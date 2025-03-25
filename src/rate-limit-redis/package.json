@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/rate-limit-redis",
-    "version": "3.4.0-alpha.13932534773",
+    "version": "3.4.0-alpha.14070378151",
     "description": "A Redis store for the `express-rate-limit` middleware",
     "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
