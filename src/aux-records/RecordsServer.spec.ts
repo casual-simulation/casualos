@@ -17877,6 +17877,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             id: 'testUser4',
                             email: null,
                             phoneNumber: null,
+                            privoServiceId: 'serviceId',
                         },
                     },
                 ]);
@@ -17933,6 +17934,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             id: 'testUser4',
                             email: null,
                             phoneNumber: null,
+                            privoServiceId: 'serviceId',
                         },
                     },
                 ]);
@@ -17989,6 +17991,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             id: 'testUser4',
                             email: null,
                             phoneNumber: null,
+                            privoServiceId: 'serviceId',
                         },
                     },
                 ]);

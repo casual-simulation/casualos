@@ -1359,6 +1359,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     name: user.name,
                     email: user.email,
                     phoneNumber: user.phoneNumber,
+                    privoServiceId: user.privoServiceId,
                 },
             });
         }
