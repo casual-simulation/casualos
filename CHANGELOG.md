@@ -12,6 +12,11 @@
     -   Requires the `ENABLE_DOM` environment variable to be set to `true` either during build or when running the server.
     -   Additionally requires that the `VM_ORIGIN` environment variable is set to something other than where the CasualOS frontend is served from (should serve the same files, but be a different origin for security purposes).
 
+### :rocket: Features
+
+-   Improved studios to support adding Privo users by email, display name, or user ID.
+    -   Additionally improved studios to only show members by name and display name when Privo support is enabled.
+
 ### :bug: Bug Fixes
 
 -   Improved error handling for `ai.generateImage()` requests with unacceptable parameters.
