@@ -2515,6 +2515,107 @@ describe('AIController', () => {
             });
         });
 
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(
+                generateSkyboxInterface.generateSkybox
+            ).not.toHaveBeenCalled();
+        });
+
         describe('subscriptions', () => {
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
@@ -2758,6 +2859,107 @@ describe('AIController', () => {
             expect(generateSkyboxInterface.getSkybox).toBeCalledWith(
                 'test-skybox-id'
             );
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            generateSkyboxInterface.getSkybox.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    status: 'generated',
+                    fileUrl: 'test-file-url',
+                    thumbnailUrl: 'test-thumbnail-url',
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.getSkybox({
+                skyboxId: 'skybox-id',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(generateSkyboxInterface.getSkybox).not.toHaveBeenCalled();
         });
     });
 
@@ -3049,6 +3251,112 @@ describe('AIController', () => {
             });
         });
 
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            generateImageInterface.generateImage.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.generateImage({
+                model: 'openai',
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(generateImageInterface.generateImage).not.toHaveBeenCalled();
+        });
+
         describe('subscriptions', () => {
             beforeEach(async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
@@ -3299,6 +3607,104 @@ describe('AIController', () => {
                 errorMessage:
                     'The subscription does not permit Hume AI features.',
             });
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            humeInterface.getAccessToken.mockResolvedValueOnce({
+                success: true,
+                accessToken: 'token',
+                expiresIn: 3600,
+                issuedAt: 1234567890,
+                tokenType: 'Bearer',
+            });
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.getHumeAccessToken({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(humeInterface.getAccessToken).not.toHaveBeenCalled();
         });
 
         describe('studio features', () => {
@@ -3996,6 +4402,110 @@ describe('AIController', () => {
             });
 
             expect(store.aiSloydMetrics).toEqual([]);
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: {
+                    interface: sloydInterface,
+                },
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+                name: 'model name',
+            });
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.sloydGenerateModel({
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(sloydInterface.createModel).not.toHaveBeenCalled();
         });
     });
 });

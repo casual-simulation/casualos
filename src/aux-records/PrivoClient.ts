@@ -45,6 +45,13 @@ export interface PrivoClientInterface {
     getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse>;
 
     /**
+     * Attempts to lookup the service ID for the given request.
+     * Can be used to lookup the service ID by user name, display name, email, phone, or user ID.
+     * @param request The request.
+     */
+    lookupServiceId(request: LookupServiceIdRequest): Promise<string | null>;
+
+    /**
      * Resends the consent email for the given requester and approver service IDs.
      * @param requesterServiceId The ID of the requester (child).
      * @param approverServiceId The ID of the approver (parent).
@@ -198,6 +205,14 @@ export interface ProcessAuthorizationCallbackResponse {
      * The user info that was returned.
      */
     userInfo: PrivoGetUserInfoResponse;
+}
+
+export interface LookupServiceIdRequest {
+    userName?: string;
+    displayName?: string;
+    email?: string;
+    phoneNumber?: string;
+    externalUserIdentifier?: string;
 }
 
 const TRACE_NAME = 'PrivoClient';
@@ -549,6 +564,50 @@ export class PrivoClient implements PrivoClientInterface {
                 active: p.active,
             })),
         };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async lookupServiceId(
+        request: LookupServiceIdRequest
+    ): Promise<string | null> {
+        const config = await this._config.getPrivoConfiguration();
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/api/v1.0/account/lookup`;
+
+        const params: Record<string, string> = {};
+        if (request.userName) {
+            params.user_name = request.userName;
+        } else if (request.displayName) {
+            params.display_name = request.displayName;
+        } else if (request.email) {
+            params.email = request.email;
+        } else if (request.phoneNumber) {
+            params.phone = request.phoneNumber;
+        } else if (request.externalUserIdentifier) {
+            params.external_user_identifier = request.externalUserIdentifier;
+        }
+
+        const result = await axios.get(url, {
+            params,
+            headers,
+        });
+
+        if (result.status === 404) {
+            return null;
+        }
+
+        const data = result.data;
+
+        const schema = z.object({
+            sid: z.string(),
+        });
+
+        const validated = schema.parse(data);
+        return validated.sid;
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)

@@ -99,6 +99,7 @@ export default class HtmlApp extends Vue {
         this._mutationQueue = [];
         this._simulation = _simulation(this.simulationId);
         this._sub = new Subscription();
+        this._nodes.set(this.appId, this.$refs.container as Node);
 
         this._sub.add(
             this._simulation.localEvents.subscribe((e) => {

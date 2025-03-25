@@ -4456,6 +4456,7 @@ describe('PolicyController', () => {
                         checkDisplayName: jest.fn(),
                         generateLogoutUrl: jest.fn(),
                         resendConsentRequest: jest.fn(),
+                        lookupServiceId: jest.fn(),
                     };
                     auth = new AuthController(
                         store,
@@ -4470,6 +4471,7 @@ describe('PolicyController', () => {
                         messenger: store,
                         metrics: store,
                         store,
+                        privo: privoClient,
                     });
 
                     controller = new PolicyController(auth, records, store);

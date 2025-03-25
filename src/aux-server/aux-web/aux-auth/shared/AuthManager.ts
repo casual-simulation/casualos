@@ -127,6 +127,8 @@ if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
 
 console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
+declare let ENABLE_SMS_AUTHENTICATION: boolean;
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
@@ -217,6 +219,10 @@ export class AuthManager {
 
     get usePrivoLogin() {
         return this._usePrivoLogin;
+    }
+
+    get supportsSms() {
+        return ENABLE_SMS_AUTHENTICATION === true;
     }
 
     get userInfoLoaded() {
