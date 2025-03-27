@@ -6,6 +6,11 @@
 
 ### :boom: Breaking Changes
 
+-   Changed the license from [MIT](https://mit-license.org/) to [AGPL](https://www.gnu.org/licenses/agpl-3.0.en.html).
+    -   The greatest difference between MIT and AGPL is that the AGPL requires the source code of derivatives to be made available to users of the derivative. (MIT does not)
+    -   The reasoning is to help ensure that CasualOS stays free and open source for all users in the future.
+    -   Older versions of CasualOS are still available under the MIT license. See the [LICENSE.txt](./LICENSE.txt) file in the repository root to determine which license you can use for a particular version.
+    -   Also note that not all code in this repository is licensed under the AGPL. Some code was written by different authors who chose to make their code available under a different license. See each package directory for the license that the code for that package is made available under.
 -   Added full access to the [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model).
     -   This is a breaking change because previously `globalThis.document` would refer to an automatically created custom app. Now, when `os.device().supportsDOM` is `true`, `globalThis.document` and `window` refer to the web browser's implementation.
     -   Use `os.device().supportsDOM` to determine whether full DOM features are supported.
