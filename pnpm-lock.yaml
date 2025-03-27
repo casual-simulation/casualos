@@ -18,6 +18,9 @@ patchedDependencies:
   deno-vm@0.12.0:
     hash: 4b6o6pkokhnxhk5mw3ayiagdxm
     path: patches/deno-vm@0.12.0.patch
+  eslint-plugin-header@3.1.1:
+    hash: b3o5exenray2xkoqu5gm4rau54
+    path: patches/eslint-plugin-header@3.1.1.patch
   fake-indexeddb@5.0.1:
     hash: 32aodcxqlam32klerymhxuwzha
     path: patches/fake-indexeddb@5.0.1.patch
@@ -182,6 +185,9 @@ importers:
       eslint:
         specifier: ^9.22.0
         version: 9.22.0
+      eslint-plugin-header:
+        specifier: 3.1.1
+        version: 3.1.1(patch_hash=b3o5exenray2xkoqu5gm4rau54)(eslint@9.22.0)
       eslint-plugin-vue:
         specifier: ^10.0.0
         version: 10.0.0(eslint@9.22.0)(vue-eslint-parser@10.1.1)
@@ -16016,6 +16022,15 @@ packages:
     optionalDependencies:
       source-map: 0.6.1
     dev: true
+
+  /eslint-plugin-header@3.1.1(patch_hash=b3o5exenray2xkoqu5gm4rau54)(eslint@9.22.0):
+    resolution: {integrity: sha512-9vlKxuJ4qf793CmeeSrZUvVClw6amtpghq3CuWcB5cUNnWHQhgcqy5eF8oVKFk1G3Y/CbchGfEaw3wiIJaNmVg==}
+    peerDependencies:
+      eslint: '>=7.7.0'
+    dependencies:
+      eslint: 9.22.0
+    dev: true
+    patched: true
 
   /eslint-plugin-vue@10.0.0(eslint@9.22.0)(vue-eslint-parser@10.1.1):
     resolution: {integrity: sha512-XKckedtajqwmaX6u1VnECmZ6xJt+YvlmMzBPZd+/sI3ub2lpYZyFnsyWo7c3nMOQKJQudeyk1lw/JxdgeKT64w==}

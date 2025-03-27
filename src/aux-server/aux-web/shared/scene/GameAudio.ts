@@ -1,8 +1,25 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { Howl, Howler } from 'howler';
 
 // Workaround so that .mpga files can be played as sounds.
 let _setup = (Howler as any)._setup.bind(Howler);
-(Howler as any)._setup = function() {
+(Howler as any)._setup = function () {
     const ret = _setup();
     // Add the mpga extension to the internal list of codecs that howler keeps
     (Howler as any)._codecs['mpga'] = (Howler as any)._codecs['mp3'];
@@ -41,9 +58,16 @@ export class GameAudio {
                 onstop: () => {
                     this._playingSounds.delete(soundId);
                 },
-                onloaderror: (id: number |string, error: number) => {
+                onloaderror: (id: number | string, error: number) => {
                     this._playingSounds.delete(soundId);
-                    reject(new Error('Unable to play audio for: ' + url + ' Error code: ' + error));
+                    reject(
+                        new Error(
+                            'Unable to play audio for: ' +
+                                url +
+                                ' Error code: ' +
+                                error
+                        )
+                    );
                 },
                 onplayerror: () => {
                     this._playingSounds.delete(soundId);
