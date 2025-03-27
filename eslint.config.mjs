@@ -107,6 +107,7 @@ export default defineConfig([
             'src/make-github-release/**/*.{js,mjs,ts}',
             'src/tunnel/**/*.{js,mjs,ts}',
             'src/websocket/**/*.{js,mjs,ts}',
+            'src/js-interpreter/**/*.{js,mjs,ts}',
         ],
         ignores: [
             'src/aux-server/aux-web/shared/public/**/*.{js,ts}',
