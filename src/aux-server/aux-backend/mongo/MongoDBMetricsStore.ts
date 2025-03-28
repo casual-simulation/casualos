@@ -20,6 +20,8 @@ import type {
     AIChatSubscriptionMetrics,
     AIImageMetrics,
     AIImageSubscriptionMetrics,
+    AIOpenAIRealtimeMetrics,
+    AIOpenAIRealtimeSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
     AISloydMetrics,
@@ -80,6 +82,17 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._imageMetrics = this._db.collection(IMAGE_METRICS_COLLECTION);
         this._skyboxMetrics = this._db.collection(SKYBOX_METRICS_COLLECTION);
         this._config = configStore;
+    }
+
+    getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+    recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     getSubscriptionAiSloydMetrics(

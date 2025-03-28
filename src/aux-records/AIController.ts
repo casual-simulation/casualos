@@ -39,6 +39,7 @@ import type { MetricsStore, SubscriptionFilter } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import {
     getHumeAiFeatures,
+    getOpenAiFeatures,
     getSloydAiFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
@@ -54,15 +55,21 @@ import type {
     AISloydInterfaceCreateModelFailure,
     AISloydInterfaceCreateModelSuccess,
 } from './AISloydInterface';
-import { AISloydInterfaceEditModelSuccess } from './AISloydInterface';
 import { fromByteArray } from 'base64-js';
 import type {
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
-import type { DenialReason } from '@casual-simulation/aux-common';
+import type {
+    DenialReason,
+    KnownErrorCodes,
+} from '@casual-simulation/aux-common';
 import type { HumeConfig, RecordsStore } from './RecordsStore';
+import type {
+    AIOpenAIRealtimeInterface,
+    CreateRealtimeSessionTokenRequest,
+} from './AIOpenAIRealtimeInterface';
 
 const TRACE_NAME = 'AIController';
 
@@ -77,6 +84,9 @@ export interface AIConfiguration {
     policies: PolicyStore | null;
     policyController: PolicyController | null;
     records: RecordsStore | null;
+    openai: {
+        realtime: AIOpenAIRealtimeConfiguration;
+    } | null;
 }
 
 export interface AIChatConfiguration {
@@ -230,6 +240,13 @@ export interface AISloydConfiguration {
     interface: AISloydInterface;
 }
 
+export interface AIOpenAIRealtimeConfiguration {
+    /**
+     * The interface that should be used for OpenAI realtime sessions.
+     */
+    interface: AIOpenAIRealtimeInterface;
+}
+
 /**
  * Defines a class that is able to handle AI requests.
  */
@@ -253,6 +270,7 @@ export class AIController {
     private _humeInterface: AIHumeInterface | null;
     private _humeConfig: HumeConfig | null;
     private _sloydInterface: AISloydInterface | null;
+    private _openAIRealtimeInterface: AIOpenAIRealtimeInterface | null;
     private _imageOptions: AIGenerateImageConfigurationOptions;
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
@@ -308,6 +326,8 @@ export class AIController {
         this._humeInterface = configuration.hume?.interface;
         this._humeConfig = configuration.hume?.config;
         this._sloydInterface = configuration.sloyd?.interface;
+        this._openAIRealtimeInterface =
+            configuration.openai?.realtime?.interface;
         this._metrics = configuration.metrics;
         this._config = configuration.config;
         this._policyStore = configuration.policies;
@@ -1332,6 +1352,7 @@ export class AIController {
         }
     }
 
+    @traced(TRACE_NAME)
     async sloydGenerateModel(
         request: AISloydGenerateModelRequest
     ): Promise<AISloydGenerateModelResponse> {
@@ -1496,6 +1517,135 @@ export class AIController {
         } catch (err) {
             console.error(
                 '[AIController] Error handling sloyd create model request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    @traced(TRACE_NAME)
+    async createOpenAIRealtimeSessionToken(
+        request: AICreateOpenAIRealtimeSessionTokenRequest
+    ): Promise<AICreateOpenAIRealtimeSessionTokenResult> {
+        try {
+            if (!this._openAIRealtimeInterface) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey.',
+                };
+            }
+
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const authResult =
+                await this._policies.authorizeSubjectUsingContext(
+                    context.context,
+                    {
+                        resourceKind: 'ai.openai.realtime',
+                        action: 'create',
+                        markers: null,
+                        subjectId: request.userId,
+                        subjectType: 'user',
+                    }
+                );
+
+            if (authResult.success === false) {
+                return authResult;
+            }
+
+            let metricsFilter: SubscriptionFilter = {};
+            if (context.context.recordStudioId) {
+                metricsFilter.studioId = context.context.recordStudioId;
+            } else {
+                metricsFilter.ownerId = context.context.recordOwnerId;
+            }
+
+            const metrics =
+                await this._metrics.getSubscriptionAiOpenAIRealtimeMetrics(
+                    metricsFilter
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getOpenAiFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                context.context.recordStudioId ? 'studio' : 'user'
+            );
+
+            if (!features.realtime.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit OpenAI Realtime features.',
+                };
+            }
+
+            if (
+                typeof features.realtime.maxSessionsPerPeriod === 'number' &&
+                metrics.totalSessionsInCurrentPeriod >=
+                    features.realtime.maxSessionsPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The request exceeds allowed subscription limits.`,
+                };
+            }
+
+            const tokenRequest: CreateRealtimeSessionTokenRequest = {
+                ...request.request,
+                maxResponseOutputTokens:
+                    features.realtime.maxResponseOutputTokens ??
+                    request.request.maxResponseOutputTokens ??
+                    undefined,
+            };
+            const result =
+                await this._openAIRealtimeInterface.createRealtimeSessionToken(
+                    tokenRequest
+                );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            await this._metrics.recordOpenAIRealtimeMetrics({
+                userId: context.context.recordOwnerId ?? undefined,
+                studioId: context.context.recordStudioId ?? undefined,
+                sessionId: result.sessionId,
+                createdAtMs: Date.now(),
+                request: tokenRequest,
+            });
+
+            return {
+                success: true,
+                sessionId: result.sessionId,
+                clientSecret: result.clientSecret,
+            };
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling createOpenAIRealtimeSessionToken request:',
                 err
             );
             return {
@@ -2005,4 +2155,40 @@ export interface AISloydGenerateModelFailure {
      * The reason why the request was denied.
      */
     reason?: DenialReason;
+}
+
+export interface AICreateOpenAIRealtimeSessionTokenRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The name of the record that the request is for.
+     */
+    recordName: string;
+
+    /**
+     * The request for the realtime session.
+     */
+    request: CreateRealtimeSessionTokenRequest;
+}
+
+export type AICreateOpenAIRealtimeSessionTokenResult =
+    | AICreateOpenAIRealtimeSessionTokenSuccess
+    | AICreateOpenAIRealtimeSessionTokenFailure;
+
+export interface AICreateOpenAIRealtimeSessionTokenSuccess {
+    success: true;
+    sessionId: string;
+    clientSecret: {
+        value: string;
+        expiresAt: number;
+    };
+}
+
+export interface AICreateOpenAIRealtimeSessionTokenFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }

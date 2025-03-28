@@ -20,6 +20,8 @@ import type {
     AIChatSubscriptionMetrics,
     AIImageMetrics,
     AIImageSubscriptionMetrics,
+    AIOpenAIRealtimeMetrics,
+    AIOpenAIRealtimeSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
     AISloydMetrics,
@@ -55,6 +57,54 @@ export class PrismaMetricsStore implements MetricsStore {
     constructor(client: PrismaClient, configStore: ConfigurationStore) {
         this._client = client;
         this._config = configStore;
+    }
+
+    @traced(TRACE_NAME)
+    async getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.AiOpenAIRealtimeMetricsWhereInput = {
+            createdAt: {
+                lt: new Date(metrics.currentPeriodEndMs),
+                gte: new Date(metrics.currentPeriodStartMs),
+            },
+        };
+
+        if (filter.ownerId) {
+            where.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            where.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const realtimeMetrics =
+            await this._client.aiOpenAIRealtimeMetrics.aggregate({
+                where,
+                _count: true,
+            });
+
+        return {
+            ...metrics,
+            totalSessionsInCurrentPeriod: realtimeMetrics._count,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void> {
+        await this._client.aiOpenAIRealtimeMetrics.create({
+            data: {
+                sessionId: metrics.sessionId,
+                userId: metrics.userId,
+                studioId: metrics.studioId,
+                createdAt: new Date(metrics.createdAtMs),
+                request: metrics.request as object,
+            },
+        });
     }
 
     @traced(TRACE_NAME)

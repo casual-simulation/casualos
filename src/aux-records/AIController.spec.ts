@@ -56,6 +56,7 @@ import type { PolicyController } from './PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 
 console.log = jest.fn();
 
@@ -110,6 +111,7 @@ describe('AIController', () => {
             [AISloydInterfaceEditModelRequest]
         >;
     };
+    let realtimeInterface: jest.Mocked<AIOpenAIRealtimeInterface>;
     let userId: string;
     let userSubscriptionTier: string;
     let store: MemoryStore;
@@ -139,6 +141,9 @@ describe('AIController', () => {
         sloydInterface = {
             createModel: jest.fn(),
             editModel: jest.fn(),
+        };
+        realtimeInterface = {
+            createRealtimeSessionToken: jest.fn(),
         };
 
         const services = createTestControllers(null);
@@ -210,6 +215,11 @@ describe('AIController', () => {
             },
             sloyd: {
                 interface: sloydInterface,
+            },
+            openai: {
+                realtime: {
+                    interface: realtimeInterface,
+                },
             },
             metrics: store,
             config: store,
@@ -505,6 +515,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -556,6 +567,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -1190,6 +1202,7 @@ describe('AIController', () => {
                         secretKey: 'secretKey',
                     },
                 },
+                openai: null,
                 sloyd: null,
                 metrics: store,
                 config: store,
@@ -1586,6 +1599,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -1644,6 +1658,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -2311,6 +2326,7 @@ describe('AIController', () => {
                     },
                 },
                 sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: store,
@@ -2423,6 +2439,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2513,6 +2530,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2588,6 +2606,7 @@ describe('AIController', () => {
                     },
                 },
                 sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: store,
@@ -2765,6 +2784,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2857,6 +2877,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2934,6 +2955,7 @@ describe('AIController', () => {
                     },
                 },
                 sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: store,
@@ -3073,6 +3095,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -3128,6 +3151,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -3236,6 +3260,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -3324,6 +3349,7 @@ describe('AIController', () => {
                     },
                 },
                 sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: store,
@@ -3576,6 +3602,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -3681,6 +3708,7 @@ describe('AIController', () => {
                         secretKey: 'secretKey',
                     },
                 },
+                openai: null,
                 sloyd: null,
                 metrics: store,
                 config: store,
@@ -3739,6 +3767,7 @@ describe('AIController', () => {
                         config: null,
                     },
                     sloyd: null,
+                    openai: null,
                     policies: null,
                     policyController: policies,
                     records: store,
@@ -3902,6 +3931,7 @@ describe('AIController', () => {
                         },
                     },
                     sloyd: null,
+                    openai: null,
                     policies: null,
                     policyController: policies,
                     records: store,
@@ -4479,6 +4509,7 @@ describe('AIController', () => {
                 sloyd: {
                     interface: sloydInterface,
                 },
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: store,
@@ -4523,6 +4554,319 @@ describe('AIController', () => {
                 errorMessage: 'AI Access is not allowed',
             });
             expect(sloydInterface.createModel).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('createOpenAIRealtimeSessionToken()', () => {
+        beforeEach(() => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI()
+                    )
+            );
+        });
+
+        it('should return not_supported if openai realtime isnt implemented', async () => {
+            controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: null,
+                metrics: store,
+                config: store,
+                hume: null,
+                sloyd: null,
+                policies: null,
+                openai: null,
+                policyController: policies,
+                records: store,
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return the result from the realtime interface', async () => {
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).toHaveBeenCalledWith({
+                model: 'test-model',
+            });
+
+            expect(store.aiOpenAIRealtimeMetrics).toEqual([
+                {
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    sessionId: expect.any(String),
+                    request: {
+                        model: 'test-model',
+                    },
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user doesnt have access to openai realtime features', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI({
+                                realtime: {
+                                    allowed: false,
+                                },
+                            })
+                    )
+            );
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The subscription does not permit OpenAI Realtime features.',
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return subscription_limit_reached if the user has too many session requests', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI({
+                                realtime: {
+                                    allowed: true,
+                                    maxSessionsPerPeriod: 1,
+                                },
+                            })
+                    )
+            );
+
+            await store.recordOpenAIRealtimeMetrics({
+                userId,
+                sessionId: 'sessionId',
+                createdAtMs: Date.now(),
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model2',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The request exceeds allowed subscription limits.',
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        describe('studio features', () => {
+            const studioId = 'studioId';
+
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'myStudio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
+
+            it('should be able to make requests for a studio', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub.withAIOpenAI({
+                                realtime: {
+                                    allowed: true,
+                                },
+                            })
+                        )
+                );
+
+                realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce(
+                    {
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    }
+                );
+
+                const result =
+                    await controller.createOpenAIRealtimeSessionToken({
+                        userId,
+                        recordName: studioId,
+                        request: {
+                            model: 'test-model',
+                        },
+                    });
+
+                expect(result).toEqual({
+                    success: true,
+                    sessionId: 'sessionId',
+                    clientSecret: {
+                        value: 'secret',
+                        expiresAt: 999,
+                    },
+                });
+
+                expect(
+                    realtimeInterface.createRealtimeSessionToken
+                ).toHaveBeenCalledWith({
+                    model: 'test-model',
+                });
+
+                expect(store.aiOpenAIRealtimeMetrics).toEqual([
+                    {
+                        studioId,
+                        createdAtMs: expect.any(Number),
+                        sessionId: 'sessionId',
+                        request: {
+                            model: 'test-model',
+                        },
+                    },
+                ]);
+            });
+
+            it('should return not_authorized if the studio doesnt have access to openai realtime features', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.withStudioDefaultFeatures((features) =>
+                            features.withAllDefaultFeatures().withAIOpenAI({
+                                realtime: {
+                                    allowed: false,
+                                },
+                            })
+                        )
+                );
+
+                realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce(
+                    {
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    }
+                );
+
+                const result =
+                    await controller.createOpenAIRealtimeSessionToken({
+                        userId,
+                        recordName: studioId,
+                        request: {
+                            model: 'test-model',
+                        },
+                    });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit OpenAI Realtime features.',
+                });
+
+                expect(
+                    realtimeInterface.createRealtimeSessionToken
+                ).not.toHaveBeenCalled();
+            });
         });
     });
 });

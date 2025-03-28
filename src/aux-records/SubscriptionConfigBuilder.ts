@@ -21,6 +21,7 @@ import type {
     AIFeaturesConfiguration,
     AIHumeFeaturesConfiguration,
     AIImageFeaturesConfiguration,
+    AIOpenAIFeaturesConfiguration,
     AISkyboxFeaturesConfiguration,
     AISloydFeaturesConfiguration,
     APISubscription,
@@ -188,6 +189,15 @@ export class FeaturesBuilder {
     withAISloyd(features?: AISloydFeaturesConfiguration): this {
         this._features.ai.sloyd = features ?? {
             allowed: true,
+        };
+        return this;
+    }
+
+    withAIOpenAI(features?: AIOpenAIFeaturesConfiguration): this {
+        this._features.ai.openai = features ?? {
+            realtime: {
+                allowed: true,
+            },
         };
         return this;
     }

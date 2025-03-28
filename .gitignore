@@ -16,6 +16,7 @@ ecosystem.json
 test-results
 cockroach
 cockroach-data
+cockroach-data*
 xpexchange
 extensions
 infra

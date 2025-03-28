@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type { CreateRealtimeSessionTokenRequest } from './AIOpenAIRealtimeInterface';
+
 export interface MetricsStore {
     /**
      * Gets the data metrics for the subscription of the given record.
@@ -117,6 +119,22 @@ export interface MetricsStore {
     getSubscriptionInstMetricsByRecordName(
         recordName: string
     ): Promise<InstSubscriptionMetrics>;
+
+    /**
+     * Gets the AI OpenAI Realtime metrics for the given user/studio.
+     * @param filter The filter to use.
+     */
+    getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics>;
+
+    /**
+     * Records the given ai.openai.realtime metrics.
+     * @param metrics The metrics to record.
+     */
+    recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void>;
 }
 
 export interface SubscriptionMetrics {
@@ -356,4 +374,39 @@ export interface AISloydMetrics {
      * The number of models that were created in this metric.
      */
     modelsCreated: number;
+}
+
+export interface AIOpenAIRealtimeSubscriptionMetrics
+    extends SubscriptionMetrics {
+    /**
+     * The total number of realtime sessions that have been created in the period.
+     */
+    totalSessionsInCurrentPeriod: number;
+}
+
+export interface AIOpenAIRealtimeMetrics {
+    /**
+     * The ID of the user that the metrics are for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the metrics are for.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the session that was created.
+     */
+    sessionId: string;
+
+    /**
+     * The request that was used to create the session.
+     */
+    request: CreateRealtimeSessionTokenRequest;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
 }
