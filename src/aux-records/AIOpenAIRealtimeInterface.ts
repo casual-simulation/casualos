@@ -141,7 +141,7 @@ export interface CreateRealtimeSessionTokenRequest {
         /**
          * Used only for `semantic_vad` mode. The eagerness of the model to respond. `low` will wait longer for the user to continue speaking, `high` will respond more quickly. `auto` is the default and is equivalent to `medium`.
          */
-        eagerness?: string;
+        eagerness?: 'low' | 'medium' | 'high';
 
         /**
          * Whether or not to automatically interrupt any ongoing response with output to the default conversation (i.e. `conversation` of `auto`) when a VAD start event occurs.
@@ -234,7 +234,7 @@ export class OpenAIRealtimeInterface implements AIOpenAIRealtimeInterface {
                 turn_detection: request.turnDetection
                     ? {
                           create_response: request.turnDetection.createResponse,
-                          eagerness: request.turnDetection.eagerness as any,
+                          eagerness: request.turnDetection.eagerness,
                           interrupt_response:
                               request.turnDetection.interruptResponse,
                           prefix_padding_ms:

@@ -34,6 +34,8 @@ import {
     ProcedureQueries,
     Procedures,
 } from '@casual-simulation/aux-common';
+import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
+import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -1404,6 +1406,34 @@ export function aiSloydGenerateModel(
     return {
         type: 'ai_sloyd_generate_model',
         ...parameters,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new action that is able to request that a realtime session be created.
+ * @param recordName The name of the record that the realtime session is being created for.
+ * @param request The request that should be used to create the realtime session.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function aiOpenAICreateRealtimeSession(
+    recordName: string,
+    request: CreateRealtimeSessionTokenRequest,
+    options?: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return {
+        type: 'records_call_procedure',
+        procedure: {
+            createOpenAIRealtimeSession: {
+                input: {
+                    recordName,
+                    request,
+                },
+            },
+        },
         options,
         taskId,
     };

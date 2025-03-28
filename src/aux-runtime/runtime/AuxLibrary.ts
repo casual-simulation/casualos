@@ -347,6 +347,7 @@ import {
     sendNotification as calcSendNotification,
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
+    aiOpenAICreateRealtimeSession,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -486,6 +487,7 @@ import {
 import type { AxiosResponse, AxiosError } from 'axios';
 import { CasualOSError } from './CasualOSError';
 import type {
+    AICreateOpenAIRealtimeSessionTokenResult,
     AIGenerateImageSuccess,
     AIHumeGetAccessTokenResult,
     AISloydGenerateModelResponse,
@@ -505,6 +507,7 @@ import type {
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3071,6 +3074,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stream: {
                     chat: chatStream,
                 },
+
+                openai: {
+                    createRealtimeSession: createOpenAIRealtimeSession,
+                },
             },
 
             os: {
@@ -5513,6 +5520,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<AISloydGenerateModelResponse> {
         const task = context.createTask();
         const action = aiSloydGenerateModel(request, options, task.taskId);
+        const final = addAsyncResultAction(task, action);
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Creates a new OpenAI Realtime Session.
+     * @param recordName The name of the record that the session is for.
+     * @param request The request options for the session.
+     * @param options The options for the records request.
+     */
+    function createOpenAIRealtimeSession(
+        recordName: string,
+        request: CreateRealtimeSessionTokenRequest = {},
+        options: RecordActionOptions = {}
+    ): Promise<AICreateOpenAIRealtimeSessionTokenResult> {
+        const task = context.createTask();
+        const action = aiOpenAICreateRealtimeSession(
+            recordName,
+            request,
+            options,
+            task.taskId
+        );
         const final = addAsyncResultAction(task, action);
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
