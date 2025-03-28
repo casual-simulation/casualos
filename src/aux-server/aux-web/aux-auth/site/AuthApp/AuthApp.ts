@@ -4,9 +4,14 @@ import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import type { CreateRecordRequest } from '@casual-simulation/aux-records';
+import type {
+    CreateRecordRequest,
+    FormError,
+} from '@casual-simulation/aux-records';
 import { ListedStudio } from '@casual-simulation/aux-records';
 import { distinctUntilChanged } from 'rxjs';
+import { getFormErrors } from '@casual-simulation/aux-records';
+import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
 const comId = authManager.getComIdFromUrl();
 document.title = comId ?? location.hostname;
@@ -14,6 +19,7 @@ document.title = comId ?? location.hostname;
 @Component({
     components: {
         'svg-icon': SvgIcon,
+        'field-errors': FieldErrors,
     },
 })
 export default class AuthApp extends Vue {
@@ -27,6 +33,8 @@ export default class AuthApp extends Vue {
 
     records: any[] = [];
     studios: any[] = [];
+
+    errors: FormError[] = [];
 
     showEnterStudioNameError: boolean = false;
     showCreateStudioError: boolean = false;
@@ -44,17 +52,16 @@ export default class AuthApp extends Vue {
     displayName: string = null;
     comId: string = null;
     usePrivoLogin: boolean = false;
+    processing: boolean = false;
 
     get studioNameFieldClass() {
-        return this.showEnterStudioNameError || this.showCreateStudioError
-            ? 'md-invalid'
-            : '';
+        const hasError = this.errors.some((e) => e.for === 'displayName');
+        return hasError ? 'md-invalid' : '';
     }
 
     get recordNameFieldClass() {
-        return this.showEnterRecordNameError || this.showInvalidRecordNameError
-            ? 'md-invalid'
-            : '';
+        const hasError = this.errors.some((e) => e.for === 'recordName');
+        return hasError ? 'md-invalid' : '';
     }
 
     get title() {
@@ -108,6 +115,7 @@ export default class AuthApp extends Vue {
         this.loadingStudios = false;
         this.records = [];
         this.studios = [];
+        this.errors = [];
         this.studioName = '';
         this.recordName = '';
         this.errorMessage = '';
@@ -161,14 +169,8 @@ export default class AuthApp extends Vue {
 
     async createStudio() {
         try {
-            this.showEnterStudioNameError = false;
-            this.showCreateStudioError = false;
-            this.errorMessage = '';
-
-            if (!this.studioName) {
-                this.showEnterStudioNameError = true;
-                return;
-            }
+            this.errors = [];
+            this.processing = true;
 
             const comId = authManager.getComIdFromUrl();
             const response = await authManager.client.createStudio({
@@ -177,32 +179,21 @@ export default class AuthApp extends Vue {
             });
 
             if (response.success == false) {
-                this.errorMessage = response.errorMessage;
-                if (response.errorCode === 'invalid_key') {
-                    this.showCreateStudioError = true;
-                }
+                this.errors = getFormErrors(response);
                 return;
             }
 
             this.showCreateStudio = false;
             await this.loadStudios();
-        } catch (error) {
-            console.error('Studio creation failed:', error);
-            this.errorMessage = error.message;
-            this.showCreateStudioError = true;
+        } finally {
+            this.processing = false;
         }
     }
 
     async createRecord() {
         try {
-            this.showEnterRecordNameError = false;
-            this.showInvalidRecordNameError = false;
-            this.errorMessage = '';
-
-            if (!this.recordName) {
-                this.showEnterRecordNameError = true;
-                return;
-            }
+            this.errors = [];
+            this.processing = true;
 
             let request: Omit<CreateRecordRequest, 'userId'> = {
                 recordName: this.recordName,
@@ -211,27 +202,16 @@ export default class AuthApp extends Vue {
                     : { ownerId: authManager.userId }),
             };
 
-            if (this.createRecordStudioId) {
-                request['studioId'] = this.createRecordStudioId;
-            } else {
-                request['ownerId'] = authManager.userId;
-            }
-
             const response = await authManager.client.createRecord(request);
 
             if (response.success == false) {
-                this.errorMessage = response.errorMessage;
-                if (response.errorCode === 'invalid_key') {
-                    this.showInvalidRecordNameError = true;
-                } else if (response.errorCode === 'record_already_exists') {
-                    this.errorMessage = 'Record name already exists';
-                    this.showInvalidRecordNameError = true;
-                }
+                this.errors = getFormErrors(response);
                 return;
             }
 
             this.showCreateRecord = false;
             if (this.createRecordStudioId) {
+                console.log('createRecordStudioId hit');
                 const studio = this.studios.find(
                     (s) => s.studioId === this.createRecordStudioId
                 );
@@ -241,9 +221,8 @@ export default class AuthApp extends Vue {
             } else {
                 await this.loadRecords();
             }
-        } catch (error) {
-            console.error(error);
-            this.errorMessage = error.message;
+        } finally {
+            this.processing = false;
         }
     }
 
