@@ -113,7 +113,6 @@ export default class AuthApp extends Vue {
         this.errors = [];
         this.studioName = '';
         this.recordName = '';
-        this.errorMessage = '';
         this.userId = '';
         this.createRecordStudioId = null;
         this.logoUrl = null;
@@ -150,16 +149,12 @@ export default class AuthApp extends Vue {
     startCreateStudio() {
         this.showCreateStudio = true;
         this.studioName = '';
-        this.showEnterStudioNameError = false;
-        this.showCreateStudioError = false;
     }
 
     startCreateRecord(studioId?: string) {
         this.showCreateRecord = true;
         this.recordName = '';
         this.createRecordStudioId = studioId ?? '';
-        this.showEnterRecordNameError = false;
-        this.showInvalidRecordNameError = false;
     }
 
     async createStudio() {
