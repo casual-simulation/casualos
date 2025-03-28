@@ -4737,6 +4737,51 @@ describe('AIController', () => {
             ).not.toHaveBeenCalled();
         });
 
+        it('should return subscription_limit_reached if the user requests a model that they dont have access to', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI({
+                                realtime: {
+                                    allowed: true,
+                                    allowedModels: ['test-model'],
+                                },
+                            })
+                    )
+            );
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'wrong-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    "The subscription doesn't support the given model.",
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
         describe('studio features', () => {
             const studioId = 'studioId';
 

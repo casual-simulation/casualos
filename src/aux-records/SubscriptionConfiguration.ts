@@ -258,6 +258,12 @@ export const subscriptionFeaturesSchema = z.object({
                             .int()
                             .positive()
                             .optional(),
+                        allowedModels: z
+                            .array(z.string())
+                            .describe(
+                                'The list of models that are allowed to be used with the realtime API. If ommited, then all models are allowed.'
+                            )
+                            .optional(),
                     })
                     .describe(
                         'The configuration for OpenAI realtime API features.'

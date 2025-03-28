@@ -1614,6 +1614,18 @@ export class AIController {
                 };
             }
 
+            if (
+                typeof features.realtime.allowedModels !== 'undefined' &&
+                !features.realtime.allowedModels.includes(request.request.model)
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        "The subscription doesn't support the given model.",
+                };
+            }
+
             const tokenRequest: CreateRealtimeSessionTokenRequest = {
                 ...request.request,
                 maxResponseOutputTokens:
