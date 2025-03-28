@@ -36,11 +36,6 @@ export default class AuthApp extends Vue {
 
     errors: FormError[] = [];
 
-    showEnterStudioNameError: boolean = false;
-    showCreateStudioError: boolean = false;
-    showEnterRecordNameError: boolean = false;
-    showInvalidRecordNameError: boolean = false;
-
     errorMessage: string = '';
     recordName: string = '';
     studioName: string = '';
