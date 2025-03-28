@@ -3044,6 +3044,113 @@ export class RecordsServer {
                     return result;
                 }),
 
+            createOpenAIRealtimeSession: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/ai/openai/realtime/session')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        request: z.object({
+                            model: z.string().min(1).optional(),
+                            instructions: z.string().min(1).optional(),
+                            modalities: z
+                                .array(z.enum(['audio', 'text']))
+                                .max(2)
+                                .optional(),
+                            maxResponseOutputTokens: z
+                                .number()
+                                .int()
+                                .min(1)
+                                .optional(),
+                            inputAudioFormat: z
+                                .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
+                                .optional(),
+                            inputAudioNoiseReduction: z
+                                .object({
+                                    type: z
+                                        .enum(['near_field', 'far_field'])
+                                        .optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            inputAudioTranscription: z
+                                .object({
+                                    language: z.string().min(1).optional(),
+                                    model: z.string().min(1).optional(),
+                                    prompt: z.string().min(1).optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            outputAudioFormat: z
+                                .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
+                                .optional(),
+                            temperature: z.number().min(0).max(2).optional(),
+                            toolChoice: z.string().optional(),
+                            tools: z
+                                .array(
+                                    z.object({
+                                        description: z.string().optional(),
+                                        name: z.string(),
+                                        parameters: z.any().optional(),
+                                        type: z.enum(['function']).optional(),
+                                    })
+                                )
+                                .optional(),
+                            turnDetection: z
+                                .object({
+                                    createResponse: z.boolean().optional(),
+                                    eagerness: z
+                                        .enum(['low', 'medium', 'high'])
+                                        .optional(),
+                                    interruptResponse: z.boolean().optional(),
+                                    prefixPaddingMs: z
+                                        .number()
+                                        .min(0)
+                                        .optional(),
+                                    silenceDurationMs: z
+                                        .number()
+                                        .min(0)
+                                        .optional(),
+                                    threshold: z.number().min(0).optional(),
+                                    type: z
+                                        .enum(['server_vad', 'semantic_vad'])
+                                        .optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            voice: z.string().min(1).optional(),
+                        }),
+                    })
+                )
+                .handler(async ({ recordName, request }, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._aiController.createOpenAIRealtimeSessionToken(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                recordName: recordName,
+                                request: request,
+                            }
+                        );
+
+                    return result;
+                }),
+
             getStudio: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/studios')
