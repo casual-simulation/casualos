@@ -21,6 +21,12 @@
 
 -   Improved studios to support adding Privo users by email, display name, or user ID.
     -   Additionally improved studios to only show members by name and display name when Privo support is enabled.
+-   Added the `ai.openai.createRealtimeSession(recordName, request, options?)` function.
+    -   Creates an [OpenAI Realtime Session](https://platform.openai.com/docs/guides/realtime) for use in conversational (audio + text) AI sessions.
+    -   `recordName` is the name of the record that the session should be created for. The owner of the record needs to have the `ai.openai.realtime` subscription features allowed.
+    -   `request` is an object that contains the details of the request (model, instructions, etc.).
+    -   `options` is optional and contains additional options for the records request (endpoint, etc).
+    -   See the documentation for more details and examples.
 
 ### :bug: Bug Fixes
 
