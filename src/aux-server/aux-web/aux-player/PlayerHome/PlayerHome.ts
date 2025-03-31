@@ -170,6 +170,7 @@ export default class PlayerHome extends Vue {
     recordSelection: string = null;
     instSelection: string = null;
     joinCode: string = null;
+    instName: string = null;
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
     codeOfConductUrl: string = null;
@@ -191,6 +192,13 @@ export default class PlayerHome extends Vue {
         return hasJoinCodeError ? 'md-invalid' : '';
     }
 
+    get showInstNameInput() {
+        return (
+            isStaticInst(this.biosSelection) &&
+            this.instSelection === 'new-inst'
+        );
+    }
+
     get botManager() {
         return appManager.simulationManager.primary;
     }
@@ -199,6 +207,8 @@ export default class PlayerHome extends Vue {
         if (this.biosSelection) {
             if (isJoinCode(this.biosSelection)) {
                 return !!this.joinCode;
+            } else if (this.showInstNameInput) {
+                return !!this.instName && this.instName.trim() !== '';
             } else {
                 return true;
             }
@@ -276,6 +286,10 @@ export default class PlayerHome extends Vue {
         return this.biosOptions.some((option) => option === 'sign up');
     }
 
+    isStaticInst(option: BiosOption): boolean {
+        return isStaticInst(option);
+    }
+
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const staticInst = this.query['staticInst'] as string | string[];
@@ -316,8 +330,20 @@ export default class PlayerHome extends Vue {
     async onBiosSelectionChanged() {
         if (isStaticInst(this.biosSelection)) {
             this.instOptions = await appManager.listStaticInsts();
+            this.instName = '';
+            if (!this.instOptions.includes(this.instSelection)) {
+                this.instSelection = 'new-inst';
+            }
         } else {
             this.instOptions = [];
+            this.instSelection = null;
+        }
+    }
+
+    @Watch('instSelection')
+    onInstSelectionChanged() {
+        if (this.instSelection !== 'new-inst') {
+            this.instName = '';
         }
     }
 
@@ -331,6 +357,7 @@ export default class PlayerHome extends Vue {
         this.biosSelection = null;
         this.recordSelection = null;
         this.instSelection = 'new-inst';
+        this.instName = '';
         this.biosOptions = [];
         this.errors = [];
         this._simulations = new Map();
@@ -515,8 +542,10 @@ export default class PlayerHome extends Vue {
     private _loadStaticInst(instSelection: string) {
         const update: Dictionary<string | string[]> = {};
         const inst =
-            instSelection === 'new-inst' || !instSelection
-                ? uniqueNamesGenerator(namesConfig)
+            instSelection === 'new-inst'
+                ? this.instName && this.instName.trim() !== ''
+                    ? this.instName.trim()
+                    : uniqueNamesGenerator(namesConfig)
                 : instSelection;
 
         update.staticInst = inst;
