@@ -2186,10 +2186,20 @@ export interface AICreateOpenAIRealtimeSessionTokenRequest {
     request: CreateRealtimeSessionTokenRequest;
 }
 
+/**
+ * The response to a request to create a realtime session token using the OpenAI interface.
+ * @dochash types/ai
+ * @docname AICreateOpenAIRealtimeSessionTokenResult
+ */
 export type AICreateOpenAIRealtimeSessionTokenResult =
     | AICreateOpenAIRealtimeSessionTokenSuccess
     | AICreateOpenAIRealtimeSessionTokenFailure;
 
+/**
+ * A successful response to a request to create a realtime session token using the OpenAI interface.
+ * @dochash types/ai
+ * @docname AICreateOpenAIRealtimeSessionTokenSuccess
+ */
 export interface AICreateOpenAIRealtimeSessionTokenSuccess {
     success: true;
     sessionId: string;
@@ -2199,6 +2209,11 @@ export interface AICreateOpenAIRealtimeSessionTokenSuccess {
     };
 }
 
+/**
+ * A unsuccessful response to a request to create a realtime session token using the OpenAI interface.
+ * @dochash types/ai
+ * @docname AICreateOpenAIRealtimeSessionTokenFailure
+ */
 export interface AICreateOpenAIRealtimeSessionTokenFailure {
     success: false;
     errorCode: KnownErrorCodes;

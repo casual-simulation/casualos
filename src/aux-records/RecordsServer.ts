@@ -3051,7 +3051,7 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         request: z.object({
-                            model: z.string().min(1).optional(),
+                            model: z.string().min(1),
                             instructions: z.string().min(1).optional(),
                             modalities: z
                                 .array(z.enum(['audio', 'text']))
@@ -3144,7 +3144,10 @@ export class RecordsServer {
                             {
                                 userId: sessionKeyValidation.userId,
                                 recordName: recordName,
-                                request: request,
+                                request: {
+                                    model: request.model,
+                                    ...request,
+                                },
                             }
                         );
 

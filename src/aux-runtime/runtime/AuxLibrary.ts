@@ -5530,10 +5530,77 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName The name of the record that the session is for.
      * @param request The request options for the session.
      * @param options The options for the records request.
+     *
+     *
+     * @example Create a new OpenAI Realtime Session.
+     * const model = "gpt-4o-realtime-preview-2024-12-17";
+     * const result = await ai.openai.createRealtimeSession(authBot.id, {
+     *    model,
+     * });
+     *
+     * @example Use WebRTC to create a new OpenAI Realtime Session.
+     * async function init() {
+     *   await os.requestAuthBot();
+     *   const recordName = authBot.id;
+     *   const model = "gpt-4o-realtime-preview-2024-12-17";
+     *   const result = await ai.openai.createRealtimeSession(recordName, {
+     *       model,
+     *   });
+     *
+     *   // Get an ephemeral key from your server - see server code below
+     *   const EPHEMERAL_KEY = result.clientSecret.value;
+     *
+     *   // Create a peer connection
+     *   const pc = new RTCPeerConnection();
+     *
+     *   // Set up to play remote audio from the model
+     *   const audioEl = document.createElement("audio");
+     *   audioEl.autoplay = true;
+     *   pc.ontrack = e => audioEl.srcObject = e.streams[0];
+     *
+     *   // Add local audio track for microphone input in the browser
+     *   const ms = await navigator.mediaDevices.getUserMedia({
+     *     audio: true
+     *   });
+     *   pc.addTrack(ms.getTracks()[0]);
+     *
+     *   // Set up data channel for sending and receiving events
+     *   const dc = pc.createDataChannel("oai-events");
+     *   dc.addEventListener("message", (e) => {
+     *     // Realtime server events appear here!
+     *     console.log(e);
+     *   });
+     *
+     *   // Start the session using the Session Description Protocol (SDP)
+     *   const offer = await pc.createOffer();
+     *   await pc.setLocalDescription(offer);
+     *
+     *   const baseUrl = "https://api.openai.com/v1/realtime";
+     *   debugger;
+     *   const sdpResponse = await window.fetch.bind(window)(`${baseUrl}?model=${model}`, {
+     *     method: "POST",
+     *     body: offer.sdp,
+     *     headers: {
+     *       Authorization: `Bearer ${EPHEMERAL_KEY}`,
+     *       "Content-Type": "application/sdp"
+     *     },
+     *   });
+     *
+     *   const answer = {
+     *     type: "answer",
+     *     sdp: await sdpResponse.text(),
+     *   };
+     *   await pc.setRemoteDescription(answer);
+     * }
+     *
+     * init();
+     *
+     * @dochash actions/ai
+     * @docname ai.openai.createRealtimeSession
      */
     function createOpenAIRealtimeSession(
         recordName: string,
-        request: CreateRealtimeSessionTokenRequest = {},
+        request: CreateRealtimeSessionTokenRequest,
         options: RecordActionOptions = {}
     ): Promise<AICreateOpenAIRealtimeSessionTokenResult> {
         const task = context.createTask();

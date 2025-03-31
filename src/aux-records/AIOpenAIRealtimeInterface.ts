@@ -18,7 +18,7 @@
 
 import type { KnownErrorCodes } from '@casual-simulation/aux-common';
 import OpenAI from 'openai';
-import { traced } from 'tracing/TracingDecorators';
+import { traced } from './tracing/TracingDecorators';
 import { v7 as uuidv7 } from 'uuid';
 
 export interface AIOpenAIRealtimeInterface {
@@ -31,6 +31,12 @@ export interface AIOpenAIRealtimeInterface {
     ): Promise<CreateRealtimeSessionTokenResult>;
 }
 
+/**
+ * Defines a request to create a new realtime session.
+ *
+ * @dochash types/ai
+ * @docname RealtimeSessionRequest
+ */
 export interface CreateRealtimeSessionTokenRequest {
     /**
      * The default system instructions (i.e. system message) prepended to model calls. This field allows the client to guide the model on desired responses. The model can be instructed on response content and format, (e.g. "be extremely succinct", "act friendly", "here are examples of good responses") and on audio behavior (e.g. "talk quickly", "inject emotion into your voice", "laugh frequently"). The instructions are not guaranteed to be followed by the model, but they provide guidance to the model on the desired behavior.
@@ -42,7 +48,7 @@ export interface CreateRealtimeSessionTokenRequest {
     /**
      * The Realtime model used for this session.
      */
-    model?: string;
+    model: string;
 
     /**
      * The set of modalities the model can respond with. To disable audio, set this to ["text"].
@@ -264,12 +270,30 @@ export class OpenAIRealtimeInterface implements AIOpenAIRealtimeInterface {
                 '[OpenAIRealtimeInterface] Error creating realtime session',
                 err
             );
-            return {
-                success: false,
-                errorCode: 'server_error',
-                errorMessage:
-                    'A server error occurred while creating the realtime session.',
-            };
+            if (
+                err instanceof OpenAI.APIError &&
+                (err.status === 400 || err.status === 404)
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: err.message,
+                };
+            } else if (err instanceof OpenAI.APIError && err.status === 429) {
+                return {
+                    success: false,
+                    errorCode: 'rate_limit_exceeded',
+                    errorMessage:
+                        'The rate limit for creating realtime sessions has been exceeded.',
+                };
+            } else {
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'A server error occurred while creating the realtime session.',
+                };
+            }
         }
     }
 }

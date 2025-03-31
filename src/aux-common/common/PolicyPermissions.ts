@@ -256,6 +256,7 @@ export type AvailablePermissions =
     | LoomPermission
     | SloydPermission
     | HumePermission
+    | OpenAIRealtimePermission
     | WebhookPermission
     | NotificationPermission;
 
