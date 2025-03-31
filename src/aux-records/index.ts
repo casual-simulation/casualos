@@ -41,7 +41,15 @@ export * from './RateLimitController';
 export * from './PolicyController';
 export * from './PolicyStore';
 
-export * from './AIController';
+export {
+    AIController,
+    AISloydGenerateModelResponse,
+    AISloydGenerateModelSuccess,
+    AISloydGenerateModelFailure,
+    AICreateOpenAIRealtimeSessionTokenResult,
+    AICreateOpenAIRealtimeSessionTokenSuccess,
+    AICreateOpenAIRealtimeSessionTokenFailure,
+} from './AIController';
 export * from './AIChatInterface';
 export * from './OpenAIChatInterface';
 export * from './AIGenerateSkyboxInterface';
