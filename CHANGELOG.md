@@ -21,6 +21,9 @@
 
 -   Improved studios to support adding Privo users by email, display name, or user ID.
     -   Additionally improved studios to only show members by name and display name when Privo support is enabled.
+-   Added a custom name input field for new local insts.
+    -   Users can now name a new local inst directly in the BIOS dialog when selecting "new-inst" under static/local inst options.
+    -   If no name is provided, a randomly generated name (e.g., testy-brown-quail) will still be used.
 
 ### :bug: Bug Fixes
 
