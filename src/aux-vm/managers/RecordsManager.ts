@@ -227,6 +227,7 @@ export class RecordsManager {
         'sendNotification',
         'listNotificationSubscriptions',
         'listUserNotificationSubscriptions',
+        'createOpenAIRealtimeSession',
     ]);
 
     /**

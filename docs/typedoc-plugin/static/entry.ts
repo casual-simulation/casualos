@@ -9,7 +9,7 @@ export * from '../../../src/aux-runtime/runtime/AuxVersion';
 export * from '../../../src/aux-runtime/runtime/AuxDevice';
 export * from '../../../src/aux-common/bots/StoredAux';
 export * from '../../../src/aux-runtime/runtime/CasualOSError';
-export * from '../../../src/aux-records/AIChatInterface';
+export * from '../../../src/aux-records/AIOpenAIRealtimeInterface';
 export * from '../../../src/aux-records';
 export * from '../../../src/aux-common/common/RemoteActions';
 export * from '../../../src/crypto/Encryption';

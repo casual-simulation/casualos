@@ -220,6 +220,7 @@ import {
     sendNotification,
     listNotificationSubscriptions,
     listUserNotificationSubscriptions,
+    aiOpenAICreateRealtimeSession,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -3575,6 +3576,26 @@ describe('AuxLibrary', () => {
                 const expected = aiSloydGenerateModel(
                     {
                         prompt: 'this is a test',
+                    },
+                    {},
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('ai.openai.createRealtimeSession()', () => {
+            it('should emit a RecordsCallProcedure action', () => {
+                const promise: any =
+                    library.api.ai.openai.createRealtimeSession('recordName', {
+                        model: 'gpt-3.5-turbo',
+                    });
+                const expected = aiOpenAICreateRealtimeSession(
+                    'recordName',
+                    {
+                        model: 'gpt-3.5-turbo',
                     },
                     {},
                     context.tasks.size

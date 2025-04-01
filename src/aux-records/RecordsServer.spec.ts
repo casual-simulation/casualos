@@ -184,6 +184,8 @@ import { NotificationRecordsController } from './notifications/NotificationRecor
 import type { WebPushInterface } from './notifications/WebPushInterface';
 import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
+import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
+import { OpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -409,6 +411,7 @@ describe('RecordsServer', () => {
             [AISloydInterfaceEditModelRequest]
         >;
     };
+    let realtimeInterface: jest.Mocked<AIOpenAIRealtimeInterface>;
 
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
@@ -680,6 +683,9 @@ describe('RecordsServer', () => {
             createModel: jest.fn(),
             editModel: jest.fn(),
         };
+        realtimeInterface = {
+            createRealtimeSessionToken: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interfaces: {
@@ -735,6 +741,11 @@ describe('RecordsServer', () => {
             },
             sloyd: {
                 interface: sloydInterface,
+            },
+            openai: {
+                realtime: {
+                    interface: realtimeInterface,
+                },
             },
             config: store,
             metrics: store,
@@ -16628,6 +16639,147 @@ describe('RecordsServer', () => {
                 }),
                 apiHeaders
             )
+        );
+    });
+
+    describe('POST /api/v2/ai/openai/realtime/session', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: Date.now() + 10000000,
+                },
+            });
+        });
+
+        it('should be able to call the realtime interface to create a session token', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/openai/realtime/session`,
+                    JSON.stringify({
+                        recordName: userId,
+                        request: {
+                            model: 'test-model',
+                            instructions: 'my instructions',
+                            modalities: ['audio', 'text'],
+                            maxResponseOutputTokens: 100,
+                            inputAudioFormat: 'pcm16',
+                            inputAudioNoiseReduction: {
+                                type: 'near_field',
+                            },
+                            inputAudioTranscription: {
+                                language: 'en',
+                                model: 'transcription-model',
+                                prompt: 'my prompt',
+                            },
+                            outputAudioFormat: 'pcm16',
+                            temperature: 1,
+                            toolChoice: 'auto',
+                            tools: [
+                                {
+                                    name: 'tool-1',
+                                    parameters: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'string',
+                                        },
+                                    },
+                                    type: 'function',
+                                },
+                            ],
+                            turnDetection: {
+                                createResponse: true,
+                                eagerness: 'low',
+                                interruptResponse: true,
+                                prefixPaddingMs: 30,
+                                silenceDurationMs: 1000,
+                                threshold: 0.5,
+                                type: 'semantic_vad',
+                            },
+                            voice: 'echo',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: 'sessionId',
+                    clientSecret: {
+                        value: 'secret',
+                        expiresAt: expect.any(Number),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).toHaveBeenCalledWith({
+                model: 'test-model',
+                instructions: 'my instructions',
+                modalities: ['audio', 'text'],
+                maxResponseOutputTokens: 100,
+                inputAudioFormat: 'pcm16',
+                inputAudioNoiseReduction: {
+                    type: 'near_field',
+                },
+                inputAudioTranscription: {
+                    language: 'en',
+                    model: 'transcription-model',
+                    prompt: 'my prompt',
+                },
+                outputAudioFormat: 'pcm16',
+                temperature: 1,
+                toolChoice: 'auto',
+                tools: [
+                    {
+                        name: 'tool-1',
+                        parameters: {
+                            type: 'array',
+                            items: {
+                                type: 'string',
+                            },
+                        },
+                        type: 'function',
+                    },
+                ],
+                turnDetection: {
+                    createResponse: true,
+                    eagerness: 'low',
+                    interruptResponse: true,
+                    prefixPaddingMs: 30,
+                    silenceDurationMs: 1000,
+                    threshold: 0.5,
+                    type: 'semantic_vad',
+                },
+                voice: 'echo',
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/ai/openai/realtime/session',
+            () =>
+                JSON.stringify({
+                    recordName: userId,
+                    request: {
+                        model: 'test-model',
+                    },
+                }),
+            () => apiHeaders
         );
     });
 

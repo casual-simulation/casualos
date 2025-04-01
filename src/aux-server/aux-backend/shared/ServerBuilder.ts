@@ -200,6 +200,7 @@ import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
+import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1347,6 +1348,7 @@ export class ServerBuilder implements SubscriptionLike {
             images: null,
             hume: null,
             sloyd: null,
+            openai: null,
             config: this._configStore,
             metrics: this._metricsStore,
             policies: this._policyStore,
@@ -1431,6 +1433,17 @@ export class ServerBuilder implements SubscriptionLike {
                     clientId: options.sloydai.clientId,
                     clientSecret: options.sloydai.clientSecret,
                 }),
+            };
+        }
+
+        if (options.openai) {
+            console.log('[ServerBuilder] Enabling OpenAI Realtime API');
+            this._aiConfiguration.openai = {
+                realtime: {
+                    interface: new OpenAIRealtimeInterface({
+                        apiKey: options.openai.apiKey,
+                    }),
+                },
             };
         }
         return this;
