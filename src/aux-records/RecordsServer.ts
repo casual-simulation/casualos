@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
 import type {
     AuthController,
@@ -3302,6 +3319,14 @@ export class RecordsServer {
                             })
                             .nonempty('addedPhoneNumber must not be empty')
                             .optional(),
+                        addedDisplayName: z
+                            .string({
+                                invalid_type_error:
+                                    'addedDisplayName must be a string.',
+                                required_error: 'addedDisplayName is required.',
+                            })
+                            .nonempty('addedDisplayName must not be empty')
+                            .optional(),
                         role: z.union([
                             z.literal('admin'),
                             z.literal('member'),
@@ -3315,6 +3340,7 @@ export class RecordsServer {
                             addedUserId,
                             addedEmail,
                             addedPhoneNumber,
+                            addedDisplayName,
                             role,
                         },
                         context
@@ -3338,6 +3364,7 @@ export class RecordsServer {
                             addedUserId,
                             addedEmail,
                             addedPhoneNumber,
+                            addedDisplayName,
                         });
                         return result;
                     }

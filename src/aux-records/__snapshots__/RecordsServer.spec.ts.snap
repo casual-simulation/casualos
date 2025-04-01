@@ -3505,6 +3505,10 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "addedDisplayName": Object {
+            "optional": true,
+            "type": "string",
+          },
           "addedEmail": Object {
             "optional": true,
             "type": "string",
@@ -7352,6 +7356,10 @@ Object {
       },
       "inputs": Object {
         "schema": Object {
+          "addedDisplayName": Object {
+            "optional": true,
+            "type": "string",
+          },
           "addedEmail": Object {
             "optional": true,
             "type": "string",

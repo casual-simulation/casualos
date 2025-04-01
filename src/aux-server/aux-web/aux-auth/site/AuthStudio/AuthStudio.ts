@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
@@ -19,12 +36,12 @@ import { getFormErrors } from '@casual-simulation/aux-records';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 import type { BiosOption } from '@casual-simulation/aux-common';
 import { isEqual } from 'lodash';
+import type { RecordsClientInputs } from '@casual-simulation/aux-records/RecordsClient';
 
 // TODO: Support uploading logos
 // import vueBotPond from 'vue-filepond';
 // import 'filepond/dist/filepond.min.css';
 // const FilePond = vueBotPond();
-
 @Component({
     components: {
         'svg-icon': SvgIcon,
@@ -117,6 +134,10 @@ export default class AuthStudio extends Vue {
 
     // TODO: Support uploading logos
     // logoFile: File = null;
+
+    get usePrivoLogin() {
+        return authManager.usePrivoLogin;
+    }
 
     get addressFieldClass() {
         return this.addMemberErrorCode ? 'md-invalid' : '';
@@ -517,11 +538,40 @@ export default class AuthStudio extends Vue {
     async addMember() {
         try {
             this.addingMember = true;
-            const result = await authManager.client.addStudioMember({
+            const request: RecordsClientInputs['addStudioMember'] = {
                 studioId: this.studioId,
-                addedEmail: this.addMemberEmail,
                 role: this.addMemberRole as StudioAssignmentRole,
-            });
+            };
+            const isEmail = this.addMemberEmail.includes('@');
+            if (this.usePrivoLogin && !isEmail) {
+                request.addedDisplayName = this.addMemberEmail;
+            } else if (isEmail) {
+                request.addedEmail = this.addMemberEmail;
+            } else if (authManager.supportsSms) {
+                request.addedPhoneNumber = this.addMemberEmail;
+            } else {
+                request.addedUserId = this.addMemberEmail;
+            }
+
+            let result = await authManager.client.addStudioMember(request);
+
+            if (
+                result.success === false &&
+                result.errorCode === 'user_not_found'
+            ) {
+                if (!request.addedUserId) {
+                    // Try adding the user by userId if we didn't already try that
+                    const idResult = await authManager.client.addStudioMember({
+                        studioId: this.studioId,
+                        role: this.addMemberRole as StudioAssignmentRole,
+                        addedUserId: this.addMemberEmail,
+                    });
+
+                    if (idResult.success === true) {
+                        result = idResult;
+                    }
+                }
+            }
 
             if (result.success === true) {
                 this.showAddMember = false;

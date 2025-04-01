@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     InvalidSubscriptionTierError,
     NotAuthorizedError,
@@ -819,6 +836,21 @@ export class AIController {
                 };
             }
 
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
             const result = await this._generateSkybox.generateSkybox({
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,
@@ -904,6 +936,21 @@ export class AIController {
                                 ._allowedGenerateSkyboxSubscriptionTiers as Set<string>),
                         ],
                         currentSubscriptionTier: request.userSubscriptionTier,
+                    };
+                }
+            }
+
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
                     };
                 }
             }
@@ -1072,6 +1119,21 @@ export class AIController {
                 };
             }
 
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
             const result = await provider.generateImage({
                 model: model,
                 prompt: request.prompt,
@@ -1222,6 +1284,21 @@ export class AIController {
                 };
             }
 
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
+            }
+
             const result = await this._humeInterface.getAccessToken({
                 apiKey: humeConfig.apiKey,
                 secretKey: humeConfig.secretKey,
@@ -1341,6 +1418,21 @@ export class AIController {
                     errorCode: 'subscription_limit_reached',
                     errorMessage: `The request exceeds allowed subscription limits.`,
                 };
+            }
+
+            if (this._policyStore) {
+                const privacyFeatures =
+                    await this._policyStore.getUserPrivacyFeatures(
+                        request.userId
+                    );
+
+                if (!privacyFeatures.allowAI) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'AI Access is not allowed',
+                    };
+                }
             }
 
             const result = await (request.baseModelId
@@ -1601,7 +1693,8 @@ export interface AIGetSkyboxFailure {
         | NotLoggedInError
         | NotSubscribedError
         | InvalidSubscriptionTierError
-        | NotSupportedError;
+        | NotSupportedError
+        | NotAuthorizedError;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];

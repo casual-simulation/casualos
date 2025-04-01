@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     parseAuthorization,
     RecordsServer,
@@ -428,31 +445,7 @@ describe('RecordsServer', () => {
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
-    let privoClientMock: {
-        createChildAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createChildAccount']>
-        >;
-        createAdultAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createAdultAccount']>
-        >;
-        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
-        generateAuthorizationUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
-        >;
-        processAuthorizationCallback: jest.Mock<
-            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
-        >;
-        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
-        checkDisplayName: jest.Mock<
-            ReturnType<PrivoClientInterface['checkDisplayName']>
-        >;
-        generateLogoutUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateLogoutUrl']>
-        >;
-        resendConsentRequest: jest.Mock<
-            ReturnType<PrivoClientInterface['resendConsentRequest']>
-        >;
-    };
+    let privoClientMock: jest.MockedObject<PrivoClientInterface>;
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -504,6 +497,7 @@ describe('RecordsServer', () => {
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
             resendConsentRequest: jest.fn(),
+            lookupServiceId: jest.fn(),
         };
         relyingParty = {
             id: 'relying_party_id',
@@ -539,6 +533,7 @@ describe('RecordsServer', () => {
             config: store,
             metrics: store,
             messenger: store,
+            privo: privoClient,
         });
 
         policyController = new PolicyController(
@@ -17848,6 +17843,179 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     },
                 },
             ]);
+        });
+
+        describe('privo', () => {
+            it('should be able to add members by email address', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedEmail: 'test4@example.com',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    email: 'test4@example.com',
+                });
+            });
+
+            it('should be able to add members by phone number', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedPhoneNumber: '+1111',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    phoneNumber: '+1111',
+                });
+            });
+
+            it('should be able to add members by display name', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedDisplayName: 'test user',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    displayName: 'test user',
+                });
+            });
         });
 
         testUrl('POST', '/api/v2/studios/members', () =>

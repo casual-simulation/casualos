@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     Object3D,
     Color,
@@ -45,16 +62,7 @@ export class LineSegments extends Object3D {
             dir.multiplyScalar(this._lineMaterial.linewidth);
 
             let meshLine = new LineGeometry();
-            meshLine.setPositions(
-                [
-                    x1,
-                    y1,
-                    z1,
-                    x2,
-                    y2,
-                    z2,
-                ],
-            );
+            meshLine.setPositions([x1, y1, z1, x2, y2, z2]);
             let mesh = new Line2(meshLine, this._lineMaterial);
             mesh.matrixAutoUpdate = false;
             this._meshLines.push(meshLine);
@@ -98,16 +106,7 @@ export class LineSegments extends Object3D {
             dir.normalize();
             dir.multiplyScalar(this._lineMaterial.linewidth);
 
-            meshLine.setPositions(
-                [
-                    x1,
-                    y1,
-                    z1,
-                    x2,
-                    y2,
-                    z2,
-                ],
-            );
+            meshLine.setPositions([x1, y1, z1, x2, y2, z2]);
         }
         this.updateMatrix();
     }
