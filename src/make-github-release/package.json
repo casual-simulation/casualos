@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/make-github-release",
-    "version": "3.4.0-alpha.14070378151",
+    "version": "3.4.0-alpha.14204808910",
     "description": "A CLI to create a github release.",
     "keywords": [
         "cli",
