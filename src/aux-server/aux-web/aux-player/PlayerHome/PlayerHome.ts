@@ -184,6 +184,7 @@ export default class PlayerHome extends Vue {
     private _simulations: Map<BrowserSimulation, Subscription>;
 
     private generatedName: string = '';
+    private savedCustomInstName: string = '';
 
     get isPrivoCertified() {
         return appManager.config?.requirePrivoLogin;
@@ -330,7 +331,6 @@ export default class PlayerHome extends Vue {
     async onBiosSelectionChanged() {
         if (isStaticInst(this.biosSelection)) {
             this.instOptions = await appManager.listStaticInsts();
-            this.instName = '';
             if (!this.instOptions.includes(this.instSelection)) {
                 this.instSelection = 'new-inst';
             }
@@ -342,8 +342,30 @@ export default class PlayerHome extends Vue {
 
     @Watch('instSelection')
     onInstSelectionChanged() {
-        if (this.instSelection !== 'new-inst') {
+        if (this.instSelection === 'new-inst') {
+            if (this.savedCustomInstName) {
+                this.instName = this.savedCustomInstName;
+            } else {
+                this.instName = this.generatedName;
+            }
+        } else {
+            if (
+                this.instSelection !== 'new-inst' &&
+                this.instName &&
+                this.instName.trim() !== ''
+            ) {
+                this.savedCustomInstName = this.instName;
+            }
             this.instName = '';
+        }
+    }
+
+    selectInstNameContent(event: FocusEvent) {
+        const input = event.target as HTMLInputElement;
+        if (input && input.value) {
+            setTimeout(() => {
+                input.select();
+            }, 0);
         }
     }
 
