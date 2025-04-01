@@ -183,6 +183,8 @@ export default class PlayerHome extends Vue {
 
     private _simulations: Map<BrowserSimulation, Subscription>;
 
+    private generatedName: string = '';
+
     get isPrivoCertified() {
         return appManager.config?.requirePrivoLogin;
     }
@@ -207,8 +209,6 @@ export default class PlayerHome extends Vue {
         if (this.biosSelection) {
             if (isJoinCode(this.biosSelection)) {
                 return !!this.joinCode;
-            } else if (this.showInstNameInput) {
-                return !!this.instName && this.instName.trim() !== '';
             } else {
                 return true;
             }
@@ -362,6 +362,7 @@ export default class PlayerHome extends Vue {
         this.errors = [];
         this._simulations = new Map();
         this.logoUrl = appManager.comIdConfig?.logoUrl;
+        this.generatedName = uniqueNamesGenerator(namesConfig);
         this.logoTitle =
             appManager.comIdConfig?.displayName ??
             appManager.comIdConfig?.comId ??
@@ -545,7 +546,7 @@ export default class PlayerHome extends Vue {
             instSelection === 'new-inst'
                 ? this.instName && this.instName.trim() !== ''
                     ? this.instName.trim()
-                    : uniqueNamesGenerator(namesConfig)
+                    : this.generatedName
                 : instSelection;
 
         update.staticInst = inst;

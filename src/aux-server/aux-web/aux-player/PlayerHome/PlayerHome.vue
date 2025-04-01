@@ -73,7 +73,12 @@
 
                 <md-field v-if="showInstNameInput">
                     <label for="instName">inst name</label>
-                    <md-input name="instName" id="instName" v-model="instName" />
+                    <md-input
+                        name="instName"
+                        id="instName"
+                        v-model="instName"
+                        :placeholder="generatedName"
+                    />
                     <field-errors field="instName" :errors="errors" />
                 </md-field>
 
@@ -125,6 +130,7 @@
                     @click="
                         executeBiosOption(biosSelection, recordSelection, instSelection, joinCode)
                     "
+                    :disabled="!canLoad"
                     >{{ startButtonLabel }}</md-button
                 >
             </md-dialog-actions>
