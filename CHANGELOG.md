@@ -19,6 +19,9 @@
 
 ### :rocket: Features
 
+-   Added an error dialog to display error messages when adding a record to a studio fails.
+    -   Improved the `createRecord` method to handle errors and show a dialog with the appropriate error message.
+    -   This ensures users receive clear feedback when record creation encounters issues, enhancing the overall user experience.
 -   Improved studios to support adding Privo users by email, display name, or user ID.
     -   Additionally improved studios to only show members by name and display name when Privo support is enabled.
 
