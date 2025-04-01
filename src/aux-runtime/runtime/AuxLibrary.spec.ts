@@ -3589,10 +3589,14 @@ describe('AuxLibrary', () => {
         describe('ai.openai.createRealtimeSession()', () => {
             it('should emit a RecordsCallProcedure action', () => {
                 const promise: any =
-                    library.api.ai.openai.createRealtimeSession('recordName');
+                    library.api.ai.openai.createRealtimeSession('recordName', {
+                        model: 'gpt-3.5-turbo',
+                    });
                 const expected = aiOpenAICreateRealtimeSession(
                     'recordName',
-                    {},
+                    {
+                        model: 'gpt-3.5-turbo',
+                    },
                     {},
                     context.tasks.size
                 );

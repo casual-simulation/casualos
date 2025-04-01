@@ -2424,6 +2424,46 @@ Object {
                     "type": "enum",
                     "values": Array [
                       "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.openai.realtime",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
                       "read",
                       "update",
                       "delete",
@@ -2578,6 +2618,7 @@ Object {
               "loom",
               "ai.sloyd",
               "ai.hume",
+              "ai.openai.realtime",
               "webhook",
               "notification",
             ],
@@ -3232,6 +3273,185 @@ Object {
         "type": "object",
       },
       "name": "getLoomAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/openai/realtime/session",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "recordName": Object {
+            "type": "string",
+          },
+          "request": Object {
+            "schema": Object {
+              "inputAudioFormat": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "pcm16",
+                  "g711_ulaw",
+                  "g711_alaw",
+                ],
+              },
+              "inputAudioNoiseReduction": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": Object {
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "near_field",
+                      "far_field",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              "inputAudioTranscription": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "language": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "model": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "prompt": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "instructions": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "maxResponseOutputTokens": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "modalities": Object {
+                "maxLength": 2,
+                "optional": true,
+                "schema": Object {
+                  "type": "enum",
+                  "values": Array [
+                    "audio",
+                    "text",
+                  ],
+                },
+                "type": "array",
+              },
+              "model": Object {
+                "type": "string",
+              },
+              "outputAudioFormat": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "pcm16",
+                  "g711_ulaw",
+                  "g711_alaw",
+                ],
+              },
+              "temperature": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "toolChoice": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "tools": Object {
+                "optional": true,
+                "schema": Object {
+                  "schema": Object {
+                    "description": Object {
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "name": Object {
+                      "type": "string",
+                    },
+                    "parameters": Object {
+                      "optional": true,
+                      "type": "any",
+                    },
+                    "type": Object {
+                      "optional": true,
+                      "type": "enum",
+                      "values": Array [
+                        "function",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "turnDetection": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "createResponse": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "eagerness": Object {
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "low",
+                      "medium",
+                      "high",
+                    ],
+                  },
+                  "interruptResponse": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "prefixPaddingMs": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "silenceDurationMs": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "threshold": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "type": Object {
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "server_vad",
+                      "semantic_vad",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              "voice": Object {
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createOpenAIRealtimeSession",
       "origins": "api",
     },
     Object {
@@ -6275,6 +6495,46 @@ Object {
                     "type": "enum",
                     "values": Array [
                       "create",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "ai.openai.realtime",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
                       "read",
                       "update",
                       "delete",
@@ -6429,6 +6689,7 @@ Object {
               "loom",
               "ai.sloyd",
               "ai.hume",
+              "ai.openai.realtime",
               "webhook",
               "notification",
             ],
@@ -7083,6 +7344,185 @@ Object {
         "type": "object",
       },
       "name": "getLoomAccessToken",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/ai/openai/realtime/session",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "recordName": Object {
+            "type": "string",
+          },
+          "request": Object {
+            "schema": Object {
+              "inputAudioFormat": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "pcm16",
+                  "g711_ulaw",
+                  "g711_alaw",
+                ],
+              },
+              "inputAudioNoiseReduction": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "type": Object {
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "near_field",
+                      "far_field",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              "inputAudioTranscription": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "language": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "model": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "prompt": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "instructions": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "maxResponseOutputTokens": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "modalities": Object {
+                "maxLength": 2,
+                "optional": true,
+                "schema": Object {
+                  "type": "enum",
+                  "values": Array [
+                    "audio",
+                    "text",
+                  ],
+                },
+                "type": "array",
+              },
+              "model": Object {
+                "type": "string",
+              },
+              "outputAudioFormat": Object {
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "pcm16",
+                  "g711_ulaw",
+                  "g711_alaw",
+                ],
+              },
+              "temperature": Object {
+                "optional": true,
+                "type": "number",
+              },
+              "toolChoice": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "tools": Object {
+                "optional": true,
+                "schema": Object {
+                  "schema": Object {
+                    "description": Object {
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "name": Object {
+                      "type": "string",
+                    },
+                    "parameters": Object {
+                      "optional": true,
+                      "type": "any",
+                    },
+                    "type": Object {
+                      "optional": true,
+                      "type": "enum",
+                      "values": Array [
+                        "function",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "turnDetection": Object {
+                "nullable": true,
+                "optional": true,
+                "schema": Object {
+                  "createResponse": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "eagerness": Object {
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "low",
+                      "medium",
+                      "high",
+                    ],
+                  },
+                  "interruptResponse": Object {
+                    "optional": true,
+                    "type": "boolean",
+                  },
+                  "prefixPaddingMs": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "silenceDurationMs": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "threshold": Object {
+                    "optional": true,
+                    "type": "number",
+                  },
+                  "type": Object {
+                    "optional": true,
+                    "type": "enum",
+                    "values": Array [
+                      "server_vad",
+                      "semantic_vad",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              "voice": Object {
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "createOpenAIRealtimeSession",
       "origins": "api",
     },
     Object {
