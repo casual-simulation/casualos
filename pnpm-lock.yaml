@@ -18,6 +18,9 @@ patchedDependencies:
   deno-vm@0.12.0:
     hash: 4b6o6pkokhnxhk5mw3ayiagdxm
     path: patches/deno-vm@0.12.0.patch
+  eslint-plugin-header@3.1.1:
+    hash: b3o5exenray2xkoqu5gm4rau54
+    path: patches/eslint-plugin-header@3.1.1.patch
   fake-indexeddb@5.0.1:
     hash: 32aodcxqlam32klerymhxuwzha
     path: patches/fake-indexeddb@5.0.1.patch
@@ -182,6 +185,9 @@ importers:
       eslint:
         specifier: ^9.22.0
         version: 9.22.0
+      eslint-plugin-header:
+        specifier: 3.1.1
+        version: 3.1.1(patch_hash=b3o5exenray2xkoqu5gm4rau54)(eslint@9.22.0)
       eslint-plugin-vue:
         specifier: ^10.0.0
         version: 10.0.0(eslint@9.22.0)(vue-eslint-parser@10.1.1)
@@ -736,8 +742,8 @@ importers:
         specifier: 2.4.6
         version: 2.4.6
       openai:
-        specifier: 4.47.1
-        version: 4.47.1
+        specifier: 4.89.0
+        version: 4.89.0(zod@3.22.4)
       openid-client:
         specifier: 5.6.1
         version: 5.6.1
@@ -16017,6 +16023,15 @@ packages:
       source-map: 0.6.1
     dev: true
 
+  /eslint-plugin-header@3.1.1(patch_hash=b3o5exenray2xkoqu5gm4rau54)(eslint@9.22.0):
+    resolution: {integrity: sha512-9vlKxuJ4qf793CmeeSrZUvVClw6amtpghq3CuWcB5cUNnWHQhgcqy5eF8oVKFk1G3Y/CbchGfEaw3wiIJaNmVg==}
+    peerDependencies:
+      eslint: '>=7.7.0'
+    dependencies:
+      eslint: 9.22.0
+    dev: true
+    patched: true
+
   /eslint-plugin-vue@10.0.0(eslint@9.22.0)(vue-eslint-parser@10.1.1):
     resolution: {integrity: sha512-XKckedtajqwmaX6u1VnECmZ6xJt+YvlmMzBPZd+/sI3ub2lpYZyFnsyWo7c3nMOQKJQudeyk1lw/JxdgeKT64w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -22221,9 +22236,17 @@ packages:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  /openai@4.47.1:
-    resolution: {integrity: sha512-WWSxhC/69ZhYWxH/OBsLEirIjUcfpQ5+ihkXKp06hmeYXgBBIUCa9IptMzYx6NdkiOCsSGYCnTIsxaic3AjRCQ==}
+  /openai@4.89.0(zod@3.22.4):
+    resolution: {integrity: sha512-XNI0q2l8/Os6jmojxaID5EhyQjxZgzR2gWcpEjYWK5hGKwE7AcifxEY7UNwFDDHJQXqeiosQ0CJwQN+rvnwdjA==}
     hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
     dependencies:
       '@types/node': 18.19.3
       '@types/node-fetch': 2.6.9
@@ -22232,7 +22255,7 @@ packages:
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
       node-fetch: 2.7.0
-      web-streams-polyfill: 3.3.3
+      zod: 3.22.4
     transitivePeerDependencies:
       - encoding
     dev: false

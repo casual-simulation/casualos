@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     DebuggerInterface,
     RecordFileApiSuccess,
@@ -203,6 +220,7 @@ import {
     sendNotification,
     listNotificationSubscriptions,
     listUserNotificationSubscriptions,
+    aiOpenAICreateRealtimeSession,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -3558,6 +3576,26 @@ describe('AuxLibrary', () => {
                 const expected = aiSloydGenerateModel(
                     {
                         prompt: 'this is a test',
+                    },
+                    {},
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('ai.openai.createRealtimeSession()', () => {
+            it('should emit a RecordsCallProcedure action', () => {
+                const promise: any =
+                    library.api.ai.openai.createRealtimeSession('recordName', {
+                        model: 'gpt-3.5-turbo',
+                    });
+                const expected = aiOpenAICreateRealtimeSession(
+                    'recordName',
+                    {
+                        model: 'gpt-3.5-turbo',
                     },
                     {},
                     context.tasks.size

@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     AIChatMessage,
     PublicRecordKeyPolicy,
@@ -17,6 +34,8 @@ import {
     ProcedureQueries,
     Procedures,
 } from '@casual-simulation/aux-common';
+import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
+import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -1387,6 +1406,34 @@ export function aiSloydGenerateModel(
     return {
         type: 'ai_sloyd_generate_model',
         ...parameters,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new action that is able to request that a realtime session be created.
+ * @param recordName The name of the record that the realtime session is being created for.
+ * @param request The request that should be used to create the realtime session.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function aiOpenAICreateRealtimeSession(
+    recordName: string,
+    request: CreateRealtimeSessionTokenRequest,
+    options?: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return {
+        type: 'records_call_procedure',
+        procedure: {
+            createOpenAIRealtimeSession: {
+                input: {
+                    recordName,
+                    request,
+                },
+            },
+        },
         options,
         taskId,
     };

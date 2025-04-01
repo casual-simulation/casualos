@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
 import type {
     AuthController,
@@ -3023,6 +3040,116 @@ export class RecordsServer {
                         userId: sessionKeyValidation.userId,
                         recordName: recordName,
                     });
+
+                    return result;
+                }),
+
+            createOpenAIRealtimeSession: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/ai/openai/realtime/session')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        request: z.object({
+                            model: z.string().min(1),
+                            instructions: z.string().min(1).optional(),
+                            modalities: z
+                                .array(z.enum(['audio', 'text']))
+                                .max(2)
+                                .optional(),
+                            maxResponseOutputTokens: z
+                                .number()
+                                .int()
+                                .min(1)
+                                .optional(),
+                            inputAudioFormat: z
+                                .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
+                                .optional(),
+                            inputAudioNoiseReduction: z
+                                .object({
+                                    type: z
+                                        .enum(['near_field', 'far_field'])
+                                        .optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            inputAudioTranscription: z
+                                .object({
+                                    language: z.string().min(1).optional(),
+                                    model: z.string().min(1).optional(),
+                                    prompt: z.string().min(1).optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            outputAudioFormat: z
+                                .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
+                                .optional(),
+                            temperature: z.number().min(0).max(2).optional(),
+                            toolChoice: z.string().optional(),
+                            tools: z
+                                .array(
+                                    z.object({
+                                        description: z.string().optional(),
+                                        name: z.string(),
+                                        parameters: z.any().optional(),
+                                        type: z.enum(['function']).optional(),
+                                    })
+                                )
+                                .optional(),
+                            turnDetection: z
+                                .object({
+                                    createResponse: z.boolean().optional(),
+                                    eagerness: z
+                                        .enum(['low', 'medium', 'high'])
+                                        .optional(),
+                                    interruptResponse: z.boolean().optional(),
+                                    prefixPaddingMs: z
+                                        .number()
+                                        .min(0)
+                                        .optional(),
+                                    silenceDurationMs: z
+                                        .number()
+                                        .min(0)
+                                        .optional(),
+                                    threshold: z.number().min(0).optional(),
+                                    type: z
+                                        .enum(['server_vad', 'semantic_vad'])
+                                        .optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            voice: z.string().min(1).optional(),
+                        }),
+                    })
+                )
+                .handler(async ({ recordName, request }, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._aiController.createOpenAIRealtimeSessionToken(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                recordName: recordName,
+                                request: {
+                                    model: request.model,
+                                    ...request,
+                                },
+                            }
+                        );
 
                     return result;
                 }),

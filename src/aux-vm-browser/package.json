@@ -7,7 +7,7 @@
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://casualsimulation.com/",
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",

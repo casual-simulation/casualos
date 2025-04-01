@@ -37,7 +37,7 @@
         "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "author": "Casual Simulation, Inc.",
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "bugs": {
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
