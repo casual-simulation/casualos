@@ -118,6 +118,10 @@ export class OpenAIChatInterface implements AIChatInterface {
             console.log(
                 `[OpenAIChatInterface] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
             );
+            console.log(
+                `[OpenAIChatInterface] [${request.userId}] [chat]: Usage:`,
+                result.data.usage
+            );
 
             let choices: AIChatMessage[] = result.data.choices.map(
                 (c: ChatChoice) => ({
