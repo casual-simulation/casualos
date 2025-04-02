@@ -177,6 +177,7 @@ export default class PlayerHome extends Vue {
     supportUrl: string = null;
     logoUrl: string = null;
     logoTitle: string = null;
+    generatedName: string = '';
 
     errors: FormError[] = [];
 
@@ -184,7 +185,6 @@ export default class PlayerHome extends Vue {
 
     private _simulations: Map<BrowserSimulation, Subscription>;
 
-    private generatedName: string = '';
     private savedCustomInstName: string = '';
 
     get isPrivoCertified() {
