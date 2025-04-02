@@ -30,6 +30,7 @@
     -   `request` is an object that contains the details of the request (model, instructions, etc.).
     -   `options` is optional and contains additional options for the records request (endpoint, etc).
     -   See the documentation for more details and examples.
+-   Added the ability to link to a support site by setting the `SUPPORT_LINK` environment variable during build.
 
 ### :bug: Bug Fixes
 
