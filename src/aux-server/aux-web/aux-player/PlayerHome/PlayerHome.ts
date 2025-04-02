@@ -177,7 +177,7 @@ export default class PlayerHome extends Vue {
     supportUrl: string = null;
     logoUrl: string = null;
     logoTitle: string = null;
-    generatedName: string = '';
+    generatedName: string = null;
 
     errors: FormError[] = [];
 
