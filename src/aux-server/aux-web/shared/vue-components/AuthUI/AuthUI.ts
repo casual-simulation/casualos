@@ -83,6 +83,7 @@ export default class AuthUI extends Vue {
         this.showNotAuthorized = false;
         this.showAccountInfo = false;
         this.loginStatus = null;
+        this.supportUrl = null;
         this._sub = new Subscription();
 
         this._sub.add(
@@ -114,6 +115,15 @@ export default class AuthUI extends Vue {
                 this.showAccountInfo = true;
                 this.loginStatus = e.loginStatus;
                 this._simId = e.simulationId;
+
+                if (e.endpoint) {
+                    const endpoint = appManager.auth.getEndpoint(e.endpoint);
+                    endpoint.getPolicyUrls().then((urls) => {
+                        this.supportUrl = urls.supportUrl;
+                    });
+                } else {
+                    this.supportUrl = null;
+                }
 
                 this.reportInstVisible = false;
                 if (this._simId) {
@@ -149,10 +159,6 @@ export default class AuthUI extends Vue {
                 }
             })
         );
-
-        appManager.auth.primary.getPolicyUrls().then((urls) => {
-            this.supportUrl = urls.supportUrl;
-        });
     }
 
     beforeDestroy() {
