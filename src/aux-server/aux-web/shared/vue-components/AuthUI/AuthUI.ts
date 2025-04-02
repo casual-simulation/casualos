@@ -50,6 +50,7 @@ export default class AuthUI extends Vue {
 
     showAccountInfo: boolean = false;
     loginStatus: LoginStatus = null;
+    supportUrl: string = null;
 
     get isLoggedIn() {
         return !!this.loginStatus;
@@ -148,6 +149,10 @@ export default class AuthUI extends Vue {
                 }
             })
         );
+
+        appManager.auth.primary.getPolicyUrls().then((urls) => {
+            this.supportUrl = urls.supportUrl;
+        });
     }
 
     beforeDestroy() {

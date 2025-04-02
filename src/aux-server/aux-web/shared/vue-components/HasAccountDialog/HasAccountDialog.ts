@@ -53,6 +53,10 @@ export default class HasAccountDialog extends Vue {
         return this.status.termsOfServiceUrl;
     }
 
+    get supportUrl() {
+        return this.status.supportUrl;
+    }
+
     processing: boolean = false;
 
     @Watch('status')

@@ -173,6 +173,7 @@ export default class PlayerHome extends Vue {
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
     codeOfConductUrl: string = null;
+    supportUrl: string = null;
     logoUrl: string = null;
     logoTitle: string = null;
 
@@ -358,6 +359,7 @@ export default class PlayerHome extends Vue {
             this.privacyPolicyUrl = urls.privacyPolicyUrl;
             this.termsOfServiceUrl = urls.termsOfServiceUrl;
             this.codeOfConductUrl = urls.codeOfConductUrl;
+            this.supportUrl = urls.supportUrl;
         });
     }
 

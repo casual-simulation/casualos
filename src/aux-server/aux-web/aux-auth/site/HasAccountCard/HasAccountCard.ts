@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { authManager } from 'aux-web/aux-auth/shared';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
@@ -25,6 +26,10 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 export default class HasAccountCard extends Vue {
     processing: boolean = false;
     hasAccountValue: boolean = null;
+
+    get supportUrl() {
+        return authManager.supportUrl;
+    }
 
     hasAccount(hasAccount: boolean) {
         this.processing = true;

@@ -24,6 +24,9 @@
                 ></md-input>
                 <field-errors field="code" :errors="formErrors" />
             </md-field>
+            <p v-if="supportUrl">
+                <a target="_blank" :href="supportUrl">Support</a>
+            </p>
 
             <field-errors :field="null" :errors="formErrors" />
         </md-dialog-content>

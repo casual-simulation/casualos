@@ -41,7 +41,7 @@ export * from './RateLimitController';
 export * from './PolicyController';
 export * from './PolicyStore';
 
-export {
+export type {
     AIController,
     AISloydGenerateModelResponse,
     AISloydGenerateModelSuccess,

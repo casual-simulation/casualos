@@ -57,6 +57,9 @@
                             >({{ loginStatus.authData.displayName }})</span
                         >
                     </h3>
+                    <p v-if="supportUrl">
+                        <a target="_blank" :href="supportUrl">Support</a>
+                    </p>
                 </div>
             </md-dialog-content>
             <md-dialog-actions>

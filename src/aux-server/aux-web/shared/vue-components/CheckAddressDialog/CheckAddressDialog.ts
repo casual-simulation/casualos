@@ -63,6 +63,10 @@ export default class CheckAddressDialog extends Vue {
         return this.status.addressType;
     }
 
+    get supportUrl() {
+        return this.status.supportUrl;
+    }
+
     get formErrors() {
         return this.status.errors ?? [];
     }
