@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { cloneDeep, orderBy, sortBy } from 'lodash';
 import type { RegexRule } from './Utils';
 import type {
@@ -112,6 +129,8 @@ import type {
     InstSubscriptionMetrics,
     AISloydMetrics,
     AISloydSubscriptionMetrics,
+    AIOpenAIRealtimeSubscriptionMetrics,
+    AIOpenAIRealtimeMetrics,
 } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
@@ -184,6 +203,7 @@ export class MemoryStore
     private _aiImageMetrics: AIImageMetrics[] = [];
     private _aiSkyboxMetrics: AISkyboxMetrics[] = [];
     private _aiSloydMetrics: AISloydMetrics[] = [];
+    private _aiRealtimeMetrics: AIOpenAIRealtimeMetrics[] = [];
 
     private _dataBuckets: Map<string, Map<string, RecordData>> = new Map();
     private _eventBuckets: Map<string, Map<string, EventData>> = new Map();
@@ -210,6 +230,10 @@ export class MemoryStore
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
     private _loadedPackages: Map<string, LoadedPackage> = new Map();
+
+    get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
+        return this._aiRealtimeMetrics;
+    }
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -761,6 +785,7 @@ export class MemoryStore
                     name: user.name,
                     email: user.email,
                     phoneNumber: user.phoneNumber,
+                    privoServiceId: user.privoServiceId,
                 },
             });
         }
@@ -2786,6 +2811,39 @@ export class MemoryStore
 
     async recordSloydMetrics(metrics: AISloydMetrics): Promise<void> {
         this._aiSloydMetrics.push(metrics);
+    }
+
+    async getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+        const metrics = filter.ownerId
+            ? this._aiRealtimeMetrics.filter(
+                  (m) =>
+                      m.userId === filter.ownerId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              )
+            : this._aiRealtimeMetrics.filter(
+                  (m) =>
+                      m.studioId === filter.studioId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              );
+
+        let totalModels = metrics.length;
+        return {
+            ...info,
+            totalSessionsInCurrentPeriod: totalModels,
+        };
+    }
+
+    async recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void> {
+        this._aiRealtimeMetrics.push(metrics);
     }
 
     async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {

@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     action,
     asyncResult,
@@ -87,6 +104,8 @@ if (typeof Element !== 'undefined') {
     };
 }
 
+let globalIdCounter = 0;
+
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
  */
@@ -139,7 +158,13 @@ export class HtmlAppBackend implements AppBackend {
         'previousSibling',
     ]);
 
-    private _idCounter = 0;
+    private get _idCounter() {
+        return globalIdCounter;
+    }
+
+    private set _idCounter(value: number) {
+        globalIdCounter = value;
+    }
 
     get onSetup() {
         return this._setupObservable.pipe(
@@ -208,9 +233,9 @@ export class HtmlAppBackend implements AppBackend {
                             supressMutations(true);
                             for (let prop of TARGET_INPUT_PROPERTIES) {
                                 let eventPropName = `_target${prop}`;
-                                if (eventPropName in finalEvent) {
+                                if (eventPropName in event.event) {
                                     (<any>target)[prop] =
-                                        finalEvent[eventPropName];
+                                        event.event[eventPropName];
                                 }
                             }
                             const propList =
@@ -218,9 +243,9 @@ export class HtmlAppBackend implements AppBackend {
                             if (propList) {
                                 for (let prop of propList) {
                                     let eventPropName = `_target${prop}`;
-                                    if (eventPropName in finalEvent) {
+                                    if (eventPropName in event.event) {
                                         (<any>target)[prop] =
-                                            finalEvent[eventPropName];
+                                            event.event[eventPropName];
                                     }
                                 }
                             }
@@ -296,13 +321,15 @@ export class HtmlAppBackend implements AppBackend {
             this._usingBrowserDocument = isBrowserDocument();
             if (this._usingBrowserDocument) {
                 this._document = globalThis.document;
-                this._body = this._document.createElement('body');
+                this._body = this._document.createElement('div');
             } else {
                 this._document = undom({
                     builtinEvents: result?.builtinEvents,
                 });
                 this._body = this._document.body;
             }
+            (<any>this._body).__id = this.appId;
+            this._nodes.set(this.appId, this._body);
 
             this._registerMethodHandlers(this._document);
 
@@ -561,13 +588,32 @@ export class HtmlAppBackend implements AppBackend {
                     const value = anyObj[prop];
                     if (hasValue(value)) {
                         if (this._propCopyList.has(prop)) {
-                            result[prop] = { ...value };
+                            if (
+                                typeof CSSStyleDeclaration !== 'undefined' &&
+                                value instanceof CSSStyleDeclaration
+                            ) {
+                                result[prop] = {
+                                    cssText: value.cssText,
+                                };
+                            } else {
+                                result[prop] = { ...value };
+                            }
                         } else if (isNamedNodeMap(value)) {
-                            let attributes: Attr[] = [];
+                            let attributes: { name: string; value: string }[] =
+                                [];
                             for (let i = 0; i < value.length; i++) {
-                                attributes.push({ ...value[i] });
+                                const attr = value[i];
+                                attributes.push({
+                                    name: attr.name,
+                                    value: attr.value,
+                                });
                             }
                             result[prop] = attributes;
+                        } else if (
+                            typeof SVGAnimatedString !== 'undefined' &&
+                            value instanceof SVGAnimatedString
+                        ) {
+                            result[prop] = value.baseVal;
                         } else {
                             result[prop] = value;
                         }

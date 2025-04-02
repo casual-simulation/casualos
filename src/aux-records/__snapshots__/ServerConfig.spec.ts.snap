@@ -179,6 +179,11 @@ Object {
             "images": Object {
               "allowed": false,
             },
+            "openai": Object {
+              "realtime": Object {
+                "allowed": false,
+              },
+            },
             "skyboxes": Object {
               "allowed": false,
             },
@@ -236,6 +241,11 @@ Object {
             },
             "images": Object {
               "allowed": false,
+            },
+            "openai": Object {
+              "realtime": Object {
+                "allowed": false,
+              },
             },
             "skyboxes": Object {
               "allowed": false,
@@ -465,6 +475,11 @@ Object {
                 "allowed": true,
                 "maxSquarePixelsPerPeriod": 102400,
               },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
               "skyboxes": Object {
                 "allowed": true,
                 "maxSkyboxesPerPeriod": 100,
@@ -537,6 +552,11 @@ Object {
               "images": Object {
                 "allowed": true,
                 "maxSquarePixelsPerPeriod": 10240000,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
               },
               "skyboxes": Object {
                 "allowed": true,
@@ -612,6 +632,11 @@ Object {
               },
               "images": Object {
                 "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
               },
               "skyboxes": Object {
                 "allowed": false,
@@ -694,6 +719,11 @@ Object {
                 "allowed": true,
                 "maxSquarePixelsPerPeriod": 1024000,
               },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
               "skyboxes": Object {
                 "allowed": true,
                 "maxSkyboxesPerPeriod": 1000,
@@ -768,6 +798,11 @@ Object {
               },
               "images": Object {
                 "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
               },
               "skyboxes": Object {
                 "allowed": false,
@@ -850,6 +885,11 @@ Object {
                 "allowed": true,
                 "maxSquarePixelsPerPeriod": 102400,
               },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
               "skyboxes": Object {
                 "allowed": true,
                 "maxSkyboxesPerPeriod": 100,
@@ -929,6 +969,11 @@ Object {
                 "allowed": true,
                 "maxSquarePixelsPerPeriod": 102400,
               },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
               "skyboxes": Object {
                 "allowed": true,
                 "maxSkyboxesPerPeriod": 100,
@@ -1002,6 +1047,11 @@ Object {
                 "allowed": true,
                 "maxSquarePixelsPerPeriod": 102400,
               },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
               "skyboxes": Object {
                 "allowed": true,
                 "maxSkyboxesPerPeriod": 100,
@@ -1072,6 +1122,11 @@ Object {
               },
               "images": Object {
                 "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
               },
               "skyboxes": Object {
                 "allowed": false,
@@ -1151,6 +1206,11 @@ Object {
               },
               "images": Object {
                 "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
               },
               "skyboxes": Object {
                 "allowed": false,
@@ -1414,6 +1474,11 @@ Object {
             "images": Object {
               "allowed": false,
             },
+            "openai": Object {
+              "realtime": Object {
+                "allowed": false,
+              },
+            },
             "skyboxes": Object {
               "allowed": false,
             },
@@ -1473,6 +1538,11 @@ Object {
             "images": Object {
               "allowed": true,
               "maxSquarePixelsPerPeriod": 102400,
+            },
+            "openai": Object {
+              "realtime": Object {
+                "allowed": false,
+              },
             },
             "skyboxes": Object {
               "allowed": true,

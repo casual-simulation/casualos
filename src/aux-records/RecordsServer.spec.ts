@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     parseAuthorization,
     RecordsServer,
@@ -171,6 +188,8 @@ import { NotificationRecordsController } from './notifications/NotificationRecor
 import type { WebPushInterface } from './notifications/WebPushInterface';
 import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
+import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
+import { OpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -401,6 +420,7 @@ describe('RecordsServer', () => {
             [AISloydInterfaceEditModelRequest]
         >;
     };
+    let realtimeInterface: jest.Mocked<AIOpenAIRealtimeInterface>;
 
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
@@ -437,31 +457,7 @@ describe('RecordsServer', () => {
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
-    let privoClientMock: {
-        createChildAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createChildAccount']>
-        >;
-        createAdultAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createAdultAccount']>
-        >;
-        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
-        generateAuthorizationUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
-        >;
-        processAuthorizationCallback: jest.Mock<
-            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
-        >;
-        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
-        checkDisplayName: jest.Mock<
-            ReturnType<PrivoClientInterface['checkDisplayName']>
-        >;
-        generateLogoutUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateLogoutUrl']>
-        >;
-        resendConsentRequest: jest.Mock<
-            ReturnType<PrivoClientInterface['resendConsentRequest']>
-        >;
-    };
+    let privoClientMock: jest.MockedObject<PrivoClientInterface>;
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -513,6 +509,7 @@ describe('RecordsServer', () => {
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
             resendConsentRequest: jest.fn(),
+            lookupServiceId: jest.fn(),
         };
         relyingParty = {
             id: 'relying_party_id',
@@ -548,6 +545,7 @@ describe('RecordsServer', () => {
             config: store,
             metrics: store,
             messenger: store,
+            privo: privoClient,
         });
 
         websocketConnectionStore = new MemoryWebsocketConnectionStore();
@@ -718,6 +716,9 @@ describe('RecordsServer', () => {
             createModel: jest.fn(),
             editModel: jest.fn(),
         };
+        realtimeInterface = {
+            createRealtimeSessionToken: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interfaces: {
@@ -773,6 +774,11 @@ describe('RecordsServer', () => {
             },
             sloyd: {
                 interface: sloydInterface,
+            },
+            openai: {
+                realtime: {
+                    interface: realtimeInterface,
+                },
             },
             config: store,
             metrics: store,
@@ -18068,6 +18074,147 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/ai/openai/realtime/session', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: Date.now() + 10000000,
+                },
+            });
+        });
+
+        it('should be able to call the realtime interface to create a session token', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/openai/realtime/session`,
+                    JSON.stringify({
+                        recordName: userId,
+                        request: {
+                            model: 'test-model',
+                            instructions: 'my instructions',
+                            modalities: ['audio', 'text'],
+                            maxResponseOutputTokens: 100,
+                            inputAudioFormat: 'pcm16',
+                            inputAudioNoiseReduction: {
+                                type: 'near_field',
+                            },
+                            inputAudioTranscription: {
+                                language: 'en',
+                                model: 'transcription-model',
+                                prompt: 'my prompt',
+                            },
+                            outputAudioFormat: 'pcm16',
+                            temperature: 1,
+                            toolChoice: 'auto',
+                            tools: [
+                                {
+                                    name: 'tool-1',
+                                    parameters: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'string',
+                                        },
+                                    },
+                                    type: 'function',
+                                },
+                            ],
+                            turnDetection: {
+                                createResponse: true,
+                                eagerness: 'low',
+                                interruptResponse: true,
+                                prefixPaddingMs: 30,
+                                silenceDurationMs: 1000,
+                                threshold: 0.5,
+                                type: 'semantic_vad',
+                            },
+                            voice: 'echo',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: 'sessionId',
+                    clientSecret: {
+                        value: 'secret',
+                        expiresAt: expect.any(Number),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).toHaveBeenCalledWith({
+                model: 'test-model',
+                instructions: 'my instructions',
+                modalities: ['audio', 'text'],
+                maxResponseOutputTokens: 100,
+                inputAudioFormat: 'pcm16',
+                inputAudioNoiseReduction: {
+                    type: 'near_field',
+                },
+                inputAudioTranscription: {
+                    language: 'en',
+                    model: 'transcription-model',
+                    prompt: 'my prompt',
+                },
+                outputAudioFormat: 'pcm16',
+                temperature: 1,
+                toolChoice: 'auto',
+                tools: [
+                    {
+                        name: 'tool-1',
+                        parameters: {
+                            type: 'array',
+                            items: {
+                                type: 'string',
+                            },
+                        },
+                        type: 'function',
+                    },
+                ],
+                turnDetection: {
+                    createResponse: true,
+                    eagerness: 'low',
+                    interruptResponse: true,
+                    prefixPaddingMs: 30,
+                    silenceDurationMs: 1000,
+                    threshold: 0.5,
+                    type: 'semantic_vad',
+                },
+                voice: 'echo',
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/ai/openai/realtime/session',
+            () =>
+                JSON.stringify({
+                    recordName: userId,
+                    request: {
+                        model: 'test-model',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('GET /api/v2/loom/token', () => {
         // Generated with:
         // $ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 36500 -nodes
@@ -19280,6 +19427,179 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     },
                 },
             ]);
+        });
+
+        describe('privo', () => {
+            it('should be able to add members by email address', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedEmail: 'test4@example.com',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    email: 'test4@example.com',
+                });
+            });
+
+            it('should be able to add members by phone number', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedPhoneNumber: '+1111',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    phoneNumber: '+1111',
+                });
+            });
+
+            it('should be able to add members by display name', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedDisplayName: 'test user',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    displayName: 'test user',
+                });
+            });
         });
 
         testUrl('POST', '/api/v2/studios/members', () =>

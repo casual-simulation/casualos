@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     AuxPartitions,
     MemoryPartition,
@@ -200,11 +217,11 @@ describe('HtmlAppBackend', () => {
                     {
                         type: 'childList',
                         target: expect.objectContaining({
-                            __id: '0',
+                            __id: 'testPortal',
                         }),
                         addedNodes: [
                             expect.objectContaining({
-                                __id: '1',
+                                __id: '0',
                                 nodeName: 'H1',
                             }),
                         ],
@@ -340,7 +357,7 @@ describe('HtmlAppBackend', () => {
 
             expect(actions).toEqual([
                 registerHtmlApp('testPortal', 'appId', 'uuid1'),
-                htmlAppMethod('testPortal', '0', 'focus', [], 'uuid2'),
+                htmlAppMethod('testPortal', 'testPortal', 'focus', [], 'uuid2'),
                 toast(undefined),
             ]);
         });

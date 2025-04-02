@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     CompleteLoginSuccess,
     ListSessionsSuccess,
@@ -136,31 +153,7 @@ describe('AuthController', () => {
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
     let privoClient: PrivoClientInterface;
-    let privoClientMock: {
-        createChildAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createChildAccount']>
-        >;
-        createAdultAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createAdultAccount']>
-        >;
-        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
-        generateAuthorizationUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
-        >;
-        processAuthorizationCallback: jest.Mock<
-            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
-        >;
-        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
-        checkDisplayName: jest.Mock<
-            ReturnType<PrivoClientInterface['checkDisplayName']>
-        >;
-        generateLogoutUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateLogoutUrl']>
-        >;
-        resendConsentRequest: jest.Mock<
-            ReturnType<PrivoClientInterface['resendConsentRequest']>
-        >;
-    };
+    let privoClientMock: jest.MockedObject<PrivoClientInterface>;
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
 
@@ -209,6 +202,7 @@ describe('AuthController', () => {
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
             resendConsentRequest: jest.fn(),
+            lookupServiceId: jest.fn(),
         };
 
         relyingParty = {

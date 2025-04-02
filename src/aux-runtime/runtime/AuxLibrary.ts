@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     AuxGlobalContext,
     AsyncTask,
@@ -330,6 +347,7 @@ import {
     sendNotification as calcSendNotification,
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
+    aiOpenAICreateRealtimeSession,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -469,6 +487,7 @@ import {
 import type { AxiosResponse, AxiosError } from 'axios';
 import { CasualOSError } from './CasualOSError';
 import type {
+    AICreateOpenAIRealtimeSessionTokenResult,
     AIGenerateImageSuccess,
     AIHumeGetAccessTokenResult,
     AISloydGenerateModelResponse,
@@ -488,6 +507,7 @@ import type {
 } from '@casual-simulation/aux-records/crud/CrudRecordsController';
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3054,6 +3074,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 stream: {
                     chat: chatStream,
                 },
+
+                openai: {
+                    createRealtimeSession: createOpenAIRealtimeSession,
+                },
             },
 
             os: {
@@ -5496,6 +5520,96 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<AISloydGenerateModelResponse> {
         const task = context.createTask();
         const action = aiSloydGenerateModel(request, options, task.taskId);
+        const final = addAsyncResultAction(task, action);
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Creates a new OpenAI Realtime Session.
+     * @param recordName The name of the record that the session is for.
+     * @param request The request options for the session.
+     * @param options The options for the records request.
+     *
+     *
+     * @example Create a new OpenAI Realtime Session.
+     * const model = "gpt-4o-realtime-preview-2024-12-17";
+     * const result = await ai.openai.createRealtimeSession(authBot.id, {
+     *    model,
+     * });
+     *
+     * @example Use WebRTC to create a new OpenAI Realtime Session.
+     * async function init() {
+     *   await os.requestAuthBot();
+     *   const recordName = authBot.id;
+     *   const model = "gpt-4o-realtime-preview-2024-12-17";
+     *   const result = await ai.openai.createRealtimeSession(recordName, {
+     *       model,
+     *   });
+     *
+     *   // Get an ephemeral key from your server - see server code below
+     *   const EPHEMERAL_KEY = result.clientSecret.value;
+     *
+     *   // Create a peer connection
+     *   const pc = new RTCPeerConnection();
+     *
+     *   // Set up to play remote audio from the model
+     *   const audioEl = document.createElement("audio");
+     *   audioEl.autoplay = true;
+     *   pc.ontrack = e => audioEl.srcObject = e.streams[0];
+     *
+     *   // Add local audio track for microphone input in the browser
+     *   const ms = await navigator.mediaDevices.getUserMedia({
+     *     audio: true
+     *   });
+     *   pc.addTrack(ms.getTracks()[0]);
+     *
+     *   // Set up data channel for sending and receiving events
+     *   const dc = pc.createDataChannel("oai-events");
+     *   dc.addEventListener("message", (e) => {
+     *     // Realtime server events appear here!
+     *     console.log(e);
+     *   });
+     *
+     *   // Start the session using the Session Description Protocol (SDP)
+     *   const offer = await pc.createOffer();
+     *   await pc.setLocalDescription(offer);
+     *
+     *   const baseUrl = "https://api.openai.com/v1/realtime";
+     *   debugger;
+     *   const sdpResponse = await window.fetch.bind(window)(`${baseUrl}?model=${model}`, {
+     *     method: "POST",
+     *     body: offer.sdp,
+     *     headers: {
+     *       Authorization: `Bearer ${EPHEMERAL_KEY}`,
+     *       "Content-Type": "application/sdp"
+     *     },
+     *   });
+     *
+     *   const answer = {
+     *     type: "answer",
+     *     sdp: await sdpResponse.text(),
+     *   };
+     *   await pc.setRemoteDescription(answer);
+     * }
+     *
+     * init();
+     *
+     * @dochash actions/ai
+     * @docname ai.openai.createRealtimeSession
+     */
+    function createOpenAIRealtimeSession(
+        recordName: string,
+        request: CreateRealtimeSessionTokenRequest,
+        options: RecordActionOptions = {}
+    ): Promise<AICreateOpenAIRealtimeSessionTokenResult> {
+        const task = context.createTask();
+        const action = aiOpenAICreateRealtimeSession(
+            recordName,
+            request,
+            options,
+            task.taskId
+        );
         const final = addAsyncResultAction(task, action);
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;

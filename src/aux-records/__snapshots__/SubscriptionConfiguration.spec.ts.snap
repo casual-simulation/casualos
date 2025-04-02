@@ -12,6 +12,11 @@ Object {
     "images": Object {
       "allowed": true,
     },
+    "openai": Object {
+      "realtime": Object {
+        "allowed": true,
+      },
+    },
     "skyboxes": Object {
       "allowed": true,
     },

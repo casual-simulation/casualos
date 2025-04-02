@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import axios from 'axios';
 import type { Subject, Observable } from 'rxjs';
 import { BehaviorSubject, from } from 'rxjs';
@@ -127,6 +144,8 @@ if (typeof (globalThis as any).USE_PRIVO_LOGIN === 'undefined') {
 
 console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
+declare let ENABLE_SMS_AUTHENTICATION: boolean;
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
@@ -217,6 +236,10 @@ export class AuthManager {
 
     get usePrivoLogin() {
         return this._usePrivoLogin;
+    }
+
+    get supportsSms() {
+        return ENABLE_SMS_AUTHENTICATION === true;
     }
 
     get userInfoLoaded() {
