@@ -26,7 +26,7 @@
                         @click="onExpandRecords"
                     >
                         <md-icon>description</md-icon>
-                        <span class="md-list-item-text">Player Studio</span>
+                        <span class="md-list-item-text">User Studio</span>
 
                         <template v-slot:md-expand>
                             <md-list>
@@ -196,7 +196,7 @@
                     <md-field>
                         <label>Studio</label>
                         <md-select v-model="createRecordStudioId">
-                            <md-option :value="''"> Player Studio </md-option>
+                            <md-option :value="''"> User Studio </md-option>
                             <md-option
                                 v-for="studio of studios"
                                 :key="studio.studioId"
