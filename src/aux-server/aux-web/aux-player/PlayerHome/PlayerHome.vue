@@ -78,8 +78,6 @@
                         id="instName"
                         v-model="instName"
                         :placeholder="generatedName"
-                        @focus="selectInstNameContent"
-                        ref="instNameInput"
                     />
                     <field-errors field="instName" :errors="errors" />
                 </md-field>
