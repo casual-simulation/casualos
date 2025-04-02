@@ -19,8 +19,18 @@
 
 ### :rocket: Features
 
+-   Added an error dialog to display error messages when adding a record to a studio fails.
+    -   Improved the `createRecord` method to handle errors and show a dialog with the appropriate error message.
+    -   This ensures users receive clear feedback when record creation encounters issues, enhancing the overall user experience.
 -   Improved studios to support adding Privo users by email, display name, or user ID.
     -   Additionally improved studios to only show members by name and display name when Privo support is enabled.
+-   Added the `ai.openai.createRealtimeSession(recordName, request, options?)` function.
+    -   Creates an [OpenAI Realtime Session](https://platform.openai.com/docs/guides/realtime) for use in conversational (audio + text) AI sessions.
+    -   `recordName` is the name of the record that the session should be created for. The owner of the record needs to have the `ai.openai.realtime` subscription features allowed.
+    -   `request` is an object that contains the details of the request (model, instructions, etc.).
+    -   `options` is optional and contains additional options for the records request (endpoint, etc).
+    -   See the documentation for more details and examples.
+-   Added the ability to link to a support site by setting the `SUPPORT_LINK` environment variable during build.
 -   Added a custom name input field for new local insts.
     -   Users can now name a new local inst directly in the BIOS dialog when selecting "new-inst" under static/local inst options.
     -   If no name is provided, a randomly generated name (e.g., testy-brown-quail) will still be used.

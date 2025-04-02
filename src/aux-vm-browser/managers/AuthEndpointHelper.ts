@@ -651,6 +651,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 privacyPolicyUrl: null,
                 termsOfServiceUrl: null,
                 codeOfConductUrl: null,
+                supportUrl: null,
             };
         }
         if (!this._initialized) {
@@ -661,6 +662,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
                 privacyPolicyUrl: null,
                 termsOfServiceUrl: null,
                 codeOfConductUrl: null,
+                supportUrl: null,
             };
         }
         return await this._proxy.getPolicyUrls();

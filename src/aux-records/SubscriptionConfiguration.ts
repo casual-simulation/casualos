@@ -233,6 +233,51 @@ export const subscriptionFeaturesSchema = z.object({
             .default({
                 allowed: false,
             }),
+        openai: z
+            .object({
+                realtime: z
+                    .object({
+                        allowed: z
+                            .boolean()
+                            .describe(
+                                'Whether OpenAI realtime API features are allowed.'
+                            ),
+                        maxSessionsPerPeriod: z
+                            .number()
+                            .describe(
+                                'The maximum number of realtime sessions that can be initiated per subscription period. If omitted, then there is no limit.'
+                            )
+                            .int()
+                            .positive()
+                            .optional(),
+                        maxResponseOutputTokens: z
+                            .number()
+                            .describe(
+                                'The maximum number of output tokens that can be generated per response per session. If omitted, then there is no limit.'
+                            )
+                            .int()
+                            .positive()
+                            .optional(),
+                        allowedModels: z
+                            .array(z.string())
+                            .describe(
+                                'The list of models that are allowed to be used with the realtime API. If ommited, then all models are allowed.'
+                            )
+                            .optional(),
+                    })
+                    .describe(
+                        'The configuration for OpenAI realtime API features.'
+                    )
+                    .optional()
+                    .default({
+                        allowed: false,
+                    }),
+            })
+            .describe(
+                'The configuration for Open AI-specific features for the subscription. Defaults to not allowed if omitted.'
+            )
+            .optional()
+            .default({}),
     }),
     insts: z.object({
         allowed: z
@@ -1046,7 +1091,16 @@ export interface AIFeaturesConfiguration {
      * The configuration for Sloyd AI features.
      */
     sloyd?: AISloydFeaturesConfiguration;
+
+    /**
+     * The configuration for OpenAI-specific features.
+     */
+    openai?: AIOpenAIFeaturesConfiguration;
 }
+
+export type AIOpenAIFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['ai']['openai'];
 
 export interface AIChatFeaturesConfiguration {
     /**
@@ -1208,6 +1262,11 @@ export function allowAllFeatures(): FeaturesConfiguration {
             sloyd: {
                 allowed: true,
             },
+            openai: {
+                realtime: {
+                    allowed: true,
+                },
+            },
         },
         data: {
             allowed: true,
@@ -1247,6 +1306,11 @@ export function denyAllFeatures(): FeaturesConfiguration {
             },
             sloyd: {
                 allowed: false,
+            },
+            openai: {
+                realtime: {
+                    allowed: false,
+                },
             },
         },
         data: {
@@ -1439,6 +1503,41 @@ export function getSloydAiFeatures(
         nowMs
     );
     return features.ai.sloyd ?? { allowed: false };
+}
+
+/**
+ * Gets the OpenAI-specific features that are allowed for the given subscription.
+ * If OpenAI features are not configured, then they are not allowed.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getOpenAiFeatures(
+    config: SubscriptionConfiguration,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): AIOpenAIFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return (
+        features.ai.openai ?? {
+            realtime: {
+                allowed: false,
+            },
+        }
+    );
 }
 
 /**

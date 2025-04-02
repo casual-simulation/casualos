@@ -95,6 +95,9 @@
                         <p v-if="termsOfServiceUrl">
                             <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
                         </p>
+                        <p v-if="supportUrl">
+                            <a target="_blank" :href="supportUrl">Support</a>
+                        </p>
                     </div>
                     <div class="spacer"></div>
                     <div class="policy-cert" v-if="isPrivoCertified">

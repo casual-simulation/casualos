@@ -91,6 +91,11 @@ export interface LoginUIAddressStatus {
     codeOfConductUrl: string;
 
     /**
+     * The page that should be linked to as the support page.
+     */
+    supportUrl: string;
+
+    /**
      * The name of the site that is being logged into.
      */
     siteName: string;
@@ -133,6 +138,11 @@ export interface LoginUICheckAddressStatus {
      * The errors that should be displayed.
      */
     errors: FormError[];
+
+    /**
+     * The URL that should be linked to for support.
+     */
+    supportUrl: string | null;
 }
 
 export interface LoginUIShowIframe {
@@ -156,6 +166,11 @@ export interface LoginUIHasAccount {
      * The page that should be linked to as the terms of service.
      */
     termsOfServiceUrl: string;
+
+    /**
+     * The page that should be linked to as the support page.
+     */
+    supportUrl: string;
 }
 
 export interface LoginUIPrivoSignUp {
@@ -175,6 +190,11 @@ export interface LoginUIPrivoSignUp {
      * The page that should be linked to as the code of conduct.
      */
     codeOfConductUrl: string;
+
+    /**
+     * The page that should be linked to as the support page.
+     */
+    supportUrl: string;
 
     /**
      * The name of the site that is being logged into.
@@ -293,6 +313,11 @@ export interface PolicyUrls {
     privacyPolicyUrl: string;
     termsOfServiceUrl: string;
     codeOfConductUrl: string;
+
+    /**
+     * The URL that should be used to contact support.
+     */
+    supportUrl: string | null;
 }
 
 /**

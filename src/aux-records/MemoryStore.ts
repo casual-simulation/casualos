@@ -137,6 +137,8 @@ import type {
     InstSubscriptionMetrics,
     AISloydMetrics,
     AISloydSubscriptionMetrics,
+    AIOpenAIRealtimeSubscriptionMetrics,
+    AIOpenAIRealtimeMetrics,
 } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
@@ -209,6 +211,7 @@ export class MemoryStore
     private _aiImageMetrics: AIImageMetrics[] = [];
     private _aiSkyboxMetrics: AISkyboxMetrics[] = [];
     private _aiSloydMetrics: AISloydMetrics[] = [];
+    private _aiRealtimeMetrics: AIOpenAIRealtimeMetrics[] = [];
 
     private _dataBuckets: Map<string, Map<string, RecordData>> = new Map();
     private _eventBuckets: Map<string, Map<string, EventData>> = new Map();
@@ -232,6 +235,10 @@ export class MemoryStore
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
+
+    get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
+        return this._aiRealtimeMetrics;
+    }
 
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
@@ -2716,6 +2723,39 @@ export class MemoryStore
 
     async recordSloydMetrics(metrics: AISloydMetrics): Promise<void> {
         this._aiSloydMetrics.push(metrics);
+    }
+
+    async getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+        const metrics = filter.ownerId
+            ? this._aiRealtimeMetrics.filter(
+                  (m) =>
+                      m.userId === filter.ownerId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              )
+            : this._aiRealtimeMetrics.filter(
+                  (m) =>
+                      m.studioId === filter.studioId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              );
+
+        let totalModels = metrics.length;
+        return {
+            ...info,
+            totalSessionsInCurrentPeriod: totalModels,
+        };
+    }
+
+    async recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void> {
+        this._aiRealtimeMetrics.push(metrics);
     }
 
     async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {

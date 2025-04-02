@@ -41,6 +41,15 @@ export * from './RateLimitController';
 export * from './PolicyController';
 export * from './PolicyStore';
 
+export type {
+    AIController,
+    AISloydGenerateModelResponse,
+    AISloydGenerateModelSuccess,
+    AISloydGenerateModelFailure,
+    AICreateOpenAIRealtimeSessionTokenResult,
+    AICreateOpenAIRealtimeSessionTokenSuccess,
+    AICreateOpenAIRealtimeSessionTokenFailure,
+} from './AIController';
 export * from './AIChatInterface';
 export * from './OpenAIChatInterface';
 export * from './AIGenerateSkyboxInterface';
@@ -51,6 +60,7 @@ export * from './OpenAIImageInterface';
 export * from './StabilityAIImageInterface';
 export * from './GoogleAIChatInterface';
 export * from './AnthropicAIChatInterface';
+export * from './AIOpenAIRealtimeInterface';
 
 export * from './ConfigurationStore';
 export * from './SubscriptionConfiguration';

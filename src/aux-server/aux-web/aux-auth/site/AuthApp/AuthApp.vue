@@ -26,7 +26,7 @@
                         @click="onExpandRecords"
                     >
                         <md-icon>description</md-icon>
-                        <span class="md-list-item-text">Player Studio</span>
+                        <span class="md-list-item-text">User Studio</span>
 
                         <template v-slot:md-expand>
                             <md-list>
@@ -156,14 +156,31 @@
             <md-dialog-title>Add Studio</md-dialog-title>
 
             <md-dialog-content>
-                <md-field>
-                    <label>Studio Name</label>
-                    <md-input v-model="studioName"></md-input>
-                </md-field>
+                <form @submit.prevent="createStudio()">
+                    <md-field :class="studioNameFieldClass">
+                        <label>Studio Name</label>
+                        <md-input v-model="studioName" required></md-input>
+                        <field-errors :field="'displayName'" :errors="errors" />
+                    </md-field>
+                    <field-errors :field="null" :errors="errors" />
+                </form>
             </md-dialog-content>
 
             <md-dialog-actions>
-                <md-button @click="createStudio()">Create</md-button>
+                <md-button
+                    type="submit"
+                    class="md-primary"
+                    :disabled="processing"
+                    @click="createStudio()"
+                >
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    ><span v-else>Create</span>
+                </md-button>
             </md-dialog-actions>
         </md-dialog>
 
@@ -171,15 +188,15 @@
             <md-dialog-title>Add Record</md-dialog-title>
             <md-dialog-content>
                 <form @submit.prevent="createRecord()">
-                    <md-field>
+                    <md-field :class="recordNameFieldClass">
                         <label>Record Name</label>
-                        <md-input v-model="recordName" required></md-input>
+                        <md-input v-model="recordName" required ref="recordInput"></md-input>
+                        <field-errors :field="'recordName'" :errors="errors" />
                     </md-field>
-
                     <md-field>
                         <label>Studio</label>
                         <md-select v-model="createRecordStudioId">
-                            <md-option :value="''"> Player Studio </md-option>
+                            <md-option :value="''"> User Studio </md-option>
                             <md-option
                                 v-for="studio of studios"
                                 :key="studio.studioId"
@@ -189,10 +206,24 @@
                             </md-option>
                         </md-select>
                     </md-field>
+                    <field-errors :field="null" :errors="errors" />
                 </form>
             </md-dialog-content>
             <md-dialog-actions>
-                <md-button class="md-primary" @click="createRecord()">Create</md-button>
+                <md-button
+                    type="submit"
+                    class="md-primary"
+                    :disabled="processing"
+                    @click="createRecord()"
+                >
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    ><span v-else>Create</span>
+                </md-button>
             </md-dialog-actions>
         </md-dialog>
 

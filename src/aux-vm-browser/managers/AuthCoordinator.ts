@@ -191,6 +191,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 this._onShowAccountInfo.next({
                     simulationId: sim.id,
                     loginStatus: status,
+                    endpoint: endpoint.origin,
                 });
             }
         } else if (this.authHelper) {
@@ -200,6 +201,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 this._onShowAccountInfo.next({
                     simulationId: null,
                     loginStatus: status,
+                    endpoint: endpoint.origin,
                 });
             }
         }
@@ -711,6 +713,11 @@ export interface ShowAccountInfoEvent {
      */
     simulationId: string;
     loginStatus: LoginStatus;
+
+    /**
+     * The endpoint that the login status comes from.
+     */
+    endpoint: string;
 }
 
 export interface NotAuthorizedEvent {

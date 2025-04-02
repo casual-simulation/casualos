@@ -41,6 +41,7 @@ export const INST_RESOURCE_KIND = 'inst';
 export const LOOM_RESOURCE_KIND = 'loom';
 export const SLOYD_RESOURCE_KIND = 'ai.sloyd';
 export const HUME_RESOURCE_KIND = 'ai.hume';
+export const OPENAI_REALTIME_RESOURCE_KIND = 'ai.openai.realtime';
 export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
 
@@ -61,7 +62,8 @@ export type ResourceKinds =
     | 'notification'
     | 'loom'
     | 'ai.sloyd'
-    | 'ai.hume';
+    | 'ai.hume'
+    | 'ai.openai.realtime';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -197,6 +199,14 @@ export type SloydActionKinds = 'create';
 export type HumeActionKinds = 'create';
 
 /**
+ * The possible types of actions that can be performed on ai.openai.realtime resources.
+ *
+ * @dochash types/permissions
+ * @docname OpenAIRealtimeActionKinds
+ */
+export type OpenAIRealtimeActionKinds = 'create';
+
+/**
  * The possible types of actions that can be performed on webhook resources.
  *
  * @dochash types/permissions
@@ -246,6 +256,7 @@ export type AvailablePermissions =
     | LoomPermission
     | SloydPermission
     | HumePermission
+    | OpenAIRealtimePermission
     | WebhookPermission
     | NotificationPermission;
 
@@ -306,6 +317,8 @@ export const SLOYD_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
 export const HUME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
 
+export const OPENAI_REALTIME_ACTION_KINDS_VALIDATION = z.enum([CREATE_ACTION]);
+
 export const WEBHOOK_ACTION_KINDS_VALIDATION = z.enum([
     CREATE_ACTION,
     READ_ACTION,
@@ -337,6 +350,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     LOOM_RESOURCE_KIND,
     SLOYD_RESOURCE_KIND,
     HUME_RESOURCE_KIND,
+    OPENAI_REALTIME_RESOURCE_KIND,
     WEBHOOK_RESOURCE_KIND,
     NOTIFICATION_RESOURCE_KIND,
 ]);
@@ -745,6 +759,37 @@ type ZodHumePermission = z.infer<typeof HUME_PERMISSION_VALIDATION>;
 type ZodHumePermissionAssertion = HasType<ZodHumePermission, HumePermission>;
 
 /**
+ * Defines an interface that describes common options for all permissions that affect ai.openai.realtime resources.
+ *
+ * @dochash types/permissions
+ * @docname OpenAIRealtimePermission
+ */
+export interface OpenAIRealtimePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'ai.openai.realtime';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: OpenAIRealtimeActionKinds | null;
+}
+export const OPENAI_REALTIME_PERMISSION_VALIDATION =
+    PERMISSION_VALIDATION.extend({
+        resourceKind: z.literal(OPENAI_REALTIME_RESOURCE_KIND),
+        action: OPENAI_REALTIME_ACTION_KINDS_VALIDATION.nullable(),
+    });
+type ZodOpenAIRealtimePermission = z.infer<
+    typeof OPENAI_REALTIME_PERMISSION_VALIDATION
+>;
+type ZodOpenAIRealtimePermissionAssertion = HasType<
+    ZodOpenAIRealtimePermission,
+    OpenAIRealtimePermission
+>;
+
+/**
  * Defines an interface that describes common options for all permissions that affect webhook resources.
  *
  * @dochash types/permissions
@@ -814,6 +859,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         LOOM_PERMISSION_VALIDATION,
         SLOYD_PERMISSION_VALIDATION,
         HUME_PERMISSION_VALIDATION,
+        OPENAI_REALTIME_PERMISSION_VALIDATION,
         WEBHOOK_PERMISSION_VALIDATION,
         NOTIFICATION_PERMISSION_VALIDATION,
     ]

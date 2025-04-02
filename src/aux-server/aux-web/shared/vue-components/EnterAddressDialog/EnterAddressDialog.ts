@@ -113,6 +113,10 @@ export default class EnterAddressDialog extends Vue {
         return this.status.codeOfConductUrl;
     }
 
+    get supportUrl() {
+        return this.status.supportUrl;
+    }
+
     get formErrors() {
         return [...(this.status.errors ?? []), ...this.extraErrors];
     }

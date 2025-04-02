@@ -178,6 +178,7 @@ export default defineConfig(({ command, mode }) => {
                 !!(config && !!config.subscriptions)
             ),
             USE_PRIVO_LOGIN: JSON.stringify(!!(config && config.privo)),
+            SUPPORT_URL: JSON.stringify(process.env.SUPPORT_URL || null),
         },
         publicDir,
         resolve: {

@@ -742,8 +742,8 @@ importers:
         specifier: 2.4.6
         version: 2.4.6
       openai:
-        specifier: 4.47.1
-        version: 4.47.1
+        specifier: 4.89.0
+        version: 4.89.0(zod@3.22.4)
       openid-client:
         specifier: 5.6.1
         version: 5.6.1
@@ -22236,9 +22236,17 @@ packages:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  /openai@4.47.1:
-    resolution: {integrity: sha512-WWSxhC/69ZhYWxH/OBsLEirIjUcfpQ5+ihkXKp06hmeYXgBBIUCa9IptMzYx6NdkiOCsSGYCnTIsxaic3AjRCQ==}
+  /openai@4.89.0(zod@3.22.4):
+    resolution: {integrity: sha512-XNI0q2l8/Os6jmojxaID5EhyQjxZgzR2gWcpEjYWK5hGKwE7AcifxEY7UNwFDDHJQXqeiosQ0CJwQN+rvnwdjA==}
     hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
     dependencies:
       '@types/node': 18.19.3
       '@types/node-fetch': 2.6.9
@@ -22247,7 +22255,7 @@ packages:
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
       node-fetch: 2.7.0
-      web-streams-polyfill: 3.3.3
+      zod: 3.22.4
     transitivePeerDependencies:
       - encoding
     dev: false
