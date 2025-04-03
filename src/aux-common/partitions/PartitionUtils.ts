@@ -252,7 +252,7 @@ function deepTraverse(
             }
         } else {
             for (let key in value) {
-                const val = value[key];
+                const val = (value as Record<string, any>)[key];
                 if (action(val) === false) {
                     return;
                 }

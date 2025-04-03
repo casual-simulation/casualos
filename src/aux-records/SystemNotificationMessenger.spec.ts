@@ -116,6 +116,7 @@ describe('formatNotificationAsString()', () => {
             resourceId: 'test_id',
             timeMs: 123,
             package: {
+                id: 'package_id',
                 address: 'test_id',
                 key: {
                     major: 1,
@@ -144,6 +145,7 @@ describe('formatNotificationAsString()', () => {
             resourceId: 'test_id',
             timeMs: 123,
             package: {
+                id: 'package_id',
                 address: 'test_id',
                 key: {
                     major: 1,

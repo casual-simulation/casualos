@@ -54,7 +54,7 @@ export interface InstParameters {
  * Gets the inst parameters from the given query.
  */
 export function getInstParameters(query: any): InstParameters {
-    const inst =
+    const inst: string =
         query.staticInst ?? query.inst ?? query.story ?? query.server ?? null;
     const recordName = query.owner ?? query.record ?? query.player ?? null;
     const owner = query.owner ?? null;

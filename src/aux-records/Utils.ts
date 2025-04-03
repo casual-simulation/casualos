@@ -551,7 +551,7 @@ export function parseVersionNumber(version: string | null | undefined) {
             tag: null,
         };
     }
-    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((:|-)\w+\.?\d*)*$/i;
+    const versionRegex = /^v?(\d+)\.(\d+)\.(\d+)((:|-)\w+\.?\d*)*$/i;
     const result = versionRegex.exec(version);
     if (!result) {
         return {

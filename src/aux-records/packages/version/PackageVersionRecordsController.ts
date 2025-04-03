@@ -189,7 +189,7 @@ export class PackageVersionRecordsController {
                 request.item.key
             );
 
-            if (!existingItem.markers || !existingItem.item) {
+            if (!existingItem.markers) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
@@ -433,7 +433,7 @@ export class PackageVersionRecordsController {
                 request.key
             );
 
-            if (!result.item || !result.markers || !result.packageId) {
+            if (!result.item) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',

@@ -362,9 +362,9 @@ export class WebhookRecordsController extends CrudRecordsController<
                 };
             }
 
-            let sessionUserId: string | null = null;
-            let sessionKey: string | null = null;
-            let connectionKey: string | null = null;
+            let sessionUserId: string | undefined = undefined;
+            let sessionKey: string | undefined = undefined;
+            let connectionKey: string | undefined = undefined;
 
             if (webhook.userId) {
                 // Create a session for the user

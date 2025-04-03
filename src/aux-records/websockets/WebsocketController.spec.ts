@@ -84,7 +84,7 @@ const uuidv7Mock: jest.Mock = <any>uuidv7;
 jest.mock('uuid');
 
 console.log = jest.fn();
-console.error = jest.fn();
+// console.error = jest.fn();
 
 const device1Info: DeviceConnection = {
     userId: 'device1',

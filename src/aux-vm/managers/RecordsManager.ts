@@ -2483,7 +2483,7 @@ export class RecordsManager {
                 if (Array.isArray(val)) {
                     url.searchParams.set(key, val.join(','));
                 } else {
-                    url.searchParams.set(key, val);
+                    url.searchParams.set(key, val as string);
                 }
             }
         }

@@ -196,9 +196,7 @@ export function doesSubjectMatchPolicy(
     policy: UserPolicy,
     subjectId: string | null
 ): boolean {
-    if (policy === true) {
-        return true;
-    } else if (policy === subjectId) {
+    if (policy === true || !policy) {
         return true;
     } else {
         return policy!.some((id) => id === subjectId);

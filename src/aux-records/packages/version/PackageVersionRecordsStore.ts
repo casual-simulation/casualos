@@ -371,20 +371,6 @@ export interface GetPackageVersionByKeyResult
 }
 
 export function getPackageVersionKey(
-    key: string,
-    major: null,
-    minor: number,
-    patch: number,
-    tag: string
-): GetPackageVersionKeyResult;
-export function getPackageVersionKey(
-    key: null,
-    major: number,
-    minor: number,
-    patch: number,
-    tag: string
-): GetPackageVersionKeyResult;
-export function getPackageVersionKey(
     key: string | null,
     major: number | null,
     minor: number,

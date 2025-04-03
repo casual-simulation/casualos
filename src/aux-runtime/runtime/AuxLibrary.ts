@@ -4040,7 +4040,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             tagsObj = bot.tags;
             botTags = tagsOnBot(bot);
         } else if (hasValue(bot[ORIGINAL_OBJECT])) {
-            tagsObj = bot[ORIGINAL_OBJECT];
+            tagsObj = bot[ORIGINAL_OBJECT] as BotTags;
             botTags = Object.keys(tagsObj);
         } else {
             tagsObj = bot;
@@ -7232,7 +7232,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return null;
         }
 
-        const state = getUploadState(data);
+        const state = getUploadState(data as StoredAux | BotsState);
         let bots = [] as Bot[];
 
         for (let bot in state) {
@@ -7285,7 +7285,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return null;
         }
 
-        return data;
+        return data as StoredAux;
     }
 
     /**
@@ -13913,7 +13913,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
-            const v = vectors[i] as any;
+            const v = vectors[i] as Record<string, number>;
             if (!hasValue(v)) {
                 continue;
             }
@@ -13975,7 +13975,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
-            const v = vectors[i] as any;
+            const v = vectors[i] as Record<string, number>;
             if (!hasValue(v)) {
                 continue;
             }
@@ -15525,7 +15525,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 if (mod && BOT_SPACE_TAG in mod) {
                     const space = mod[BOT_SPACE_TAG];
                     if (hasValue(space)) {
-                        bot.space = space;
+                        bot.space = space as BotSpace;
                     }
                     break;
                 }

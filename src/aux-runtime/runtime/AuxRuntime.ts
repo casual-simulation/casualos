@@ -2274,7 +2274,7 @@ export class AuxRuntime
         }
 
         return processListOfMaybePromises(null, portals, (portal) => {
-            const dimension = userBot.values[portal];
+            const dimension: string = userBot.values[portal];
             let hasChange = false;
             if (hasValue(dimension)) {
                 if (newBots && newBots.length > 0) {
@@ -2479,7 +2479,7 @@ export class AuxRuntime
             if (bot) {
                 removeFromContext(this._globalContext, [bot.script]);
 
-                const system = bot.values['system'];
+                const system: string = bot.values['system'];
                 if (hasValue(system)) {
                     const map = this._systemMap.get(system);
                     map?.delete(bot.id);
@@ -3339,7 +3339,7 @@ export class AuxRuntime
 
         if (typeof value !== 'function') {
             if (tag === 'system') {
-                const originalValue = bot.values[tag];
+                const originalValue: string = bot.values[tag];
                 if (originalValue !== value) {
                     if (hasValue(originalValue)) {
                         let originalSystemBots =
@@ -3355,10 +3355,10 @@ export class AuxRuntime
                     }
 
                     if (hasValue(value)) {
-                        let systemBots = this._systemMap.get(value);
+                        let systemBots = this._systemMap.get(value as string);
                         if (!systemBots) {
                             systemBots = new Set();
-                            this._systemMap.set(value, systemBots);
+                            this._systemMap.set(value as string, systemBots);
                         }
                         systemBots.add(bot.id);
                     }
