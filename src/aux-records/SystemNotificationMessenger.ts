@@ -108,6 +108,11 @@ export interface ResourceNotification extends RecordsNotificationBase {
      * The ID of the resource.
      */
     resourceId: string;
+
+    /**
+     * The markers that are present on the resource.
+     */
+    markers?: string[];
 }
 
 /**

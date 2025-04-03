@@ -380,7 +380,7 @@ export interface PolicyStore {
         packageId: string,
         feature: EntitlementFeature,
         scope: GrantedEntitlementScope,
-        recordName: string | null
+        recordName: string
     ): Promise<GrantedPackageEntitlement | null>;
 
     /**
@@ -446,7 +446,7 @@ export interface GrantedPackageEntitlement {
     /**
      * The record that the entitlement was granted for.
      */
-    recordName: string | null;
+    recordName: string;
 
     /**
      * The unix time that the entitlement expires in miliseconds.

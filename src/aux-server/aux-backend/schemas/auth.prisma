@@ -566,13 +566,9 @@ model GrantedPackageEntitlement {
     userId String
     user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GrantedPackageEntitlement_userId_fkey1")
 
-    // The name of the record that the package is stored in
-    packageRecordName String @db.String(128)
-    record Record @relation(fields: [packageRecordName], references: [name], onDelete: Cascade, map: "GrantedPackageEntitlement_packageRecordName_fkey1")
-
-    // The name of the address that the package is stored in
-    packageAddress String @db.String(128)
-    package PackageRecord @relation(fields: [packageRecordName, packageAddress], references: [recordName, address], onDelete: Cascade, map: "GrantedPackageEntitlement_packageAddress_fkey1")
+    // The ID of the package that the entitlement is granted for
+    packageId String @db.Uuid
+    package PackageRecord @relation(fields: [packageId], references: [id], onDelete: Cascade, map: "GrantedPackageEntitlement_packageId_fkey1")
 
     // The feature that the entitlement covers
     feature String @db.String(32)
@@ -580,11 +576,15 @@ model GrantedPackageEntitlement {
     // The scope of the entitlement
     scope String @db.String(32)
 
+    // The record that was designated by the entitlement
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "GrantedPackageEntitlement_recordName_fkey1")
+
     // The time that the entitlement grant expires
     expireTime DateTime
 
-    // The records that were designated by the entitlement
-    designatedRecords String[]
+    // The time that the entitlement was revoked
+    revokeTime DateTime?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

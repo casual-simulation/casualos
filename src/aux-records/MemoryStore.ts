@@ -1229,7 +1229,7 @@ export class MemoryStore
         packageId: string,
         feature: Entitlement['feature'],
         scope: GrantedEntitlementScope,
-        recordName: string | null
+        recordName: string
     ): Promise<GrantedPackageEntitlement | null> {
         return (
             this._grantedPackageEntitlements.find(
@@ -1239,8 +1239,7 @@ export class MemoryStore
                     e.feature === feature &&
                     e.scope === scope &&
                     e.revokeTimeMs === null &&
-                    (e.recordName === recordName ||
-                        (!e.recordName && !recordName))
+                    e.recordName === recordName
             ) ?? null
         );
     }

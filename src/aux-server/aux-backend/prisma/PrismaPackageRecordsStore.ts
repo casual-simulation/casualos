@@ -1,3 +1,21 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import type {
     PackageRecord,
     PackageRecordsStore,
@@ -11,6 +29,7 @@ import type {
 import type { Prisma, PrismaClient } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { convertMarkers } from './Utils';
+import type { PrismaMetricsStore } from './PrismaMetricsStore';
 
 const TRACE_NAME = 'PrismaPackageRecordsStore';
 
@@ -19,15 +38,52 @@ const TRACE_NAME = 'PrismaPackageRecordsStore';
  */
 export class PrismaPackageRecordsStore implements PackageRecordsStore {
     private _client: PrismaClient;
+    private _metrics: PrismaMetricsStore;
 
-    constructor(prisma: PrismaClient) {
+    constructor(prisma: PrismaClient, metrics: PrismaMetricsStore) {
         this._client = prisma;
+        this._metrics = metrics;
     }
 
-    getSubscriptionMetrics(
+    @traced(TRACE_NAME)
+    async getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<PackageSubscriptionMetrics> {
-        throw new Error('Method not implemented.');
+        const metrics = await this._metrics.getSubscriptionRecordMetrics(
+            filter
+        );
+
+        const where: Prisma.NotificationRecordWhereInput = {};
+        const whereRun: Prisma.SentNotificationWhereInput = {};
+
+        if (filter.ownerId) {
+            where.record = {
+                ownerId: filter.ownerId,
+            };
+            whereRun.record = {
+                ownerId: filter.ownerId,
+            };
+        } else if (filter.studioId) {
+            where.record = {
+                studioId: filter.studioId,
+            };
+            whereRun.record = {
+                studioId: filter.studioId,
+            };
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const [totalItems] = await Promise.all([
+            this._client.notificationRecord.count({
+                where,
+            }),
+        ]);
+
+        return {
+            ...metrics,
+            totalItems,
+        };
     }
 
     @traced(TRACE_NAME)

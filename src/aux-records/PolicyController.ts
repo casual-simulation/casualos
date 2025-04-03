@@ -2751,7 +2751,7 @@ export class PolicyController {
                     request.packageId,
                     request.feature,
                     request.scope,
-                    request.recordName ?? null
+                    request.recordName
                 );
 
             const grantId = grant?.id ?? uuidv7();
@@ -2768,7 +2768,7 @@ export class PolicyController {
                 packageId: grant?.packageId ?? request.packageId,
                 userId: grant?.userId ?? request.grantingUserId,
                 feature: grant?.feature ?? request.feature,
-                recordName: grant?.recordName ?? request.recordName ?? null,
+                recordName: grant?.recordName ?? request.recordName,
             });
 
             return {

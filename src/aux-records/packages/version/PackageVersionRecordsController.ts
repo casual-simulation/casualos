@@ -1,3 +1,21 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import type {
     ActionKinds,
     Entitlement,
@@ -103,7 +121,7 @@ export interface PackageVersionRecordsConfiguration
     /**
      * The controller that should be used for sending system notifications.
      */
-    systemNotifications: SystemNotificationMessenger;
+    systemNotifications: SystemNotificationMessenger | null;
 }
 
 /**
@@ -116,7 +134,7 @@ export class PackageVersionRecordsController {
     private _config: ConfigurationStore;
     private _resourceKind: ResourceKinds;
     private _files: FileRecordsController;
-    private _systemNotifications: SystemNotificationMessenger;
+    private _systemNotifications: SystemNotificationMessenger | null;
     private _name: string = 'PackageVersionRecordsController';
 
     get store() {
@@ -344,13 +362,14 @@ export class PackageVersionRecordsController {
                     return crudResult;
                 }
 
-                await this._systemNotifications.sendRecordNotification({
+                await this._systemNotifications?.sendRecordNotification({
                     resource: 'package_version_publish',
                     action: 'created',
                     recordName: recordName,
                     resourceId: address,
                     timeMs: createdAtMs,
                     package: item,
+                    markers: resourceMarkers,
                 });
             } else {
                 item = existingItem.item;

@@ -69,6 +69,7 @@ import {
     WebhookRecordsController,
     cleanupObject,
     NotificationRecordsController,
+    PackageRecordsController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -198,9 +199,12 @@ import { getConnectionId } from '@casual-simulation/aux-common';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
-import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { PrismaNotificationRecordsStore } from '../prisma/PrismaNotificationRecordsStore';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
+import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
+import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -221,6 +225,8 @@ export interface BuildReturn {
     websocketRateLimitController: RateLimitController;
     policyController: PolicyController;
     websocketController: WebsocketController;
+    packagesController: PackageRecordsController;
+    packageVersionController: PackageVersionRecordsController;
     dynamodbClient: DocumentClient;
     mongoClient: MongoClient;
     mongoDatabase: Db;
@@ -362,6 +368,10 @@ export class ServerBuilder implements SubscriptionLike {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
+    private _packagesStore: PrismaPackageRecordsStore;
+    private _packageVersionsStore: PrismaPackageVersionRecordsStore;
+    private _packagesController: PackageRecordsController;
+    private _packageVersionController: PackageVersionRecordsController;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -688,6 +698,14 @@ export class ServerBuilder implements SubscriptionLike {
             metricsStore
         );
         this._notificationsStore = new PrismaNotificationRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._packagesStore = new PrismaPackageRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
             prismaClient,
             metricsStore
         );
@@ -1738,6 +1756,23 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._packagesStore && this._packageVersionsStore) {
+            this._packagesController = new PackageRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._packagesStore,
+            });
+            this._packageVersionController =
+                new PackageVersionRecordsController({
+                    config: this._configStore,
+                    policies: this._policyController,
+                    recordItemStore: this._packagesStore,
+                    store: this._packageVersionsStore,
+                    files: this._filesController,
+                    systemNotifications: this._notificationMessenger,
+                });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1758,6 +1793,8 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
+            packagesController: this._packagesController,
+            packageVersionController: this._packageVersionController,
         });
 
         const buildReturn: BuildReturn = {
@@ -1774,6 +1811,8 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
+            packagesController: this._packagesController,
+            packageVersionController: this._packageVersionController,
 
             moderationController: this._moderationController,
             moderationJobProvider: this._moderationJobProvider,
