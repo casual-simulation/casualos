@@ -384,7 +384,7 @@ export class PortalConfig implements SubscriptionLike {
         portalTag: string
     ) {
         // Update the dimension background color.
-        let dimensionBackgroundColor = calculateBotValue(
+        let dimensionBackgroundColor: string = calculateBotValue(
             calc,
             bot,
             `auxPortalColor`

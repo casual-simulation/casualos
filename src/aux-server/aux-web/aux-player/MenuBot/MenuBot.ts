@@ -501,12 +501,12 @@ export default class MenuBot extends Vue {
 
         this.progress = hasValue(progress) ? clamp(progress, 0, 1) : null;
 
-        let colorTagValue: any = calculateBotValue(
+        let colorTagValue: string = calculateBotValue(
             calc,
             bot,
             'auxProgressBarColor'
         );
-        let bgColorTagValue: any = calculateBotValue(
+        let bgColorTagValue: string = calculateBotValue(
             calc,
             bot,
             'auxProgressBarBackgroundColor'
