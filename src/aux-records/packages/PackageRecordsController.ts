@@ -108,7 +108,11 @@ export class PackageRecordsController extends CrudRecordsController<
             };
         }
 
-        if (action === 'create' && typeof features.maxItems === 'number') {
+        if (
+            item &&
+            action === 'create' &&
+            typeof features.maxItems === 'number'
+        ) {
             if (metrics.totalItems >= features.maxItems) {
                 return {
                     success: false,
@@ -136,7 +140,7 @@ export type PackageRecordsSubscriptionMetricsResult =
 
 export interface PackageRecordsSubscriptionMetricsSuccess
     extends CheckSubscriptionMetricsSuccess {
-    config: SubscriptionConfiguration;
+    config: SubscriptionConfiguration | null;
     metrics: PackageSubscriptionMetrics;
     features: PackageFeaturesConfiguration;
 }

@@ -333,7 +333,7 @@ export class MemoryNotificationRecordsStore
 
         const records = filter.ownerId
             ? await this.store.listRecordsByOwnerId(filter.ownerId)
-            : await this.store.listRecordsByStudioId(filter.studioId);
+            : await this.store.listRecordsByStudioId(filter.studioId!);
         for (let record of records) {
             totalItems += this.getItemRecord(record.name).size;
         }
@@ -345,6 +345,7 @@ export class MemoryNotificationRecordsStore
 
             if (
                 !info.currentPeriodStartMs ||
+                !info.currentPeriodEndMs ||
                 send.sentTimeMs >= info.currentPeriodStartMs ||
                 send.sentTimeMs <= info.currentPeriodEndMs
             ) {

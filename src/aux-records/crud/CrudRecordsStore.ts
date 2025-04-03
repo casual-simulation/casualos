@@ -18,6 +18,11 @@
 import type { SubscriptionMetrics } from '../MetricsStore';
 
 /**
+ * Maps the given type to a new type where all properties are optional except for the given keys.
+ */
+export type PartialExcept<T, K extends keyof T> = Partial<T> & Pick<T, K>;
+
+/**
  * Defines an interface for a store that can be used to create, read, update, and delete items in a record.
  *
  * @param T The type of the records that the store can manage.
@@ -36,7 +41,7 @@ export interface CrudRecordsStore<T extends CrudRecord> {
      * @param recordName The name of the record that the item lives in.
      * @param address The address of the item to read.
      */
-    getItemByAddress(recordName: string, address: string): Promise<T>;
+    getItemByAddress(recordName: string, address: string): Promise<T | null>;
 
     /**
      * Updates the record with the given ID.
@@ -44,7 +49,10 @@ export interface CrudRecordsStore<T extends CrudRecord> {
      * @param recordName The name of the record that the item lives in.
      * @param record The record to update.
      */
-    updateItem(recordName: string, item: Partial<T>): Promise<void>;
+    updateItem(
+        recordName: string,
+        item: PartialExcept<T, 'address'>
+    ): Promise<void>;
 
     /**
      * Creates or updates the record with the given ID.
@@ -52,7 +60,10 @@ export interface CrudRecordsStore<T extends CrudRecord> {
      * @param recordName The name of the record that the item lives in.
      * @param item The item to create or update.
      */
-    putItem(recordName: string, item: Partial<T>): Promise<void>;
+    putItem(
+        recordName: string,
+        item: PartialExcept<T, 'address'>
+    ): Promise<void>;
 
     /**
      * Deletes the item with the given ID.

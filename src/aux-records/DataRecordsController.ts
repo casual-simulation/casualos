@@ -309,7 +309,10 @@ export class DataRecordsController {
 
             if (!existingRecord.success) {
                 // Check metrics
-                if (features.data.maxItems > 0) {
+                if (
+                    hasValue(features.data.maxItems) &&
+                    features.data.maxItems > 0
+                ) {
                     if (metricsResult.totalItems >= features.data.maxItems) {
                         return {
                             success: false,
@@ -339,7 +342,7 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: result2.errorCode,
-                    errorMessage: result2.errorMessage,
+                    errorMessage: result2.errorMessage!,
                 };
             }
 
@@ -350,7 +353,9 @@ export class DataRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[DataRecordsController] A server error occurred while recording data:`,
@@ -375,7 +380,7 @@ export class DataRecordsController {
     async getData(
         recordName: string,
         address: string,
-        userId?: string,
+        userId?: string | null,
         instances?: string[]
     ): Promise<GetDataResult> {
         try {
@@ -400,7 +405,7 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: result.errorCode,
-                    errorMessage: result.errorMessage,
+                    errorMessage: result.errorMessage!,
                 };
             }
 
@@ -425,8 +430,8 @@ export class DataRecordsController {
             return {
                 success: true,
                 data: result.data,
-                publisherId: result.publisherId,
-                subjectId: result.subjectId,
+                publisherId: result.publisherId!,
+                subjectId: result.subjectId!,
                 recordName,
                 updatePolicy: result.updatePolicy ?? true,
                 deletePolicy: result.deletePolicy ?? true,
@@ -434,7 +439,9 @@ export class DataRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[DataRecordsController] An error occurred while getting data:',
@@ -513,7 +520,9 @@ export class DataRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[DataRecordsController] An error occurred while listing data:',
@@ -588,7 +597,9 @@ export class DataRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 '[DataRecordsController] An error occurred while listing data by marker:',
@@ -614,7 +625,7 @@ export class DataRecordsController {
     async eraseData(
         recordKeyOrName: string,
         address: string,
-        subjectId: string,
+        subjectId: string | null,
         instances?: string[]
     ): Promise<EraseDataResult> {
         try {
@@ -703,7 +714,7 @@ export class DataRecordsController {
                 return {
                     success: false,
                     errorCode: result2.errorCode,
-                    errorMessage: result2.errorMessage,
+                    errorMessage: result2.errorMessage!,
                 };
             }
 
@@ -714,7 +725,9 @@ export class DataRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
             console.error(
                 `[DataRecordsController] A server error occurred while erasing data:`,

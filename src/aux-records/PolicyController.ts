@@ -3571,12 +3571,12 @@ export interface AuthorizeUserAndInstancesRequest {
     /**
      * The ID of the user that should be authorized.
      */
-    userId: string;
+    userId: string | null | undefined;
 
     /**
      * The instances that should be authorized.
      */
-    instances: string[];
+    instances: string[] | null | undefined;
 
     /**
      * The kind of resource that the action is being performed on.
@@ -3623,7 +3623,7 @@ export interface AuthorizeUserAndInstancesForResources {
     /**
      * The ID of the user that should be authorized.
      */
-    userId: string;
+    userId: string | null;
 
     /**
      * The instances that should be authorized.

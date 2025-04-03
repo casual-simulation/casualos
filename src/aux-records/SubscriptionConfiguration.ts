@@ -17,6 +17,104 @@
  */
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
+import { webhook } from '@casual-simulation/aux-common';
+
+export const webhookFeaturesSchema = z
+    .object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether webhook features are granted for the subscription.'
+            ),
+
+        maxItems: z
+            .number()
+            .describe(
+                'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
+            )
+            .int()
+            .optional(),
+
+        tokenLifetimeMs: z
+            .number()
+            .describe(
+                'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5 * 60 * 1000),
+
+        initTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5000),
+
+        requestTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5000),
+
+        fetchTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5000),
+
+        addStateTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(1000),
+
+        maxRunsPerPeriod: z
+            .number()
+            .describe(
+                'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+
+        maxRunsPerHour: z
+            .number()
+            .describe(
+                'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+    })
+    .describe(
+        'The configuration for webhook features. Defaults to not allowed.'
+    )
+    .optional()
+    .default({
+        allowed: false,
+    });
 
 export const subscriptionFeaturesSchema = z.object({
     records: z
@@ -351,102 +449,7 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: false,
         }),
 
-    webhooks: z
-        .object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether webhook features are granted for the subscription.'
-                ),
-
-            maxItems: z
-                .number()
-                .describe(
-                    'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
-                )
-                .int()
-                .optional(),
-
-            tokenLifetimeMs: z
-                .number()
-                .describe(
-                    'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5 * 60 * 1000),
-
-            initTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5000),
-
-            requestTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5000),
-
-            fetchTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5000),
-
-            addStateTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(1000),
-
-            maxRunsPerPeriod: z
-                .number()
-                .describe(
-                    'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-
-            maxRunsPerHour: z
-                .number()
-                .describe(
-                    'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-        })
-        .describe(
-            'The configuration for webhook features. Defaults to not allowed.'
-        )
-        .optional()
-        .default({
-            allowed: false,
-        }),
+    webhooks: webhookFeaturesSchema,
 
     notifications: z
         .object({
@@ -1353,12 +1356,12 @@ export function denyAllFeatures(): FeaturesConfiguration {
  * @param type The type of the user.
  */
 export function getPackageFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
-    periodStartMs?: number,
-    periodEndMs?: number,
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
     nowMs: number = Date.now()
 ): PackageFeaturesConfiguration {
     const features = getSubscriptionFeatures(
@@ -1381,7 +1384,7 @@ export function getPackageFeatures(
  * @param type The type of the user.
  */
 export function getNotificationFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1409,7 +1412,7 @@ export function getNotificationFeatures(
  * @param type The type of the user.
  */
 export function getWebhookFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1426,7 +1429,7 @@ export function getWebhookFeatures(
         periodEndMs,
         nowMs
     );
-    return features.webhooks ?? { allowed: false };
+    return features.webhooks ?? webhookFeaturesSchema.parse({ allowed: false });
 }
 
 /**
@@ -1436,7 +1439,7 @@ export function getWebhookFeatures(
  * @param subscriptionId The ID of the subscription.
  */
 export function getComIdFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     periodStartMs?: number,
@@ -1467,7 +1470,7 @@ export function getComIdFeatures(
  * @param subscriptionId The ID of the subscription.
  */
 export function getLoomFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     periodStartMs?: number,
@@ -1495,7 +1498,7 @@ export function getLoomFeatures(
  * @param type The type of the user.
  */
 export function getHumeAiFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1524,7 +1527,7 @@ export function getHumeAiFeatures(
  * @param type The type of the user.
  */
 export function getSloydAiFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1553,7 +1556,7 @@ export function getSloydAiFeatures(
  * @param type The type of the user.
  */
 export function getOpenAiFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1591,12 +1594,12 @@ export function getOpenAiFeatures(
  * @param nowMs The current time in milliseconds.
  */
 export function getSubscriptionFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
-    periodStartMs?: number,
-    periodEndMs?: number,
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
     nowMs: number = Date.now()
 ): FeaturesConfiguration {
     if (!config) {

@@ -2193,8 +2193,8 @@ export class MemoryStore
     async addFileRecord(
         recordName: string,
         fileName: string,
-        publisherId: string,
-        subjectId: string,
+        publisherId: string | null,
+        subjectId: string | null,
         sizeInBytes: number,
         description: string,
         markers: string[]
@@ -3518,8 +3518,8 @@ interface EventData {
 interface StoredFile {
     fileName: string;
     recordName: string;
-    publisherId: string;
-    subjectId: string;
+    publisherId: string | null;
+    subjectId: string | null;
     sizeInBytes: number;
     uploaded: boolean;
     description: string;

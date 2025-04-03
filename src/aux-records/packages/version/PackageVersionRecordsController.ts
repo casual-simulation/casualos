@@ -189,7 +189,7 @@ export class PackageVersionRecordsController {
                 request.item.key
             );
 
-            if (!existingItem.markers) {
+            if (!existingItem.markers || !existingItem.item) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
@@ -331,6 +331,13 @@ export class PackageVersionRecordsController {
                     recordFileResult.success === true
                         ? recordFileResult.fileName
                         : recordFileResult.existingFileName;
+
+                if (!fileName) {
+                    throw new Error(
+                        'Unable to determine file name for package'
+                    );
+                }
+
                 const sha256 = getHash({
                     auxFileName: fileName,
                     auxSha256: request.item.auxFileRequest.fileSha256Hex,
@@ -383,7 +390,9 @@ export class PackageVersionRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error recording item:`, err);
@@ -424,7 +433,7 @@ export class PackageVersionRecordsController {
                 request.key
             );
 
-            if (!result.item) {
+            if (!result.item || !result.markers || !result.packageId) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
@@ -487,7 +496,9 @@ export class PackageVersionRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error getting item:`, err);
@@ -523,7 +534,7 @@ export class PackageVersionRecordsController {
                 request.key
             );
 
-            if (!result.item) {
+            if (!result.item || !result.markers) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
@@ -572,7 +583,9 @@ export class PackageVersionRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error erasing item:`, err);
@@ -649,7 +662,9 @@ export class PackageVersionRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error listing items:`, err);
@@ -670,7 +685,7 @@ export class PackageVersionRecordsController {
                 request.packageVersionId
             );
 
-            if (!packageVersion?.item) {
+            if (!packageVersion.item || !packageVersion.recordName) {
                 return {
                     success: false,
                     errorCode: 'not_found',
@@ -725,7 +740,9 @@ export class PackageVersionRecordsController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error reviewing item:`, err);
@@ -747,8 +764,8 @@ export class PackageVersionRecordsController {
     ): Promise<PackageRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
-            ownerId: context.recordOwnerId,
-            studioId: context.recordStudioId,
+            ownerId: context.recordOwnerId ?? undefined,
+            studioId: context.recordStudioId ?? undefined,
         });
 
         const features = getPackageFeatures(
@@ -782,6 +799,7 @@ export class PackageVersionRecordsController {
 
             if (
                 typeof features.maxPackageVersionSizeInBytes === 'number' &&
+                item &&
                 item.auxFileRequest.fileByteLength >=
                     features.maxPackageVersionSizeInBytes
             ) {
@@ -798,9 +816,10 @@ export class PackageVersionRecordsController {
                 typeof features.maxPackageBytesTotal === 'number'
             ) {
                 if (
+                    item &&
                     metrics.totalPackageVersionBytes +
                         item.auxFileRequest.fileByteLength >=
-                    features.maxPackageBytesTotal
+                        features.maxPackageBytesTotal
                 ) {
                     return {
                         success: false,
@@ -863,7 +882,7 @@ export type PackageRecordsSubscriptionMetricsResult =
 
 export interface PackageRecordsSubscriptionMetricsSuccess
     extends CheckSubscriptionMetricsSuccess {
-    config: SubscriptionConfiguration;
+    config: SubscriptionConfiguration | null;
     metrics: PackageVersionSubscriptionMetrics;
     features: PackageFeaturesConfiguration;
 }

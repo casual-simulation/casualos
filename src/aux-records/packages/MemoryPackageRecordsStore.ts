@@ -39,7 +39,7 @@ export class MemoryPackageRecordsStore
 
         const records = filter.ownerId
             ? await this.store.listRecordsByOwnerId(filter.ownerId)
-            : await this.store.listRecordsByStudioId(filter.studioId);
+            : await this.store.listRecordsByStudioId(filter.studioId!);
         for (let record of records) {
             totalItems += this.getItemRecord(record.name).size;
         }

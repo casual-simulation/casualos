@@ -487,8 +487,9 @@ export interface SaveSubscriptionFailure {
 export interface UserPushSubscription extends NotificationPushSubscription {
     /**
      * The ID of the user that the push subscription is for.
+     * If null, then notifications should only be sent to the specified push subscription.
      */
-    userId: string;
+    userId: string | null;
 
     /**
      * The ID of the subscription.

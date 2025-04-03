@@ -475,7 +475,7 @@ export class FileRecordsController {
     async readFile(
         recordKeyOrRecordName: string,
         fileName: string,
-        subjectId: string,
+        subjectId: string | null,
         instances?: string[],
         userRole?: UserRole
     ): Promise<ReadFileResult> {

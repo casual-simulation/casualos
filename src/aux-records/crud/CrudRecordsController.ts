@@ -162,11 +162,9 @@ export abstract class CrudRecordsController<
             );
 
             let resourceMarkers: string[];
-            let action = existingItem
-                ? ('update' as const)
-                : ('create' as const);
+            let action: 'update' | 'create';
             let authorization: AuthorizeUserAndInstancesForResourcesResult;
-            if (action === 'update') {
+            if (existingItem) {
                 const existingMarkers = existingItem.markers;
                 resourceMarkers = request.item.markers ?? existingMarkers;
                 action = 'update';
@@ -197,6 +195,7 @@ export abstract class CrudRecordsController<
                 }
             } else {
                 resourceMarkers = request.item.markers;
+                action = 'create';
 
                 authorization =
                     await this._policies.authorizeUserAndInstancesForResources(
@@ -251,7 +250,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error recording item:`, err);
@@ -323,7 +324,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error getting item:`, err);
@@ -403,7 +406,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error erasing item:`, err);
@@ -455,7 +460,7 @@ export abstract class CrudRecordsController<
 
             const result2 = await this._store.listItems(
                 context.context.recordName,
-                request.startingAddress
+                request.startingAddress ?? null
             );
 
             return {
@@ -468,7 +473,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error listing items:`, err);
@@ -520,7 +527,7 @@ export abstract class CrudRecordsController<
 
             const result2 = await this._store.listItemsByMarker({
                 recordName: context.context.recordName,
-                startingAddress: request.startingAddress,
+                startingAddress: request.startingAddress ?? null,
                 marker: request.marker,
                 sort: request.sort,
             });
@@ -535,7 +542,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error listing items:`, err);
@@ -771,7 +780,7 @@ export interface CrudListItemsSuccess<T> {
      * The marker that was listed.
      * If null, then all markers are listed.
      */
-    marker?: string;
+    marker?: string | null;
 }
 
 export interface CrudListItemsFailure {

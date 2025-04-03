@@ -359,17 +359,33 @@ export interface GetPackageVersionByKeyResult
     extends GetSubCrudItemResult<PackageRecordVersion> {
     /**
      * The name of the record that the package version is stored in.
+     * Null if the package was not found.
      */
-    recordName: string;
+    recordName: string | null;
 
     /**
      * The ID of the package that the version is stored under.
+     * Null if the package was not found.
      */
-    packageId: string;
+    packageId: string | null;
 }
 
 export function getPackageVersionKey(
     key: string,
+    major: null,
+    minor: number,
+    patch: number,
+    tag: string
+): GetPackageVersionKeyResult;
+export function getPackageVersionKey(
+    key: null,
+    major: number,
+    minor: number,
+    patch: number,
+    tag: string
+): GetPackageVersionKeyResult;
+export function getPackageVersionKey(
+    key: string | null,
     major: number | null,
     minor: number,
     patch: number,
