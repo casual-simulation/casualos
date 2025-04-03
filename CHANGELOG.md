@@ -31,6 +31,9 @@
     -   `options` is optional and contains additional options for the records request (endpoint, etc).
     -   See the documentation for more details and examples.
 -   Added the ability to link to a support site by setting the `SUPPORT_LINK` environment variable during build.
+-   Added a custom name input field for new local insts.
+    -   Users can now name a new local inst directly in the BIOS dialog when selecting "new-inst" under static/local inst options.
+    -   If no name is provided, a randomly generated name (e.g., testy-brown-quail) will still be used.
 
 ### :bug: Bug Fixes
 
