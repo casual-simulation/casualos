@@ -43,6 +43,7 @@
 -   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
 -   Fixed an issue where predefined `bios` values in URLs (e.g., `?bios=free`) are now preserved during authentication. Users no longer encounter the BIOS selection screen unnecessarily after signing in.
 -   Fixed an issue in the documentation where links to tags and actions were completely broken.
+-   Fixed an issue where the `value` property on `textarea` HTML elements wouldn't work properly.
 
 ## V3.3.15
 
