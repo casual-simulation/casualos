@@ -102,6 +102,35 @@ if (typeof Element !== 'undefined') {
             ...arguments
         );
     };
+
+    // Technically a hack
+    // This is a workaround for the fact that the value property of an input element
+    // is not an attribute, but MutationObserver is only able to observe attribute changes.
+    // This means that Custom Apps aren't able to track value changes
+    // when DOM is used when the value is set via the API.
+    // This might break cases where code expects the value and attribute to be separate, but in practice
+    // this is probably a much more rare case than the opposite.
+    const classes = [HTMLInputElement, HTMLTextAreaElement];
+    for (let C of classes) {
+        const TargetClass = C;
+        const oldDescriptor = Object.getOwnPropertyDescriptor(
+            TargetClass.prototype,
+            'value'
+        );
+        Object.defineProperty(TargetClass.prototype, 'value', {
+            get: function (this: typeof TargetClass) {
+                // eslint-disable-next-line prefer-rest-params
+                return oldDescriptor.get.apply(this, arguments);
+            },
+            set: function (this: typeof TargetClass, value: string) {
+                // eslint-disable-next-line prefer-rest-params
+                oldDescriptor.set.apply(this, arguments);
+                if (this instanceof TargetClass) {
+                    this.setAttribute('value', value);
+                }
+            },
+        });
+    }
 }
 
 let globalIdCounter = 0;

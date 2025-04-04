@@ -73,6 +73,10 @@ export default class EnterAccountInfoDialog extends Vue {
         return this.status.codeOfConductUrl;
     }
 
+    get supportUrl() {
+        return this.status.supportUrl;
+    }
+
     get loginSiteName(): string {
         return this.status.siteName;
     }

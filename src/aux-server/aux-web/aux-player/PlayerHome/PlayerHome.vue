@@ -60,7 +60,8 @@
                         }}</md-option>
                     </md-select>
                 </md-field> -->
-                <md-field v-if="instOptions.length > 0">
+
+                <md-field v-if="isStaticInst(biosSelection)">
                     <label for="instOption">inst</label>
                     <md-select v-model="instSelection" name="instOption" id="instOption">
                         <md-option value="new-inst">+new</md-option>
@@ -68,6 +69,17 @@
                             option
                         }}</md-option>
                     </md-select>
+                </md-field>
+
+                <md-field v-if="showInstNameInput">
+                    <label for="instName">inst name</label>
+                    <md-input
+                        name="instName"
+                        id="instName"
+                        v-model="instName"
+                        :placeholder="generatedName"
+                    />
+                    <field-errors field="instName" :errors="errors" />
                 </md-field>
 
                 <div class="policies-grid">
@@ -80,6 +92,9 @@
                         </p>
                         <p v-if="termsOfServiceUrl">
                             <a target="_blank" :href="termsOfServiceUrl">Terms of Service</a>
+                        </p>
+                        <p v-if="supportUrl">
+                            <a target="_blank" :href="supportUrl">Support</a>
                         </p>
                     </div>
                     <div class="spacer"></div>

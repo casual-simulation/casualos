@@ -5474,7 +5474,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets an access token for the Hume AI API.
      * Returns a promise that resolves with the access token.
      *
-     * @param recordName The name of the record that the access token should be generated for. If omitted, then the user's player studio record will be used.
+     * @param recordName The name of the record that the access token should be generated for. If omitted, then the user's studio record will be used.
      *
      * @example Get an access token for the Hume AI API.
      * const accessToken = await ai.hume.getAccessToken();

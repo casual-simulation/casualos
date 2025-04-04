@@ -222,6 +222,7 @@ describe('AuthCoordinator', () => {
             expect(events).toEqual([
                 {
                     simulationId: 'sim-1',
+                    endpoint: 'http://localhost:3002',
                     loginStatus: {
                         isLoading: false,
                         isLoggingIn: true,
@@ -279,6 +280,7 @@ describe('AuthCoordinator', () => {
             expect(events).toEqual([
                 {
                     simulationId: 'sim-1',
+                    endpoint: 'http://localhost:3002',
                     loginStatus: {
                         isLoading: false,
                         isLoggingIn: true,

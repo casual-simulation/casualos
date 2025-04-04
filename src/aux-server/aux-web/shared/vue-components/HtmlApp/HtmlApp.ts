@@ -450,7 +450,8 @@ export default class HtmlApp extends Vue {
                 }
             }
         } else if (
-            node instanceof HTMLInputElement &&
+            (node instanceof HTMLInputElement ||
+                node instanceof HTMLTextAreaElement) &&
             (attributeName === 'value' || attributeName === 'checked')
         ) {
             (<any>node)[attributeName] = value;

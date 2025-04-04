@@ -610,6 +610,25 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS
     );
 
+    class HTMLTextAreaElement extends HTMLElement {
+        constructor(nodeType: number, nodeName: string) {
+            super(nodeType, nodeName);
+            this.setAttribute('value', '');
+            Object.defineProperty(this, 'value', {
+                set: (val) => {
+                    this.setAttribute('value', val);
+                },
+                get: () => this.getAttribute('value'),
+            });
+        }
+    }
+
+    registerBuiltinMethods(
+        HTMLTextAreaElement,
+        'HTMLTextAreaElement',
+        BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS
+    );
+
     class HTMLFormElement extends HTMLElement {
         constructor() {
             super(null, 'FORM');
@@ -895,6 +914,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         let element: HTMLElement;
         if (typeUpper === 'INPUT') {
             element = new HTMLInputElement(null, typeUpper);
+        } else if (typeUpper === 'TEXTAREA') {
+            element = new HTMLTextAreaElement(null, typeUpper);
         } else if (typeUpper === 'FORM') {
             element = new HTMLFormElement();
         } else if (typeUpper === 'VIDEO') {
