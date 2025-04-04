@@ -108,12 +108,11 @@ export class PackageRecordsController extends CrudRecordsController<
             };
         }
 
-        if (
-            item &&
-            action === 'create' &&
-            typeof features.maxItems === 'number'
-        ) {
-            if (metrics.totalItems >= features.maxItems) {
+        if (action === 'create') {
+            if (
+                typeof features.maxItems === 'number' &&
+                metrics.totalItems >= features.maxItems
+            ) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
@@ -122,7 +121,7 @@ export class PackageRecordsController extends CrudRecordsController<
                 };
             }
 
-            item.id = uuid();
+            item!.id = uuid();
         }
 
         return {

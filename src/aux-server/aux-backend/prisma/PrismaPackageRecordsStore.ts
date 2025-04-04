@@ -102,7 +102,7 @@ export class PrismaPackageRecordsStore implements PackageRecordsStore {
     async getItemByAddress(
         recordName: string,
         address: string
-    ): Promise<PackageRecord> {
+    ): Promise<PackageRecord | null> {
         const packageRecord = await this._client.packageRecord.findUnique({
             where: {
                 recordName_address: {
@@ -111,6 +111,10 @@ export class PrismaPackageRecordsStore implements PackageRecordsStore {
                 },
             },
         });
+
+        if (!packageRecord) {
+            return null;
+        }
 
         return {
             id: packageRecord.id,

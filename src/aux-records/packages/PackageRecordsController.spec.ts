@@ -238,6 +238,52 @@ describe('PackageRecordsController', () => {
                         'The maximum number of package items has been reached for your subscription.',
                 });
             });
+
+            it('should properly create the item with a new ID even if there is no package limit', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier('tier1')
+                                .withAllDefaultFeatures()
+                                .withPackages()
+                        )
+                );
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toEqual({
+                    id: expect.any(String),
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            });
         });
     });
 });
