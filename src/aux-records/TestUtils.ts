@@ -130,6 +130,7 @@ export function createTestControllers(
     const packageVersions = new PackageVersionRecordsController({
         config: store,
         policies,
+        packages,
         files,
         systemNotifications: store,
         recordItemStore: packagesStore,

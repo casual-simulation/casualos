@@ -56,6 +56,7 @@ import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
 import { v7 as uuid } from 'uuid';
 import type { UserRole } from '../../AuthStore';
+import { PackageRecordsController } from '../PackageRecordsController';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -76,6 +77,11 @@ describe('PackageVersionRecordsController', () => {
         (config, services) =>
             new PackageVersionRecordsController({
                 ...config,
+                packages: new PackageRecordsController({
+                    config: services.configStore,
+                    policies: services.policies,
+                    store: config.recordItemStore,
+                }),
                 files: new FileRecordsController({
                     config: services.configStore,
                     metrics: services.store,
@@ -107,6 +113,7 @@ describe('PackageVersionRecordsController', () => {
             sizeInBytes: 0,
             createdFile: true,
             requiresReview: false,
+            markers: [PUBLIC_READ_MARKER],
         }),
         (item) => ({
             address: item.address,
@@ -174,6 +181,11 @@ describe('PackageVersionRecordsController', () => {
             (config, services) => {
                 return new PackageVersionRecordsController({
                     ...config,
+                    packages: new PackageRecordsController({
+                        config: services.configStore,
+                        policies: services.policies,
+                        store: config.recordItemStore,
+                    }),
                     files: new FileRecordsController({
                         config: services.configStore,
                         metrics: services.store,
@@ -310,6 +322,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId,
                     instances: [],
@@ -395,6 +408,7 @@ describe('PackageVersionRecordsController', () => {
                             },
                         ],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId,
                     instances: [],
@@ -488,6 +502,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId,
                     instances: [],
@@ -579,6 +594,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId: otherUserId,
                     instances: [],
@@ -684,6 +700,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId: otherUserId,
                     instances: [],
@@ -744,6 +761,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     instances: [],
                 });
@@ -781,6 +799,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     instances: [],
                 });
@@ -830,6 +849,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     instances: [],
                 });
@@ -888,6 +908,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     instances: [],
                 });
@@ -957,6 +978,7 @@ describe('PackageVersionRecordsController', () => {
                     sizeInBytes: 0,
                     createdFile: true,
                     requiresReview: false,
+                    markers: [PUBLIC_READ_MARKER],
                 });
 
                 const aux: StoredAux = {
@@ -983,6 +1005,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId,
                     instances: [],
@@ -1022,6 +1045,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId,
                     instances: [],
@@ -1105,6 +1129,202 @@ describe('PackageVersionRecordsController', () => {
                     },
                 ]);
             });
+
+            it.only('should be able to upload a package version even if the package doesnt exist', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address2',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                        markers: [PRIVATE_MARKER],
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address2',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const packageItem = await recordItemsStore.getItemByAddress(
+                    recordName,
+                    'address2'
+                );
+
+                expect(packageItem).toEqual({
+                    id: expect.any(String),
+                    address: 'address2',
+
+                    // Should use the PRIVATE_MARKER when
+                    // the package has to be created from a version.
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address2',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+                expect(item.parentMarkers).toEqual([PRIVATE_MARKER]);
+                expect(item.item!.markers).toEqual([PRIVATE_MARKER]);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    id,
+                    markers,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it.only('should be able to use separate markers for the package version', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address2',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address2',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PUBLIC_READ_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const packageItem = await recordItemsStore.getItemByAddress(
+                    recordName,
+                    'address2'
+                );
+
+                expect(packageItem).toEqual({
+                    id: expect.any(String),
+                    address: 'address2',
+
+                    // Should use the PRIVATE_MARKER when
+                    // the package has to be created from a version.
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address2',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+                expect(item.parentMarkers).toEqual([PRIVATE_MARKER]);
+                expect(item.item!.markers).toEqual([PUBLIC_READ_MARKER]);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    id,
+                    markers,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
         });
 
         describe('update()', () => {
@@ -1132,6 +1352,7 @@ describe('PackageVersionRecordsController', () => {
                     sizeInBytes: 123,
                     createdFile: true,
                     requiresReview: false,
+                    markers: [PUBLIC_READ_MARKER],
                 });
             });
 
@@ -1161,6 +1382,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: '',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     instances: [],
                 });
@@ -1187,6 +1409,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: '',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     instances: [],
                 });
@@ -1229,6 +1452,7 @@ describe('PackageVersionRecordsController', () => {
                         },
                         entitlements: [],
                         readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     userId,
                     instances: [],
@@ -1304,6 +1528,7 @@ describe('PackageVersionRecordsController', () => {
                 sizeInBytes: 123,
                 createdFile: true,
                 requiresReview: false,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -1336,6 +1561,7 @@ describe('PackageVersionRecordsController', () => {
                 sizeInBytes: 123,
                 createdFile: false,
                 requiresReview: false,
+                markers: [PUBLIC_READ_MARKER],
             });
 
             const result = await manager.getItem({
@@ -1421,6 +1647,7 @@ describe('PackageVersionRecordsController', () => {
                 sizeInBytes: 123,
                 createdFile: true,
                 requiresReview: false,
+                markers: [PUBLIC_READ_MARKER],
             });
 
             const result = await manager.getItem({
@@ -1707,6 +1934,7 @@ describe('PackageVersionRecordsController', () => {
                 sizeInBytes: 123,
                 createdFile: true,
                 requiresReview: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 

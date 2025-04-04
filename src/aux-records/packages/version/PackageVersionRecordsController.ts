@@ -97,6 +97,7 @@ import type { SystemNotificationMessenger } from '../../SystemNotificationMessen
 import type { UserRole } from '../../AuthStore';
 import { isPackageReviewerRole, isSuperUserRole } from '../../AuthUtils';
 import { v7 as uuid } from 'uuid';
+import type { PackageRecordsController } from '../PackageRecordsController';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -113,6 +114,11 @@ export interface PackageVersionRecordsConfiguration
         >,
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {
+    /**
+     * The controller that should be used for package records.
+     */
+    packages: PackageRecordsController;
+
     /**
      * The controller that should be used for file records.
      */
@@ -131,6 +137,7 @@ export class PackageVersionRecordsController {
     private _store: PackageVersionRecordsStore;
     private _recordStore: PackageRecordsStore;
     private _policies: PolicyController;
+    private _packages: PackageRecordsController;
     private _config: ConfigurationStore;
     private _resourceKind: ResourceKinds;
     private _files: FileRecordsController;
@@ -157,6 +164,7 @@ export class PackageVersionRecordsController {
         this._store = config.store;
         this._recordStore = config.recordItemStore;
         this._policies = config.policies;
+        this._packages = config.packages;
         this._config = config.config;
         this._files = config.files;
         this._systemNotifications = config.systemNotifications;
@@ -189,21 +197,37 @@ export class PackageVersionRecordsController {
                 request.item.key
             );
 
-            if (!existingItem.markers) {
-                return {
-                    success: false,
-                    errorCode: 'data_not_found',
-                    errorMessage: 'The parent item was not found.',
-                };
+            let parentMarkers: string[];
+            if (!existingItem.parentMarkers) {
+                console.log(`[${this._name}] Parent package not found.`);
+                const result = await this._packages.recordItem({
+                    userId: request.userId,
+                    recordKeyOrRecordName: recordName,
+                    instances: request.instances,
+                    item: {
+                        address: request.item.address,
+                        markers: [PRIVATE_MARKER],
+                    },
+                });
+
+                if (result.success === false) {
+                    return result;
+                } else {
+                    console.log(
+                        `[${this._name}] Created parent package ${request.item.address}`
+                    );
+                }
+            } else {
+                parentMarkers = existingItem.parentMarkers;
             }
 
-            const resourceMarkers = existingItem.markers;
-
+            let resourceMarkers: string[];
             let action = existingItem.item
                 ? ('update' as const)
                 : ('create' as const);
             let authorization: AuthorizeUserAndInstancesForResourcesResult;
             if (action === 'update') {
+                resourceMarkers = existingItem.item.markers;
                 action = 'update';
                 authorization =
                     await this._policies.authorizeUserAndInstancesForResources(
@@ -226,6 +250,12 @@ export class PackageVersionRecordsController {
                     return authorization;
                 }
             } else {
+                // TODO: Allow these markers to be inherited from the parent package.
+                // When the markers are inherited, then the user shouldn't need permission to assign them.
+                resourceMarkers = request.item.markers;
+
+                // TODO: Make sure that whenever the user is selecting markers that they also have permissions to
+                // assign the markers they are selecting.
                 authorization =
                     await this._policies.authorizeUserAndInstancesForResources(
                         contextResult.context,
@@ -248,7 +278,7 @@ export class PackageVersionRecordsController {
                 }
             }
 
-            if (!resourceMarkers) {
+            if (!resourceMarkers || resourceMarkers.length <= 0) {
                 return {
                     success: false,
                     errorCode: 'invalid_request',
@@ -288,6 +318,9 @@ export class PackageVersionRecordsController {
                 }
             }
 
+            // TODO: File records should always be private if the system is creating them
+            // so that the file can only be accessed via the package version API unless the user has access
+            // to private items.
             //record file
             let recordFileResult = await this.files.recordFile(
                 recordName,
@@ -302,6 +335,9 @@ export class PackageVersionRecordsController {
 
             if (recordFileResult.success === false) {
                 if (recordFileResult.errorCode === 'file_already_exists') {
+                    // Retry the request to see if the user has the ability to upload to a file record
+                    // that has already been made but may not yet be uploaded.
+                    // If the file record has been made, but not uplaoded, then this will succeed.
                     recordFileResult = await this.files.recordFile(
                         recordName,
                         contextResult.context.userId,
@@ -313,11 +349,14 @@ export class PackageVersionRecordsController {
                     );
                 }
 
-                if (
-                    recordFileResult.success === false &&
-                    recordFileResult.errorCode !== 'file_already_exists'
-                ) {
-                    return recordFileResult;
+                if (recordFileResult.success === false) {
+                    if (recordFileResult.errorCode === 'file_already_exists') {
+                        // TODO:
+                        // If the file already exists and has already been uploaded, then
+                        // we should see if we need to update the file record to match the package version markers.
+                    } else {
+                        return recordFileResult;
+                    }
                 }
             }
 
@@ -361,6 +400,7 @@ export class PackageVersionRecordsController {
                     requiresReview: request.item.entitlements.some((e) =>
                         entitlementRequiresApproval(e)
                     ),
+                    markers: request.item.markers,
                 };
 
                 const crudResult = await this._store.putItem(recordName, item);
@@ -441,7 +481,7 @@ export class PackageVersionRecordsController {
                 };
             }
 
-            const markers = result.markers;
+            const markers = result.parentMarkers;
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -534,7 +574,7 @@ export class PackageVersionRecordsController {
                 request.key
             );
 
-            if (!result.item || !result.markers) {
+            if (!result.item || !result.parentMarkers) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
@@ -542,7 +582,7 @@ export class PackageVersionRecordsController {
                 };
             }
 
-            const markers = result.markers;
+            const markers = result.parentMarkers;
 
             const authorization =
                 await this._policies.authorizeUserAndInstances(
@@ -863,6 +903,11 @@ export type PackageRecordVersionInput = Omit<
         RecordFileRequest,
         'markers' | 'instances' | 'userRole'
     >;
+
+    /**
+     * The markers that should be used for the item if the package doesn't exist.
+     */
+    markers?: string[];
 };
 
 export type RecordPackageVersionResult =

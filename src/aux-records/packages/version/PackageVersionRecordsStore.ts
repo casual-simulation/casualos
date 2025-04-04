@@ -169,6 +169,11 @@ export interface PackageRecordVersion
      * The unix time in miliseconds that this package version was created at.
      */
     createdAtMs: number;
+
+    /**
+     * The markers for the package version.
+     */
+    markers: string[];
 }
 
 export interface PackageRecordVersionWithMetadata extends PackageRecordVersion {

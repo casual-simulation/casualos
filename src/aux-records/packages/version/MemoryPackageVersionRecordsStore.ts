@@ -61,7 +61,7 @@ export class MemoryPackageVersionRecordsStore
         return {
             item,
             recordName: recordName,
-            markers: recordItem?.markers ?? null,
+            parentMarkers: recordItem?.markers ?? null,
             packageId: recordItem?.id ?? null,
         };
     }
@@ -79,7 +79,7 @@ export class MemoryPackageVersionRecordsStore
                         return {
                             item: v,
                             recordName: recordName,
-                            markers: recordItem?.markers ?? null,
+                            parentMarkers: recordItem?.markers ?? null,
                             packageId: recordItem?.id ?? null,
                         };
                     }
@@ -90,7 +90,7 @@ export class MemoryPackageVersionRecordsStore
         return {
             item: null,
             recordName: null,
-            markers: null,
+            parentMarkers: null,
             packageId: null,
         };
     }

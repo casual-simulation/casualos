@@ -111,7 +111,7 @@ export class MemorySubCrudRecordsStore<
 
         return {
             item,
-            markers: recordItem?.markers ?? null,
+            parentMarkers: recordItem?.markers ?? null,
         };
     }
 

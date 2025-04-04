@@ -106,10 +106,10 @@ export interface GetSubCrudItemResult<T> {
     item: T | null;
 
     /**
-     * The markers that are related to the item.
+     * The markers that are related to the item's parent.
      * Null if the parent record item doesn't exist.
      */
-    markers: string[] | null;
+    parentMarkers: string[] | null;
 }
 
 export interface ListSubCrudStoreSuccess<T> {
