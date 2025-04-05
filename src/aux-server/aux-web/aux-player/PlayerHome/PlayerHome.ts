@@ -536,7 +536,7 @@ export default class PlayerHome extends Vue {
     private _loadStaticInst(instSelection: string) {
         const update: Dictionary<string | string[]> = {};
         const inst =
-            instSelection === 'new-inst'
+            !instSelection || instSelection === 'new-inst'
                 ? this.instName && this.instName.trim() !== ''
                     ? this.instName.trim()
                     : this.generatedName
