@@ -1,4 +1,21 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     FileRecordsStore,
     GetFileNameFromUrlResult,
     ListAllFilesFilter,
@@ -7,9 +24,9 @@ import {
     ListFilesStoreResult,
     PresignFileReadRequest,
     PresignFileReadResult,
-    signRequest,
 } from '@casual-simulation/aux-records';
-import {
+import { signRequest } from '@casual-simulation/aux-records';
+import type {
     PresignFileUploadRequest,
     PresignFileUploadResult,
     GetFileRecordResult,
@@ -20,11 +37,10 @@ import {
     UpdateFileResult,
 } from '@casual-simulation/aux-records';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
-import {
-    AwsCredentialIdentityProvider,
-    AwsCredentialIdentity,
-} from '@aws-sdk/types';
+import type { S3 } from '@aws-sdk/client-s3';
+import { S3ClientConfig } from '@aws-sdk/client-s3';
+import type { AwsCredentialIdentityProvider } from '@aws-sdk/types';
+import { AwsCredentialIdentity } from '@aws-sdk/types';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

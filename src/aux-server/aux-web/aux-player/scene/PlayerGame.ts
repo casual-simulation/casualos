@@ -1,86 +1,81 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { Game } from '../../shared/scene/Game';
-import PlayerGameView from '../PlayerGameView/PlayerGameView';
-import {
+import type PlayerGameView from '../PlayerGameView/PlayerGameView';
+import type {
     CameraRig,
     CameraType,
+} from '../../shared/scene/CameraRigFactory';
+import {
     createCameraRig,
     Perspective_MaxZoom,
     Perspective_MinZoom,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
+import type {
+    Texture,
+    DirectionalLight,
+    AmbientLight,
+    Group,
+} from '@casual-simulation/three';
 import {
     Scene,
     Color,
-    Texture,
     OrthographicCamera,
     Vector3,
     Vector2,
     Mesh,
     WebGLRenderer,
     sRGBEncoding,
-    DirectionalLight,
-    AmbientLight,
     Ray,
     MathUtils as ThreeMath,
     Plane,
     SphereGeometry,
     MeshBasicMaterial,
-    Group,
     PerspectiveCamera,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
-import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
+import type { Simulation3D } from '../../shared/scene/Simulation3D';
+import type { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first, map } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import {
-    BrowserSimulation,
-    getPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
-import {
-    clamp,
-    DEFAULT_MINI_PORTAL_VISIBLE,
-    DEFAULT_PORTAL_SHOW_FOCUS_POINT,
-    DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY,
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
+import type {
     BufferSoundAction,
-    hasValue,
     BotAction,
-    enqueueAsyncResult,
-    enqueueAsyncError,
     PlaySoundAction,
     CancelSoundAction,
     Bot,
     BotTags,
-    isBot,
-    DEFAULT_SCENE_BACKGROUND_COLOR,
-    getPortalConfigBotID,
-    asyncResult,
     BotCursorType,
-    getPortalTag,
-    DEFAULT_MAP_PORTAL_VISIBLE,
-    DEFAULT_MAP_PORTAL_BASEMAP,
     Easing,
-    getEasing,
-    getDefaultEasing,
-    DEFAULT_MINI_PORTAL_HEIGHT,
-    realNumberOrDefault,
     RaycastInPortalAction,
-    VECTOR_TAG_PREFIX,
     RaycastFromCameraAction,
-    asyncError,
-    createBotLink,
     CalculateRayFromCameraAction,
     BufferFormAddressGLTFAction,
     StartFormAnimationAction,
     StopFormAnimationAction,
     ListFormAnimationsAction,
-    formatBotVector,
-    getBotsStateFromStoredAux,
-    isStoredVersion2,
     ImportAUXAction,
     LDrawCountBuildStepsAction,
     CalculateViewportCoordinatesFromPositionAction,
@@ -91,29 +86,55 @@ import {
     Photo,
 } from '@casual-simulation/aux-common';
 import {
+    clamp,
+    DEFAULT_MINI_PORTAL_VISIBLE,
+    DEFAULT_PORTAL_SHOW_FOCUS_POINT,
+    DEFAULT_PORTAL_DISABLE_CANVAS_TRANSPARENCY,
+    hasValue,
+    enqueueAsyncResult,
+    enqueueAsyncError,
+    isBot,
+    DEFAULT_SCENE_BACKGROUND_COLOR,
+    getPortalConfigBotID,
+    asyncResult,
+    getPortalTag,
+    DEFAULT_MAP_PORTAL_VISIBLE,
+    DEFAULT_MAP_PORTAL_BASEMAP,
+    getEasing,
+    getDefaultEasing,
+    DEFAULT_MINI_PORTAL_HEIGHT,
+    realNumberOrDefault,
+    VECTOR_TAG_PREFIX,
+    asyncError,
+    createBotLink,
+    formatBotVector,
+    getBotsStateFromStoredAux,
+    isStoredVersion2,
+} from '@casual-simulation/aux-common';
+import type { TweenCameraPosition } from '../../shared/scene/SceneUtils';
+import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     calculateHitFace,
     createSphere,
-    TweenCameraPosition,
 } from '../../shared/scene/SceneUtils';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
-import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
-import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import type { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { GameAudio } from '../../shared/scene/GameAudio';
 import TWEEN from '@tweenjs/tween.js';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import { Input, MouseButtonId } from '../../shared/scene/Input';
-import { MapSimulation3D } from './MapSimulation3D';
+import type { MapSimulation3D } from './MapSimulation3D';
 import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 import { ExternalRenderers, SpatialReference } from '../MapUtils';
 import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';
-import { XRFrame } from '../../shared/scene/xr/WebXRTypes';
+import type { XRFrame } from '../../shared/scene/xr/WebXRTypes';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { Physics } from '../../shared/scene/Physics';
 import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
@@ -530,6 +551,15 @@ export class PlayerGame extends Game {
             return 0;
         }
         return MINI_PORTAL_DEFAULT_HEIGHT_PADDING;
+    }
+
+    getGridPortalVisible(): boolean {
+        return this._getSimulationValue(
+            this.playerSimulations,
+            'hasDimension',
+            false,
+            (hasDimension) => hasDimension === true
+        );
     }
 
     getMapPortalVisible(): boolean {
@@ -1899,6 +1929,8 @@ export class PlayerGame extends Game {
             this.setupDelay = false;
         }
 
+        this._updateVisibility();
+        this._updateMapPortalVisibility();
         this._updateDefaultZoomAndRotation();
         this._updateMiniPortalVisibility();
         this._updateMiniPortalControls();
@@ -1909,6 +1941,22 @@ export class PlayerGame extends Game {
         this._updateConfigBotValues();
 
         this._updateMapPortals();
+    }
+
+    private _updateVisibility() {
+        const visible =
+            this.getGridPortalVisible() ||
+            this.getMiniPortalVisible() ||
+            this.getMapPortalVisible();
+
+        if (visible && this.gameView.container.style.display !== 'block') {
+            this.gameView.container.style.display = 'block';
+        } else if (
+            !visible &&
+            this.gameView.container.style.display !== 'none'
+        ) {
+            this.gameView.container.style.display = 'none';
+        }
     }
 
     private _updateMapPortals() {

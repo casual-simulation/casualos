@@ -1,11 +1,28 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import { some, union, sortBy } from 'lodash';
+import type { Bot, BotTags, BotSpace } from '@casual-simulation/aux-common';
 import {
     botTags,
     isHiddenTag,
-    Bot,
     hasValue,
     isFormula,
     getShortId,
@@ -25,11 +42,9 @@ import {
     getBotSpace,
     getBotTag,
     goToDimension,
-    BotTags,
     tweenTo,
     getTagValueForSpace,
     TAG_MASK_SPACE_PRIORITIES,
-    BotSpace,
     getScriptPrefix,
     isBotLink,
     KNOWN_TAG_PREFIXES,
@@ -48,7 +63,7 @@ import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../../DownloadHelpers';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
@@ -60,7 +75,7 @@ import { getModelUriFromId } from '../../MonacoUtils';
 // import {} from 'vue-material/dist/'
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 
 export interface TableBot {
@@ -487,7 +502,7 @@ export default class BotTable extends Vue {
 
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
-                var options = new AlertDialogOptions();
+                let options = new AlertDialogOptions();
                 options.title = 'Tag already exists';
                 options.body =
                     "Tag '" + this.newTag + "' already exists on this bot.";
@@ -499,7 +514,7 @@ export default class BotTable extends Vue {
             }
 
             if (!this.tagNotEmpty(this.newTag)) {
-                var options = new AlertDialogOptions();
+                let options = new AlertDialogOptions();
                 options.title = 'Tag cannot be empty';
                 options.body = 'Tag is empty or contains only whitespace......';
                 options.confirmText = 'Close';
@@ -581,7 +596,7 @@ export default class BotTable extends Vue {
 
         // Check to make sure that the tag is unique.
         if (this.tagExists(this.newTag)) {
-            var options = new AlertDialogOptions();
+            let options = new AlertDialogOptions();
             options.title = 'Tag already exists';
             options.body =
                 "Tag '" + this.newTag + "' already exists on this bot.";
@@ -593,7 +608,7 @@ export default class BotTable extends Vue {
         }
 
         if (!this.tagNotEmpty(this.newTag)) {
-            var options = new AlertDialogOptions();
+            let options = new AlertDialogOptions();
             options.title = 'Tag cannot be empty';
             options.body = 'Tag is empty or contains only whitespace.';
             options.confirmText = 'Close';
@@ -799,12 +814,6 @@ export default class BotTable extends Vue {
 
         EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
-    }
-
-    mounted() {
-        const tagValueEditorWrapper = this.$refs.tagValueEditorWrapper;
-        if (tagValueEditorWrapper) {
-        }
     }
 
     get readOnlyTags() {

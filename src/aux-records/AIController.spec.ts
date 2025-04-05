@@ -1,20 +1,37 @@
-import {
-    AIChatInterface,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
-import {
+import { AIChatInterface } from './AIChatInterface';
+import type {
     AIGenerateSkyboxInterfaceResponse,
     AIGenerateSkyboxInterfaceRequest,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
 import { AIController } from './AIController';
-import { MemoryStore } from './MemoryStore';
+import type { MemoryStore } from './MemoryStore';
 import {
     asyncIterable,
     asyncIterator,
@@ -28,17 +45,18 @@ import {
 } from './SubscriptionConfiguration';
 import { merge } from 'lodash';
 import { unwind } from '../js-interpreter/InterpreterUtils';
-import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
-import {
+import type { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import type {
     AISloydInterfaceCreateModelRequest,
     AISloydInterfaceCreateModelResponse,
     AISloydInterfaceEditModelRequest,
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
-import { PolicyController } from './PolicyController';
+import type { PolicyController } from './PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 
 console.log = jest.fn();
 
@@ -93,6 +111,7 @@ describe('AIController', () => {
             [AISloydInterfaceEditModelRequest]
         >;
     };
+    let realtimeInterface: jest.Mocked<AIOpenAIRealtimeInterface>;
     let userId: string;
     let userSubscriptionTier: string;
     let store: MemoryStore;
@@ -122,6 +141,9 @@ describe('AIController', () => {
         sloydInterface = {
             createModel: jest.fn(),
             editModel: jest.fn(),
+        };
+        realtimeInterface = {
+            createRealtimeSessionToken: jest.fn(),
         };
 
         const services = createTestControllers(null);
@@ -193,6 +215,11 @@ describe('AIController', () => {
             },
             sloyd: {
                 interface: sloydInterface,
+            },
+            openai: {
+                realtime: {
+                    interface: realtimeInterface,
+                },
             },
             metrics: store,
             config: store,
@@ -488,6 +515,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -539,6 +567,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -1173,6 +1202,7 @@ describe('AIController', () => {
                         secretKey: 'secretKey',
                     },
                 },
+                openai: null,
                 sloyd: null,
                 metrics: store,
                 config: store,
@@ -1569,6 +1599,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -1627,6 +1658,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -2294,6 +2326,7 @@ describe('AIController', () => {
                     },
                 },
                 sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: store,
@@ -2406,6 +2439,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2496,6 +2530,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2513,6 +2548,108 @@ describe('AIController', () => {
             expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
                 prompt: 'test',
             });
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    skyboxId: 'test-skybox-id',
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(
+                generateSkyboxInterface.generateSkybox
+            ).not.toHaveBeenCalled();
         });
 
         describe('subscriptions', () => {
@@ -2647,6 +2784,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2739,6 +2877,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -2759,12 +2898,115 @@ describe('AIController', () => {
                 'test-skybox-id'
             );
         });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            generateSkyboxInterface.getSkybox.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    status: 'generated',
+                    fileUrl: 'test-file-url',
+                    thumbnailUrl: 'test-thumbnail-url',
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.getSkybox({
+                skyboxId: 'skybox-id',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(generateSkyboxInterface.getSkybox).not.toHaveBeenCalled();
+        });
     });
 
     describe('generateImage()', () => {
         it('should return the result from the generateImage interface', async () => {
             generateImageInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2853,6 +3095,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -2860,6 +3103,7 @@ describe('AIController', () => {
 
             otherInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -2907,6 +3151,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -2979,6 +3224,7 @@ describe('AIController', () => {
         it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
             generateImageInterface.generateImage.mockReturnValueOnce(
                 Promise.resolve({
+                    success: true,
                     images: [
                         {
                             base64: 'base64',
@@ -3014,6 +3260,7 @@ describe('AIController', () => {
                 config: store,
                 hume: null,
                 sloyd: null,
+                openai: null,
                 policies: null,
                 policyController: policies,
                 records: store,
@@ -3044,6 +3291,113 @@ describe('AIController', () => {
                 steps: 30,
                 userId: 'test-user',
             });
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: null,
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            generateImageInterface.generateImage.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                            mimeType: 'image/png',
+                        },
+                    ],
+                })
+            );
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.generateImage({
+                model: 'openai',
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(generateImageInterface.generateImage).not.toHaveBeenCalled();
         });
 
         describe('subscriptions', () => {
@@ -3090,6 +3444,7 @@ describe('AIController', () => {
 
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -3120,6 +3475,7 @@ describe('AIController', () => {
             it('should reject the request if it would exceed the subscription request limits', async () => {
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -3150,6 +3506,7 @@ describe('AIController', () => {
             it('should reject the request if it would exceed the subscription period limits', async () => {
                 generateImageInterface.generateImage.mockReturnValueOnce(
                     Promise.resolve({
+                        success: true,
                         images: [
                             {
                                 base64: 'base64',
@@ -3245,6 +3602,7 @@ describe('AIController', () => {
                 hume: null,
                 sloyd: null,
                 policies: null,
+                openai: null,
                 policyController: policies,
                 records: store,
             });
@@ -3295,6 +3653,105 @@ describe('AIController', () => {
             });
         });
 
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                openai: null,
+                sloyd: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            humeInterface.getAccessToken.mockResolvedValueOnce({
+                success: true,
+                accessToken: 'token',
+                expiresIn: 3600,
+                issuedAt: 1234567890,
+                tokenType: 'Bearer',
+            });
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.getHumeAccessToken({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(humeInterface.getAccessToken).not.toHaveBeenCalled();
+        });
+
         describe('studio features', () => {
             const studioId = 'studioId';
 
@@ -3310,6 +3767,7 @@ describe('AIController', () => {
                         config: null,
                     },
                     sloyd: null,
+                    openai: null,
                     policies: null,
                     policyController: policies,
                     records: store,
@@ -3473,6 +3931,7 @@ describe('AIController', () => {
                         },
                     },
                     sloyd: null,
+                    openai: null,
                     policies: null,
                     policyController: policies,
                     records: store,
@@ -3990,6 +4449,469 @@ describe('AIController', () => {
             });
 
             expect(store.aiSloydMetrics).toEqual([]);
+        });
+
+        it('should return a not_authorized result if the user privacy features do not allow AI access', async () => {
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                    },
+                    options: {
+                        defaultModel: 'default-model',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: { default: 1.0 },
+                    },
+                },
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+                hume: {
+                    interface: humeInterface,
+                    config: {
+                        apiKey: 'apiKey',
+                        secretKey: 'secretKey',
+                    },
+                },
+                sloyd: {
+                    interface: sloydInterface,
+                },
+                openai: null,
+                metrics: store,
+                config: store,
+                policies: store,
+                policyController: policies,
+                records: store,
+            });
+
+            sloydInterface.createModel.mockResolvedValueOnce({
+                success: true,
+                confidenceScore: 0.5,
+                interactionId: 'modelId',
+                modelMimeType: 'model/gltf+json',
+                modelData: 'json',
+                name: 'model name',
+            });
+
+            // const user = await store.findUser(userId);
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: false,
+                    allowPublicData: true,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await controller.sloydGenerateModel({
+                recordName: userId,
+                outputMimeType: 'model/gltf+json',
+                prompt: 'test',
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'AI Access is not allowed',
+            });
+            expect(sloydInterface.createModel).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('createOpenAIRealtimeSessionToken()', () => {
+        beforeEach(() => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI()
+                    )
+            );
+        });
+
+        it('should return not_supported if openai realtime isnt implemented', async () => {
+            controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: null,
+                metrics: store,
+                config: store,
+                hume: null,
+                sloyd: null,
+                policies: null,
+                openai: null,
+                policyController: policies,
+                records: store,
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return the result from the realtime interface', async () => {
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).toHaveBeenCalledWith({
+                model: 'test-model',
+            });
+
+            expect(store.aiOpenAIRealtimeMetrics).toEqual([
+                {
+                    userId: userId,
+                    createdAtMs: expect.any(Number),
+                    sessionId: expect.any(String),
+                    request: {
+                        model: 'test-model',
+                    },
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user doesnt have access to openai realtime features', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI({
+                                realtime: {
+                                    allowed: false,
+                                },
+                            })
+                    )
+            );
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The subscription does not permit OpenAI Realtime features.',
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return subscription_limit_reached if the user has too many session requests', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI({
+                                realtime: {
+                                    allowed: true,
+                                    maxSessionsPerPeriod: 1,
+                                },
+                            })
+                    )
+            );
+
+            await store.recordOpenAIRealtimeMetrics({
+                userId,
+                sessionId: 'sessionId',
+                createdAtMs: Date.now(),
+                request: {
+                    model: 'test-model',
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'test-model2',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The request exceeds allowed subscription limits.',
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        it('should return subscription_limit_reached if the user requests a model that they dont have access to', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.withUserDefaultFeatures((features) =>
+                        features
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIOpenAI({
+                                realtime: {
+                                    allowed: true,
+                                    allowedModels: ['test-model'],
+                                },
+                            })
+                    )
+            );
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: 999,
+                },
+            });
+
+            const result = await controller.createOpenAIRealtimeSessionToken({
+                userId,
+                recordName: userId,
+                request: {
+                    model: 'wrong-model',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    "The subscription doesn't support the given model.",
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).not.toHaveBeenCalled();
+        });
+
+        describe('studio features', () => {
+            const studioId = 'studioId';
+
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'myStudio',
+                        subscriptionId: 'sub1',
+                        subscriptionStatus: 'active',
+                    },
+                    userId
+                );
+
+                await store.updateStudioHumeConfig(studioId, {
+                    apiKey: 'apiKey',
+                    secretKey: 'secretKey',
+                });
+            });
+
+            it('should be able to make requests for a studio', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.addSubscription('sub1', (sub) =>
+                            sub.withAIOpenAI({
+                                realtime: {
+                                    allowed: true,
+                                },
+                            })
+                        )
+                );
+
+                realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce(
+                    {
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    }
+                );
+
+                const result =
+                    await controller.createOpenAIRealtimeSessionToken({
+                        userId,
+                        recordName: studioId,
+                        request: {
+                            model: 'test-model',
+                        },
+                    });
+
+                expect(result).toEqual({
+                    success: true,
+                    sessionId: 'sessionId',
+                    clientSecret: {
+                        value: 'secret',
+                        expiresAt: 999,
+                    },
+                });
+
+                expect(
+                    realtimeInterface.createRealtimeSessionToken
+                ).toHaveBeenCalledWith({
+                    model: 'test-model',
+                });
+
+                expect(store.aiOpenAIRealtimeMetrics).toEqual([
+                    {
+                        studioId,
+                        createdAtMs: expect.any(Number),
+                        sessionId: 'sessionId',
+                        request: {
+                            model: 'test-model',
+                        },
+                    },
+                ]);
+            });
+
+            it('should return not_authorized if the studio doesnt have access to openai realtime features', async () => {
+                store.subscriptionConfiguration = buildSubscriptionConfig(
+                    (config) =>
+                        config.withStudioDefaultFeatures((features) =>
+                            features.withAllDefaultFeatures().withAIOpenAI({
+                                realtime: {
+                                    allowed: false,
+                                },
+                            })
+                        )
+                );
+
+                realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce(
+                    {
+                        success: true,
+                        sessionId: 'sessionId',
+                        clientSecret: {
+                            value: 'secret',
+                            expiresAt: 999,
+                        },
+                    }
+                );
+
+                const result =
+                    await controller.createOpenAIRealtimeSessionToken({
+                        userId,
+                        recordName: studioId,
+                        request: {
+                            model: 'test-model',
+                        },
+                    });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit OpenAI Realtime features.',
+                });
+
+                expect(
+                    realtimeInterface.createRealtimeSessionToken
+                ).not.toHaveBeenCalled();
+            });
         });
     });
 });

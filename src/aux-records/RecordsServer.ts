@@ -1,88 +1,103 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
-import {
+import type {
     AuthController,
+    NoSessionKeyResult,
+    ValidateSessionKeyResult,
+} from './AuthController';
+import {
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
     MAX_EMAIL_ADDRESS_LENGTH,
     MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
-    NoSessionKeyResult,
     PRIVO_OPEN_ID_PROVIDER,
     validateSessionKey,
-    ValidateSessionKeyResult,
 } from './AuthController';
 import { isSuperUserRole, parseSessionKey } from './AuthUtils';
-import { LivekitController } from './LivekitController';
-import { RecordsController } from './RecordsController';
-import { EventRecordsController } from './EventRecordsController';
-import { DataRecordsController } from './DataRecordsController';
-import { FileRecordsController } from './FileRecordsController';
-import {
+import type { LivekitController } from './LivekitController';
+import type { RecordsController } from './RecordsController';
+import type { EventRecordsController } from './EventRecordsController';
+import type { DataRecordsController } from './DataRecordsController';
+import type { FileRecordsController } from './FileRecordsController';
+import type {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
-import { ZodError, z } from 'zod';
-import {
-    HUME_CONFIG,
-    LOOM_CONFIG,
-    PublicRecordKeyPolicy,
-} from './RecordsStore';
-import { RateLimitController } from './RateLimitController';
-import {
-    AVAILABLE_PERMISSIONS_VALIDATION,
+import type { ZodError } from 'zod';
+import { z } from 'zod';
+import type { PublicRecordKeyPolicy } from './RecordsStore';
+import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
+import type { RateLimitController } from './RateLimitController';
+import type {
     DenialReason,
-    PRIVATE_MARKER,
     Procedure,
     ProcedureOutput,
     ProcedureOutputStream,
     Procedures,
-    RESOURCE_KIND_VALIDATION,
     RPCContext,
+} from '@casual-simulation/aux-common';
+import {
+    AVAILABLE_PERMISSIONS_VALIDATION,
+    PRIVATE_MARKER,
+    RESOURCE_KIND_VALIDATION,
     getProcedureMetadata,
     procedure,
 } from '@casual-simulation/aux-common';
-import {
-    GrantResourcePermissionRequest,
-    PolicyController,
-} from './PolicyController';
-import { AIController } from './AIController';
-import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
-import { WebsocketController } from './websockets/WebsocketController';
-import {
+import type { PolicyController } from './PolicyController';
+import { GrantResourcePermissionRequest } from './PolicyController';
+import type { AIController } from './AIController';
+import type { AIChatMessage } from './AIChatInterface';
+import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
+import type { WebsocketController } from './websockets/WebsocketController';
+import type {
     AddUpdatesMessage,
     LoginMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
-    UnwatchBranchMessage,
     WatchBranchMessage,
+    WebsocketRequestMessage,
+} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import {
+    UnwatchBranchMessage,
     WebsocketErrorEvent,
     WebsocketEventTypes,
     WebsocketMessage,
-    WebsocketRequestMessage,
     websocketEventSchema,
     websocketRequestMessageSchema,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { DEFAULT_BRANCH_NAME } from '@casual-simulation/aux-common';
-import {
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
     GenericWebsocketRequest,
     KnownErrorCodes,
-    getStatusCode,
 } from '@casual-simulation/aux-common';
-import { ModerationController } from './ModerationController';
+import { getStatusCode } from '@casual-simulation/aux-common';
+import type { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
-import { LoomController } from './LoomController';
-import {
-    SpanKind,
-    Tracer,
-    ValueType,
-    metrics,
-    trace,
-} from '@opentelemetry/api';
+import type { LoomController } from './LoomController';
+import type { Tracer } from '@opentelemetry/api';
+import { SpanKind, ValueType, metrics, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
     SEMATTRS_ENDUSER_ID,
@@ -116,7 +131,7 @@ import {
     STUDIO_ID_VALIDATION,
     UPDATE_FILE_SCHEMA,
 } from './Validations';
-import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
+import type { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import {
     eraseItemProcedure,
     getItemProcedure,
@@ -124,7 +139,7 @@ import {
     recordItemProcedure,
 } from './crud/CrudHelpers';
 import { merge, omit } from 'lodash';
-import { NotificationRecordsController } from './notifications/NotificationRecordsController';
+import type { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
@@ -548,7 +563,7 @@ export class RecordsServer {
                 .origins('account')
                 .http('POST', '/api/v2/createAccount')
                 .inputs(z.object({}))
-                .handler(async ({}, context) => {
+                .handler(async (_, context) => {
                     const validation = await this._validateSessionKey(
                         context.sessionKey
                     );
@@ -3029,6 +3044,116 @@ export class RecordsServer {
                     return result;
                 }),
 
+            createOpenAIRealtimeSession: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/ai/openai/realtime/session')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        request: z.object({
+                            model: z.string().min(1),
+                            instructions: z.string().min(1).optional(),
+                            modalities: z
+                                .array(z.enum(['audio', 'text']))
+                                .max(2)
+                                .optional(),
+                            maxResponseOutputTokens: z
+                                .number()
+                                .int()
+                                .min(1)
+                                .optional(),
+                            inputAudioFormat: z
+                                .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
+                                .optional(),
+                            inputAudioNoiseReduction: z
+                                .object({
+                                    type: z
+                                        .enum(['near_field', 'far_field'])
+                                        .optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            inputAudioTranscription: z
+                                .object({
+                                    language: z.string().min(1).optional(),
+                                    model: z.string().min(1).optional(),
+                                    prompt: z.string().min(1).optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            outputAudioFormat: z
+                                .enum(['pcm16', 'g711_ulaw', 'g711_alaw'])
+                                .optional(),
+                            temperature: z.number().min(0).max(2).optional(),
+                            toolChoice: z.string().optional(),
+                            tools: z
+                                .array(
+                                    z.object({
+                                        description: z.string().optional(),
+                                        name: z.string(),
+                                        parameters: z.any().optional(),
+                                        type: z.enum(['function']).optional(),
+                                    })
+                                )
+                                .optional(),
+                            turnDetection: z
+                                .object({
+                                    createResponse: z.boolean().optional(),
+                                    eagerness: z
+                                        .enum(['low', 'medium', 'high'])
+                                        .optional(),
+                                    interruptResponse: z.boolean().optional(),
+                                    prefixPaddingMs: z
+                                        .number()
+                                        .min(0)
+                                        .optional(),
+                                    silenceDurationMs: z
+                                        .number()
+                                        .min(0)
+                                        .optional(),
+                                    threshold: z.number().min(0).optional(),
+                                    type: z
+                                        .enum(['server_vad', 'semantic_vad'])
+                                        .optional(),
+                                })
+                                .optional()
+                                .nullable(),
+                            voice: z.string().min(1).optional(),
+                        }),
+                    })
+                )
+                .handler(async ({ recordName, request }, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._aiController.createOpenAIRealtimeSessionToken(
+                            {
+                                userId: sessionKeyValidation.userId,
+                                recordName: recordName,
+                                request: {
+                                    model: request.model,
+                                    ...request,
+                                },
+                            }
+                        );
+
+                    return result;
+                }),
+
             getStudio: procedure()
                 .origins('account')
                 .http('GET', '/api/v2/studios')
@@ -3304,6 +3429,14 @@ export class RecordsServer {
                             })
                             .nonempty('addedPhoneNumber must not be empty')
                             .optional(),
+                        addedDisplayName: z
+                            .string({
+                                invalid_type_error:
+                                    'addedDisplayName must be a string.',
+                                required_error: 'addedDisplayName is required.',
+                            })
+                            .nonempty('addedDisplayName must not be empty')
+                            .optional(),
                         role: z.union([
                             z.literal('admin'),
                             z.literal('member'),
@@ -3317,6 +3450,7 @@ export class RecordsServer {
                             addedUserId,
                             addedEmail,
                             addedPhoneNumber,
+                            addedDisplayName,
                             role,
                         },
                         context
@@ -3340,6 +3474,7 @@ export class RecordsServer {
                             addedUserId,
                             addedEmail,
                             addedPhoneNumber,
+                            addedDisplayName,
                         });
                         return result;
                     }
@@ -3809,7 +3944,7 @@ export class RecordsServer {
                 .origins(true)
                 .http('GET', '/api/v2/procedures')
                 .inputs(z.object({}))
-                .handler(async ({}, context) => {
+                .handler(async (_, context) => {
                     const procedures = this._procedures;
                     const metadata = getProcedureMetadata(procedures);
                     return {
@@ -3827,7 +3962,7 @@ export class RecordsServer {
     private _setupRoutes() {
         const procs = this._procedures;
         for (let procedureName of Object.keys(procs)) {
-            if (procs.hasOwnProperty(procedureName)) {
+            if (Object.prototype.hasOwnProperty.call(procs, procedureName)) {
                 const procedure = (procs as any)[procedureName];
                 if (procedure.http) {
                     this._addProcedureRoute(procedure, procedureName);

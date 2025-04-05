@@ -1,35 +1,54 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Observable, SubscriptionLike } from 'rxjs';
 import {
     BehaviorSubject,
     NEVER,
-    Observable,
     Subject,
     Subscription,
-    SubscriptionLike,
     filter,
     firstValueFrom,
     startWith,
     switchMap,
 } from 'rxjs';
-import { BrowserSimulation } from './BrowserSimulation';
-import {
+import type { BrowserSimulation } from './BrowserSimulation';
+import type {
     AuthHelperInterface,
-    Simulation,
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
-import { AuthHelper } from './AuthHelper';
+import { Simulation } from '@casual-simulation/aux-vm/managers';
+import type { AuthHelper } from './AuthHelper';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
-import {
+import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
     PartitionAuthExternalPermissionResult,
     PartitionAuthPermissionResult,
     PartitionAuthRequest,
     PublicUserInfo,
+} from '@casual-simulation/aux-common';
+import {
     asyncResult,
     hasValue,
     reportInst,
 } from '@casual-simulation/aux-common';
-import { LoginStatus, LoginUIStatus } from '@casual-simulation/aux-vm/auth';
+import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 import type {
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
@@ -172,6 +191,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 this._onShowAccountInfo.next({
                     simulationId: sim.id,
                     loginStatus: status,
+                    endpoint: endpoint.origin,
                 });
             }
         } else if (this.authHelper) {
@@ -181,6 +201,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 this._onShowAccountInfo.next({
                     simulationId: null,
                     loginStatus: status,
+                    endpoint: endpoint.origin,
                 });
             }
         }
@@ -692,6 +713,11 @@ export interface ShowAccountInfoEvent {
      */
     simulationId: string;
     loginStatus: LoginStatus;
+
+    /**
+     * The endpoint that the login status comes from.
+     */
+    endpoint: string;
 }
 
 export interface NotAuthorizedEvent {

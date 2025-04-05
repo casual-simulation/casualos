@@ -1,33 +1,46 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { TestControllers } from '../crud/CrudRecordsControllerTests';
 import {
     setupTestContext,
-    TestControllers,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
 import { MemoryNotificationRecordsStore } from './MemoryNotificationRecordsStore';
-import {
+import type {
     NotificationRecord,
     NotificationRecordsStore,
 } from './NotificationRecordsStore';
-import {
-    NotificationRecordsController,
-    SubscribeToNotificationSuccess,
-} from './NotificationRecordsController';
+import type { SubscribeToNotificationSuccess } from './NotificationRecordsController';
+import { NotificationRecordsController } from './NotificationRecordsController';
 import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
 } from '../SubscriptionConfigBuilder';
-import { MemoryStore } from '../MemoryStore';
-import { RecordsController } from '../RecordsController';
-import { PolicyController } from '../PolicyController';
+import type { MemoryStore } from '../MemoryStore';
+import type { RecordsController } from '../RecordsController';
+import type { PolicyController } from '../PolicyController';
 import {
     action,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import {
-    SUBSCRIPTION_ID_NAMESPACE,
-    WebPushInterface,
-} from './WebPushInterface';
+import type { WebPushInterface } from './WebPushInterface';
+import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 
 console.log = jest.fn();

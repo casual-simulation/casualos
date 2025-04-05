@@ -1,22 +1,41 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
-import {
-    calculateNumericalTagValue,
+import type {
     BotCalculationContext,
     Bot,
+    BotOrientationMode,
+    LocalActions,
+    BotAction,
+    LocalRotationTweenAction,
+    LocalPositionTweenAction,
+} from '@casual-simulation/aux-common';
+import {
+    calculateNumericalTagValue,
     getBotPosition,
     getBotRotation,
     cacheFunction,
     getBotOrientationMode,
-    BotOrientationMode,
     getBotIndex,
     getAnchorPointOffset,
-    LocalActions,
     hasValue,
     enqueueAsyncResult,
-    BotAction,
-    LocalRotationTweenAction,
-    LocalPositionTweenAction,
     enqueueAsyncError,
     getEasing,
     getBotTransformer,
@@ -25,17 +44,17 @@ import {
     Rotation,
     Vector3 as CasualVector3,
 } from '@casual-simulation/aux-common/math';
+import type { Object3D } from '@casual-simulation/three';
 import {
     Vector3,
     Quaternion,
     Euler,
-    Object3D,
     MathUtils as ThreeMath,
     Matrix4,
 } from '@casual-simulation/three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
 import { calculateScale } from '../SceneUtils';
-import { Game } from '../Game';
+import type { Game } from '../Game';
 import TWEEN from '@tweenjs/tween.js';
 import { DimensionGroup3D } from '../DimensionGroup3D';
 

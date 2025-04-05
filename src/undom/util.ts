@@ -1,5 +1,5 @@
 export function assign(obj: any, props: any) {
-    for (let i in props) obj[i] = props[i]; // eslint-disable-line guard-for-in
+    for (let i in props) obj[i] = props[i];
 }
 
 export function toLower(str: string) {
@@ -17,7 +17,13 @@ export function splice<T>(
     byValueOnly: boolean = false
 ) {
     let i = (arr ? findWhere(arr, item, true, byValueOnly) : -1) as number;
-    if (~i) add ? arr.splice(i, 0, add) : arr.splice(i, 1);
+    if (~i) {
+        if (add) {
+            arr.splice(i, 0, add);
+        } else {
+            arr.splice(i, 1);
+        }
+    }
     return i;
 }
 

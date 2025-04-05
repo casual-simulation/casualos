@@ -1,6 +1,23 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Bot } from '@casual-simulation/aux-common';
 import {
     asyncResult,
-    Bot,
     BotAction,
     hasValue,
     ON_ROOM_JOINED,
@@ -14,17 +31,17 @@ import {
     ON_ROOM_TRACK_SUBSCRIBED,
     ON_ROOM_TRACK_UNSUBSCRIBED,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     GetRoomRemoteOptionsAction,
     GetRoomTrackOptionsAction,
-    RoomJoinOptions,
     RoomOptions,
     RoomRemoteOptions,
     RuntimeActions,
     SetRoomTrackOptionsAction,
     TrackVideoQuality,
 } from '@casual-simulation/aux-runtime';
-import {
+import { RoomJoinOptions } from '@casual-simulation/aux-runtime';
+import type {
     BotHelper,
     GetRoomOptions,
     RoomJoin,
@@ -43,8 +60,9 @@ import type {
     TrackPublication,
     VideoQuality,
 } from 'livekit-client';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-type LivekitModule = typeof import('livekit-client');
+import type Livekit from 'livekit-client';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 /**
  * Defines a class that is able to manage Livekit rooms and make streams available to scripts.
@@ -62,7 +80,7 @@ export class LivekitManager implements SubscriptionLike {
 
     private _onTrackNeedsAttachment = new Subject<Track>();
     private _onTrackNeedsDetachment = new Subject<Track>();
-    private _livekit: LivekitModule;
+    private _livekit: typeof Livekit;
 
     /**
      * Gets an observable that resolves whenever a track needs to be attached to the document.

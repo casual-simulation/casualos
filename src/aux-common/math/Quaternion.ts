@@ -1,32 +1,21 @@
-/**
- * Defines a class that represents a Quaternion. That is, a representation of a 3D rotation.
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
  *
- * Quaternions are a mathematical representation of 3D transformations and are commonly used to calculate and apply rotations to 3D points.
- * They work by defining a quaterion such that `q = w + x*i + y*j + z*k`, where `w, x, y, and z` are real numbers and `i, j, and k` are imaginary numbers.
- * The basics of this is that `x`, `y`, and `z` define a vector that represents the rotation axis, and `w` defines an angle around which the rotation occurs.
- * However, because `i`, `j`, and `k` are included we can keep `x`, `y`, and `z` from incorrectly interacting with each other and so avoid common pitfalls like Gimbal lock.
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
  *
- * One little known feature of quaternions is that they can also represent reflections and also scale.
- * This is because there are two different ways to apply a quaternion to a 3D point:
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- * - `quaterion * point * inverse(quaterion)`
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * This formula rotates and scales the point quaternion. The rotation occurs around the axis specified by the quaternion X, Y, and Z values.
- * Additionally, the point will be scaled by the length of the quaternion. (i.e. `sqrt( x^2 + y^2 + z^2 + w^2 )`)
- * This is why quaternions that are used to represent only rotations must be normalized.
- *
- * - `quaternion * point * quaternion`
- *
- * This formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.
- * Additionally, the point will be scaled by the length of the quaternion. (i.e. `sqrt( x^2 + y^2 + z^2 + w^2 )`)
- *
- * @dochash types/math/rotations
- * @docorder 1
- * @doctitle Rotations
- * @docsidebar Rotations
- * @docdescription Rotations help represent orientation.
- * @docname Quaternion
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 export class Quaternion {
     /**
      * The X value of the quaternion.

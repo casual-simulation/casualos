@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     InterpreterContinuation,
     InterpreterStop,
@@ -8,41 +25,43 @@ import {
     UNCOPIABLE,
     INTERPRETER_OBJECT,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
+import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
     applyTagEdit,
     edit,
     isTagEdit,
     mergeEdits,
     remoteEdit,
-    TagEditOp,
 } from '@casual-simulation/aux-common/bots';
-import {
-    BotSpace,
+import type {
     BotTags,
     Bot,
     ScriptTags,
+    BotTagMasks,
+    RuntimeBot,
+    CompiledBotListener,
+    RuntimeBotLinks,
+} from '@casual-simulation/aux-common/bots';
+import {
+    BotSpace,
     PrecalculatedBot,
     BOT_SPACE_TAG,
     getBotSpace,
     createPrecalculatedBot,
     BotSignatures,
-    BotTagMasks,
     getTag,
     getTagMaskSpaces,
     hasValue,
     DEFAULT_TAG_MASK_SPACE,
     TAG_MASK_SPACE_PRIORITIES_REVERSE,
     TAG_MASK_SPACE_PRIORITIES,
-    RuntimeBot,
     CLEAR_CHANGES_SYMBOL,
     SET_TAG_MASK_SYMBOL,
     CLEAR_TAG_MASKS_SYMBOL,
-    CompiledBotListener,
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
     getOriginalObject,
     GET_TAG_MASKS_SYMBOL,
-    RuntimeBotLinks,
     BotAction,
 } from '@casual-simulation/aux-common/bots';
 import { REPLACE_BOT_SYMBOL } from '@casual-simulation/aux-common/bots/Bot';
@@ -53,9 +72,9 @@ import {
     ORIGINAL_OBJECT,
 } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
-import { CompiledBot } from './CompiledBot';
-import { RuntimeStateVersion } from './RuntimeStateVersion';
-import { RuntimeActions } from './RuntimeEvents';
+import type { CompiledBot } from './CompiledBot';
+import type { RuntimeStateVersion } from './RuntimeStateVersion';
+import type { RuntimeActions } from './RuntimeEvents';
 
 const KNOWN_SYMBOLS = new Set([
     REGULAR_OBJECT,
@@ -160,8 +179,13 @@ export function createRuntimeBot(
             const proxy = new Proxy(value, {
                 get(target, key: string, proxy) {
                     if (arrayModifyMethods.has(key)) {
-                        const func: Function = Reflect.get(target, key, proxy);
+                        const func: typeof Reflect.get = Reflect.get(
+                            target,
+                            key,
+                            proxy
+                        );
                         return function () {
+                            // eslint-disable-next-line prefer-rest-params
                             const ret = func.apply(this, arguments);
                             if (isMaskValue()) {
                                 updateTagMask(tag, value);

@@ -1,10 +1,30 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import {
+import type {
     Bot,
-    hasValue,
     BotTags,
+    SystemPortalPane,
+} from '@casual-simulation/aux-common';
+import {
+    hasValue,
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
@@ -43,21 +63,23 @@ import {
     getPortalTag,
     getTag,
     getTagValueForSpace,
-    SystemPortalPane,
     SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     BrowserSimulation,
     SystemPortalBot,
     SystemPortalItem,
     SystemPortalSelectionTag,
     TagSortMode,
-    userBotChanged,
-    getSystemArea,
     BotManager,
 } from '@casual-simulation/aux-vm-browser';
+import {
+    userBotChanged,
+    getSystemArea,
+} from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import { Subject, Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
@@ -69,17 +91,17 @@ import { onMonacoLoaded } from '../../MonacoAsync';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
-import {
+import type {
     SystemPortalDiffArea,
     SystemPortalDiffBot,
     SystemPortalDiffSelectionTag,
-    SystemPortalRecentsUpdate,
     SystemPortalRecentTag,
     SystemPortalSearchBot,
     SystemPortalSearchItem,
     SystemPortalSearchMatch,
     SystemPortalSearchTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
+import { SystemPortalRecentsUpdate } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
 import TagEditor from '../TagEditor/TagEditor';
@@ -91,7 +113,8 @@ import HighlightedText from '../HighlightedText/HighlightedText';
 import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
-import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import { SimulationManager } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
 

@@ -1,9 +1,26 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
@@ -74,6 +91,11 @@ export interface LoginUIAddressStatus {
     codeOfConductUrl: string;
 
     /**
+     * The page that should be linked to as the support page.
+     */
+    supportUrl: string;
+
+    /**
      * The name of the site that is being logged into.
      */
     siteName: string;
@@ -116,6 +138,11 @@ export interface LoginUICheckAddressStatus {
      * The errors that should be displayed.
      */
     errors: FormError[];
+
+    /**
+     * The URL that should be linked to for support.
+     */
+    supportUrl: string | null;
 }
 
 export interface LoginUIShowIframe {
@@ -139,6 +166,11 @@ export interface LoginUIHasAccount {
      * The page that should be linked to as the terms of service.
      */
     termsOfServiceUrl: string;
+
+    /**
+     * The page that should be linked to as the support page.
+     */
+    supportUrl: string;
 }
 
 export interface LoginUIPrivoSignUp {
@@ -158,6 +190,11 @@ export interface LoginUIPrivoSignUp {
      * The page that should be linked to as the code of conduct.
      */
     codeOfConductUrl: string;
+
+    /**
+     * The page that should be linked to as the support page.
+     */
+    supportUrl: string;
 
     /**
      * The name of the site that is being logged into.
@@ -276,6 +313,11 @@ export interface PolicyUrls {
     privacyPolicyUrl: string;
     termsOfServiceUrl: string;
     codeOfConductUrl: string;
+
+    /**
+     * The URL that should be used to contact support.
+     */
+    supportUrl: string | null;
 }
 
 /**

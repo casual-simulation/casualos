@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     BehaviorSubject,
     filter,
@@ -7,12 +24,12 @@ import {
     Subject,
     Subscription,
 } from 'rxjs';
+import type { SharedDocument } from './SharedDocument';
 import {
     RelativePosition,
     SharedArray,
     SharedArrayChanges,
     SharedArrayDelta,
-    SharedDocument,
     SharedMap,
     SharedMapChanges,
     SharedText,
@@ -21,6 +38,7 @@ import {
     SharedType,
     SharedTypeChanges,
 } from './SharedDocument';
+import type { Doc, Transaction } from 'yjs';
 import {
     createRelativePositionFromTypeIndex,
     createAbsolutePositionFromRelativePosition,
@@ -32,12 +50,10 @@ import {
     YEvent,
     YArrayEvent,
     YTextEvent,
-    Doc,
     encodeStateAsUpdate,
-    Transaction,
     applyUpdate,
 } from 'yjs';
-import {
+import type {
     ClientError,
     ClientEvent,
     InstRecordsClient,
@@ -45,8 +61,8 @@ import {
     RateLimitExceededMessage,
     WebsocketErrorInfo,
 } from '../websockets';
-import { SharedDocumentConfig } from './SharedDocumentConfig';
-import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
+import type { SharedDocumentConfig } from './SharedDocumentConfig';
+import type { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
 import { fromByteArray, toByteArray } from 'base64-js';
 import {
@@ -59,8 +75,8 @@ import {
     YjsSharedDocument,
     APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN,
 } from './YjsSharedDocument';
-import { SharedDocumentServices } from './SharedDocumentFactories';
-import { KnownErrorCodes } from '../rpc/ErrorCodes';
+import type { SharedDocumentServices } from './SharedDocumentFactories';
+import type { KnownErrorCodes } from '../rpc/ErrorCodes';
 
 export function createRemoteClientYjsSharedDocument(
     config: SharedDocumentConfig,

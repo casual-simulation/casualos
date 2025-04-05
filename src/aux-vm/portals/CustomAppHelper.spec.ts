@@ -1,27 +1,48 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    AuxPartitions,
+    MemoryPartition,
+    RegisterHtmlAppAction,
+} from '@casual-simulation/aux-common';
 import {
     action,
     asyncResult,
-    AuxPartitions,
     BotAction,
     botAdded,
     createBot,
     createMemoryPartition,
     iteratePartitions,
-    MemoryPartition,
     ON_DOCUMENT_AVAILABLE_ACTION_NAME,
     registerCustomApp,
     customAppContainerAvailable,
-    RegisterHtmlAppAction,
     toast,
     unregisterCustomApp,
 } from '@casual-simulation/aux-common';
-import { AuxRuntime, RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuxHelper } from '../vm';
 import { CustomAppHelper } from './CustomAppHelper';
-import { HtmlAppBackend, HtmlPortalSetupResult } from './HtmlAppBackend';
+import type { HtmlPortalSetupResult } from './HtmlAppBackend';
+import { HtmlAppBackend } from './HtmlAppBackend';
 
 describe('CustomAppHelper', () => {
     let runtime: AuxRuntime;
@@ -48,6 +69,7 @@ describe('CustomAppHelper', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',
@@ -82,6 +104,7 @@ describe('CustomAppHelper', () => {
             {
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 isCollaborative: true,
                 allowCollaborationUpgrade: true,
                 ab1BootstrapUrl: 'ab1Bootstrap',

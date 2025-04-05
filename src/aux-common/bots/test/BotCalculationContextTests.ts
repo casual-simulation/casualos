@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     createBot,
     objectsAtDimensionGridPosition,
@@ -80,13 +97,11 @@ import {
     getMenuBotSubtype,
     getBotMeshPositioningMode,
 } from '../BotCalculations';
+import type { Bot, AuxDomain, BotCursorType } from '../Bot';
 import {
-    Bot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
-    AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
-    BotCursorType,
     SYSTEM_PORTAL,
     SHEET_PORTAL,
     SYSTEM_PORTAL_DIFF,
@@ -107,7 +122,7 @@ import {
     calculateDestroyBotEvents,
     resolveRejectedActions,
 } from '../BotActions';
-import { BotCalculationContext } from '../BotCalculationContext';
+import type { BotCalculationContext } from '../BotCalculationContext';
 import { Quaternion, Rotation, Vector3 } from '../../math';
 
 export function botCalculationContextTests(

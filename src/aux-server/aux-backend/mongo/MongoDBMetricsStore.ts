@@ -1,8 +1,27 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     AIChatMetrics,
     AIChatSubscriptionMetrics,
     AIImageMetrics,
     AIImageSubscriptionMetrics,
+    AIOpenAIRealtimeMetrics,
+    AIOpenAIRealtimeSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
     AISloydMetrics,
@@ -17,11 +36,11 @@ import {
     RecordSubscriptionMetrics,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery, Db } from 'mongodb';
-import { DataRecord } from './MongoDBDataRecordsStore';
-import { MongoFileRecord } from './MongoDBFileRecordsStore';
-import { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
-import { EventRecord } from './MongoDBEventRecordsStore';
+import type { Collection, FilterQuery, Db } from 'mongodb';
+import type { DataRecord } from './MongoDBDataRecordsStore';
+import type { MongoFileRecord } from './MongoDBFileRecordsStore';
+import type { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
+import type { EventRecord } from './MongoDBEventRecordsStore';
 import { DateTime } from 'luxon';
 
 export const CHAT_METRICS_COLLECTION = 'chatMetrics';
@@ -63,6 +82,17 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._imageMetrics = this._db.collection(IMAGE_METRICS_COLLECTION);
         this._skyboxMetrics = this._db.collection(SKYBOX_METRICS_COLLECTION);
         this._config = configStore;
+    }
+
+    getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+    recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     getSubscriptionAiSloydMetrics(

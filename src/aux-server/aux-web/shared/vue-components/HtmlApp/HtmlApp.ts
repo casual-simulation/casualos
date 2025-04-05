@@ -1,6 +1,27 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
+import type {
+    UpdateHtmlAppAction,
+    SerializableMutationRecord,
+} from '@casual-simulation/aux-common';
 import {
     Bot,
     getShortId,
@@ -8,8 +29,6 @@ import {
     tagsOnBot,
     hasValue,
     runScript,
-    UpdateHtmlAppAction,
-    SerializableMutationRecord,
     asyncResult,
     htmlAppEvent,
     RegisterHtmlAppAction,
@@ -17,14 +36,14 @@ import {
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import { BrowserSimulation } from '../../../../../aux-vm-browser';
+import type { BrowserSimulation } from '../../../../../aux-vm-browser';
+import type { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import {
-    ELEMENT_SPECIFIC_PROPERTIES,
-    HtmlPortalSetupResult,
     TARGET_INPUT_PROPERTIES,
-} from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
+    ELEMENT_SPECIFIC_PROPERTIES,
+} from '@casual-simulation/aux-vm/portals/HtmlAppConsts';
 import { eventNames } from './Util';
-import { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import type { HtmlAppMethodCallAction } from '@casual-simulation/aux-common/bots/BotEvents';
 import { getMediaForCasualOSUrl } from '../../MediaUtils';
 import { parseCasualOSUrl } from '../../UrlUtils';
 
@@ -80,6 +99,8 @@ export default class HtmlApp extends Vue {
     private _currentTouch: any;
     private _sub: Subscription;
     private _listeners: Map<string, number> = new Map();
+    private _isDestroyed: boolean; // Set by Vue
+    private _isBeingDestroyed: boolean; // Set by Vue
 
     constructor() {
         super();
@@ -95,6 +116,7 @@ export default class HtmlApp extends Vue {
         this._mutationQueue = [];
         this._simulation = _simulation(this.simulationId);
         this._sub = new Subscription();
+        this._nodes.set(this.appId, this.$refs.container as Node);
 
         this._sub.add(
             this._simulation.localEvents.subscribe((e) => {
@@ -213,7 +235,7 @@ export default class HtmlApp extends Vue {
                 typeof value !== 'object' &&
                 typeof value !== 'function' &&
                 prop !== prop.toUpperCase() &&
-                !e.hasOwnProperty(prop)
+                !Object.prototype.hasOwnProperty.call(e, prop)
             ) {
                 e[prop] = value;
             }
@@ -243,7 +265,12 @@ export default class HtmlApp extends Vue {
 
             if (skeleton.style) {
                 for (let prop in skeleton.style) {
-                    if (skeleton.style.hasOwnProperty(prop)) {
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            skeleton.style,
+                            prop
+                        )
+                    ) {
                         el.style[prop] = skeleton.style[prop];
                     }
                 }
@@ -315,6 +342,10 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyMutation(mutation: any) {
+        if (this._isDestroyed || this._isBeingDestroyed) {
+            return;
+        }
+
         if (mutation.type === 'childList') {
             this._applyChildList(mutation);
         } else if (mutation.type === 'attributes') {
@@ -414,12 +445,13 @@ export default class HtmlApp extends Vue {
     ) {
         if (attributeName === 'style' && typeof value === 'object') {
             for (let prop in value) {
-                if (value.hasOwnProperty(prop)) {
+                if (Object.prototype.hasOwnProperty.call(value, prop)) {
                     (<any>node).style[prop] = value[prop];
                 }
             }
         } else if (
-            node instanceof HTMLInputElement &&
+            (node instanceof HTMLInputElement ||
+                node instanceof HTMLTextAreaElement) &&
             (attributeName === 'value' || attributeName === 'checked')
         ) {
             (<any>node)[attributeName] = value;

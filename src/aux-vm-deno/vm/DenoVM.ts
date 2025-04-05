@@ -1,34 +1,48 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     BotAction,
-    ConnectionIndicator,
     PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, Endpoint } from 'comlink';
-import {
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Remote, Endpoint } from 'comlink';
+import { wrap, proxy, expose, transfer } from 'comlink';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
+import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
     AuxSubChannel,
     AuxSubVM,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
-import {
-    StatusUpdate,
-    remapProgressPercent,
-    DeviceAction,
-} from '@casual-simulation/aux-common';
-import { DenoWorker, DenoWorkerOptions, polyfillMessageChannel } from 'deno-vm';
+} from '@casual-simulation/aux-vm/vm';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
+import { remapProgressPercent } from '@casual-simulation/aux-common';
+import type { DenoWorkerOptions } from 'deno-vm';
+import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import {
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,

@@ -1,26 +1,41 @@
-import { Subscription, Subject, SubscriptionLike } from 'rxjs';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
-import { DimensionItem } from './DimensionItem';
-import {
+import type { DimensionItem } from './DimensionItem';
+import type {
     Simulation,
     BotDimensionsUpdate,
     SimulationManager,
 } from '@casual-simulation/aux-vm';
-import {
-    getBotIndex,
-    Bot,
-    BotCalculationContext,
-} from '@casual-simulation/aux-common';
+import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
+import { getBotIndex } from '@casual-simulation/aux-common';
 import { MenuPortalConfig } from './MenuPortalConfig';
-import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
+import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a dimension that watches a set of simulations for changes to items in a dimension.
  */
 export class MenuPortal implements SubscriptionLike {
     items: DimensionItem[] = [];
-    extraStyle: Object = {};
+    extraStyle: object = {};
 
     private _dimensionTags: string[] = [];
     private _itemsUpdated = new Subject<DimensionItem[]>();

@@ -1,4 +1,22 @@
-import { Object3D, Vector3, Color, Vector2 } from '@casual-simulation/three';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Vector3, Color } from '@casual-simulation/three';
+import { Object3D, Vector2 } from '@casual-simulation/three';
 import {
     HexGridMesh,
     HexGrid,
@@ -8,13 +26,16 @@ import {
     realPosToGridPos,
 } from './hex';
 import { GridMesh } from './grid/GridMesh';
+import type {
+    AuxDomain,
+    BotCalculationContext,
+    Bot,
+} from '@casual-simulation/aux-common';
 import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_MINI_WORKSPACE_SCALE,
-    AuxDomain,
-    BotCalculationContext,
     calculateBotValue,
     getDimensionSize,
     getDimensionDefaultHeight,
@@ -29,12 +50,12 @@ import {
     getDimensionGridHeight,
     calculateGridScale,
     getDimensionVisualizeMode,
-    Bot,
 } from '@casual-simulation/aux-common';
 import { minBy, isEqual } from 'lodash';
-import { GridChecker, GridCheckResults } from './grid/GridChecker';
+import type { GridCheckResults } from './grid/GridChecker';
+import { GridChecker } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { AuxBot3D } from './AuxBot3D';
+import type { AuxBot3D } from './AuxBot3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
 import { buildSRGBColor } from './SceneUtils';
 

@@ -1,14 +1,34 @@
-import { ConfigurationStore } from './ConfigurationStore';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { PrivoClientCredentials, PrivoStore } from './PrivoStore';
-import { Client, Issuer, TokenSet, generators } from 'openid-client';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { ConfigurationStore } from './ConfigurationStore';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { PrivoClientCredentials, PrivoStore } from './PrivoStore';
+import type { Client, TokenSet } from 'openid-client';
+import { Issuer, generators } from 'openid-client';
 import { v4 as uuid } from 'uuid';
-import axios, { RawAxiosRequestHeaders } from 'axios';
+import type { RawAxiosRequestHeaders } from 'axios';
+import axios from 'axios';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
-import { ServerError } from '@casual-simulation/aux-common';
+import type { ServerError } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
-import { SpanKind, SpanOptions } from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind } from '@opentelemetry/api';
 
 /**
  * Defines an interface for objects that can interface with the Privo API.
@@ -40,6 +60,13 @@ export interface PrivoClientInterface {
      * @param serviceId The ID of the service.
      */
     getUserInfo(serviceId: string): Promise<PrivoGetUserInfoResponse>;
+
+    /**
+     * Attempts to lookup the service ID for the given request.
+     * Can be used to lookup the service ID by user name, display name, email, phone, or user ID.
+     * @param request The request.
+     */
+    lookupServiceId(request: LookupServiceIdRequest): Promise<string | null>;
 
     /**
      * Resends the consent email for the given requester and approver service IDs.
@@ -195,6 +222,14 @@ export interface ProcessAuthorizationCallbackResponse {
      * The user info that was returned.
      */
     userInfo: PrivoGetUserInfoResponse;
+}
+
+export interface LookupServiceIdRequest {
+    userName?: string;
+    displayName?: string;
+    email?: string;
+    phoneNumber?: string;
+    externalUserIdentifier?: string;
 }
 
 const TRACE_NAME = 'PrivoClient';
@@ -546,6 +581,50 @@ export class PrivoClient implements PrivoClientInterface {
                 active: p.active,
             })),
         };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async lookupServiceId(
+        request: LookupServiceIdRequest
+    ): Promise<string | null> {
+        const config = await this._config.getPrivoConfiguration();
+        if (!config) {
+            throw new Error('No Privo configuration found.');
+        }
+
+        const headers = await this._getRequestHeaders(config);
+        const url = `${config.gatewayEndpoint}/api/v1.0/account/lookup`;
+
+        const params: Record<string, string> = {};
+        if (request.userName) {
+            params.user_name = request.userName;
+        } else if (request.displayName) {
+            params.display_name = request.displayName;
+        } else if (request.email) {
+            params.email = request.email;
+        } else if (request.phoneNumber) {
+            params.phone = request.phoneNumber;
+        } else if (request.externalUserIdentifier) {
+            params.external_user_identifier = request.externalUserIdentifier;
+        }
+
+        const result = await axios.get(url, {
+            params,
+            headers,
+        });
+
+        if (result.status === 404) {
+            return null;
+        }
+
+        const data = result.data;
+
+        const schema = z.object({
+            sid: z.string(),
+        });
+
+        const validated = schema.parse(data);
+        return validated.sid;
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)

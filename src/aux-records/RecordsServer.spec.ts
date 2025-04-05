@@ -1,24 +1,40 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     parseAuthorization,
     RecordsServer,
     validateOrigin,
     getSessionKey,
 } from './RecordsServer';
-import {
-    DEFAULT_BRANCH_NAME,
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
     GenericHttpResponse,
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
-    procedure,
 } from '@casual-simulation/aux-common';
+import { DEFAULT_BRANCH_NAME, procedure } from '@casual-simulation/aux-common';
+import type { RelyingParty } from './AuthController';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
     PRIVO_OPEN_ID_PROVIDER,
-    RelyingParty,
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
@@ -27,24 +43,25 @@ import {
     generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
-import { AuthSession, AuthUser } from './AuthStore';
+import type { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
+import type { CreateStudioSuccess } from './RecordsController';
 import {
     CreateStudioInComIdResult,
-    CreateStudioSuccess,
     isRecordKey,
     RecordsController,
 } from './RecordsController';
-import { RecordKey, RecordsStore, Studio } from './RecordsStore';
+import type { Studio } from './RecordsStore';
+import { RecordKey, RecordsStore } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
-import { DataRecordsStore } from './DataRecordsStore';
+import type { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
-import { StripeInterface, StripeProduct } from './StripeInterface';
+import type { StripeInterface, StripeProduct } from './StripeInterface';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
@@ -60,7 +77,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
-import { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
     createTestControllers,
@@ -70,17 +87,17 @@ import {
     unwindAndCaptureAsync,
 } from './TestUtils';
 import { AIController } from './AIController';
-import {
+import type {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
     AIChatInterfaceStreamResponse,
 } from './AIChatInterface';
-import {
+import type {
     AIGenerateSkyboxInterfaceRequest,
     AIGenerateSkyboxInterfaceResponse,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
-import {
+import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
@@ -89,64 +106,66 @@ import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
 import { MemoryWebsocketMessenger } from './websockets/MemoryWebsocketMessenger';
-import { InstRecordsStore } from './websockets/InstRecordsStore';
-import { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
+import type { InstRecordsStore } from './websockets/InstRecordsStore';
+import type { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
 import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
-import {
+import type {
     LoginMessage,
     WebsocketDownloadRequestEvent,
-    WebsocketEventTypes,
     WebsocketHttpPartialResponseMessage,
     WebsocketHttpResponseMessage,
     WebsocketMessage,
     WebsocketMessageEvent,
     WebsocketUploadRequestEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import type { StoredAuxVersion1 } from '@casual-simulation/aux-common/bots';
 import {
     botAdded,
     createBot,
     StoredAux,
-    StoredAuxVersion1,
     toast,
 } from '@casual-simulation/aux-common/bots';
 import {
     device,
     remote,
 } from '@casual-simulation/aux-common/common/RemoteActions';
-import { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
+import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import {
     YjsPartitionImpl,
     constructInitializationUpdate,
 } from '@casual-simulation/aux-common';
-import { PrivoClientInterface } from './PrivoClient';
+import type { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
 import { ModerationController } from './ModerationController';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerSuccess,
     AssignPermissionToSubjectAndResourceSuccess,
 } from './PolicyStore';
-import {
+import type {
     GenerateAuthenticationOptionsOpts,
     GenerateRegistrationOptionsOpts,
     VerifiedAuthenticationResponse,
     VerifiedRegistrationResponse,
     VerifyAuthenticationResponseOpts,
+} from '@simplewebauthn/server';
+import {
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server';
-import {
+import type {
     PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import { fromByteArray } from 'base64-js';
 import { z } from 'zod';
-import { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
+import type { AIHumeInterfaceGetAccessTokenResult } from './AIHumeInterface';
 import * as jose from 'jose';
 import { LoomController } from './LoomController';
-import {
+import type {
     AISloydInterfaceCreateModelRequest,
     AISloydInterfaceCreateModelResponse,
     AISloydInterfaceEditModelRequest,
@@ -156,17 +175,17 @@ import { MemoryModerationJobProvider } from './MemoryModerationJobProvider';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import { WebhookRecordsController } from './webhooks/WebhookRecordsController';
 import { MemoryWebhookRecordsStore } from './webhooks/MemoryWebhookRecordsStore';
-import {
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
 import { tryParseJson } from './Utils';
 import { NotificationRecordsController } from './notifications/NotificationRecordsController';
-import {
-    SUBSCRIPTION_ID_NAMESPACE,
-    WebPushInterface,
-} from './notifications/WebPushInterface';
+import type { WebPushInterface } from './notifications/WebPushInterface';
+import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
+import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
+import { OpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -392,6 +411,7 @@ describe('RecordsServer', () => {
             [AISloydInterfaceEditModelRequest]
         >;
     };
+    let realtimeInterface: jest.Mocked<AIOpenAIRealtimeInterface>;
 
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
@@ -428,31 +448,7 @@ describe('RecordsServer', () => {
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
-    let privoClientMock: {
-        createChildAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createChildAccount']>
-        >;
-        createAdultAccount: jest.Mock<
-            ReturnType<PrivoClientInterface['createAdultAccount']>
-        >;
-        getUserInfo: jest.Mock<ReturnType<PrivoClientInterface['getUserInfo']>>;
-        generateAuthorizationUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateAuthorizationUrl']>
-        >;
-        processAuthorizationCallback: jest.Mock<
-            ReturnType<PrivoClientInterface['processAuthorizationCallback']>
-        >;
-        checkEmail: jest.Mock<ReturnType<PrivoClientInterface['checkEmail']>>;
-        checkDisplayName: jest.Mock<
-            ReturnType<PrivoClientInterface['checkDisplayName']>
-        >;
-        generateLogoutUrl: jest.Mock<
-            ReturnType<PrivoClientInterface['generateLogoutUrl']>
-        >;
-        resendConsentRequest: jest.Mock<
-            ReturnType<PrivoClientInterface['resendConsentRequest']>
-        >;
-    };
+    let privoClientMock: jest.MockedObject<PrivoClientInterface>;
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -504,6 +500,7 @@ describe('RecordsServer', () => {
             checkDisplayName: jest.fn(),
             generateLogoutUrl: jest.fn(),
             resendConsentRequest: jest.fn(),
+            lookupServiceId: jest.fn(),
         };
         relyingParty = {
             id: 'relying_party_id',
@@ -539,6 +536,7 @@ describe('RecordsServer', () => {
             config: store,
             metrics: store,
             messenger: store,
+            privo: privoClient,
         });
 
         policyController = new PolicyController(
@@ -685,6 +683,9 @@ describe('RecordsServer', () => {
             createModel: jest.fn(),
             editModel: jest.fn(),
         };
+        realtimeInterface = {
+            createRealtimeSessionToken: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interfaces: {
@@ -740,6 +741,11 @@ describe('RecordsServer', () => {
             },
             sloyd: {
                 interface: sloydInterface,
+            },
+            openai: {
+                realtime: {
+                    interface: realtimeInterface,
+                },
             },
             config: store,
             metrics: store,
@@ -16239,6 +16245,7 @@ describe('RecordsServer', () => {
             });
 
             imageInterface.generateImage.mockResolvedValueOnce({
+                success: true,
                 images: [
                     {
                         base64: 'base64',
@@ -16632,6 +16639,147 @@ describe('RecordsServer', () => {
                 }),
                 apiHeaders
             )
+        );
+    });
+
+    describe('POST /api/v2/ai/openai/realtime/session', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            realtimeInterface.createRealtimeSessionToken.mockResolvedValueOnce({
+                success: true,
+                sessionId: 'sessionId',
+                clientSecret: {
+                    value: 'secret',
+                    expiresAt: Date.now() + 10000000,
+                },
+            });
+        });
+
+        it('should be able to call the realtime interface to create a session token', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/ai/openai/realtime/session`,
+                    JSON.stringify({
+                        recordName: userId,
+                        request: {
+                            model: 'test-model',
+                            instructions: 'my instructions',
+                            modalities: ['audio', 'text'],
+                            maxResponseOutputTokens: 100,
+                            inputAudioFormat: 'pcm16',
+                            inputAudioNoiseReduction: {
+                                type: 'near_field',
+                            },
+                            inputAudioTranscription: {
+                                language: 'en',
+                                model: 'transcription-model',
+                                prompt: 'my prompt',
+                            },
+                            outputAudioFormat: 'pcm16',
+                            temperature: 1,
+                            toolChoice: 'auto',
+                            tools: [
+                                {
+                                    name: 'tool-1',
+                                    parameters: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'string',
+                                        },
+                                    },
+                                    type: 'function',
+                                },
+                            ],
+                            turnDetection: {
+                                createResponse: true,
+                                eagerness: 'low',
+                                interruptResponse: true,
+                                prefixPaddingMs: 30,
+                                silenceDurationMs: 1000,
+                                threshold: 0.5,
+                                type: 'semantic_vad',
+                            },
+                            voice: 'echo',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: 'sessionId',
+                    clientSecret: {
+                        value: 'secret',
+                        expiresAt: expect.any(Number),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                realtimeInterface.createRealtimeSessionToken
+            ).toHaveBeenCalledWith({
+                model: 'test-model',
+                instructions: 'my instructions',
+                modalities: ['audio', 'text'],
+                maxResponseOutputTokens: 100,
+                inputAudioFormat: 'pcm16',
+                inputAudioNoiseReduction: {
+                    type: 'near_field',
+                },
+                inputAudioTranscription: {
+                    language: 'en',
+                    model: 'transcription-model',
+                    prompt: 'my prompt',
+                },
+                outputAudioFormat: 'pcm16',
+                temperature: 1,
+                toolChoice: 'auto',
+                tools: [
+                    {
+                        name: 'tool-1',
+                        parameters: {
+                            type: 'array',
+                            items: {
+                                type: 'string',
+                            },
+                        },
+                        type: 'function',
+                    },
+                ],
+                turnDetection: {
+                    createResponse: true,
+                    eagerness: 'low',
+                    interruptResponse: true,
+                    prefixPaddingMs: 30,
+                    silenceDurationMs: 1000,
+                    threshold: 0.5,
+                    type: 'semantic_vad',
+                },
+                voice: 'echo',
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/ai/openai/realtime/session',
+            () =>
+                JSON.stringify({
+                    recordName: userId,
+                    request: {
+                        model: 'test-model',
+                    },
+                }),
+            () => apiHeaders
         );
     });
 
@@ -17849,6 +17997,179 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             ]);
         });
 
+        describe('privo', () => {
+            it('should be able to add members by email address', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedEmail: 'test4@example.com',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    email: 'test4@example.com',
+                });
+            });
+
+            it('should be able to add members by phone number', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedPhoneNumber: '+1111',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    phoneNumber: '+1111',
+                });
+            });
+
+            it('should be able to add members by display name', async () => {
+                await store.saveNewUser({
+                    id: 'testUser4',
+                    email: null,
+                    phoneNumber: null,
+                    privoServiceId: 'serviceId',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                privoClientMock.lookupServiceId.mockResolvedValueOnce(
+                    'serviceId'
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/studios/members',
+                        JSON.stringify({
+                            studioId,
+                            addedDisplayName: 'test user',
+                            role: 'member',
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                    },
+                    headers: accountCorsHeaders,
+                });
+
+                const list = await store.listStudioAssignments(studioId, {
+                    userId: 'testUser4',
+                });
+
+                expect(list).toEqual([
+                    {
+                        studioId,
+                        userId: 'testUser4',
+                        role: 'member',
+                        isPrimaryContact: false,
+                        user: {
+                            id: 'testUser4',
+                            email: null,
+                            phoneNumber: null,
+                            privoServiceId: 'serviceId',
+                        },
+                    },
+                ]);
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    displayName: 'test user',
+                });
+            });
+        });
+
         testUrl('POST', '/api/v2/studios/members', () =>
             JSON.stringify({
                 studioId,
@@ -18100,7 +18421,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             it('should include default subscriptions in the list of purchasable subscriptions', async () => {
-                (store.subscriptionConfiguration.subscriptions = [
+                store.subscriptionConfiguration.subscriptions = [
                     {
                         id: 'sub_id',
                         eligibleProducts: ['product_id'],
@@ -18114,12 +18435,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
                     },
-                ]),
-                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                        {
-                            subscriptions: [],
-                        }
-                    );
+                ];
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
 
                 const result = await server.handleHttpRequest(
                     httpGet(
@@ -18467,7 +18788,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             it('should include default subscriptions in the list of purchasable subscriptions', async () => {
-                (store.subscriptionConfiguration.subscriptions = [
+                store.subscriptionConfiguration.subscriptions = [
                     {
                         id: 'sub_id',
                         eligibleProducts: ['product_id'],
@@ -18481,12 +18802,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         defaultSubscription: true,
                         featureList: ['default feature 1'],
                     },
-                ]),
-                    stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                        {
-                            subscriptions: [],
-                        }
-                    );
+                ];
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
 
                 const result = await server.handleHttpRequest(
                     httpGet(

@@ -1,3 +1,4 @@
+/* eslint-disable */
 var $jscomp = $jscomp || {};
 $jscomp.scope = {};
 $jscomp.arrayIteratorImpl = function (l) {

@@ -1,48 +1,62 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     Bot,
     UpdatedBot,
     BotAction,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    botAdded,
-    botRemoved,
-    botUpdated,
-    breakIntoIndividualEvents,
     BotsState,
-    getActiveObjects,
-    tagsOnBot,
-    hasValue,
     LocalStoragePartition,
     LocalStoragePartitionConfig,
     AuxPartitionRealtimeStrategy,
-    stateUpdatedEvent,
     StateUpdatedEvent,
     PartialBotsState,
     BotSpace,
-    merge,
     BotTagMasks,
     BotTags,
 } from '@casual-simulation/aux-common';
 import {
+    botAdded,
+    botRemoved,
+    botUpdated,
+    breakIntoIndividualEvents,
+    getActiveObjects,
+    tagsOnBot,
+    hasValue,
+    stateUpdatedEvent,
+    merge,
+} from '@casual-simulation/aux-common';
+import type {
     StatusUpdate,
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
 import { flatMap, union } from 'lodash';
-import {
-    Subject,
-    Subscription,
-    Observable,
-    fromEventPattern,
-    BehaviorSubject,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subject, Subscription, fromEventPattern, BehaviorSubject } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
+import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
     applyTagEdit,
     edits,
     isTagEdit,
-    TagEditOp,
 } from '@casual-simulation/aux-common/bots';
 import {
     ensureBotIsSerializable,

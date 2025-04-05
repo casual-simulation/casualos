@@ -1,23 +1,44 @@
-import { IOperation } from './IOperation';
-import { BaseInteractionManager } from './BaseInteractionManager';
-import { Vector3, Vector2 } from '@casual-simulation/three';
-import {
-    asyncError,
-    asyncResult,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { IOperation } from './IOperation';
+import type { BaseInteractionManager } from './BaseInteractionManager';
+import type { Vector3 } from '@casual-simulation/three';
+import { Vector2 } from '@casual-simulation/three';
+import type {
     BotCalculationContext,
-    hasValue,
     FocusOnOptions,
     Easing,
     EaseType,
+} from '@casual-simulation/aux-common';
+import {
+    asyncError,
+    asyncResult,
+    hasValue,
     realNumberOrDefault,
     getEasing,
 } from '@casual-simulation/aux-common';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { CameraRig } from '../scene/CameraRigFactory';
-import { CameraRigControls } from './CameraRigControls';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { CameraRig } from '../scene/CameraRigFactory';
+import type { CameraRigControls } from './CameraRigControls';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
-import { Time } from '../scene/Time';
-import { objectForwardRay, TweenCameraPosition } from '../scene/SceneUtils';
+import type { Time } from '../scene/Time';
+import type { TweenCameraPosition } from '../scene/SceneUtils';
+import { objectForwardRay } from '../scene/SceneUtils';
 
 /**
  * Class that is able to tween the main camera to a given location.

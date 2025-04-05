@@ -1,65 +1,83 @@
-import {
-    isTagEdit,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     TagEditOp,
-    preserve,
-    del,
-    insert,
-    edit,
     TagEdit,
-    GetRemoteCountAction,
-    asyncResult,
     GetInstStateFromUpdatesAction,
-    asyncError,
     CreateInitializationUpdateAction,
     InstUpdate,
     ApplyUpdatesToInstAction,
     GetCurrentInstUpdateAction,
 } from '../bots';
-import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import {
-    CausalRepoPartition,
+    isTagEdit,
+    preserve,
+    del,
+    insert,
+    edit,
+    GetRemoteCountAction,
+    asyncResult,
+    asyncError,
+} from '../bots';
+import type { Observable } from 'rxjs';
+import { Subscription, Subject, BehaviorSubject } from 'rxjs';
+import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
-    MemoryPartition,
 } from './AuxPartition';
-import {
+import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
+import type {
     BotAction,
     Bot,
     UpdatedBot,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     BotsState,
+    BotTags,
+} from '../bots';
+import {
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
     PartialBotsState,
     botAdded,
-    BotTags,
     createBot,
     botRemoved,
     hasValue,
     botUpdated,
     convertToString,
 } from '../bots';
-import {
+import type {
     PartitionConfig,
     PartitionRemoteEvents,
     YjsPartitionConfig,
 } from './AuxPartitionConfig';
 import { flatMap, random } from 'lodash';
+import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
-    Doc,
     Text,
     Map,
     applyUpdate,
-    Transaction,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    AbstractType,
-    YEvent,
     encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
@@ -69,13 +87,8 @@ import {
     getStateVector,
 } from '../yjs/YjsHelpers';
 import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
-import {
-    Action,
-    CurrentVersion,
-    RemoteActions,
-    StatusUpdate,
-    VersionVector,
-} from '../common';
+import type { RemoteActions, VersionVector } from '../common';
+import { Action, CurrentVersion, StatusUpdate } from '../common';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { YjsSharedDocument } from '../documents/YjsSharedDocument';
 

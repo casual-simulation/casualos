@@ -1,22 +1,42 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { GameObject, IGameObject } from './GameObject';
-import {
+import type {
     Bot,
     BotCalculationContext,
+    AuxDomain,
+} from '@casual-simulation/aux-common';
+import {
     TagUpdatedEvent,
     hasValue,
     calculateBotValue,
-    AuxDomain,
     getBotConfigDimensions,
 } from '@casual-simulation/aux-common';
 import { flatMap } from 'lodash';
-import { Object3D, Group } from '@casual-simulation/three';
-import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
-import { Simulation3D } from './Simulation3D';
+import type { Object3D } from '@casual-simulation/three';
+import { Group } from '@casual-simulation/three';
+import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import type { Simulation3D } from './Simulation3D';
 import { AuxBot3D } from './AuxBot3D';
-import { DimensionGroup } from './DimensionGroup';
-import { AuxBotVisualizer } from './AuxBotVisualizer';
+import type { DimensionGroup } from './DimensionGroup';
+import type { AuxBotVisualizer } from './AuxBotVisualizer';
 import { DimensionGroupHelper } from './DimensionGroupHelper';
-import { CoordinateTransformer } from './CoordinateSystem';
+import type { CoordinateTransformer } from './CoordinateSystem';
 
 /**
  * Defines a class that represents a visualization of a dimension for the AUX Builder.

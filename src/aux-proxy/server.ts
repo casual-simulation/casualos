@@ -1,16 +1,35 @@
-import { Config } from './config';
-import express, { Handler } from 'express';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Config } from './config';
+import type { Handler } from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
 import { promisify } from 'util';
 import { verify } from 'jsonwebtoken';
 import { WebSocketServer, requestUrl } from '@casual-simulation/tunnel';
-import { Server as HttpServer, IncomingMessage } from 'http';
-import { Socket } from 'net';
+import type { IncomingMessage } from 'http';
+import { Server as HttpServer } from 'http';
+import type { Socket } from 'net';
 import HttpProxy from 'http-proxy';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(er => {
+        Promise.resolve(fn(req, res, next)).catch((er) => {
             next(er);
         });
     };
@@ -49,7 +68,7 @@ export class Server {
             autoUpgrade: false,
         });
 
-        server.acceptTunnel = r => {
+        server.acceptTunnel = (r) => {
             if (r.direction === 'reverse') {
                 const token = r.authorization;
                 try {
@@ -58,7 +77,6 @@ export class Server {
                     return true;
                 } catch (e) {
                     return false;
-                    e;
                 }
             } else if (r.direction === 'connect') {
                 return true;
@@ -67,7 +85,7 @@ export class Server {
             }
         };
 
-        server.tunnelAccepted.subscribe(r => {
+        server.tunnelAccepted.subscribe((r) => {
             if (r.direction === 'reverse') {
                 console.log('Reverse tunnel accepted!');
                 const decoded: { key: string } = <any>(
@@ -81,7 +99,7 @@ export class Server {
             }
         });
 
-        server.tunnelDropped.subscribe(r => {
+        server.tunnelDropped.subscribe((r) => {
             if (r.direction === 'reverse') {
                 console.log('Reverse tunnel closed!');
                 const decoded: { key: string } = <any>(

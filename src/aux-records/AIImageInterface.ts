@@ -1,3 +1,30 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    InvalidSubscriptionTierError,
+    NotAuthorizedError,
+    NotLoggedInError,
+    NotSubscribedError,
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from '@casual-simulation/aux-common/Errors';
+
 /**
  * Defines an interface that is able to generate images from text prompts.
  */
@@ -79,11 +106,28 @@ export interface AIGenerateImageInterfaceRequest {
     userId?: string;
 }
 
-export interface AIGenerateImageInterfaceResponse {
-    /**
-     * The list of images that were generated.
-     */
+export type AIGenerateImageInterfaceResponse =
+    | AIGenerateImageInterfaceSuccess
+    | AIGenerateImageInterfaceFailure;
+
+export interface AIGenerateImageInterfaceSuccess {
+    success: true;
     images: AIGeneratedImage[];
+}
+
+export interface AIGenerateImageInterfaceFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
+        | 'invalid_request'
+        | 'invalid_model';
+    errorMessage: string;
 }
 
 /**

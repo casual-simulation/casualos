@@ -1,14 +1,34 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import {
+import type {
     CreateRecordRequest,
-    ListedStudio,
+    FormError,
 } from '@casual-simulation/aux-records';
+import { ListedStudio } from '@casual-simulation/aux-records';
 import { distinctUntilChanged } from 'rxjs';
+import { getFormErrors } from '@casual-simulation/aux-records';
+import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
 const comId = authManager.getComIdFromUrl();
 document.title = comId ?? location.hostname;
@@ -16,6 +36,7 @@ document.title = comId ?? location.hostname;
 @Component({
     components: {
         'svg-icon': SvgIcon,
+        'field-errors': FieldErrors,
     },
 })
 export default class AuthApp extends Vue {
@@ -26,9 +47,13 @@ export default class AuthApp extends Vue {
     loadingStudios: boolean = false;
     showCreateStudio: boolean = false;
     showCreateRecord: boolean = false;
+
     records: any[] = [];
     studios: any[] = [];
 
+    errors: FormError[] = [];
+
+    errorMessage: string = '';
     recordName: string = '';
     studioName: string = '';
     userId: string = '';
@@ -39,6 +64,17 @@ export default class AuthApp extends Vue {
     displayName: string = null;
     comId: string = null;
     usePrivoLogin: boolean = false;
+    processing: boolean = false;
+
+    get studioNameFieldClass() {
+        const hasError = this.errors.some((e) => e.for === 'displayName');
+        return hasError ? 'md-invalid' : '';
+    }
+
+    get recordNameFieldClass() {
+        const hasError = this.errors.some((e) => e.for === 'recordName');
+        return hasError ? 'md-invalid' : '';
+    }
 
     get title() {
         return comId ?? location.hostname;
@@ -91,6 +127,7 @@ export default class AuthApp extends Vue {
         this.loadingStudios = false;
         this.records = [];
         this.studios = [];
+        this.errors = [];
         this.studioName = '';
         this.recordName = '';
         this.userId = '';
@@ -138,38 +175,61 @@ export default class AuthApp extends Vue {
     }
 
     async createStudio() {
-        this.showCreateStudio = false;
-        const comId = authManager.getComIdFromUrl();
-        const result = await authManager.client.createStudio({
-            displayName: this.studioName,
-            ownerStudioComId: comId,
-        });
-        await this.loadStudios();
+        try {
+            this.errors = [];
+            this.processing = true;
+
+            const comId = authManager.getComIdFromUrl();
+            const response = await authManager.client.createStudio({
+                displayName: this.studioName,
+                ownerStudioComId: comId,
+            });
+
+            if (response.success == false) {
+                this.errors = getFormErrors(response);
+                return;
+            }
+
+            this.showCreateStudio = false;
+            await this.loadStudios();
+        } finally {
+            this.processing = false;
+        }
     }
 
     async createRecord() {
-        this.showCreateRecord = false;
-        let request: Omit<CreateRecordRequest, 'userId'> = {
-            recordName: this.recordName,
-        };
+        try {
+            this.errors = [];
+            this.processing = true;
 
-        if (this.createRecordStudioId) {
-            request['studioId'] = this.createRecordStudioId;
-        } else {
-            request['ownerId'] = authManager.userId;
-        }
+            let request: Omit<CreateRecordRequest, 'userId'> = {
+                recordName: this.recordName,
+                ...(this.createRecordStudioId
+                    ? { studioId: this.createRecordStudioId }
+                    : { ownerId: authManager.userId }),
+            };
 
-        await authManager.client.createRecord(request);
+            const response = await authManager.client.createRecord(request);
 
-        if (this.createRecordStudioId) {
-            const studio = this.studios.find(
-                (s) => s.studioId === this.createRecordStudioId
-            );
-            if (studio) {
-                await this.onExpandStudio(studio);
+            if (response.success == false) {
+                this.errors = getFormErrors(response);
+                return;
             }
-        } else {
-            await this.loadRecords();
+
+            this.showCreateRecord = false;
+            if (this.createRecordStudioId) {
+                console.log('createRecordStudioId hit');
+                const studio = this.studios.find(
+                    (s) => s.studioId === this.createRecordStudioId
+                );
+                if (studio) {
+                    await this.onExpandStudio(studio);
+                }
+            } else {
+                await this.loadRecords();
+            }
+        } finally {
+            this.processing = false;
         }
     }
 
@@ -218,7 +278,7 @@ export default class AuthApp extends Vue {
             const studios = result.studios;
             this.studios = studios.map((s) => ({
                 ...s,
-                records: [],
+                records: [] as any[],
                 loading: false,
                 open:
                     this.$route.name === 'studio' &&

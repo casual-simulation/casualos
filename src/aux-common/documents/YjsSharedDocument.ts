@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     BehaviorSubject,
     filter,
@@ -7,16 +24,15 @@ import {
     Subject,
     Subscription,
 } from 'rxjs';
+import type { YEvent, RelativePosition } from 'yjs';
 import {
     AbstractType as YType,
     Map as YMap,
     Array as YArray,
     Text as YText,
-    YEvent,
     YMapEvent,
     YArrayEvent,
     YTextEvent,
-    RelativePosition,
     createRelativePositionFromTypeIndex,
     createAbsolutePositionFromRelativePosition,
     Doc,
@@ -24,7 +40,7 @@ import {
     applyUpdate,
     encodeStateAsUpdate,
 } from 'yjs';
-import {
+import type {
     SharedTypeChanges,
     SharedMap,
     SharedArray,
@@ -38,11 +54,11 @@ import {
     SharedTextChanges,
 } from './SharedDocument';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { InstUpdate } from '../bots';
-import { CurrentVersion, Action, StatusUpdate } from '../common';
-import { ClientError, InstRecordsClient } from '../websockets';
+import type { InstUpdate } from '../bots';
+import type { CurrentVersion, Action, StatusUpdate } from '../common';
+import type { ClientError, InstRecordsClient } from '../websockets';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
-import { SharedDocumentConfig } from './SharedDocumentConfig';
+import type { SharedDocumentConfig } from './SharedDocumentConfig';
 
 export const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN =
     '__apply_updates_to_inst';

@@ -1,18 +1,38 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    PrecalculatedBot,
+    BotIndex,
+    StateUpdatedEvent,
+    BotTags,
+} from '@casual-simulation/aux-common';
 import {
     Bot,
-    PrecalculatedBot,
     merge,
-    BotIndex,
     BotIndexEvent,
     tagsOnBot,
-    StateUpdatedEvent,
     applyUpdates,
-    BotTags,
     hasTagOrMask,
     getTagValueForSpace,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { Subject, Observable, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 import {
     mergeMap,
     filter,
@@ -25,17 +45,15 @@ import {
     mergeWith,
 } from 'rxjs/operators';
 import { values } from 'lodash';
-import { BotHelper } from './BotHelper';
+import type { BotHelper } from './BotHelper';
+import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
     isTagEdit,
     stateUpdatedEvent,
-    TagEditOp,
 } from '@casual-simulation/aux-common/bots';
-import { VersionVector } from '@casual-simulation/aux-common';
-import {
-    RuntimeStateVersion,
-    updateRuntimeVersion,
-} from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
+import type { VersionVector } from '@casual-simulation/aux-common';
+import type { RuntimeStateVersion } from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
+import { updateRuntimeVersion } from '@casual-simulation/aux-runtime/runtime/RuntimeStateVersion';
 
 /**
  * Defines an interface that contains information about an updated bot.

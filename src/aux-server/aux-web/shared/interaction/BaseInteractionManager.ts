@@ -1,32 +1,49 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     Vector2,
     Vector3,
     Intersection,
     Object3D,
-    OrthographicCamera,
     Ray,
-    Color,
     Sphere,
 } from '@casual-simulation/three';
-import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
-import {
+import { OrthographicCamera, Color } from '@casual-simulation/three';
+import type { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
+import type {
     BotCalculationContext,
     Bot,
     BotTags,
-    getBotCursor,
-    hasValue,
 } from '@casual-simulation/aux-common';
+import { getBotCursor, hasValue } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap } from 'lodash';
 import { CameraControls } from './CameraControls';
+import type {
+    ControllerData,
+    InputMethod,
+    InputModality,
+} from '../scene/Input';
 import {
     MouseButtonId,
     InputType,
     Input,
-    ControllerData,
-    InputMethod,
     MOUSE_INPUT_METHOD_IDENTIFIER,
-    InputModality,
     getFingerModality,
     getModalityKey,
     getModalityHand,
@@ -34,28 +51,28 @@ import {
     modalityForInputMethod,
 } from '../scene/Input';
 import { appManager } from '../AppManager';
-import { IOperation } from './IOperation';
+import type { IOperation } from './IOperation';
 import { AuxBot3D } from '../scene/AuxBot3D';
-import { GameObject } from '../scene/GameObject';
+import type { GameObject } from '../scene/GameObject';
+import type { CameraRig } from '../scene/CameraRigFactory';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
-    CameraRig,
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { DraggableGroup } from './DraggableGroup';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { DraggableGroup } from './DraggableGroup';
 import {
     isObjectVisible,
     objectForwardRay,
     cameraForwardRay,
 } from '../scene/SceneUtils';
-import { CameraRigControls } from './CameraRigControls';
-import { Game } from '../scene/Game';
+import type { CameraRigControls } from './CameraRigControls';
+import type { Game } from '../scene/Game';
 import { DimensionGroup3D } from '../scene/DimensionGroup3D';
 import { DebugObjectManager } from '../scene/debugobjectmanager/DebugObjectManager';
-import { Viewport } from '../scene/Viewport';
-import { Grid3D } from '../scene/Grid3D';
+import type { Viewport } from '../scene/Viewport';
+import type { Grid3D } from '../scene/Grid3D';
 import { BaseBotDragOperation } from './DragOperation/BaseBotDragOperation';
 import { BaseModDragOperation } from './DragOperation/BaseModDragOperation';
 import { BaseClickOperation } from './ClickOperation/BaseClickOperation';

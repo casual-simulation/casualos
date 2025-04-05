@@ -1,0 +1,15 @@
+diff --git a/lib/rules/header.js b/lib/rules/header.js
+index 3504b6fc59b780674e652ad1ca944cb3577b8fed..dfd04dd40c91ddbd3364eebb342398c680123aef 100644
+--- a/lib/rules/header.js
++++ b/lib/rules/header.js
+@@ -121,7 +121,9 @@ function matchesLineEndings(src, num) {
+ module.exports = {
+     meta: {
+         type: "layout",
+-        fixable: "whitespace"
++        fixable: "whitespace",
++        // PATCH: Workaround for https://github.com/Stuk/eslint-plugin-header/issues/59
++        schema: false,
+     },
+     create: function(context) {
+         var options = context.options;

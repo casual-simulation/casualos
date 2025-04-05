@@ -1,16 +1,36 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Watch, Prop } from 'vue-property-decorator';
+import type {
+    BotTags,
+    PrecalculatedBot,
+    BotAction,
+    BiosOption,
+} from '@casual-simulation/aux-common';
 import {
     goToDimension,
     calculateBotValue,
-    BotTags,
-    PrecalculatedBot,
     hasValue,
     BotCalculationContext,
     QUERY_PORTALS,
     KNOWN_PORTALS,
-    BotAction,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
     calculateStringTagValue,
     calculateStringListTagValue,
@@ -18,7 +38,6 @@ import {
     QUERY_FULL_HISTORY_TAGS,
     QUERY_PARTIAL_HISTORY_TAGS,
     getBotTheme,
-    BiosOption,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import {
@@ -27,23 +46,24 @@ import {
     appManager,
 } from '../../shared/AppManager';
 import { first } from 'rxjs/operators';
-import { Dictionary } from 'vue-router/types/router';
+import type { Dictionary } from 'vue-router/types/router';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    BrowserSimulation,
     userBotChanged,
     getUserBotAsync,
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
-import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
+import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 import { intersection, isEqual, sortBy } from 'lodash';
-import { Subscription } from 'rxjs';
-import { uniqueNamesGenerator, Config } from 'unique-names-generator';
+import type { Subscription } from 'rxjs';
+import type { Config } from 'unique-names-generator';
+import { uniqueNamesGenerator } from 'unique-names-generator';
 import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-records';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
 import { sortInsts } from '../PlayerUtils';
@@ -150,11 +170,14 @@ export default class PlayerHome extends Vue {
     recordSelection: string = null;
     instSelection: string = null;
     joinCode: string = null;
+    instName: string = null;
     privacyPolicyUrl: string = null;
     termsOfServiceUrl: string = null;
     codeOfConductUrl: string = null;
+    supportUrl: string = null;
     logoUrl: string = null;
     logoTitle: string = null;
+    generatedName: string = null;
 
     errors: FormError[] = [];
 
@@ -169,6 +192,13 @@ export default class PlayerHome extends Vue {
     get joinCodeClass() {
         const hasJoinCodeError = this.errors.some((e) => e.for === 'joinCode');
         return hasJoinCodeError ? 'md-invalid' : '';
+    }
+
+    get showInstNameInput() {
+        return (
+            isStaticInst(this.biosSelection) &&
+            this.instSelection === 'new-inst'
+        );
     }
 
     get botManager() {
@@ -256,6 +286,10 @@ export default class PlayerHome extends Vue {
         return this.biosOptions.some((option) => option === 'sign up');
     }
 
+    isStaticInst(option: BiosOption): boolean {
+        return isStaticInst(option);
+    }
+
     @Watch('query')
     async onQueryChanged(newValue: any, oldQuery: any) {
         const staticInst = this.query['staticInst'] as string | string[];
@@ -296,8 +330,12 @@ export default class PlayerHome extends Vue {
     async onBiosSelectionChanged() {
         if (isStaticInst(this.biosSelection)) {
             this.instOptions = await appManager.listStaticInsts();
+            if (!this.instOptions.includes(this.instSelection)) {
+                this.instSelection = 'new-inst';
+            }
         } else {
             this.instOptions = [];
+            this.instSelection = null;
         }
     }
 
@@ -311,10 +349,12 @@ export default class PlayerHome extends Vue {
         this.biosSelection = null;
         this.recordSelection = null;
         this.instSelection = 'new-inst';
+        this.instName = '';
         this.biosOptions = [];
         this.errors = [];
         this._simulations = new Map();
         this.logoUrl = appManager.comIdConfig?.logoUrl;
+        this.generatedName = uniqueNamesGenerator(namesConfig);
         this.logoTitle =
             appManager.comIdConfig?.displayName ??
             appManager.comIdConfig?.comId ??
@@ -332,6 +372,17 @@ export default class PlayerHome extends Vue {
             }
         });
 
+        await this._executeOrShowBios();
+
+        appManager.auth.primary.getPolicyUrls().then((urls) => {
+            this.privacyPolicyUrl = urls.privacyPolicyUrl;
+            this.termsOfServiceUrl = urls.termsOfServiceUrl;
+            this.codeOfConductUrl = urls.codeOfConductUrl;
+            this.supportUrl = urls.supportUrl;
+        });
+    }
+
+    private async _executeOrShowBios() {
         if (import.meta.env.MODE === 'static') {
             this.executeBiosOption('local inst', null, null, null);
         } else if (this.query) {
@@ -398,12 +449,6 @@ export default class PlayerHome extends Vue {
                 }
             }
         }
-
-        appManager.auth.primary.getPolicyUrls().then((urls) => {
-            this.privacyPolicyUrl = urls.privacyPolicyUrl;
-            this.termsOfServiceUrl = urls.termsOfServiceUrl;
-            this.codeOfConductUrl = urls.codeOfConductUrl;
-        });
     }
 
     private async _showBiosOptions() {
@@ -432,6 +477,15 @@ export default class PlayerHome extends Vue {
         return isJoinCode(option);
     }
 
+    private async _deleteInst(inst: string) {
+        if (window.confirm(`Are you sure you want to delete ${inst}?`)) {
+            await appManager.deleteStaticInst(inst);
+            this.instSelection = 'new-inst';
+            this.instOptions = await appManager.listStaticInsts();
+        }
+        this.showBios = true;
+    }
+
     async executeBiosOption(
         option: BiosOption,
         recordName: string,
@@ -449,7 +503,7 @@ export default class PlayerHome extends Vue {
             } finally {
                 this.showLoggingIn = false;
                 this.biosSelection = null;
-                this._showBiosOptions();
+                await this._executeOrShowBios();
             }
         } else if (option === 'sign out') {
             await appManager.auth.primary.logout();
@@ -463,6 +517,8 @@ export default class PlayerHome extends Vue {
             this._loadPublicInst();
         } else if (isJoinCode(option)) {
             this._loadJoinCode(joinCode);
+        } else if (option === 'delete inst') {
+            this._deleteInst(inst);
         } else {
             this.showBios = true;
         }
@@ -480,8 +536,10 @@ export default class PlayerHome extends Vue {
     private _loadStaticInst(instSelection: string) {
         const update: Dictionary<string | string[]> = {};
         const inst =
-            instSelection === 'new-inst' || !instSelection
-                ? uniqueNamesGenerator(namesConfig)
+            instSelection === 'new-inst'
+                ? this.instName && this.instName.trim() !== ''
+                    ? this.instName.trim()
+                    : this.generatedName
                 : instSelection;
 
         update.staticInst = inst;

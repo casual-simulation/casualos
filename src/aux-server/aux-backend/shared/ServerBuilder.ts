@@ -1,96 +1,109 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    AuthStore,
+    DataRecordsStore,
+    EventRecordsStore,
+    FileRecordsStore,
+    PolicyStore,
+    RecordsStore,
+    Record,
+    AIChatInterface,
+    MetricsStore,
+    WebsocketConnectionStore,
+    InstRecordsStore,
+    WebsocketMessenger,
+    TemporaryInstRecordsStore,
+    MultiCache,
+    ModerationStore,
+    RelyingParty,
+    ServerConfig,
+    RedisServerOptions,
+    ModerationJobProvider,
+    WebhookRecordsStore,
+    WebhookEnvironment,
+    NotificationRecordsStore,
+    WebPushInterface,
+} from '@casual-simulation/aux-records';
 import {
     AuthController,
-    AuthStore,
     DataRecordsController,
-    DataRecordsStore,
     EventRecordsController,
-    EventRecordsStore,
     FileRecordsController,
-    FileRecordsStore,
     PolicyController,
-    PolicyStore,
     RateLimitController,
     RecordKey,
     RecordsController,
     RecordsServer,
-    RecordsStore,
     SubscriptionController,
-    Record,
     OpenAIChatInterface,
-    AIChatInterface,
     BlockadeLabsGenerateSkyboxInterface,
     OpenAIImageInterface,
     StabilityAIImageInterface,
-    MetricsStore,
     WebsocketController,
-    WebsocketConnectionStore,
-    InstRecordsStore,
-    WebsocketMessenger,
     SplitInstRecordsStore,
-    TemporaryInstRecordsStore,
-    MultiCache,
     CachingPolicyStore,
     CachingConfigStore,
     notificationsSchema,
     SystemNotificationMessenger,
     MultiNotificationMessenger,
     ModerationController,
-    ModerationStore,
     GoogleAIChatInterface,
-    RelyingParty,
     LoomController,
-    ServerConfig,
-    RedisServerOptions,
     AnthropicAIChatInterface,
-    ModerationJobProvider,
     WebhookRecordsController,
-    WebhookRecordsStore,
-    WebhookEnvironment,
     cleanupObject,
     NotificationRecordsController,
-    NotificationRecordsStore,
-    WebPushInterface,
 } from '@casual-simulation/aux-records';
+import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
     RekognitionModerationJobProvider,
     S3FileRecordsStore,
     SimpleEmailServiceAuthMessenger,
-    SimpleEmailServiceAuthMessengerOptions,
     TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
-import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
+import type { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
-import {
-    SubscriptionConfiguration,
-    subscriptionConfigSchema,
-} from '@casual-simulation/aux-records/SubscriptionConfiguration';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import { subscriptionConfigSchema } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESv2 } from '@aws-sdk/client-sesv2';
-import {
-    RedisClientOptions,
-    RedisClientType,
-    createClient as createRedisClient,
-} from 'redis';
+import type { RedisClientType } from 'redis';
+import { RedisClientOptions, createClient as createRedisClient } from 'redis';
 import { TracedRedisRateLimitStore } from '../redis/TracedRedisRateLimitStore';
 import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
 import Stripe from 'stripe';
+import type { Db } from 'mongodb';
 import {
     Binary,
     Collection,
     Cursor,
-    Db,
     MongoClient,
     MongoClientOptions,
     ObjectId,
 } from 'mongodb';
 import pify from 'pify';
+import type { MongoDBAuthUser, DataRecord, MongoDBStudio } from '../mongo';
 import {
-    MongoDBAuthUser,
     MongoDBLoginRequest,
     MongoDBAuthSession,
-    DataRecord,
     MongoDBAuthStore,
     MongoDBFileRecordsStore,
     MongoDBRateLimiter,
@@ -98,7 +111,6 @@ import {
     MongoDBDataRecordsStore,
     MongoDBPolicyStore,
     MongoDBFileRecordsLookup,
-    MongoDBStudio,
     MongoDBConfigurationStore,
     MongoDBMetricsStore,
     USERS_COLLECTION_NAME,
@@ -120,38 +132,37 @@ import {
     PrismaPolicyStore,
     PrismaRecordsStore,
 } from '../prisma';
-import {
+import type {
     AIConfiguration,
-    AIController,
     AIGenerateImageConfiguration,
 } from '@casual-simulation/aux-records/AIController';
-import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
+import { AIController } from '@casual-simulation/aux-records/AIController';
+import type { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
 import { PrismaMetricsStore } from '../prisma/PrismaMetricsStore';
 import { S3 } from '@aws-sdk/client-s3';
 import { RedisTempInstRecordsStore } from '../redis/RedisTempInstRecordsStore';
 import { RedisWebsocketConnectionStore } from '../redis/RedisWebsocketConnectionStore';
 import { ApiGatewayWebsocketMessenger } from '../serverless/aws/src/ApiGatewayWebsocketMessenger';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { PrismaInstRecordsStore } from '../prisma/PrismaInstRecordsStore';
 import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
 import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
-import {
-    PrivoConfiguration,
-    privoSchema,
-} from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { privoSchema } from '@casual-simulation/aux-records/PrivoConfiguration';
 import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
 import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
-import {
-    ModerationConfiguration,
-    moderationSchema,
-} from '@casual-simulation/aux-records/ModerationConfiguration';
+import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { moderationSchema } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
@@ -184,13 +195,12 @@ import {
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
 import { getConnectionId } from '@casual-simulation/aux-common';
-import {
-    RemoteAuxChannel,
-    RemoteSimulationImpl,
-} from '@casual-simulation/aux-vm-client';
-import { AuxConfigParameters } from '@casual-simulation/aux-vm';
+import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
+import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -1338,6 +1348,7 @@ export class ServerBuilder implements SubscriptionLike {
             images: null,
             hume: null,
             sloyd: null,
+            openai: null,
             config: this._configStore,
             metrics: this._metricsStore,
             policies: this._policyStore,
@@ -1424,6 +1435,17 @@ export class ServerBuilder implements SubscriptionLike {
                 }),
             };
         }
+
+        if (options.openai) {
+            console.log('[ServerBuilder] Enabling OpenAI Realtime API');
+            this._aiConfiguration.openai = {
+                realtime: {
+                    interface: new OpenAIRealtimeInterface({
+                        apiKey: options.openai.apiKey,
+                    }),
+                },
+            };
+        }
         return this;
     }
 
@@ -1447,6 +1469,7 @@ export class ServerBuilder implements SubscriptionLike {
                 isCollaborative: false,
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 ab1BootstrapUrl: null,
             },
@@ -1611,6 +1634,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             metrics: this._metricsStore,
             messenger: this._notificationMessenger,
+            privo: this._privoClient ?? null,
         });
         this._policyController = new PolicyController(
             this._authController,

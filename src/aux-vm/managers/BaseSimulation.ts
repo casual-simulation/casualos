@@ -1,3 +1,24 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    StoredAux,
+    PartitionAuthMessage,
+} from '@casual-simulation/aux-common';
 import {
     botRemoved,
     parseSimulationId,
@@ -5,23 +26,23 @@ import {
     BotIndex,
     AuxPartitionConfig,
     LocalActions,
-    StoredAux,
     ConnectionIndicator,
-    PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject, SubscriptionLike } from 'rxjs';
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
-import { AuxVM } from '../vm/AuxVM';
+import type { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
-import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import { DeviceAction } from '@casual-simulation/aux-common';
-import { Simulation, SimulationOrigin } from './Simulation';
+import type { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
+import type { DeviceAction } from '@casual-simulation/aux-common';
+import type { Simulation } from './Simulation';
+import { SimulationOrigin } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.

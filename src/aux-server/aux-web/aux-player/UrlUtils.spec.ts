@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { getInstParameters, getPermalink } from './UrlUtils';
 
 describe('getInstParameters()', () => {
@@ -89,6 +106,32 @@ describe('getInstParameters()', () => {
 
     it('should prefer static insts', () => {
         const params = getInstParameters({ inst: 'abc', staticInst: 'test' });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: null,
+            owner: null,
+            isStatic: true,
+        });
+    });
+
+    it('should not support deleting insts (with inst=)', () => {
+        const params = getInstParameters({
+            bios: 'delete inst',
+            inst: 'test',
+        });
+        expect(params).toEqual({
+            inst: 'test',
+            recordName: null,
+            owner: null,
+            isStatic: false,
+        });
+    });
+
+    it('should not support deleting insts (with staticInst=)', () => {
+        const params = getInstParameters({
+            bios: 'delete inst',
+            staticInst: 'test',
+        });
         expect(params).toEqual({
             inst: 'test',
             recordName: null,

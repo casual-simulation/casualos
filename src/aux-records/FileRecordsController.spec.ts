@@ -1,9 +1,25 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { RecordsStore } from './RecordsStore';
-import { RecordsController } from './RecordsController';
-import {
+import type { RecordsController } from './RecordsController';
+import type {
     EraseFileFailure,
     EraseFileSuccess,
-    FileRecordsController,
     ListedFile,
     ReadFileFailure,
     ReadFileSuccess,
@@ -11,12 +27,13 @@ import {
     RecordFileSuccess,
     UpdateFileRecordSuccess,
 } from './FileRecordsController';
-import {
-    FileRecordsStore,
+import { FileRecordsController } from './FileRecordsController';
+import type {
     GetFileRecordSuccess,
     UpdateFileFailure,
 } from './FileRecordsStore';
-import { PolicyController } from './PolicyController';
+import { FileRecordsStore } from './FileRecordsStore';
+import type { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
@@ -28,7 +45,7 @@ import {
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import { sortBy } from 'lodash';
-import { MemoryStore } from './MemoryStore';
+import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
 console.log = jest.fn();

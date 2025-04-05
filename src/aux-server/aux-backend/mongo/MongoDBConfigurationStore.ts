@@ -1,21 +1,36 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     ConfigurationStore,
-    MODERATION_CONFIG_KEY,
     MemoryConfiguration,
+} from '@casual-simulation/aux-records';
+import {
+    MODERATION_CONFIG_KEY,
     PRIVO_CONFIG_KEY,
     SUBSCRIPTIONS_CONFIG_KEY,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
-import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
-import {
-    PrivoConfiguration,
-    parsePrivoConfiguration,
-} from '@casual-simulation/aux-records/PrivoConfiguration';
-import { Collection } from 'mongodb';
-import {
-    ModerationConfiguration,
-    parseModerationConfiguration,
-} from '@casual-simulation/aux-records/ModerationConfiguration';
+import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import { parsePrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
+import type { Collection } from 'mongodb';
+import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
+import { parseModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 
 export class MongoDBConfigurationStore implements ConfigurationStore {
     private _defaultConfiguration: MemoryConfiguration;

@@ -1,4 +1,21 @@
-import Vue from 'vue';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type Vue from 'vue';
 import {
     Vector2,
     Vector3,
@@ -7,11 +24,12 @@ import {
     Matrix4,
 } from '@casual-simulation/three';
 import { find, some } from 'lodash';
-import { Viewport } from './Viewport';
-import { Game } from './Game';
-import { Subscription, Observable, Subject } from 'rxjs';
+import type { Viewport } from './Viewport';
+import type { Game } from './Game';
+import type { Observable } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     XRInputSource,
     XRInputSourceEvent,
     XRInputSourcesChangeEvent,
@@ -19,9 +37,9 @@ import {
     XRSession,
     XRFrame,
     XRHandJoint,
-    XRJointPose,
     XRHandedness,
 } from './xr/WebXRTypes';
+import { XRJointPose } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
@@ -377,7 +395,7 @@ export class Input {
         const browser = Bowser.getParser(navigator.userAgent);
 
         // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
-        const isOculusBrowser = browser.test(/OculusBrowser\/[\d\.]+/);
+        const isOculusBrowser = browser.test(/OculusBrowser\/[\d.]+/);
         const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
         const isSafariBrowser = browser.getBrowserName(true) === 'safari';
 
@@ -2462,7 +2480,7 @@ export class Input {
         event.stopPropagation();
     }
 
-    private _bind(func: Function): any {
+    private _bind(func: (event: Event) => any): (event: any) => any {
         return (event: any) => {
             if (this.events.has(event) || event.__ignoreForInput) {
                 return;

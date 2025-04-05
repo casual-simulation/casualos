@@ -1,10 +1,30 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import {
+import type {
     Bot,
-    hasValue,
     BotTags,
+    FocusOnBotAction,
+} from '@casual-simulation/aux-common';
+import {
+    hasValue,
     ON_SHEET_TAG_CLICK,
     ON_SHEET_BOT_ID_CLICK,
     ON_SHEET_BOT_CLICK,
@@ -15,20 +35,20 @@ import {
     onClickArg,
     getPortalTag,
     createBotLink,
-    FocusOnBotAction,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     BotManager,
     BrowserSimulation,
-    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import BotTable, { TableBot } from '../BotTable/BotTable';
+import type { TableBot } from '../BotTable/BotTable';
+import BotTable from '../BotTable/BotTable';
 import { Subscription, SubscriptionLike } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SheetPortalConfig } from './SheetPortalConfig';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 
 interface SheetState {

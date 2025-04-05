@@ -1,8 +1,25 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
-import {
+import type {
     AuthHelperInterface,
     LoginUIAddressStatus,
 } from '@casual-simulation/aux-vm';
@@ -10,13 +27,12 @@ import {
     cleanPhoneNumber,
     mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
-import {
-    ADDRESS_FIELD,
+import type {
     CompleteWebAuthnLoginResult,
     FormError,
     RequestWebAuthnLoginResult,
-    getFormErrors,
 } from '@casual-simulation/aux-records';
+import { ADDRESS_FIELD, getFormErrors } from '@casual-simulation/aux-records';
 import { Prop, Watch } from 'vue-property-decorator';
 import FieldErrors from '../FieldErrors/FieldErrors';
 import {
@@ -24,7 +40,7 @@ import {
     startAuthentication,
     WebAuthnAbortService,
 } from '@simplewebauthn/browser';
-import { AuthenticationResponseJSON } from '@simplewebauthn/types';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/types';
 import Bowser from 'bowser';
 
 @Component({
@@ -95,6 +111,10 @@ export default class EnterAddressDialog extends Vue {
 
     get codeOfConductUrl() {
         return this.status.codeOfConductUrl;
+    }
+
+    get supportUrl() {
+        return this.status.supportUrl;
     }
 
     get formErrors() {
@@ -199,6 +219,7 @@ export default class EnterAddressDialog extends Vue {
                 console.log('Success!');
             } else {
                 if (result.errorCode === 'aborted') {
+                    /* empty */
                 } else if (result.errorCode === 'invalid_origin') {
                     console.error(
                         '[EnterAddressDialog] Unable to use WebAuthn:',

@@ -1,8 +1,39 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    Object3D,
+    BufferGeometry,
+    Material,
+    Sprite,
+    Camera,
+    Sphere,
+    Group,
+    LineSegments as ThreeLineSegments,
+    LineBasicMaterial,
+    Intersection,
+    Float32BufferAttribute,
+    Texture,
+    SpotLight,
+} from '@casual-simulation/three';
 import {
     Vector3,
     SphereBufferGeometry,
     Mesh,
-    Object3D,
     Scene,
     Matrix4,
     Box2,
@@ -10,9 +41,7 @@ import {
     Box3,
     Layers,
     BoxBufferGeometry,
-    BufferGeometry,
     BufferAttribute,
-    Material,
     ConeGeometry,
     DoubleSide,
     AmbientLight,
@@ -20,25 +49,16 @@ import {
     MathUtils as ThreeMath,
     Euler,
     SpriteMaterial,
-    Sprite,
     PlaneBufferGeometry,
     Color,
     MeshStandardMaterial,
     Ray,
     Quaternion,
     MeshBasicMaterial,
-    Camera,
-    Sphere,
     PerspectiveCamera,
-    Group,
-    LineSegments as ThreeLineSegments,
-    LineBasicMaterial,
     MeshToonMaterial,
-    Intersection,
     CircleBufferGeometry,
-    Float32BufferAttribute,
     MeshNormalMaterial,
-    Texture,
     Cache,
     PointLight,
     WebGLRenderer,
@@ -47,21 +67,22 @@ import {
     SphereGeometry,
     CameraHelper,
     Light,
-    SpotLight,
     HemisphereLight,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
-import {
+import type {
     BotCalculationContext,
     Bot,
     BotLabelAnchor,
+} from '@casual-simulation/aux-common';
+import {
     getBotScale,
     getBotTransformer,
     CameraType,
     clamp,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { BackSide, PCFShadowMap } from 'three';
 
 /**
@@ -1303,6 +1324,7 @@ export function getThreeJSQuaternionFromBotRotation(rotation: {
     w?: number;
 }) {
     if ('w' in rotation) {
+        /* empty */
     } else {
         return new Quaternion().setFromEuler(
             new Euler(rotation.x, rotation.z, rotation.y, 'XYZ')

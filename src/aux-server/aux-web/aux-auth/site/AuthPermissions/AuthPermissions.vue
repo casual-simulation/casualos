@@ -17,21 +17,22 @@
             >
             </md-table-empty-state>
 
-            <md-table-row slot="md-table-row" slot-scope="{ item }">
-                <md-table-cell md-label="ID" md-sort-by="id">{{ item.id }}</md-table-cell>
-                <md-table-cell md-label="Resource Kind" md-sort-by="resourceKind">{{
-                    item.resourceKind || '(any resource kind)'
-                }}</md-table-cell>
-                <md-table-cell md-label="Action" md-sort-by="action">{{
-                    item.action || '(any action)'
-                }}</md-table-cell>
-                <md-table-cell md-label="Subject Type" md-sort-by="subjectType">{{
-                    item.subjectType
-                }}</md-table-cell>
-                <md-table-cell md-label="Subject ID" md-sort-by="subjectId">{{
-                    item.subjectId
-                }}</md-table-cell>
-                <!-- <md-table-cell md-label="Options">
+            <template v-slot:md-table-row="{ item }">
+                <md-table-row>
+                    <md-table-cell md-label="ID" md-sort-by="id">{{ item.id }}</md-table-cell>
+                    <md-table-cell md-label="Resource Kind" md-sort-by="resourceKind">{{
+                        item.resourceKind || '(any resource kind)'
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Action" md-sort-by="action">{{
+                        item.action || '(any action)'
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Subject Type" md-sort-by="subjectType">{{
+                        item.subjectType
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Subject ID" md-sort-by="subjectId">{{
+                        item.subjectId
+                    }}</md-table-cell>
+                    <!-- <md-table-cell md-label="Options">
                     <md-menu md-align-trigger>
                         <md-button md-menu-trigger class="md-icon-button">
                             <md-icon>more_vert</md-icon>
@@ -43,7 +44,8 @@
                         </md-menu-content>
                     </md-menu>
                 </md-table-cell> -->
-            </md-table-row>
+                </md-table-row>
+            </template>
         </md-table>
 
         <md-table
@@ -63,21 +65,22 @@
             >
             </md-table-empty-state>
 
-            <md-table-row slot="md-table-row" slot-scope="{ item }">
-                <md-table-cell md-label="ID" md-sort-by="id">{{ item.id }}</md-table-cell>
-                <md-table-cell md-label="Resource Kind" md-sort-by="resourceKind">{{
-                    item.resourceKind || '(any resource kind)'
-                }}</md-table-cell>
-                <md-table-cell md-label="Action" md-sort-by="action">{{
-                    item.action || '(any action)'
-                }}</md-table-cell>
-                <md-table-cell md-label="Subject Type" md-sort-by="subjectType">{{
-                    item.subjectType
-                }}</md-table-cell>
-                <md-table-cell md-label="Subject ID" md-sort-by="subjectId">{{
-                    item.subjectId
-                }}</md-table-cell>
-                <!-- <md-table-cell md-label="Options">
+            <template v-slot:md-table-row="{ item }">
+                <md-table-row>
+                    <md-table-cell md-label="ID" md-sort-by="id">{{ item.id }}</md-table-cell>
+                    <md-table-cell md-label="Resource Kind" md-sort-by="resourceKind">{{
+                        item.resourceKind || '(any resource kind)'
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Action" md-sort-by="action">{{
+                        item.action || '(any action)'
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Subject Type" md-sort-by="subjectType">{{
+                        item.subjectType
+                    }}</md-table-cell>
+                    <md-table-cell md-label="Subject ID" md-sort-by="subjectId">{{
+                        item.subjectId
+                    }}</md-table-cell>
+                    <!-- <md-table-cell md-label="Options">
                     <md-menu md-align-trigger>
                         <md-button md-menu-trigger class="md-icon-button">
                             <md-icon>more_vert</md-icon>
@@ -89,7 +92,8 @@
                         </md-menu-content>
                     </md-menu>
                 </md-table-cell> -->
-            </md-table-row>
+                </md-table-row>
+            </template>
         </md-table>
     </div>
 </template>

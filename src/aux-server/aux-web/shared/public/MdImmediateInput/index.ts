@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import type Vue from 'vue';
 import MdImmediateInput from './MdImmediateInput.vue';
 
 export default (vue: typeof Vue) => {

@@ -1,18 +1,37 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import * as Http from 'http';
 import * as Https from 'https';
-import express, { Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import cors from 'cors';
 import { Binary } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { Config, DRIVES_URL } from './config';
-import {
-    hasValue,
+import type { Config } from './config';
+import { DRIVES_URL } from './config';
+import type {
     GenericHttpHeaders,
     GenericHttpRequest,
 } from '@casual-simulation/aux-common';
-import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import { hasValue } from '@casual-simulation/aux-common';
+import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import compression from 'compression';
 import { ServerBuilder } from '../shared/ServerBuilder';
 import { getStatusCode } from '@casual-simulation/aux-common';

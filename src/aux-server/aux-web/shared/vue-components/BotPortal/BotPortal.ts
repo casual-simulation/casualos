@@ -1,19 +1,34 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import type { PrecalculatedBot } from '@casual-simulation/aux-common';
 import {
     hasValue,
-    PrecalculatedBot,
     calculateStringTagValue,
     calculateMeetPortalAnchorPointOffset,
-    BOT_PORTAL
+    BOT_PORTAL,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    BrowserSimulation,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { BotPortalConfig } from './BotPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
@@ -29,7 +44,7 @@ export default class BotPortal extends Vue {
     private _currentSim: BrowserSimulation;
 
     currentBot: string = null;
-    extraStyle: Object = {};
+    extraStyle: object = {};
 
     get hasPortal(): boolean {
         return hasValue(this.currentBot);
@@ -153,7 +168,10 @@ export default class BotPortal extends Vue {
             const bot = sim.helper.botsState[botId];
             if (bot) {
                 const { id, tags, space } = bot;
-                this.currentBot = stableStringify({ id, tags, space}, { space: 2 })
+                this.currentBot = stableStringify(
+                    { id, tags, space },
+                    { space: 2 }
+                );
             } else {
                 this.currentBot = null;
             }
@@ -163,7 +181,6 @@ export default class BotPortal extends Vue {
         this._updateConfig();
     }
 
-    
     private _resize(): any {
         if (!this.portalElement || !this.othersElement) {
             return;
@@ -245,7 +262,7 @@ export default class BotPortal extends Vue {
         if (this._currentConfig) {
             this.extraStyle = this._currentConfig.style;
             this._resize();
-        } else {;
+        } else {
             this.extraStyle =
                 calculateMeetPortalAnchorPointOffset('fullscreen');
         }

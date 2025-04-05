@@ -18,6 +18,7 @@ import z from 'zod';
 import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats.mjs';
 
@@ -177,6 +178,7 @@ export default defineConfig(({ command, mode }) => {
                 !!(config && !!config.subscriptions)
             ),
             USE_PRIVO_LOGIN: JSON.stringify(!!(config && config.privo)),
+            SUPPORT_URL: JSON.stringify(process.env.SUPPORT_URL || null),
         },
         publicDir,
         resolve: {

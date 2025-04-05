@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { getHashBuffer } from '@casual-simulation/crypto';
 import { padZero, byteToHex } from '../SharedUtils';
 
@@ -95,7 +112,7 @@ export function invertColor(hex: string, useBlackAndWhite?: boolean): string {
     if (hex.length !== 6) {
         throw new Error('Invalid HEX color.');
     }
-    var r = parseInt(hex.slice(0, 2), 16),
+    let r = parseInt(hex.slice(0, 2), 16),
         g = parseInt(hex.slice(2, 4), 16),
         b = parseInt(hex.slice(4, 6), 16);
     if (useBlackAndWhite) {
@@ -144,7 +161,7 @@ export class ColorConvert {
      * @return  A valid rgba CSS color string
      */
     toRgba(color: string) {
-        var a = this.toRgbaArray(color);
+        let a = this.toRgbaArray(color);
         return (
             'rgba(' + a[0] + ',' + a[1] + ',' + a[2] + ',' + a[3] / 255 + ')'
         );
@@ -162,10 +179,10 @@ export class ColorConvert {
      * @return  A valid rgba CSS color string
      */
     toHex(color: string) {
-        var a = this.toRgbaArray(color);
+        let a = this.toRgbaArray(color);
         // Sigh, you can't map() typed arrays
-        var hex = [0, 1, 2]
-            .map(function(i) {
+        let hex = [0, 1, 2]
+            .map(function (i) {
                 return byteToHex(a[i]);
             })
             .join('');

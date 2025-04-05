@@ -1,57 +1,71 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     OtherPlayersClientPartitionConfig,
     OtherPlayersRepoPartitionConfig,
     PartitionConfig,
 } from './AuxPartitionConfig';
-import {
+import type {
     OtherPlayersPartition,
     AuxPartitionRealtimeStrategy,
     AuxPartition,
 } from './AuxPartition';
-import {
+import type {
     BotsState,
-    getActiveObjects,
     UpdatedBot,
     Bot,
     BotAction,
+    GetRemotesAction,
+    StateUpdatedEvent,
+    PrecalculatedBotsState,
+    PartialBotsState,
+} from '../bots';
+import {
+    getActiveObjects,
     breakIntoIndividualEvents,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    GetRemotesAction,
     asyncResult,
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
-    StateUpdatedEvent,
     stateUpdatedEvent,
     applyUpdates,
-    PrecalculatedBotsState,
     isBot,
-    PartialBotsState,
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
-import {
-    BehaviorSubject,
-    Observable,
-    Subject,
-    Subscription,
-    firstValueFrom,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, first, skip, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
-import { InstRecordsClient } from '../websockets';
-import {
+import type { InstRecordsClient } from '../websockets';
+import type {
     Action,
     ConnectionInfo,
     CurrentVersion,
     RemoteActions,
     StatusUpdate,
-    getConnectionId,
 } from '../common';
-import { PartitionAuthSource } from './PartitionAuthSource';
+import { getConnectionId } from '../common';
+import type { PartitionAuthSource } from './PartitionAuthSource';
 
 export async function createOtherPlayersClientPartition(
     config: PartitionConfig,
