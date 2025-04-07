@@ -867,13 +867,17 @@ export class AppManager {
                 });
                 console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
+            },
+        });
 
+        this.loadingProgress.subscribe((p) => {
+            if (p.done) {
                 if (!this._updateServiceWorker) {
                     setTimeout(() => {
                         this.initOffline();
                     }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
                 }
-            },
+            }
         });
 
         return sim;
