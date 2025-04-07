@@ -15,6 +15,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { CoordinateTransformer } from './../CoordinateSystem';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import type {
@@ -281,24 +299,85 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 const objWorld = new Vector3();
                 this._rotationObj.getWorldPosition(objWorld);
-                const direction = new CasualVector3(
-                    objWorld.x,
-                    objWorld.y,
-                    objWorld.z
-                ).subtract(
-                    new CasualVector3(
-                        cameraWorld.x,
-                        cameraWorld.y,
-                        cameraWorld.z
-                    )
+
+                let direction: CasualVector3;
+                let upVector: CasualVector3;
+
+                const transformer = getBotTransformer(calc, this.bot3D.bot);
+                const currentGridPos = getBotPosition(
+                    calc,
+                    this.bot3D.bot,
+                    this.bot3D.dimension
                 );
-                const lookRotation = new Rotation({
-                    direction: direction,
-                    upwards: new CasualVector3(
+                const coordinateTransform =
+                    this.bot3D.coordinateTransformer && !hasValue(transformer)
+                        ? this.bot3D.coordinateTransformer(currentGridPos)
+                        : null;
+
+                if (
+                    this._orientationMode === 'billboardTop' &&
+                    coordinateTransform
+                ) {
+                    const globeCenter = new Vector3(0, 0, 0);
+                    const globalDirection = new Vector3().subVectors(
+                        objWorld,
+                        globeCenter
+                    );
+
+                    const invTransform = new Matrix4()
+                        .copy(coordinateTransform)
+                        .invert();
+                    const localDirection = globalDirection
+                        .clone()
+                        .applyMatrix4(invTransform);
+
+                    const adjustedGlobalDirection =
+                        localDirection.applyMatrix4(coordinateTransform);
+
+                    direction = new CasualVector3(
+                        -adjustedGlobalDirection.x,
+                        -adjustedGlobalDirection.y,
+                        -adjustedGlobalDirection.z
+                    );
+
+                    const cameraViewDir = new Vector3()
+                        .subVectors(objWorld, cameraWorld)
+                        .normalize();
+
+                    const rightVector = new Vector3()
+                        .crossVectors(cameraViewDir, adjustedGlobalDirection)
+                        .normalize();
+                    const properUp = new Vector3()
+                        .crossVectors(adjustedGlobalDirection, rightVector)
+                        .normalize();
+
+                    upVector = new CasualVector3(
+                        properUp.x,
+                        properUp.y,
+                        properUp.z
+                    );
+                } else {
+                    direction = new CasualVector3(
+                        objWorld.x,
+                        objWorld.y,
+                        objWorld.z
+                    ).subtract(
+                        new CasualVector3(
+                            cameraWorld.x,
+                            cameraWorld.y,
+                            cameraWorld.z
+                        )
+                    );
+
+                    upVector = new CasualVector3(
                         this._rotationObj.up.x,
                         this._rotationObj.up.y,
                         this._rotationObj.up.z
-                    ),
+                    );
+                }
+                const lookRotation = new Rotation({
+                    direction: direction,
+                    upwards: upVector,
                     errorHandling: 'nudge',
                 });
 
@@ -328,13 +407,15 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 update = true;
                 if (this._orientationMode === 'billboardTop') {
-                    const euler = new Euler().setFromQuaternion(
-                        this._rotationObj.quaternion,
-                        'ZXY'
-                    );
-                    euler.x = ThreeMath.degToRad(90);
-                    euler.y = 0;
-                    this._rotationObj.setRotationFromEuler(euler);
+                    if (!coordinateTransform) {
+                        const euler = new Euler().setFromQuaternion(
+                            this._rotationObj.quaternion,
+                            'ZXY'
+                        );
+                        euler.x = ThreeMath.degToRad(45);
+                        euler.y = 0;
+                        this._rotationObj.setRotationFromEuler(euler);
+                    }
                 } else if (this._orientationMode === 'billboardFront') {
                     const euler = new Euler().setFromQuaternion(
                         this._rotationObj.quaternion,
