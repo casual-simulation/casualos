@@ -39,10 +39,11 @@ import undom, {
 } from '@casual-simulation/undom';
 import { render } from 'preact';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { first, map } from 'rxjs/operators';
+import { bufferTime, first, map } from 'rxjs/operators';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import {
     ELEMENT_NODE,
+    ELEMENT_READ_ONLY_PROPERTIES,
     ELEMENT_SPECIFIC_PROPERTIES,
     NODE_REFERENCE_PROPERTIES,
     TARGET_INPUT_PROPERTIES,
@@ -102,9 +103,39 @@ if (typeof Element !== 'undefined') {
             ...arguments
         );
     };
+
+    // Technically a hack
+    // This is a workaround for the fact that the value property of an input element
+    // is not an attribute, but MutationObserver is only able to observe attribute changes.
+    // This means that Custom Apps aren't able to track value changes
+    // when DOM is used when the value is set via the API.
+    // This might break cases where code expects the value and attribute to be separate, but in practice
+    // this is probably a much more rare case than the opposite.
+    const classes = [HTMLInputElement, HTMLTextAreaElement];
+    for (let C of classes) {
+        const TargetClass = C;
+        const oldDescriptor = Object.getOwnPropertyDescriptor(
+            TargetClass.prototype,
+            'value'
+        );
+        Object.defineProperty(TargetClass.prototype, 'value', {
+            get: function (this: typeof TargetClass) {
+                // eslint-disable-next-line prefer-rest-params
+                return oldDescriptor.get.apply(this, arguments);
+            },
+            set: function (this: typeof TargetClass, value: string) {
+                // eslint-disable-next-line prefer-rest-params
+                oldDescriptor.set.apply(this, arguments);
+                if (this instanceof TargetClass) {
+                    this.setAttribute('value', value);
+                }
+            },
+        });
+    }
 }
 
 let globalIdCounter = 0;
+let registeredMethodHandlers = false;
 
 /**
  * Defines a class that is used to communicate HTML changes for a custom html portal.
@@ -120,7 +151,6 @@ export class HtmlAppBackend implements AppBackend {
     private _instanceId: string;
     private _document: Document;
     private _body: Node;
-    private _usingBrowserDocument: boolean;
     private _mutationObserver: MutationObserver;
     private _nodes: Map<string, RootNode | Node> = new Map<
         string,
@@ -177,6 +207,10 @@ export class HtmlAppBackend implements AppBackend {
         return this._document;
     }
 
+    get usingBrowserDocument() {
+        return isBrowserDocument();
+    }
+
     constructor(
         appId: string,
         botId: string,
@@ -217,7 +251,7 @@ export class HtmlAppBackend implements AppBackend {
                 if (event.appId === this.appId) {
                     let target = this._getNode(event.event.target);
                     if (target && target.dispatchEvent) {
-                        let finalEvent = this._usingBrowserDocument
+                        let finalEvent = this.usingBrowserDocument
                             ? new Event(event.event.type, {
                                   bubbles: true,
                                   cancelable: event.event.cancelable,
@@ -244,8 +278,26 @@ export class HtmlAppBackend implements AppBackend {
                                 for (let prop of propList) {
                                     let eventPropName = `_target${prop}`;
                                     if (eventPropName in event.event) {
-                                        (<any>target)[prop] =
-                                            event.event[eventPropName];
+                                        if (
+                                            ELEMENT_READ_ONLY_PROPERTIES.has(
+                                                prop
+                                            )
+                                        ) {
+                                            Object.defineProperty(
+                                                target,
+                                                prop,
+                                                {
+                                                    writable: false,
+                                                    value: event.event[
+                                                        eventPropName
+                                                    ],
+                                                    configurable: true,
+                                                }
+                                            );
+                                        } else {
+                                            (<any>target)[prop] =
+                                                event.event[eventPropName];
+                                        }
                                     }
                                 }
                             }
@@ -284,7 +336,7 @@ export class HtmlAppBackend implements AppBackend {
         // implementation
         let prevDocument = globalThis.document;
         try {
-            if (!this._usingBrowserDocument) {
+            if (!this.usingBrowserDocument) {
                 globalThis.document = this._document;
             }
             if (this._document) {
@@ -293,7 +345,7 @@ export class HtmlAppBackend implements AppBackend {
         } catch (err) {
             console.error(err);
         } finally {
-            if (!this._usingBrowserDocument) {
+            if (!this.usingBrowserDocument) {
                 globalThis.document = prevDocument;
             }
         }
@@ -318,10 +370,9 @@ export class HtmlAppBackend implements AppBackend {
 
     private _setupApp(result: HtmlPortalSetupResult) {
         try {
-            this._usingBrowserDocument = isBrowserDocument();
-            if (this._usingBrowserDocument) {
+            if (this.usingBrowserDocument) {
                 this._document = globalThis.document;
-                this._body = this._document.createElement('div');
+                this._body = this._document.createElement('noscript');
             } else {
                 this._document = undom({
                     builtinEvents: result?.builtinEvents,
@@ -346,34 +397,36 @@ export class HtmlAppBackend implements AppBackend {
                 childList: true,
             });
             this._sub.add(
-                addedEventListeners.subscribe((e) => {
-                    setTimeout(() => {
-                        if ('__id' in e.target) {
-                            this._processMutations([
-                                {
+                addedEventListeners.pipe(bufferTime(10)).subscribe((events) => {
+                    this._processMutations(
+                        events.map(
+                            (e) =>
+                                ({
                                     type: 'event_listener',
-                                    target: e.target,
+                                    // target: e.target,
                                     listenerName: e.type,
                                     listenerDelta: 1,
-                                } as any,
-                            ]);
-                        }
-                    });
+                                } as any)
+                        )
+                    );
                 })
             );
             this._sub.add(
-                removedEventListeners.subscribe((e) => {
-                    if ('__id' in e.target) {
-                        this._processMutations([
-                            {
-                                type: 'event_listener',
-                                target: e.target,
-                                listenerName: e.type,
-                                listenerDelta: -1,
-                            } as any,
-                        ]);
-                    }
-                })
+                removedEventListeners
+                    .pipe(bufferTime(10))
+                    .subscribe((events) => {
+                        this._processMutations(
+                            events.map(
+                                (e) =>
+                                    ({
+                                        type: 'event_listener',
+                                        // target: e.target,
+                                        listenerName: e.type,
+                                        listenerDelta: -1,
+                                    } as any)
+                            )
+                        );
+                    })
             );
 
             this._helper.transaction(
@@ -398,6 +451,13 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     private _registerMethodHandlers(doc: Document) {
+        if (this.usingBrowserDocument) {
+            if (registeredMethodHandlers) {
+                return;
+            }
+            registeredMethodHandlers = true;
+        }
+
         for (let method of BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS) {
             this._registerVoidMethodHandler(doc, 'HTMLElement', method);
         }
@@ -457,17 +517,56 @@ export class HtmlAppBackend implements AppBackend {
         className: string,
         methodName: string
     ) {
-        this._sub.add(
-            registerMethodHandler(
-                doc,
-                className,
-                methodName,
-                (el, method, args) => {
-                    this._emitMethodCall(el, methodName, args);
-                    return undefined;
+        if (this.usingBrowserDocument) {
+            const _class = (doc.defaultView as any)[className];
+            if (!_class) {
+                console.warn(
+                    `[HtmlAppBackend] Class ${className} not found in document`
+                );
+                return;
+            }
+
+            const method = _class.prototype[methodName];
+            if (!method) {
+                console.warn(
+                    `[HtmlAppBackend] Method ${methodName} not found in class ${className}`
+                );
+                return;
+            }
+
+            const _this = this;
+            function newMethod(...args: any[]) {
+                if (this.__id) {
+                    console.log(
+                        `[HtmlAppBackend] Intercepting ${className}.${methodName}`,
+                        args
+                    );
+                    try {
+                        return _this._emitMethodCall(this, methodName, args);
+                    } catch (err) {
+                        console.error(
+                            `[HtmlAppBackend] Error emitting method call ${className}.${methodName}`,
+                            err
+                        );
+                    }
                 }
-            )
-        );
+                return method.apply(this, args);
+            }
+
+            _class.prototype[methodName] = newMethod;
+        } else {
+            this._sub.add(
+                registerMethodHandler(
+                    doc,
+                    className,
+                    methodName,
+                    (el, method, args) => {
+                        this._emitMethodCall(el, methodName, args);
+                        return undefined;
+                    }
+                )
+            );
+        }
     }
 
     private _registerPromiseMethodHandler(
@@ -475,16 +574,21 @@ export class HtmlAppBackend implements AppBackend {
         className: string,
         methodName: string
     ) {
-        this._sub.add(
-            registerMethodHandler(
-                doc,
-                className,
-                methodName,
-                (el, method, args) => {
-                    return this._emitMethodCall(el, methodName, args);
-                }
-            )
-        );
+        if (this.usingBrowserDocument) {
+            // console.warn(`[HtmlAppBackend] Promise method ${className}.${methodName} not fully supported in custom apps when DOM support is enabled.`);
+            this._registerVoidMethodHandler(doc, className, methodName);
+        } else {
+            this._sub.add(
+                registerMethodHandler(
+                    doc,
+                    className,
+                    methodName,
+                    (el, method, args) => {
+                        return this._emitMethodCall(el, methodName, args);
+                    }
+                )
+            );
+        }
     }
 
     private _emitMethodCall(
@@ -532,20 +636,40 @@ export class HtmlAppBackend implements AppBackend {
                 listenerName: (mutation as any).listenerName,
                 listenerDelta: (mutation as any).listenerDelta,
             };
-            for (let prop of this._propReferenceList) {
-                (<any>processedMutation)[prop] = this._makeReference(
-                    (<any>mutation)[prop]
-                );
+            if (mutation.type === 'childList') {
+                for (let prop of this._propReferenceList) {
+                    (<any>processedMutation)[prop] = this._makeReference(
+                        (<any>mutation)[prop]
+                    );
+                }
+            } else {
+                for (let prop of this._propReferenceList) {
+                    delete (<any>processedMutation)[prop];
+                }
+
+                if (mutation.type === 'attributes') {
+                    processedMutation.target = {
+                        __id: this._getNodeId(mutation.target),
+                        attributes: [
+                            {
+                                name: mutation.attributeName,
+                                value: (
+                                    mutation.target as Element
+                                ).getAttribute(mutation.attributeName),
+                            },
+                        ],
+                    } as any;
+                }
             }
             processedMutations.push(processedMutation);
         }
 
-        this._helper.transaction(
-            updateHtmlApp(this.appId, processedMutations as any[])
-        );
+        this._helper.sendEvents([
+            updateHtmlApp(this.appId, processedMutations as any[]),
+        ]);
     }
 
-    private _getNodeId(obj: RootNode) {
+    private _getNodeId(obj: RootNode | Node) {
         let id = (<any>obj).__id;
         if (!id) {
             id = (<any>obj).__id = (this._idCounter++).toString();
