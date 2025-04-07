@@ -451,10 +451,12 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     private _registerMethodHandlers(doc: Document) {
-        if (registeredMethodHandlers) {
-            return;
+        if (this.usingBrowserDocument) {
+            if (registeredMethodHandlers) {
+                return;
+            }
+            registeredMethodHandlers = true;
         }
-        registeredMethodHandlers = true;
 
         for (let method of BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS) {
             this._registerVoidMethodHandler(doc, 'HTMLElement', method);
