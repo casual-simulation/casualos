@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V3.4.1
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed several performance issues with using custom apps when DOM is enabled.
+-   Fixed an issue where the service worker would not be installed when jumping directly into an inst.
+-   Fixed an issue where the gridPortal would not resize to match the window size.
+-   Fixed an issue where an error would occur when calling `os.unregisterApp()` before `os.registerApp()` completes.
+
 ## V3.4.0
 
 #### Date: 4/5/2025
