@@ -18,13 +18,13 @@
                                 ></bot-chat>
                             </div>
                         </md-toolbar>
-                        <div class="vm-iframe-container"></div>
                         <bot-sheet></bot-sheet>
                         <ide-portal></ide-portal>
                         <system-portal></system-portal>
-                        <router-view></router-view>
-                        <!-- <md-content id="app-game-container">
-                        </md-content> -->
+                        <md-content id="app-game-container">
+                            <div class="vm-iframe-container"></div>
+                            <router-view></router-view>
+                        </md-content>
                     </tag-portal>
                 </meet-portal>
             </bot-portal>
