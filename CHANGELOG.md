@@ -1,8 +1,19 @@
 # CasualOS Changelog
 
+## V3.4.1
+
+#### Date: 4/7/2025
+
+### :bug: Bug Fixes
+
+-   Fixed several performance issues with using custom apps when DOM is enabled.
+-   Fixed an issue where the service worker would not be installed when jumping directly into an inst.
+-   Fixed an issue where the gridPortal would not resize to match the window size.
+-   Fixed an issue where an error would occur when calling `os.unregisterApp()` before `os.registerApp()` completes.
+
 ## V3.4.0
 
-#### Date: 4/1/2025
+#### Date: 4/5/2025
 
 ### :boom: Breaking Changes
 
@@ -30,6 +41,10 @@
     -   `request` is an object that contains the details of the request (model, instructions, etc.).
     -   `options` is optional and contains additional options for the records request (endpoint, etc).
     -   See the documentation for more details and examples.
+-   Added the ability to link to a support site by setting the `SUPPORT_LINK` environment variable during build.
+-   Added a custom name input field for new local insts.
+    -   Users can now name a new local inst directly in the BIOS dialog when selecting "new-inst" under static/local inst options.
+    -   If no name is provided, a randomly generated name (e.g., testy-brown-quail) will still be used.
 
 ### :bug: Bug Fixes
 
@@ -39,6 +54,7 @@
 -   Fixed an issue where custom HTML apps would sometimes throw lots of errors.
 -   Fixed an issue where predefined `bios` values in URLs (e.g., `?bios=free`) are now preserved during authentication. Users no longer encounter the BIOS selection screen unnecessarily after signing in.
 -   Fixed an issue in the documentation where links to tags and actions were completely broken.
+-   Fixed an issue where the `value` property on `textarea` HTML elements wouldn't work properly.
 
 ## V3.3.15
 

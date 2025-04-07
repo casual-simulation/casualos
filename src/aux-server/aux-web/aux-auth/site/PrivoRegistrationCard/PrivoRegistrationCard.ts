@@ -51,6 +51,10 @@ export default class PrivoRegistrationCard extends Vue {
 
     processing: boolean = false;
 
+    get supportUrl() {
+        return authManager.supportUrl;
+    }
+
     get emailFieldClass() {
         const hasEmailError = this.errors.some((e) => e.for === EMAIL_FIELD);
         return hasEmailError ? 'md-invalid' : '';

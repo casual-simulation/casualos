@@ -193,6 +193,7 @@ Use the following environment variables to configure infrastructure-related opti
 -   `CHILDREN_PRIVACY_POLICY`: The Markdown of the children's privacy policy that the sites should use.
 -   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 -   `CODE_OF_CONDUCT`: The Markdown of the code of conduct that the sites should use.
+-   `SUPPORT_LINK`: The URL to the support website. If not provided, then no support URLs will be provided.
 
 #### Webhooks
 

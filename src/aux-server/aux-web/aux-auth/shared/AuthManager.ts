@@ -146,6 +146,8 @@ console.log(`[AuthManager] Use Privo Login: ${USE_PRIVO_LOGIN}`);
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
+declare let SUPPORT_URL: string;
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
@@ -180,6 +182,10 @@ export class AuthManager {
         this._usePrivoLogin = USE_PRIVO_LOGIN;
         this._client = createRecordsClient(this.apiEndpoint);
         this._updateClientSessionKey();
+    }
+
+    get supportUrl() {
+        return SUPPORT_URL;
     }
 
     get userId() {

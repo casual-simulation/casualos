@@ -39,7 +39,14 @@
             class="account-info-dialog"
             @md-closed="closeAccountInfo()"
         >
-            <md-dialog-title>Account Info</md-dialog-title>
+            <md-dialog-title class="show-account-info-title">
+                <span>Account Info</span>
+                <span class="spacer"></span>
+                <a v-if="supportUrl" target="_blank" :href="supportUrl">
+                    <md-icon>help</md-icon>
+                    <md-tooltip md-direction="bottom">Support</md-tooltip>
+                </a>
+            </md-dialog-title>
             <md-dialog-content v-if="loginStatus && loginStatus.authData">
                 <div>
                     <div class="avatar">
@@ -127,4 +134,4 @@
     </div>
 </template>
 <script src="./AuthUI.ts"></script>
-<style src="./AuthUI.css"></style>
+<style src="./AuthUI.css" scoped></style>
