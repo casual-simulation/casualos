@@ -39,7 +39,7 @@ import undom, {
 } from '@casual-simulation/undom';
 import { render } from 'preact';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { first, map } from 'rxjs/operators';
+import { bufferTime, first, map } from 'rxjs/operators';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import {
     ELEMENT_NODE,
@@ -375,34 +375,36 @@ export class HtmlAppBackend implements AppBackend {
                 childList: true,
             });
             this._sub.add(
-                addedEventListeners.subscribe((e) => {
-                    setTimeout(() => {
-                        if ('__id' in e.target) {
-                            this._processMutations([
-                                {
+                addedEventListeners.pipe(bufferTime(10)).subscribe((events) => {
+                    this._processMutations(
+                        events.map(
+                            (e) =>
+                                ({
                                     type: 'event_listener',
-                                    target: e.target,
+                                    // target: e.target,
                                     listenerName: e.type,
                                     listenerDelta: 1,
-                                } as any,
-                            ]);
-                        }
-                    });
+                                } as any)
+                        )
+                    );
                 })
             );
             this._sub.add(
-                removedEventListeners.subscribe((e) => {
-                    if ('__id' in e.target) {
-                        this._processMutations([
-                            {
-                                type: 'event_listener',
-                                target: e.target,
-                                listenerName: e.type,
-                                listenerDelta: -1,
-                            } as any,
-                        ]);
-                    }
-                })
+                removedEventListeners
+                    .pipe(bufferTime(10))
+                    .subscribe((events) => {
+                        this._processMutations(
+                            events.map(
+                                (e) =>
+                                    ({
+                                        type: 'event_listener',
+                                        // target: e.target,
+                                        listenerName: e.type,
+                                        listenerDelta: -1,
+                                    } as any)
+                            )
+                        );
+                    })
             );
 
             this._helper.transaction(
@@ -569,9 +571,9 @@ export class HtmlAppBackend implements AppBackend {
             processedMutations.push(processedMutation);
         }
 
-        this._helper.transaction(
-            updateHtmlApp(this.appId, processedMutations as any[])
-        );
+        this._helper.sendEvents([
+            updateHtmlApp(this.appId, processedMutations as any[]),
+        ]);
     }
 
     private _getNodeId(obj: RootNode) {
