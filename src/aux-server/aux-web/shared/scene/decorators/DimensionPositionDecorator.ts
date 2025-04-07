@@ -15,24 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { CoordinateTransformer } from './../CoordinateSystem';
-/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
- *
- * Copyright (c) 2019-2025 Casual Simulation, Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import type {
@@ -270,7 +252,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         } else {
             let update = false;
             if (
-                ['billboard', 'billboardTop', 'billboardFront'].indexOf(
+                ['billboard', 'billboardFront', 'billboardTop'].indexOf(
                     this._orientationMode
                 ) >= 0
             ) {
@@ -315,10 +297,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         : null;
 
                 if (
-                    this._orientationMode === 'billboardTop' &&
+                    this._orientationMode === 'billboardFront' &&
                     coordinateTransform
                 ) {
                     const globeCenter = new Vector3(0, 0, 0);
+
                     const globalDirection = new Vector3().subVectors(
                         objWorld,
                         globeCenter
@@ -395,7 +378,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 );
                 this._rotationObj.quaternion.premultiply(parentRotationWorld);
 
-                if (this._orientationMode !== 'billboardFront') {
+                if (this._orientationMode !== 'billboardTop') {
                     // Rotate the object 90 degrees around its X axis
                     // so that the top of the bot is facing the camera.
                     const rotationOffset = new Quaternion().setFromAxisAngle(
@@ -406,7 +389,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 }
 
                 update = true;
-                if (this._orientationMode === 'billboardTop') {
+                if (this._orientationMode === 'billboardFront') {
                     if (!coordinateTransform) {
                         const euler = new Euler().setFromQuaternion(
                             this._rotationObj.quaternion,
@@ -416,7 +399,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         euler.y = 0;
                         this._rotationObj.setRotationFromEuler(euler);
                     }
-                } else if (this._orientationMode === 'billboardFront') {
+                } else if (this._orientationMode === 'billboardTop') {
                     const euler = new Euler().setFromQuaternion(
                         this._rotationObj.quaternion,
                         'ZXY'
