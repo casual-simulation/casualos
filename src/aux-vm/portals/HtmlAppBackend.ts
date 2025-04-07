@@ -565,10 +565,30 @@ export class HtmlAppBackend implements AppBackend {
                 listenerName: (mutation as any).listenerName,
                 listenerDelta: (mutation as any).listenerDelta,
             };
-            for (let prop of this._propReferenceList) {
-                (<any>processedMutation)[prop] = this._makeReference(
-                    (<any>mutation)[prop]
-                );
+            if (mutation.type === 'childList') {
+                for (let prop of this._propReferenceList) {
+                    (<any>processedMutation)[prop] = this._makeReference(
+                        (<any>mutation)[prop]
+                    );
+                }
+            } else {
+                for (let prop of this._propReferenceList) {
+                    delete (<any>processedMutation)[prop];
+                }
+
+                if (mutation.type === 'attributes') {
+                    processedMutation.target = {
+                        __id: this._getNodeId(mutation.target),
+                        attributes: [
+                            {
+                                name: mutation.attributeName,
+                                value: (
+                                    mutation.target as Element
+                                ).getAttribute(mutation.attributeName),
+                            },
+                        ],
+                    } as any;
+                }
             }
             processedMutations.push(processedMutation);
         }
@@ -578,7 +598,7 @@ export class HtmlAppBackend implements AppBackend {
         ]);
     }
 
-    private _getNodeId(obj: RootNode) {
+    private _getNodeId(obj: RootNode | Node) {
         let id = (<any>obj).__id;
         if (!id) {
             id = (<any>obj).__id = (this._idCounter++).toString();
