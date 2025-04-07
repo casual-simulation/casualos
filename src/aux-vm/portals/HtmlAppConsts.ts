@@ -39,6 +39,18 @@ export const ELEMENT_SPECIFIC_PROPERTIES: { [nodeName: string]: string[] } = {
     CANVAS: ['height', 'width'],
 };
 
+export const ELEMENT_READ_ONLY_PROPERTIES = new Set([
+    'naturalWidth',
+    'naturalHeight',
+    'currentSrc',
+    'videoWidth',
+    'videoHeight',
+    'duration',
+    'ended',
+    'offsetHeight',
+    'paused',
+]);
+
 export const TEXT_REFERENCE_PROPERTIES = ['data'];
 export const NODE_REFERENCE_PROPERTIES = [
     'namespace',
