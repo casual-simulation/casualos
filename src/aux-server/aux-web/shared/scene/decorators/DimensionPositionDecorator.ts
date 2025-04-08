@@ -282,6 +282,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 const objWorld = new Vector3();
                 this._rotationObj.getWorldPosition(objWorld);
 
+                //MY CHANGES START HERE
                 let direction: CasualVector3;
                 let upVector: CasualVector3;
 
@@ -296,11 +297,8 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         ? this.bot3D.coordinateTransformer(currentGridPos)
                         : null;
 
-                if (
-                    this._orientationMode === 'billboardFront' &&
-                    coordinateTransform
-                ) {
-                    const globeCenter = new Vector3(0, 0, 0);
+                if (coordinateTransform) {
+                    const globeCenter = new Vector3(0, 0, 0); //Assuming globe center is at origin
 
                     const globalDirection = new Vector3().subVectors(
                         objWorld,
@@ -378,7 +376,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 );
                 this._rotationObj.quaternion.premultiply(parentRotationWorld);
 
-                if (this._orientationMode !== 'billboardTop') {
+                if (this._orientationMode !== 'billboardFront') {
                     // Rotate the object 90 degrees around its X axis
                     // so that the top of the bot is facing the camera.
                     const rotationOffset = new Quaternion().setFromAxisAngle(
@@ -389,24 +387,40 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 }
 
                 update = true;
-                if (this._orientationMode === 'billboardFront') {
+                if (this._orientationMode === 'billboardTop') {
                     if (!coordinateTransform) {
                         const euler = new Euler().setFromQuaternion(
                             this._rotationObj.quaternion,
                             'ZXY'
                         );
-                        euler.x = ThreeMath.degToRad(45);
+                        euler.x = ThreeMath.degToRad(90);
                         euler.y = 0;
                         this._rotationObj.setRotationFromEuler(euler);
+                    } else {
+                        const rotationOffset =
+                            new Quaternion().setFromAxisAngle(
+                                new Vector3(1, 0, 0),
+                                ThreeMath.degToRad(90)
+                            );
+                        this._rotationObj.quaternion.multiply(rotationOffset);
                     }
-                } else if (this._orientationMode === 'billboardTop') {
-                    const euler = new Euler().setFromQuaternion(
-                        this._rotationObj.quaternion,
-                        'ZXY'
-                    );
-                    euler.x = 0;
-                    euler.y = 0;
-                    this._rotationObj.setRotationFromEuler(euler);
+                } else if (this._orientationMode === 'billboardFront') {
+                    if (!coordinateTransform) {
+                        const euler = new Euler().setFromQuaternion(
+                            this._rotationObj.quaternion,
+                            'ZXY'
+                        );
+                        euler.x = 0;
+                        euler.y = 0;
+                        this._rotationObj.setRotationFromEuler(euler);
+                    } else {
+                        const rotationOffset =
+                            new Quaternion().setFromAxisAngle(
+                                new Vector3(1, 0, 0),
+                                ThreeMath.degToRad(90)
+                            );
+                        this._rotationObj.quaternion.multiply(rotationOffset);
+                    }
                 }
             }
 
