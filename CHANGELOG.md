@@ -4,6 +4,25 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the ability to configure CasualOS to use a custom [OpenAI Completions API-compatible](https://platform.openai.com/docs/api-reference/completions) integration for the `ai.chat()` API for a set of models.
+    -   To configure, provide an allowed model that sets `provider` to `custom-openai-completions` and also has the following list of properties:
+        -   `name` The name that should be used for this provider in the logs.
+        -   `apiKey` - The API Key that should be used for requests to this provider.
+        -   `baseUrl` - The URL that requests should be made to. (e.g. "https://api.openai.com/v1/" for OpenAIs API)
+        -   `models` - The array of models that should use this provider.
+    -   Here's an example:
+    ```json
+    {
+        "provider": "custom-openai-completions",
+        "name": "custom",
+        "apiKey": "my-api-key",
+        "baseUrl": "https://api.openai.com/v1/",
+        "models": ["gpt-4o"]
+    }
+    ```
+
 ### :bug: Bug Fixes
 
 -   Fixed several performance issues with using custom apps when DOM is enabled.
