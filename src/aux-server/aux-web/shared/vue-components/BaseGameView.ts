@@ -62,7 +62,7 @@ export default class BaseGameView extends Vue implements IGameView {
     }
 
     /**
-     * Gets the conatiner element for the game view that is inside this component.
+     * Gets the container element for the game view that is inside this component.
      */
     get container(): HTMLElement {
         return <HTMLElement>this.$refs.container;
