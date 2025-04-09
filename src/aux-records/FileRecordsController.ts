@@ -95,8 +95,8 @@ export class FileRecordsController {
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
-            const markers = getMarkersOrDefault(request.markers);
-            const rootMarkers = getRootMarkersOrDefault(markers);
+            let markers = getMarkersOrDefault(request.markers);
+            let rootMarkers = getRootMarkersOrDefault(markers);
 
             const contextResult =
                 await this._policies.constructAuthorizationContext({
@@ -257,20 +257,6 @@ export class FileRecordsController {
                 }
             }
 
-            const presignResult = await this._store.presignFileUpload({
-                recordName,
-                fileName: fileName,
-                fileSha256Hex: request.fileSha256Hex,
-                fileMimeType: request.fileMimeType,
-                fileByteLength: request.fileByteLength,
-                markers: rootMarkers,
-                headers: request.headers,
-            });
-
-            if (presignResult.success === false) {
-                return presignResult;
-            }
-
             const addFileResult = await this._store.addFileRecord(
                 recordName,
                 fileName,
@@ -300,14 +286,44 @@ export class FileRecordsController {
                     }
 
                     if (!fileResult.uploaded) {
-                        return {
-                            success: true,
-                            fileName,
-                            uploadUrl: presignResult.uploadUrl,
-                            uploadHeaders: presignResult.uploadHeaders,
-                            uploadMethod: presignResult.uploadMethod,
-                            markers,
-                        };
+                        if (
+                            !fileResult.markers.some((m) => markers.includes(m))
+                        ) {
+                            // re-check permissions because none of the markers match up
+                            // with the markers that the file actually has
+                            markers = fileResult.markers;
+                            rootMarkers = getRootMarkersOrDefault(markers);
+
+                            const authorization =
+                                await this._policies.authorizeUserAndInstancesForResources(
+                                    contextResult.context,
+                                    {
+                                        userId: subjectId,
+                                        instances: request.instances,
+                                        resources: [
+                                            {
+                                                resourceKind: 'file',
+                                                resourceId: fileName,
+                                                action: 'create',
+                                                markers: markers,
+                                            },
+                                            ...getMarkerResourcesForCreation(
+                                                markers
+                                            ),
+                                        ],
+                                    }
+                                );
+
+                            if (authorization.success === false) {
+                                return authorization;
+                            }
+                        } else {
+                            // allow the request to be successful
+                            // because at least one of the markers is the same
+                            // we just need to grab the real markers from the file
+                            markers = fileResult.markers;
+                            rootMarkers = getRootMarkersOrDefault(markers);
+                        }
                     } else {
                         return {
                             success: false,
@@ -319,9 +335,23 @@ export class FileRecordsController {
                             existingFileName: fileResult.fileName,
                         };
                     }
+                } else {
+                    return addFileResult;
                 }
+            }
 
-                return addFileResult;
+            const presignResult = await this._store.presignFileUpload({
+                recordName,
+                fileName: fileName,
+                fileSha256Hex: request.fileSha256Hex,
+                fileMimeType: request.fileMimeType,
+                fileByteLength: request.fileByteLength,
+                markers: rootMarkers,
+                headers: request.headers,
+            });
+
+            if (presignResult.success === false) {
+                return presignResult;
             }
 
             return {

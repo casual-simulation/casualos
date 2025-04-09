@@ -42,6 +42,7 @@ import {
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
+    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import { sortBy } from 'lodash';
@@ -284,6 +285,89 @@ describe('FileRecordsController', () => {
                 subjectId: 'subjectId',
                 sizeInBytes: 100,
                 markers: [PUBLIC_READ_MARKER],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should reject the request if the file hasnt been uploaded and the user doesnt have access to the markers that are already on the file', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'user',
+                userId,
+                'file',
+                PRIVATE_MARKER,
+                'create',
+                {},
+                null
+            );
+
+            await store.assignPermissionToSubjectAndMarker(
+                recordName,
+                'user',
+                userId,
+                'marker',
+                ACCOUNT_MARKER,
+                'assign',
+                {},
+                null
+            );
+
+            await store.addFileRecord(
+                recordName,
+                'testSha256.txt',
+                'testUser',
+                'subjectId',
+                100,
+                'testDescription',
+                ['custom']
+            );
+
+            const result = (await manager.recordFile(recordName, userId, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+                markers: [PRIVATE_MARKER],
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: recordName,
+                    resourceKind: 'file',
+                    action: 'create',
+                    resourceId: 'testSha256.txt',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+            expect(presignUrlMock).not.toHaveBeenCalled();
+
+            await expect(
+                store.getFileRecord(recordName, 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: recordName,
+                publisherId: 'testUser',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                markers: ['custom'],
                 uploaded: false,
                 url: expect.any(String),
             });
