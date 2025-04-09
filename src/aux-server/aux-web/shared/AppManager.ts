@@ -228,15 +228,13 @@ export class AppManager {
                 : null;
 
             let relaxOrigin = false;
-            if (
-                isStatic &&
-                storedInst &&
-                config.vmOrigin !== storedInst.vmOrigin
-            ) {
+            let vmOrigin: string | null = config.vmOrigin;
+            if (isStatic && storedInst && vmOrigin !== storedInst.vmOrigin) {
                 console.log(
-                    `[AppManager] old static inst already exists for "${id}". Relaxing origin.`
+                    `[AppManager] old static inst already exists for "${id}". Relaxing origin and using stored inst origin.`
                 );
                 relaxOrigin = true;
+                vmOrigin = storedInst.vmOrigin ?? location.origin;
             }
 
             if (this._db) {
@@ -247,9 +245,7 @@ export class AppManager {
                         id: id,
                         origin,
                         isStatic: isStatic,
-                        vmOrigin: storedInst
-                            ? storedInst.vmOrigin
-                            : config.vmOrigin,
+                        vmOrigin: vmOrigin,
                         version: storedInst ? storedInst.version : this.version,
                     }
                 );
@@ -263,7 +259,10 @@ export class AppManager {
                     origin,
                     {
                         configBotId: configBotId,
-                        config,
+                        config: {
+                            ...config,
+                            vmOrigin,
+                        },
                         partitions,
                     },
                     relaxOrigin
@@ -867,13 +866,17 @@ export class AppManager {
                 });
                 console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
+            },
+        });
 
+        this.loadingProgress.subscribe((p) => {
+            if (p.done) {
                 if (!this._updateServiceWorker) {
                     setTimeout(() => {
                         this.initOffline();
                     }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
                 }
-            },
+            }
         });
 
         return sim;

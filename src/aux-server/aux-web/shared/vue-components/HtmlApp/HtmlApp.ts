@@ -358,7 +358,7 @@ export default class HtmlApp extends Vue {
     }
 
     private _applyEventListener(mutation: any) {
-        let { target, listenerName, listenerDelta } = mutation;
+        let { listenerName, listenerDelta } = mutation;
 
         const container = this.$refs.container as any;
         let currentCount = this._listeners.get(listenerName);

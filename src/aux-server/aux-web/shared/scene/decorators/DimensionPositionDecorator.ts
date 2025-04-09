@@ -252,7 +252,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
         } else {
             let update = false;
             if (
-                ['billboard', 'billboardTop', 'billboardFront'].indexOf(
+                ['billboard', 'billboardFront', 'billboardTop'].indexOf(
                     this._orientationMode
                 ) >= 0
             ) {
@@ -281,24 +281,72 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 const objWorld = new Vector3();
                 this._rotationObj.getWorldPosition(objWorld);
-                const direction = new CasualVector3(
-                    objWorld.x,
-                    objWorld.y,
-                    objWorld.z
-                ).subtract(
-                    new CasualVector3(
-                        cameraWorld.x,
-                        cameraWorld.y,
-                        cameraWorld.z
-                    )
+
+                let direction: CasualVector3;
+                let upVector: CasualVector3;
+
+                const transformer = getBotTransformer(calc, this.bot3D.bot);
+                const currentGridPos = getBotPosition(
+                    calc,
+                    this.bot3D.bot,
+                    this.bot3D.dimension
                 );
-                const lookRotation = new Rotation({
-                    direction: direction,
-                    upwards: new CasualVector3(
+                const coordinateTransform =
+                    this.bot3D.coordinateTransformer && !hasValue(transformer)
+                        ? this.bot3D.coordinateTransformer(currentGridPos)
+                        : null;
+
+                if (this._orientationMode === 'billboard') {
+                    direction = new CasualVector3(
+                        objWorld.x - cameraWorld.x,
+                        objWorld.y - cameraWorld.y,
+                        objWorld.z - cameraWorld.z
+                    );
+
+                    upVector = new CasualVector3(
                         this._rotationObj.up.x,
                         this._rotationObj.up.y,
                         this._rotationObj.up.z
-                    ),
+                    );
+                } else if (coordinateTransform) {
+                    direction = new CasualVector3(
+                        -objWorld.x,
+                        -objWorld.y,
+                        -objWorld.z
+                    );
+
+                    const cameraViewDir = new Vector3()
+                        .subVectors(objWorld, cameraWorld)
+                        .normalize();
+
+                    const rightVector = new Vector3()
+                        .crossVectors(cameraViewDir, objWorld)
+                        .normalize();
+                    const properUp = new Vector3()
+                        .crossVectors(objWorld, rightVector)
+                        .normalize();
+
+                    upVector = new CasualVector3(
+                        properUp.x,
+                        properUp.y,
+                        properUp.z
+                    );
+                } else {
+                    direction = new CasualVector3(
+                        objWorld.x - cameraWorld.x,
+                        objWorld.y - cameraWorld.y,
+                        objWorld.z - cameraWorld.z
+                    );
+
+                    upVector = new CasualVector3(
+                        this._rotationObj.up.x,
+                        this._rotationObj.up.y,
+                        this._rotationObj.up.z
+                    );
+                }
+                const lookRotation = new Rotation({
+                    direction: direction,
+                    upwards: upVector,
                     errorHandling: 'nudge',
                 });
 
@@ -328,21 +376,39 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
                 update = true;
                 if (this._orientationMode === 'billboardTop') {
-                    const euler = new Euler().setFromQuaternion(
-                        this._rotationObj.quaternion,
-                        'ZXY'
-                    );
-                    euler.x = ThreeMath.degToRad(90);
-                    euler.y = 0;
-                    this._rotationObj.setRotationFromEuler(euler);
+                    if (!coordinateTransform) {
+                        const euler = new Euler().setFromQuaternion(
+                            this._rotationObj.quaternion,
+                            'ZXY'
+                        );
+                        euler.x = ThreeMath.degToRad(90);
+                        euler.y = 0;
+                        this._rotationObj.setRotationFromEuler(euler);
+                    } else {
+                        const rotationOffset =
+                            new Quaternion().setFromAxisAngle(
+                                new Vector3(1, 0, 0),
+                                ThreeMath.degToRad(90)
+                            );
+                        this._rotationObj.quaternion.multiply(rotationOffset);
+                    }
                 } else if (this._orientationMode === 'billboardFront') {
-                    const euler = new Euler().setFromQuaternion(
-                        this._rotationObj.quaternion,
-                        'ZXY'
-                    );
-                    euler.x = 0;
-                    euler.y = 0;
-                    this._rotationObj.setRotationFromEuler(euler);
+                    if (!coordinateTransform) {
+                        const euler = new Euler().setFromQuaternion(
+                            this._rotationObj.quaternion,
+                            'ZXY'
+                        );
+                        euler.x = 0;
+                        euler.y = 0;
+                        this._rotationObj.setRotationFromEuler(euler);
+                    } else {
+                        const rotationOffset =
+                            new Quaternion().setFromAxisAngle(
+                                new Vector3(1, 0, 0),
+                                ThreeMath.degToRad(90)
+                            );
+                        this._rotationObj.quaternion.multiply(rotationOffset);
+                    }
                 }
             }
 

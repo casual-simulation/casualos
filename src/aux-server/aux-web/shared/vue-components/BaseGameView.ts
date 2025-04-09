@@ -51,6 +51,9 @@ export default class BaseGameView extends Vue implements IGameView {
 
     _game: Game = null;
 
+    /**
+     * The ID of the container element that the game view should be resized to.
+     */
     @Prop({})
     containerId: string;
 
@@ -58,6 +61,9 @@ export default class BaseGameView extends Vue implements IGameView {
         return <HTMLElement>this.$refs.gameView;
     }
 
+    /**
+     * Gets the container element for the game view that is inside this component.
+     */
     get container(): HTMLElement {
         return <HTMLElement>this.$refs.container;
     }
