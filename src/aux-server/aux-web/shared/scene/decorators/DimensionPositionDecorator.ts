@@ -309,27 +309,10 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this._rotationObj.up.z
                     );
                 } else if (coordinateTransform) {
-                    const globeCenter = new Vector3(0, 0, 0); //Assuming globe center is at origin
-
-                    const globalDirection = new Vector3().subVectors(
-                        objWorld,
-                        globeCenter
-                    );
-
-                    const invTransform = new Matrix4()
-                        .copy(coordinateTransform)
-                        .invert();
-                    const localDirection = globalDirection
-                        .clone()
-                        .applyMatrix4(invTransform);
-
-                    const adjustedGlobalDirection =
-                        localDirection.applyMatrix4(coordinateTransform);
-
                     direction = new CasualVector3(
-                        -adjustedGlobalDirection.x,
-                        -adjustedGlobalDirection.y,
-                        -adjustedGlobalDirection.z
+                        -objWorld.x,
+                        -objWorld.y,
+                        -objWorld.z
                     );
 
                     const cameraViewDir = new Vector3()
@@ -337,10 +320,10 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         .normalize();
 
                     const rightVector = new Vector3()
-                        .crossVectors(cameraViewDir, adjustedGlobalDirection)
+                        .crossVectors(cameraViewDir, objWorld)
                         .normalize();
                     const properUp = new Vector3()
-                        .crossVectors(adjustedGlobalDirection, rightVector)
+                        .crossVectors(objWorld, rightVector)
                         .normalize();
 
                     upVector = new CasualVector3(
