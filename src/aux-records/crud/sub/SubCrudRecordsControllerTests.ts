@@ -295,7 +295,7 @@ export function testCrudRecordsController<
                             )
                         ).resolves.toMatchObject({
                             item,
-                            markers: [PUBLIC_READ_MARKER],
+                            parentMarkers: [PUBLIC_READ_MARKER],
                         });
                     });
 
@@ -325,7 +325,7 @@ export function testCrudRecordsController<
                             )
                         ).resolves.toMatchObject({
                             item: null,
-                            markers: null,
+                            parentMarkers: null,
                         });
                     });
 
@@ -354,7 +354,7 @@ export function testCrudRecordsController<
                             )
                         ).resolves.toMatchObject({
                             item: null,
-                            markers: [PUBLIC_READ_MARKER],
+                            parentMarkers: [PUBLIC_READ_MARKER],
                         });
                     });
 
@@ -387,7 +387,7 @@ export function testCrudRecordsController<
                                     address: 'address',
                                     key: createKey(0),
                                 },
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
 
@@ -419,7 +419,7 @@ export function testCrudRecordsController<
                                     address: 'address',
                                     key: createKey(0),
                                 },
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
                     } else {
@@ -457,7 +457,7 @@ export function testCrudRecordsController<
                                 )
                             ).resolves.toMatchObject({
                                 item: null,
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
 
@@ -495,7 +495,7 @@ export function testCrudRecordsController<
                                 )
                             ).resolves.toMatchObject({
                                 item: null,
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
                     }
@@ -547,7 +547,7 @@ export function testCrudRecordsController<
                             )
                         ).resolves.toMatchObject({
                             item,
-                            markers: [PUBLIC_READ_MARKER],
+                            parentMarkers: [PUBLIC_READ_MARKER],
                         });
                     });
 
@@ -577,7 +577,7 @@ export function testCrudRecordsController<
                             )
                         ).resolves.toMatchObject({
                             item,
-                            markers: [PUBLIC_READ_MARKER],
+                            parentMarkers: [PUBLIC_READ_MARKER],
                         });
                     });
 
@@ -608,7 +608,7 @@ export function testCrudRecordsController<
                                 )
                             ).resolves.toMatchObject({
                                 item,
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
 
@@ -638,7 +638,7 @@ export function testCrudRecordsController<
                                 )
                             ).resolves.toMatchObject({
                                 item,
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
                     } else {
@@ -680,7 +680,7 @@ export function testCrudRecordsController<
                                     address: 'address',
                                     key: createKey(0),
                                 }),
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
 
@@ -722,7 +722,7 @@ export function testCrudRecordsController<
                                     address: 'address',
                                     key: createKey(0),
                                 }),
-                                markers: [PUBLIC_READ_MARKER],
+                                parentMarkers: [PUBLIC_READ_MARKER],
                             });
                         });
                     }
@@ -950,7 +950,7 @@ export function testCrudRecordsController<
                     )
                 ).resolves.toMatchObject({
                     item: null,
-                    markers: [PRIVATE_MARKER],
+                    parentMarkers: [PRIVATE_MARKER],
                 });
             });
 
@@ -1008,7 +1008,7 @@ export function testCrudRecordsController<
                         )
                     ).resolves.toMatchObject({
                         item: null,
-                        markers: [PRIVATE_MARKER],
+                        parentMarkers: [PRIVATE_MARKER],
                     });
                 });
             } else {

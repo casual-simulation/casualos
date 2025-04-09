@@ -182,7 +182,7 @@ export abstract class SubCrudRecordsController<
                 request.item.key
             );
 
-            if (!existingItem.markers) {
+            if (!existingItem.parentMarkers) {
                 return {
                     success: false,
                     errorCode: 'data_not_found',
@@ -190,7 +190,7 @@ export abstract class SubCrudRecordsController<
                 };
             }
 
-            const resourceMarkers = existingItem.markers;
+            let resourceMarkers = existingItem.parentMarkers;
 
             let action = existingItem.item
                 ? ('update' as const)
@@ -351,7 +351,7 @@ export abstract class SubCrudRecordsController<
                 };
             }
 
-            const markers = result.markers;
+            const markers = result.parentMarkers;
             const authorization =
                 await this._policies.authorizeUserAndInstances(
                     context.context,
@@ -431,7 +431,7 @@ export abstract class SubCrudRecordsController<
                 };
             }
 
-            const markers = result.markers;
+            const markers = result.parentMarkers;
 
             const authorization =
                 await this._policies.authorizeUserAndInstances(
