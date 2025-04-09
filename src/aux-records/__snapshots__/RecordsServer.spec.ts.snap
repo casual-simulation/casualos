@@ -2228,6 +2228,14 @@ Object {
                 },
                 "type": "object",
               },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
               "readme": Object {
                 "type": "string",
               },
@@ -6892,6 +6900,14 @@ Object {
                   },
                 },
                 "type": "object",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
               },
               "readme": Object {
                 "type": "string",

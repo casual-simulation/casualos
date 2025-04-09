@@ -656,6 +656,7 @@ describe('RecordsServer', () => {
             store: packageVersionsStore,
             files: filesController,
             systemNotifications: store,
+            packages: packageController,
         });
 
         stripe = stripeMock = {
@@ -12850,6 +12851,7 @@ describe('RecordsServer', () => {
                 readme: '',
                 requiresReview: false,
                 sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -12886,6 +12888,7 @@ describe('RecordsServer', () => {
                         sha256: 'sha256',
                         approved: true,
                         approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     auxFile: {
                         success: true,
@@ -12931,6 +12934,7 @@ describe('RecordsServer', () => {
                         sha256: 'sha256',
                         approved: true,
                         approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     auxFile: {
                         success: true,
@@ -12989,6 +12993,7 @@ describe('RecordsServer', () => {
                             },
                             entitlements: [],
                             readme: 'readme',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     }),
                     apiHeaders
@@ -13004,7 +13009,7 @@ describe('RecordsServer', () => {
                     auxFileResult: {
                         success: true,
                         fileName: expect.any(String),
-                        markers: [PUBLIC_READ_MARKER],
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -13040,6 +13045,7 @@ describe('RecordsServer', () => {
                         },
                         entitlements: [],
                         readme: 'readme',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                 }),
             () => apiHeaders
@@ -13073,6 +13079,7 @@ describe('RecordsServer', () => {
                     readme: '',
                     requiresReview: false,
                     sha256: 'sha256',
+                    markers: [PUBLIC_READ_MARKER],
                 });
             }
         });
@@ -13110,6 +13117,7 @@ describe('RecordsServer', () => {
                             readme: '',
                             requiresReview: false,
                             sha256: 'sha256',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             id: 'packageVersionId2',
@@ -13129,6 +13137,7 @@ describe('RecordsServer', () => {
                             readme: '',
                             requiresReview: false,
                             sha256: 'sha256',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             id: 'packageVersionId1',
@@ -13148,6 +13157,7 @@ describe('RecordsServer', () => {
                             readme: '',
                             requiresReview: false,
                             sha256: 'sha256',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     ],
                 },
@@ -13192,6 +13202,7 @@ describe('RecordsServer', () => {
                     readme: '',
                     requiresReview: false,
                     sha256: 'sha256',
+                    markers: [PUBLIC_READ_MARKER],
                 });
             }
         });
@@ -13236,7 +13247,7 @@ describe('RecordsServer', () => {
             ).toEqual({
                 item: null,
                 recordName,
-                markers: [PUBLIC_READ_MARKER],
+                parentMarkers: [PUBLIC_READ_MARKER],
                 packageId: 'packageId',
             });
         });
@@ -13285,6 +13296,7 @@ describe('RecordsServer', () => {
                 readme: '',
                 requiresReview: false,
                 sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -15980,6 +15992,7 @@ describe('RecordsServer', () => {
                 readme: '',
                 requiresReview: false,
                 sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await store.saveGrantedPackageEntitlement({
@@ -16175,6 +16188,7 @@ describe('RecordsServer', () => {
                 readme: '',
                 requiresReview: false,
                 sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -16341,6 +16355,7 @@ describe('RecordsServer', () => {
                 readme: '',
                 requiresReview: false,
                 sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await store.saveGrantedPackageEntitlement({

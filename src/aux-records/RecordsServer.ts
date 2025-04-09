@@ -2273,6 +2273,7 @@ export class RecordsServer {
                             }),
                             entitlements: z.array(ENTITLEMENT_VALIDATION),
                             readme: z.string(),
+                            markers: MARKERS_VALIDATION,
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
@@ -2308,6 +2309,7 @@ export class RecordsServer {
                                 entitlements:
                                     item.entitlements as Entitlement[],
                                 readme: item.readme,
+                                markers: item.markers,
                             },
                             instances,
                         });
