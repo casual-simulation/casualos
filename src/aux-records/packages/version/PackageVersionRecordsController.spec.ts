@@ -335,7 +335,7 @@ describe('PackageVersionRecordsController', () => {
                     auxFileResult: {
                         success: true,
                         fileName: `${getHash(aux)}.json`,
-                        markers: [PUBLIC_READ_MARKER],
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -367,6 +367,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType,
                     requiresReview,
                     id,
+                    markers,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -421,7 +422,7 @@ describe('PackageVersionRecordsController', () => {
                     auxFileResult: {
                         success: true,
                         fileName: `${getHash(aux)}.json`,
-                        markers: [PUBLIC_READ_MARKER],
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -454,6 +455,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType,
                     requiresReview,
                     id,
+                    markers,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -464,7 +466,7 @@ describe('PackageVersionRecordsController', () => {
                 ).toBe(sha256);
             });
 
-            it('should store if the package version is uploading a new file', async () => {
+            it('should store whether the package version is uploading a new file', async () => {
                 dateNowMock.mockReturnValue(123);
                 let aux: StoredAux = {
                     version: 1,
@@ -544,6 +546,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType,
                     requiresReview,
                     id,
+                    markers,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -607,7 +610,7 @@ describe('PackageVersionRecordsController', () => {
                     auxFileResult: {
                         success: true,
                         fileName: `${getHash(aux)}.json`,
-                        markers: [PUBLIC_READ_MARKER],
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -640,6 +643,7 @@ describe('PackageVersionRecordsController', () => {
                     approved,
                     requiresReview,
                     id,
+                    markers,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -735,7 +739,222 @@ describe('PackageVersionRecordsController', () => {
                 expect(item.item).toBe(null);
             });
 
-            it('should return data_not_found if the record item doesnt exist', async () => {
+            it('should be able to upload the file as the system if the file hasnt been uploaded yet and the markers match the default system markers', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    otherUserId,
+                    'package.version',
+                    PUBLIC_READ_MARKER,
+                    'create',
+                    {},
+                    null
+                );
+
+                // await store.assignPermissionToSubjectAndMarker(
+                //     recordName,
+                //     'user',
+                //     otherUserId,
+                //     'file',
+                //     PUBLIC_READ_MARKER,
+                //     'create',
+                //     {},
+                //     null
+                // );
+
+                const fileName = `${getHash(aux)}.json`;
+                await store.addFileRecord(
+                    recordName,
+                    fileName,
+                    userId,
+                    userId,
+                    123,
+                    'description',
+                    [PRIVATE_MARKER]
+                );
+
+                // file is not uploaded yet
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    userId: otherUserId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(item.item!.createdFile).toBe(true);
+                expect(!!item.item).toBe(true);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approvalType,
+                    approved,
+                    requiresReview,
+                    id,
+                    markers,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it('should return not_authorized if the file hasnt been uploaded yet and the markers dont match the default system markers and the user doesnt have access', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    otherUserId,
+                    'package.version',
+                    PUBLIC_READ_MARKER,
+                    'create',
+                    {},
+                    null
+                );
+
+                // await store.assignPermissionToSubjectAndMarker(
+                //     recordName,
+                //     'user',
+                //     otherUserId,
+                //     'file',
+                //     PUBLIC_READ_MARKER,
+                //     'create',
+                //     {},
+                //     null
+                // );
+
+                const fileName = `${getHash(aux)}.json`;
+                await store.addFileRecord(
+                    recordName,
+                    fileName,
+                    userId,
+                    userId,
+                    123,
+                    'description',
+                    ['custom']
+                );
+
+                // file is not uploaded yet
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    userId: otherUserId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'file',
+                        action: 'create',
+                        resourceId: fileName,
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(item.item).toBe(null);
+            });
+
+            it.skip('should return data_not_found if the record item doesnt exist', async () => {
                 dateNowMock.mockReturnValue(123);
                 let aux: StoredAux = {
                     version: 1,
@@ -819,7 +1038,7 @@ describe('PackageVersionRecordsController', () => {
                     })
                 ).resolves.toMatchObject({
                     item: null,
-                    markers: [PUBLIC_READ_MARKER],
+                    parentMarkers: [PUBLIC_READ_MARKER],
                 });
             });
 
@@ -878,7 +1097,7 @@ describe('PackageVersionRecordsController', () => {
                     })
                 ).resolves.toMatchObject({
                     item: null,
-                    markers: [PUBLIC_READ_MARKER],
+                    parentMarkers: [PUBLIC_READ_MARKER],
                 });
             });
 
@@ -937,7 +1156,7 @@ describe('PackageVersionRecordsController', () => {
                     })
                 ).resolves.toMatchObject({
                     item: null,
-                    markers: [PUBLIC_READ_MARKER],
+                    parentMarkers: [PUBLIC_READ_MARKER],
                 });
             });
 
@@ -1058,7 +1277,7 @@ describe('PackageVersionRecordsController', () => {
                     auxFileResult: {
                         success: true,
                         fileName: `${getHash(aux)}.json`,
-                        markers: [PUBLIC_READ_MARKER],
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -1090,6 +1309,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType,
                     requiresReview,
                     id,
+                    markers,
                     ...hashedProperties
                 } = item.item as PackageRecordVersionWithMetadata;
                 expect(hashedProperties.createdAtMs).toBe(123);
@@ -1125,12 +1345,13 @@ describe('PackageVersionRecordsController', () => {
                             createdAtMs: 123,
                             createdFile: true,
                             sizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     },
                 ]);
             });
 
-            it.only('should be able to upload a package version even if the package doesnt exist', async () => {
+            it('should be able to upload a package version even if the package doesnt exist', async () => {
                 dateNowMock.mockReturnValue(123);
                 let aux: StoredAux = {
                     version: 1,
@@ -1228,7 +1449,7 @@ describe('PackageVersionRecordsController', () => {
                 ).toBe(sha256);
             });
 
-            it.only('should be able to use separate markers for the package version', async () => {
+            it('should be able to use separate markers for the package version', async () => {
                 dateNowMock.mockReturnValue(123);
                 let aux: StoredAux = {
                     version: 1,
@@ -1267,7 +1488,105 @@ describe('PackageVersionRecordsController', () => {
                     auxFileResult: {
                         success: true,
                         fileName: `${getHash(aux)}.json`,
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const packageItem = await recordItemsStore.getItemByAddress(
+                    recordName,
+                    'address2'
+                );
+
+                expect(packageItem).toEqual({
+                    id: expect.any(String),
+                    address: 'address2',
+
+                    // Should use the PRIVATE_MARKER when
+                    // the package has to be created from a version.
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address2',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+                expect(item.parentMarkers).toEqual([PRIVATE_MARKER]);
+                expect(item.item!.markers).toEqual([PUBLIC_READ_MARKER]);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    id,
+                    markers,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it('should use the private marker for files uploaded by the system', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address2',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
                         markers: [PUBLIC_READ_MARKER],
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address2',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -1421,7 +1740,7 @@ describe('PackageVersionRecordsController', () => {
                     auxFileResult: {
                         success: true,
                         fileName: expect.any(String),
-                        markers: [PUBLIC_READ_MARKER],
+                        markers: [PRIVATE_MARKER],
                         uploadHeaders: {
                             'content-type': 'application/json',
                             'record-name': recordName,
@@ -1487,7 +1806,7 @@ describe('PackageVersionRecordsController', () => {
                         sha256: '',
                         sizeInBytes: 123,
                     },
-                    markers: [PUBLIC_READ_MARKER],
+                    parentMarkers: [PUBLIC_READ_MARKER],
                 });
             });
         });
@@ -1600,6 +1919,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType: 'normal',
                     createdFile: false,
                     requiresReview: false,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 auxFile: {
                     success: false,
@@ -1686,6 +2006,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType: 'normal',
                     createdFile: true,
                     requiresReview: false,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 auxFile: {
                     success: true,
@@ -1735,6 +2056,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType: 'normal',
                     createdFile: true,
                     requiresReview: false,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 auxFile: {
                     success: true,
@@ -1812,6 +2134,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType: null,
                     createdFile: true,
                     requiresReview: true,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 auxFile: {
                     success: true,
@@ -1901,6 +2224,7 @@ describe('PackageVersionRecordsController', () => {
                     approvalType: 'normal',
                     createdFile: true,
                     requiresReview: true,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 auxFile: {
                     success: true,

@@ -98,6 +98,8 @@ import type { UserRole } from '../../AuthStore';
 import { isPackageReviewerRole, isSuperUserRole } from '../../AuthUtils';
 import { v7 as uuid } from 'uuid';
 import type { PackageRecordsController } from '../PackageRecordsController';
+import { isEqual } from 'lodash';
+import { record } from 'zod';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 
@@ -327,7 +329,7 @@ export class PackageVersionRecordsController {
                 null,
                 {
                     ...request.item.auxFileRequest,
-                    markers: resourceMarkers,
+                    markers: [PRIVATE_MARKER],
                     instances: request.instances,
                     userRole: 'system',
                 }
@@ -349,14 +351,46 @@ export class PackageVersionRecordsController {
                     );
                 }
 
-                if (recordFileResult.success === false) {
-                    if (recordFileResult.errorCode === 'file_already_exists') {
-                        // TODO:
-                        // If the file already exists and has already been uploaded, then
-                        // we should see if we need to update the file record to match the package version markers.
-                    } else {
-                        return recordFileResult;
+                if (
+                    recordFileResult.success === false &&
+                    recordFileResult.errorCode !== 'file_already_exists'
+                ) {
+                    return recordFileResult;
+
+                    // if (recordFileResult.errorCode === 'file_already_exists') {
+                    //     // TODO:
+                    //     // If the file already exists and has already been uploaded, then
+                    //     // we should see if we need to update the file record markers to match the package version markers.
+
+                    //     // if(recordFileResult.existingFileName) {
+
+                    //     // }
+
+                    // } else {
+                    //     return recordFileResult;
+                    // }
+                }
+            } else if (!isEqual(recordFileResult.markers, [PRIVATE_MARKER])) {
+                // System is able to upload the file, but the file record has already been made with different markers and not uploaded.
+                // In this case, we want to retry the request but with the user so that we can be sure the user has permission to upload the file.
+                // Retry the request to see if the user has the ability to upload to a file record
+                // that has already been made but may not yet be uploaded.
+                // If the file record has been made, but not uplaoded, then this will succeed.
+                recordFileResult = await this.files.recordFile(
+                    recordName,
+                    contextResult.context.userId,
+                    {
+                        ...request.item.auxFileRequest,
+                        markers: resourceMarkers,
+                        instances: request.instances,
                     }
+                );
+
+                if (
+                    recordFileResult.success === false &&
+                    recordFileResult.errorCode !== 'file_already_exists'
+                ) {
+                    return recordFileResult;
                 }
             }
 
