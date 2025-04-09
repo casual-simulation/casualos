@@ -429,6 +429,15 @@ export class AuxHelper extends BaseHelper<Bot> {
         };
     }
 
+    /**
+     * Sends the given list of events to the frontend without running them through the runtime.
+     * This is useful for processing events that should not be able to be rejected by the runtime.
+     * @param events The events to send.
+     */
+    sendEvents(events: RuntimeActions[]) {
+        this._sendEvents(events);
+    }
+
     private async _sendEvents(events: RuntimeActions[]) {
         let map = new Map<AuxPartition, BotAction[]>();
         let newBotPartitions = new Map<string, AuxPartition>();

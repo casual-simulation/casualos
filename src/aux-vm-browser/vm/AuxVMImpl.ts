@@ -172,11 +172,11 @@ export default class AuxVMImpl implements AuxVM {
         let enableDom = this._config.config.enableDom;
         if (
             enableDom &&
-            location.origin === origin &&
+            getBaseOrigin(location.origin) === getBaseOrigin(origin) &&
             !this._config.config.debug
         ) {
             console.error(
-                '[AuxVMImpl] Cannot use DOM when origin is the same as the VM origin.'
+                `[AuxVMImpl] Cannot use DOM when base origin is the same as the VM origin. ${origin} should not share the same base domain as ${location.origin}.`
             );
             console.error('[AuxVMImpl] Using WebWorker isolated VM.');
             console.error(

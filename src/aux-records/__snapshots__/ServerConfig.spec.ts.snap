@@ -1635,3 +1635,1340 @@ Object {
   "success": true,
 }
 `;
+
+exports[`serverConfigSchema should be able to support custom AI chat providers 1`] = `
+Object {
+  "data": Object {
+    "ai": Object {
+      "chat": Object {
+        "allowedModels": Array [
+          "o1-preview",
+          "o1-mini",
+          "gpt-3.5-turbo",
+          "gpt-4",
+          "gpt-4o",
+          "gpt-4-1106-preview",
+          "gpt-4-vision-preview",
+          Object {
+            "model": "gemini-pro",
+            "provider": "google",
+          },
+          Object {
+            "model": "gemini-1.5-pro",
+            "provider": "google",
+          },
+          Object {
+            "model": "claude-3-5-sonnet-20240620",
+            "provider": "anthropic",
+          },
+          Object {
+            "model": "claude-3-5-sonnet-20241022",
+            "provider": "anthropic",
+          },
+          Object {
+            "model": "claude-3-5-sonnet-latest",
+            "provider": "anthropic",
+          },
+          Object {
+            "apiKey": "test",
+            "baseUrl": "https://api.example.com/v1/",
+            "models": Array [
+              "custom-model-1",
+              "custom-model-2",
+            ],
+            "name": "example",
+            "provider": "custom-openai-completions",
+          },
+        ],
+        "allowedSubscriptionTiers": true,
+        "defaultModel": "gpt-3.5-turbo",
+        "provider": "openai",
+        "tokenModifierRatio": Object {},
+      },
+      "generateSkybox": Object {
+        "allowedSubscriptionTiers": true,
+        "provider": "blockadeLabs",
+      },
+      "images": Object {
+        "allowedModels": Object {
+          "openai": Array [
+            "dall-e-2",
+            "dall-e-3",
+          ],
+          "stabilityai": Array [
+            "stable-diffusion-xl-1024-v1-0",
+            "stable-diffusion-v1-6",
+            "stable-image-ultra",
+            "stable-image-core",
+            "sd3-medium",
+            "sd3-large",
+            "sd3-large-turbo",
+          ],
+        },
+        "allowedSubscriptionTiers": true,
+        "defaultHeight": 512,
+        "defaultModel": "dall-e-2",
+        "defaultWidth": 512,
+        "maxHeight": 1024,
+        "maxImages": 3,
+        "maxSteps": 50,
+        "maxWidth": 1024,
+      },
+    },
+    "anthropicai": Object {
+      "apiKey": "anthropic-api-key",
+    },
+    "blockadeLabs": Object {
+      "apiKey": "blockadeLabs-api-key",
+    },
+    "googleai": Object {
+      "apiKey": "google-api-key",
+    },
+    "humeai": Object {
+      "apiKey": "hume-api-key",
+      "secretKey": "hume-secret-key",
+    },
+    "livekit": Object {
+      "apiKey": "api-key",
+      "endpoint": "wss://webrtc.example.com:443",
+      "secretKey": "secret-key",
+    },
+    "meta": Object {
+      "apiOrigin": "https://api.example.com",
+    },
+    "moderation": Object {
+      "allowUnauthenticatedReports": true,
+    },
+    "notifications": Object {
+      "filter": Object {},
+      "slack": Object {
+        "webhookUrl": "https://slack.webhook.example.com",
+      },
+      "telegram": Object {
+        "chatId": 1,
+        "token": "telegram-token",
+      },
+    },
+    "openai": Object {
+      "apiKey": "openai-api-key",
+    },
+    "prisma": Object {
+      "configurationCacheSeconds": 86400,
+      "options": Object {
+        "datasources": Object {
+          "db": Object {
+            "url": "postgresql://cocroach-host:26257/database?sslmode=verify-full",
+          },
+        },
+      },
+      "policiesCacheSeconds": 60,
+    },
+    "rateLimit": Object {
+      "maxHits": 5000,
+      "windowMs": 60000,
+    },
+    "redis": Object {
+      "cacheNamespace": "/cache",
+      "connectionAuthorizationCacheSeconds": 300,
+      "connectionExpireMode": null,
+      "connectionExpireSeconds": 10800,
+      "host": "redis-host.example.com",
+      "instRecordsStoreNamespace": "/insts",
+      "password": "redis-password",
+      "port": 11123,
+      "publicInstRecordsLifetimeExpireMode": "NX",
+      "publicInstRecordsLifetimeSeconds": 86400,
+      "rateLimitPrefix": "/rate-limit",
+      "servers": Object {},
+      "tempInstRecordsLifetimeExpireMode": null,
+      "tempInstRecordsLifetimeSeconds": 86400,
+      "tempInstRecordsStoreNamespace": "/tempInsts",
+      "tls": false,
+      "websocketConnectionNamespace": "/connections",
+    },
+    "ses": Object {
+      "content": Object {
+        "body": "Your casualos login code is: {{code}}",
+        "subject": "casualos login code",
+        "type": "plain",
+      },
+      "fromAddress": "casualos-noreply@example.com",
+    },
+    "sloydai": Object {
+      "clientId": "slodai-client-id",
+      "clientSecret": "sloydai-client-secret",
+    },
+    "stabilityai": Object {
+      "apiKey": "stabilityai-api-key",
+    },
+    "stripe": Object {
+      "publishableKey": "stripe-publishable-key",
+      "secretKey": "stripe-secret-key",
+    },
+    "subscriptions": Object {
+      "cancelUrl": "https://example.com/",
+      "checkoutConfig": Object {
+        "allow_promotion_codes": true,
+      },
+      "defaultFeatures": Object {
+        "defaultPeriodLength": Object {
+          "months": 1,
+        },
+        "studio": Object {
+          "ai": Object {
+            "chat": Object {
+              "allowed": false,
+            },
+            "hume": Object {
+              "allowed": false,
+            },
+            "images": Object {
+              "allowed": false,
+            },
+            "openai": Object {
+              "realtime": Object {
+                "allowed": false,
+              },
+            },
+            "skyboxes": Object {
+              "allowed": false,
+            },
+            "sloyd": Object {
+              "allowed": false,
+            },
+          },
+          "comId": Object {
+            "allowed": false,
+          },
+          "data": Object {
+            "allowed": false,
+            "maxItemSizeInBytes": 500000,
+          },
+          "documents": Object {
+            "allowed": false,
+          },
+          "events": Object {
+            "allowed": false,
+          },
+          "files": Object {
+            "allowed": false,
+          },
+          "insts": Object {
+            "allowed": false,
+          },
+          "loom": Object {
+            "allowed": false,
+          },
+          "notifications": Object {
+            "allowed": false,
+          },
+          "policies": Object {
+            "allowed": false,
+          },
+          "records": Object {
+            "allowed": false,
+          },
+          "webhooks": Object {
+            "addStateTimeoutMs": 1000,
+            "allowed": false,
+            "fetchTimeoutMs": 5000,
+            "initTimeoutMs": 5000,
+            "requestTimeoutMs": 5000,
+            "tokenLifetimeMs": 300000,
+          },
+        },
+        "user": Object {
+          "ai": Object {
+            "chat": Object {
+              "allowed": false,
+            },
+            "hume": Object {
+              "allowed": false,
+            },
+            "images": Object {
+              "allowed": false,
+            },
+            "openai": Object {
+              "realtime": Object {
+                "allowed": false,
+              },
+            },
+            "skyboxes": Object {
+              "allowed": false,
+            },
+            "sloyd": Object {
+              "allowed": false,
+            },
+          },
+          "comId": Object {
+            "allowed": false,
+          },
+          "data": Object {
+            "allowed": false,
+            "maxItemSizeInBytes": 500000,
+          },
+          "documents": Object {
+            "allowed": false,
+          },
+          "events": Object {
+            "allowed": false,
+          },
+          "files": Object {
+            "allowed": false,
+          },
+          "insts": Object {
+            "allowed": false,
+          },
+          "loom": Object {
+            "allowed": false,
+          },
+          "notifications": Object {
+            "allowed": false,
+          },
+          "policies": Object {
+            "allowed": false,
+          },
+          "records": Object {
+            "allowed": false,
+          },
+          "webhooks": Object {
+            "addStateTimeoutMs": 1000,
+            "allowed": false,
+            "fetchTimeoutMs": 5000,
+            "initTimeoutMs": 5000,
+            "requestTimeoutMs": 5000,
+            "tokenLifetimeMs": 300000,
+          },
+        },
+      },
+      "returnUrl": "https://example.com/",
+      "subscriptions": Array [
+        Object {
+          "defaultSubscription": true,
+          "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
+          "featureList": Array [
+            "Save Progress",
+            "Experience Personalization",
+          ],
+          "id": "default-6dcf-42b3-89a0-e6594278a53d",
+          "name": "Free Play",
+          "tier": "FreePlay",
+          "userOnly": true,
+        },
+        Object {
+          "defaultSubscription": false,
+          "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
+          "featureList": Array [
+            "Save Progress",
+            "Enhanced Experience Personalization",
+          ],
+          "id": "MediumImpactMaker-6dcf-42b3-89a0-e6594278a53d",
+          "name": "Medium Impact Maker",
+          "purchasable": false,
+          "tier": "MediumImpactMaker",
+          "userOnly": true,
+        },
+        Object {
+          "defaultSubscription": false,
+          "description": "Play Personalized 3D Experiences from your Favorite Brands for FREE",
+          "featureList": Array [
+            "Save Progress",
+            "Enhanced Experience Personalization",
+          ],
+          "id": "LargeImpactMaker-6dcf-42b3-89a0-e6594278a53d",
+          "name": "Large Impact Maker",
+          "purchasable": false,
+          "tier": "LargeImpactMaker",
+          "userOnly": true,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_OrbyQz0UFHLQQO",
+          ],
+          "featureList": Array [
+            "Save Progress",
+            "Enhanced Experience Personalization",
+          ],
+          "id": "f4850284-f962-4fe6-a1e9-eacaf39a67e7",
+          "product": "prod_OrbyQz0UFHLQQO",
+          "purchasable": false,
+          "studioOnly": false,
+          "tier": "PremiumPlay",
+          "userOnly": true,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_OrXGgxeKpv94BF",
+          ],
+          "featureList": Array [
+            "All Play Features",
+            "Maker Bots",
+            "Core Play Patterns",
+            "Play Pattern Publishing",
+          ],
+          "id": "ad6df9e1-9137-413a-9914-db81261ffec1",
+          "product": "prod_OrXGgxeKpv94BF",
+          "purchasable": true,
+          "studioOnly": false,
+          "tier": "PremiumBuildPlay",
+          "userOnly": true,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_Orrnj0pqlTj02P",
+          ],
+          "featureList": Array [
+            "Small Data Limits",
+            "Multiple Collaborators",
+            "Experience Hosting",
+            "Advanced Play Patterns",
+          ],
+          "id": "204a5697-2351-49c1-af5d-7d6e49461b7a",
+          "product": "prod_Orrnj0pqlTj02P",
+          "purchasable": true,
+          "studioOnly": true,
+          "tier": "SmallTier",
+          "userOnly": false,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_Orro9s8Gqqey9Y",
+          ],
+          "featureList": Array [
+            "Medium Data Limits",
+            "Multiple Collaborators",
+            "Experience Hosting",
+            "Experimental Play Patterns",
+          ],
+          "id": "a5faca0a-26d7-4fbf-986a-7dddf41c5dbd",
+          "product": "prod_Orro9s8Gqqey9Y",
+          "purchasable": true,
+          "studioOnly": true,
+          "tier": "MediumTier",
+          "userOnly": false,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_Orrqb0wFsDfUwg",
+          ],
+          "featureList": Array [
+            "Larger Data Limits",
+            "Multiple Collaborators",
+            "Experience Hosting",
+            "Experimental Play Patterns",
+          ],
+          "id": "651e7640-b7e3-4ef2-9590-517f5cfb377f",
+          "product": "prod_Orrqb0wFsDfUwg",
+          "purchasable": true,
+          "studioOnly": true,
+          "tier": "LargeTier",
+          "userOnly": false,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_OrrsITJLnxo7Po",
+          ],
+          "featureList": Array [
+            "Largest Data Limits",
+            "Multiple Collaborators",
+            "Experience Hosting",
+            "Exclusive Play Patterns",
+          ],
+          "id": "45e2d2dc-4f3a-42dd-b509-e2bb9463be96",
+          "product": "prod_OrrsITJLnxo7Po",
+          "purchasable": false,
+          "studioOnly": true,
+          "tier": "XLTier",
+          "userOnly": false,
+        },
+        Object {
+          "defaultSubscription": false,
+          "eligibleProducts": Array [
+            "prod_prod_pubrecnotinstripe",
+          ],
+          "featureList": Array [
+            "Public Records",
+            "Used by ABPro",
+            "Internal Use Only",
+          ],
+          "id": "public-3954-4356-ba6d-36ef243d1062",
+          "product": "prod_pubrecnotinstripe",
+          "purchasable": false,
+          "studioOnly": false,
+          "tier": "PublicRecords",
+          "userOnly": true,
+        },
+      ],
+      "successUrl": "https://example.com/",
+      "tiers": Object {
+        "FreePlay": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": true,
+                "maxTokensPerPeriod": 250000,
+              },
+              "hume": Object {
+                "allowed": false,
+              },
+              "images": Object {
+                "allowed": true,
+                "maxSquarePixelsPerPeriod": 102400,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": true,
+                "maxSkyboxesPerPeriod": 100,
+              },
+              "sloyd": Object {
+                "allowed": false,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 10000,
+              "maxReadsPerPeriod": 100000,
+              "maxWritesPerPeriod": 100000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 100,
+              "maxUpdatesPerPeriod": 10000,
+            },
+            "files": Object {
+              "allowed": false,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 8,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": false,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 32,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 30,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": false,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 5000,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "LargeImpactMaker": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": true,
+                "maxTokensPerPeriod": 25000000,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": true,
+                "maxSquarePixelsPerPeriod": 10240000,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": true,
+                "maxSkyboxesPerPeriod": 10000,
+              },
+              "sloyd": Object {
+                "allowed": true,
+                "maxModelsPerPeriod": 10000,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 1000000,
+              "maxReadsPerPeriod": 10000000,
+              "maxWritesPerPeriod": 10000000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 10000,
+              "maxUpdatesPerPeriod": 1000000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 25000000000000,
+              "maxFiles": 5000000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 32,
+              "maxBytesPerInst": 50000000,
+              "maxInsts": 102400,
+            },
+            "loom": Object {
+              "allowed": false,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 3200,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 30000,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": false,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 5000,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "LargeTier": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": false,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": false,
+              },
+              "sloyd": Object {
+                "allowed": false,
+              },
+            },
+            "comId": Object {
+              "allowed": true,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 100000,
+              "maxReadsPerPeriod": 1000000,
+              "maxWritesPerPeriod": 1000000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 1000,
+              "maxUpdatesPerPeriod": 100000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 200000000,
+              "maxBytesTotal": 500000000000,
+              "maxFiles": 10000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 32,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": true,
+            },
+            "notifications": Object {
+              "allowed": true,
+              "maxItems": 10000,
+              "maxSentNotificationsPerPeriod": 100000,
+              "maxSentPushNotificationsPerPeriod": 50000,
+              "maxSubscribersPerItem": 5000,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 320,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 300,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": true,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 100000,
+              "maxItems": 50,
+              "maxRunsPerHour": 1000,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "MediumImpactMaker": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": true,
+                "maxTokensPerPeriod": 2500000,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": true,
+                "maxSquarePixelsPerPeriod": 1024000,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": true,
+                "maxSkyboxesPerPeriod": 1000,
+              },
+              "sloyd": Object {
+                "allowed": true,
+                "maxModelsPerPeriod": 1000,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 100000,
+              "maxReadsPerPeriod": 1000000,
+              "maxWritesPerPeriod": 1000000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 1000,
+              "maxUpdatesPerPeriod": 100000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 2500000000000,
+              "maxFiles": 50000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 16,
+              "maxBytesPerInst": 50000000,
+              "maxInsts": 10240,
+            },
+            "loom": Object {
+              "allowed": false,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 320,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 1500,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": false,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 5000,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "MediumTier": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": false,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": false,
+              },
+              "sloyd": Object {
+                "allowed": false,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 50000,
+              "maxReadsPerPeriod": 500000,
+              "maxWritesPerPeriod": 500000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 500,
+              "maxUpdatesPerPeriod": 50000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 250000000000,
+              "maxFiles": 5000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 16,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": true,
+            },
+            "notifications": Object {
+              "allowed": true,
+              "maxItems": 1000,
+              "maxSentNotificationsPerPeriod": 10000,
+              "maxSentPushNotificationsPerPeriod": 5000,
+              "maxSubscribersPerItem": 500,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 160,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 150,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": true,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 100000,
+              "maxItems": 15,
+              "maxRunsPerHour": 200,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "PremiumBuildPlay": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": true,
+                "maxTokensPerPeriod": 250000,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": true,
+                "maxSquarePixelsPerPeriod": 102400,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": true,
+                "maxSkyboxesPerPeriod": 100,
+              },
+              "sloyd": Object {
+                "allowed": true,
+                "maxModelsPerPeriod": 100,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 10000,
+              "maxReadsPerPeriod": 100000,
+              "maxWritesPerPeriod": 100000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 100,
+              "maxUpdatesPerPeriod": 10000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 50000000000,
+              "maxFiles": 1000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 8,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": false,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 32,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 30,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": true,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 100000,
+              "maxItems": 1,
+              "maxRunsPerHour": 100,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "PremiumPlay": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": true,
+                "maxTokensPerPeriod": 250000,
+              },
+              "hume": Object {
+                "allowed": false,
+              },
+              "images": Object {
+                "allowed": true,
+                "maxSquarePixelsPerPeriod": 102400,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": true,
+                "maxSkyboxesPerPeriod": 100,
+              },
+              "sloyd": Object {
+                "allowed": false,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 10000,
+              "maxReadsPerPeriod": 100000,
+              "maxWritesPerPeriod": 100000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 100,
+              "maxUpdatesPerPeriod": 10000,
+            },
+            "files": Object {
+              "allowed": false,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 8,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": false,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 32,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 30,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": false,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 5000,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "PublicRecords": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": true,
+                "maxTokensPerPeriod": 250000,
+              },
+              "hume": Object {
+                "allowed": false,
+              },
+              "images": Object {
+                "allowed": true,
+                "maxSquarePixelsPerPeriod": 102400,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": true,
+                "maxSkyboxesPerPeriod": 100,
+              },
+              "sloyd": Object {
+                "allowed": true,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 1000000000,
+              "maxReadsPerPeriod": 10000000000,
+              "maxWritesPerPeriod": 10000000000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 1000000000,
+              "maxUpdatesPerPeriod": 1000000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 5000000000000000,
+              "maxFiles": 1000000000,
+            },
+            "insts": Object {
+              "allowed": false,
+            },
+            "loom": Object {
+              "allowed": true,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 3200,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 1000000000,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": false,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 5000,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "SmallTier": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": false,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": false,
+              },
+              "sloyd": Object {
+                "allowed": false,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 10000,
+              "maxReadsPerPeriod": 100000,
+              "maxWritesPerPeriod": 100000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 100,
+              "maxUpdatesPerPeriod": 10000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 50000000000,
+              "maxFiles": 1000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 8,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": true,
+            },
+            "notifications": Object {
+              "allowed": true,
+              "maxItems": 100,
+              "maxSentNotificationsPerPeriod": 1000,
+              "maxSentPushNotificationsPerPeriod": 500,
+              "maxSubscribersPerItem": 50,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 32,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 30,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": true,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 100000,
+              "maxItems": 5,
+              "maxRunsPerHour": 100,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+        "XLTier": Object {
+          "features": Object {
+            "ai": Object {
+              "chat": Object {
+                "allowed": false,
+              },
+              "hume": Object {
+                "allowed": true,
+              },
+              "images": Object {
+                "allowed": false,
+              },
+              "openai": Object {
+                "realtime": Object {
+                  "allowed": false,
+                },
+              },
+              "skyboxes": Object {
+                "allowed": false,
+              },
+              "sloyd": Object {
+                "allowed": false,
+              },
+            },
+            "comId": Object {
+              "allowed": false,
+            },
+            "data": Object {
+              "allowed": true,
+              "maxItemSizeInBytes": 500000,
+              "maxItems": 1000000,
+              "maxReadsPerPeriod": 10000000,
+              "maxWritesPerPeriod": 10000000,
+            },
+            "documents": Object {
+              "allowed": false,
+            },
+            "events": Object {
+              "allowed": true,
+              "maxEvents": 10000,
+              "maxUpdatesPerPeriod": 1000000,
+            },
+            "files": Object {
+              "allowed": true,
+              "maxBytesPerFile": 50000000,
+              "maxBytesTotal": 5000000000000,
+              "maxFiles": 100000,
+            },
+            "insts": Object {
+              "allowed": true,
+              "maxActiveConnectionsPerInst": 32,
+              "maxBytesPerInst": 25000000,
+              "maxInsts": 1024,
+            },
+            "loom": Object {
+              "allowed": true,
+            },
+            "notifications": Object {
+              "allowed": false,
+            },
+            "policies": Object {
+              "allowed": true,
+              "maxPolicies": 3200,
+            },
+            "records": Object {
+              "allowed": true,
+              "maxRecords": 3000,
+            },
+            "webhooks": Object {
+              "addStateTimeoutMs": 1000,
+              "allowed": true,
+              "fetchTimeoutMs": 5000,
+              "initTimeoutMs": 100000,
+              "maxItems": 50,
+              "maxRunsPerHour": 1500,
+              "requestTimeoutMs": 5000,
+              "tokenLifetimeMs": 300000,
+            },
+          },
+        },
+      },
+      "webhookSecret": "we-dont-need-this-now",
+    },
+    "telemetry": Object {
+      "instrumentation": Object {},
+      "metrics": Object {
+        "exporter": "otlp",
+        "headers": Object {
+          "Authorization": "Basic Token",
+        },
+        "url": "https://metrics.oltp.example.com",
+      },
+      "resource": Object {
+        "service.name": "casualos",
+      },
+      "tracing": Object {
+        "exporter": "otlp",
+        "headers": Object {
+          "Authorization": "Basic Token",
+        },
+        "url": "https://traces.oltp.example.com",
+      },
+    },
+    "webPush": Object {
+      "vapidPrivateKey": "private-key",
+      "vapidPublicKey": "public-key",
+      "vapidSubject": "mailto:no-reply@example.com",
+    },
+    "webauthn": Object {
+      "relyingParties": Array [
+        Object {
+          "id": "auth.example.com",
+          "name": "Auth CasualOS",
+          "origin": "https://auth.example.com",
+        },
+        Object {
+          "id": "example.com",
+          "name": "CasualOS",
+          "origin": "https://example.com",
+        },
+      ],
+    },
+    "webhooks": Object {
+      "environment": Object {
+        "type": "lambda",
+      },
+    },
+  },
+  "success": true,
+}
+`;

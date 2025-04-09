@@ -134,8 +134,11 @@ import {
     PrismaRecordsStore,
 } from '../prisma';
 import type {
+    AIChatOptions,
+    AIChatProviders,
     AIConfiguration,
     AIGenerateImageConfiguration,
+    AllowedAIChatModel,
 } from '@casual-simulation/aux-records/AIController';
 import { AIController } from '@casual-simulation/aux-records/AIController';
 import type { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
@@ -311,6 +314,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _stripe: StripeIntegration;
 
     private _openAIChatInterface: AIChatInterface = null;
+    private _customChatInterfaces: AIChatProviders = null;
     private _googleAIChatInterface: AIChatInterface = null;
     private _anthropicAIChatInterface: AnthropicAIChatInterface = null;
     private _aiConfiguration: AIConfiguration = null;
@@ -1375,8 +1379,39 @@ export class ServerBuilder implements SubscriptionLike {
         };
 
         if (hasChatInterface && options.ai.chat) {
+            const allowedChatModels: AllowedAIChatModel[] = [];
+            this._customChatInterfaces = {};
+
+            for (let model of options.ai.chat.allowedModels) {
+                if (typeof model === 'string') {
+                    allowedChatModels.push({
+                        provider: options.ai.chat.provider,
+                        model: model,
+                    });
+                } else if (model.provider === 'custom-openai-completions') {
+                    this._customChatInterfaces[model.name] =
+                        new OpenAIChatInterface({
+                            apiKey: model.apiKey,
+                            baseUrl: model.baseUrl,
+                            name: model.name ?? model.provider,
+                        });
+                    for (let m of model.models) {
+                        allowedChatModels.push({
+                            provider: model.name,
+                            model: m,
+                        });
+                    }
+                } else {
+                    allowedChatModels.push({
+                        provider: model.provider,
+                        model: model.model,
+                    });
+                }
+            }
+
             this._aiConfiguration.chat = {
                 interfaces: cleanupObject({
+                    ...this._customChatInterfaces,
                     openai: this._openAIChatInterface,
                     google: this._googleAIChatInterface,
                     anthropic: this._anthropicAIChatInterface,
@@ -1384,17 +1419,7 @@ export class ServerBuilder implements SubscriptionLike {
                 options: {
                     defaultModel: options.ai.chat.defaultModel,
                     defaultModelProvider: options.ai.chat.provider,
-                    allowedChatModels: options.ai.chat.allowedModels.map((m) =>
-                        typeof m === 'string'
-                            ? {
-                                  provider: options.ai.chat.provider,
-                                  model: m,
-                              }
-                            : {
-                                  provider: m.provider,
-                                  model: m.model,
-                              }
-                    ),
+                    allowedChatModels: allowedChatModels,
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
                     tokenModifierRatio: options.ai.chat.tokenModifierRatio,

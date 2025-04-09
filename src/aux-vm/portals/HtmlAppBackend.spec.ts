@@ -531,7 +531,7 @@ describe('HtmlAppBackend', () => {
             expect(updateAction2.updates[0].type).toBe('attributes');
             expect(updateAction2.updates[0].attributeName).toBe('value');
             expect((<any>updateAction2.updates[0].target).attributes).toEqual([
-                { name: 'value', value: 'my value', ns: null },
+                { name: 'value', value: 'my value' },
             ]);
         });
     });

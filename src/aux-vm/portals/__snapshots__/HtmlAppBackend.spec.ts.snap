@@ -6,16 +6,11 @@ Object {
   "type": "update_html_app",
   "updates": Array [
     Object {
-      "addedNodes": undefined,
       "attributeName": undefined,
       "attributeNamespace": undefined,
       "listenerDelta": 1,
       "listenerName": "input",
-      "nextSibling": undefined,
       "oldValue": undefined,
-      "previousSibling": undefined,
-      "removedNodes": undefined,
-      "target": null,
       "type": "event_listener",
     },
     Object {
@@ -97,28 +92,19 @@ Object {
   "type": "update_html_app",
   "updates": Array [
     Object {
-      "addedNodes": undefined,
       "attributeName": "value",
       "attributeNamespace": null,
       "listenerDelta": undefined,
       "listenerName": undefined,
-      "nextSibling": undefined,
       "oldValue": "",
-      "previousSibling": undefined,
-      "removedNodes": undefined,
       "target": Object {
         "__id": "7",
         "attributes": Array [
           Object {
             "name": "value",
-            "ns": null,
             "value": "my value",
           },
         ],
-        "childNodes": Array [],
-        "nodeName": "INPUT",
-        "nodeType": 1,
-        "style": Object {},
       },
       "type": "attributes",
     },
