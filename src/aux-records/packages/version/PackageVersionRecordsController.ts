@@ -34,8 +34,13 @@ import type {
     PolicyController,
     AuthorizeUserAndInstancesForResourcesResult,
     ConstructAuthorizationContextRequest,
+    ResourceInfo,
 } from '../../PolicyController';
-import { AuthorizeSubjectFailure } from '../../PolicyController';
+import {
+    AuthorizeSubjectFailure,
+    getMarkerResourcesForCreation,
+    getMarkerResourcesForUpdate,
+} from '../../PolicyController';
 import type {
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
@@ -229,7 +234,9 @@ export class PackageVersionRecordsController {
                 : ('create' as const);
             let authorization: AuthorizeUserAndInstancesForResourcesResult;
             if (action === 'update') {
-                resourceMarkers = existingItem.item.markers;
+                const existingMarkers = existingItem.item.markers;
+                resourceMarkers = request.item.markers ?? existingMarkers;
+                // resourceMarkers = existingItem.item.markers;
                 action = 'update';
                 authorization =
                     await this._policies.authorizeUserAndInstancesForResources(
@@ -244,6 +251,10 @@ export class PackageVersionRecordsController {
                                     action: action,
                                     markers: resourceMarkers,
                                 },
+                                ...getMarkerResourcesForUpdate(
+                                    existingMarkers,
+                                    resourceMarkers
+                                ),
                             ],
                         }
                     );
@@ -254,7 +265,28 @@ export class PackageVersionRecordsController {
             } else {
                 // TODO: Allow these markers to be inherited from the parent package.
                 // When the markers are inherited, then the user shouldn't need permission to assign them.
+                let usingGivenMarkers = true;
                 resourceMarkers = request.item.markers;
+
+                if (!resourceMarkers) {
+                    resourceMarkers = existingItem.parentMarkers;
+                    usingGivenMarkers = false;
+                }
+
+                let resources: ResourceInfo[] = [
+                    {
+                        resourceKind: this._resourceKind,
+                        resourceId: request.item.address,
+                        action: action,
+                        markers: resourceMarkers,
+                    },
+                ];
+
+                if (!usingGivenMarkers) {
+                    resources.push(
+                        ...getMarkerResourcesForCreation(resourceMarkers)
+                    );
+                }
 
                 // TODO: Make sure that whenever the user is selecting markers that they also have permissions to
                 // assign the markers they are selecting.
@@ -264,14 +296,7 @@ export class PackageVersionRecordsController {
                         {
                             userId: request.userId,
                             instances: request.instances,
-                            resources: [
-                                {
-                                    resourceKind: this._resourceKind,
-                                    resourceId: request.item.address,
-                                    action: action,
-                                    markers: resourceMarkers,
-                                },
-                            ],
+                            resources,
                         }
                     );
 
@@ -434,7 +459,7 @@ export class PackageVersionRecordsController {
                     requiresReview: request.item.entitlements.some((e) =>
                         entitlementRequiresApproval(e)
                     ),
-                    markers: request.item.markers,
+                    markers: resourceMarkers,
                 };
 
                 const crudResult = await this._store.putItem(recordName, item);
@@ -453,7 +478,15 @@ export class PackageVersionRecordsController {
                     markers: resourceMarkers,
                 });
             } else {
-                item = existingItem.item;
+                item = {
+                    ...existingItem.item,
+                    markers: resourceMarkers,
+                };
+                const crudResult = await this._store.putItem(recordName, item);
+
+                if (crudResult.success === false) {
+                    return crudResult;
+                }
             }
 
             return {
@@ -932,6 +965,7 @@ export type PackageRecordVersionInput = Omit<
     | 'createdFile'
     | 'requiresReview'
     | 'id'
+    | 'markers'
 > & {
     auxFileRequest: Omit<
         RecordFileRequest,

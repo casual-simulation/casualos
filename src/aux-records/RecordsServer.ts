@@ -2259,7 +2259,7 @@ export class RecordsServer {
                                 major: z.number().int(),
                                 minor: z.number().int(),
                                 patch: z.number().int(),
-                                tag: z.string().max(16),
+                                tag: z.string().max(16).default(''),
                             }),
                             auxFileRequest: z.object({
                                 fileSha256Hex: z.string().min(1).max(123),
@@ -2273,7 +2273,7 @@ export class RecordsServer {
                             }),
                             entitlements: z.array(ENTITLEMENT_VALIDATION),
                             readme: z.string(),
-                            markers: MARKERS_VALIDATION,
+                            markers: MARKERS_VALIDATION.optional(),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })
@@ -2370,7 +2370,7 @@ export class RecordsServer {
                             major: z.number().int(),
                             minor: z.number().int(),
                             patch: z.number().int(),
-                            tag: z.string().max(16),
+                            tag: z.string().max(16).default(''),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                     })

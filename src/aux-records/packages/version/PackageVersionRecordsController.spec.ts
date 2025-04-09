@@ -1644,6 +1644,103 @@ describe('PackageVersionRecordsController', () => {
                     })
                 ).toBe(sha256);
             });
+
+            it('should use the same markers as the package if no markers are provided', async () => {
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: 'def',
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const packageItem = await recordItemsStore.getItemByAddress(
+                    recordName,
+                    'address'
+                );
+
+                expect(packageItem).toEqual({
+                    id: expect.any(String),
+                    address: 'address',
+
+                    // Should use the PRIVATE_MARKER when
+                    // the package has to be created from a version.
+                    markers: [PUBLIC_READ_MARKER],
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+                expect(item.parentMarkers).toEqual([PUBLIC_READ_MARKER]);
+                expect(item.item!.markers).toEqual([PUBLIC_READ_MARKER]);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    id,
+                    markers,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
         });
 
         describe('update()', () => {
@@ -1807,6 +1904,71 @@ describe('PackageVersionRecordsController', () => {
                         sizeInBytes: 123,
                     },
                     parentMarkers: [PUBLIC_READ_MARKER],
+                });
+            });
+
+            it('should return not_authorized if trying to assign markers that the user doesnt have ability to', async () => {
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    otherUserId,
+                    'package.version',
+                    PUBLIC_READ_MARKER,
+                    'update',
+                    {},
+                    null
+                );
+
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'user',
+                    otherUserId,
+                    'package.version',
+                    'other_marker',
+                    'update',
+                    {},
+                    null
+                );
+
+                const result1 = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId: otherUserId,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileDescription: 'description',
+                            fileMimeType: 'application/json',
+                            fileSha256Hex: getHash('aux'),
+                            headers: {},
+                        },
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER, 'other_marker'],
+                    },
+                    instances: [],
+                });
+
+                expect(result1).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'assign',
+                        resourceKind: 'marker',
+                        resourceId: 'other_marker',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
                 });
             });
         });

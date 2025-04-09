@@ -2223,6 +2223,8 @@ Object {
                     "type": "number",
                   },
                   "tag": Object {
+                    "defaultValue": "",
+                    "hasDefault": true,
                     "type": "string",
                   },
                 },
@@ -2231,6 +2233,7 @@ Object {
               "markers": Object {
                 "maxLength": 10,
                 "minLength": 1,
+                "optional": true,
                 "schema": Object {
                   "type": "string",
                 },
@@ -2310,6 +2313,8 @@ Object {
                 "type": "number",
               },
               "tag": Object {
+                "defaultValue": "",
+                "hasDefault": true,
                 "type": "string",
               },
             },
@@ -6896,6 +6901,8 @@ Object {
                     "type": "number",
                   },
                   "tag": Object {
+                    "defaultValue": "",
+                    "hasDefault": true,
                     "type": "string",
                   },
                 },
@@ -6904,6 +6911,7 @@ Object {
               "markers": Object {
                 "maxLength": 10,
                 "minLength": 1,
+                "optional": true,
                 "schema": Object {
                   "type": "string",
                 },
@@ -6983,6 +6991,8 @@ Object {
                 "type": "number",
               },
               "tag": Object {
+                "defaultValue": "",
+                "hasDefault": true,
                 "type": "string",
               },
             },

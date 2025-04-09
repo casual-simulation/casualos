@@ -13022,6 +13022,61 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should allow markers to be optional', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package/version`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileByteLength: 123,
+                                fileDescription: 'description',
+                                fileMimeType: 'application/json',
+                                fileSha256Hex: getHash('aux'),
+                                headers: {},
+                            },
+                            entitlements: [],
+                            readme: 'readme',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: expect.any(String),
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         testUrl(
             'POST',
             `/api/v2/records/package/version`,
