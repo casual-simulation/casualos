@@ -589,9 +589,9 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z
-                .enum(['openai', 'google', 'anthropic'])
+                .string()
                 .describe(
-                    'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
+                    'The provider that should be used by default for Chat AI request models that dont have an associated provider. If you want to point to a custom provider, then use the name for the provider.'
                 ),
             defaultModel: z
                 .string()
