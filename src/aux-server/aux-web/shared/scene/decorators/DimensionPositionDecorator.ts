@@ -282,7 +282,6 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                 const objWorld = new Vector3();
                 this._rotationObj.getWorldPosition(objWorld);
 
-                //MY CHANGES START HERE
                 let direction: CasualVector3;
                 let upVector: CasualVector3;
 
@@ -297,7 +296,19 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         ? this.bot3D.coordinateTransformer(currentGridPos)
                         : null;
 
-                if (coordinateTransform) {
+                if (this._orientationMode === 'billboard') {
+                    direction = new CasualVector3(
+                        objWorld.x - cameraWorld.x,
+                        objWorld.y - cameraWorld.y,
+                        objWorld.z - cameraWorld.z
+                    );
+
+                    upVector = new CasualVector3(
+                        this._rotationObj.up.x,
+                        this._rotationObj.up.y,
+                        this._rotationObj.up.z
+                    );
+                } else if (coordinateTransform) {
                     const globeCenter = new Vector3(0, 0, 0); //Assuming globe center is at origin
 
                     const globalDirection = new Vector3().subVectors(
@@ -339,15 +350,9 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     );
                 } else {
                     direction = new CasualVector3(
-                        objWorld.x,
-                        objWorld.y,
-                        objWorld.z
-                    ).subtract(
-                        new CasualVector3(
-                            cameraWorld.x,
-                            cameraWorld.y,
-                            cameraWorld.z
-                        )
+                        objWorld.x - cameraWorld.x,
+                        objWorld.y - cameraWorld.y,
+                        objWorld.z - cameraWorld.z
                     );
 
                     upVector = new CasualVector3(
