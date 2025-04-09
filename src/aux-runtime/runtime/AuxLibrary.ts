@@ -11276,6 +11276,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example Get a shared document from the current inst by name.
      * const sharedDocument = await os.getSharedDocument('myDocument');
+     *
+     * @dochash actions/os/documents
+     * @doctitle Document Actions
+     * @docsidebar Documents
+     * @docdescription Actions for working with shared documents.
+     * @docname os.getSharedDocument
+     * @docid os.getShareDocument-name
      */
     function getSharedDocument(name: string): Promise<SharedDocument>;
 
@@ -11288,6 +11295,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName The name of the record. If null, then a public inst will be used.
      * @param inst The name of the inst that the shared document is in.
      * @param branch The name of the branch that the shared document is in.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-recordName-inst-name
      */
     function getSharedDocument(
         recordName: string | null,
@@ -11328,6 +11339,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets a shared document that is only stored locally on this device.
      * @param name The name of the document.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getLocalDocument
      */
     function getLocalDocument(name: string): Promise<SharedDocument> {
         const task = context.createTask();
@@ -11342,6 +11356,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a document that is not shared or saved to the device.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getMemoryDocument
      */
     function getMemoryDocument(): Promise<SharedDocument> {
         const task = context.createTask();
