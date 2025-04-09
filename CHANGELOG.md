@@ -29,6 +29,7 @@
 -   Fixed an issue where the service worker would not be installed when jumping directly into an inst.
 -   Fixed an issue where the gridPortal would not resize to match the window size.
 -   Fixed an issue where an error would occur when calling `os.unregisterApp()` before `os.registerApp()` completes.
+-   Fixed orientation issues for bots on the mapPortal surface with `orientationMode` set to `billboardFront` and `billboardTop`.
 
 ## V3.4.0
 
