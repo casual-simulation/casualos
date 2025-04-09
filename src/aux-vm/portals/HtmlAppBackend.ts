@@ -251,17 +251,45 @@ export class HtmlAppBackend implements AppBackend {
                 if (event.appId === this.appId) {
                     let target = this._getNode(event.event.target);
                     if (target && target.dispatchEvent) {
-                        let finalEvent = this.usingBrowserDocument
-                            ? new Event(event.event.type, {
-                                  bubbles: true,
-                                  cancelable: event.event.cancelable,
-                                  composed: event.event.composed,
-                              })
-                            : {
-                                  ...event.event,
-                                  target: target,
-                                  bubbles: true,
-                              };
+                        let finalEvent: Event;
+                        if (this.usingBrowserDocument) {
+                            finalEvent = new Event(event.event.type, {
+                                bubbles: true,
+                                cancelable: event.event.cancelable,
+                                composed: event.event.composed,
+                            });
+
+                            // Copy all properties from the event
+                            for (let key in event.event) {
+                                try {
+                                    const prop = getPropertyDescriptor(
+                                        finalEvent,
+                                        key
+                                    );
+                                    if (!prop || prop.writable || prop.set) {
+                                        (finalEvent as any)[key] =
+                                            event.event[key];
+                                    } else if (prop?.configurable) {
+                                        Object.defineProperty(finalEvent, key, {
+                                            value: event.event[key],
+                                            writable: true,
+                                            configurable: true,
+                                        });
+                                    }
+                                } catch (err) {
+                                    console.warn(
+                                        `[HtmlAppBackend] Error copying property ${key} from event`,
+                                        err
+                                    );
+                                }
+                            }
+                        } else {
+                            finalEvent = {
+                                ...event.event,
+                                target: target,
+                                bubbles: true,
+                            };
+                        }
 
                         try {
                             supressMutations(true);
@@ -752,6 +780,21 @@ export class HtmlAppBackend implements AppBackend {
 
         return result;
     }
+}
+
+function getPropertyDescriptor(
+    obj: object,
+    key: PropertyKey
+): PropertyDescriptor {
+    let descriptor: PropertyDescriptor;
+    while (obj) {
+        descriptor = Object.getOwnPropertyDescriptor(obj, key);
+        if (descriptor) {
+            return descriptor;
+        }
+        obj = Object.getPrototypeOf(obj);
+    }
+    return null;
 }
 
 /**
