@@ -45,6 +45,17 @@ export interface OpenAIChatOptions {
      * The API key to use.
      */
     apiKey: string;
+
+    /**
+     * The HTTP base URL to use for the OpenAI API.
+     * Defaults to "https://api.openai.com/v1/"
+     */
+    baseUrl?: string;
+
+    /**
+     * The name of this interface to use for logging;
+     */
+    name?: string;
 }
 
 /**
@@ -54,10 +65,19 @@ export class OpenAIChatInterface implements AIChatInterface {
     private _options: OpenAIChatOptions;
     private _client: OpenAI;
 
+    private get _baseUrl() {
+        return this._options.baseUrl ?? 'https://api.openai.com/v1/';
+    }
+
+    private get _name() {
+        return this._options.name ?? 'OpenAIChatInterface';
+    }
+
     constructor(options: OpenAIChatOptions) {
         this._options = options;
         this._client = new OpenAI({
             apiKey: options.apiKey,
+            baseURL: this._options.baseUrl ?? undefined,
         });
     }
 
@@ -66,8 +86,18 @@ export class OpenAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
+            if (this._options.name) {
+                const span = trace.getActiveSpan();
+                if (span) {
+                    span.setAttribute(
+                        'chat.interface.name',
+                        this._options.name
+                    );
+                }
+            }
+
             const result = await axios.post(
-                'https://api.openai.com/v1/chat/completions',
+                `${this._baseUrl}chat/completions`,
                 {
                     model: request.model,
                     messages: request.messages.map((m) => ({
@@ -116,10 +146,10 @@ export class OpenAIChatInterface implements AIChatInterface {
             );
 
             console.log(
-                `[OpenAIChatInterface] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
+                `[${this._name}] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
             );
             console.log(
-                `[OpenAIChatInterface] [${request.userId}] [chat]: Usage:`,
+                `[${this._name}] [${request.userId}] [chat]: Usage:`,
                 result.data.usage
             );
 
@@ -145,7 +175,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                     span?.setStatus({ code: SpanStatusCode.ERROR });
 
                     console.error(
-                        `[OpenAIChatInterface] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`
+                        `[${this._name}] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`
                     );
                     return {
                         choices: [
@@ -166,6 +196,13 @@ export class OpenAIChatInterface implements AIChatInterface {
     async *chatStream(
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
+        if (this._options.name) {
+            const span = trace.getActiveSpan();
+            if (span) {
+                span.setAttribute('chat.interface.name', this._options.name);
+            }
+        }
+
         const res = await this._client.chat.completions.create({
             model: request.model,
             messages: request.messages.map((m) => ({
