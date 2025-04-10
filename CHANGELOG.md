@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.4.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed another issue with handling of text data in custom apps.
+
 ## V3.4.2
 
 #### Date: 4/10/2025
