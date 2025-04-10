@@ -149,6 +149,16 @@ export default class HtmlApp extends Vue {
             }
         }
 
+        // Always listen for input events to prevent weird things from happening
+        // with input-related events (like onkeydown)
+        // Specific issue is that the value of the input is not set until just before the input event
+        // is fired, and if we don't listen for the input event, then the actual value of the input element
+        // won't be sent to the HtmlAppBackend
+        this._applyEventListener({
+            listenerName: 'input',
+            listenerDelta: 1,
+        });
+
         if (hasValue(this.taskId)) {
             this._simulation.helper.transaction(
                 asyncResult(this.taskId, {
