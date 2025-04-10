@@ -681,6 +681,11 @@ export class HtmlAppBackend implements AppBackend {
                             },
                         ],
                     } as any;
+                } else if (mutation.type === 'characterData') {
+                    processedMutation.target = {
+                        __id: this._getNodeId(mutation.target),
+                        data: (mutation.target as CharacterData).data,
+                    } as any;
                 }
             }
             processedMutations.push(processedMutation);
