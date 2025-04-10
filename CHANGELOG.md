@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.4.2
+
+#### Date: 4/10/2025
+
+### :bug: Bug Fixes
+
+-   Fixed a couple of issues with DOM and custom apps.
+
 ## V3.4.1
 
 #### Date: 4/9/2025

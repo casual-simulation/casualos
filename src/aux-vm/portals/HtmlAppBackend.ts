@@ -269,12 +269,6 @@ export class HtmlAppBackend implements AppBackend {
                                     if (!prop || prop.writable || prop.set) {
                                         (finalEvent as any)[key] =
                                             event.event[key];
-                                    } else if (prop?.configurable) {
-                                        Object.defineProperty(finalEvent, key, {
-                                            value: event.event[key],
-                                            writable: true,
-                                            configurable: true,
-                                        });
                                     }
                                 } catch (err) {
                                     console.warn(
