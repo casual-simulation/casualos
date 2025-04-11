@@ -1795,6 +1795,7 @@ export class ServerBuilder implements SubscriptionLike {
                     store: this._packageVersionsStore,
                     files: this._filesController,
                     systemNotifications: this._notificationMessenger,
+                    packages: this._packagesController,
                 });
         }
 
