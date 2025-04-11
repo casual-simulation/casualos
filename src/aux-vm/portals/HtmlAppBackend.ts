@@ -269,12 +269,6 @@ export class HtmlAppBackend implements AppBackend {
                                     if (!prop || prop.writable || prop.set) {
                                         (finalEvent as any)[key] =
                                             event.event[key];
-                                    } else if (prop?.configurable) {
-                                        Object.defineProperty(finalEvent, key, {
-                                            value: event.event[key],
-                                            writable: true,
-                                            configurable: true,
-                                        });
                                     }
                                 } catch (err) {
                                     console.warn(
@@ -686,6 +680,11 @@ export class HtmlAppBackend implements AppBackend {
                                 ).getAttribute(mutation.attributeName),
                             },
                         ],
+                    } as any;
+                } else if (mutation.type === 'characterData') {
+                    processedMutation.target = {
+                        __id: this._getNodeId(mutation.target),
+                        data: (mutation.target as CharacterData).data,
                     } as any;
                 }
             }

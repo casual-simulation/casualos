@@ -165,7 +165,7 @@ export class OpenAIChatInterface implements AIChatInterface {
 
             return {
                 choices: choices,
-                totalTokens: result.data.usage.total_tokens,
+                totalTokens: result.data.usage?.total_tokens ?? 0,
             };
         } catch (err) {
             if (axios.isAxiosError(err)) {

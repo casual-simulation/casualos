@@ -1,8 +1,24 @@
 # CasualOS Changelog
 
+## V3.4.3
+
+#### Date: 4/10/2025
+
+### :bug: Bug Fixes
+
+-   Fixed another issue with handling of text data in custom apps.
+
+## V3.4.2
+
+#### Date: 4/10/2025
+
+### :bug: Bug Fixes
+
+-   Fixed a couple of issues with DOM and custom apps.
+
 ## V3.4.1
 
-#### Date: TBD
+#### Date: 4/9/2025
 
 ### :rocket: Features
 
@@ -29,6 +45,7 @@
 -   Fixed an issue where the service worker would not be installed when jumping directly into an inst.
 -   Fixed an issue where the gridPortal would not resize to match the window size.
 -   Fixed an issue where an error would occur when calling `os.unregisterApp()` before `os.registerApp()` completes.
+-   Fixed orientation issues for bots on the mapPortal surface with `orientationMode` set to `billboardFront` and `billboardTop`.
 
 ## V3.4.0
 
