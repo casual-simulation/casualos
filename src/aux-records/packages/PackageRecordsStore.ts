@@ -38,6 +38,13 @@ export interface PackageRecordsStore extends CrudRecordsStore<PackageRecord> {
     getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<PackageSubscriptionMetrics>;
+
+    // TODO: support package metadata
+    // /**
+    //  * Gets the metadata for the package.
+    //  * @param id
+    //  */
+    // getPackageMetadata(id: string): Promise<PackageMetadata>;
 }
 
 /**

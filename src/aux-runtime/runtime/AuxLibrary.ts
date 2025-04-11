@@ -297,6 +297,8 @@ import type {
     ListWebhooksOptions,
     ListNotificationsOptions,
     SendNotificationOptions,
+    GrantEntitlementsRequest,
+    GrantEntitlementsResult,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -348,6 +350,7 @@ import {
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
     aiOpenAICreateRealtimeSession,
+    grantEntitlements as calcGrantEntitlements,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3357,6 +3360,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordEvent,
                 countEvents,
+
+                grantEntitlements,
 
                 listUserStudios,
 
@@ -10654,6 +10659,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    function grantEntitlements(
+        request: GrantEntitlementsRequest,
+        options: RecordActionOptions = {}
+    ): Promise<GrantEntitlementsResult> {
+        const task = context.createTask();
+        const event = calcGrantEntitlements(request, options, task.taskId);
         return addAsyncAction(task, event);
     }
 

@@ -221,6 +221,8 @@ import {
     listNotificationSubscriptions,
     listUserNotificationSubscriptions,
     aiOpenAICreateRealtimeSession,
+    recordsCallProcedure,
+    grantEntitlements,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -8454,6 +8456,32 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.countEvents('key', {} as string);
                 }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe.only('os.grantEntitlements()', () => {
+            it('should emit a GrantEntitlementAction', async () => {
+                const action: any = library.api.os.grantEntitlements({
+                    packageId: 'packageId',
+                    features: ['data'],
+                    scope: 'designated',
+                    recordName: 'recordName',
+                    expireTimeMs: 999,
+                });
+
+                const expected = grantEntitlements(
+                    {
+                        packageId: 'packageId',
+                        features: ['data'],
+                        scope: 'designated',
+                        recordName: 'recordName',
+                        expireTimeMs: 999,
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

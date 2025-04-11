@@ -22,12 +22,17 @@ import type {
     WebhookRecord,
     NotificationRecord,
     PushNotificationPayload,
+    GrantEntitlementRequest,
+    RevokeEntitlementRequest,
+    GrantEntitlementFailure,
 } from '@casual-simulation/aux-records';
 import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import type {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+    EntitlementFeature,
+    GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
 import {
     ProcedureInputs,
@@ -71,7 +76,9 @@ export type RecordsAsyncActions =
     | SetRoomTrackOptionsAction
     | GetRoomRemoteOptionsAction
     | RecordsCallProcedureAction
-    | SubscribeToNotificationAction;
+    | SubscribeToNotificationAction
+    | GrantEntitlementsAction
+    | RevokeEntitlementGrantAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -844,6 +851,79 @@ export interface GetEventCountAction extends RecordsAction {
      * The name of the event.
      */
     eventName: string;
+}
+
+/**
+ * Defines a request that grants a package entitlements to access a record.
+ *
+ * @dochash types/records/packages
+ * @docname GrantEntitlementsRequest
+ */
+export interface GrantEntitlementsRequest {
+    /**
+     * The ID of the package that should be granted entitlements.
+     */
+    packageId: string;
+
+    /**
+     * The scope that the entitlements should have.
+     */
+    scope: GrantedEntitlementScope;
+
+    /**
+     * The name of the record that the entitlements cover.
+     */
+    recordName: string;
+
+    /**
+     * The time that the entitlements should expire.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The features that should be granted.
+     */
+    features: EntitlementFeature[];
+}
+
+export type GrantEntitlementsResult =
+    | GrantEntitlementFailure
+    | GrantEntitlementsSuccess;
+
+export interface GrantEntitlementsSuccess {
+    success: true;
+
+    grantedEntitlements: {
+        grantId: string;
+        feature: EntitlementFeature;
+    }[];
+}
+
+/**
+ * Defines an action that grants a package entitlements to access a record.
+ */
+export interface GrantEntitlementsAction extends RecordsAction {
+    type: 'grant_record_entitlements';
+
+    request: GrantEntitlementsRequest;
+}
+
+/**
+ * Defines a request that revokes an entitlement grant from a package.
+ * @dochash types/records/packages
+ * @docname GrantRecordEntitlementsRequest
+ */
+export interface RevokeEntitlementGrantRequest {
+    /**
+     * The ID of the entitlement grant to revoke.
+     */
+    grantId: string;
+}
+
+export interface RevokeEntitlementGrantAction extends RecordsAction {
+    type: 'revoke_record_entitlements';
+
+    request: RevokeEntitlementGrantRequest;
 }
 
 /**
@@ -2330,6 +2410,44 @@ export function getEventCount(
         type: 'get_event_count',
         recordName,
         eventName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRecordEntitlementsAction.
+ * @param request The request that should be used to grant the entitlements.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantEntitlements(
+    request: GrantEntitlementsRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GrantEntitlementsAction {
+    return {
+        type: 'grant_record_entitlements',
+        request,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RevokeEntitlementGrantAction.
+ * @param request The request that should be used to revoke the entitlement.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeEntitlement(
+    request: RevokeEntitlementGrantRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RevokeEntitlementGrantAction {
+    return {
+        type: 'revoke_record_entitlements',
+        request,
         options,
         taskId,
     };
