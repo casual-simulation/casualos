@@ -2755,6 +2755,7 @@ export class PolicyController {
                 );
 
             const grantId = grant?.id ?? uuidv7();
+            const feature = grant?.feature ?? request.feature;
 
             await this._policies.saveGrantedPackageEntitlement({
                 id: grantId,
@@ -2767,13 +2768,14 @@ export class PolicyController {
                 scope: grant?.scope ?? request.scope,
                 packageId: grant?.packageId ?? request.packageId,
                 userId: grant?.userId ?? request.grantingUserId,
-                feature: grant?.feature ?? request.feature,
+                feature: feature,
                 recordName: grant?.recordName ?? request.recordName,
             });
 
             return {
                 success: true,
                 grantId,
+                feature,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -3992,7 +3994,7 @@ export interface GrantEntitlementRequest {
     scope: GrantedEntitlementScope;
 
     /**
-     * The record that the entitlement grant is for.
+     * The record that the entitlement grant covers.
      */
     recordName: string;
 
@@ -4013,6 +4015,11 @@ export interface GrantEntitlementSuccess {
      * The ID of the entitlement grant.
      */
     grantId: string;
+
+    /**
+     * The feature that was granted.
+     */
+    feature: EntitlementFeature;
 }
 
 export interface GrantEntitlementFailure {
