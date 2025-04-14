@@ -1,8 +1,28 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     WebGLRenderer,
+    Object3D,
+    Vector2,
+} from '@casual-simulation/three';
+import {
     Scene,
     Camera,
-    Object3D,
     PerspectiveCamera,
     OrthographicCamera,
     Color,
@@ -13,7 +33,6 @@ import {
     Mesh,
     Vector3,
     Quaternion,
-    Vector2,
 } from '@casual-simulation/three';
 import {
     CSS3DRenderer,
@@ -27,6 +46,7 @@ import { buildSRGBColor } from './SceneUtils';
  * some other modifications and additional features.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace HtmlMixer {
     /**
      * define a context for HtmlMixer
@@ -242,7 +262,7 @@ export namespace HtmlMixer {
                 newDomElement
             );
             // remove the oldDomElement
-            var oldDomElement = this.domElement;
+            let oldDomElement = this.domElement;
             if (oldDomElement.parentNode) {
                 oldDomElement.parentNode.removeChild(oldDomElement);
             }
@@ -313,6 +333,7 @@ export namespace HtmlMixer {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace HtmlMixerHelpers {
     /**
      * create domElement for a iframe to insert in a HtmlMixed.Plane

@@ -1,14 +1,32 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue from 'vue';
-import { IGameView } from './IGameView';
+import type { IGameView } from './IGameView';
 import { BotRenderer } from '../scene/BotRenderer';
 import { Provide, Component, Prop } from 'vue-property-decorator';
 import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
-import { Game } from '../scene/Game';
-import { SubscriptionLike } from 'rxjs';
+import type { Game } from '../scene/Game';
+import type { SubscriptionLike } from 'rxjs';
 import { EventBus } from '@casual-simulation/aux-components';
 import { debounce } from 'lodash';
-import { BotCursorType, getCursorCSS } from '@casual-simulation/aux-common';
+import type { BotCursorType } from '@casual-simulation/aux-common';
+import { getCursorCSS } from '@casual-simulation/aux-common';
 
 export interface SidebarItem {
     id: string;
@@ -25,6 +43,7 @@ export interface SidebarItem {
     },
 })
 export default class BaseGameView extends Vue implements IGameView {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     private _resizeObserver: import('@juggle/resize-observer').ResizeObserver;
     protected _subscriptions: SubscriptionLike[] = [];
 
@@ -32,6 +51,9 @@ export default class BaseGameView extends Vue implements IGameView {
 
     _game: Game = null;
 
+    /**
+     * The ID of the container element that the game view should be resized to.
+     */
     @Prop({})
     containerId: string;
 
@@ -39,6 +61,9 @@ export default class BaseGameView extends Vue implements IGameView {
         return <HTMLElement>this.$refs.gameView;
     }
 
+    /**
+     * Gets the container element for the game view that is inside this component.
+     */
     get container(): HTMLElement {
         return <HTMLElement>this.$refs.container;
     }

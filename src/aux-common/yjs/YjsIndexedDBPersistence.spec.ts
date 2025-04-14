@@ -1,4 +1,20 @@
-// The MIT License (MIT)
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 // Copyright (c) 2014,2023
 //   - Kevin Jahns <kevin.jahns@rwth-aachen.de>.
@@ -24,7 +40,8 @@
 // SOFTWARE.
 
 import { IDBFactory } from 'fake-indexeddb';
-import { Doc, Transaction, YEvent } from 'yjs';
+import type { Transaction, YEvent } from 'yjs';
+import { Doc } from 'yjs';
 import {
     YjsIndexedDBPersistence,
     PREFERRED_TRIM_SIZE,
@@ -140,7 +157,6 @@ describe('YjsIndexedDBPersistence', () => {
         const persistence = new YjsIndexedDBPersistence('test3', ydoc);
         persistence.set('a', 4);
         persistence.set(4, 'meta!');
-        // @ts-ignore
         persistence.set('obj', { a: 4 });
         const resA = await runTask(() => persistence.get('a'));
 

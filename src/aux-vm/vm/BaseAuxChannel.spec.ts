@@ -1,52 +1,76 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { BaseAuxChannel } from './BaseAuxChannel';
-import {
+import type {
     RemoteAction,
     DeviceAction,
-    remote,
     ConnectionInfo,
     Action,
     CurrentVersion,
     StatusUpdate,
     ConnectionIndicator,
     AuxPartitionServices,
+} from '@casual-simulation/aux-common';
+import {
+    remote,
     ON_ALLOW_COLLABORATION_UPGRADE,
     ON_DISALLOW_COLLABORATION_UPGRADE,
+} from '@casual-simulation/aux-common';
+import type {
+    MemoryPartition,
+    MemoryPartitionConfig,
+    PartitionConfig,
+    AuxPartition,
+    StateUpdatedEvent,
+    AuxPartitions,
+    MemoryPartitionStateConfig,
 } from '@casual-simulation/aux-common';
 import {
     createBot,
     botAdded,
-    MemoryPartition,
     createMemoryPartition,
-    MemoryPartitionConfig,
-    PartitionConfig,
-    AuxPartition,
     createAuxPartition,
-    StateUpdatedEvent,
     createPrecalculatedBot,
     toast,
-    AuxPartitions,
     action,
     stateUpdatedEvent,
     MemoryPartitionImpl,
-    MemoryPartitionStateConfig,
     asyncResult,
     botUpdated,
 } from '@casual-simulation/aux-common';
-import {
-    AuxRuntime,
+import type {
     RuntimeActions,
     RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
+import {
+    AuxRuntime,
     attachRuntime,
     detachRuntime,
 } from '@casual-simulation/aux-runtime';
-import { AuxConfig } from './AuxConfig';
+import type { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
 import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
-import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
+import type { TimeSample } from '@casual-simulation/timesync';
+import { TimeSyncController } from '@casual-simulation/timesync';
+import type { AsyncResultAction } from '@casual-simulation/aux-common/bots';
 import {
-    AsyncResultAction,
     ON_COLLABORATION_ENABLED,
     TEMPORARY_BOT_PARTITION_ID,
     edit,
@@ -54,9 +78,9 @@ import {
     insert,
     preserve,
 } from '@casual-simulation/aux-common/bots';
-import { AuxSubChannel } from './AuxChannel';
-import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
-import { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import type { AuxSubChannel } from './AuxChannel';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
 import { createSharedDocument } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 import {
     createYjsSharedDocument,
@@ -1188,6 +1212,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1247,6 +1272,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1335,6 +1361,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1434,6 +1461,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1550,6 +1578,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1725,6 +1754,7 @@ describe('BaseAuxChannel', () => {
                     {
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         isCollaborative: false,
                         allowCollaborationUpgrade: false,
                         ab1BootstrapUrl: 'bootstrap',
@@ -1791,6 +1821,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1887,6 +1918,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -1972,6 +2004,7 @@ describe('BaseAuxChannel', () => {
                             ab1BootstrapUrl: 'url',
                             supportsAR: false,
                             supportsVR: false,
+                            supportsDOM: false,
                         },
                     },
                     partitions: {
@@ -2177,6 +2210,7 @@ describe('BaseAuxChannel', () => {
                         ab1BootstrapUrl: 'url',
                         supportsAR: false,
                         supportsVR: false,
+                        supportsDOM: false,
                         allowCollaborationUpgrade: false,
                         isCollaborative: false,
                     },
@@ -2203,6 +2237,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'url',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
             });
@@ -2211,6 +2246,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: true,
                 supportsVR: true,
+                supportsDOM: true,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2223,6 +2259,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: true,
                 supportsVR: true,
+                supportsDOM: true,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2248,6 +2285,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: true,
                 isCollaborative: true,
             });
@@ -2277,6 +2315,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: true,
                 isCollaborative: false,
             });
@@ -2308,6 +2347,7 @@ describe('BaseAuxChannel', () => {
                 ab1BootstrapUrl: 'other',
                 supportsAR: false,
                 supportsVR: false,
+                supportsDOM: false,
                 allowCollaborationUpgrade: false,
                 isCollaborative: false,
             });

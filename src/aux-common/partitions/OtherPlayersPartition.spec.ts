@@ -1,9 +1,25 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { testPartitionImplementation } from './test/PartitionTests';
 import { OtherPlayersPartitionImpl } from './OtherPlayersPartition';
 import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
+import type { Bot, UpdatedBot, StateUpdatedEvent } from '../bots';
 import {
-    Bot,
-    UpdatedBot,
     createBot,
     botAdded,
     getRemotes,
@@ -11,13 +27,12 @@ import {
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
-    StateUpdatedEvent,
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
     botRemoved,
     botUpdated,
 } from '../bots';
-import { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
+import type { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync, wait } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
@@ -25,15 +40,15 @@ import { YjsPartitionImpl } from './YjsPartition';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import { cloneDeep } from 'lodash';
-import { Action, connectionInfo, remote } from '../common';
-import {
+import type { Action } from '../common';
+import { connectionInfo, remote } from '../common';
+import type {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
     DisconnectedFromBranchMessage,
-    InstRecordsClient,
-    MemoryConnectionClient,
     ReceiveDeviceActionMessage,
 } from '../websockets';
+import { InstRecordsClient, MemoryConnectionClient } from '../websockets';
 import { PartitionAuthSource } from './PartitionAuthSource';
 
 console.log = jest.fn();

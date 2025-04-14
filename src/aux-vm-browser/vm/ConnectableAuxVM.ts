@@ -1,26 +1,45 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     BotAction,
     PartitionAuthMessage,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
-import {
+import type {
     AuxVM,
     AuxChannel,
     AuxChannelErrorType,
     ChannelActionResult,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
-import { proxy, releaseProxy, Remote, wrap } from 'comlink';
-import { Observable, Subject, Subscription } from 'rxjs';
+} from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm';
+import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
+import type { DeviceAction, StatusUpdate } from '@casual-simulation/aux-common';
+import type { Remote } from 'comlink';
+import { proxy, releaseProxy, wrap } from 'comlink';
+import type { Observable } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Gets an AUX VM that is able to communicate with a proxied aux channel.

@@ -1,31 +1,49 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
-    STORED_AUX_SCHEMA,
     WebhookEnvironment,
 } from '@casual-simulation/aux-records';
+import { STORED_AUX_SCHEMA } from '@casual-simulation/aux-records';
 import { v4 as uuid } from 'uuid';
-import {
+import type {
     AuxConfig,
     AuxConfigParameters,
-    AuxVM,
-    RecordsManager,
     Simulation,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm';
+import { RecordsManager } from '@casual-simulation/aux-vm';
+import type {
+    BotAction,
+    BotsState,
+    ConnectionIndicator,
+    StoredAux,
+} from '@casual-simulation/aux-common';
 import {
     addState,
     applyUpdatesToInst,
-    BotAction,
     botAdded,
-    BotsState,
-    ConnectionIndicator,
     COOKIE_BOT_PARTITION_ID,
     createBot,
     defineGlobalBot,
     first,
     remote,
-    StoredAux,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
 } from '@casual-simulation/aux-common';
@@ -33,8 +51,10 @@ import { getSimulationId } from '../../../shared/SimulationHelpers';
 import mime from 'mime';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { Observable, Subscription, tap } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subscription, tap } from 'rxjs';
 import { sendWebhook } from '../../../shared/WebhookUtils';
+import type { AuxVM } from '@casual-simulation/aux-vm/vm';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;

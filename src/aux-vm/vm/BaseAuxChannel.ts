@@ -1,24 +1,54 @@
-import {
-    Observable,
-    Subject,
-    Subscription,
-    SubscriptionLike,
-    firstValueFrom,
-} from 'rxjs';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Observable, SubscriptionLike } from 'rxjs';
+import { Subject, Subscription, firstValueFrom } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
-import { AuxChannel, AuxSubChannel, ChannelActionResult } from './AuxChannel';
-import {
+import type {
+    AuxChannel,
+    AuxSubChannel,
+    ChannelActionResult,
+} from './AuxChannel';
+import type {
     LocalActions,
     BotAction,
     BotsState,
-    BOT_SPACE_TAG,
     StateUpdatedEvent,
     AuxPartitions,
     AuxPartition,
     PartitionConfig,
-    iteratePartitions,
     BotSpace,
     LoadSpaceAction,
+    BotTagMasks,
+    PrecalculatedBot,
+    StoredAux,
+    ConnectionInfo,
+    DeviceAction,
+    StatusUpdate,
+    Action,
+    RemoteActions,
+    EnableCollaborationAction,
+    PartitionAuthMessage,
+    AuxPartitionServices,
+    LoadSharedDocumentAction,
+} from '@casual-simulation/aux-common';
+import {
+    BOT_SPACE_TAG,
+    iteratePartitions,
     hasValue,
     asyncResult,
     addDebugApi,
@@ -27,37 +57,21 @@ import {
     defineGlobalBot,
     createPrecalculatedBot,
     merge,
-    BotTagMasks,
-    PrecalculatedBot,
     asyncError,
     botAdded,
     botUpdated,
     createBot,
     getBotSpace,
-    StoredAux,
-    ConnectionInfo,
-    DeviceAction,
-    StatusUpdate,
     remapProgressPercent,
-    Action,
-    RemoteActions,
     ConnectionIndicator,
     getConnectionId,
-    EnableCollaborationAction,
-    PartitionAuthMessage,
-    AuxPartitionServices,
     PartitionAuthSource,
     action,
     ON_COLLABORATION_ENABLED,
     ON_ALLOW_COLLABORATION_UPGRADE,
     ON_DISALLOW_COLLABORATION_UPGRADE,
-    LoadSharedDocumentAction,
 } from '@casual-simulation/aux-common';
-import {
-    realtimeStrategyToRealtimeEditMode,
-    AuxPartitionRealtimeEditModeProvider,
-    AuxRuntime,
-    isPromise,
+import type {
     AttachRuntimeAction,
     DetachRuntimeAction,
     TagMapper,
@@ -65,9 +79,16 @@ import {
     RuntimeActions,
     AuxDevice,
 } from '@casual-simulation/aux-runtime';
+import {
+    realtimeStrategyToRealtimeEditMode,
+    AuxPartitionRealtimeEditModeProvider,
+    AuxRuntime,
+    isPromise,
+} from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
-import { AuxConfig, buildVersionNumber } from './AuxConfig';
-import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import type { AuxConfig } from './AuxConfig';
+import { buildVersionNumber } from './AuxConfig';
+import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
 import {
     flatMap,
@@ -79,10 +100,10 @@ import {
 } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
-import { TimeSyncController } from '@casual-simulation/timesync';
-import { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
-import { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
-import { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
+import type { TimeSyncController } from '@casual-simulation/timesync';
+import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
+import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
+import type { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 
 export interface AuxChannelOptions {}
 
@@ -424,7 +445,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let [key, partitionConfig] of iteratePartitions(
             this._config.partitions
         )) {
-            if (!this._config.partitions.hasOwnProperty(key)) {
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    this._config.partitions,
+                    key
+                )
+            ) {
                 continue;
             }
             const partition = await this._createPartition(

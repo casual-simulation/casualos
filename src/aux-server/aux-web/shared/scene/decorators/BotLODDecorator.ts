@@ -1,12 +1,32 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import {
+import type { AuxBot3D } from '../AuxBot3D';
+import type {
     BotCalculationContext,
+    BotLOD,
+    ShoutAction,
+} from '@casual-simulation/aux-common';
+import {
     calculateGridScale,
     getBuilderDimensionGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
     botHasLOD,
-    BotLOD,
     DEFAULT_BOT_LOD,
     calculateNumericalTagValue,
     DEFAULT_BOT_LOD_MIN_THRESHOLD,
@@ -17,15 +37,14 @@ import {
     ON_MIN_LOD_ENTER_ACTION_NAME,
     ON_MIN_LOD_EXIT_ACTION_NAME,
     ON_ANY_MIN_LOD_EXIT_ACTION_NAME,
-    ShoutAction,
     ON_MAX_LOD_EXIT_ACTION_NAME,
     ON_ANY_MAX_LOD_EXIT_ACTION_NAME,
     ON_ANY_MIN_LOD_ENTER_ACTION_NAME,
     ON_ANY_MAX_LOD_ENTER_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { calculateScale, percentOfScreen } from '../SceneUtils';
-import { Camera } from '@casual-simulation/three';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Camera } from '@casual-simulation/three';
+import type { Simulation } from '@casual-simulation/aux-vm';
 import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 export class BotLODDecorator extends AuxBot3DDecoratorBase {
@@ -38,7 +57,8 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
         if (this.bot3D.dimensionGroup) {
-            this._simulation = this.bot3D.dimensionGroup.simulation3D.simulation;
+            this._simulation =
+                this.bot3D.dimensionGroup.simulation3D.simulation;
         }
     }
 
@@ -86,7 +106,8 @@ export class BotLODDecorator extends AuxBot3DDecoratorBase {
 
     private _updateCamera() {
         if (this.bot3D.dimensionGroup) {
-            this._camera = this.bot3D.dimensionGroup.simulation3D.getMainCameraRig().mainCamera;
+            this._camera =
+                this.bot3D.dimensionGroup.simulation3D.getMainCameraRig().mainCamera;
         }
     }
 

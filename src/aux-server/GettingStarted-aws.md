@@ -97,6 +97,7 @@ Use the following environment variables to configure the inst collaboration feat
 -   `DEFAULT_BIOS_OPTION`: The BIOS option that should be selected by default when the BIOS is shown.
 -   `AUTOMATIC_BIOS_OPTION`: The BIOS option that should be executed automatically by the BIOS. Setting this to a valid BIOS value will skip the BIOS screen.
 -   `VM_ORIGIN`: The HTTP Origin that should be used to load the inst virtual machine. Useful for securely isolating insts from each other and from the frontend. Supports `{{inst}}` to customize the origin based on the inst that is being loaded. For example setting `VM_ORIGIN` to `https://{{inst}}.example.com` will cause `?staticInst=myInst` to load inside `https://myInst.example.com`. Defaults to null, which means that no special origin is used. Recommended for high-security deployments.
+-   `ENABLE_DOM`: Whether full access to the DOM should be enabled for scripts. Setting this to `true` will cause the VM to load the runtime without the web worker, thereby allowing scripts to have full access to DOM APIs. Defaults to false.
 
 #### Privo Features
 
@@ -144,6 +145,7 @@ Use the following to configure the records system:
 -   `CHILDREN_PRIVACY_POLICY`: The Markdown of the children's privacy policy that the sites should use.
 -   `ACCEPTABLE_USE_POLICY`: The Markdown of the Acceptable Use Policy that the sites should use.
 -   `CODE_OF_CONDUCT`: The Markdown of the code of conduct that the sites should use.
+-   `SUPPORT_LINK`: The URL to the support website. If not provided, then no support URLs will be provided.
 
 #### Webhooks
 

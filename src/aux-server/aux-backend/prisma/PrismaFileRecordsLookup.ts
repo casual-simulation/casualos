@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
@@ -5,15 +22,17 @@ import {
     PresignFileReadResult,
     signRequest,
 } from '@casual-simulation/aux-records';
-import {
-    PresignFileUploadRequest,
-    PresignFileUploadResult,
-    GetFileRecordResult,
+import type {
     AddFileResult,
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
 import {
+    PresignFileUploadRequest,
+    PresignFileUploadResult,
+    GetFileRecordResult,
+} from '@casual-simulation/aux-records';
+import type {
     FileRecord,
     FileRecordsLookup,
     ListAllFilesFilter,
@@ -21,7 +40,8 @@ import {
     ListFilesLookupResult,
     UpdateFileResult,
 } from '@casual-simulation/aux-records/FileRecordsStore';
-import { Prisma, PrismaClient } from './generated';
+import type { PrismaClient } from './generated';
+import { Prisma } from './generated';
 import { convertMarkers } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

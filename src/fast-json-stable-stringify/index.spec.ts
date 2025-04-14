@@ -2,7 +2,7 @@ import stringify from './index';
 
 describe('fast-json-stable-stringify', () => {
     it('should support nested objects', () => {
-        var obj = { c: 8, b: [{ z: 6, y: 5, x: 4 }, 7], a: 3 };
+        let obj = { c: 8, b: [{ z: 6, y: 5, x: 4 }, 7], a: 3 };
         expect(stringify(obj)).toBe(
             '{"a":3,"b":[{"x":4,"y":5,"z":6},7],"c":8}'
         );
@@ -39,8 +39,8 @@ describe('fast-json-stable-stringify', () => {
     });
 
     it('should support custom comparision functions', () => {
-        var obj = { c: 8, b: [{ z: 6, y: 5, x: 4 }, 7], a: 3 };
-        var s = stringify(obj, function (a, b) {
+        let obj = { c: 8, b: [{ z: 6, y: 5, x: 4 }, 7], a: 3 };
+        let s = stringify(obj, function (a, b) {
             return a.key < b.key ? 1 : -1;
         });
         expect(s).toBe('{"c":8,"b":[{"z":6,"y":5,"x":4},7],"a":3}');
@@ -69,7 +69,7 @@ describe('fast-json-stable-stringify', () => {
     });
 
     it('should support toJSON that returns object', () => {
-        var obj = {
+        let obj = {
             one: 1,
             two: 2,
             toJSON: function () {
@@ -80,7 +80,7 @@ describe('fast-json-stable-stringify', () => {
     });
 
     it('should support toJSON that returns string', () => {
-        var obj = {
+        let obj = {
             one: 1,
             two: 2,
             toJSON: function () {
@@ -91,7 +91,7 @@ describe('fast-json-stable-stringify', () => {
     });
 
     it('should support toJSON that returns array', () => {
-        var obj = {
+        let obj = {
             one: 1,
             two: 2,
             toJSON: function () {

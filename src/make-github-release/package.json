@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/make-github-release",
-    "version": "3.1.11",
+    "version": "3.4.0",
     "description": "A CLI to create a github release.",
     "keywords": [
         "cli",
@@ -9,7 +9,7 @@
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "main": "index.js",
     "directories": {
         "lib": "."

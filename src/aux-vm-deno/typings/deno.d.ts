@@ -1,4 +1,4 @@
-declare var Deno: {
+declare let Deno: {
     stdin: Reader;
     stdout: Writer;
 

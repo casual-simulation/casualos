@@ -1,41 +1,62 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Axios from 'axios';
 import Vue, { inject } from 'vue';
-import { BehaviorSubject, Observable, Subject, SubscriptionLike } from 'rxjs';
+import type { Observable, Subject, SubscriptionLike } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { filter, first, map, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
-import {
-    AuxPartitionConfig,
+import type {
     BotsState,
     ConnectionIndicator,
     ProgressMessage,
+} from '@casual-simulation/aux-common';
+import {
+    AuxPartitionConfig,
     getUploadState,
     remapProgressPercent,
     remote,
 } from '@casual-simulation/aux-common';
+import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
 import {
     hasValue,
     KNOWN_PORTALS,
     normalizeAUXBotURL,
-    StoredAux,
     getBotsStateFromStoredAux,
     applyUpdatesToInst,
     isStoredVersion2,
-    PrivacyFeatures,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
-import { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
-import {
-    SimulationManager,
+import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
+import type {
     AuxConfig,
-    parseVersionNumber,
     SimulationOrigin,
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
 import {
+    SimulationManager,
+    parseVersionNumber,
+} from '@casual-simulation/aux-vm';
+import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
     AuthCoordinator,
     AuthHelper,
     BotManager,
-    BrowserSimulation,
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
@@ -46,12 +67,9 @@ import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
-import {
-    ComIdConfig,
-    GetPlayerConfigSuccess,
-    tryParseJson,
-} from '@casual-simulation/aux-records';
-import { AuxDevice } from '@casual-simulation/aux-runtime';
+import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
+import { ComIdConfig, tryParseJson } from '@casual-simulation/aux-records';
+import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
 
 /**
@@ -91,9 +109,9 @@ interface StoredInst {
 declare function sa_event(
     name: string,
     metadata: any,
-    callback: Function
+    callback: () => void
 ): void;
-declare function sa_event(name: string, callback: Function): void;
+declare function sa_event(name: string, callback: () => void): void;
 
 const SAVE_CONFIG_TIMEOUT_MILISECONDS = 5000;
 
@@ -117,6 +135,7 @@ export class AppManager {
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
     private _arSupported: boolean;
     private _vrSupported: boolean;
+    private _domSupported: boolean;
     private _ab1BootstrapUrl: string;
     private _comId: string;
     private _comIdConfig: GetPlayerConfigSuccess;
@@ -209,15 +228,13 @@ export class AppManager {
                 : null;
 
             let relaxOrigin = false;
-            if (
-                isStatic &&
-                storedInst &&
-                config.vmOrigin !== storedInst.vmOrigin
-            ) {
+            let vmOrigin: string | null = config.vmOrigin;
+            if (isStatic && storedInst && vmOrigin !== storedInst.vmOrigin) {
                 console.log(
-                    `[AppManager] old static inst already exists for "${id}". Relaxing origin.`
+                    `[AppManager] old static inst already exists for "${id}". Relaxing origin and using stored inst origin.`
                 );
                 relaxOrigin = true;
+                vmOrigin = storedInst.vmOrigin ?? location.origin;
             }
 
             if (this._db) {
@@ -228,9 +245,7 @@ export class AppManager {
                         id: id,
                         origin,
                         isStatic: isStatic,
-                        vmOrigin: storedInst
-                            ? storedInst.vmOrigin
-                            : config.vmOrigin,
+                        vmOrigin: vmOrigin,
                         version: storedInst ? storedInst.version : this.version,
                     }
                 );
@@ -244,7 +259,10 @@ export class AppManager {
                     origin,
                     {
                         configBotId: configBotId,
-                        config,
+                        config: {
+                            ...config,
+                            vmOrigin,
+                        },
                         partitions,
                     },
                     relaxOrigin
@@ -308,6 +326,8 @@ export class AppManager {
             playerMode: this._config.playerMode,
             requirePrivoLogin: this._config.requirePrivoLogin,
             comId: this._comId,
+            enableDom: this._config.enableDom,
+            debug: this._config.debug,
         };
     }
 
@@ -639,6 +659,7 @@ export class AppManager {
         this._arSupported = arSupported;
         this._vrSupported = vrSupported;
         this._ab1BootstrapUrl = ab1Bootstrap;
+        this._domSupported = this._config.enableDom ?? false;
 
         console.log('[AppManager] AB-1 URL: ' + ab1Bootstrap);
     }
@@ -647,6 +668,7 @@ export class AppManager {
         return {
             supportsAR: this._arSupported,
             supportsVR: this._vrSupported,
+            supportsDOM: this._domSupported,
             isCollaborative: !isStatic,
             allowCollaborationUpgrade: false,
             ab1BootstrapUrl: this._ab1BootstrapUrl,
@@ -844,13 +866,17 @@ export class AppManager {
                 });
                 console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
+            },
+        });
 
+        this.loadingProgress.subscribe((p) => {
+            if (p.done) {
                 if (!this._updateServiceWorker) {
                     setTimeout(() => {
                         this.initOffline();
                     }, INIT_OFFLINE_TIMEOUT_MILISECONDS);
                 }
-            },
+            }
         });
 
         return sim;

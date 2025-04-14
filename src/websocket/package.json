@@ -1,11 +1,11 @@
 {
     "name": "@casual-simulation/websocket",
-    "version": "3.3.4",
+    "version": "3.4.0",
     "description": "Minimal WebSocket implementation",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",

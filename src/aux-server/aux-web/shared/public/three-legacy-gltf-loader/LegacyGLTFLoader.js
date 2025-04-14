@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as THREE from '@casual-simulation/three';
 
 /**

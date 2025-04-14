@@ -1,10 +1,24 @@
-import {
-    Box3,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     Object3D,
-    Scene,
     Vector3,
     Box3Helper,
-    Color,
     LineBasicMaterial,
     LineSegments,
     Camera,
@@ -16,13 +30,14 @@ import {
     MeshBasicMaterial,
     Quaternion,
 } from '@casual-simulation/three';
+import { Box3, Scene, Color } from '@casual-simulation/three';
 import { Time } from '../Time';
 import { getOptionalValue } from '../../SharedUtils';
-import { PointHelper } from '../helpers/PointHelper';
+import type { PointHelper } from '../helpers/PointHelper';
 import { Box3HelperPool } from '../objectpools/Box3HelperPool';
-import { ObjectPool } from '../objectpools/ObjectPool';
+import type { ObjectPool } from '../objectpools/ObjectPool';
 import { PointHelperPool } from '../objectpools/PointHelperPool';
-import { LineHelper } from '../helpers/LineHelper';
+import type { LineHelper } from '../helpers/LineHelper';
 import { LineHelperPool } from '../objectpools/LineHelperPool';
 import { Input } from '../Input';
 import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
@@ -42,24 +57,25 @@ const ARROWHELPER_POOL_ID = 'arrowhelper_pool';
  * A helper module for drawing THREE objects to that are useful for visual debugging.
  * By default, debug objects are only drawn for one frame and are automatically removed by the manager.
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace DebugObjectManager {
     /**
      * Wether or not debug object manager is enabled.
      */
-    export var enabled: boolean = false;
+    export let enabled: boolean = false;
 
     /**
      * Wether or not debug objects are rendered with the depth buffer (objects can occlude debug objects),
      * or without it (the depth buffer is discarded and debug objects are rendered over top).
      */
-    export var useDepth: boolean = false;
+    export let useDepth: boolean = false;
 
-    var _time: Time;
-    var _scene: Scene;
-    var _debugObjects: DebugObject[];
-    var _objectPools: Map<string, ObjectPool<unknown>>;
-    var _initialized: boolean;
-    let _updateFuncs: Function[];
+    let _time: Time;
+    let _scene: Scene;
+    let _debugObjects: DebugObject[];
+    let _objectPools: Map<string, ObjectPool<unknown>>;
+    let _initialized: boolean;
+    let _updateFuncs: (() => any)[];
 
     /**
      * Initalize the Debug Object Manager.
@@ -435,7 +451,7 @@ export namespace DebugObjectManager {
      * Registers the given function to be executed every frame.
      * @param func The function to execute.
      */
-    export function registerUpdateFunction(func: Function) {
+    export function registerUpdateFunction(func: () => any) {
         _updateFuncs.push(func);
     }
 
@@ -443,7 +459,7 @@ export namespace DebugObjectManager {
      * Unregisters the given function so it will no longer be executed every frame.
      * @param func The function to unregister.
      */
-    export function unregisterUpdateFunction(func: Function) {
+    export function unregisterUpdateFunction(func: () => any) {
         const index = _updateFuncs.indexOf(func);
         if (index >= 0) {
             _updateFuncs.splice(index, 1);
@@ -461,7 +477,7 @@ export namespace DebugObjectManager {
 }
 
 if (typeof window !== 'undefined') {
-    let debuggedObjects: Map<Object3D, Function> = new Map();
+    let debuggedObjects: Map<Object3D, () => void> = new Map();
     const a = <any>window;
 
     merge(window, {

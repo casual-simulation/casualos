@@ -1,23 +1,31 @@
-import { DirectoryStore } from './DirectoryStore';
-import { DirectoryClientConfig } from '../config';
-import {
-    DEFAULT_PING_INTERVAL,
-    DirectoryClientSettings,
-} from './DirectoryClientSettings';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { DirectoryStore } from './DirectoryStore';
+import type { DirectoryClientConfig } from '../config';
+import type { DirectoryClientSettings } from './DirectoryClientSettings';
+import { DEFAULT_PING_INTERVAL } from './DirectoryClientSettings';
 import { randomBytes } from 'crypto';
 import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
 import { sortBy } from 'lodash';
-import {
-    SubscriptionLike,
-    timer,
-    Observable,
-    defer,
-    throwError,
-    EMPTY,
-    NEVER,
-} from 'rxjs';
+import type { SubscriptionLike, Observable } from 'rxjs';
+import { timer, defer, throwError, EMPTY, NEVER } from 'rxjs';
 import {
     retryWhen,
     delayWhen,
@@ -26,7 +34,7 @@ import {
     repeatWhen,
     mergeMap,
 } from 'rxjs/operators';
-import { TunnelClient } from '@casual-simulation/tunnel';
+import type { TunnelClient } from '@casual-simulation/tunnel';
 
 /**
  * Defines a client for the directory.

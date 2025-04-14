@@ -1,14 +1,14 @@
 {
     "name": "@casual-simulation/aux-redirector",
     "private": true,
-    "version": "3.3.13",
+    "version": "3.4.0",
     "description": "A simple web service that redirects old style aux URLs to the new version.",
     "keywords": [
         "aux"
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://casualsimulation.com/",
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index.js",

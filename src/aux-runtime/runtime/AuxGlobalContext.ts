@@ -1,28 +1,48 @@
-import {
-    BotAction,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     Bot,
     BotTags,
+    RuntimeBot,
+} from '@casual-simulation/aux-common/bots';
+import {
+    BotAction,
     isBot,
     PrecalculatedBot,
     botAdded,
     botRemoved,
     DEFAULT_ENERGY,
-    RuntimeBot,
     getOriginalObject,
     ORIGINAL_OBJECT,
     ImportFunc,
     ExportFunc,
 } from '@casual-simulation/aux-common/bots';
-import {
+import type {
     RuntimeBotFactory,
     RuntimeBotsState,
-    RealtimeEditMode,
     RuntimeBatcher,
     RuntimeInterpreterGeneratorProcessor,
 } from './RuntimeBot';
-import { AuxVersion } from './AuxVersion';
-import { AuxDevice } from './AuxDevice';
-import { ScriptError, RanOutOfEnergyError } from './AuxResults';
+import { RealtimeEditMode } from './RuntimeBot';
+import type { AuxVersion } from './AuxVersion';
+import type { AuxDevice } from './AuxDevice';
+import type { ScriptError } from './AuxResults';
+import { RanOutOfEnergyError } from './AuxResults';
 import {
     sortBy,
     sortedIndex,
@@ -31,13 +51,8 @@ import {
     transform,
 } from 'lodash';
 import './PerformanceNowPolyfill';
-import {
-    Observable,
-    ReplaySubject,
-    Subject,
-    Subscription,
-    SubscriptionLike,
-} from 'rxjs';
+import type { SubscriptionLike } from 'rxjs';
+import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -48,8 +63,8 @@ import type {
     InterpreterStop,
 } from '@casual-simulation/js-interpreter';
 import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
-import { RuntimeActions } from './RuntimeEvents';
-import seedrandom from 'seedrandom';
+import type { RuntimeActions } from './RuntimeEvents';
+import type seedrandom from 'seedrandom';
 import { GenericError } from './CasualOSError';
 
 /**

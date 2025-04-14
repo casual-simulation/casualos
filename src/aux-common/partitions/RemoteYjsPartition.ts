@@ -1,45 +1,66 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    TagEditOp,
+    TagEdit,
+    GetRemoteCountAction,
+    AsyncAction,
+    ShoutAction,
+} from '../bots';
 import {
     isTagEdit,
-    TagEditOp,
     preserve,
     del,
     insert,
     edit,
-    TagEdit,
-    GetRemoteCountAction,
-    AsyncAction,
     ON_REMOTE_WHISPER_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
-    ShoutAction,
 } from '../bots';
-import {
-    Observable,
-    Subscription,
-    Subject,
-    BehaviorSubject,
-    firstValueFrom,
-} from 'rxjs';
-import {
-    CausalRepoPartition,
+import type { Observable } from 'rxjs';
+import { Subscription, Subject, BehaviorSubject, firstValueFrom } from 'rxjs';
+import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
-    MemoryPartition,
 } from './AuxPartition';
-import {
+import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
+import type {
     BotAction,
     Bot,
     UpdatedBot,
-    getActiveObjects,
     AddBotAction,
     RemoveBotAction,
     UpdateBotAction,
-    breakIntoIndividualEvents,
     StateUpdatedEvent,
-    stateUpdatedEvent,
     BotsState,
+    BotTags,
+    ListInstUpdatesAction,
+    GetInstStateFromUpdatesAction,
+    CreateInitializationUpdateAction,
+    InstUpdate,
+    ApplyUpdatesToInstAction,
+    GetCurrentInstUpdateAction,
+} from '../bots';
+import {
+    getActiveObjects,
+    breakIntoIndividualEvents,
+    stateUpdatedEvent,
     PartialBotsState,
     botAdded,
-    BotTags,
     createBot,
     botRemoved,
     hasValue,
@@ -48,32 +69,23 @@ import {
     asyncResult,
     asyncError,
     convertToString,
-    ListInstUpdatesAction,
-    GetInstStateFromUpdatesAction,
-    CreateInitializationUpdateAction,
-    InstUpdate,
-    ApplyUpdatesToInstAction,
     ON_SPACE_MAX_SIZE_REACHED,
     ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
-    GetCurrentInstUpdateAction,
 } from '../bots';
-import {
+import type {
     PartitionConfig,
     YjsClientPartitionConfig,
     RemoteYjsPartitionConfig,
     PartitionRemoteEvents,
 } from './AuxPartitionConfig';
+import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
-    Doc,
     Text,
     Map,
     applyUpdate,
-    Transaction,
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    AbstractType,
-    YEvent,
     encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
@@ -85,19 +97,15 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { YjsPartitionImpl } from './YjsPartition';
 import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
-import {
-    RemoteActions,
-    CurrentVersion,
-    VersionVector,
-    device,
-} from '../common';
-import {
+import type { RemoteActions, CurrentVersion, VersionVector } from '../common';
+import { device } from '../common';
+import type {
     ClientEvent,
     InstRecordsClient,
     MaxInstSizeReachedClientError,
     RateLimitExceededMessage,
 } from '../websockets';
-import { PartitionAuthSource } from './PartitionAuthSource';
+import type { PartitionAuthSource } from './PartitionAuthSource';
 import { RemoteYjsSharedDocument } from '../documents/RemoteYjsSharedDocument';
 
 /**

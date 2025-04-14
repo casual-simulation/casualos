@@ -1,3 +1,21 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { SimulationIdParseSuccess } from './BotCalculations';
 import {
     isFormula,
     isNumber,
@@ -16,7 +34,6 @@ import {
     createDimensionId,
     formatValue,
     parseSimulationId,
-    SimulationIdParseSuccess,
     simulationIdToString,
     normalizeAUXBotURL,
     cleanBot,
@@ -62,11 +79,12 @@ import {
     isModule,
     parseModule,
 } from './BotCalculations';
-import { Bot, BotsState, DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
+import type { Bot, BotsState } from './Bot';
+import { DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
 import { v4 as uuid } from 'uuid';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
-import { BotCalculationContext } from './BotCalculationContext';
+import type { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
 import { DateTime, FixedOffsetZone, Zone } from 'luxon';
 import { Vector2, Vector3, Rotation, Quaternion } from '../math';

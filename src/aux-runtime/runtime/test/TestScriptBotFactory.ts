@@ -1,25 +1,41 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     PrecalculatedBot,
     BotTags,
     BotSpace,
     Bot,
     BotSignatures,
+    RuntimeBot,
+} from '@casual-simulation/aux-common/bots';
+import {
     botsFromShortIds,
     TAG_MASK_SPACE_PRIORITIES,
-    RuntimeBot,
     hasValue,
     BotAction,
 } from '@casual-simulation/aux-common/bots';
-import {
-    createRuntimeBot,
-    RuntimeBotInterface,
-    RuntimeBotFactory,
-    RealtimeEditMode,
-} from '../RuntimeBot';
-import { createCompiledBot, CompiledBot } from '../CompiledBot';
+import type { RuntimeBotInterface, RuntimeBotFactory } from '../RuntimeBot';
+import { createRuntimeBot, RealtimeEditMode } from '../RuntimeBot';
+import type { CompiledBot } from '../CompiledBot';
+import { createCompiledBot } from '../CompiledBot';
 import { pickBy } from 'lodash';
 import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
-import { RuntimeActions } from '../RuntimeEvents';
+import type { RuntimeActions } from '../RuntimeEvents';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
     createRuntimeBot(bot: Bot): RuntimeBot {

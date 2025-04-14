@@ -1,36 +1,54 @@
-import {
-    LocalActions,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     BotAction,
     StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
     StoredAux,
-    AsyncResultAction,
-    ConnectionIndicator,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject } from 'rxjs';
-import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
 import {
+    LocalActions,
+    ProxyBridgePartitionImpl,
+    AsyncResultAction,
+    ConnectionIndicator,
+} from '@casual-simulation/aux-common';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Remote } from 'comlink';
+import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import type {
     AuxConfig,
     AuxVM,
     ChannelActionResult,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm';
-import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-} from '@casual-simulation/aux-vm';
+} from '@casual-simulation/aux-vm/vm';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import {
-    StatusUpdate,
     remapProgressPercent,
-    DeviceAction,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
-import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
-import {
+import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
+import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm/RemoteAuxVM';
+import type {
     AuxDevice,
     RuntimeActions,
     RuntimeStateVersion,
@@ -150,13 +168,33 @@ export default class AuxVMImpl implements AuxVM {
             location.origin,
             this._id
         );
+
+        let enableDom = this._config.config.enableDom;
+        if (
+            enableDom &&
+            getBaseOrigin(location.origin) === getBaseOrigin(origin) &&
+            !this._config.config.debug
+        ) {
+            console.error(
+                `[AuxVMImpl] Cannot use DOM when base origin is the same as the VM origin. ${origin} should not share the same base domain as ${location.origin}.`
+            );
+            console.error('[AuxVMImpl] Using WebWorker isolated VM.');
+            console.error(
+                '[AuxVMImpl] To use DOM, enable debug mode or use a separate VM origin.'
+            );
+            enableDom = false;
+        }
+
         if (this._relaxOrigin) {
             const baseOrigin = getBaseOrigin(origin);
             console.log('[AuxVMImpl] Relaxing origin to:', baseOrigin);
             origin = baseOrigin;
         }
         console.log('origin', origin);
-        const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
+        const iframeUrl = new URL(
+            enableDom ? '/aux-vm-iframe-dom.html' : '/aux-vm-iframe.html',
+            origin
+        ).href;
 
         this._connectionStateChanged.next({
             type: 'progress',
@@ -171,12 +209,22 @@ export default class AuxVMImpl implements AuxVM {
         });
         this._iframe = document.createElement('iframe');
         this._iframe.src = iframeUrl;
-        this._iframe.style.display = 'none';
+        if (!enableDom) {
+            this._iframe.style.display = 'none';
+        }
+        this._iframe.style.position = 'absolute';
+        this._iframe.style.height = '100%';
+        this._iframe.style.width = '100%';
         this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
         this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
 
         let promise = waitForLoad(this._iframe);
-        document.body.insertBefore(this._iframe, document.body.firstChild);
+        const iframeContainer = document.querySelector('.vm-iframe-container');
+        if (iframeContainer) {
+            iframeContainer.appendChild(this._iframe);
+        } else {
+            document.body.insertBefore(this._iframe, document.body.firstChild);
+        }
 
         await promise;
 
@@ -333,8 +381,12 @@ export default class AuxVMImpl implements AuxVM {
         this.closed = true;
         this._channel = null;
         this._proxy = null;
-        document.body.removeChild(this._iframe);
-        this._iframe = null;
+        if (this._iframe) {
+            if (this._iframe.parentNode) {
+                this._iframe.parentNode.removeChild(this._iframe);
+            }
+            this._iframe = null;
+        }
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();

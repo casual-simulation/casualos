@@ -1,7 +1,27 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
-import {
+import type { AuxBot3D } from '../AuxBot3D';
+import type {
     BotCalculationContext,
+    BotLabelFontSize,
+} from '@casual-simulation/aux-common';
+import {
     calculateBotValue,
     isFormula,
     calculateFormattedBotValue,
@@ -15,22 +35,21 @@ import {
     calculateLabelFontSize,
     BotLabelAlignment,
     calculateLabelWordWrapMode,
-    BotLabelFontSize,
     getBotLabelPadding,
     getBotOrientationMode,
     isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
+import type { Object3D } from '@casual-simulation/three';
 import {
     Color,
     Vector3,
     Vector2,
     PerspectiveCamera,
     Group,
-    Object3D,
 } from '@casual-simulation/three';
-import { WordBubbleElement } from '../WordBubbleElement';
-import { Game } from '../Game';
+import type { WordBubbleElement } from '../WordBubbleElement';
+import type { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 import { calculateScale, buildSRGBColor } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';

@@ -1,5 +1,22 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { handleAxiosErrors } from './Utils';
-import {
+import type {
     AIChatInterface,
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
@@ -11,12 +28,8 @@ import {
 import axios from 'axios';
 import OpenAI from 'openai';
 import { traced } from './tracing/TracingDecorators';
-import {
-    SpanKind,
-    SpanOptions,
-    SpanStatusCode,
-    trace,
-} from '@opentelemetry/api';
+import type { SpanOptions } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 
 const TRACE_NAME = 'OpenAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {
@@ -32,6 +45,17 @@ export interface OpenAIChatOptions {
      * The API key to use.
      */
     apiKey: string;
+
+    /**
+     * The HTTP base URL to use for the OpenAI API.
+     * Defaults to "https://api.openai.com/v1/"
+     */
+    baseUrl?: string;
+
+    /**
+     * The name of this interface to use for logging;
+     */
+    name?: string;
 }
 
 /**
@@ -41,10 +65,19 @@ export class OpenAIChatInterface implements AIChatInterface {
     private _options: OpenAIChatOptions;
     private _client: OpenAI;
 
+    private get _baseUrl() {
+        return this._options.baseUrl ?? 'https://api.openai.com/v1/';
+    }
+
+    private get _name() {
+        return this._options.name ?? 'OpenAIChatInterface';
+    }
+
     constructor(options: OpenAIChatOptions) {
         this._options = options;
         this._client = new OpenAI({
             apiKey: options.apiKey,
+            baseURL: this._options.baseUrl ?? undefined,
         });
     }
 
@@ -53,8 +86,18 @@ export class OpenAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
+            if (this._options.name) {
+                const span = trace.getActiveSpan();
+                if (span) {
+                    span.setAttribute(
+                        'chat.interface.name',
+                        this._options.name
+                    );
+                }
+            }
+
             const result = await axios.post(
-                'https://api.openai.com/v1/chat/completions',
+                `${this._baseUrl}chat/completions`,
                 {
                     model: request.model,
                     messages: request.messages.map((m) => ({
@@ -103,7 +146,11 @@ export class OpenAIChatInterface implements AIChatInterface {
             );
 
             console.log(
-                `[OpenAIChatInterface] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
+                `[${this._name}] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
+            );
+            console.log(
+                `[${this._name}] [${request.userId}] [chat]: Usage:`,
+                result.data.usage
             );
 
             let choices: AIChatMessage[] = result.data.choices.map(
@@ -118,7 +165,7 @@ export class OpenAIChatInterface implements AIChatInterface {
 
             return {
                 choices: choices,
-                totalTokens: result.data.usage.total_tokens,
+                totalTokens: result.data.usage?.total_tokens ?? 0,
             };
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -128,7 +175,7 @@ export class OpenAIChatInterface implements AIChatInterface {
                     span?.setStatus({ code: SpanStatusCode.ERROR });
 
                     console.error(
-                        `[OpenAIChatInterface] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`
+                        `[${this._name}] [${request.userId}] [chat]: Bad request: ${err.response.data.error.message}`
                     );
                     return {
                         choices: [
@@ -149,6 +196,13 @@ export class OpenAIChatInterface implements AIChatInterface {
     async *chatStream(
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
+        if (this._options.name) {
+            const span = trace.getActiveSpan();
+            if (span) {
+                span.setAttribute('chat.interface.name', this._options.name);
+            }
+        }
+
         const res = await this._client.chat.completions.create({
             model: request.model,
             messages: request.messages.map((m) => ({

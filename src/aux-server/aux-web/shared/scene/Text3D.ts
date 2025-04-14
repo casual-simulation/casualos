@@ -1,11 +1,27 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Color, Texture } from '@casual-simulation/three';
 import {
     MathUtils as ThreeMath,
     Mesh,
     Object3D,
     DoubleSide,
-    Color,
     TextureLoader,
-    Texture,
     Vector3,
     Box3,
     RawShaderMaterial,
@@ -15,12 +31,12 @@ import {
     Quaternion,
 } from '@casual-simulation/three';
 
-import {
+import type {
     BotLabelAnchor,
     BotLabelAlignment,
     BotLabelWordWrap,
-    isFloatingAnchor,
 } from '@casual-simulation/aux-common';
+import { isFloatingAnchor } from '@casual-simulation/aux-common';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Text as TextMesh } from 'troika-three-text';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';

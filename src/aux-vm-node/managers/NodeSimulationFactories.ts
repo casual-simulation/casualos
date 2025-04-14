@@ -1,21 +1,38 @@
-import {
-    RemoteAuxChannel,
-    RemoteSimulationImpl,
-} from '@casual-simulation/aux-vm-client';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { AuxVMNode } from '../vm/AuxVMNode';
-import { AuxConfig } from '@casual-simulation/aux-vm/vm';
+import type { AuxConfig } from '@casual-simulation/aux-vm/vm';
+import type {
+    AuxPartitionConfig,
+    InstRecordsClient,
+    ConnectionIndicator,
+    YjsClientPartitionConfig,
+} from '@casual-simulation/aux-common';
 import {
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     TEMPORARY_BOT_PARTITION_ID,
-    AuxPartitionConfig,
-    InstRecordsClient,
-    ConnectionIndicator,
     getConnectionId,
     DEFAULT_BRANCH_NAME,
-    YjsClientPartitionConfig,
 } from '@casual-simulation/aux-common';
-import { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
+import type { SimulationOrigin } from '@casual-simulation/aux-vm/managers';
+import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 
 export function nodeSimulationForBranch(
     id: string,

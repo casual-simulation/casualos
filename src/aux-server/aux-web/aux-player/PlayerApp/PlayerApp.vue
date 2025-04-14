@@ -22,6 +22,7 @@
                         <ide-portal></ide-portal>
                         <system-portal></system-portal>
                         <md-content id="app-game-container">
+                            <div class="vm-iframe-container"></div>
                             <router-view></router-view>
                         </md-content>
                     </tag-portal>

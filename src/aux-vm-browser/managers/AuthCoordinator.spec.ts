@@ -1,44 +1,63 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { Subject, Subscription } from 'rxjs';
-import {
-    AuthCoordinator,
+import type {
     MissingPermissionEvent,
     NotAuthorizedEvent,
     ShowAccountInfoEvent,
 } from './AuthCoordinator';
+import { AuthCoordinator } from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
+import type { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
 import {
-    AuthHelperInterface,
     SimulationManager,
     SimulationOrigin,
 } from '@casual-simulation/aux-vm/managers';
+import type {
+    AuthData,
+    PartitionAuthResponse,
+} from '@casual-simulation/aux-common';
 import {
     AsyncErrorAction,
     AsyncResultAction,
-    AuthData,
     ConnectionInfo,
     PartitionAuthMessage,
-    PartitionAuthResponse,
     asyncResult,
     botAdded,
     createBot,
     showAccountInfo,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
+import type { AuxConfigParameters } from '@casual-simulation/aux-vm/vm';
 import { AuthHelper } from './AuthHelper';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
+import type { GrantResourcePermissionResult } from '@casual-simulation/aux-records';
 import {
     GrantMarkerPermissionResult,
-    GrantResourcePermissionResult,
     SESSION_SECRET_BYTE_LENGTH,
 } from '@casual-simulation/aux-records';
 import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
 } from '@casual-simulation/aux-records/AuthUtils';
-import { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
 
 console.log = jest.fn();
 
@@ -203,6 +222,7 @@ describe('AuthCoordinator', () => {
             expect(events).toEqual([
                 {
                     simulationId: 'sim-1',
+                    endpoint: 'http://localhost:3002',
                     loginStatus: {
                         isLoading: false,
                         isLoggingIn: true,
@@ -260,6 +280,7 @@ describe('AuthCoordinator', () => {
             expect(events).toEqual([
                 {
                     simulationId: 'sim-1',
+                    endpoint: 'http://localhost:3002',
                     loginStatus: {
                         isLoading: false,
                         isLoggingIn: true,

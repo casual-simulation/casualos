@@ -1,21 +1,40 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
-import {
+import type {
     Bot,
     BotCalculationContext,
     BotAction,
+    PartialBot,
+} from '@casual-simulation/aux-common';
+import {
     merge,
     createBot,
     botAdded,
-    PartialBot,
     CREATE_ACTION_NAME,
     BotDragMode,
 } from '@casual-simulation/aux-common';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerBotDragOperation } from './PlayerBotDragOperation';
-import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { InputMethod, InputModality } from '../../../shared/scene/Input';
-import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
+import type { MapSimulation3D } from '../../scene/MapSimulation3D';
 
 export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
     private _botAdded: boolean;

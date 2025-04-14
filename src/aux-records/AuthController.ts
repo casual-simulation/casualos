@@ -1,4 +1,21 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     AddressType,
     AuthListedUserAuthenticator,
     AuthLoginRequest,
@@ -11,7 +28,7 @@ import {
     UserLoginMetadata,
     UserRole,
 } from './AuthStore';
-import {
+import type {
     NotAuthorizedError,
     NotLoggedInError,
     NotSupportedError,
@@ -25,13 +42,9 @@ import {
     verifyPasswordAgainstHashes,
 } from './InstrumentedHashHelpers';
 import { fromByteArray } from 'base64-js';
-import { AuthMessenger } from './AuthMessenger';
-import {
-    cleanupObject,
-    isActiveSubscription,
-    isStringValid,
-    RegexRule,
-} from './Utils';
+import type { AuthMessenger } from './AuthMessenger';
+import type { RegexRule } from './Utils';
+import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
@@ -41,22 +54,22 @@ import {
     verifyConnectionToken,
 } from './AuthUtils';
 import { randomCode } from './CryptoUtils';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { ConfigurationStore } from './ConfigurationStore';
-import {
-    parseConnectionToken,
+import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { ConfigurationStore } from './ConfigurationStore';
+import type {
     PrivacyFeatures,
     PublicUserInfo,
 } from '@casual-simulation/aux-common';
-import {
+import { parseConnectionToken } from '@casual-simulation/aux-common';
+import type {
     PrivoClientInterface,
     PrivoFeatureStatus,
     PrivoPermission,
     ResendConsentRequestFailure,
 } from './PrivoClient';
 import { DateTime } from 'luxon';
-import { PrivoConfiguration } from './PrivoConfiguration';
-import { ZodIssue } from 'zod';
+import type { PrivoConfiguration } from './PrivoConfiguration';
+import type { ZodIssue } from 'zod';
 import type {
     PublicKeyCredentialCreationOptionsJSON,
     RegistrationResponseJSON,
@@ -1029,7 +1042,7 @@ export class AuthController {
                 });
             } else if (user.privoServiceId !== serviceId) {
                 console.log(
-                    `[AuthController] [completeOpenIDLogin] User\'s service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
+                    `[AuthController] [completeOpenIDLogin] User's service ID (${user.privoServiceId}) doesnt match the one returned by Privo (${serviceId}).`
                 );
                 return {
                     success: false,

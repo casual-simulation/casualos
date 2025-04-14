@@ -1,14 +1,35 @@
-import { Record, RecordKey } from './RecordsStore';
-import { MemoryStore } from './MemoryStore';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Record, RecordKey } from './RecordsStore';
+import type { MemoryStore } from './MemoryStore';
 import {
     PolicyController,
     explainationForPermissionAssignment,
     getMarkerResourcesForCreation,
     willMarkersBeRemaining,
 } from './PolicyController';
+import type {
+    ActionKinds,
+    ResourceKinds,
+    SubjectType,
+} from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
-    ActionKinds,
     ADMIN_ROLE_NAME,
     AvailablePermissions,
     DATA_RESOURCE_KIND,
@@ -19,25 +40,25 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    ResourceKinds,
     ROLE_RESOURCE_KIND,
-    SubjectType,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     CreateRecordSuccess,
-    CreateStudioResult,
     CreateStudioSuccess,
+} from './RecordsController';
+import {
+    CreateStudioResult,
     formatV1RecordKey,
     parseRecordKey,
     RecordsController,
 } from './RecordsController';
+import type { TestServices } from './TestUtils';
 import {
-    TestServices,
     createTestControllers,
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
-import {
+import type {
     AssignPermissionToSubjectAndMarkerSuccess,
     AssignPermissionToSubjectAndResourceSuccess,
     MarkerPermissionAssignment,
@@ -45,7 +66,7 @@ import {
 } from './PolicyStore';
 import { formatInstId } from './websockets';
 import { AuthController } from './AuthController';
-import { PrivoClientInterface } from './PrivoClient';
+import type { PrivoClientInterface } from './PrivoClient';
 
 console.log = jest.fn();
 
@@ -4452,6 +4473,7 @@ describe('PolicyController', () => {
                         checkDisplayName: jest.fn(),
                         generateLogoutUrl: jest.fn(),
                         resendConsentRequest: jest.fn(),
+                        lookupServiceId: jest.fn(),
                     };
                     auth = new AuthController(
                         store,
@@ -4466,6 +4488,7 @@ describe('PolicyController', () => {
                         messenger: store,
                         metrics: store,
                         store,
+                        privo: privoClient,
                     });
 
                     controller = new PolicyController(auth, records, store);

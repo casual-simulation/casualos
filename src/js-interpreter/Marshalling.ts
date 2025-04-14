@@ -1,8 +1,24 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Completion, ObjectValue } from '@casual-simulation/engine262';
 import {
     BooleanValue,
-    Completion,
     Get,
-    ObjectValue,
     Type,
     Value,
     Set,
@@ -21,12 +37,12 @@ import {
     markWithRegularObject,
     unwind,
 } from './InterpreterUtils';
-import { Interpreter } from './Interpreter';
+import type { Interpreter } from './Interpreter';
 
 export type TransformObjectFunc = (obj: object) => void;
 export type CopyFromValueConstructor<T extends Value> = (
     val: T,
-    proto: Object,
+    proto: object,
     interpreter: Interpreter,
     transformObject?: TransformObjectFunc
 ) => any;
@@ -37,14 +53,14 @@ export type CopyToValueConstructor<T> = (
 ) => Completion<Value>;
 export type KnownPrototype = [
     interpreterPrototype: string,
-    realPrototype: Object,
+    realPrototype: object,
     copyToValue: CopyToValueConstructor<any>,
     CopyFromValueConstructor: CopyFromValueConstructor<Value>
 ];
 
 const copyPropertiesFromObject = (
     source: ObjectValue,
-    target: Object,
+    target: object,
     interpreter: Interpreter,
     transformObject: TransformObjectFunc,
     disallowedProps: Set<string | symbol>
@@ -88,7 +104,7 @@ const copyPropertiesFromObject = (
 };
 
 const copyPropertiesToObject = (
-    source: Object,
+    source: object,
     target: ObjectValue,
     interpreter: Interpreter,
     disallowedProps: Set<string | symbol>
@@ -143,7 +159,7 @@ const copyFromObjectFunc: (
 
 const copyToObjectFunc: (
     disallowedProps?: Set<string | symbol>
-) => CopyToValueConstructor<Object> = (disallowedProps) => {
+) => CopyToValueConstructor<object> = (disallowedProps) => {
     return (value, proto, interpreter) => {
         const obj = OrdinaryObjectCreate(proto, []);
         return copyPropertiesToObject(value, obj, interpreter, disallowedProps);
@@ -154,7 +170,7 @@ const copyFromArrayFunc: (
     disallowedProps?: Set<string | symbol>
 ) => CopyFromValueConstructor<ObjectValue> = (disallowedProps) => {
     return (value, proto, interpreter, transformObject) => {
-        const obj = new Array();
+        const obj = [] as any[];
         copyPropertiesFromObject(
             value,
             obj,
@@ -291,6 +307,7 @@ const copyFromFunction: CopyFromValueConstructor<ObjectValue> = (
 ) => {
     return interpreter.reverseProxyObject(val);
 };
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const copyToFunction: CopyToValueConstructor<Function> = (
     val,
     proto,

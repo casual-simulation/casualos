@@ -1,5 +1,22 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { ConnectionIndicator } from '../common';
 import {
-    ConnectionIndicator,
     ConnectionIndicatorId,
     ConnectionIndicatorToken,
     ConnectionInfo,
@@ -7,20 +24,20 @@ import {
 import { AuthenticatedConnectionClient } from './AuthenticatedConnectionClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { waitAsync } from '../test/TestHelpers';
-import { ClientConnectionState } from './ConnectionClient';
+import type { ClientConnectionState } from './ConnectionClient';
 import { Subject } from 'rxjs';
-import {
+import type {
     LoginResultMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
-    WebsocketMessage,
 } from './WebsocketEvents';
-import {
+import { WebsocketMessage } from './WebsocketEvents';
+import type {
     PartitionAuthExternalPermissionResult,
     PartitionAuthExternalRequestPermission,
     PartitionAuthRequest,
-    PartitionAuthSource,
 } from '../partitions';
+import { PartitionAuthSource } from '../partitions';
 
 console.log = jest.fn();
 

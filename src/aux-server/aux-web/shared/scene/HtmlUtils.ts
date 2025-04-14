@@ -1,9 +1,26 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     WebGLRenderer,
     PerspectiveCamera,
     OrthographicCamera,
-    Vector2,
 } from '@casual-simulation/three';
+import { Vector2 } from '@casual-simulation/three';
 import { HtmlMixer } from './HtmlMixer';
 import Bowser from 'bowser';
 
@@ -24,18 +41,18 @@ export function createHtmlMixerContext(
     //
 
     // Setup rendererCss
-    var rendererCss = mixerContext.rendererCss;
+    let rendererCss = mixerContext.rendererCss;
     // Setup rendererWebgl
-    var rendererWebgl = mixerContext.rendererWebgl;
+    let rendererWebgl = mixerContext.rendererWebgl;
 
-    var css3dElement = rendererCss.domElement;
+    let css3dElement = rendererCss.domElement;
     css3dElement.style.position = 'absolute';
     css3dElement.style.top = '0px';
     css3dElement.style.width = '100%';
     css3dElement.style.height = '100%';
     parentElement.appendChild(css3dElement);
 
-    var webglCanvas = rendererWebgl.domElement;
+    let webglCanvas = rendererWebgl.domElement;
     webglCanvas.style.position = 'absolute';
     webglCanvas.style.top = '0px';
     webglCanvas.style.width = '100%';

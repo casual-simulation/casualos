@@ -1,71 +1,94 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     ActionKinds,
-    BotsState,
-    DEFAULT_BRANCH_NAME,
     DenialReason,
     GenericHttpRequest,
     GenericHttpResponse,
-    getBotsStateFromStoredAux,
     ServerError,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
+    BotsState,
+    DEFAULT_BRANCH_NAME,
+    getBotsStateFromStoredAux,
+} from '@casual-simulation/aux-common';
+import type {
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
     ConstructAuthorizationContextFailure,
     AuthorizeSubjectFailure,
-    AuthorizeSubject,
     AuthorizationContext,
 } from '../PolicyController';
-import {
+import { AuthorizeSubject } from '../PolicyController';
+import type {
     CheckSubscriptionMetricsFailure,
-    CheckSubscriptionMetricsResult,
     CheckSubscriptionMetricsSuccess,
     CrudListItemsResult,
     CrudRecordsConfiguration,
-    CrudRecordsController,
 } from '../crud/CrudRecordsController';
 import {
+    CheckSubscriptionMetricsResult,
+    CrudRecordsController,
+} from '../crud/CrudRecordsController';
+import type {
     WebhookInfoFile,
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
-    WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
-import {
-    getWebhookFeatures,
-    WebhooksFeaturesConfiguration,
-} from '../SubscriptionConfiguration';
+import { WebhookSubscriptionMetrics } from './WebhookRecordsStore';
+import type { WebhooksFeaturesConfiguration } from '../SubscriptionConfiguration';
+import { getWebhookFeatures } from '../SubscriptionConfiguration';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import {
+import type {
     HandleHttpRequestFailure,
-    HandleHttpRequestResult,
     HandleWebhookOptions,
-    STORED_AUX_SCHEMA,
     WebhookEnvironment,
     WebhookState,
 } from './WebhookEnvironment';
 import {
-    DataRecordsConfiguration,
+    HandleHttpRequestResult,
+    STORED_AUX_SCHEMA,
+} from './WebhookEnvironment';
+import type {
     DataRecordsController,
     GetDataFailure,
-    GetDataResult,
 } from '../DataRecordsController';
 import {
+    DataRecordsConfiguration,
+    GetDataResult,
+} from '../DataRecordsController';
+import type {
     FileRecordsController,
     ReadFileFailure,
     ReadFileResult,
 } from '../FileRecordsController';
 import { tryParseJson } from '../Utils';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { v7 as uuidv7 } from 'uuid';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
-import { AuthController } from '../AuthController';
+import type { AuthController } from '../AuthController';
 import { getHash } from '@casual-simulation/crypto';
-import { GetBranchDataFailure, WebsocketController } from '../websockets';
+import type { GetBranchDataFailure, WebsocketController } from '../websockets';
 
 const TRACE_NAME = 'WebhookRecordsController';
 

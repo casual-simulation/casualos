@@ -1,20 +1,37 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { Box3, Vector3, Color, Ray } from '@casual-simulation/three';
-import { Time } from '../Time';
+import type { Time } from '../Time';
 import { DebugObjectManager } from './DebugObjectManager';
 
-var _box = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
-var _boxScalar = 1;
-var _boxScaleTweenForward = true;
-var _boxScaleTweenSpeed = 4;
+let _box = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+let _boxScalar = 1;
+let _boxScaleTweenForward = true;
+let _boxScaleTweenSpeed = 4;
 
-var _ray = new Ray(new Vector3(4, 0, 0), new Vector3(0, 0, 3));
-var _rayTweenForward = true;
-var _rayTweenSpeed = 4;
+let _ray = new Ray(new Vector3(4, 0, 0), new Vector3(0, 0, 3));
+let _rayTweenForward = true;
+let _rayTweenSpeed = 4;
 
-var _letterOnColor = new Color('#0ff');
-var _letterOffColor = new Color('#000');
-var _letter: number = 0;
-var _letterChangeTime: number = 0;
+let _letterOnColor = new Color('#0ff');
+let _letterOffColor = new Color('#000');
+let _letter: number = 0;
+let _letterChangeTime: number = 0;
 
 export function drawExamples(time: Time): void {
     // Apply some ping-pong scale tweening to the box.

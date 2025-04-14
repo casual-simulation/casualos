@@ -1,17 +1,33 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { ClientError, SyncUpdatesEvent } from './InstRecordsClient';
 import {
     InstRecordsClient,
-    ClientError,
     isClientError,
     isClientEvent,
     isClientUpdates,
     DEFAULT_BRANCH_NAME,
     isWatchBranchResult,
-    SyncUpdatesEvent,
 } from './InstRecordsClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
 import { waitAsync } from '../test/TestHelpers';
-import {
+import type {
     AddUpdatesMessage,
     ConnectedToBranchMessage,
     ConnectionCountMessage,
@@ -23,15 +39,14 @@ import {
     WatchBranchResultMessage,
 } from './WebsocketEvents';
 import { filter, map } from 'rxjs/operators';
-import {
+import type {
     DeviceAction,
-    device,
-    remote,
     DeviceActionResult,
     DeviceActionError,
 } from '../common/RemoteActions';
+import { device, remote } from '../common/RemoteActions';
 import { ConnectionInfo, connectionInfo } from '../common/ConnectionInfo';
-import { TimeSample } from '@casual-simulation/timesync';
+import type { TimeSample } from '@casual-simulation/timesync';
 
 describe('InstRecordsClient', () => {
     let client: InstRecordsClient;

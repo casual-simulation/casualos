@@ -1,17 +1,34 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import {
+import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
-    Bot,
-    toast,
 } from '@casual-simulation/aux-common';
+import { Bot, toast } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
-import { LoginStatus } from '@casual-simulation/aux-vm';
+import type { LoginStatus } from '@casual-simulation/aux-vm';
 import FieldErrors from '../FieldErrors/FieldErrors';
-import { FormError, getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-records';
+import { getFormErrors } from '@casual-simulation/aux-records';
 
 @Component({
     components: {
@@ -33,6 +50,7 @@ export default class AuthUI extends Vue {
 
     showAccountInfo: boolean = false;
     loginStatus: LoginStatus = null;
+    supportUrl: string = null;
 
     get isLoggedIn() {
         return !!this.loginStatus;
@@ -65,6 +83,7 @@ export default class AuthUI extends Vue {
         this.showNotAuthorized = false;
         this.showAccountInfo = false;
         this.loginStatus = null;
+        this.supportUrl = null;
         this._sub = new Subscription();
 
         this._sub.add(
@@ -96,6 +115,15 @@ export default class AuthUI extends Vue {
                 this.showAccountInfo = true;
                 this.loginStatus = e.loginStatus;
                 this._simId = e.simulationId;
+
+                if (e.endpoint) {
+                    const endpoint = appManager.auth.getEndpoint(e.endpoint);
+                    endpoint.getPolicyUrls().then((urls) => {
+                        this.supportUrl = urls.supportUrl;
+                    });
+                } else {
+                    this.supportUrl = null;
+                }
 
                 this.reportInstVisible = false;
                 if (this._simId) {

@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     BehaviorSubject,
     Subject,
@@ -16,60 +33,56 @@ import {
 import { testPartitionImplementation } from './test/PartitionTests';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { RemoteYjsPartitionImpl } from './RemoteYjsPartition';
+import type {
+    AsyncAction,
+    Bot,
+    InstUpdate,
+    StateUpdatedEvent,
+    UpdatedBot,
+} from '../bots';
 import {
     action,
     applyUpdatesToInst,
-    AsyncAction,
     asyncError,
     asyncResult,
-    Bot,
     botAdded,
     botUpdated,
     createBot,
     createInitializationUpdate,
     getInstStateFromUpdates,
-    InstUpdate,
     listInstUpdates,
     ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
     ON_SPACE_MAX_SIZE_REACHED,
     stateUpdatedEvent,
-    StateUpdatedEvent,
-    UpdatedBot,
     getCurrentInstUpdate,
     getRemoteCount,
 } from '../bots';
-import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
+import type { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { wait, waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../bots';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
 import { YjsPartitionImpl } from './YjsPartition';
-import {
+import type {
     AddUpdatesMessage,
     ConnectionCountMessage,
-    DEFAULT_BRANCH_NAME,
-    InstRecordsClient,
-    MemoryConnectionClient,
     RateLimitExceededMessage,
     ReceiveDeviceActionMessage,
     UpdatesReceivedMessage,
     WatchBranchResultMessage,
 } from '../websockets';
 import {
-    Action,
-    CurrentVersion,
-    StatusUpdate,
-    connectionInfo,
-    device,
-    remote,
-} from '../common';
+    DEFAULT_BRANCH_NAME,
+    InstRecordsClient,
+    MemoryConnectionClient,
+} from '../websockets';
+import type { Action, CurrentVersion, StatusUpdate } from '../common';
+import { connectionInfo, device, remote } from '../common';
 import { getStateFromUpdates } from './PartitionUtils';
-import {
-    PartitionAuthRequest,
-    PartitionAuthSource,
-} from './PartitionAuthSource';
+import type { PartitionAuthRequest } from './PartitionAuthSource';
+import { PartitionAuthSource } from './PartitionAuthSource';
 import { case1 } from './test/UpdateCases';
 
 console.log = jest.fn();
@@ -1516,7 +1529,6 @@ describe('RemoteYjsPartition', () => {
                     );
                     partition.onStateUpdated.subscribe((s) => states.push(s));
 
-                    // @ts-ignore
                     const editVersion = { ...version.vector };
                     await partition.applyEvents([
                         botUpdated('bot1', {
@@ -1534,9 +1546,7 @@ describe('RemoteYjsPartition', () => {
                         }),
                     });
 
-                    // @ts-ignore
                     expect(states[1].state.bot1.tags.tag1.version).toEqual({
-                        // @ts-ignore
                         [version.currentSite]: 0,
                     });
                 });

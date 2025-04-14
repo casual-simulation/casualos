@@ -1,11 +1,11 @@
 {
     "name": "@casual-simulation/js-interpreter",
-    "version": "3.2.18",
+    "version": "3.4.0",
     "description": "A JavaScript interpreter",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
-    "license": "Apache-2.0",
+    "license": "AGPL-3.0-only",
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",

@@ -73,6 +73,7 @@ model User {
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
     aiSloydMetrics AiSloydMetrics[]
+    aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
 
     instReports UserInstReport[]
     comIdRequests StudioComIdRequest[]
@@ -283,6 +284,7 @@ model Studio {
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
     aiSloydMetrics AiSloydMetrics[]
+    aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
 
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]
@@ -1025,6 +1027,20 @@ model AiSloydMetrics {
     studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiSloydMetrics_studioId_fkey1")
 }
 
+model AiOpenAIRealtimeMetrics {
+    sessionId String @id @db.Uuid
+
+    request Json
+
+    createdAt DateTime @default(now())
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "AiOpenAIRealtimeMetrics_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "AiOpenAIRealtimeMetrics_studioId_fkey1")
+}
+
 model PrivoClientCredentials {
     id String @id @db.Uuid
     createdAt DateTime @default(now())
@@ -1242,3 +1258,5 @@ model XpInvoice {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+
+

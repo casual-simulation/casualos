@@ -1,8 +1,29 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
-import {
+import type {
     Bot,
     BotCalculationContext,
     BotTags,
+    SnapAxis,
+    SnapGrid,
+} from '@casual-simulation/aux-common';
+import {
     getBotPosition,
     getBotTransformer,
     hasValue,
@@ -10,29 +31,27 @@ import {
     getBotScale,
     getAnchorPointOffset,
     getBotRotation,
-    SnapAxis,
-    SnapGrid,
     realNumberOrDefault,
     getBotShape,
 } from '@casual-simulation/aux-common';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { Intersection, Object3D } from '@casual-simulation/three';
 import {
-    Intersection,
     Vector2,
     Ray,
     Vector3,
     Quaternion,
     Matrix4,
     Group,
-    Object3D,
 } from '@casual-simulation/three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Input, InputMethod, InputModality } from '../../../shared/scene/Input';
-import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
-import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { PlayerGame } from '../../scene/PlayerGame';
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
+import { Input } from '../../../shared/scene/Input';
+import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
+import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
+import type { PlayerGame } from '../../scene/PlayerGame';
 import { take, drop } from 'lodash';
-import { IOperation } from '../../../shared/interaction/IOperation';
+import type { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {
     calculateHitFace,
@@ -41,19 +60,19 @@ import {
     safeSetParent,
 } from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
-import {
+import type { Grid3D, GridTile } from '../../../shared/scene/Grid3D';
+import type {
     SnapBotsInterface,
     SnapOptions,
 } from '../../../shared/interaction/DragOperation/SnapInterface';
-import { MapSimulation3D } from '../../scene/MapSimulation3D';
+import type { MapSimulation3D } from '../../scene/MapSimulation3D';
 import { ExternalRenderers, SpatialReference } from '../../MapUtils';
 import { PriorityGrid3D } from '../../../shared/scene/PriorityGrid3D';
 import { BoundedGrid3D } from '../../../shared/scene/BoundedGrid3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { first } from '@casual-simulation/aux-common';
 import { convertCasualOSPositionToThreePosition } from '../../../shared/scene/grid/Grid';
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import type { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { SphereGrid3D } from '../../../shared/scene/SphereGrid3D';
 
 const INTERNAL_GRID_FLAG = Symbol('internal_grid');

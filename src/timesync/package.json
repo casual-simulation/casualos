@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/timesync",
-    "version": "3.3.4",
+    "version": "3.4.0",
     "description": "Time Synchronization utilities",
     "keywords": [
         "cryptography",
@@ -8,7 +8,7 @@
     ],
     "author": "Casual Simulation, Inc.",
     "homepage": "https://github.com/casual-simulation/casualos",
-    "license": "MIT",
+    "license": "AGPL-3.0-only",
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",

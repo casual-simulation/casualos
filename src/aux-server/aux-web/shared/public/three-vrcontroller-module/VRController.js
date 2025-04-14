@@ -7,6 +7,7 @@
 
 // Kallyn Gowdy <kal@casualsimulation.com>
 // Changed to require the '@casual-simulation/three' module instead of 'three-full'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const {Object3D, Matrix4, Vector3, Quaternion, Euler, _Math} = require('@casual-simulation/three')
 
 

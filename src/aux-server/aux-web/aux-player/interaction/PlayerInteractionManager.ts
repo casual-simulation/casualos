@@ -1,25 +1,42 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Intersection, Object3D, Ray } from '@casual-simulation/three';
 import {
     Vector3,
-    Intersection,
-    Object3D,
     OrthographicCamera,
     Quaternion,
     Euler,
     Matrix4,
     Vector2,
-    Ray,
 } from '@casual-simulation/three';
-import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
-import {
+import type { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
+import type {
     Bot,
     BotCalculationContext,
+    BotTags,
+} from '@casual-simulation/aux-common';
+import {
     ON_FOCUS_EXIT_ACTION_NAME,
     ON_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_EXIT_ACTION_NAME,
     PortalType,
     calculateGridScale,
-    BotTags,
     hasValue,
     ON_POINTER_ENTER,
     ON_POINTER_EXIT,
@@ -46,26 +63,28 @@ import {
     Rotation,
     Vector3 as CasualVector3,
 } from '@casual-simulation/aux-common/math';
-import { IOperation } from '../../shared/interaction/IOperation';
+import type { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
-import { GameObject } from '../../shared/scene/GameObject';
+import type { GameObject } from '../../shared/scene/GameObject';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { PlayerBotClickOperation } from './ClickOperation/PlayerBotClickOperation';
+import type {
+    InputMethod,
+    InputState,
+    InputModality,
+} from '../../shared/scene/Input';
 import {
     Input,
     ControllerData,
-    InputMethod,
-    InputState,
     MouseButtonId,
-    InputModality,
     getModalityHand,
     getModalityFinger,
     getModalityButtonId,
     getModalityKey,
 } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
-import { Simulation } from '@casual-simulation/aux-vm';
-import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
+import type { Simulation } from '@casual-simulation/aux-vm';
+import type { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import { flatMap, isEqual } from 'lodash';
 import { MiniPortalContextGroup3D } from '../scene/MiniPortalContextGroup3D';
 import {
@@ -78,27 +97,27 @@ import {
     objectUpwardRay,
     cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
-import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import type { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
-import { PlayerGame } from '../scene/PlayerGame';
+import type { PlayerGame } from '../scene/PlayerGame';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
-import { Grid3D } from '../../shared/scene/Grid3D';
+import type { Grid3D } from '../../shared/scene/Grid3D';
 import { PlayerPageSimulation3D } from '../scene/PlayerPageSimulation3D';
 import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { MiniSimulation3D } from '../scene/MiniSimulation3D';
 import { Physics } from '../../shared/scene/Physics';
-import { Simulation3D } from '../../shared/scene/Simulation3D';
+import type { Simulation3D } from '../../shared/scene/Simulation3D';
 import { PlayerBotDragOperation } from './DragOperation/PlayerBotDragOperation';
 import { PlayerModDragOperation } from './DragOperation/PlayerModDragOperation';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { MapPortalDimensionGroup3D } from '../scene/MapPortalDimensionGroup3D';
 import { MiniMapPortalDimensionGroup3D } from '../scene/MiniMapPortalDimensionGroup3D';
-import { Block } from 'three-mesh-ui';
+import type { Block } from 'three-mesh-ui';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.

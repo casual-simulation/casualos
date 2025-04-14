@@ -34,7 +34,7 @@
                 <md-table-row v-for="member of members" :key="member.userId">
                     <md-table-cell>{{ member.user.name || member.user.email }}</md-table-cell>
                     <md-table-cell>{{
-                        member.user.email || member.user.phoneNumber
+                        member.user.email || member.user.phoneNumber || member.user.displayName
                     }}</md-table-cell>
                     <md-table-cell>{{ member.role }}</md-table-cell>
                     <md-table-cell>{{ member.isPrimaryContact }}</md-table-cell>
@@ -188,7 +188,7 @@
             </md-dialog-content>
             <md-dialog-content v-else>
                 <md-field :class="addressFieldClass">
-                    <label>Email</label>
+                    <label>Email <span v-if="usePrivoLogin">or Display Name</span></label>
                     <md-input v-model="addMemberEmail" />
                     <span v-if="addMemberErrorCode === 'user_not_found'" class="md-error"
                         >No user with this email was found.</span

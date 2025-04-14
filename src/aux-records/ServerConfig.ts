@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { moderationSchema } from './ModerationConfiguration';
 import { notificationsSchema } from './SystemNotificationMessenger';
 import { privoSchema } from './PrivoConfiguration';
@@ -572,9 +589,9 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z
-                .enum(['openai', 'google', 'anthropic'])
+                .string()
                 .describe(
-                    'The provider that should be used by default for Chat AI request models that dont have an associated provider.'
+                    'The provider that should be used by default for Chat AI request models that dont have an associated provider. If you want to point to a custom provider, then use the name for the provider.'
                 ),
             defaultModel: z
                 .string()
@@ -591,6 +608,37 @@ const aiSchema = z.object({
                                 .enum(['openai', 'google', 'anthropic'])
                                 .optional(),
                             model: z.string().nonempty(),
+                        }),
+                        z.object({
+                            provider: z
+                                .literal('custom-openai-completions')
+                                .describe(
+                                    'Defines that the provider points to a custom implementation of the OpenAI Completions API'
+                                ),
+                            name: z
+                                .string()
+                                .describe(
+                                    'The name that should be used for this provider'
+                                )
+                                .nonempty()
+                                .default('custom-openai-completions'),
+                            apiKey: z
+                                .string()
+                                .describe(
+                                    'The API key that should be used to communicate with the custom API.'
+                                )
+                                .nonempty(),
+                            baseUrl: z
+                                .string()
+                                .describe(
+                                    'The endpoint that should be used to communicate with the custom API. (e.g. "https://api.openai.com/v1/" for OpenAIs API)'
+                                )
+                                .nonempty(),
+                            models: z
+                                .array(z.string().nonempty())
+                                .describe(
+                                    'The list of models that should be mapped to this provider'
+                                ),
                         }),
                     ])
                 )

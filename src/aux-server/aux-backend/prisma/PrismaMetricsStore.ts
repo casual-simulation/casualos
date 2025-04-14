@@ -1,8 +1,27 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     AIChatMetrics,
     AIChatSubscriptionMetrics,
     AIImageMetrics,
     AIImageSubscriptionMetrics,
+    AIOpenAIRealtimeMetrics,
+    AIOpenAIRealtimeSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
     AISloydMetrics,
@@ -12,16 +31,18 @@ import {
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
     InstSubscriptionMetrics,
-    MemoryConfiguration,
     MetricsStore,
     RecordSubscriptionMetrics,
+    SubscriptionFilter,
+} from '@casual-simulation/aux-records';
+import {
+    MemoryConfiguration,
     SUBSCRIPTIONS_CONFIG_KEY,
     SubscriptionConfiguration,
-    SubscriptionFilter,
     isActiveSubscription,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
-import { PrismaClient, Prisma } from './generated';
+import type { PrismaClient, Prisma } from './generated';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 import { DateTime } from 'luxon';
@@ -36,6 +57,54 @@ export class PrismaMetricsStore implements MetricsStore {
     constructor(client: PrismaClient, configStore: ConfigurationStore) {
         this._client = client;
         this._config = configStore;
+    }
+
+    @traced(TRACE_NAME)
+    async getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.AiOpenAIRealtimeMetricsWhereInput = {
+            createdAt: {
+                lt: new Date(metrics.currentPeriodEndMs),
+                gte: new Date(metrics.currentPeriodStartMs),
+            },
+        };
+
+        if (filter.ownerId) {
+            where.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            where.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const realtimeMetrics =
+            await this._client.aiOpenAIRealtimeMetrics.aggregate({
+                where,
+                _count: true,
+            });
+
+        return {
+            ...metrics,
+            totalSessionsInCurrentPeriod: realtimeMetrics._count,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void> {
+        await this._client.aiOpenAIRealtimeMetrics.create({
+            data: {
+                sessionId: metrics.sessionId,
+                userId: metrics.userId,
+                studioId: metrics.studioId,
+                createdAt: new Date(metrics.createdAtMs),
+                request: metrics.request as object,
+            },
+        });
     }
 
     @traced(TRACE_NAME)

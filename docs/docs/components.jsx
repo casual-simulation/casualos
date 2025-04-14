@@ -340,7 +340,7 @@ export const tagMap = {
 };
 
 function relativeLink(path) {
-    return new URL(path, import.meta.url).href;
+    return useBaseUrl(path);
 }
 
 export const ListenTagLink = ({tag}) => (

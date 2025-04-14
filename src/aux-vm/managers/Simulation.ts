@@ -1,21 +1,40 @@
-import {
-    SimulationIdParseSuccess,
-    LocalActions,
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     BotIndex,
     StoredAux,
     PartitionAuthMessage,
+} from '@casual-simulation/aux-common';
+import {
+    SimulationIdParseSuccess,
+    LocalActions,
     BotsState,
 } from '@casual-simulation/aux-common';
-import { BotWatcher } from './BotWatcher';
-import { Observable } from 'rxjs';
-import { DeviceAction } from '@casual-simulation/aux-common';
-import { Initable } from './Initable';
-import { BotHelper } from './BotHelper';
-import { ConnectionManager } from './ConnectionManager';
-import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import { CodeLanguageManager } from './CodeLanguageManager';
-import { BotDimensionManager } from './BotDimensionManager';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { BotWatcher } from './BotWatcher';
+import type { Observable } from 'rxjs';
+import type { DeviceAction } from '@casual-simulation/aux-common';
+import type { Initable } from './Initable';
+import type { BotHelper } from './BotHelper';
+import type { ConnectionManager } from './ConnectionManager';
+import type { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
+import type { CodeLanguageManager } from './CodeLanguageManager';
+import type { BotDimensionManager } from './BotDimensionManager';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 export interface SimulationOrigin {
     /**

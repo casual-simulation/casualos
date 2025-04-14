@@ -1,14 +1,30 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     AuxAuth,
     LoginHint,
     LoginStatus,
-    LoginUIAddressStatus,
     LoginUIStatus,
     OAuthRedirectRequest,
     PolicyUrls,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
-import {
+import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
@@ -20,28 +36,30 @@ import {
     waitForLoad,
 } from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
-import {
-    CompleteOpenIDLoginSuccess,
+import type {
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
     PublicRecordKeyPolicy,
-    getFormErrors,
-    CODE_FIELD,
-    DATE_OF_BIRTH_FIELD,
-    DISPLAY_NAME_FIELD,
-    EMAIL_FIELD,
     FormError,
-    TERMS_OF_SERVICE_FIELD,
-    NAME_FIELD,
-    PARENT_EMAIL_FIELD,
-    ADDRESS_FIELD,
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
+} from '@casual-simulation/aux-records';
+import {
+    CompleteOpenIDLoginSuccess,
+    getFormErrors,
+    CODE_FIELD,
+    DATE_OF_BIRTH_FIELD,
+    DISPLAY_NAME_FIELD,
+    EMAIL_FIELD,
+    TERMS_OF_SERVICE_FIELD,
+    NAME_FIELD,
+    PARENT_EMAIL_FIELD,
+    ADDRESS_FIELD,
 } from '@casual-simulation/aux-records';
 import {
     canExpire,
@@ -159,6 +177,7 @@ export class AuthHandler implements AuxAuth {
             privacyPolicyUrl: this.privacyPolicyUrl,
             termsOfServiceUrl: this.termsOfServiceUrl,
             codeOfConductUrl: this.codeOfConductUrl,
+            supportUrl: this.supportUrl,
         };
     }
 
@@ -418,6 +437,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 codeOfConductUrl: this.codeOfConductUrl,
+                supportUrl: this.supportUrl,
                 supportsSms: this._supportsSms,
                 supportsWebAuthn: this._supportsWebAuthn,
                 errors: errors,
@@ -474,6 +494,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 codeOfConductUrl: this.codeOfConductUrl,
+                supportUrl: this.supportUrl,
                 supportsSms: this._supportsSms,
                 supportsWebAuthn: this._supportsWebAuthn,
                 errors: errors,
@@ -627,6 +648,7 @@ export class AuthHandler implements AuxAuth {
                 termsOfServiceUrl: this.termsOfServiceUrl,
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 codeOfConductUrl: this.codeOfConductUrl,
+                supportUrl: this.supportUrl,
                 errors: errors,
             });
             return;
@@ -753,6 +775,7 @@ export class AuthHandler implements AuxAuth {
             termsOfServiceUrl: this.termsOfServiceUrl,
             privacyPolicyUrl: this.privacyPolicyUrl,
             codeOfConductUrl: this.codeOfConductUrl,
+            supportUrl: this.supportUrl,
             siteName: this.siteName,
             supportsSms: this._supportsSms,
             supportsWebAuthn: this._supportsWebAuthn,
@@ -817,6 +840,7 @@ export class AuthHandler implements AuxAuth {
                         addressType: result.addressType,
                         enterCode: true,
                         errors: [],
+                        supportUrl: this.supportUrl,
                     });
 
                     return this._providedCodes.pipe(
@@ -843,6 +867,7 @@ export class AuthHandler implements AuxAuth {
                                                     result.errorMessage,
                                             },
                                         ],
+                                        supportUrl: this.supportUrl,
                                     });
                                 }
                             }
@@ -857,6 +882,7 @@ export class AuthHandler implements AuxAuth {
                         termsOfServiceUrl: this.termsOfServiceUrl,
                         privacyPolicyUrl: this.privacyPolicyUrl,
                         codeOfConductUrl: this.codeOfConductUrl,
+                        supportUrl: this.supportUrl,
                         errors: errors,
                         supportsSms: this._supportsSms,
                         supportsWebAuthn: this._supportsWebAuthn,
@@ -921,6 +947,7 @@ export class AuthHandler implements AuxAuth {
                 privacyPolicyUrl: this.privacyPolicyUrl,
                 codeOfConductUrl: this.codeOfConductUrl,
                 termsOfServiceUrl: this.termsOfServiceUrl,
+                supportUrl: this.supportUrl,
             });
 
             const hasAccount = await firstValueFrom(
@@ -982,6 +1009,7 @@ export class AuthHandler implements AuxAuth {
             termsOfServiceUrl: this.termsOfServiceUrl,
             privacyPolicyUrl: this.privacyPolicyUrl,
             codeOfConductUrl: this.codeOfConductUrl,
+            supportUrl: this.supportUrl,
             siteName: this.siteName,
             errors: [],
         });
@@ -1017,6 +1045,7 @@ export class AuthHandler implements AuxAuth {
                         termsOfServiceUrl: this.termsOfServiceUrl,
                         privacyPolicyUrl: this.privacyPolicyUrl,
                         codeOfConductUrl: this.codeOfConductUrl,
+                        supportUrl: this.supportUrl,
                         siteName: this.siteName,
                         errors: errors,
                     });
@@ -1033,6 +1062,7 @@ export class AuthHandler implements AuxAuth {
                     termsOfServiceUrl: this.termsOfServiceUrl,
                     privacyPolicyUrl: this.privacyPolicyUrl,
                     codeOfConductUrl: this.codeOfConductUrl,
+                    supportUrl: this.supportUrl,
                     siteName: this.siteName,
                     errors: [
                         {
@@ -1159,6 +1189,10 @@ export class AuthHandler implements AuxAuth {
 
     private get codeOfConductUrl() {
         return new URL('/code-of-conduct', location.origin).href;
+    }
+
+    private get supportUrl() {
+        return authManager.supportUrl;
     }
 
     private get _supportsSms() {

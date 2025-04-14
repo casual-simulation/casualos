@@ -1,6 +1,23 @@
-/**
- * Defines an interface for services that are able to store and retrieve metrics about records and subscriptions.
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+import type { CreateRealtimeSessionTokenRequest } from './AIOpenAIRealtimeInterface';
+
 export interface MetricsStore {
     /**
      * Gets the data metrics for the subscription of the given record.
@@ -102,6 +119,22 @@ export interface MetricsStore {
     getSubscriptionInstMetricsByRecordName(
         recordName: string
     ): Promise<InstSubscriptionMetrics>;
+
+    /**
+     * Gets the AI OpenAI Realtime metrics for the given user/studio.
+     * @param filter The filter to use.
+     */
+    getSubscriptionAiOpenAIRealtimeMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIOpenAIRealtimeSubscriptionMetrics>;
+
+    /**
+     * Records the given ai.openai.realtime metrics.
+     * @param metrics The metrics to record.
+     */
+    recordOpenAIRealtimeMetrics(
+        metrics: AIOpenAIRealtimeMetrics
+    ): Promise<void>;
 }
 
 export interface SubscriptionMetrics {
@@ -341,4 +374,39 @@ export interface AISloydMetrics {
      * The number of models that were created in this metric.
      */
     modelsCreated: number;
+}
+
+export interface AIOpenAIRealtimeSubscriptionMetrics
+    extends SubscriptionMetrics {
+    /**
+     * The total number of realtime sessions that have been created in the period.
+     */
+    totalSessionsInCurrentPeriod: number;
+}
+
+export interface AIOpenAIRealtimeMetrics {
+    /**
+     * The ID of the user that the metrics are for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the metrics are for.
+     */
+    studioId?: string;
+
+    /**
+     * The ID of the session that was created.
+     */
+    sessionId: string;
+
+    /**
+     * The request that was used to create the session.
+     */
+    request: CreateRealtimeSessionTokenRequest;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
 }

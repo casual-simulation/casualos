@@ -1,25 +1,46 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type { Object3D, AnimationAction } from '@casual-simulation/three';
 import {
     AnimationObjectGroup,
     AnimationMixer,
-    Object3D,
-    AnimationAction,
     LoopOnce,
     LoopRepeat,
     LoopPingPong,
 } from '@casual-simulation/three';
-import { SubscriptionLike } from 'rxjs';
-import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
+import type { SubscriptionLike } from 'rxjs';
+import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { gltfPool } from './decorators/BotShapeDecorator';
+import type {
+    StartFormAnimationAction,
+    Bot,
+    StopFormAnimationAction,
+    ListFormAnimationsAction,
+    FormAnimationData,
+} from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
-    StartFormAnimationAction,
     StartFormAnimationOptions,
     hasValue,
     asyncResult,
     asyncError,
     realNumberOrDefault,
     ON_FORM_ANIMATION_STARTED,
-    Bot,
     ON_ANY_FORM_ANIMATION_STARTED,
     ON_FORM_ANIMATION_LOOPED,
     ON_ANY_FORM_ANIMATION_LOOPED,
@@ -27,12 +48,9 @@ import {
     ON_ANY_FORM_ANIMATION_FINISHED,
     ON_FORM_ANIMATION_STOPPED,
     ON_ANY_FORM_ANIMATION_STOPPED,
-    StopFormAnimationAction,
-    ListFormAnimationsAction,
-    FormAnimationData,
 } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { Simulation } from '@casual-simulation/aux-vm';
+import type { Simulation } from '@casual-simulation/aux-vm';
 
 const CANCEL_SYMBOL = Symbol('cancel');
 
@@ -91,33 +109,25 @@ export class AnimationHelper {
     }
 
     startAnimation(event: StartFormAnimationAction): Promise<any> {
-        try {
-            let promises = event.botIds
-                .map((id) => this._startAnimationForBot(id, event))
-                .filter((p) => !!p);
+        let promises = event.botIds
+            .map((id) => this._startAnimationForBot(id, event))
+            .filter((p) => !!p);
 
-            if (promises.length > 0) {
-                return Promise.all(promises);
-            }
-            return null;
-        } catch (err) {
-            throw err;
+        if (promises.length > 0) {
+            return Promise.all(promises);
         }
+        return null;
     }
 
     stopAnimation(event: StopFormAnimationAction): Promise<any> {
-        try {
-            let promises = event.botIds
-                .map((id) => this._stopAnimationForBot(id, event))
-                .filter((p) => !!p);
+        let promises = event.botIds
+            .map((id) => this._stopAnimationForBot(id, event))
+            .filter((p) => !!p);
 
-            if (promises.length > 0) {
-                return Promise.all(promises);
-            }
-            return null;
-        } catch (err) {
-            throw err;
+        if (promises.length > 0) {
+            return Promise.all(promises);
         }
+        return null;
     }
 
     async listFormAnimations(

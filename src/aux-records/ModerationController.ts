@@ -1,5 +1,25 @@
-import { NotLoggedInError, ServerError } from '@casual-simulation/aux-common';
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    NotLoggedInError,
+    ServerError,
+} from '@casual-simulation/aux-common';
+import type {
     ModerationFileScanResultLabel,
     ModerationFileScanResult,
     ModerationJob,
@@ -7,16 +27,14 @@ import {
     ReportReason,
     UserInstReport,
 } from './ModerationStore';
-import { ZodIssue } from 'zod';
+import type { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
-import {
-    SystemNotificationMessenger,
-    RecordsNotification,
-} from './SystemNotificationMessenger';
-import { ConfigurationStore } from './ConfigurationStore';
+import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
+import { RecordsNotification } from './SystemNotificationMessenger';
+import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import {
+import type {
     ModerationJobFilesFilter,
     ModerationJobProvider,
 } from './ModerationJobProvider';

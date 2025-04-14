@@ -1,3 +1,20 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { Vector2 } from '@casual-simulation/three';
 import { Axial } from './Axial';
 import { hexWidth } from './Hex';
@@ -38,12 +55,12 @@ export function realPosToGridPos(pos: Vector2, size: number): Axial {
  * @param second The second grid point.
  */
 export function gridDistance(first: Axial, second: Axial): number {
-    var x1 = first.q;
-    var z1 = first.r;
-    var y1 = -x1 - z1;
-    var x2 = second.q;
-    var z2 = second.r;
-    var y2 = -x2 - z2;
+    let x1 = first.q;
+    let z1 = first.r;
+    let y1 = -x1 - z1;
+    let x2 = second.q;
+    let z2 = second.r;
+    let y2 = -x2 - z2;
 
     return (Math.abs(x1 - x2) + Math.abs(y1 - y2) + Math.abs(z1 - z2)) / 2;
 }

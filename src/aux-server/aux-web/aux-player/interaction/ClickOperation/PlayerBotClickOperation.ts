@@ -1,10 +1,27 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
-import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { Intersection, Vector2 } from '@casual-simulation/three';
-import { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { AuxBot3D } from '../../../shared/scene/AuxBot3D';
+import type { Intersection, Vector2 } from '@casual-simulation/three';
+import type { PlayerInteractionManager } from '../PlayerInteractionManager';
+import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    BotCalculationContext,
     getBotPosition,
     objectsAtDimensionGridPosition,
     getBotIndex,
@@ -17,24 +34,23 @@ import {
     onAnyClickArg,
     VECTOR_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
-import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
+import type { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
 import { dropWhile } from 'lodash';
-import { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
+import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
-import { MiniSimulation3D } from '../../scene/MiniSimulation3D';
-import { Simulation3D } from '../../../shared/scene/Simulation3D';
-import { PlayerGame } from '../../scene/PlayerGame';
+import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
+import type { Simulation3D } from '../../../shared/scene/Simulation3D';
+import type { PlayerGame } from '../../scene/PlayerGame';
+import type { InputMethod, InputModality } from '../../../shared/scene/Input';
 import {
     ControllerData,
-    InputMethod,
-    InputModality,
     getModalityHand,
     getModalityFinger,
     getModalityButtonId,
 } from '../../../shared/scene/Input';
-import { MapSimulation3D } from '../../scene/MapSimulation3D';
-import { Block } from 'three-mesh-ui';
+import type { MapSimulation3D } from '../../scene/MapSimulation3D';
+import type { Block } from 'three-mesh-ui';
 
 export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.

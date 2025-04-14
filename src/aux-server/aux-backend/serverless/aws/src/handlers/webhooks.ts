@@ -1,17 +1,32 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { SimulationWebhookEnvironment } from '../../../../shared/webhooks/SimulationWebhookEnvironment';
-import { GenericHttpRequest } from '@casual-simulation/aux-common';
-import {
+import type { GenericHttpRequest } from '@casual-simulation/aux-common';
+import type {
     HandleWebhookOptions,
-    WEBHOOK_STATE_SCHEMA,
     WebhookState,
 } from '@casual-simulation/aux-records';
+import { WEBHOOK_STATE_SCHEMA } from '@casual-simulation/aux-records';
 import { resolve } from 'path';
-import {
-    HANDLE_WEBHOOK_PAYLOAD_SCHEMA,
-    HandleWebhookPayload,
-} from '../../../../shared/webhooks/LambdaWebhookPayload';
+import type { HandleWebhookPayload } from '../../../../shared/webhooks/LambdaWebhookPayload';
+import { HANDLE_WEBHOOK_PAYLOAD_SCHEMA } from '../../../../shared/webhooks/LambdaWebhookPayload';
 import { statSync } from 'fs';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 

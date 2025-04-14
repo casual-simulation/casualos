@@ -1,18 +1,37 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    ConnectionClient,
+    RemoteCausalRepoProtocol,
+    GenericHttpRequest,
+    GetRecordsEndpointAction,
+} from '@casual-simulation/aux-common';
 import {
     BotAction,
     hasValue,
     asyncResult,
     asyncError,
     APPROVED_SYMBOL,
-    ConnectionClient,
-    RemoteCausalRepoProtocol,
-    GenericHttpRequest,
-    GetRecordsEndpointAction,
     iterableNext,
     iterableThrow,
     iterableComplete,
 } from '@casual-simulation/aux-common';
-import {
+import type {
     ListRecordDataAction,
     RecordEventAction,
     GetEventCountAction,
@@ -45,39 +64,41 @@ import {
     AISloydGenerateModelAction,
     RecordsCallProcedureAction,
 } from '@casual-simulation/aux-runtime';
-import { AuxConfigParameters } from '../vm/AuxConfig';
+import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
-import { BotHelper } from './BotHelper';
-import {
+import type { BotHelper } from './BotHelper';
+import type {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
     IssueMeetTokenResult,
-    isRecordKey,
     GrantMarkerPermissionResult,
-    RevokeMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
-    GetFileRecordResult,
     ReadFileResult,
     ReadFileFailure,
     ReportInstRequest,
     ReportInstResult,
     GrantResourcePermissionResult,
     RevokePermissionResult,
-    formatInstId,
     PublicRecordKeyPolicy,
+} from '@casual-simulation/aux-records';
+import {
+    isRecordKey,
+    RevokeMarkerPermissionResult,
+    GetFileRecordResult,
+    formatInstId,
     parseRecordKey,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
+import type { Observable } from 'rxjs';
 import {
-    Observable,
     ReplaySubject,
     Subject,
     connectable,
@@ -89,16 +110,16 @@ import {
     takeWhile,
 } from 'rxjs';
 import { DateTime } from 'luxon';
-import {
+import type {
     AIChatResponse,
     AIGenerateImageResponse,
     AIGenerateSkyboxResponse,
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
-import { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
+import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import {
     RecordsClientInputs,
-    RecordsClientActions,
     createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
 
@@ -206,6 +227,7 @@ export class RecordsManager {
         'sendNotification',
         'listNotificationSubscriptions',
         'listUserNotificationSubscriptions',
+        'createOpenAIRealtimeSession',
         'getXpUserMeta',
         'createXpContract',
         'updateXpContract',

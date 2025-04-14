@@ -10,15 +10,17 @@
         >
         </md-table-empty-state>
 
-        <md-table-row slot="md-table-row" slot-scope="{ item }">
-            <md-table-cell md-label="Role Name">{{ item.role.role }}</md-table-cell>
-            <md-table-cell md-label="Kind">{{ item.type }}</md-table-cell>
-            <md-table-cell md-label="Subject">{{ item.userId || item.inst }}</md-table-cell>
-            <md-table-cell md-label="Expire Time">
-                <span v-if="item.role.expireTimeMs === null">Never</span>
-                <span v-else>Expires <relative-time :millis="item.role.expireTimeMs" /></span>
-            </md-table-cell>
-        </md-table-row>
+        <template v-slot:md-table-row="{ item }">
+            <md-table-row>
+                <md-table-cell md-label="Role Name">{{ item.role.role }}</md-table-cell>
+                <md-table-cell md-label="Kind">{{ item.type }}</md-table-cell>
+                <md-table-cell md-label="Subject">{{ item.userId || item.inst }}</md-table-cell>
+                <md-table-cell md-label="Expire Time">
+                    <span v-if="item.role.expireTimeMs === null">Never</span>
+                    <span v-else>Expires <relative-time :millis="item.role.expireTimeMs" /></span>
+                </md-table-cell>
+            </md-table-row>
+        </template>
 
         <template v-slot:md-table-pagination v-if="items.mdData.length > 0">
             <div class="md-table-pagination">

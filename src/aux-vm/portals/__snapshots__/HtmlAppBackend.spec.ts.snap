@@ -6,23 +6,21 @@ Object {
   "type": "update_html_app",
   "updates": Array [
     Object {
-      "addedNodes": undefined,
+      "attributeName": undefined,
+      "attributeNamespace": undefined,
       "listenerDelta": 1,
       "listenerName": "input",
-      "nextSibling": undefined,
-      "previousSibling": undefined,
-      "removedNodes": undefined,
-      "target": null,
+      "oldValue": undefined,
       "type": "event_listener",
     },
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "1",
+          "__id": "6",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "2",
+              "__id": "7",
               "attributes": Array [
                 Object {
                   "name": "value",
@@ -41,19 +39,24 @@ Object {
           "style": Object {},
         },
       ],
+      "attributeName": undefined,
+      "attributeNamespace": undefined,
+      "listenerDelta": undefined,
+      "listenerName": undefined,
       "nextSibling": undefined,
+      "oldValue": undefined,
       "previousSibling": undefined,
       "removedNodes": Array [],
       "target": Object {
-        "__id": "0",
+        "__id": "testPortal",
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "1",
+            "__id": "6",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "2",
+                "__id": "7",
                 "attributes": Array [
                   Object {
                     "name": "value",
@@ -89,26 +92,19 @@ Object {
   "type": "update_html_app",
   "updates": Array [
     Object {
-      "addedNodes": undefined,
       "attributeName": "value",
       "attributeNamespace": null,
-      "nextSibling": undefined,
+      "listenerDelta": undefined,
+      "listenerName": undefined,
       "oldValue": "",
-      "previousSibling": undefined,
-      "removedNodes": undefined,
       "target": Object {
-        "__id": "2",
+        "__id": "7",
         "attributes": Array [
           Object {
             "name": "value",
-            "ns": null,
             "value": "my value",
           },
         ],
-        "childNodes": Array [],
-        "nodeName": "INPUT",
-        "nodeType": 1,
-        "style": Object {},
       },
       "type": "attributes",
     },
@@ -125,11 +121,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "1",
+          "__id": "4",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "2",
+              "__id": "5",
               "data": "Hello",
               "nodeType": 3,
             },
@@ -139,19 +135,24 @@ Object {
           "style": Object {},
         },
       ],
+      "attributeName": undefined,
+      "attributeNamespace": undefined,
+      "listenerDelta": undefined,
+      "listenerName": undefined,
       "nextSibling": undefined,
+      "oldValue": undefined,
       "previousSibling": undefined,
       "removedNodes": Array [],
       "target": Object {
-        "__id": "0",
+        "__id": "testPortal",
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "1",
+            "__id": "4",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "2",
+                "__id": "5",
                 "data": "Hello",
                 "nodeType": 3,
               },
@@ -180,11 +181,11 @@ Object {
     Object {
       "addedNodes": Array [
         Object {
-          "__id": "1",
+          "__id": "2",
           "attributes": Array [],
           "childNodes": Array [
             Object {
-              "__id": "2",
+              "__id": "3",
               "data": "Hello",
               "nodeType": 3,
             },
@@ -194,19 +195,24 @@ Object {
           "style": Object {},
         },
       ],
+      "attributeName": undefined,
+      "attributeNamespace": undefined,
+      "listenerDelta": undefined,
+      "listenerName": undefined,
       "nextSibling": undefined,
+      "oldValue": undefined,
       "previousSibling": undefined,
       "removedNodes": Array [],
       "target": Object {
-        "__id": "0",
+        "__id": "testPortal",
         "attributes": Array [],
         "childNodes": Array [
           Object {
-            "__id": "1",
+            "__id": "2",
             "attributes": Array [],
             "childNodes": Array [
               Object {
-                "__id": "2",
+                "__id": "3",
                 "data": "Hello",
                 "nodeType": 3,
               },

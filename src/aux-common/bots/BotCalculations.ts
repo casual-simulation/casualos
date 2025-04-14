@@ -1,60 +1,82 @@
-import {
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
     Bot,
     Workspace,
+    AuxDomain,
+    BotShape,
+    BotTags,
+    BotLabelAnchor,
+    DimensionVisualizeMode,
+    PrecalculatedBot,
+    PrecalculatedTags,
+    BotsState,
+    BotSpace,
+    PortalType,
+    BotSubShape,
+    BotOrientationMode,
+    BotAnchorPoint,
+    BotLOD,
+    BotLabelAlignment,
+    BotScaleMode,
+    MeetPortalAnchorPoint,
+    RuntimeBot,
+    BotLabelFontSize,
+    BotLabelWordWrap,
+    MenuBotForm,
+    PortalCameraControlsMode,
+    MenuBotHoverStyle,
+    MenuBotResolvedHoverStyle,
+    PortalCameraType,
+    BotCursorType,
+    BotLabelPadding,
+    SystemPortalPane,
+    MenuBotSubtype,
+    BotMeshPositioningMode,
+} from './Bot';
+import {
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
-    AuxDomain,
-    BotShape,
     DEFAULT_BOT_SHAPE,
-    BotTags,
     DEFAULT_WORKSPACE_SIZE,
-    BotLabelAnchor,
     DEFAULT_LABEL_ANCHOR,
     BotDragMode,
-    DimensionVisualizeMode,
-    PrecalculatedBot,
-    PrecalculatedTags,
-    BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
-    BotSpace,
     BOT_SPACE_TAG,
-    PortalType,
-    BotSubShape,
-    BotOrientationMode,
     DEFAULT_ORIENTATION_MODE,
-    BotAnchorPoint,
     DEFAULT_ANCHOR_POINT,
-    BotLOD,
-    BotLabelAlignment,
     DEFAULT_LABEL_ALIGNMENT,
-    BotScaleMode,
     DEFAULT_SCALE_MODE,
-    MeetPortalAnchorPoint,
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     BotSignatures,
     DEFAULT_TAG_PORTAL_ANCHOR_POINT,
     TAG_MASK_SPACE_PRIORITIES,
-    RuntimeBot,
     DNA_TAG_PREFIX,
-    BotLabelFontSize,
     DEFAULT_LABEL_FONT_SIZE,
-    BotLabelWordWrap,
     DEFAULT_LABEL_WORD_WRAP_MODE,
-    MenuBotForm,
     DEFAULT_MENU_BOT_FORM,
-    PortalCameraControlsMode,
     DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
-    MenuBotHoverStyle,
-    MenuBotResolvedHoverStyle,
     DEFAULT_MENU_BOT_HOVER_STYLE,
-    PortalCameraType,
-    BotCursorType,
     DEFAULT_BOT_CURSOR,
-    BotLabelPadding,
     BOT_LINK_TAG_PREFIX,
     DATE_TAG_PREFIX,
     STRING_TAG_PREFIX,
@@ -62,19 +84,18 @@ import {
     DEFAULT_BOT_PORTAL_ANCHOR_POINT,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
-    SystemPortalPane,
     SYSTEM_PORTAL_PANE,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_SEARCH,
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
-    MenuBotSubtype,
-    BotMeshPositioningMode,
     DEFAULT_MESH_POSITIONING_MODE,
 } from './Bot';
-import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
+import type { Easing as TweenEasing } from '@tweenjs/tween.js';
+import TWEEN from '@tweenjs/tween.js';
 
-import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
+import type { BotCalculationContext } from './BotCalculationContext';
+import { cacheFunction } from './BotCalculationContext';
 
 import { v4 as uuid } from 'uuid';
 import {
@@ -92,15 +113,15 @@ import {
 } from 'lodash';
 
 /// <reference path="../typings/global.d.ts" />
-import { EaseMode, EaseType, Easing, PartialBot } from '../bots';
+import type { EaseMode, EaseType, Easing, PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
-import { BotObjectsContext } from './BotObjectsContext';
+import type { BotObjectsContext } from './BotObjectsContext';
 import { DateTime, SystemZone } from 'luxon';
 import { Quaternion, Rotation, Vector2, Vector3 } from '../math';
 
-export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
+export let isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
-export var ShortId_Length: number = 5;
+export let ShortId_Length: number = 5;
 
 /**
  * The default energy for actions.
@@ -341,9 +362,9 @@ export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
  * @returns bot array or null if no matches found.
  */
 export function botsFromShortIds(bots: Bot[], shortIds: string[]): Bot[] {
-    var matches: Bot[] = [];
+    let matches: Bot[] = [];
     shortIds.forEach((shortId) => {
-        var bot = this.botFromShortId(bots, shortId);
+        let bot = this.botFromShortId(bots, shortId);
         if (bot) matches.push(bot);
     });
 
@@ -2462,7 +2483,9 @@ function calculateBotCursor(
             x: position.x,
             y: position.y,
         };
-    } catch {}
+    } catch {
+        /* empty because we want to hide the error and return the default */
+    }
 
     return DEFAULT_BOT_CURSOR;
 }
