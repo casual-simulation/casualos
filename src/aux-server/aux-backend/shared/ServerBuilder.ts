@@ -39,6 +39,8 @@ import type {
     WebhookEnvironment,
     NotificationRecordsStore,
     WebPushInterface,
+    XpStore,
+    FinancialInterface,
 } from '@casual-simulation/aux-records';
 import {
     AuthController,
@@ -69,9 +71,7 @@ import {
     WebhookRecordsController,
     cleanupObject,
     NotificationRecordsController,
-    XpStore,
     XpController,
-    FinancialInterface,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {

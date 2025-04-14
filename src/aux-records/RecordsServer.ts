@@ -144,7 +144,7 @@ import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
-import { XpController } from './XpController';
+import type { XpController } from './XpController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -394,8 +394,8 @@ export interface RecordsServerOptions {
  */
 const GetXpUserById = z
     .object({
-        userId: z.string().optional().nullable(),
-        xpId: z.string().optional().nullable(),
+        userId: z.string().nonempty().optional().nullable(),
+        xpId: z.string().nonempty().optional().nullable(),
     })
     .refine(
         (contractedUser) => {
@@ -2200,8 +2200,8 @@ export class RecordsServer {
                                     if (contract.status === 'open') {
                                         //* Open contracts must have a contracted user
                                         return (
-                                            contract.contractedUserId ??
-                                            undefined !== undefined
+                                            (contract.contractedUserId ??
+                                                undefined) !== undefined
                                         );
                                     } else if (contract.status === 'draft') {
                                         /**
@@ -2209,8 +2209,8 @@ export class RecordsServer {
                                          * * This is because the contracted user is only set when the contract is opened.
                                          */
                                         return (
-                                            contract.contractedUserId ??
-                                            undefined === undefined
+                                            (contract.contractedUserId ??
+                                                undefined) === undefined
                                         );
                                     }
                                 },
@@ -2223,14 +2223,11 @@ export class RecordsServer {
                             .refine(
                                 (contract) => {
                                     if (contract.status === 'open') {
-                                        return (
-                                            contract.accountCurrency ??
-                                            undefined !== undefined
-                                        );
+                                        return !contract.accountCurrency;
                                     } else if (contract.status === 'draft') {
                                         return (
-                                            contract.accountCurrency ??
-                                            undefined === undefined
+                                            (contract.accountCurrency ??
+                                                undefined) === undefined
                                         );
                                     }
                                 },

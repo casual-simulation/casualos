@@ -3532,8 +3532,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             xp: {
+                // TODO: Refactor
                 getUserMeta: async function (
-                    by?: {} | string,
+                    by?: object | string,
                     options: RecordActionOptions = {}
                 ) {
                     const task = context.createTask();
@@ -3544,7 +3545,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 },
                 createContract: async function (
                     contractMeta: {
-                        forUser: {} | string;
+                        forUser: object | string;
                         gigRate: number;
                         gigs: number;
                         status: 'open' | 'draft';

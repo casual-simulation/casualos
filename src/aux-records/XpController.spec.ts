@@ -1,19 +1,34 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import {
     createTestControllers,
     createTestUser,
     createTestXpUser,
 } from './TestUtils';
-import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { AuthController } from './AuthController';
-import { MemoryStore } from './MemoryStore';
-import {
-    CreateContractResultSuccess,
-    XpController,
-} from '../aux-records/XpController';
-import { XpUser } from './XpStore';
-import { NotNullOrOptional, PromiseT } from './TypeUtils';
+import type { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import type { AuthController } from './AuthController';
+import type { MemoryStore } from './MemoryStore';
+import type { CreateContractResultSuccess } from '../aux-records/XpController';
+import { XpController } from '../aux-records/XpController';
+import type { XpUser } from './XpStore';
+import type { NotNullOrOptional, PromiseT } from './TypeUtils';
 import { v4 as uuid } from 'uuid';
-import { MemoryFinancialInterface } from './MemoryFinancialInterface';
+import type { MemoryFinancialInterface } from './MemoryFinancialInterface';
 
 jest.mock('uuid');
 const uuidMock: jest.Mock = <any>uuid;

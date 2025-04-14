@@ -172,7 +172,7 @@ import type {
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
-import { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
+import type { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
