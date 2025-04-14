@@ -1,3 +1,5 @@
+import { KnownErrorCodes } from '@casual-simulation/aux-common';
+
 /**
  * A map of ISO4217 alphabetic currency codes to their numeric codes
  * and minor units
@@ -500,17 +502,24 @@ export type ActionResult_T<S extends boolean, T extends object> = {
  * @template S The success state of the action
  * @template T The type of the result to be included in the action result
  */
-export type SuccessResult<
+export type StatefulResult<
     S extends boolean = true | false,
     T extends object = S extends true
         ? {}
         : {
               /** The error code */
-              errorCode: string;
+              errorCode: KnownErrorCodes;
               /** The error message */
               errorMessage?: string;
           }
 > = ActionResult_T<S, T>;
+
+export type SuccessResult = StatefulResult<true, {}>;
+
+export type FailedResult = StatefulResult<
+    false,
+    { errorCode: KnownErrorCodes; errorMessage: string }
+>;
 
 /**
  * A Generic utility type which represents data in a manner which is safe for JSON serialization

@@ -16,6 +16,7 @@ import {
 } from './SubscriptionConfigBuilder';
 import { XpController } from './XpController';
 import { MemoryFinancialInterface } from './MemoryFinancialInterface';
+import { FinancialController } from './financial/FinancialController';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -83,12 +84,13 @@ export function createTestControllers(
         messenger: store,
     });
     const financialInterface = new MemoryFinancialInterface();
+    const financialController = new FinancialController(financialInterface);
     const policies = new PolicyController(auth, records, store);
     const xpController = new XpController({
         authController: auth,
         authStore: store,
         xpStore: store,
-        financialInterface,
+        financialController,
     });
 
     return {
@@ -102,6 +104,7 @@ export function createTestControllers(
         policies,
         configStore: store,
         xpController,
+        financialController,
         financialInterface,
     };
 }

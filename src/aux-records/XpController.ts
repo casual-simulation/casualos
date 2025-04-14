@@ -3,39 +3,38 @@ import { AuthController } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
 import { v4 as uuid } from 'uuid';
 import {
-    ISO4217_Map,
+    FailedResult,
     ReduceKeysToPrimitives,
-    SafeJSONSerializable,
-    SuccessResult,
-    UnionOfTValues,
+    StatefulResult,
 } from './TypeUtils';
-import { KnownErrorCodes } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
 import { tryScope } from './Utils';
-import { Account } from './financial/Types';
-import {
-    AccountCodes,
-    FinancialInterface,
-} from './financial/FinancialInterface';
+import { Account, AccountFlags } from './financial/Types';
+import { AccountCodes, TransferCodes } from './financial/FinancialInterface';
+import { FinancialController } from './financial/FinancialController';
 
 interface XpConfig {
     xpStore: XpStore;
     authController: AuthController;
     authStore: AuthStore;
-    financialInterface: FinancialInterface;
+    financialController: FinancialController;
 }
 
-interface GenAccountConfig {
-    /**
-     * The code associated with the type of account to generate.
-     */
-    accountCode: AccountCodes;
-    /**
-     * The number of accounts to generate.
-     * * Useful when creating user and contract accounts in one go.
-     */
-    quantity: number;
+interface TransferConfig {
+    /** The account being debited */
+    account_debit: Account['id'];
+    /** The account being credited */
+    account_credit: Account['id'];
+    /** The amount to transfer */
+    amount: bigint;
+    /** The idempotency key for the transfer */
+    idempotencyKey: bigint;
 }
+
+/**
+ * Defines the result of validating users from the controllers private method
+ */
+type ValidateUsersResult = StatefulResult<boolean, { users: XpUser[] }>;
 
 const TRACE_NAME = 'XpController';
 
@@ -46,71 +45,47 @@ export class XpController {
     private _auth: AuthController;
     private _authStore: AuthStore;
     private _xpStore: XpStore;
-    private _fInterface: FinancialInterface;
+    private _financialController: FinancialController;
 
     constructor(config: XpConfig) {
         this._auth = config.authController;
         this._authStore = config.authStore;
         this._xpStore = config.xpStore;
-        this._fInterface = config.financialInterface;
-    }
-
-    /**
-     * Generate an account (user or contract) configured for the given currency
-     * @param accountConf The configuration for the account
-     */
-    private _generateAccounts(accounts: GenAccountConfig[]): Account['id'][][] {
-        const _accounts: Account[] = [];
-        const idArray = accounts.map((account) => {
-            const subIdArray = [];
-            for (let i = 0; i < account.quantity; i++) {
-                const id = this._fInterface.generateId();
-                _accounts.push({
-                    id,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: 1,
-                    code: account.accountCode,
-                    flags: 0,
-                    timestamp: 0n,
-                });
-                subIdArray.push(id);
-            }
-            return subIdArray;
-        });
-        return idArray;
+        this._financialController = config.financialController;
     }
 
     /**
      * Simple helper to generate a user account
      * * Standardizes the account code for user accounts
      */
-    private _generateUserAccount(): Account['id'] {
-        return this._generateAccounts([
-            {
-                accountCode: AccountCodes.liabilities_customer,
-                quantity: 1,
-            },
-        ])[0][0];
+    private async _generateUserAccount(): Promise<Account['id']> {
+        return await this._financialController.nicheAccountGen({
+            accounts: [
+                {
+                    accountCode: AccountCodes.liabilities_customer,
+                    quantity: 1,
+                    flags: AccountFlags.debits_must_not_exceed_credits,
+                },
+            ],
+            onFail: (err) => console.error(err),
+        });
     }
 
     /**
      * Simple helper to generate a contract account
      * * Standardizes the account code for contracts
      */
-    private _generateContractAccount(): Account['id'] {
-        return this._generateAccounts([
-            {
-                accountCode: AccountCodes.liabilities_escrow,
-                quantity: 1,
-            },
-        ])[0][0];
+    private async _generateContractAccount(): Promise<Account['id']> {
+        return await this._financialController.nicheAccountGen({
+            accounts: [
+                {
+                    accountCode: AccountCodes.liabilities_escrow,
+                    quantity: 1,
+                    flags: AccountFlags.debits_must_not_exceed_credits,
+                },
+            ],
+            onFail: (err) => console.error(err),
+        });
     }
 
     /**
@@ -135,7 +110,7 @@ export class XpController {
                 const user: XpUser = {
                     id: uuid(),
                     userId: authUserId,
-                    accountId: String(this._generateUserAccount()),
+                    accountId: String(await this._generateUserAccount()),
                     requestedRate: null,
                     createdAtMs: Date.now(),
                     updatedAtMs: Date.now(),
@@ -158,6 +133,140 @@ export class XpController {
         );
     }
 
+    private async _validateUsers(config: {
+        xpIds: XpUser['id'][];
+        authIds: AuthUser['id'][];
+    }): Promise<ValidateUsersResult | FailedResult> {
+        return await tryScope(
+            async () => {
+                const batchResult = await this.batchGetXpUsers({
+                    xpId: config.xpIds,
+                    authId: config.authIds,
+                });
+                if (!batchResult.success) {
+                    return batchResult;
+                }
+                const userIds = new Set(config.xpIds);
+                const authIds = new Set(config.authIds);
+                const filteredUsers = batchResult.users.filter(
+                    (user) => userIds.has(user.id) || authIds.has(user.userId)
+                );
+                if (filteredUsers.length === 0) {
+                    return {
+                        success: false,
+                        errorCode: 'user_not_found',
+                        errorMessage: 'No users were found.',
+                    };
+                }
+                if (filteredUsers.length !== config.xpIds.length) {
+                    return {
+                        success: false,
+                        errorCode: 'user_not_found',
+                        errorMessage:
+                            'Not all users were found. Please check the provided ids.',
+                    };
+                }
+
+                return {
+                    success: true,
+                    users: filteredUsers,
+                };
+            },
+            {
+                scope: [TRACE_NAME, this._validateUsers.name],
+                errMsg: 'An error occurred while validating the users.',
+                returnOnError: {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'An error occurred while validating the users.',
+                },
+            }
+        );
+    }
+
+    /**
+     * Validates the issuance of a contract between two users
+     * @param config The configuration for the contract issuance
+     * TODO: Iterate implementation
+     * @returns The result of the validation (and the users from a data store if successful)
+     */
+    private async _validateContractIssuance(config: {
+        receivingUserId: GetXpUserById;
+        issuingUserId: GetXpUserById;
+    }): Promise<
+        | StatefulResult<true, { receivingUser: XpUser; issuingUser: XpUser }>
+        | FailedResult
+    > {
+        const validationParams: Parameters<typeof this._validateUsers>[0] = {
+            xpIds: [],
+            authIds: [],
+        };
+        if ('xpId' in config.issuingUserId) {
+            validationParams.authIds.push(config.issuingUserId.xpId);
+        } else if ('userId' in config.issuingUserId) {
+            validationParams.xpIds.push(config.issuingUserId.userId);
+        } else
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The issuing user must have an xpId or userId.',
+            };
+        if ('xpId' in config.receivingUserId) {
+            validationParams.authIds.push(config.receivingUserId.xpId);
+        } else if ('userId' in config.receivingUserId) {
+            validationParams.xpIds.push(config.receivingUserId.userId);
+        } else
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The receiving user must have an xpId or userId.',
+            };
+
+        const batchParties = await this._validateUsers(validationParams);
+
+        if (!batchParties.success)
+            return {
+                success: false,
+                errorCode: 'user_not_found',
+                errorMessage: 'Some or all users were not found.',
+            };
+
+        let receivingUser = null;
+        let issuingUser = null;
+
+        if (
+            new Set(
+                batchParties.users.map((user) => {
+                    if (
+                        ('xpId' in config.receivingUserId &&
+                            user.id === config.receivingUserId.xpId) ||
+                        ('userId' in config.receivingUserId &&
+                            user.userId === config.receivingUserId.userId)
+                    ) {
+                        receivingUser = user;
+                    } else if (
+                        ('xpId' in config.issuingUserId &&
+                            user.id === config.issuingUserId.xpId) ||
+                        ('userId' in config.issuingUserId &&
+                            user.userId === config.issuingUserId.userId)
+                    ) {
+                        issuingUser = user;
+                    }
+                    return user.id;
+                })
+            ).size !== 2
+        )
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage:
+                    'The issuing and receiving party cannot be the same user.',
+            };
+
+        return { success: true, receivingUser, issuingUser };
+    }
+
     /**
      * Get an Xp user's meta data (Xp meta associated with an auth user)
      * Creates an Xp user for the auth user if one does not exist
@@ -166,17 +275,10 @@ export class XpController {
         return await tryScope(
             async () => {
                 let user =
-                    (await (id.userId
+                    (await ('userId' in id
                         ? this._xpStore.getXpUserByAuthId(id.userId)
                         : this._xpStore.getXpUserById(id.xpId))) ?? null;
-                if (id.userId !== undefined && id.xpId !== undefined)
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'Cannot use multiple identifiers to get a user.',
-                    };
-                if (!user && id.userId) {
+                if (!user && 'userId' in id) {
                     const result = await this._createXpUser(id.userId);
                     if (result.success) {
                         user = result.user;
@@ -197,6 +299,39 @@ export class XpController {
                     success: false,
                     errorCode: 'server_error',
                     errorMessage: 'An error occurred while getting the user.',
+                },
+            }
+        );
+    }
+
+    async batchGetXpUsers(
+        queryOptions:
+            | {
+                  xpId: XpUser['id'][];
+                  authId?: AuthUser['id'][];
+              }
+            | {
+                  authId: AuthUser['id'][];
+                  xpId?: XpUser['id'][];
+              }
+    ): Promise<BatchGetXpUserResult> {
+        return await tryScope(
+            async () => {
+                const results = await this._xpStore.batchQueryXpUsers(
+                    queryOptions
+                );
+                return {
+                    success: true,
+                    users: results,
+                };
+            },
+            {
+                scope: [TRACE_NAME, this.batchGetXpUsers.name],
+                errMsg: 'An error occurred while getting the users.',
+                returnOnError: {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'An error occurred while getting the users.',
                 },
             }
         );
@@ -240,84 +375,115 @@ export class XpController {
      */
     async createContract(config: {
         description?: XpContract['description'];
-        issuerUserId: GetXpUserById;
-        holdingUserId: GetXpUserById | null;
+        issuingUserId: GetXpUserById;
+        receivingUserId: GetXpUserById | null;
         rate: XpContract['rate'];
         offeredWorth: XpContract['offeredWorth'] | null;
         status: XpContract['status'];
         //* This is when the contract was requested to be created (received by the server)
         creationRequestReceivedAt: XpContract['createdAtMs'];
+        //* This is the idempotency key for the transfer of funds from the issuer to the contract account
+        idempotencyKey: bigint;
     }): Promise<CreateContractResult> {
         return await tryScope(
             async () => {
-                const issuer = await this.getXpUser(config.issuerUserId);
-
-                if (!issuer.success)
-                    return {
-                        success: false,
-                        errorCode: 'user_not_found',
-                        errorMessage: 'The issuing user was not found.',
-                    };
-
-                if (!['draft', 'open'].includes(config.status))
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The contract status during creation must be one of literals "draft" or "open".',
-                    };
-
-                if (config.status !== 'draft' && !config.holdingUserId)
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The contract status must be "draft" if no contract recipient is provided.',
-                    };
-
-                let holder = null;
-                let accountId = null;
-
-                if (config.status === 'open') {
-                    holder = await this.getXpUser(config.holdingUserId);
-
-                    if (!holder.success)
-                        return {
-                            success: false,
-                            errorCode: 'user_not_found',
-                            errorMessage:
-                                'The holding (contract recipient) user was not found.',
-                        };
-
-                    if (issuer.user.id === holder.user.id)
+                if (config.status !== 'draft') {
+                    if (config.status !== 'open')
                         return {
                             success: false,
                             errorCode: 'invalid_request',
                             errorMessage:
-                                'The issuer and holder cannot be the same user.',
+                                'The contract status during creation must be one of literals "draft" or "open".',
                         };
-
-                    accountId = this._generateContractAccount();
+                    if ((config.receivingUserId ?? null) === null)
+                        return {
+                            success: false,
+                            errorCode: 'invalid_request',
+                            errorMessage:
+                                'The contract status must be "draft" if no contract recipient is provided.',
+                        };
                 }
 
-                const contract: XpContract = {
+                let receivingUser = null;
+                let accountId = null;
+
+                const issuer = await this.getXpUser(config.issuingUserId);
+                if (issuer.success === false) return issuer;
+
+                if (config.status === 'open') {
+                    const validation = await this._validateContractIssuance({
+                        receivingUserId: config.receivingUserId,
+                        issuingUserId: config.issuingUserId,
+                    });
+                    if (validation.success === false) return validation;
+                    receivingUser = validation.receivingUser;
+                    accountId = await this._generateContractAccount();
+                    if (accountId === null)
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage:
+                                'An error occurred while creating the contract account.',
+                        };
+                }
+
+                /**
+                 * * Create the contract in a draft state initially regardless of the requested status
+                 * * This is to ensure that the contract and its associated account are created and (if open) funds have been transferred
+                 * * before the contract is truly open
+                 */
+                const stagedDraftContract: XpContract = {
                     id: uuid(),
                     description: config.description ?? null,
-                    accountId: String(accountId),
+                    accountId: accountId === null ? null : String(accountId),
                     issuerUserId: issuer.user.id,
-                    holdingUserId: holder ? holder.user.id : null,
+                    holdingUserId: receivingUser?.id ?? null,
                     rate: config.rate,
                     offeredWorth: config.offeredWorth,
-                    status: config.status,
+                    status: 'draft',
                     createdAtMs: Date.now(),
                     updatedAtMs: Date.now(),
                 };
 
-                await this._xpStore.saveXpContract(contract);
+                const draftContract = await this._xpStore.saveXpContract(
+                    stagedDraftContract
+                );
+
+                if (draftContract !== null) {
+                    const transferResult =
+                        await this._financialController.createIdempotentTransfer(
+                            {
+                                debit: BigInt(issuer.user.accountId),
+                                credit: accountId,
+                                amount: BigInt(config.offeredWorth ?? 0),
+                                code: TransferCodes.user_credits_contract,
+                            },
+                            BigInt(Date.now())
+                        );
+                    if (transferResult.success === true) {
+                        if (config.status === 'open') {
+                            const contract =
+                                await this._xpStore.updateXpContract(
+                                    stagedDraftContract.id,
+                                    { status: 'open' }
+                                );
+                            if (contract !== null) {
+                                return {
+                                    success: true,
+                                    contract: contract,
+                                };
+                            } else {
+                                throw new Error(
+                                    'An error occurred while updating the contract.'
+                                );
+                            }
+                        }
+                    }
+                }
 
                 return {
                     success: true,
-                    contract,
+                    contract: draftContract,
                 };
             },
             {
@@ -348,17 +514,9 @@ export class XpController {
                     config.draftContractId
                 );
 
-                if (!draftContract.success)
-                    return {
-                        success: false,
-                        errorCode: 'not_found',
-                        errorMessage: 'The draft contract was not found.',
-                    };
+                if (draftContract.success === false) return draftContract;
 
-                //* Shallow copy of the contract object to be able to modify it prior to return
-                const contract = { ...draftContract.contract };
-
-                if (contract.status !== 'draft')
+                if (draftContract.contract.status !== 'draft')
                     return {
                         success: false,
                         errorCode: 'invalid_request',
@@ -366,30 +524,28 @@ export class XpController {
                             'The contract must be in draft status to issue it.',
                     };
 
-                const receivingUser = await this.getXpUser(
-                    config.receivingUserId
-                );
-
-                if (!receivingUser.success)
-                    return {
-                        success: false,
-                        errorCode: 'user_not_found',
-                        errorMessage: 'The receiving user was not found.',
-                    };
-
-                if (contract.issuerUserId === receivingUser.user.id)
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The issuing and holding (receiving) party cannot be the same user.',
-                    };
-
-                return await this._xpStore.updateXpContract(contract.id, {
-                    status: 'open',
-                    accountId: String(this._generateContractAccount()),
-                    holdingUserId: receivingUser.user.id,
+                const validation = await this._validateContractIssuance({
+                    receivingUserId: config.receivingUserId,
+                    issuingUserId: {
+                        xpId: draftContract.contract.issuerUserId,
+                    },
                 });
+
+                if (validation.success === false) return validation;
+
+                return {
+                    success: true,
+                    contract: await this._xpStore.updateXpContract(
+                        draftContract.contract.id,
+                        {
+                            status: 'open',
+                            accountId: String(
+                                await this._generateContractAccount()
+                            ),
+                            holdingUserId: validation.receivingUser.id,
+                        }
+                    ),
+                };
             },
             {
                 scope: [TRACE_NAME, this.issueDraftContract.name],
@@ -404,82 +560,87 @@ export class XpController {
         );
     }
 
-    async createInvoice(config: {
-        contractId: XpContract['id'];
-        amount: number;
-        note: string | null;
-    }): Promise<CreateInvoiceResult> {
-        return await tryScope(
-            async () => {
-                if (config.amount <= 0)
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The invoice amount must be greater than zero.',
-                    };
+    // async createInvoice(config: {
+    //     contractId: XpContract['id'];
+    //     amount: number;
+    //     note: string | null;
+    // }): Promise<CreateInvoiceResult> {
+    //     return await tryScope(
+    //         async () => {
+    //             if (config.amount <= 0)
+    //                 return {
+    //                     success: false,
+    //                     errorCode: 'invalid_request',
+    //                     errorMessage:
+    //                         'The invoice amount must be greater than zero.',
+    //                 };
 
-                const contract = await this._xpStore.getXpContract(
-                    config.contractId
-                );
-                if (!contract)
-                    return {
-                        success: false,
-                        errorCode: 'not_found',
-                        errorMessage: 'The contract was not found.',
-                    };
+    //             const contract = await this._xpStore.getXpContract(
+    //                 config.contractId
+    //             );
+    //             if (!contract)
+    //                 return {
+    //                     success: false,
+    //                     errorCode: 'not_found',
+    //                     errorMessage: 'The contract was not found.',
+    //                 };
 
-                if (contract.status !== 'open')
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The contract must be open to create an invoice.',
-                    };
+    //             if (contract.status !== 'open')
+    //                 return {
+    //                     success: false,
+    //                     errorCode: 'invalid_request',
+    //                     errorMessage:
+    //                         'The contract must be open to create an invoice.',
+    //                 };
 
-                const account = (
-                    await this._fInterface.lookupAccounts([
-                        BigInt(contract.accountId),
-                    ])
-                )[0];
-                if (!account)
-                    return {
-                        success: false,
-                        errorCode: 'not_found',
-                        errorMessage: 'The invoiceable account was not found.',
-                    };
+    //             console.log('contract', contract);
 
-                const invoice: XpInvoice = {
-                    id: uuid(),
-                    contractId: contract.id,
-                    amount: config.amount,
-                    note: config.note,
-                    status: 'open',
-                    transactionId: null,
-                    voidReason: null,
-                    createdAtMs: Date.now(),
-                    updatedAtMs: Date.now(),
-                };
+    //             const invoicingUser = await this.getXpUser({
+    //                 xpId: contract.holdingUserId,
+    //             });
 
-                await this._xpStore.saveXpInvoice(invoice);
+    //             if (invoicingUser.success === false) return invoicingUser;
 
-                return { success: true, invoice };
-            },
-            {
-                scope: [TRACE_NAME, this.createInvoice.name],
-                errMsg: 'An error occurred while creating the invoice.',
-                returnOnError: {
-                    success: false,
-                    errorCode: 'server_error',
-                    errorMessage:
-                        'An error occurred while creating the invoice.',
-                },
-            }
-        );
-    }
+    //             const canTransfer =
+    //                 await this._financialController.liabilityCanTransfer({
+    //                     currentlyLiable: BigInt(contract.accountId),
+    //                     targetLiable: BigInt(invoicingUser.user.accountId),
+    //                     amount: BigInt(config.amount),
+    //                 });
+
+    //             if (canTransfer.success === false) return canTransfer;
+
+    //             const invoice: XpInvoice = {
+    //                 id: uuid(),
+    //                 contractId: contract.id,
+    //                 amount: config.amount,
+    //                 note: config.note,
+    //                 status: 'open',
+    //                 transactionId: null,
+    //                 voidReason: null,
+    //                 createdAtMs: Date.now(),
+    //                 updatedAtMs: Date.now(),
+    //             };
+
+    //             await this._xpStore.saveXpInvoice(invoice);
+
+    //             return { success: true, invoice };
+    //         },
+    //         {
+    //             scope: [TRACE_NAME, this.createInvoice.name],
+    //             errMsg: 'An error occurred while creating the invoice.',
+    //             returnOnError: {
+    //                 success: false,
+    //                 errorCode: 'server_error',
+    //                 errorMessage:
+    //                     'An error occurred while creating the invoice.',
+    //             },
+    //         }
+    //     );
+    // }
 }
 
-export type CreateInvoiceResultSuccess = SuccessResult<
+export type CreateInvoiceResultSuccess = StatefulResult<
     true,
     { invoice: XpInvoice }
 >;
@@ -488,29 +649,30 @@ export type CreateInvoiceResult =
     | CreateInvoiceResultSuccess
     | CreateInvoiceResultFailure;
 
-export interface GetXpUserById {
-    /** The auth Id of the xp user to get (mutually exclusive with xpId) */
-    userId?: AuthUser['id'];
-    /** The xp Id of the xp user to get (mutually exclusive with userId) */
-    xpId?: XpUser['id'];
-}
+export type GetXpUserById =
+    | {
+          /** The xp Id of the xp user to get (mutually exclusive with userId) */
+          xpId: XpUser['id'];
+      }
+    | {
+          /** The auth Id of the xp user to get (mutually exclusive with xpId) */
+          userId: AuthUser['id'];
+      };
 
-export type FailedResult = SuccessResult<
-    false,
-    { errorCode: KnownErrorCodes; errorMessage: string }
->;
-
-export type CreateXpUserResultSuccess = SuccessResult<true, { user: XpUser }>;
+export type CreateXpUserResultSuccess = StatefulResult<true, { user: XpUser }>;
 export type CreateXpUserResultFailure = FailedResult;
 export type CreateXpUserResult =
     | CreateXpUserResultSuccess
     | CreateXpUserResultFailure;
 
-export type GetXpUserResultSuccess = SuccessResult<true, { user: XpUser }>;
+export type GetXpUserResultSuccess = StatefulResult<true, { user: XpUser }>;
 export type GetXpUserResultFailure = FailedResult;
 export type GetXpUserResult = GetXpUserResultSuccess | GetXpUserResultFailure;
+export type BatchGetXpUserResult =
+    | StatefulResult<true, { users: XpUser[] }>
+    | FailedResult;
 
-export type CreateContractResultSuccess = SuccessResult<
+export type CreateContractResultSuccess = StatefulResult<
     true,
     {
         contract: ReduceKeysToPrimitives<XpContract>;
@@ -521,7 +683,7 @@ export type CreateContractResult =
     | CreateContractResultSuccess
     | CreateContractResultFailure;
 
-export type GetContractResultSuccess = SuccessResult<
+export type GetContractResultSuccess = StatefulResult<
     true,
     { contract: ReduceKeysToPrimitives<XpContract> }
 >;

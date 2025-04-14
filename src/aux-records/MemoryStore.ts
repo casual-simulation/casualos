@@ -357,6 +357,38 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
+    async batchQueryXpUsers(
+        queryOptions:
+            | {
+                  xpId: XpUser['id'][];
+                  authId?: AuthUser['id'][];
+              }
+            | {
+                  authId: AuthUser['id'][];
+                  xpId?: XpUser['id'][];
+              }
+    ): Promise<XpUser[]> {
+        const users = [];
+        if ('xpId' in queryOptions) {
+            for (const id of queryOptions.xpId) {
+                const user = this._xpUsers.get(id);
+                if (user) {
+                    users.push(cloneDeep(user));
+                }
+            }
+        }
+        if ('authId' in queryOptions) {
+            const xpUsers = Array.from(this._xpUsers.values());
+            for (const id of queryOptions.authId) {
+                const user = xpUsers.find((u: XpUser) => u.userId === id);
+                if (user) {
+                    users.push(cloneDeep(user));
+                }
+            }
+        }
+        return users;
+    }
+
     async saveXpUser(id: XpUser['id'], user: XpUser) {
         const u = cloneDeep(user);
         this._xpUsers.set(id, u);

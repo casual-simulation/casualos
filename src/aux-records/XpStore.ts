@@ -65,6 +65,25 @@ export type XpStore = {
         id: XpContract['id'],
         config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
     ) => Promise<DataBaseM<XpContract>>;
+
+    /**
+     * Batch query xp users by their xp user ids
+     * @param queryOptions Must contain at least an authId or xpId, can contain both
+     * @param queryOptions.xpId The xp user ids to query
+     * @param queryOptions.authId The auth user ids to query
+     * * Returns all xp users that match the query (if any) includes all results if both id types are provided
+     */
+    batchQueryXpUsers: (
+        queryOptions:
+            | {
+                  xpId: XpUser['id'][];
+                  authId?: AuthUser['id'][];
+              }
+            | {
+                  authId: AuthUser['id'][];
+                  xpId?: XpUser['id'][];
+              }
+    ) => Promise<DataBaseM<XpUser>[]>;
 };
 
 type DataBaseM<M> = ReduceKeysToPrimitives<M>;

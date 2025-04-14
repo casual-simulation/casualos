@@ -14,6 +14,37 @@ export class PrismaXpStore implements XpStore {
     constructor(client: PrismaClient) {
         this._client = client;
     }
+    async batchQueryXpUsers(
+        queryOptions:
+            | {
+                  xpId: XpUser['id'][];
+                  authId?: AuthUser['id'][];
+              }
+            | {
+                  authId: AuthUser['id'][];
+                  xpId?: XpUser['id'][];
+              }
+    ) {
+        const pUsers = await this._client.xpUser.findMany({
+            where: {
+                ...(queryOptions.xpId
+                    ? {
+                          id: {
+                              in: queryOptions.xpId,
+                          },
+                      }
+                    : {}),
+                ...(queryOptions.authId
+                    ? {
+                          userId: {
+                              in: queryOptions.authId,
+                          },
+                      }
+                    : {}),
+            },
+        });
+        return pUsers.map((user) => convertDateToDateMS(user));
+    }
 
     async getXpUserById(id: XpUser['id']) {
         const pUser = await noThrowNull(this._client.xpUser.findUnique, null, {

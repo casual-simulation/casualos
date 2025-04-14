@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import {
     FinancialInterface,
     AccountCodes,
@@ -9,6 +10,7 @@ import {
     AccountFlags,
     CreateAccountError,
     CreateAccountsError,
+    CreateTransferError,
     CreateTransfersError,
     QueryFilter,
     Transfer,
@@ -43,12 +45,50 @@ export class MemoryFinancialInterface implements FinancialInterface {
         // TODO: Add more validation
     }
 
+    private _validateTransfer(transfer: Transfer): CreateTransferError {
+        /**
+         * * Format and convention validation
+         */
+        if (transfer.id === 0n) {
+            return CreateTransferError.id_must_not_be_zero;
+        }
+        if (transfer.id > MAX_BIGINT_128) {
+            return CreateTransferError.id_must_not_be_int_max;
+        }
+        /**
+         * * Existential validation
+         * 1. Credit account must exist
+         * 2. Debit account must exist
+         */
+        const creditAccount = this._accounts.get(transfer.credit_account_id);
+        const debitAccount = this._accounts.get(transfer.debit_account_id);
+        if (!creditAccount) {
+            return CreateTransferError.credit_account_not_found;
+        }
+        if (!debitAccount) {
+            return CreateTransferError.debit_account_not_found;
+        }
+
+        //TODO: Add more validation
+    }
+
+    private _performTransfer(transfer: Transfer): CreateTransferError {
+        const validation = this._validateTransfer(transfer);
+        if (validation !== CreateTransferError.ok) return validation;
+        const creditAccount = this._accounts.get(transfer.credit_account_id);
+        const debitAccount = this._accounts.get(transfer.debit_account_id);
+        // TODO: Continue transfer logic implementation
+    }
+
     generateId = () => {
         return this._currentId++;
     };
 
     async createAccount(account: Account): Promise<CreateAccountsError[]> {
-        return [{ index: 0, result: this._validateAccount(account) }];
+        const errs = [{ index: 0, result: this._validateAccount(account) }];
+        if (errs[0].result === CreateAccountError.ok)
+            this._accounts.set(account.id, account);
+        return errs;
     }
 
     async createAccounts(batch: Account[]): Promise<CreateAccountsError[]> {
@@ -61,12 +101,29 @@ export class MemoryFinancialInterface implements FinancialInterface {
         });
     }
 
-    createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
-        throw new Error('Method not implemented.');
+    async createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
+        const errs: CreateTransfersError[] = [];
+        for (let i = 0; i < batch.length; i++) {
+            errs.push({
+                index: i,
+                result: this._validateTransfer(batch[i]),
+            });
+            if (errs[i].result === CreateTransferError.ok) {
+                this._transfers.push(batch[i]);
+            }
+        }
+        return errs;
     }
 
-    lookupAccounts(batch: Account['id'][]): Promise<Account[]> {
-        throw new Error('Method not implemented.');
+    async lookupAccounts(batch: Account['id'][]): Promise<Account[]> {
+        const accounts: Account[] = [];
+        for (const id of batch) {
+            const account = this._accounts.get(id);
+            if (account) {
+                accounts.push(cloneDeep(account));
+            }
+        }
+        return accounts;
     }
 
     lookupTransfers(batch: Transfer['id'][]): Promise<Transfer[]> {
