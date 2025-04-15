@@ -443,6 +443,30 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         }
     }
 
+    async grantEntitlements(entitlementGrantEvent: GrantEntitlementsEvent) {
+        const sim = this._simulationManager.simulations.get(
+            entitlementGrantEvent.simulationId
+        );
+        if (sim) {
+            await sim.records.grantEntitlements(entitlementGrantEvent.action);
+        }
+    }
+
+    async denyEntitlements(entitlementGrantEvent: GrantEntitlementsEvent) {
+        const sim = this._simulationManager.simulations.get(
+            entitlementGrantEvent.simulationId
+        );
+        if (sim) {
+            sim.helper.transaction(
+                asyncResult(entitlementGrantEvent.action.taskId, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'The request for access was denied.',
+                })
+            );
+        }
+    }
+
     private async _handleAuthRequest(
         sim: TSim,
         request: PartitionAuthRequest

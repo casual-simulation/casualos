@@ -63,6 +63,7 @@ import type {
     AIHumeGetAccessTokenAction,
     AISloydGenerateModelAction,
     RecordsCallProcedureAction,
+    GrantEntitlementsAction,
 } from '@casual-simulation/aux-runtime';
 import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -354,6 +355,56 @@ export class RecordsManager {
             } else if (event.type === 'records_call_procedure') {
                 this._recordsCallProcedure(event);
             }
+        }
+    }
+
+    async grantEntitlements(event: GrantEntitlementsAction) {
+        const info = await this._resolveInfoForEvent(event);
+
+        if (info.error) {
+            return;
+        }
+
+        let grantIds: string[] = [];
+
+        for (let feature of event.request.features) {
+            const result = await this._client.grantEntitlement(
+                {
+                    packageId: event.request.packageId,
+                    feature: feature,
+                    scope: event.request.scope,
+                    recordName: event.request.recordName,
+                    expireTimeMs: event.request.expireTimeMs,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: info.recordsOrigin,
+                }
+            );
+
+            if (result.success === false) {
+                console.error(
+                    '[RecordsManager] Unable to grant entitlement:',
+                    result
+                );
+                if (hasValue(event.taskId)) {
+                    await this._helper.transaction(
+                        asyncResult(event.taskId, result)
+                    );
+                }
+                return;
+            } else {
+                grantIds.push(result.grantId);
+            }
+        }
+
+        if (hasValue(event.taskId)) {
+            await this._helper.transaction(
+                asyncResult(event.taskId, {
+                    success: true,
+                    grantIds,
+                })
+            );
         }
     }
 

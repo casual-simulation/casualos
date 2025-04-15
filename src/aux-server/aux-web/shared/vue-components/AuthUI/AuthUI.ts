@@ -198,28 +198,23 @@ export default class AuthUI extends Vue {
             this.entitlementGrantEvent &&
             this.entitlementGrantEvent.action.taskId
         ) {
-            const sim = appManager.simulationManager.simulations.get(
-                this.entitlementGrantEvent.simulationId
+            appManager.authCoordinator.denyEntitlements(
+                this.entitlementGrantEvent
             );
-            if (sim) {
-                sim.helper.transaction(
-                    asyncResult(this.entitlementGrantEvent.action.taskId, {
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: 'The request for access was denied.',
-                    })
-                );
-            }
         }
 
         this.showGrantEntitlements = false;
         this._simId = null;
     }
 
-    grantEntitlements() {
+    async grantEntitlements() {
         try {
             this.processing = true;
+            await appManager.authCoordinator.grantEntitlements(
+                this.entitlementGrantEvent
+            );
         } finally {
+            this.showGrantEntitlements = false;
             this.processing = false;
         }
     }
