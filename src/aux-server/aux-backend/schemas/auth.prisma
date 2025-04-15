@@ -1021,6 +1021,9 @@ model PackageRecordVersion {
     // The README of the package
     readme String
 
+    // The markers that the package version has
+    markers String[]
+
     // The size of the package version in bytes
     sizeInBytes Int
 

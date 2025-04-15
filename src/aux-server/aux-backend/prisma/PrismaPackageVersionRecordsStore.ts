@@ -81,7 +81,7 @@ export class PrismaPackageVersionRecordsStore
         if (!item) {
             return {
                 item: null,
-                markers: null,
+                parentMarkers: null,
                 recordName: null,
                 packageId: null,
             };
@@ -89,7 +89,7 @@ export class PrismaPackageVersionRecordsStore
 
         return {
             item: this._convertToItem(item),
-            markers: item.package.markers,
+            parentMarkers: item.package.markers,
             packageId: item.package.id,
             recordName: item.package.recordName,
         };
@@ -112,6 +112,7 @@ export class PrismaPackageVersionRecordsStore
             sha256: item.sha256,
             entitlements: item.entitlements as unknown as Entitlement[],
             readme: item.readme,
+            markers: item.markers,
             sizeInBytes: item.sizeInBytes,
             requiresReview: item.requiresReview,
             createdFile: item.createdFile,
@@ -132,7 +133,7 @@ export class PrismaPackageVersionRecordsStore
         if (!item) {
             return {
                 item: null,
-                markers: null,
+                parentMarkers: null,
                 recordName: null,
                 packageId: null,
             };
@@ -140,7 +141,7 @@ export class PrismaPackageVersionRecordsStore
 
         return {
             item: this._convertToItem(item),
-            markers: item.package.markers,
+            parentMarkers: item.package.markers,
             packageId: item.package.id,
             recordName: item.package.recordName,
         };
@@ -321,6 +322,7 @@ export class PrismaPackageVersionRecordsStore
                 sha256: item.sha256,
                 entitlements: item.entitlements as unknown as JsonObject[],
                 readme: item.readme,
+                markers: item.markers,
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
@@ -355,6 +357,7 @@ export class PrismaPackageVersionRecordsStore
                 sha256: item.sha256,
                 entitlements: item.entitlements as unknown as string[],
                 readme: item.readme,
+                markers: item.markers,
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
@@ -395,6 +398,7 @@ export class PrismaPackageVersionRecordsStore
                 sha256: item.sha256,
                 entitlements: item.entitlements as unknown as JsonObject[],
                 readme: item.readme,
+                markers: item.markers,
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
@@ -406,6 +410,7 @@ export class PrismaPackageVersionRecordsStore
                 sha256: item.sha256,
                 entitlements: item.entitlements as unknown as JsonObject[],
                 readme: item.readme,
+                markers: item.markers,
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
