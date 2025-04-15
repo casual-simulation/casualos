@@ -932,12 +932,40 @@ export interface RevokeEntitlementGrantAction extends RecordsAction {
 }
 
 export interface RecordPackageVersionRequest {
+    /**
+     * The record that the package version should be stored in.
+     */
     recordName: string;
+
+    /**
+     * The address that the package version should be stored in.
+     */
     address: string;
+
+    /**
+     * The key for the package version.
+     */
     key: PackageRecordVersionKey;
+
+    /**
+     * The list of entitlements that the package version can request.
+     */
     entitlements: Entitlement[];
+
+    /**
+     * The readme for the package version.
+     */
     readme: string;
+
+    /**
+     * The state that should be saved in the package.
+     */
     state: StoredAux;
+
+    /**
+     * The markers that should be set on the package version.
+     */
+    markers?: string[];
 }
 
 export interface RecordPackageVersionAction extends RecordsAction {

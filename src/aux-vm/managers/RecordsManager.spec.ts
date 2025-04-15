@@ -22,6 +22,7 @@ import type {
     WebsocketHttpResponseMessage,
     WebsocketHttpRequestMessage,
     WebsocketHttpPartialResponseMessage,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     asyncResult,
@@ -31,6 +32,8 @@ import {
     getRecordsEndpoint,
     iterableNext,
     iterableComplete,
+    createBot,
+    PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -64,6 +67,7 @@ import {
     aiSloydGenerateModel,
     recordWebhook,
     recordsCallProcedure,
+    recordPackageVersion,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -9061,6 +9065,653 @@ describe('RecordsManager', () => {
                 expect(vm.events).toEqual([
                     asyncResult(1, 'http://localhost:3002'),
                 ]);
+            });
+        });
+
+        describe('record_package_version', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
+            });
+
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            it('should record the package and file', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            uploadUrl: 'https://example.com/upload',
+                            uploadMethod: 'POST',
+                            uploadHeaders: {
+                                test: 'abc',
+                            },
+                            fileName: 'test.txt',
+                        },
+                    }),
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            color: 'red',
+                        }),
+                    },
+                };
+
+                records.handleEvents([
+                    recordPackageVersion(
+                        {
+                            recordName: 'test',
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                            state,
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'recordPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        item: {
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileSha256Hex:
+                                    '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                                fileByteLength: 67,
+                                fileMimeType: 'application/json',
+                                fileDescription: 'test/package@1.0.0',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                        },
+                    },
+                });
+
+                const json = stringify(state);
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            url: 'https://example.com/upload',
+                            sha256Hash:
+                                '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            uploadUrl: 'https://example.com/upload',
+                            uploadMethod: 'POST',
+                            uploadHeaders: {
+                                test: 'abc',
+                            },
+                            fileName: 'test.txt',
+                        },
+                    }),
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            color: 'red',
+                        }),
+                    },
+                };
+
+                records.handleEvents([
+                    recordPackageVersion(
+                        {
+                            recordName: 'test',
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                            state,
+                        },
+                        { endpoint: 'http://localhost:9999' },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:9999/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'recordPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        item: {
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileSha256Hex:
+                                    '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                                fileByteLength: 67,
+                                fileMimeType: 'application/json',
+                                fileDescription: 'test/package@1.0.0',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                        },
+                    },
+                });
+
+                const json = stringify(state);
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            url: 'https://example.com/upload',
+                            sha256Hash:
+                                '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should include the inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            uploadUrl: 'https://example.com/upload',
+                            uploadMethod: 'POST',
+                            uploadHeaders: {
+                                test: 'abc',
+                            },
+                            fileName: 'test.txt',
+                        },
+                    }),
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            color: 'red',
+                        }),
+                    },
+                };
+
+                records.handleEvents([
+                    recordPackageVersion(
+                        {
+                            recordName: 'test',
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                            state,
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'recordPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        item: {
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileSha256Hex:
+                                    '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                                fileByteLength: 67,
+                                fileMimeType: 'application/json',
+                                fileDescription: 'test/package@1.0.0',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                        },
+                        instances: ['/myInst'],
+                    },
+                });
+
+                const json = stringify(state);
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            url: 'https://example.com/upload',
+                            sha256Hash:
+                                '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should include the markers', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            uploadUrl: 'https://example.com/upload',
+                            uploadMethod: 'POST',
+                            uploadHeaders: {
+                                test: 'abc',
+                            },
+                            fileName: 'test.txt',
+                        },
+                    }),
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            color: 'red',
+                        }),
+                    },
+                };
+
+                records.handleEvents([
+                    recordPackageVersion(
+                        {
+                            recordName: 'test',
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                            state,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'recordPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        item: {
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileSha256Hex:
+                                    '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                                fileByteLength: 67,
+                                fileMimeType: 'application/json',
+                                fileDescription: 'test/package@1.0.0',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    },
+                });
+
+                const json = stringify(state);
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            url: 'https://example.com/upload',
+                            sha256Hash:
+                                '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should attempt to login if not authenticated', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            uploadUrl: 'https://example.com/upload',
+                            uploadMethod: 'POST',
+                            uploadHeaders: {
+                                test: 'abc',
+                            },
+                            fileName: 'test.txt',
+                        },
+                    }),
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            color: 'red',
+                        }),
+                    },
+                };
+
+                records.handleEvents([
+                    recordPackageVersion(
+                        {
+                            recordName: 'test',
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                            state,
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'recordPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        item: {
+                            address: 'package',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileSha256Hex:
+                                    '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                                fileByteLength: 67,
+                                fileMimeType: 'application/json',
+                                fileDescription: 'test/package@1.0.0',
+                            },
+                            entitlements: [],
+                            readme: 'test',
+                        },
+                    },
+                });
+
+                const json = stringify(state);
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', json),
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'test',
+                        address: 'package',
+                        auxFileResult: {
+                            success: true,
+                            url: 'https://example.com/upload',
+                            sha256Hash:
+                                '8cd7595e8a4aa0ce1a2bbb142cd64317840305391be5e0409802e0f2a8e23940',
+                        },
+                    }),
+                ]);
+
+                expect(authMock.isAuthenticated).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
         });
 

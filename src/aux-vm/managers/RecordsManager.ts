@@ -64,6 +64,7 @@ import type {
     AISloydGenerateModelAction,
     RecordsCallProcedureAction,
     GrantEntitlementsAction,
+    RecordPackageVersionAction,
 } from '@casual-simulation/aux-runtime';
 import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -87,6 +88,7 @@ import type {
     GrantResourcePermissionResult,
     RevokePermissionResult,
     PublicRecordKeyPolicy,
+    RecordFileFailure,
 } from '@casual-simulation/aux-records';
 import {
     isRecordKey,
@@ -354,6 +356,8 @@ export class RecordsManager {
                 this._getRecordsEndpoint(event);
             } else if (event.type === 'records_call_procedure') {
                 this._recordsCallProcedure(event);
+            } else if (event.type === 'record_package_version') {
+                this._recordPackageVersion(event);
             }
         }
     }
@@ -811,99 +815,21 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording file...', event);
 
-            let byteLength: number;
-            let hash: string;
-            let mimeType: string;
-            let data: any;
+            const fileInfo = await this._resolveRecordFileInfo(
+                event.data,
+                event.mimeType
+            );
 
-            if (typeof event.data === 'function') {
+            if (fileInfo.success === false) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'invalid_file_data',
-                            errorMessage:
-                                'Function instances cannot be stored in files.',
-                        } as RecordFileResult)
+                        asyncResult(event.taskId, fileInfo)
                     );
                 }
                 return;
-            } else if (
-                typeof event.data === 'undefined' ||
-                event.data === null
-            ) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'invalid_file_data',
-                            errorMessage:
-                                'Null or undefined values cannot be stored in files.',
-                        } as RecordFileResult)
-                    );
-                }
-                return;
-            } else if (
-                typeof event.data === 'string' ||
-                typeof event.data === 'number' ||
-                typeof event.data === 'boolean'
-            ) {
-                const encoder = new TextEncoder();
-                data = encoder.encode(event.data.toString());
-                byteLength = data.byteLength;
-                mimeType = event.mimeType || 'text/plain';
-                hash = getHash(data);
-            } else if (typeof event.data === 'object') {
-                if (event.data instanceof Blob) {
-                    const buffer = await event.data.arrayBuffer();
-                    data = new Uint8Array(buffer);
-                    byteLength = data.byteLength;
-                    mimeType =
-                        event.mimeType ||
-                        event.data.type ||
-                        'application/octet-stream';
-                    hash = getHash(data);
-                } else if (event.data instanceof ArrayBuffer) {
-                    data = new Uint8Array(event.data);
-                    byteLength = data.byteLength;
-                    mimeType = event.mimeType || 'application/octet-stream';
-                    hash = getHash(data);
-                } else if (ArrayBuffer.isView(event.data)) {
-                    data = new Uint8Array(event.data.buffer);
-                    byteLength = data.byteLength;
-                    mimeType = event.mimeType || 'application/octet-stream';
-                    hash = getHash(data);
-                } else {
-                    const obj = event.data;
-                    if (
-                        'data' in obj &&
-                        'mimeType' in obj &&
-                        (obj.data instanceof ArrayBuffer ||
-                            typeof obj.data === 'string') &&
-                        typeof obj.mimeType === 'string'
-                    ) {
-                        if (typeof obj.data === 'string') {
-                            data = new TextEncoder().encode(obj.data);
-                        } else {
-                            data = new Uint8Array(obj.data);
-                        }
-                        byteLength = data.byteLength;
-                        mimeType =
-                            event.mimeType ||
-                            obj.mimeType ||
-                            (typeof obj.data === 'string'
-                                ? 'text/plain'
-                                : 'application/octet-stream');
-                        hash = getHash(data);
-                    } else {
-                        let json = stringify(event.data);
-                        data = new TextEncoder().encode(json);
-                        byteLength = data.byteLength;
-                        mimeType = event.mimeType || 'application/json';
-                        hash = getHash(data);
-                    }
-                }
             }
+
+            const { byteLength, hash, mimeType, data } = fileInfo;
 
             let instances: string[] = undefined;
             if (hasValue(this._helper.origin)) {
@@ -935,56 +861,16 @@ export class RecordsManager {
                 }
             );
 
-            if (result.data.success === true) {
-                const method = result.data.uploadMethod;
-                const url = result.data.uploadUrl;
-                const headers = { ...result.data.uploadHeaders };
+            const uploadResult = await this._uploadFile(
+                result.data,
+                data,
+                hash
+            );
 
-                for (let name of UNSAFE_HEADERS) {
-                    delete headers[name];
-                }
-
-                const uploadResult = await axios.request({
-                    ...this._axiosOptions,
-                    method: method.toLowerCase() as any,
-                    url: url,
-                    headers: headers,
-                    data: data,
-                });
-
-                if (uploadResult.status >= 200 && uploadResult.status < 300) {
-                    console.log('[RecordsManager] File recorded!');
-
-                    if (hasValue(event.taskId)) {
-                        this._helper.transaction(
-                            asyncResult(event.taskId, {
-                                success: true,
-                                url: url,
-                                sha256Hash: hash,
-                            } as FileRecordedResult)
-                        );
-                    }
-                } else {
-                    console.error(
-                        '[RecordsManager] File upload failed!',
-                        uploadResult
-                    );
-                    if (hasValue(event.taskId)) {
-                        this._helper.transaction(
-                            asyncResult(event.taskId, {
-                                success: false,
-                                errorCode: 'upload_failed',
-                                errorMessage: 'The file upload failed.',
-                            } as FileRecordedResult)
-                        );
-                    }
-                }
-            } else {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, result.data)
-                    );
-                }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, uploadResult)
+                );
             }
         } catch (e) {
             console.error('[RecordsManager] Error recording file:', e);
@@ -994,6 +880,179 @@ export class RecordsManager {
                 );
             }
         }
+    }
+
+    private async _uploadFile(
+        result: RecordFileResult,
+        data: any,
+        hash: string
+    ): Promise<FileRecordedResult> {
+        if (result.success === false) {
+            return result;
+        }
+        const method = result.uploadMethod;
+        const url = result.uploadUrl;
+        const headers = { ...result.uploadHeaders };
+
+        for (let name of UNSAFE_HEADERS) {
+            delete headers[name];
+        }
+
+        const uploadResult = await axios.request({
+            ...this._axiosOptions,
+            method: method.toLowerCase() as any,
+            url: url,
+            headers: headers,
+            data: data,
+        });
+
+        if (uploadResult.status >= 200 && uploadResult.status < 300) {
+            console.log('[RecordsManager] File recorded!');
+
+            return {
+                success: true,
+                url: url,
+                sha256Hash: hash,
+            };
+            // if (hasValue(event.taskId)) {
+
+            //     this._helper.transaction(
+            //         asyncResult(event.taskId, {
+            //             success: true,
+            //             url: url,
+            //             sha256Hash: hash,
+            //         } as FileRecordedResult)
+            //     );
+            // }
+        } else {
+            console.error('[RecordsManager] File upload failed!', uploadResult);
+            return {
+                success: false,
+                errorCode: 'upload_failed',
+                errorMessage: 'The file upload failed.',
+            };
+            // if (hasValue(event.taskId)) {
+            //     this._helper.transaction(
+            //         asyncResult(event.taskId, {
+            //             success: false,
+            //             errorCode: 'upload_failed',
+            //             errorMessage: 'The file upload failed.',
+            //         } as FileRecordedResult)
+            //     );
+            // }
+        }
+    }
+
+    private async _resolveRecordFileInfo(
+        eventData: any,
+        eventMimeType: string
+    ): Promise<
+        | RecordFileFailure
+        | {
+              success: true;
+              byteLength: number;
+              hash: string;
+              mimeType: string;
+              data: any;
+          }
+    > {
+        let byteLength: number;
+        let hash: string;
+        let mimeType: string;
+        let data: any;
+
+        if (typeof eventData === 'function') {
+            // if (hasValue(event.taskId)) {
+            //     this._helper.transaction(
+            //         asyncResult(event.taskId, {
+            //             success: false,
+            //             errorCode: 'invalid_file_data',
+            //             errorMessage:
+            //                 'Function instances cannot be stored in files.',
+            //         } as RecordFileResult)
+            //     );
+            // }
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage: 'Function instances cannot be stored in files.',
+            };
+        } else if (typeof eventData === 'undefined' || eventData === null) {
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage:
+                    'Null or undefined values cannot be stored in files.',
+            };
+        } else if (
+            typeof eventData === 'string' ||
+            typeof eventData === 'number' ||
+            typeof eventData === 'boolean'
+        ) {
+            const encoder = new TextEncoder();
+            data = encoder.encode(eventData.toString());
+            byteLength = data.byteLength;
+            mimeType = eventMimeType || 'text/plain';
+            hash = getHash(data);
+        } else if (typeof eventData === 'object') {
+            if (eventData instanceof Blob) {
+                const buffer = await eventData.arrayBuffer();
+                data = new Uint8Array(buffer);
+                byteLength = data.byteLength;
+                mimeType =
+                    eventMimeType ||
+                    eventData.type ||
+                    'application/octet-stream';
+                hash = getHash(data);
+            } else if (eventData instanceof ArrayBuffer) {
+                data = new Uint8Array(eventData);
+                byteLength = data.byteLength;
+                mimeType = eventMimeType || 'application/octet-stream';
+                hash = getHash(data);
+            } else if (ArrayBuffer.isView(eventData)) {
+                data = new Uint8Array(eventData.buffer);
+                byteLength = data.byteLength;
+                mimeType = eventMimeType || 'application/octet-stream';
+                hash = getHash(data);
+            } else {
+                const obj = eventData;
+                if (
+                    'data' in obj &&
+                    'mimeType' in obj &&
+                    (obj.data instanceof ArrayBuffer ||
+                        typeof obj.data === 'string') &&
+                    typeof obj.mimeType === 'string'
+                ) {
+                    if (typeof obj.data === 'string') {
+                        data = new TextEncoder().encode(obj.data);
+                    } else {
+                        data = new Uint8Array(obj.data);
+                    }
+                    byteLength = data.byteLength;
+                    mimeType =
+                        eventMimeType ||
+                        obj.mimeType ||
+                        (typeof obj.data === 'string'
+                            ? 'text/plain'
+                            : 'application/octet-stream');
+                    hash = getHash(data);
+                } else {
+                    let json = stringify(eventData);
+                    data = new TextEncoder().encode(json);
+                    byteLength = data.byteLength;
+                    mimeType = eventMimeType || 'application/json';
+                    hash = getHash(data);
+                }
+            }
+        }
+
+        return {
+            success: true,
+            byteLength,
+            hash,
+            mimeType,
+            data,
+        };
     }
 
     private async _getFile(event: GetFileAction) {
@@ -2211,6 +2270,109 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error generating Sloyd model:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _recordPackageVersion(event: RecordPackageVersionAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            const fileInfo = await this._resolveRecordFileInfo(
+                event.request.state,
+                'application/json'
+            );
+
+            if (fileInfo.success === false) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, fileInfo)
+                    );
+                }
+                return;
+            }
+
+            const { byteLength, hash, mimeType, data } = fileInfo;
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            const result = await this._client.recordPackageVersion(
+                {
+                    recordName: event.request.recordName,
+                    item: {
+                        address: event.request.address,
+                        key: event.request.key,
+                        readme: event.request.readme,
+                        entitlements: event.request.entitlements,
+                        markers: event.request.markers as [string, ...string[]],
+                        auxFileRequest: {
+                            fileByteLength: byteLength,
+                            fileSha256Hex: hash,
+                            fileMimeType: mimeType,
+                            fileDescription: `${event.request.recordName}/${event.request.address}@${event.request.key.major}.${event.request.key.minor}.${event.request.key.patch}${event.request.key.tag}`,
+                        },
+                    },
+                    instances,
+                },
+                {
+                    endpoint: info.recordsOrigin,
+                    sessionKey: info.token,
+                }
+            );
+
+            if (result.success === false) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
+                return;
+            }
+
+            const uploadResult = await this._uploadFile(
+                result.auxFileResult,
+                data,
+                hash
+            );
+
+            if (uploadResult.success === false) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, uploadResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: true,
+                        recordName: result.recordName,
+                        address: result.address,
+                        auxFileResult: uploadResult,
+                    })
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error recording package version:',
+                e
+            );
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
