@@ -87,7 +87,7 @@ export function isStoredVersion1(stored: unknown): stored is StoredAuxVersion1 {
  * Gets the bot state from the given stored causal tree.
  * @param stored The stored tree to load.
  */
-export function getBotsStateFromStoredAux(stored: StoredAuxVersion1) {
+export function getBotsStateFromStoredAux(stored: StoredAux): BotsState {
     return getUploadState(stored);
 }
 

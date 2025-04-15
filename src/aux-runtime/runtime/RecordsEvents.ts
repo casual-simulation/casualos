@@ -31,8 +31,11 @@ import type {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+    BotsState,
+    Entitlement,
     EntitlementFeature,
     GrantedEntitlementScope,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     ProcedureInputs,
@@ -41,6 +44,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import type { PackageRecordVersionKey } from '@casual-simulation/aux-records/packages/version';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -78,7 +82,8 @@ export type RecordsAsyncActions =
     | RecordsCallProcedureAction
     | SubscribeToNotificationAction
     | GrantEntitlementsAction
-    | RevokeEntitlementGrantAction;
+    | RevokeEntitlementGrantAction
+    | RecordPackageVersionAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -924,6 +929,21 @@ export interface RevokeEntitlementGrantAction extends RecordsAction {
     type: 'revoke_record_entitlements';
 
     request: RevokeEntitlementGrantRequest;
+}
+
+export interface RecordPackageVersionRequest {
+    recordName: string;
+    address: string;
+    key: PackageRecordVersionKey;
+    entitlements: Entitlement[];
+    readme: string;
+    state: StoredAux;
+}
+
+export interface RecordPackageVersionAction extends RecordsAction {
+    type: 'record_package_version';
+
+    request: RecordPackageVersionRequest;
 }
 
 /**
@@ -2447,6 +2467,19 @@ export function revokeEntitlement(
 ): RevokeEntitlementGrantAction {
     return {
         type: 'revoke_record_entitlements',
+        request,
+        options,
+        taskId,
+    };
+}
+
+export function recordPackageVersion(
+    request: RecordPackageVersionRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordPackageVersionAction {
+    return {
+        type: 'record_package_version',
         request,
         options,
         taskId,

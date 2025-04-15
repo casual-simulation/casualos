@@ -351,6 +351,7 @@ import {
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
     aiOpenAICreateRealtimeSession,
     grantEntitlements as calcGrantEntitlements,
+    recordPackageVersion as calcRecordPackageVersion,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -365,6 +366,7 @@ import type {
     DeviceSelector,
     RemoteAction,
     AvailablePermissions,
+    Entitlement,
 } from '@casual-simulation/aux-common';
 import {
     Action,
@@ -511,6 +513,10 @@ import type {
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import type {
+    PackageRecordVersionKey,
+    RecordPackageVersionResult,
+} from '@casual-simulation/aux-records/packages/version';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -793,6 +799,39 @@ export interface AIGeneratedImageAPI {
      * The MIME Type of the image data.
      */
     mimeType: string;
+}
+
+export interface RecordPackageVersionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The version of the package that should be recorded.
+     */
+    key: PackageRecordVersionKey;
+
+    /**
+     * The readme that should be included in the package version.
+     */
+    readme: string;
+
+    /**
+     * The list of entitlements for the package version.
+     * If omitted, then the package version will be recorded without any entitlements.
+     */
+    entitlements?: Entitlement[];
+
+    /**
+     * The bots that should be saved to the package.
+     */
+    bots: Bot[];
 }
 
 /**
@@ -3362,6 +3401,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 countEvents,
 
                 grantEntitlements,
+                recordPackageVersion,
 
                 listUserStudios,
 
@@ -10662,12 +10702,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     *
+     * @param request
+     * @param options
+     * @returns
+     */
     function grantEntitlements(
         request: GrantEntitlementsRequest,
         options: RecordActionOptions = {}
     ): Promise<GrantEntitlementsResult> {
         const task = context.createTask();
         const event = calcGrantEntitlements(request, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records the given package version.
+     * @param request
+     * @param options
+     */
+    function recordPackageVersion(
+        request: RecordPackageVersionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<RecordPackageVersionResult> {
+        const task = context.createTask();
+        const event = calcRecordPackageVersion(
+            {
+                recordName: request.recordName,
+                address: request.address,
+                key: request.key,
+                entitlements: request.entitlements ?? [],
+                readme: request.readme,
+                state: {
+                    version: 2,
+                    updates: [
+                        constructInitializationUpdate(
+                            calcCreateInitalizationUpdate(request.bots)
+                        ),
+                    ],
+                },
+            },
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

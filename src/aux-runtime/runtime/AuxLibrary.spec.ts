@@ -168,9 +168,11 @@ import {
     watchLoom,
     getLoomMetadata,
     loadSharedDocument,
+    getBotsStateFromStoredAux,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
+import type { RecordPackageVersionAction } from './RecordsEvents';
 import {
     aiChat,
     aiGenerateSkybox,
@@ -223,6 +225,7 @@ import {
     aiOpenAICreateRealtimeSession,
     recordsCallProcedure,
     grantEntitlements,
+    recordPackageVersion,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -8482,6 +8485,73 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe.only('os.recordPackageVersion()', () => {
+            it('should emit a RecordPackageVersionAction', async () => {
+                const action: any = library.api.os.recordPackageVersion({
+                    recordName: 'test',
+                    address: 'test',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    readme: 'This is my first package!',
+                    bots: [bot1, bot2],
+                    entitlements: [
+                        {
+                            feature: 'data',
+                            scope: 'personal',
+                        },
+                    ],
+                });
+
+                const expected = recordPackageVersion(
+                    {
+                        recordName: 'test',
+                        address: 'test',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        readme: 'This is my first package!',
+                        state: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    timestamp: expect.any(Number),
+                                    update: expect.any(String),
+                                },
+                            ],
+                        },
+                        entitlements: [
+                            {
+                                feature: 'data',
+                                scope: 'personal',
+                            },
+                        ],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                const state = getBotsStateFromStoredAux(
+                    (context.actions[0] as RecordPackageVersionAction).request
+                        .state
+                );
+
+                expect(state).toEqual({
+                    [bot1.id]: createBot(bot1.id, bot1.tags, bot1.space),
+                    [bot2.id]: createBot(bot2.id, bot2.tags, bot2.space),
+                });
             });
         });
 
