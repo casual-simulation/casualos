@@ -31,6 +31,7 @@ import {
     AccountFlags,
     CreateAccountError,
     CreateTransferError,
+    TransferFlags,
 } from './financial/Types';
 
 /**
@@ -72,13 +73,103 @@ export class MemoryFinancialInterface implements FinancialInterface {
         if (transfer.id > MAX_BIGINT_128) {
             return CreateTransferError.id_must_not_be_int_max;
         }
+        const existingTransfer = this._transfers.find(
+            (t) => t.id === transfer.id
+        );
+        if (existingTransfer) {
+            if (existingTransfer.flags !== transfer.flags) {
+                return CreateTransferError.exists_with_different_flags;
+            }
+            if (existingTransfer.pending_id !== transfer.pending_id) {
+                return CreateTransferError.exists_with_different_pending_id;
+            }
+            if (existingTransfer.timeout !== transfer.timeout) {
+                return CreateTransferError.exists_with_different_timeout;
+            }
+            if (
+                existingTransfer.debit_account_id !== transfer.debit_account_id
+            ) {
+                return CreateTransferError.exists_with_different_debit_account_id;
+            }
+            if (
+                existingTransfer.credit_account_id !==
+                transfer.credit_account_id
+            ) {
+                return CreateTransferError.exists_with_different_credit_account_id;
+            }
+            if (existingTransfer.user_data_128 !== transfer.user_data_128) {
+                return CreateTransferError.exists_with_different_user_data_128;
+            }
+            if (existingTransfer.user_data_64 !== transfer.user_data_64) {
+                return CreateTransferError.exists_with_different_user_data_64;
+            }
+            if (existingTransfer.user_data_32 !== transfer.user_data_32) {
+                return CreateTransferError.exists_with_different_user_data_32;
+            }
+            if (existingTransfer.ledger !== transfer.ledger) {
+                return CreateTransferError.exists_with_different_ledger;
+            }
+            if (existingTransfer.code !== transfer.code) {
+                return CreateTransferError.exists_with_different_code;
+            }
+            if (existingTransfer.amount !== transfer.amount) {
+                if (existingTransfer.flags & TransferFlags.balancing_debit) {
+                    // TODO: Implement balancing debit logic
+                } else if (
+                    existingTransfer.flags & TransferFlags.balancing_credit
+                ) {
+                    // TODO: Implement balancing credit logic
+                } else if (
+                    existingTransfer.flags & TransferFlags.post_pending_transfer
+                ) {
+                    // TODO: Implement post pending transfer logic
+                } else {
+                    return CreateTransferError.exists_with_different_amount;
+                }
+            }
+        }
+
         /**
          * * Existential validation
          * 1. Credit account must exist
          * 2. Debit account must exist
          */
-        const creditAccount = this._accounts.get(transfer.credit_account_id);
-        const debitAccount = this._accounts.get(transfer.debit_account_id);
+        let creditAccount = this._accounts.get(transfer.credit_account_id);
+        let debitAccount = this._accounts.get(transfer.debit_account_id);
+        if (
+            transfer.flags & TransferFlags.void_pending_transfer ||
+            transfer.flags & TransferFlags.post_pending_transfer
+        ) {
+            if (!transfer.pending_id || transfer.pending_id === 0n) {
+                return CreateTransferError.pending_id_must_not_be_zero;
+            }
+            if (transfer.pending_id > MAX_BIGINT_128) {
+                return CreateTransferError.pending_id_must_not_be_int_max;
+            }
+            const pendingTransfer =
+                this._transfers[
+                    this._transfers.findIndex(
+                        (t) => t.id === transfer.pending_id
+                    )
+                ];
+            if (!pendingTransfer) {
+                return CreateTransferError.pending_transfer_not_found;
+            }
+            if (pendingTransfer.flags & TransferFlags.pending) {
+                return CreateTransferError.pending_transfer_not_pending;
+            }
+            if (pendingTransfer.flags & TransferFlags.void_pending_transfer) {
+                return CreateTransferError.pending_transfer_already_voided;
+            }
+            if (pendingTransfer.flags & TransferFlags.post_pending_transfer) {
+                return CreateTransferError.pending_transfer_already_posted;
+            }
+
+            creditAccount = this._accounts.get(
+                pendingTransfer.credit_account_id
+            );
+            debitAccount = this._accounts.get(pendingTransfer.debit_account_id);
+        }
         if (!creditAccount) {
             return CreateTransferError.credit_account_not_found;
         }
@@ -86,15 +177,66 @@ export class MemoryFinancialInterface implements FinancialInterface {
             return CreateTransferError.debit_account_not_found;
         }
 
-        //TODO: Add more validation
+        /**
+         * TODO: Add more validation
+         * * Ensure the transfer satisfies the account codes
+         * * Ensure the transfer satisfies the flags
+         */
     }
 
     private _performTransfer(transfer: Transfer): CreateTransferError {
         const validation = this._validateTransfer(transfer);
         if (validation !== CreateTransferError.ok) return validation;
-        const creditAccount = this._accounts.get(transfer.credit_account_id);
-        const debitAccount = this._accounts.get(transfer.debit_account_id);
-        // TODO: Continue transfer logic implementation
+        let creditAccount = this._accounts.get(transfer.credit_account_id);
+        let debitAccount = this._accounts.get(transfer.debit_account_id);
+        if (transfer.flags & TransferFlags.pending) {
+            creditAccount.credits_pending += transfer.amount;
+            debitAccount.debits_pending += transfer.amount;
+        } else if (transfer.flags & TransferFlags.void_pending_transfer) {
+            if (!creditAccount || !debitAccount) {
+                const voidTransfer =
+                    this._transfers[
+                        this._transfers.findIndex(
+                            (t) => t.id === transfer.pending_id
+                        )
+                    ];
+                creditAccount = this._accounts.get(
+                    voidTransfer.credit_account_id
+                );
+                debitAccount = this._accounts.get(
+                    voidTransfer.debit_account_id
+                );
+            }
+            creditAccount.credits_pending -= transfer.amount;
+            debitAccount.debits_pending -= transfer.amount;
+        } else if (transfer.flags & TransferFlags.post_pending_transfer) {
+            if (!creditAccount || !debitAccount) {
+                const postTransfer =
+                    this._transfers[
+                        this._transfers.findIndex(
+                            (t) => t.id === transfer.pending_id
+                        )
+                    ];
+                creditAccount = this._accounts.get(
+                    postTransfer.credit_account_id
+                );
+                debitAccount = this._accounts.get(
+                    postTransfer.debit_account_id
+                );
+            }
+            creditAccount.credits_pending -= transfer.amount;
+            debitAccount.debits_pending -= transfer.amount;
+            creditAccount.credits_posted += transfer.amount;
+            debitAccount.debits_posted += transfer.amount;
+        } else {
+            creditAccount.credits_posted += transfer.amount;
+            debitAccount.debits_posted += transfer.amount;
+        }
+        /**
+         * TODO: Continue transfer logic implementation
+         * * 1. Route based on if the credits and debits need to be pending or posted
+         * * 2. Ensure the transfer satisfies the accounting equation
+         */
     }
 
     generateId = () => {
