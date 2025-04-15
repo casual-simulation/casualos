@@ -207,13 +207,14 @@ export class PackageVersionRecordsController {
             let parentMarkers: string[];
             if (!existingItem.parentMarkers) {
                 console.log(`[${this._name}] Parent package not found.`);
+                parentMarkers = [PRIVATE_MARKER];
                 const result = await this._packages.recordItem({
                     userId: request.userId,
                     recordKeyOrRecordName: recordName,
                     instances: request.instances,
                     item: {
                         address: request.item.address,
-                        markers: [PRIVATE_MARKER],
+                        markers: parentMarkers,
                     },
                 });
 
@@ -269,7 +270,7 @@ export class PackageVersionRecordsController {
                 resourceMarkers = request.item.markers;
 
                 if (!resourceMarkers) {
-                    resourceMarkers = existingItem.parentMarkers;
+                    resourceMarkers = parentMarkers;
                     usingGivenMarkers = false;
                 }
 
