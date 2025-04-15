@@ -146,23 +146,37 @@ export class PrismaPackageRecordsStore implements PackageRecordsStore {
         recordName: string,
         item: Partial<PackageRecord>
     ): Promise<void> {
-        await this._client.packageRecord.upsert({
-            where: {
-                recordName_address: {
+        if (item.id) {
+            await this._client.packageRecord.upsert({
+                where: {
+                    recordName_address: {
+                        recordName,
+                        address: item.address,
+                    },
+                },
+                create: {
+                    id: item.id,
                     recordName,
                     address: item.address,
+                    markers: item.markers,
                 },
-            },
-            create: {
-                id: item.id,
-                recordName,
-                address: item.address,
-                markers: item.markers,
-            },
-            update: {
-                markers: item.markers,
-            },
-        });
+                update: {
+                    markers: item.markers,
+                },
+            });
+        } else {
+            await this._client.packageRecord.update({
+                where: {
+                    recordName_address: {
+                        recordName,
+                        address: item.address,
+                    },
+                },
+                data: {
+                    markers: item.markers,
+                },
+            });
+        }
     }
 
     @traced(TRACE_NAME)
