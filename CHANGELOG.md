@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.4.4
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with custom apps where setting an attribute to `null` would not remove the attribute.
+
 ## V3.4.3
 
 #### Date: 4/10/2025
