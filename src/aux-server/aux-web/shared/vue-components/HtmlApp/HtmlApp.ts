@@ -433,7 +433,7 @@ export default class HtmlApp extends Vue {
         for (let p of target.attributes) {
             if (p.name === attributeName) {
                 val = p.value;
-                hasAttribute = true;
+                hasAttribute = val !== null && val !== undefined;
                 break;
             }
         }
