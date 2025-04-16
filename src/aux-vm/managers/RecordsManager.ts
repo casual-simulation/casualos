@@ -30,6 +30,7 @@ import {
     iterableNext,
     iterableThrow,
     iterableComplete,
+    formatVersionNumber,
 } from '@casual-simulation/aux-common';
 import type {
     ListRecordDataAction,
@@ -2328,7 +2329,14 @@ export class RecordsManager {
                             fileByteLength: byteLength,
                             fileSha256Hex: hash,
                             fileMimeType: mimeType,
-                            fileDescription: `${event.request.recordName}/${event.request.address}@${event.request.key.major}.${event.request.key.minor}.${event.request.key.patch}${event.request.key.tag}`,
+                            fileDescription: `${event.request.recordName}/${
+                                event.request.address
+                            }@${formatVersionNumber(
+                                event.request.key.major,
+                                event.request.key.minor,
+                                event.request.key.patch,
+                                event.request.key.tag
+                            )}`,
                         },
                     },
                     instances,
