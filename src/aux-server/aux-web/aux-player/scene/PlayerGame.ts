@@ -1139,26 +1139,120 @@ export class PlayerGame extends Game {
             sim.helper.transaction(asyncResult(e.taskId, null));
         }
     }
-
+    //MY CHANGES START HERE
     private _calculateViewportCoordinatesFromPosition(
         sim: Simulation,
         e: CalculateViewportCoordinatesFromPositionAction
     ) {
+        //console.log("1");
         const portalTag = getPortalTag(e.portal);
+        //console.log("2");
         const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+        //console.log("3");
         if (_3dSim) {
+            //console.log("4");
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
-            const vector = new Vector3(
-                e.position.x * gridScale,
-                e.position.y * gridScale,
-                e.position.z * gridScale
+
+            const position = {
+                x: e.position.x,
+                y: e.position.y,
+                z: e.position.z,
+            };
+            // console.log("5");
+            // console.log("5.5", portalTag);
+
+            const isMapPortal =
+                portalTag === 'mapPortal' || portalTag === 'miniMapPortal';
+            // console.log("6");
+            console.log('6 - Is map portal by tag check:', isMapPortal);
+
+            const coordinateTransform = _3dSim.coordinateTransformer
+                ? _3dSim.coordinateTransformer(position)
+                : null;
+            //console.log("7");
+
+            let vector = new Vector3(
+                position.x * gridScale,
+                position.y * gridScale,
+                position.z * gridScale
             );
-            vector.project(rig.mainCamera);
+            //console.log("8");
+
+            if (!isMapPortal) {
+                //console.log("9");
+                if (coordinateTransform) {
+                    vector.applyMatrix4(coordinateTransform);
+                }
+                vector.project(rig.mainCamera);
+            } else {
+                console.log('10');
+                const isMapSimulation =
+                    _3dSim instanceof PlayerMapSimulation3D ||
+                    _3dSim instanceof MiniMapSimulation3D;
+                // console.log("5.7 - Is map simulation by type check:", isMapSimulation);
+                // console.log("5.6 - Simulation type:", _3dSim.constructor.name);
+
+                // console.log("Map Portal Debug: ", {
+                //     portalTag,
+                //     isMapPortal,
+                //     position,
+                //     hasCoordinateTransform: !!coordinateTransform,
+                //     simType: _3dSim.constructor.name
+                // });
+
+                if (isMapSimulation && _3dSim.coordinateTransformer) {
+                    const lon = position.x * (Math.PI / 180);
+                    const lat = position.y * (Math.PI / 180);
+
+                    const x = Math.cos(lat) * Math.cos(lon);
+                    const y = Math.cos(lat) * Math.sin(lon);
+                    const z = Math.sin(lat);
+
+                    let spherePos = new Vector3(z, y, z);
+
+                    spherePos.multiplyScalar(EARTH_RADIUS);
+
+                    if (coordinateTransform) {
+                        spherePos.applyMatrix4(coordinateTransform);
+                    }
+
+                    spherePos.project(rig.mainCamera);
+
+                    vector = spherePos;
+
+                    // console.log("Sphere calculation: ", {
+                    //     original: { x: position.x, y: position.y, z: position.z },
+                    //     radians: { lon, lat },
+                    //     spherePos: { x, y, z },
+                    //     earthRadiusScale: EARTH_RADIUS,
+                    //     projected: { x: vector.x, y: vector.y, z: vector.z }
+                    // });
+                } else {
+                    if (coordinateTransform) {
+                        vector.applyMatrix4(coordinateTransform);
+                    }
+                    vector.project(rig.mainCamera);
+
+                    console.log('Standard approach result: ', {
+                        projected: { x: vector.x, y: vector.y, z: vector.z },
+                    });
+                }
+            }
+
             const viewportPosition = convertVector2(vector);
-            sim.helper.transaction(
-                asyncResult(e.taskId, viewportPosition, true)
-            );
+
+            if (isMapPortal) {
+                const result = {
+                    viewportPosition,
+                    raw: { x: vector.x, y: vector.y, z: vector.z },
+                };
+                sim.helper.transaction(asyncResult(e.taskId, result, true));
+            } else {
+                sim.helper.transaction(
+                    asyncResult(e.taskId, viewportPosition, true)
+                );
+            }
         } else {
             sim.helper.transaction(asyncResult(e.taskId, null));
         }
@@ -1168,6 +1262,7 @@ export class PlayerGame extends Game {
         sim: BrowserSimulation,
         e: CalculateViewportCoordinatesFromScreenCoordinatesAction
     ) {
+        console.log('Hit 2');
         try {
             const portalTag = getPortalTag(e.portal);
             const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
@@ -1196,6 +1291,7 @@ export class PlayerGame extends Game {
         sim: BrowserSimulation,
         e: CalculateScreenCoordinatesFromViewportCoordinatesAction
     ) {
+        console.log('Hit 3');
         try {
             const portalTag = getPortalTag(e.portal);
             const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
