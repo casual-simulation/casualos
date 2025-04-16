@@ -2514,6 +2514,28 @@ export function recordPackageVersion(
     };
 }
 
+export function erasePackageVersion(
+    recordName: string,
+    address: string,
+    key: PackageRecordVersionKey,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            erasePackageVersion: {
+                input: {
+                    recordName,
+                    address,
+                    key,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
 /**
  * Creates a ListUserStudiosAction.
  * @param options The options that should be used for the action.

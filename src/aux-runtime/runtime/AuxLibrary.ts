@@ -352,6 +352,7 @@ import {
     aiOpenAICreateRealtimeSession,
     grantEntitlements as calcGrantEntitlements,
     recordPackageVersion as calcRecordPackageVersion,
+    erasePackageVersion as calcErasePackageVersion,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3402,6 +3403,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 grantEntitlements,
                 recordPackageVersion,
+                erasePackageVersion,
 
                 listUserStudios,
 
@@ -10743,6 +10745,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     ],
                 },
             },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the given package version.
+     * @param recordName the name of the record that the package version should be erased from.
+     * @param address the address of the package version that should be erased.
+     * @param key the key of the package version that should be erased.
+     */
+    function erasePackageVersion(
+        recordName: string,
+        address: string,
+        key: PackageRecordVersionKey,
+        options: RecordActionOptions = {}
+    ) {
+        const task = context.createTask();
+        const event = calcErasePackageVersion(
+            recordName,
+            address,
+            key,
             options,
             task.taskId
         );

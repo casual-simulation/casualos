@@ -6678,6 +6678,27 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'erasePackageVersion',
+                    recordsCallProcedure(
+                        {
+                            erasePackageVersion: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    key: {
+                                        major: 1,
+                                        minor: 0,
+                                        patch: 0,
+                                        tag: '',
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

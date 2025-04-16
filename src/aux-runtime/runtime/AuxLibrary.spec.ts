@@ -8555,6 +8555,42 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe.only('os.erasePackageVersion()', () => {
+            it('should emit a ErasePackageVersionAction', async () => {
+                const action: any = library.api.os.erasePackageVersion(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        erasePackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                key: {
+                                    major: 1,
+                                    minor: 0,
+                                    patch: 0,
+                                    tag: '',
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.listUserStudios()', () => {
             it('should emit a GetEventCountAction', async () => {
                 const action: any = library.api.os.listUserStudios();
