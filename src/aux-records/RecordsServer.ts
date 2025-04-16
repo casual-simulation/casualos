@@ -16,11 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-    parseVersionNumber,
-    tryDecodeUriComponent,
-    tryParseJson,
-} from './Utils';
+import { tryDecodeUriComponent, tryParseJson } from './Utils';
 import type {
     AuthController,
     NoSessionKeyResult,

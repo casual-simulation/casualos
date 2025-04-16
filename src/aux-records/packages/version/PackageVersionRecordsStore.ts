@@ -33,7 +33,7 @@ import type {
     SubCrudRecord,
     SubCrudRecordsStore,
 } from '../../crud/sub/SubCrudRecordsStore';
-import { parseVersionNumber } from '../../Utils';
+import { parseVersionNumber } from '@casual-simulation/aux-common';
 
 /**
  * Defines a store that contains notification records.
