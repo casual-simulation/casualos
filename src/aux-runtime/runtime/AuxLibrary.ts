@@ -354,6 +354,7 @@ import {
     recordPackageVersion as calcRecordPackageVersion,
     erasePackageVersion as calcErasePackageVersion,
     listPackageVersions as calcListPackageVersions,
+    getPackageVersion as calcGetPackageVersion,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3411,6 +3412,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 recordPackageVersion,
                 erasePackageVersion,
                 listPackageVersions,
+                getPackageVersion,
 
                 listUserStudios,
 
@@ -10785,6 +10787,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcListPackageVersions(
             recordName,
             address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets metadata about the given package version.
+     * @param recordName The name of the record that the package version is stored in.
+     * @param address The address of the package version.
+     * @param key The key of the package version.
+     * @param options The options for the package version.
+     */
+    function getPackageVersion(
+        recordName: string,
+        address: string,
+        key: string | PackageRecordVersionKey,
+        options: RecordActionOptions = {}
+    ): Promise<CrudGetItemResult<PackageRecordVersion>> {
+        const task = context.createTask();
+        const event = calcGetPackageVersion(
+            recordName,
+            address,
+            key,
             options,
             task.taskId
         );

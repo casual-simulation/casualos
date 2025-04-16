@@ -8585,7 +8585,7 @@ describe('AuxLibrary', () => {
         });
 
         describe.only('os.listPackageVersions()', () => {
-            it('should emit a ListPackageVersions', async () => {
+            it('should emit a ListPackageVersionsAction', async () => {
                 const action: any = library.api.os.listPackageVersions(
                     'test',
                     'address'
@@ -8597,6 +8597,64 @@ describe('AuxLibrary', () => {
                             input: {
                                 recordName: 'test',
                                 address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe.only('os.getPackageVersion()', () => {
+            it('should emit a GetPackageVersionAction', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support string keys', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    '1.0.0'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                key: '1.0.0',
                             },
                         },
                     },

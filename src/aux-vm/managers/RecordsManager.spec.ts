@@ -6714,6 +6714,22 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'getPackageVersion',
+                    recordsCallProcedure(
+                        {
+                            getPackageVersion: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    key: 'v1.0.0',
+                                } as any,
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

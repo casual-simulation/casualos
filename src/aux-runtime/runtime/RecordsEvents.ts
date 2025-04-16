@@ -26,7 +26,10 @@ import type {
     RevokeEntitlementRequest,
     GrantEntitlementFailure,
 } from '@casual-simulation/aux-records';
-import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
+import type {
+    RecordsClientActions,
+    RecordsClientInputs,
+} from '@casual-simulation/aux-records/RecordsClient';
 import type {
     APPROVED_SYMBOL,
     AsyncAction,
@@ -2527,6 +2530,38 @@ export function listPackageVersions(
                     recordName,
                     address,
                 },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function getPackageVersion(
+    recordName: string,
+    address: string,
+    key: string | PackageRecordVersionKey,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    let input: RecordsClientInputs['getPackageVersion'] = {
+        recordName,
+        address,
+    };
+
+    if (typeof key === 'string') {
+        input.key = key;
+    } else {
+        input = {
+            ...input,
+            ...key,
+        };
+    }
+
+    return recordsCallProcedure(
+        {
+            getPackageVersion: {
+                input,
             },
         },
         options,

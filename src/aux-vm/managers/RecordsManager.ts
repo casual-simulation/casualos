@@ -233,6 +233,7 @@ export class RecordsManager {
         'createOpenAIRealtimeSession',
         'erasePackageVersion',
         'listPackageVersions',
+        'getPackageVersion',
     ]);
 
     /**
