@@ -73,7 +73,6 @@ import { formatInstId } from './websockets';
 import { AuthController } from './AuthController';
 import type { PrivoClientInterface } from './PrivoClient';
 import { version } from './packages/version';
-import { error } from 'console';
 
 console.log = jest.fn();
 
@@ -2587,6 +2586,7 @@ describe('PolicyController', () => {
                         scope: 'personal',
                     },
                 ],
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -2608,6 +2608,7 @@ describe('PolicyController', () => {
             expect(result).toEqual({
                 success: true,
                 grantId: expect.any(String),
+                feature: 'data',
             });
 
             const entitlement = store.grantedPackageEntitlements[0];
@@ -2650,6 +2651,7 @@ describe('PolicyController', () => {
             expect(result).toEqual({
                 success: true,
                 grantId: 'entitlementId',
+                feature: 'data',
             });
 
             expect(store.grantedPackageEntitlements).toEqual([
@@ -2693,6 +2695,7 @@ describe('PolicyController', () => {
             expect(result).toEqual({
                 success: true,
                 grantId: expect.any(String),
+                feature: 'data',
             });
 
             expect(store.grantedPackageEntitlements).toEqual([
@@ -2756,6 +2759,7 @@ describe('PolicyController', () => {
             expect(result).toEqual({
                 success: true,
                 grantId: expect.any(String),
+                feature: 'data',
             });
 
             expect(store.grantedPackageEntitlements).toEqual([
@@ -2788,6 +2792,7 @@ describe('PolicyController', () => {
             expect(result).toEqual({
                 success: true,
                 grantId: expect.any(String),
+                feature: 'data',
             });
 
             expect(store.grantedPackageEntitlements).toEqual([
@@ -2847,6 +2852,7 @@ describe('PolicyController', () => {
                         scope: 'personal',
                     },
                 ],
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await store.saveGrantedPackageEntitlement({
@@ -3075,6 +3081,7 @@ describe('PolicyController', () => {
                         scope: 'personal',
                     },
                 ],
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await services.packagesStore.createItem(packageRecordName, {
@@ -6133,6 +6140,7 @@ describe('PolicyController', () => {
                                         scope: 'personal',
                                     },
                                 ],
+                                markers: [PUBLIC_READ_MARKER],
                             }
                         );
                     });
