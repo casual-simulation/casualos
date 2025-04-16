@@ -52,7 +52,24 @@ export const ELEMENT_READ_ONLY_PROPERTIES = new Set([
 ]);
 
 export const TEXT_REFERENCE_PROPERTIES = ['data'];
-export const NODE_REFERENCE_PROPERTIES = [
+
+/**
+ * The properties that should be copied from the target element to the event object.
+ * ONLY USED FOR FULL DOM.
+ */
+export const DOM_NODE_REFERENCE_PROPERTIES = [
+    'namespaceURI',
+    'localName',
+    'style',
+    'attributes',
+    'className',
+];
+
+/**
+ * The properties that should be copied from the target element to the event object.
+ * ONLY USED FOR WHEN DOM IS NOT ENABLED.
+ */
+export const UNDOM_NODE_REFERENCE_PROPERTIES = [
     'namespace',
     'nodeName',
     'style',

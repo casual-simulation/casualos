@@ -56,6 +56,11 @@ export interface OpenAIChatOptions {
      * The name of this interface to use for logging;
      */
     name?: string;
+
+    /**
+     * The additional properties that should be included in requests.
+     */
+    additionalProperties?: Record<string, any>;
 }
 
 /**
@@ -64,6 +69,7 @@ export interface OpenAIChatOptions {
 export class OpenAIChatInterface implements AIChatInterface {
     private _options: OpenAIChatOptions;
     private _client: OpenAI;
+    private _additionalProperties: Record<string, any>;
 
     private get _baseUrl() {
         return this._options.baseUrl ?? 'https://api.openai.com/v1/';
@@ -79,6 +85,7 @@ export class OpenAIChatInterface implements AIChatInterface {
             apiKey: options.apiKey,
             baseURL: this._options.baseUrl ?? undefined,
         });
+        this._additionalProperties = options.additionalProperties ?? {};
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
@@ -99,6 +106,7 @@ export class OpenAIChatInterface implements AIChatInterface {
             const result = await axios.post(
                 `${this._baseUrl}chat/completions`,
                 {
+                    ...this._additionalProperties,
                     model: request.model,
                     messages: request.messages.map((m) => ({
                         role: m.role,
@@ -165,7 +173,7 @@ export class OpenAIChatInterface implements AIChatInterface {
 
             return {
                 choices: choices,
-                totalTokens: result.data.usage.total_tokens,
+                totalTokens: result.data.usage?.total_tokens ?? 0,
             };
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -204,6 +212,7 @@ export class OpenAIChatInterface implements AIChatInterface {
         }
 
         const res = await this._client.chat.completions.create({
+            ...this._additionalProperties,
             model: request.model,
             messages: request.messages.map((m) => ({
                 role: m.role,

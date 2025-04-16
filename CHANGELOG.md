@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.4.4
+
+#### Date: 4/16/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with custom apps where setting an attribute to `null` would not remove the attribute.
+-   Fixed an issue with custom apps where SVG elements would not work when DOM support is enabled.
+
 ## V3.4.3
 
 #### Date: 4/10/2025
