@@ -232,6 +232,7 @@ export class RecordsManager {
         'listUserNotificationSubscriptions',
         'createOpenAIRealtimeSession',
         'erasePackageVersion',
+        'listPackageVersions',
     ]);
 
     /**

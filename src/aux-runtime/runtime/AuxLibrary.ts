@@ -353,6 +353,7 @@ import {
     grantEntitlements as calcGrantEntitlements,
     recordPackageVersion as calcRecordPackageVersion,
     erasePackageVersion as calcErasePackageVersion,
+    listPackageVersions as calcListPackageVersions,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -515,6 +516,7 @@ import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhook
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 import type {
+    PackageRecordVersion,
     PackageRecordVersionKey,
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
@@ -3404,6 +3406,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 grantEntitlements,
                 recordPackageVersion,
                 erasePackageVersion,
+                listPackageVersions,
 
                 listUserStudios,
 
@@ -10752,6 +10755,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the list of versions for the given package.
+     * @param recordName The name of the record that the package is stored in.
+     * @param address The address of the package.
+     */
+    function listPackageVersions(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudListItemsResult<PackageRecordVersion>> {
+        const task = context.createTask();
+        const event = calcListPackageVersions(
+            recordName,
+            address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Erases the given package version.
      * @param recordName the name of the record that the package version should be erased from.
      * @param address the address of the package version that should be erased.
@@ -10762,7 +10785,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         address: string,
         key: PackageRecordVersionKey,
         options: RecordActionOptions = {}
-    ) {
+    ): Promise<CrudEraseItemResult> {
         const task = context.createTask();
         const event = calcErasePackageVersion(
             recordName,

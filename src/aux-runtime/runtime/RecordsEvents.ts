@@ -2514,6 +2514,26 @@ export function recordPackageVersion(
     };
 }
 
+export function listPackageVersions(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackageVersions: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
 export function erasePackageVersion(
     recordName: string,
     address: string,

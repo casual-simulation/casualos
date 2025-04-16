@@ -8555,6 +8555,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe.only('os.listPackageVersions()', () => {
+            it('should emit a ListPackageVersions', async () => {
+                const action: any = library.api.os.listPackageVersions(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listPackageVersions: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe.only('os.erasePackageVersion()', () => {
             it('should emit a ErasePackageVersionAction', async () => {
                 const action: any = library.api.os.erasePackageVersion(
