@@ -8488,6 +8488,35 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe.only('os.parseVersionKey()', () => {
+            it('should return a package version key object', () => {
+                expect(library.api.os.parseVersionKey('1.0.0')).toEqual({
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: null,
+                    alpha: false,
+                    version: '1.0.0',
+                });
+                expect(library.api.os.parseVersionKey('v1.2.3')).toEqual({
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    tag: null,
+                    alpha: false,
+                    version: 'v1.2.3',
+                });
+                expect(library.api.os.parseVersionKey('1.2.3-alpha')).toEqual({
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    tag: 'alpha',
+                    alpha: true,
+                    version: '1.2.3-alpha',
+                });
+            });
+        });
+
         describe.only('os.recordPackageVersion()', () => {
             it('should emit a RecordPackageVersionAction', async () => {
                 const action: any = library.api.os.recordPackageVersion({

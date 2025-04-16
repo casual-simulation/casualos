@@ -369,11 +369,13 @@ import type {
     RemoteAction,
     AvailablePermissions,
     Entitlement,
+    VersionNumber,
 } from '@casual-simulation/aux-common';
 import {
     Action,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
+    parseVersionNumber,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
@@ -3402,6 +3404,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordEvent,
                 countEvents,
+
+                parseVersionKey,
 
                 grantEntitlements,
                 recordPackageVersion,
@@ -10720,6 +10724,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcGrantEntitlements(request, options, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Parses the given version number into a version key.
+     * @param version The version number to parse.
+     */
+    function parseVersionKey(version: string): VersionNumber {
+        const key = parseVersionNumber(version);
+        if (key.major === null) {
+            return null;
+        }
+
+        return key;
     }
 
     /**
