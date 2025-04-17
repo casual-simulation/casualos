@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.4.5
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `os.calculateViewportCoordinatesFromPosition()` function returned incorrect coordinate values when used in the mapPortal.
+    -   Function now properly converts longitude/latitude coordinates to accurate viewport positions, ensuring consistent behavior between gridPortal and mapPortal.
+
 ## V3.4.4
 
 #### Date: 4/17/2025
