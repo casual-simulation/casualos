@@ -842,6 +842,11 @@ export interface RecordPackageVersionApiRequest {
      * The bots that should be saved to the package.
      */
     bots: Bot[];
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
 }
 
 /**
@@ -10769,6 +10774,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 key: request.key,
                 entitlements: request.entitlements ?? [],
                 readme: request.readme,
+                markers: request.markers,
                 state: {
                     version: 2,
                     updates: [
