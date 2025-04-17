@@ -1139,31 +1139,19 @@ export class PlayerGame extends Game {
             sim.helper.transaction(asyncResult(e.taskId, null));
         }
     }
-    //MY CHANGES START HERE
+
     private _calculateViewportCoordinatesFromPosition(
         sim: Simulation,
         e: CalculateViewportCoordinatesFromPositionAction
     ) {
-        let portalTag;
-        if (e.portal === 'map') {
-            portalTag = 'mapPortal';
-        } else if (e.portal === 'grid') {
-            portalTag = 'gridPortal';
-        } else if (e.portal === 'miniGrid') {
-            portalTag = 'miniGridPortal';
-        } else if (e.portal === 'miniMap') {
-            portalTag = 'miniMapPortal';
-        } else {
-            portalTag = getPortalTag(e.portal);
-        }
-
-        const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+        const _3dSim = this._findSimulationForPortalTag(
+            sim,
+            getPortalTag(e.portal)
+        );
 
         if (_3dSim) {
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
-            const isMapPortal =
-                portalTag === 'mapPortal' || portalTag === 'miniMapPortal';
 
             const position = {
                 x: e.position.x,
@@ -1173,37 +1161,19 @@ export class PlayerGame extends Game {
 
             let vector;
 
-            if (isMapPortal) {
-                const coordinateTransform = _3dSim.coordinateTransformer
-                    ? _3dSim.coordinateTransformer(position)
-                    : null;
-                if (coordinateTransform) {
-                    vector = new Vector3(0, 0, 0);
-                    vector.applyMatrix4(coordinateTransform);
-                } else {
-                    const lon = position.x * (Math.PI / 180);
-                    const lat = position.y * (Math.PI / 180);
+            const coordinateTransform = _3dSim.coordinateTransformer
+                ? _3dSim.coordinateTransformer(position)
+                : null;
 
-                    const x = EARTH_RADIUS * Math.cos(lat) * Math.cos(lon);
-                    const y = EARTH_RADIUS * Math.sin(lat);
-                    const z = EARTH_RADIUS * Math.cos(lat) * Math.sin(lon);
-
-                    vector = new Vector3(x, y, z);
-                }
+            if (coordinateTransform) {
+                vector = new Vector3(0, 0, 0);
+                vector.applyMatrix4(coordinateTransform);
             } else {
                 vector = new Vector3(
                     position.x * gridScale,
                     position.y * gridScale,
                     position.z * gridScale
                 );
-
-                const coordinateTransform = _3dSim.coordinateTransformer
-                    ? _3dSim.coordinateTransformer(position)
-                    : null;
-
-                if (coordinateTransform) {
-                    vector.applyMatrix4(coordinateTransform);
-                }
             }
 
             vector.project(rig.mainCamera);
