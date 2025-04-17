@@ -11008,7 +11008,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os/records
      * @docgroup 01-packages
-     * @docname os.listPackageContainersByMarker
+     * @docname os.listPackageContainers
      */
     function listPackageContainers(
         recordName: string,
