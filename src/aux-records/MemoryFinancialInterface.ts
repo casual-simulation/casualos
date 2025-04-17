@@ -63,6 +63,13 @@ export class MemoryFinancialInterface implements FinancialInterface {
         // TODO: Add more validation
     }
 
+    private _recoverTransfer(
+        transfer: Transfer,
+        pendingTransfer: Transfer
+    ): CreateTransferError {
+        return CreateTransferError.ok; // TODO: Implement recovery logic for: post_pending_transfer, void_pending_transfer, expired (via timeout)
+    }
+
     private _validateTransfer(transfer: Transfer): CreateTransferError {
         /**
          * * Format and convention validation
@@ -140,6 +147,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
             transfer.flags & TransferFlags.void_pending_transfer ||
             transfer.flags & TransferFlags.post_pending_transfer
         ) {
+            //TODO: Determine order of operations to invoke a recovery
             if (!transfer.pending_id || transfer.pending_id === 0n) {
                 return CreateTransferError.pending_id_must_not_be_zero;
             }
@@ -164,6 +172,10 @@ export class MemoryFinancialInterface implements FinancialInterface {
             if (pendingTransfer.flags & TransferFlags.post_pending_transfer) {
                 return CreateTransferError.pending_transfer_already_posted;
             }
+            /**
+             * TODO: Expired pending transfer logic.
+             * * There doesn't appear to be a way to mark whether an expired transfer has previously been handled.
+             */
 
             creditAccount = this._accounts.get(
                 pendingTransfer.credit_account_id
