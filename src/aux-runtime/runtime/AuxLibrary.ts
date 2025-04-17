@@ -357,6 +357,8 @@ import {
     getPackageVersion as calcGetPackageVersion,
     recordPackageContainer as calcRecordPackageContainer,
     erasePackageContaienr as calcErasePackageContainer,
+    listPackageContainers as calcListPackageContainers,
+    listPackageContainersByMarker as calcListPackageContainersByMarker,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3427,6 +3429,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordPackageContainer,
                 erasePackageContainer,
+                listPackageContainers,
+                listPackageContainersByMarker,
 
                 listUserStudios,
 
@@ -10985,6 +10989,75 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcErasePackageContainer(
             recordName,
             address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists all the package containers that are in the given record.
+     * You must have access to the `account` marker in order to list all package containers in a record.
+     *
+     * @param recordName the name of the record that the package containers should be listed from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     *
+     * @example List package containers in a record
+     * const result = await os.listPackageContainers('myRecord');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageContainersByMarker
+     */
+    function listPackageContainers(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<PackageRecord>> {
+        const task = context.createTask();
+        const event = calcListPackageContainers(
+            recordName,
+            startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the package containers that have the given marker in the given record.
+     * You must have access to the specified marker in order to list the package containers.
+     *
+     * @param recordName the name of the record that the package containers should be listed from.
+     * @param marker the marker that the package containers should have.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     *
+     * @example List public package containers in a record
+     * const result = await os.listPackageContainersByMarker('myRecord', 'publicRead');
+     *
+     * @example List private package containers in a record
+     * const result = await os.listPackageContainersByMarker('myRecord', 'private');
+     *
+     * @example List public package containers stored at "myNamespace"
+     * const result = await os.listPackageContainersByMarker('myRecord', 'publicRead:myNamespace');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageContainersByMarker
+     */
+    function listPackageContainersByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<PackageRecord>> {
+        const task = context.createTask();
+        const event = calcListPackageContainersByMarker(
+            recordName,
+            marker,
+            startingAddress,
             options,
             task.taskId
         );

@@ -8902,6 +8902,57 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.listPackageContainers()', () => {
+            it('should emit a ListPackagesAction', async () => {
+                const action: any = library.api.os.listPackageContainers(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listPackages: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPackageContainersByMarker()', () => {
+            it('should emit a ListPackagesAction', async () => {
+                const action: any =
+                    library.api.os.listPackageContainersByMarker(
+                        'test',
+                        'marker',
+                        'address'
+                    );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listPackages: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                marker: 'marker',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.listUserStudios()', () => {
             it('should emit a GetEventCountAction', async () => {
                 const action: any = library.api.os.listUserStudios();

@@ -2635,6 +2635,50 @@ export function erasePackageContaienr(
     );
 }
 
+export function listPackageContainers(
+    recordName: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackages: {
+                input: {
+                    recordName,
+                    address,
+                    sort: options?.sort,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function listPackageContainersByMarker(
+    recordName: string,
+    marker: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackages: {
+                input: {
+                    recordName,
+                    address,
+                    sort: options?.sort,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
 /**
  * Creates a ListUserStudiosAction.
  * @param options The options that should be used for the action.
