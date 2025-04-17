@@ -20,7 +20,10 @@ import type { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 import type { ModerationFileScanLabel } from './ModerationJobProvider';
-import type { ResourceKinds } from '@casual-simulation/aux-common';
+import {
+    formatVersionNumber,
+    type ResourceKinds,
+} from '@casual-simulation/aux-common';
 import type { PackageRecordVersion } from './packages/version';
 
 /**
@@ -361,10 +364,12 @@ export function formatPackageVersionPublishNotification(
         zone: 'utc',
     }).toISO();
 
-    let version = `${notification.package.key.major}.${notification.package.key.minor}.${notification.package.key.patch}`;
-    if (notification.package.key.tag) {
-        version += `-${notification.package.key.tag}`;
-    }
+    let version = formatVersionNumber(
+        notification.package.key.major,
+        notification.package.key.minor,
+        notification.package.key.patch,
+        notification.package.key.tag
+    );
 
     return `A ${notification.resource} was ${notification.action}.
 
@@ -375,5 +380,6 @@ RequiresReview: ${notification.package.requiresReview}
 Entitlements: [${notification.package.entitlements
         .map((e) => `${e.feature}:${e.scope}`)
         .join(', ')}]
+Markers: [${notification.package.markers.join(', ')}]
 Time: ${time}`;
 }

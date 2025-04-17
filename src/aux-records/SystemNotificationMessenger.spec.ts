@@ -21,6 +21,7 @@ import {
     formatPackageVersionPublishNotification,
 } from './SystemNotificationMessenger';
 import type { StudioComIdRequest } from './RecordsStore';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 
 describe('formatNotificationAsString()', () => {
     it('should consistently format user inst report notifications', () => {
@@ -133,6 +134,7 @@ describe('formatNotificationAsString()', () => {
                 readme: 'abc',
                 sha256: 'test',
                 sizeInBytes: 123,
+                markers: [PUBLIC_READ_MARKER],
             },
         });
 
@@ -171,6 +173,7 @@ describe('formatNotificationAsString()', () => {
                 readme: 'abc',
                 sha256: 'test',
                 sizeInBytes: 123,
+                markers: [PUBLIC_READ_MARKER],
             },
         });
 

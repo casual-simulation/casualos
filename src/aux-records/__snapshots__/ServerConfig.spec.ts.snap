@@ -1844,9 +1844,6 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
-          "documents": Object {
-            "allowed": false,
-          },
           "events": Object {
             "allowed": false,
           },
@@ -1861,6 +1858,9 @@ Object {
           },
           "notifications": Object {
             "allowed": false,
+          },
+          "packages": Object {
+            "allowed": true,
           },
           "policies": Object {
             "allowed": false,
@@ -1907,9 +1907,6 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
-          "documents": Object {
-            "allowed": false,
-          },
           "events": Object {
             "allowed": false,
           },
@@ -1924,6 +1921,9 @@ Object {
           },
           "notifications": Object {
             "allowed": false,
+          },
+          "packages": Object {
+            "allowed": true,
           },
           "policies": Object {
             "allowed": false,
@@ -2144,9 +2144,6 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2166,6 +2163,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2223,9 +2223,6 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -2248,6 +2245,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2301,9 +2301,6 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -2330,6 +2327,9 @@ Object {
               "maxSentNotificationsPerPeriod": 100000,
               "maxSentPushNotificationsPerPeriod": 50000,
               "maxSubscribersPerItem": 5000,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2389,9 +2389,6 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -2414,6 +2411,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2467,9 +2467,6 @@ Object {
               "maxReadsPerPeriod": 500000,
               "maxWritesPerPeriod": 500000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 500,
@@ -2496,6 +2493,9 @@ Object {
               "maxSentNotificationsPerPeriod": 10000,
               "maxSentPushNotificationsPerPeriod": 5000,
               "maxSubscribersPerItem": 500,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2555,9 +2555,6 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2580,6 +2577,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2638,9 +2638,6 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2660,6 +2657,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2716,9 +2716,6 @@ Object {
               "maxReadsPerPeriod": 10000000000,
               "maxWritesPerPeriod": 10000000000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000000000,
@@ -2738,6 +2735,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2791,9 +2791,6 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2820,6 +2817,9 @@ Object {
               "maxSentNotificationsPerPeriod": 1000,
               "maxSentPushNotificationsPerPeriod": 500,
               "maxSubscribersPerItem": 50,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,
@@ -2875,9 +2875,6 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
-            "documents": Object {
-              "allowed": false,
-            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -2900,6 +2897,9 @@ Object {
             },
             "notifications": Object {
               "allowed": false,
+            },
+            "packages": Object {
+              "allowed": true,
             },
             "policies": Object {
               "allowed": true,

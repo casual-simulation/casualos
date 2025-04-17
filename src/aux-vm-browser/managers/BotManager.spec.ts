@@ -28,13 +28,14 @@ import {
     wait,
     waitAsync,
 } from '@casual-simulation/aux-common/test/TestHelpers';
+import type { RecordsAsyncActions } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();
 
 describe('BotManager', () => {
     let sim: BotManager;
     let vm: TestAuxVM;
-    let localEvents: Subject<LocalActions[]>;
+    let localEvents: Subject<(LocalActions | RecordsAsyncActions)[]>;
 
     beforeEach(() => {
         vm = new TestAuxVM('sim');

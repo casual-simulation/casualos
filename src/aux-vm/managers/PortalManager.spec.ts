@@ -36,12 +36,13 @@ import {
     PortalManager,
     PortalUpdate,
 } from './PortalManager';
+import type { RuntimeAsyncActions } from '@casual-simulation/aux-runtime';
 
 describe('PortalManager', () => {
     let manager: PortalManager;
     let vm: TestAuxVM;
     let sub: Subscription;
-    let localEvents: Subject<LocalActions[]>;
+    let localEvents: Subject<(LocalActions | RuntimeAsyncActions)[]>;
 
     beforeEach(() => {
         sub = new Subscription();
