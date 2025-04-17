@@ -355,6 +355,7 @@ import {
     erasePackageVersion as calcErasePackageVersion,
     listPackageVersions as calcListPackageVersions,
     getPackageVersion as calcGetPackageVersion,
+    recordPackageContainer as calcRecordPackageContainer,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -378,6 +379,7 @@ import {
     DEFAULT_BRANCH_NAME,
     formatVersionNumber,
     parseVersionNumber,
+    PRIVATE_MARKER,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
@@ -473,6 +475,7 @@ import type {
     GrantMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
+    PackageRecord,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3415,6 +3418,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 erasePackageVersion,
                 listPackageVersions,
                 getPackageVersion,
+
+                recordPackageContainer,
 
                 listUserStudios,
 
@@ -10843,6 +10848,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records the given package container.
+     * Package containers (also known simply as packages) are ways to group multiple package versions together.
+     *
+     * Markers that are applied to the package container control whether all the package versions can be deleted and also will be used as the default markers for package versions if the version isn't created with a marker.
+     *
+     * @param recordName The name of the record that the package should be stored in.
+     * @param address The address of the package.
+     * @param markers The markers that should be applied to the package.
+     * @param options The options.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.recordPackageContainer
+     */
+    function recordPackageContainer(
+        recordName: string,
+        address: string,
+        markers?: string | string[],
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordPackageContainer(
+            recordName,
+            address,
+            typeof markers === 'string'
+                ? [markers]
+                : markers ?? [PRIVATE_MARKER],
+            options,
+            task.taskId
+        );
+
         return addAsyncAction(task, event);
     }
 

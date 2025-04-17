@@ -229,6 +229,7 @@ import {
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
+    PRIVATE_MARKER,
     remote,
     reportInst,
     showAccountInfo,
@@ -8719,6 +8720,85 @@ describe('AuxLibrary', () => {
                                     minor: 0,
                                     patch: 0,
                                     tag: '',
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordPackageContainer()', () => {
+            it('should emit a RecordPackageAction', async () => {
+                const action: any = library.api.os.recordPackageContainer(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordPackage: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'address',
+                                    markers: [PRIVATE_MARKER],
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow specifying a marker', async () => {
+                const action: any = library.api.os.recordPackageContainer(
+                    'test',
+                    'address',
+                    'custom'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordPackage: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'address',
+                                    markers: ['custom'],
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow specifying markers', async () => {
+                const action: any = library.api.os.recordPackageContainer(
+                    'test',
+                    'address',
+                    ['custom', 'test']
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordPackage: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'address',
+                                    markers: ['custom', 'test'],
                                 },
                             },
                         },
