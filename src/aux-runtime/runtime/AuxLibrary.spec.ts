@@ -8517,6 +8517,35 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.formatVersionKey()', () => {
+            it('should return the formatted version', () => {
+                expect(
+                    library.api.os.formatVersionKey({
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    })
+                ).toEqual('v1.0.0');
+                expect(
+                    library.api.os.formatVersionKey({
+                        major: 1,
+                        minor: 2,
+                        patch: 3,
+                        tag: null,
+                    })
+                ).toEqual('v1.2.3');
+                expect(
+                    library.api.os.formatVersionKey({
+                        major: 1,
+                        minor: 2,
+                        patch: 3,
+                        tag: 'alpha',
+                    })
+                ).toEqual('v1.2.3-alpha');
+            });
+        });
+
         describe('os.recordPackageVersion()', () => {
             it('should emit a RecordPackageVersionAction', async () => {
                 const action: any = library.api.os.recordPackageVersion({

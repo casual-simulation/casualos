@@ -376,6 +376,7 @@ import {
     Action,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
+    formatVersionNumber,
     parseVersionNumber,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
@@ -3407,6 +3408,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 countEvents,
 
                 parseVersionKey,
+                formatVersionKey,
 
                 grantEntitlements,
                 recordPackageVersion,
@@ -10739,6 +10741,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return key;
+    }
+
+    function formatVersionKey(key: PackageRecordVersionKey): string {
+        return formatVersionNumber(key.major, key.minor, key.patch, key.tag);
     }
 
     /**
