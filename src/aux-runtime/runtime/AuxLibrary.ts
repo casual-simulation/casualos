@@ -356,6 +356,7 @@ import {
     listPackageVersions as calcListPackageVersions,
     getPackageVersion as calcGetPackageVersion,
     recordPackageContainer as calcRecordPackageContainer,
+    erasePackageContaienr as calcErasePackageContainer,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3425,6 +3426,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPackageVersion,
 
                 recordPackageContainer,
+                erasePackageContainer,
 
                 listUserStudios,
 
@@ -10964,6 +10966,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
 
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the given package container and any package versions that it contains.
+     *
+     * @param recordName the name of the record that the package container is in.
+     * @param address the address of the package container.
+     * @param options the options to use for the request.
+     */
+    function erasePackageContainer(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcErasePackageContainer(
+            recordName,
+            address,
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

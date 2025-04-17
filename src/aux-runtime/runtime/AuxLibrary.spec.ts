@@ -8631,7 +8631,7 @@ describe('AuxLibrary', () => {
                             scope: 'personal',
                         },
                     ],
-                    markers: ['test']
+                    markers: ['test'],
                 });
 
                 const expected = recordPackageVersion(
@@ -8661,7 +8661,7 @@ describe('AuxLibrary', () => {
                                 scope: 'personal',
                             },
                         ],
-                        markers: ['test']
+                        markers: ['test'],
                     },
                     {},
                     context.tasks.size
@@ -8867,6 +8867,30 @@ describe('AuxLibrary', () => {
                                     address: 'address',
                                     markers: ['custom', 'test'],
                                 },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.erasePackageContainer()', () => {
+            it('should emit a ErasePackageAction', async () => {
+                const action: any = library.api.os.erasePackageContainer(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        erasePackage: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
                             },
                         },
                     },

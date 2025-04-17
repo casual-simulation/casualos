@@ -2615,6 +2615,26 @@ export function recordPackageContainer(
     );
 }
 
+export function erasePackageContaienr(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            erasePackage: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
 /**
  * Creates a ListUserStudiosAction.
  * @param options The options that should be used for the action.
