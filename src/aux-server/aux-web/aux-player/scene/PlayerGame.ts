@@ -1144,115 +1144,75 @@ export class PlayerGame extends Game {
         sim: Simulation,
         e: CalculateViewportCoordinatesFromPositionAction
     ) {
-        //console.log("1");
-        const portalTag = getPortalTag(e.portal);
-        //console.log("2");
+        let portalTag;
+        if (e.portal === 'map') {
+            portalTag = 'mapPortal';
+        } else if (e.portal === 'grid') {
+            portalTag = 'gridPortal';
+        } else if (e.portal === 'miniGrid') {
+            portalTag = 'miniGridPortal';
+        } else if (e.portal === 'miniMap') {
+            portalTag = 'miniMapPortal';
+        } else {
+            portalTag = getPortalTag(e.portal);
+        }
+
         const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
-        //console.log("3");
+
         if (_3dSim) {
-            //console.log("4");
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
+            const isMapPortal =
+                portalTag === 'mapPortal' || portalTag === 'miniMapPortal';
 
             const position = {
                 x: e.position.x,
                 y: e.position.y,
                 z: e.position.z,
             };
-            // console.log("5");
-            // console.log("5.5", portalTag);
 
-            const isMapPortal =
-                portalTag === 'mapPortal' || portalTag === 'miniMapPortal';
-            // console.log("6");
-            console.log('6 - Is map portal by tag check:', isMapPortal);
+            let vector;
 
-            const coordinateTransform = _3dSim.coordinateTransformer
-                ? _3dSim.coordinateTransformer(position)
-                : null;
-            //console.log("7");
-
-            let vector = new Vector3(
-                position.x * gridScale,
-                position.y * gridScale,
-                position.z * gridScale
-            );
-            //console.log("8");
-
-            if (!isMapPortal) {
-                //console.log("9");
+            if (isMapPortal) {
+                const coordinateTransform = _3dSim.coordinateTransformer
+                    ? _3dSim.coordinateTransformer(position)
+                    : null;
                 if (coordinateTransform) {
+                    vector = new Vector3(0, 0, 0);
                     vector.applyMatrix4(coordinateTransform);
-                }
-                vector.project(rig.mainCamera);
-            } else {
-                console.log('10');
-                const isMapSimulation =
-                    _3dSim instanceof PlayerMapSimulation3D ||
-                    _3dSim instanceof MiniMapSimulation3D;
-                // console.log("5.7 - Is map simulation by type check:", isMapSimulation);
-                // console.log("5.6 - Simulation type:", _3dSim.constructor.name);
-
-                // console.log("Map Portal Debug: ", {
-                //     portalTag,
-                //     isMapPortal,
-                //     position,
-                //     hasCoordinateTransform: !!coordinateTransform,
-                //     simType: _3dSim.constructor.name
-                // });
-
-                if (isMapSimulation && _3dSim.coordinateTransformer) {
+                } else {
                     const lon = position.x * (Math.PI / 180);
                     const lat = position.y * (Math.PI / 180);
 
-                    const x = Math.cos(lat) * Math.cos(lon);
-                    const y = Math.cos(lat) * Math.sin(lon);
-                    const z = Math.sin(lat);
+                    const x = EARTH_RADIUS * Math.cos(lat) * Math.cos(lon);
+                    const y = EARTH_RADIUS * Math.sin(lat);
+                    const z = EARTH_RADIUS * Math.cos(lat) * Math.sin(lon);
 
-                    let spherePos = new Vector3(z, y, z);
+                    vector = new Vector3(x, y, z);
+                }
+            } else {
+                vector = new Vector3(
+                    position.x * gridScale,
+                    position.y * gridScale,
+                    position.z * gridScale
+                );
 
-                    spherePos.multiplyScalar(EARTH_RADIUS);
+                const coordinateTransform = _3dSim.coordinateTransformer
+                    ? _3dSim.coordinateTransformer(position)
+                    : null;
 
-                    if (coordinateTransform) {
-                        spherePos.applyMatrix4(coordinateTransform);
-                    }
-
-                    spherePos.project(rig.mainCamera);
-
-                    vector = spherePos;
-
-                    // console.log("Sphere calculation: ", {
-                    //     original: { x: position.x, y: position.y, z: position.z },
-                    //     radians: { lon, lat },
-                    //     spherePos: { x, y, z },
-                    //     earthRadiusScale: EARTH_RADIUS,
-                    //     projected: { x: vector.x, y: vector.y, z: vector.z }
-                    // });
-                } else {
-                    if (coordinateTransform) {
-                        vector.applyMatrix4(coordinateTransform);
-                    }
-                    vector.project(rig.mainCamera);
-
-                    console.log('Standard approach result: ', {
-                        projected: { x: vector.x, y: vector.y, z: vector.z },
-                    });
+                if (coordinateTransform) {
+                    vector.applyMatrix4(coordinateTransform);
                 }
             }
 
+            vector.project(rig.mainCamera);
+
             const viewportPosition = convertVector2(vector);
 
-            if (isMapPortal) {
-                const result = {
-                    viewportPosition,
-                    raw: { x: vector.x, y: vector.y, z: vector.z },
-                };
-                sim.helper.transaction(asyncResult(e.taskId, result, true));
-            } else {
-                sim.helper.transaction(
-                    asyncResult(e.taskId, viewportPosition, true)
-                );
-            }
+            sim.helper.transaction(
+                asyncResult(e.taskId, viewportPosition, true)
+            );
         } else {
             sim.helper.transaction(asyncResult(e.taskId, null));
         }
@@ -1262,7 +1222,6 @@ export class PlayerGame extends Game {
         sim: BrowserSimulation,
         e: CalculateViewportCoordinatesFromScreenCoordinatesAction
     ) {
-        console.log('Hit 2');
         try {
             const portalTag = getPortalTag(e.portal);
             const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
@@ -1291,7 +1250,6 @@ export class PlayerGame extends Game {
         sim: BrowserSimulation,
         e: CalculateScreenCoordinatesFromViewportCoordinatesAction
     ) {
-        console.log('Hit 3');
         try {
             const portalTag = getPortalTag(e.portal);
             const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
