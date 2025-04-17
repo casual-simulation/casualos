@@ -259,16 +259,21 @@ export default class HtmlApp extends Vue {
         if (skeleton.nodeType === 3) {
             node = document.createTextNode(skeleton.data);
         } else if (skeleton.nodeType === 1) {
-            if (DISALLOWED_NODE_NAMES.has(skeleton.nodeName.toUpperCase())) {
+            const nodeName = skeleton.namespaceURI
+                ? skeleton.localName
+                : skeleton.nodeName;
+            if (DISALLOWED_NODE_NAMES.has(nodeName.toUpperCase())) {
                 return null;
             }
 
             let el = (node = skeleton.namespace
+                ? document.createElementNS(skeleton.namespace, nodeName)
+                : skeleton.namespaceURI
                 ? document.createElementNS(
-                      skeleton.namespace,
-                      skeleton.nodeName
+                      skeleton.namespaceURI,
+                      skeleton.localName ?? nodeName
                   )
-                : document.createElement(skeleton.nodeName));
+                : document.createElement(nodeName));
             if (skeleton.className) {
                 el.className = skeleton.className;
             }
@@ -524,7 +529,7 @@ export default class HtmlApp extends Vue {
         if (!node) {
             return null;
         }
-        if (node.nodeName === 'BODY') {
+        if (node.nodeName === 'BODY' || node.localName === 'body') {
             return this.$refs.container as Element;
         }
         return this._nodes.get(node.__id);

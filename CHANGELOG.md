@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue with custom apps where setting an attribute to `null` would not remove the attribute.
+-   Fixed an issue with custom apps where SVG elements would not work when DOM support is enabled.
 
 ## V3.4.3
 
