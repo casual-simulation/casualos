@@ -8462,7 +8462,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe.only('os.grantEntitlements()', () => {
+        describe('os.grantEntitlements()', () => {
             it('should emit a GrantEntitlementAction', async () => {
                 const action: any = library.api.os.grantEntitlements({
                     packageId: 'packageId',
@@ -8488,7 +8488,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe.only('os.parseVersionKey()', () => {
+        describe('os.parseVersionKey()', () => {
             it('should return a package version key object', () => {
                 expect(library.api.os.parseVersionKey('1.0.0')).toEqual({
                     major: 1,
@@ -8517,7 +8517,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe.only('os.recordPackageVersion()', () => {
+        describe('os.recordPackageVersion()', () => {
             it('should emit a RecordPackageVersionAction', async () => {
                 const action: any = library.api.os.recordPackageVersion({
                     recordName: 'test',
@@ -8584,7 +8584,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe.only('os.listPackageVersions()', () => {
+        describe('os.listPackageVersions()', () => {
             it('should emit a ListPackageVersionsAction', async () => {
                 const action: any = library.api.os.listPackageVersions(
                     'test',
@@ -8608,7 +8608,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe.only('os.getPackageVersion()', () => {
+        describe('os.getPackageVersion()', () => {
             it('should emit a GetPackageVersionAction', async () => {
                 const action: any = library.api.os.getPackageVersion(
                     'test',
@@ -8666,7 +8666,7 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe.only('os.erasePackageVersion()', () => {
+        describe('os.erasePackageVersion()', () => {
             it('should emit a ErasePackageVersionAction', async () => {
                 const action: any = library.api.os.erasePackageVersion(
                     'test',
