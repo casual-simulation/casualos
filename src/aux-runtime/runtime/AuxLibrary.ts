@@ -10743,6 +10743,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Parses the given version number into a version key.
      * @param version The version number to parse.
+     *
+     * @example Parse a version number
+     * const key = os.parseVersionKey('1.0.0');
+     * os.toast(key.major); // 1
+     * os.toast(key.minor); // 0
+     * os.toast(key.patch); // 0
+     * os.toast(key.tag); // null
+     *
+     * @dochash actions/os/records
+     * @docname os.parseVersionKey
      */
     function parseVersionKey(version: string): VersionNumber {
         const key = parseVersionNumber(version);
@@ -10753,14 +10763,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return key;
     }
 
+    /**
+     * Formats the given version key into a string.
+     *
+     * @example Print the version key
+     * os.toast(os.formatVersionKey({ major: 1, minor: 0, patch: 0, tag: 'alpha' }));
+     *
+     * @param key The key to format.
+     *
+     * @dochash actions/os/records
+     * @docname os.formatVersionKey
+     */
     function formatVersionKey(key: PackageRecordVersionKey): string {
         return formatVersionNumber(key.major, key.minor, key.patch, key.tag);
     }
 
     /**
-     * Records the given package version.
-     * @param request
-     * @param options
+     * Records the given package version. Package versions are useful for storing multiple distinct versions of the same AUX.
+     * Package versions live inside package containers (also known simply as packages) and are distinguished by `key`.
+     *
+     * If the package container does not exist, then it will be automatically created with the `private` marker.
+     * If no markers are specified, then the markers from the package container are used.
+     *
+     * @example Record a v1.0.0 package version
+     * const result = await os.recordPackageVersion({
+     *   recordName: 'myRecord',
+     *   address: 'myPackage',
+     *   key: os.parseVersionKey('1.0.0'),
+     *   readme: 'description of the package',
+     *   bots: getBots('color', 'red'),
+     * });
+     *
+     * @example Record a package version that can request access to the user's data
+     * const result = await os.recordPackageVersion({
+     *   recordName: 'myRecord',
+     *   address: 'myPackage',
+     *   key: os.parseVersionKey('1.0.0'),
+     *   readme: 'description of the package',
+     *   entitlements: [
+     *     {
+     *        feature: 'data',
+     *        scope: 'personal',
+     *     }
+     *   ],
+     *   bots: getBots('color', 'red),
+     * });
+     *
+     * @param request the information about the package version that should be recorded.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.recordPackageVersion
      */
     function recordPackageVersion(
         request: RecordPackageVersionApiRequest,
@@ -10794,6 +10848,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the list of versions for the given package.
      * @param recordName The name of the record that the package is stored in.
      * @param address The address of the package.
+     *
+     * @example List all the versions of a package
+     * const result = await os.listPackageVersions('myRecord', 'myPackage');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageVersions
      */
     function listPackageVersions(
         recordName: string,
@@ -10816,6 +10877,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param address The address of the package version.
      * @param key The key of the package version.
      * @param options The options for the package version.
+     *
+     * @example Get info about a package version
+     * const result = await os.getPackageVersion('myRecord', 'myPackage', os.parseVersionKey('1.0.0'));
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.getPackageVersion
      */
     function getPackageVersion(
         recordName: string,
@@ -10839,6 +10907,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName the name of the record that the package version should be erased from.
      * @param address the address of the package version that should be erased.
      * @param key the key of the package version that should be erased.
+     *
+     * @example Erase a package version
+     * const result = await os.erasePackageVersion('myRecord', 'myPackage', os.parseVersionKey('1.0.0'));
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.erasePackageVersion
      */
     function erasePackageVersion(
         recordName: string,
