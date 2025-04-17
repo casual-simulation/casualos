@@ -8,6 +8,8 @@
 
 -   Fixed an issue with custom apps where setting an attribute to `null` would not remove the attribute.
 -   Fixed an issue with custom apps where SVG elements would not work when DOM support is enabled.
+-   Fixed an issue where the `calculateViewportCoordinatesFromPosition` function returned incorrect coordinate values when used in the mapPortal.
+    -   Function now properly converts longitude/latitude coordinates to accurate viewport positions, ensuring consistent behavior between gridPortal and mapPortal.
 
 ## V3.4.3
 
