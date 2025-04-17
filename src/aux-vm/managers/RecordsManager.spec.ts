@@ -6730,6 +6730,70 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'recordPackage',
+                    recordsCallProcedure(
+                        {
+                            recordPackage: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        markers: ['marker'],
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'erasePackage',
+                    recordsCallProcedure(
+                        {
+                            erasePackage: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listPackages',
+                    recordsCallProcedure(
+                        {
+                            listPackages: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    marker: 'publicRead',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getPackage',
+                    recordsCallProcedure(
+                        {
+                            getPackage: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

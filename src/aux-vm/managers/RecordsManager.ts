@@ -235,6 +235,10 @@ export class RecordsManager {
         'erasePackageVersion',
         'listPackageVersions',
         'getPackageVersion',
+        'recordPackage',
+        'erasePackage',
+        'listPackages',
+        'getPackage',
     ]);
 
     /**
