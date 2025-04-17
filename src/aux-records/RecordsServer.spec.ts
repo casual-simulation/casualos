@@ -16266,6 +16266,7 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    feature: 'data',
                     grantId: expect.any(String),
                 },
                 headers: apiCorsHeaders,
@@ -16315,6 +16316,7 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    feature: 'data',
                     grantId: expect.any(String),
                 },
                 headers: apiCorsHeaders,
