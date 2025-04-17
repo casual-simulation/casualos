@@ -42,13 +42,14 @@ import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { bufferTime, first, map } from 'rxjs/operators';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import {
+    DOM_NODE_REFERENCE_PROPERTIES,
     ELEMENT_NODE,
     ELEMENT_READ_ONLY_PROPERTIES,
     ELEMENT_SPECIFIC_PROPERTIES,
-    NODE_REFERENCE_PROPERTIES,
     TARGET_INPUT_PROPERTIES,
     TEXT_NODE,
     TEXT_REFERENCE_PROPERTIES,
+    UNDOM_NODE_REFERENCE_PROPERTIES,
 } from './HtmlAppConsts';
 
 export interface HtmlPortalSetupResult {
@@ -729,12 +730,16 @@ export class HtmlAppBackend implements AppBackend {
             nodeType: obj.nodeType,
         } as any;
 
+        const domEnabled = isBrowserDocument();
+        const properties = domEnabled
+            ? DOM_NODE_REFERENCE_PROPERTIES
+            : UNDOM_NODE_REFERENCE_PROPERTIES;
         if (obj.nodeType === TEXT_NODE) {
             for (let prop of TEXT_REFERENCE_PROPERTIES) {
                 result[prop] = anyObj[prop];
             }
         } else if (obj.nodeType === ELEMENT_NODE) {
-            for (let prop of NODE_REFERENCE_PROPERTIES) {
+            for (let prop of properties) {
                 if (!prop.startsWith('_') || prop === '__id') {
                     const value = anyObj[prop];
                     if (hasValue(value)) {
