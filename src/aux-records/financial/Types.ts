@@ -930,3 +930,46 @@ export enum Operation {
     query_accounts = 135,
     query_transfers = 136,
 }
+
+/**
+ * The TigerBeetle client API.
+ * Derived from the tigerbeetle (@0.16.20) node modules: tigerbeetle-node/dist/index.d.ts
+ */
+export declare type Context = object;
+export declare type AccountID = bigint;
+export declare type TransferID = bigint;
+export declare type Event =
+    | Account
+    | Transfer
+    | AccountID
+    | TransferID
+    | AccountFilter
+    | QueryFilter;
+export declare type Result =
+    | CreateAccountsError
+    | CreateTransfersError
+    | Account
+    | Transfer
+    | AccountBalance;
+export declare type ResultCallback = (
+    error: Error | null,
+    results: Result[] | null
+) => void;
+export declare const amount_max: bigint;
+export interface ClientInitArgs {
+    cluster_id: bigint;
+    replica_addresses: Array<string | number>;
+}
+export interface Client {
+    createAccounts: (batch: Account[]) => Promise<CreateAccountsError[]>;
+    createTransfers: (batch: Transfer[]) => Promise<CreateTransfersError[]>;
+    lookupAccounts: (batch: AccountID[]) => Promise<Account[]>;
+    lookupTransfers: (batch: TransferID[]) => Promise<Transfer[]>;
+    getAccountTransfers: (filter: AccountFilter) => Promise<Transfer[]>;
+    getAccountBalances: (filter: AccountFilter) => Promise<AccountBalance[]>;
+    queryAccounts: (filter: QueryFilter) => Promise<Account[]>;
+    queryTransfers: (filter: QueryFilter) => Promise<Transfer[]>;
+    destroy: () => void;
+}
+export declare function createClient(args: ClientInitArgs): Client;
+export declare function id(): bigint;

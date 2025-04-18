@@ -28,38 +28,6 @@ import type {
 } from './Types';
 import { AccountFlags, CreateAccountError, CreateTransferError } from './Types';
 
-interface GenAccountConfig {
-    /**
-     * The code associated with the type of account(s) to generate.
-     */
-    accountCode: AccountCodes;
-    /**
-     * The number of accounts of this configuration to generate.
-     * * Useful when creating user and contract accounts in one go.
-     */
-    quantity: number;
-    /**
-     * The flags to set on the account(s).
-     * * Defaults to 0.
-     */
-    flags?: number;
-}
-
-type AccountType = 'assets' | 'liabilities' | 'equity' | 'revenue' | 'expenses';
-
-/**
- * Errors that are both nominally and logically errors
- * * * These errors are those which aren't false assertions / paradoxical (like ok as an error)
- */
-type GenuineCreateTransferError = Omit<
-    CreateTransferError,
-    CreateTransferError.ok
->;
-type GenuineCreateTransfersError = {
-    index: number;
-    result: GenuineCreateTransferError;
-};
-
 export class FinancialController {
     private _fInterface: FinancialInterface;
     private _idempotentKeyMaxAgeMS = 3600000; // 1 hour
@@ -101,7 +69,7 @@ export class FinancialController {
                 success: false,
                 errorCode: 'invalid_request',
                 errorMessage:
-                    'Idempotency key must be a positive 128-bit integer',
+                    'Idempotency key must be a positive integer which is less than 2^128 - 1',
             };
         }
 
@@ -250,3 +218,35 @@ export class FinancialController {
         };
     }
 }
+
+interface GenAccountConfig {
+    /**
+     * The code associated with the type of account(s) to generate.
+     */
+    accountCode: AccountCodes;
+    /**
+     * The number of accounts of this configuration to generate.
+     * * Useful when creating user and contract accounts in one go.
+     */
+    quantity: number;
+    /**
+     * The flags to set on the account(s).
+     * * Defaults to 0.
+     */
+    flags?: number;
+}
+
+type AccountType = 'assets' | 'liabilities' | 'equity' | 'revenue' | 'expenses';
+
+/**
+ * Errors that are both nominally and logically errors
+ * * * These errors are those which aren't false assertions / paradoxical (like ok as an error)
+ */
+type GenuineCreateTransferError = Omit<
+    CreateTransferError,
+    CreateTransferError.ok
+>;
+type GenuineCreateTransfersError = {
+    index: number;
+    result: GenuineCreateTransferError;
+};

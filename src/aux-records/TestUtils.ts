@@ -28,8 +28,8 @@ import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import { XpController } from './XpController';
-import { MemoryFinancialInterface } from './MemoryFinancialInterface';
 import { FinancialController } from './financial/FinancialController';
+import { TigerBeetleFinancialInterface } from 'TigerBeetleFinancialInterface';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -97,7 +97,7 @@ export function createTestControllers(
         messenger: store,
         privo: null,
     });
-    const financialInterface = new MemoryFinancialInterface();
+    const financialInterface = new TigerBeetleFinancialInterface(); // TODO: Move or install tigerbeetle client into aux-records
     const financialController = new FinancialController(financialInterface);
     const policies = new PolicyController(auth, records, store);
     const xpController = new XpController({

@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { FinancialInterface } from '@casual-simulation/aux-records';
+import type { FinancialInterface } from './financial/FinancialInterface';
 import type {
     Client,
+    id,
     Account,
     CreateAccountsError,
     Transfer,
@@ -25,28 +26,39 @@ import type {
     AccountFilter,
     AccountBalance,
     QueryFilter,
-} from 'tigerbeetle-node';
-import { id } from 'tigerbeetle-node';
+} from './financial/Types';
 
+/**
+ * Configuration for the instantiation of the TigerBeetleFinancialInterface.
+ */
 export interface Config {
+    /**
+     * The TigerBeetle client to use for financial operations.
+     */
     client: Client;
+    /**
+     * A function that generates a unique ID for accounts, transfers, etc.
+     */
+    id: typeof id;
 }
 
+/**
+ * The TigerBeetleFinancialInterface class implements the FinancialInterface
+ * using the TigerBeetle client.
+ */
 export class TigerBeetleFinancialInterface implements FinancialInterface {
     private _client: Client;
-
+    private _id: () => Account['id'];
     constructor(config: Config) {
         this._client = config.client;
+        this._id = config.id;
     }
-
     generateId(): Account['id'] {
-        return id();
+        return this._id();
     }
-
     createAccount(account: Account): Promise<CreateAccountsError[]> {
         return this._client.createAccounts([account]);
     }
-
     createAccounts(batch: Account[]): Promise<CreateAccountsError[]> {
         return this._client.createAccounts(batch);
     }
