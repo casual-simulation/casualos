@@ -299,6 +299,7 @@ import type {
     SendNotificationOptions,
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
+    LoadPackageResult,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -360,6 +361,7 @@ import {
     listPackageContainers as calcListPackageContainers,
     listPackageContainersByMarker as calcListPackageContainersByMarker,
     getPackageContainer as calcGetPackageContainer,
+    loadPackage as calcLoadPackage,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3433,6 +3435,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listPackageContainers,
                 listPackageContainersByMarker,
                 getPackageContainer,
+                loadPackage,
 
                 listUserStudios,
 
@@ -11086,6 +11089,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const event = calcGetPackageContainer(
             recordName,
             address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to load the given package into the inst.
+     *
+     * @param recordName the name of the record that the package is in.
+     * @param address the address of the package that should be loaded.
+     * @param key the key that specifies the version of the package that should be loaded. If not specified, then the latest version will be loaded.
+     * @param options the options for the request.
+     */
+    function loadPackage(
+        recordName: string,
+        address: string,
+        key?: string | Partial<PackageRecordVersionKey>,
+        options: RecordActionOptions = {}
+    ): Promise<LoadPackageResult> {
+        const task = context.createTask();
+        const event = calcLoadPackage(
+            recordName,
+            address,
+            key ?? null,
             options,
             task.taskId
         );

@@ -226,6 +226,7 @@ import {
     recordsCallProcedure,
     grantEntitlements,
     recordPackageVersion,
+    loadPackage,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -8968,6 +8969,93 @@ describe('AuxLibrary', () => {
                                 address: 'address',
                             },
                         },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.loadPackage()', () => {
+            it('should emit a LoadPackageAction', async () => {
+                const action: any = library.api.os.loadPackage(
+                    'test',
+                    'address'
+                );
+
+                const expected = loadPackage(
+                    'test',
+                    'address',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a key', async () => {
+                const action: any = library.api.os.loadPackage(
+                    'test',
+                    'address',
+                    'v1.0.0'
+                );
+
+                const expected = loadPackage(
+                    'test',
+                    'address',
+                    'v1.0.0',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a key object', async () => {
+                const action: any = library.api.os.loadPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                const expected = loadPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a key object with partial specifier', async () => {
+                const action: any = library.api.os.loadPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                    }
+                );
+
+                const expected = loadPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
                     },
                     {},
                     context.tasks.size

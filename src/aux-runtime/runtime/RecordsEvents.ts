@@ -38,6 +38,7 @@ import type {
     Entitlement,
     EntitlementFeature,
     GrantedEntitlementScope,
+    KnownErrorCodes,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
@@ -86,7 +87,8 @@ export type RecordsAsyncActions =
     | SubscribeToNotificationAction
     | GrantEntitlementsAction
     | RevokeEntitlementGrantAction
-    | RecordPackageVersionAction;
+    | RecordPackageVersionAction
+    | LoadPackageAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -859,6 +861,54 @@ export interface GetEventCountAction extends RecordsAction {
      * The name of the event.
      */
     eventName: string;
+}
+
+export interface LoadPackageAction extends RecordsAction {
+    type: 'load_package';
+
+    /**
+     * The name of the record that the package should be loaded from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the package that should be loaded.
+     */
+    address: string;
+
+    /**
+     * The key for the package version that should be loaded.
+     * If null, then the latest version will be loaded.
+     */
+    key: string | Partial<PackageRecordVersionKey> | null;
+
+    /**
+     * The options for the request.
+     */
+    options: RecordActionOptions;
+}
+
+export type LoadPackageResult = LoadPackageSuccess | LoadPackageFailure;
+export interface LoadPackageSuccess {
+    success: true;
+
+    /**
+     * The package that was loaded.
+     */
+    package: {
+        version: string;
+        address: string;
+        key: PackageRecordVersionKey;
+        sha256: string;
+        readme: string;
+        entitlements: Entitlement[];
+    };
+}
+
+export interface LoadPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
 }
 
 /**
@@ -2697,6 +2747,23 @@ export function getPackageContainer(
         options,
         taskId
     );
+}
+
+export function loadPackage(
+    recordName: string,
+    address: string,
+    key: string | Partial<PackageRecordVersionKey> | null,
+    options: RecordActionOptions,
+    taskId?: number | string
+): LoadPackageAction {
+    return {
+        type: 'load_package',
+        recordName,
+        address,
+        key,
+        options,
+        taskId,
+    };
 }
 
 /**
