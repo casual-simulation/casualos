@@ -929,6 +929,7 @@ export type BotShape =
     | 'skybox'
     | 'sphere'
     | 'sprite'
+    | 'map'
     | 'mesh'
     | 'iframe'
     | 'frustum'

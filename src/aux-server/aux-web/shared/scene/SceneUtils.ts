@@ -319,6 +319,21 @@ export function createPlane(size: number): Mesh {
 }
 
 /**
+ * Creates a new map plane mesh.
+ */
+export function createMapPlane(position: Vector3, size: number): Mesh {
+    const geometry = new PlaneBufferGeometry(size, size);
+    let material = new MeshBasicMaterial({
+        side: DoubleSide,
+    });
+
+    const plane = new Mesh(geometry, material);
+    plane.castShadow = false;
+    plane.receiveShadow = false;
+    return plane;
+}
+
+/**
  * Set the parent of the object3d.
  * @param object3d the object to re-parent.
  * @param parent the object to parent to.

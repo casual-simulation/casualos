@@ -100,6 +100,7 @@ import {
     setLightPenumbra,
     setLightDecay,
     setLightGroundColor,
+    createMapPlane,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -979,6 +980,8 @@ export class BotShapeDecorator
             this._createSphere();
         } else if (this._shape === 'sprite') {
             this._createSprite();
+        } else if (this._shape === 'map') {
+            this._createMapPlane();
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
@@ -1551,6 +1554,13 @@ export class BotShapeDecorator
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
         this._canHaveStroke = false;
+    }
+
+    private _createMapPlane() {
+        this.mesh = this.collider = createMapPlane(new Vector3(0, 0, 0), 0.5);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
     }
 
     private _createSphere() {
