@@ -101,7 +101,7 @@ import {
     DEFAULT_BRANCH_NAME,
     formatVersionNumber,
 } from '@casual-simulation/aux-common';
-import { ZodIssue } from 'zod';
+import type { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type {
@@ -2492,6 +2492,180 @@ export class WebsocketController {
         });
     }
 
+    /**
+     * A request/response version of loadPackage()
+     */
+    @traced(TRACE_NAME)
+    async loadPackageRequest(
+        request: LoadPackageRequest
+    ): Promise<LoadPackageResult> {
+        if (!this._packageVersions) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Package loading is not supported.',
+            };
+        }
+        const userId = request.userId;
+        console.log(
+            `[CausalRepoServer] [namespace: ${request.recordName}/${
+                request.inst
+            }, ${userId}, package: ${request.package.recordName}/${
+                request.package.address
+            }@${formatVersionNumber(
+                request.package.key.major,
+                request.package.key.minor,
+                request.package.key.patch,
+                request.package.key.tag
+            )}] Load Package`
+        );
+
+        const p = await this._packageVersions.getItem({
+            recordName: request.package.recordName,
+            address: request.package.address,
+            key: request.package.key,
+            userId: userId,
+            instances: [formatInstId(request.recordName, request.inst)],
+        });
+
+        if (p.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to load package.`,
+                p
+            );
+            return p;
+        }
+        if (p.auxFile.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to load package file.`,
+                p.auxFile
+            );
+            return p.auxFile;
+        }
+
+        const loadedPackageStore = this._instStore;
+
+        if (
+            await loadedPackageStore.isPackageLoaded(
+                request.recordName,
+                request.inst,
+                p.item.packageId
+            )
+        ) {
+            // Already loaded
+            console.log(
+                `[CausalRepoServer] [userId: ${userId}] Package already loaded.`
+            );
+            return {
+                success: true,
+                package: p.item,
+            };
+        }
+
+        const fileResponse = await fetch(p.auxFile.requestUrl, {
+            method: p.auxFile.requestMethod,
+            headers: new Headers(p.auxFile.requestHeaders),
+        });
+
+        if (fileResponse.status >= 300) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to load package file.`
+            );
+
+            // Failed
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage: 'The package file could not be loaded.',
+            };
+        }
+
+        const json = await fileResponse.text();
+
+        const packageData = tryParseJson(json);
+
+        if (packageData.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to parse package file.`,
+                packageData
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage:
+                    'The package file could not be parsed. It must be valid JSON.',
+            };
+        }
+
+        const parsed = STORED_AUX_SCHEMA.safeParse(packageData.value);
+        if (parsed.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to parse package file.`,
+                packageData
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage: 'The package file could not be parsed.',
+                issues: parsed.error.issues,
+            };
+        }
+
+        const updates =
+            parsed.data.version === 2
+                ? parsed.data.updates.map((u) => u.update)
+                : [
+                      constructInitializationUpdate(
+                          createInitializationUpdate(
+                              Object.values(parsed.data.state as BotsState)
+                          )
+                      ).update,
+                  ];
+        const timestamps =
+            parsed.data.version === 2
+                ? parsed.data.updates.map((u) => u.timestamp)
+                : [0];
+
+        const branch = request.branch ?? DEFAULT_BRANCH_NAME;
+
+        const result = await this.addUserUpdates({
+            userId: request.userId,
+            userRole: request.userRole,
+            recordName: request.recordName,
+            inst: request.inst,
+            branch,
+            updates: updates,
+            timestamps: timestamps,
+        });
+
+        if (result.success === false) {
+            return result;
+        }
+
+        const loadedPackageId = uuidv7();
+        await loadedPackageStore.saveLoadedPackage({
+            id: loadedPackageId,
+            recordName: request.recordName,
+            inst: request.inst,
+
+            packageId: p.item.packageId,
+            packageVersionId: p.item.id,
+
+            userId: userId,
+        });
+
+        return {
+            success: true,
+            package: p.item,
+        };
+
+        // await this._messenger.sendMessage([connectionId], {
+        //     type: 'repo/load_package/response',
+        //     success: true,
+        //     requestId: request.requestId,
+        // });
+    }
+
     @traced(TRACE_NAME)
     async syncTime(
         connectionId: string,
@@ -3361,4 +3535,56 @@ export interface AddUpdatesFailure {
     errorCode: KnownErrorCodes;
     errorMessage: string;
     reason?: DenialReason;
+}
+
+export interface LoadPackageRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The name of the record that the package should be loaded into.
+     */
+    recordName: string;
+
+    /**
+     * The inst that the package should be loaded into.
+     */
+    inst: string;
+
+    /**
+     * The branch that the package should be loaded into.
+     * If omitted, then the default branch will be used.
+     */
+    branch?: string;
+
+    /**
+     * The package that should be loaded.
+     */
+    package: WebsocketPackage;
+}
+
+export type LoadPackageResult = LoadPackageSuccess | LoadPackageFailure;
+
+export interface LoadPackageSuccess {
+    success: true;
+
+    /**
+     * The package that was loaded.
+     */
+    package: PackageRecordVersion;
+}
+
+export interface LoadPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
+    issues?: ZodIssue[];
 }

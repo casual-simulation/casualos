@@ -568,7 +568,19 @@ export class PackageVersionRecordsController {
             }
 
             const item: PackageRecordVersionWithMetadata = {
-                ...result.item,
+                id: result.item.id,
+                address: result.item.address,
+                key: result.item.key,
+                auxFileName: result.item.auxFileName,
+                createdAtMs: result.item.createdAtMs,
+                auxSha256: result.item.auxSha256,
+                createdFile: result.item.createdFile,
+                entitlements: result.item.entitlements,
+                markers: result.item.markers,
+                readme: result.item.readme,
+                requiresReview: result.item.requiresReview,
+                sha256: result.item.sha256,
+                sizeInBytes: result.item.sizeInBytes,
                 packageId: result.packageId,
                 approved: true,
                 approvalType: 'normal',

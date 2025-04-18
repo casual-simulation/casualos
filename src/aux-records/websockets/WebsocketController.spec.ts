@@ -9474,6 +9474,185 @@ describe('WebsocketController', () => {
             });
         });
 
+        describe('loadPackageRequest()', () => {
+            async function recordPackage(
+                recordName: string,
+                address: string,
+                markers: string[],
+                key: PackageRecordVersionKey,
+                aux: StoredAux
+            ) {
+                const r = await services.recordsStore.getRecordByName(
+                    recordName
+                );
+                if (!r) {
+                    await services.records.createRecord({
+                        recordName,
+                        userId,
+                        ownerId: userId,
+                    });
+                }
+                await services.packagesStore.createItem(recordName, {
+                    id: address,
+                    address: address,
+                    markers,
+                });
+
+                const json = JSON.stringify(aux);
+                const sha256 = getHash(json);
+
+                uuidv7Mock.mockReturnValueOnce(
+                    `${address}@${key.major}.${key.minor}.${key.patch}`
+                );
+                const result = await services.packageVersions.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId: userId,
+                    item: {
+                        address,
+                        key,
+                        readme: '',
+                        entitlements: [],
+                        auxFileRequest: {
+                            fileSha256Hex: sha256,
+                            fileByteLength: json.length,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                    },
+                    instances: [],
+                });
+                uuidv7Mock.mockReset();
+
+                if (!result.success) {
+                    console.error(result);
+                    throw new Error('Failed to record package');
+                }
+
+                if (!result.auxFileResult.success) {
+                    console.error(result.auxFileResult);
+                    throw new Error('Failed to record file');
+                }
+
+                files.set(result.auxFileResult.uploadUrl, json);
+            }
+
+            let originalFetch: typeof fetch;
+            let fetchMock: jest.Mock;
+            let files: Map<string, string>;
+
+            beforeEach(async () => {
+                files = new Map();
+
+                originalFetch = global.fetch;
+                fetchMock = global.fetch = jest.fn(async (request) => {
+                    const url =
+                        typeof request === 'string'
+                            ? request
+                            : request instanceof URL
+                            ? request.href
+                            : request.url;
+
+                    const text = files.get(url);
+                    return {
+                        status: text ? 200 : 404,
+                        text: async () => text,
+                    } as Response;
+                });
+
+                await recordPackage(
+                    recordName,
+                    'public',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+            });
+
+            afterEach(() => {
+                global.fetch = originalFetch;
+            });
+
+            it('should load the package into the default branch of the inst', async () => {
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.loadPackageRequest({
+                    userId: userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+        });
+
         describe('sync/time', () => {
             let oldNow: typeof Date.now;
             let now: jest.Mock<number>;
