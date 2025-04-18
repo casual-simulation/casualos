@@ -2679,6 +2679,26 @@ export function listPackageContainersByMarker(
     );
 }
 
+export function getPackageContainer(
+    recordName: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            getPackage: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
 /**
  * Creates a ListUserStudiosAction.
  * @param options The options that should be used for the action.

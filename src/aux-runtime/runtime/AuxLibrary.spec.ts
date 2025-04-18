@@ -8953,6 +8953,30 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.getPackageContainer()', () => {
+            it('should emit a GetPackageAction', async () => {
+                const action: any = library.api.os.getPackageContainer(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackage: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.listUserStudios()', () => {
             it('should emit a GetEventCountAction', async () => {
                 const action: any = library.api.os.listUserStudios();

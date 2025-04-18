@@ -359,6 +359,7 @@ import {
     erasePackageContaienr as calcErasePackageContainer,
     listPackageContainers as calcListPackageContainers,
     listPackageContainersByMarker as calcListPackageContainersByMarker,
+    getPackageContainer as calcGetPackageContainer,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3431,6 +3432,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 erasePackageContainer,
                 listPackageContainers,
                 listPackageContainersByMarker,
+                getPackageContainer,
 
                 listUserStudios,
 
@@ -11058,6 +11060,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordName,
             marker,
             startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the package container in the given record at the given address.
+     *
+     * @param recordName the name of the record that the package container is in.
+     * @param address the address that the package container is stored at.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.getPackageContainer
+     */
+    function getPackageContainer(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudGetItemResult<PackageRecord>> {
+        const task = context.createTask();
+        const event = calcGetPackageContainer(
+            recordName,
+            address,
             options,
             task.taskId
         );
