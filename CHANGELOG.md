@@ -1,8 +1,19 @@
 # CasualOS Changelog
 
+## V3.4.5
+
+#### Date: 4/18/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `os.calculateViewportCoordinatesFromPosition()` function returned incorrect coordinate values when used in the mapPortal.
+    -   Function now properly converts longitude/latitude coordinates to accurate viewport positions, ensuring consistent behavior between gridPortal and mapPortal.
+-   Fixed an issue with custom apps where setting the `selected` property on an `<option>` element would appear to have no effect.
+-   Fixed an issue with custom apps where setting the `checked` property on `<input>` elements would have no effect.
+
 ## V3.4.4
 
-#### Date: 4/16/2025
+#### Date: 4/17/2025
 
 ### :bug: Bug Fixes
 

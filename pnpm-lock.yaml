@@ -510,19 +510,19 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.4.0
@@ -787,7 +787,7 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -811,7 +811,7 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^3.4.0
@@ -965,28 +965,28 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.4.0
@@ -1284,7 +1284,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1371,10 +1371,10 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^3.4.0
@@ -1422,16 +1422,16 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
         specifier: ^3.4.0
@@ -1476,10 +1476,10 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
         specifier: ^3.4.0
@@ -1518,13 +1518,13 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.4.0
@@ -1554,13 +1554,13 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.4.0
@@ -1611,7 +1611,7 @@ importers:
         specifier: ^3.4.0
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.4.4-alpha.14502478455
+        specifier: ^3.4.4
         version: link:../aux-records
       '@octokit/app':
         specifier: ^15.1.0
