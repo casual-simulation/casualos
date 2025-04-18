@@ -1162,6 +1162,9 @@ importers:
       filepond-plugin-file-validate-type:
         specifier: ^1.2.1
         version: 1.2.8(filepond@3.9.0)
+      geo-three:
+        specifier: ^0.1.15
+        version: 0.1.15(three@0.169.0)
       hash.js:
         specifier: 1.1.7
         version: 1.1.7
@@ -16992,6 +16995,14 @@ packages:
   /gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
+
+  /geo-three@0.1.15(three@0.169.0):
+    resolution: {integrity: sha512-mU5K5QfnRwOawTjXg1zmAMTu+c/uC6cZFNGYqf41eCRXfX4bkDHFaPhXa08z1WjYzg5kq1BSjpFR9weW2vNJZg==}
+    peerDependencies:
+      three: '>0.120.0'
+    dependencies:
+      three: 0.169.0
+    dev: false
 
   /get-assigned-identifiers@1.2.0:
     resolution: {integrity: sha512-mBBwmeGTrxEMO4pMaaf/uUEFHnYtwr8FTe8Y/mer4rcV/bye0qGm6pw1bGZFGStxC5O76c5ZAVBGnqHmOaJpdQ==}
