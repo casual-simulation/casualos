@@ -27,6 +27,9 @@ import { parseSessionKey } from './AuthUtils';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import { XpController } from './XpController';
+import { FinancialController } from './financial/FinancialController';
+import { TigerBeetleFinancialInterface } from 'TigerBeetleFinancialInterface';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -94,7 +97,15 @@ export function createTestControllers(
         messenger: store,
         privo: null,
     });
+    const financialInterface = new TigerBeetleFinancialInterface(); // TODO: Move or install tigerbeetle client into aux-records
+    const financialController = new FinancialController(financialInterface);
     const policies = new PolicyController(auth, records, store);
+    const xpController = new XpController({
+        authController: auth,
+        authStore: store,
+        xpStore: store,
+        financialController,
+    });
 
     return {
         store,
@@ -106,6 +117,9 @@ export function createTestControllers(
         policyStore: store,
         policies,
         configStore: store,
+        xpController,
+        financialController,
+        financialInterface,
     };
 }
 
@@ -153,6 +167,18 @@ export async function createTestUser(
         connectionKey,
         sessionId,
     };
+}
+
+export async function createTestXpUser(
+    xpController: XpController,
+    ...createTestUserParams: Parameters<typeof createTestUser>
+) {
+    const authUser = await createTestUser(...createTestUserParams);
+    const xpUser = await xpController.getXpUser({ userId: authUser.userId });
+    if (!xpUser.success) {
+        throw new Error('Unable to create xp user!');
+    }
+    return xpUser.user;
 }
 
 export async function createTestRecordKey(

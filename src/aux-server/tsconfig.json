@@ -23,8 +23,8 @@
         "./aux-web/**/*",
         "./aux-backend/**/*",
         "./shared/**/*",
-        "./typings/**/*"
-        // "./node_modules/@casual-simulation/aux-common/**/*"
+        "./typings/**/*",
+        "../aux-records/TigerBeetleFinancialInterface.ts" // "./node_modules/@casual-simulation/aux-common/**/*"
     ],
     "exclude": [
         "**/node_modules/**",

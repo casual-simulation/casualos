@@ -84,6 +84,9 @@ model User {
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentPushNotification[]
 
+    xpUser XpUser?
+    isXpAdmin Boolean?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -1162,4 +1165,98 @@ model StudioComIdRequest {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
+
+// Represents information about a user that has been onboarded to the xpExchange
+model XpUser {
+    id String @id @db.Uuid
+
+    userId String @unique
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
+
+    // The id of the account that the user is associated with
+    accountId String @unique
+
+    // The rate at which the user is requested to be paid per gig.
+    // Should have the same currency as the account.
+    requestedRate Int?
+
+    issuedContracts XpContract[] @relation("IssuerUser")
+    heldContracts XpContract[] @relation("HoldingUser")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// A contract is a promise of work at a certain rate
+model XpContract {
+    id String @id @db.Uuid
+
+    // The user that is issuing the contract
+    // That is, the user who is paying for the work
+    issuerUserId String
+    issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Restrict, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
+
+    // The user that is holding the contract (if the contract is not a draft)
+    // That is, the user who is doing the work and getting paid
+    holdingUserId String?
+    holdingUser XpUser? @relation(fields: [holdingUserId], references: [userId], onDelete: Restrict, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
+
+    // The rate at which gigs are paid in the contract
+    // The rate is in the smallest unit of the currency (e.g. cents for USD)
+    // The currency should always be the same as the account
+    rate Int
+
+    // The worth of the contract in the smallest unit of the currency (all gigs) if the contract is a draft
+    // This is what would appear in the contract's account if the contract was opened
+    offeredWorth Int?
+
+    // The description of the contract
+    description String?
+
+    // The status of the contract
+    // "open" - the contract is open and can be invoiced
+    // "draft" - the contract is a draft and has not been dedicated to a user (holdingUser)
+    // "closed" - the contract is closed and cannot be invoiced
+    status String
+
+    // The id of the account which holds the money allocated to the contract
+    accountId String? @unique
+
+    invoices XpInvoice[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// An invoice is a request for payment for part of a contract
+model XpInvoice {
+    id String @id @db.Uuid
+
+    contractId String @db.Uuid
+    contract XpContract @relation(fields: [contractId], references: [id], onDelete: Restrict, map: "XpInvoice_contractId_fkey1")
+
+    // The amount charged in the invoice, in the smallest unit of the currency used in the contracts account
+    amount Int
+
+    // The status of the invoice
+    // "open" - the invoice has been created but not yet paid
+    // "paid" - the invoice has been paid
+    // "void" - the invoice has been cancelled
+    status String
+
+    // The reason why the invoice was voided
+    // "rejected" - the invoice was rejected by the receiver
+    // "cancelled" - the invoice was cancelled by the issuer
+    voidReason String?
+
+    // The ID of the transaction that paid the invoice
+    transactionId String? @db.Uuid
+
+    // Additional information about the invoice
+    note String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 

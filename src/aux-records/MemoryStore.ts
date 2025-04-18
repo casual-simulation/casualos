@@ -17,6 +17,7 @@
  */
 import { cloneDeep, orderBy, sortBy } from 'lodash';
 import type { RegexRule } from './Utils';
+import { cloneDeepNull } from './Utils';
 import type {
     AddressType,
     AuthInvoice,
@@ -171,6 +172,7 @@ import type {
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import { uniq } from 'lodash';
+import type { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -190,7 +192,8 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        SystemNotificationMessenger
+        SystemNotificationMessenger,
+        XpStore
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -235,6 +238,10 @@ export class MemoryStore
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
+
+    private _xpUsers: Map<XpUser['id'], XpUser> = new Map();
+    private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
+    private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
 
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
@@ -376,6 +383,90 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async batchQueryXpUsers(
+        queryOptions:
+            | {
+                  xpId: XpUser['id'][];
+                  authId?: AuthUser['id'][];
+              }
+            | {
+                  authId: AuthUser['id'][];
+                  xpId?: XpUser['id'][];
+              }
+    ): Promise<XpUser[]> {
+        const users = [];
+        if ('xpId' in queryOptions) {
+            for (const id of queryOptions.xpId) {
+                const user = this._xpUsers.get(id);
+                if (user) {
+                    users.push(cloneDeep(user));
+                }
+            }
+        }
+        if ('authId' in queryOptions) {
+            const xpUsers = Array.from(this._xpUsers.values());
+            for (const id of queryOptions.authId) {
+                const user = xpUsers.find((u: XpUser) => u.userId === id);
+                if (user) {
+                    users.push(cloneDeep(user));
+                }
+            }
+        }
+        return users;
+    }
+
+    async saveXpUser(id: XpUser['id'], user: XpUser) {
+        const u = cloneDeep(user);
+        this._xpUsers.set(id, u);
+        return u;
+    }
+
+    async saveXpContract(contract: XpContract) {
+        const c = cloneDeep(contract);
+        this._xpContracts.set(contract.id, c);
+        return c;
+    }
+
+    async updateXpContract(
+        id: XpContract['id'],
+        config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
+    ): ReturnType<XpStore['updateXpContract']> {
+        const contract = this._xpContracts.get(id);
+        if (!contract)
+            throw new Error(`Contract with id ${id} not found in memory store`);
+        for (const key in config) {
+            if (config[key as keyof typeof config] !== undefined) {
+                (contract as any)[key] = config[key as keyof typeof config];
+            }
+        }
+        return cloneDeep(contract);
+    }
+
+    async saveXpInvoice(invoice: XpInvoice) {
+        const i = cloneDeep(invoice);
+        this._xpInvoices.set(invoice.id, i);
+        return i;
+    }
+
+    async getXpUserByAuthId(id: AuthUser['id']): Promise<XpUser> {
+        const user = Array.from(this._xpUsers.values()).find(
+            (u: XpUser) => u.userId === id
+        );
+        return cloneDeepNull(user ?? undefined);
+    }
+
+    async getXpUserById(id: XpUser['id']): Promise<XpUser> {
+        return cloneDeep(this._xpUsers.get(id) ?? undefined);
+    }
+
+    async getXpContract(contractId: XpContract['id']): Promise<XpContract> {
+        return cloneDeepNull(this._xpContracts.get(contractId) ?? undefined);
+    }
+
+    async getXpInvoice(invoiceId: XpInvoice['id']): Promise<XpInvoice> {
+        return cloneDeepNull(this._xpInvoices.get(invoiceId) ?? undefined);
     }
 
     init?(): Promise<void>;

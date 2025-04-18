@@ -78,7 +78,7 @@ task('generate-stub-projects', [], async function () {
     const { existsSync, writeFileSync, mkdirSync } = await import('fs');
 
     const projects = [
-        path.resolve(__dirname, 'xpexchange', 'xp-api', 'tsconfig.json'),
+        path.resolve(__dirname, 'xpexchange', 'tsconfig.json'),
         path.resolve(
             __dirname,
             'extensions',

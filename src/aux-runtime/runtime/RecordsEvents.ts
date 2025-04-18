@@ -22,6 +22,7 @@ import type {
     WebhookRecord,
     NotificationRecord,
     PushNotificationPayload,
+    XpController,
 } from '@casual-simulation/aux-records';
 import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
 import type {
@@ -2217,6 +2218,88 @@ export function listUserNotificationSubscriptions(
         taskId
     );
 }
+
+export interface xpUserIdQuery {
+    /** The auth user Id of the xp user. */
+    userId?: string;
+    /** The xp user Id of the xp user. */
+    xpId?: string;
+}
+
+/**
+ * Possible statuses for an xp contract.
+ */
+export type xpContractStatus = 'open' | 'draft' | 'closed';
+
+/**
+ * Creates an action that can be used to provide meta data on an auth users Xp (user) identity.
+ */
+export function getXpUserMeta(
+    by: xpUserIdQuery | string | undefined,
+    options: RecordActionOptions,
+    taskId: string | number
+): RecordsCallProcedureAction {
+    if (typeof by === 'string') by = { userId: by };
+    if (!by) by = {};
+    return recordsCallProcedure(
+        {
+            getXpUserMeta: {
+                input: {
+                    ...by,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that can be used to create a contract between two xp users.
+ */
+export function createXpContract(
+    contractMeta: {
+        forUser: xpUserIdQuery | string | null;
+        gigRate: number;
+        gigs: number;
+        status: Exclude<xpContractStatus, 'closed'>;
+        description?: string;
+        accountCurrency?: string;
+    },
+    options: RecordActionOptions,
+    taskId: string | number
+): RecordsCallProcedureAction {
+    if (typeof contractMeta.forUser === 'string')
+        contractMeta.forUser = { userId: contractMeta.forUser };
+    return recordsCallProcedure(
+        {
+            createXpContract: {
+                input: {
+                    contract: {
+                        contractedUserId: contractMeta.forUser,
+                        gigRate: contractMeta.gigRate,
+                        gigs: contractMeta.gigs,
+                        status: contractMeta.status,
+                        description: contractMeta.description,
+                        accountCurrency: contractMeta.accountCurrency,
+                    },
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+// TODO: Implement this
+// export function issueDraftXpContractToUser(config: {
+//     draftContractId: string;
+//     receivingUserId: string;
+// }): RecordsCallProcedureAction  {
+//     return recordsCallProcedure({
+
+//     });
+// }
 
 /**
  * Creates a RecordFileAction.

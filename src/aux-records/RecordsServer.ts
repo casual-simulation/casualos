@@ -144,6 +144,7 @@ import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
+import type { XpController } from './XpController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -380,7 +381,37 @@ export interface RecordsServerOptions {
      * If null, then notifications are not supported.
      */
     notificationsController?: NotificationRecordsController | null;
+
+    /**
+     * The controller that should be used for handling XP requests.
+     * If null, then XP is not supported.
+     */
+    xpController?: XpController | null; // TODO: Determine whether or not this should be optional
 }
+
+/**
+ * A schema that represents a request to get an XP user by one of it's IDs.
+ */
+const GetXpUserById = z
+    .object({
+        userId: z.string().nonempty().optional().nullable(),
+        xpId: z.string().nonempty().optional().nullable(),
+    })
+    .refine(
+        (contractedUser) => {
+            if (!contractedUser) return true;
+            if (
+                typeof contractedUser.userId === 'string' &&
+                typeof contractedUser.xpId === 'string'
+            )
+                return false;
+            return true;
+        },
+        {
+            message: 'Properties userId and xpId are mutually exclusive.',
+            path: ['userId', 'xpId'],
+        }
+    );
 
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
@@ -400,6 +431,7 @@ export class RecordsServer {
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
     private _notificationsController: NotificationRecordsController | null;
+    private _xpController: XpController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -467,6 +499,7 @@ export class RecordsServer {
         loomController,
         webhooksController,
         notificationsController,
+        xpController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -488,6 +521,7 @@ export class RecordsServer {
         this._loomController = loomController;
         this._webhooksController = webhooksController;
         this._notificationsController = notificationsController;
+        this._xpController = xpController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2104,6 +2138,175 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            getXpUserMeta: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/xp/user')
+                .inputs(GetXpUserById)
+                .handler(async (input, context) => {
+                    const authUser = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (!authUser.success) {
+                        return authUser;
+                    }
+                    if (!input.userId && !input.xpId && !authUser.userId) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'One of properties userId or xpId must be provided.',
+                        };
+                    }
+                    if (input.userId && input.xpId) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'You cannot provide both userId and xpId.\nProperties are mutually exclusive.',
+                        };
+                    }
+                    //* An empty string for any of the query types will be treated as the current logged in user
+                    const user = await this._xpController.getXpUser(
+                        input.xpId
+                            ? { xpId: input.xpId }
+                            : input.userId
+                            ? { userId: input.userId }
+                            : { userId: authUser.userId }
+                    );
+                    return user;
+                }),
+
+            createXpContract: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/xp/contract')
+                .inputs(
+                    z.object({
+                        contract: z
+                            .object({
+                                description: z.string().optional(),
+                                accountCurrency: z.string().optional(),
+                                gigRate: z.number().int().positive(),
+                                gigs: z.number().int().positive(),
+                                status: z.union([
+                                    z.literal('open'),
+                                    z.literal('draft'),
+                                ]),
+                                contractedUserId:
+                                    GetXpUserById.optional().nullable(),
+                            })
+                            .refine(
+                                (contract) => {
+                                    if (contract.status === 'open') {
+                                        //* Open contracts must have a contracted user
+                                        return (
+                                            (contract.contractedUserId ??
+                                                undefined) !== undefined
+                                        );
+                                    } else if (contract.status === 'draft') {
+                                        /**
+                                         * * Draft contracts from the database's perspective should not be expecting a contracted user yet.
+                                         * * This is because the contracted user is only set when the contract is opened.
+                                         */
+                                        return (
+                                            (contract.contractedUserId ??
+                                                undefined) === undefined
+                                        );
+                                    }
+                                },
+                                {
+                                    message:
+                                        'Contract must contain contractedUserId (only when status is "open").',
+                                    path: ['contractedUserId'],
+                                }
+                            )
+                            .refine(
+                                (contract) => {
+                                    if (contract.status === 'open') {
+                                        return !contract.accountCurrency;
+                                    } else if (contract.status === 'draft') {
+                                        return (
+                                            (contract.accountCurrency ??
+                                                undefined) === undefined
+                                        );
+                                    }
+                                },
+                                {
+                                    message:
+                                        'Contract must contain accountCurrency (only when status is "open").',
+                                    path: ['accountCurrency'],
+                                }
+                            ),
+                    })
+                )
+                .handler(async ({ contract }, context) => {
+                    const authUser = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (!authUser.success) {
+                        return authUser;
+                    }
+                    // const result = await this._xpController.createContract({
+                    //     description: contract.description ?? null,
+                    //     accountCurrency: contract.accountCurrency,
+                    //     rate: contract.gigRate,
+                    //     offeredWorth: contract.gigs
+                    //         ? (contract.gigRate ?? 0) * contract.gigs
+                    //         : 0,
+                    //     status: contract.status,
+                    //     issuerUserId: { userId: authUser.userId },
+                    //     holdingUserId: contract.contractedUserId,
+                    //     creationRequestReceivedAt: Date.now(),
+                    // });
+                    // return result;
+                    return {
+                        success: true,
+                        message: 'Not implemented',
+                    };
+                }),
+
+            updateXpContract: procedure()
+                .origins('api')
+                .http('PUT', '/api/v2/xp/contract')
+                .inputs(
+                    z.object({
+                        contractId: z.string().min(1),
+                        newStatus: z.union([
+                            z.literal('open'),
+                            z.literal('draft'),
+                            z.literal('closed'),
+                        ]),
+                        //* Note this is the change of the description which can only be done when the contract is in draft status
+                        newDescription: z.string().optional(),
+                        receivingUserId: GetXpUserById,
+                    })
+                )
+                .handler(
+                    async (
+                        { contractId, newStatus, newDescription },
+                        context
+                    ) => {
+                        const authUser = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (!authUser.success) {
+                            return authUser;
+                        }
+                        // const result = await this._xpController.updateContract({
+                        //     contractId,
+                        //     newStatus,
+                        //     newDescription,
+                        //     userId: authUser.userId,
+                        // });
+                        // throw new Error('Not implemented');
+                        //return result;
+                        // TODO: Implement.
+                        return {
+                            success: true,
+                            message: 'Not implemented',
+                        };
+                    }
+                ),
 
             listRecords: procedure()
                 .origins('api')

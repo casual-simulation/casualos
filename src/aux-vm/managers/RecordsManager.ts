@@ -228,6 +228,9 @@ export class RecordsManager {
         'listNotificationSubscriptions',
         'listUserNotificationSubscriptions',
         'createOpenAIRealtimeSession',
+        'getXpUserMeta',
+        'createXpContract',
+        'updateXpContract',
     ]);
 
     /**

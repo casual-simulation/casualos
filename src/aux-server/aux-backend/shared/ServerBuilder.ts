@@ -39,6 +39,8 @@ import type {
     WebhookEnvironment,
     NotificationRecordsStore,
     WebPushInterface,
+    XpStore,
+    FinancialInterface,
 } from '@casual-simulation/aux-records';
 import {
     AuthController,
@@ -69,6 +71,7 @@ import {
     WebhookRecordsController,
     cleanupObject,
     NotificationRecordsController,
+    XpController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -202,6 +205,9 @@ import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { PrismaXpStore } from 'aux-backend/prisma/PrismaXpStore';
+import { TigerBeetleFinancialInterface } from 'aux-backend/tigerbeetle';
+import { createClient } from 'tigerbeetle-node';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 
@@ -302,6 +308,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _notificationsStore: NotificationRecordsStore;
     private _pushInterface: WebPushInterface;
     private _notificationsController: NotificationRecordsController;
+
+    private _xpStore: XpStore;
+    private _xpController: XpController;
+    private _financialInterface: FinancialInterface;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -695,6 +705,7 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             metricsStore
         );
+        this._xpStore = new PrismaXpStore(prismaClient);
 
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         return {
@@ -1264,6 +1275,73 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    /**
+     * Configures the server to use tigerbeetle for financial transactions.
+     * @param options The options to use.
+     */
+    useTigerBeetle(
+        options: Pick<ServerConfig, 'tigerBeetle'> = this._options
+    ): this {
+        if (!options.tigerBeetle || !options.tigerBeetle._enabled) {
+            console.warn(
+                '[ServerBuilder] TigerBeetle is explicitly disabled or lacks necessary config.'
+            );
+            return this;
+        }
+
+        console.log('[ServerBuilder] Using TigerBeetle Financial Interface.');
+
+        /**
+         * !!! TigerBeetle does not provide a way to check the status of server connections:
+         * * Because of this, misconfiguration can lead to an everlasting retry loop, which can be problematic and use resources unnecessarily.
+         * * To mitigate this, a timeout is set to race a method invocation which proves an established connection during server build.
+         * * If the connection is not proven established within the duration the timeout permits, the server will throw an error (and exit).
+         * * Disconnects (or any network errors) after the server is built will not be detected / handled by this mechanism;
+         *   it serves only to deter building the server with invalid connection parameters.
+         */
+        this._actions.push({
+            priority: 0,
+            action: async () => {
+                const client = createClient({
+                    cluster_id: options.tigerBeetle.clusterId,
+                    replica_addresses: options.tigerBeetle.replicaAddresses,
+                });
+                console.log(
+                    '[ServerBuilder] Connecting to tigerbeetle server.'
+                );
+                try {
+                    await Promise.race([
+                        client.lookupAccounts([0n]),
+                        new Promise((_, rej) => {
+                            setTimeout(() => {
+                                rej(
+                                    new Error(
+                                        'Failed to connect to tigerbeetle server in time.'
+                                    )
+                                );
+                            }, 3000);
+                        }),
+                    ]);
+                    console.log(
+                        '[ServerBuilder] Connected to tigerbeetle server.'
+                    );
+                    this._financialInterface =
+                        new TigerBeetleFinancialInterface({
+                            client,
+                        });
+                } catch (e) {
+                    this._financialInterface = null;
+                    client.destroy();
+                    console.error(
+                        '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
+                    );
+                }
+            },
+        });
+
+        return this;
+    }
+
     useAI(
         options: Pick<
             ServerConfig,
@@ -1631,6 +1709,14 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
+        if (!this._xpStore || !this._financialInterface) {
+            console.warn(
+                `[ServerBuilder] Not using XP API. The following required are missing in configuration: ${
+                    !this._financialInterface ? 'Financial Interface, ' : ''
+                }${!this._xpStore ? 'XP Store' : ''}`
+            );
+        }
+
         if (!this._rateLimitController) {
             console.log('[ServerBuilder] Not using rate limiting.');
         }
@@ -1763,6 +1849,15 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._xpStore && this._financialInterface) {
+            this._xpController = new XpController({
+                xpStore: this._xpStore,
+                authController: this._authController,
+                authStore: this._authStore,
+                financialInterface: this._financialInterface,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1783,6 +1878,7 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
+            xpController: this._xpController,
         });
 
         const buildReturn: BuildReturn = {

@@ -347,6 +347,8 @@ import {
     sendNotification as calcSendNotification,
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
+    getXpUserMeta,
+    createXpContract,
     aiOpenAICreateRealtimeSession,
 } from './RecordsEvents';
 import {
@@ -3527,6 +3529,66 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 get: makeMockableFunction(webGet, 'web.get'),
                 post: makeMockableFunction(webPost, 'web.post'),
                 hook: makeMockableFunction(webhook, 'web.hook'),
+            },
+
+            xp: {
+                // TODO: Refactor
+                getUserMeta: async function (
+                    by?: object | string,
+                    options: RecordActionOptions = {}
+                ) {
+                    const task = context.createTask();
+                    return await addAsyncResultAction(
+                        task,
+                        getXpUserMeta(by, options, task.taskId)
+                    );
+                },
+                createContract: async function (
+                    contractMeta: {
+                        forUser: object | string;
+                        gigRate: number;
+                        gigs: number;
+                        status: 'open' | 'draft';
+                        description?: string;
+                        accountCurrency?: string;
+                    },
+                    options: RecordActionOptions = {}
+                ) {
+                    const task = context.createTask();
+                    return await addAsyncResultAction(
+                        task,
+                        createXpContract(contractMeta, options, task.taskId)
+                    );
+                },
+                draftContract: async function (
+                    draftContractMeta: {
+                        gigRate: number;
+                        gigs: number;
+                        description?: string;
+                    },
+                    options: RecordActionOptions = {}
+                ) {
+                    const task = context.createTask();
+                    return await addAsyncResultAction(
+                        task,
+                        createXpContract(
+                            {
+                                ...draftContractMeta,
+                                forUser: null,
+                                status: 'draft',
+                            },
+                            options,
+                            task.taskId
+                        )
+                    );
+                },
+                issueDraftContractToUser: async function (
+                    draftContractId: string,
+                    receivingUserId: string
+                ) {
+                    const task = context.createTask();
+                    //return await addAsyncResultAction(task);
+                },
             },
 
             analytics: {

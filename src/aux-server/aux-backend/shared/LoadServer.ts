@@ -208,6 +208,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.usePrismaAndRedisInstRecords();
     }
 
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
+    }
+
     if (config.ai) {
         builder.useAI();
     }

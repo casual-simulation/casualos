@@ -89,3 +89,8 @@ export * from './ServerConfig';
 
 export * from './webhooks';
 export * from './notifications';
+
+export * from './XpController';
+export * from './XpStore';
+export type * from './TypeUtils';
+export * from './financial/FinancialInterface';
