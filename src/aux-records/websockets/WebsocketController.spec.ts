@@ -76,8 +76,8 @@ import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
 import type { PackageRecordVersionKey } from '../packages/version';
 import { version } from '../packages/version';
 import { getHash } from '@casual-simulation/crypto';
-import { address } from 'faker';
 import { formatInstId } from './Utils';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 const uuidv7Mock: jest.Mock = <any>uuidv7;
@@ -4589,6 +4589,1655 @@ describe('WebsocketController', () => {
             //         },
             //     ]);
             // });
+        });
+
+        describe('addUserUpdates()', () => {
+            describe('no record', () => {
+                const recordName: string | null = null;
+
+                it('should create the branch if it does not exist', async () => {
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        ['333'],
+                        3
+                    );
+
+                    await connectionStore.saveConnection(device1Info);
+                    await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        protocol: 'updates',
+                    });
+
+                    await waitAsync();
+
+                    expect(
+                        await instStore.getBranchByName(
+                            recordName,
+                            inst,
+                            'testBranch'
+                        )
+                    ).toEqual({
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        temporary: false,
+                        linkedInst: !recordName
+                            ? null
+                            : {
+                                  recordName,
+                                  inst,
+                                  markers: [PUBLIC_WRITE_MARKER],
+                              },
+                    });
+                    expect(
+                        messenger.getMessages(device1Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222', '333'],
+                            initial: true,
+                        },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
+                    ]);
+                });
+
+                it('should add the given updates to the given branch', async () => {
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        ['333'],
+                        3
+                    );
+
+                    await connectionStore.saveConnection(device1Info);
+                    await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        protocol: 'updates',
+                    });
+
+                    expect(
+                        messenger.getMessages(device1Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222', '333'],
+                            initial: true,
+                        },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
+                    ]);
+
+                    const updates = await instStore.getCurrentUpdates(
+                        recordName,
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(updates).toEqual({
+                        updates: ['111', '222', '333'],
+                        timestamps: [
+                            expect.any(Number),
+                            expect.any(Number),
+                            expect.any(Number),
+                        ],
+                        instSizeInBytes: 9,
+                    });
+
+                    const dirtyBranches =
+                        await instStore.temp.listDirtyBranches();
+
+                    // Should not record the branch as dirty if it doesn't have a record name
+                    if (!recordName) {
+                        expect(dirtyBranches).toEqual([]);
+                    } else {
+                        expect(dirtyBranches).toEqual([
+                            {
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                            },
+                        ]);
+                    }
+                });
+
+                it('should still work if the user id is null', async () => {
+                    const result = await server.addUserUpdates({
+                        userId: null,
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        ['333'],
+                        3
+                    );
+
+                    await connectionStore.saveConnection(device1Info);
+                    await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        protocol: 'updates',
+                    });
+
+                    expect(
+                        messenger.getMessages(device1Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222', '333'],
+                            initial: true,
+                        },
+
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
+                    ]);
+
+                    const updates = await instStore.getCurrentUpdates(
+                        recordName,
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(updates).toEqual({
+                        updates: ['111', '222', '333'],
+                        timestamps: [
+                            expect.any(Number),
+                            expect.any(Number),
+                            expect.any(Number),
+                        ],
+                        instSizeInBytes: 9,
+                    });
+
+                    const dirtyBranches =
+                        await instStore.temp.listDirtyBranches();
+
+                    // Should not record the branch as dirty if it doesn't have a record name
+                    if (!recordName) {
+                        expect(dirtyBranches).toEqual([]);
+                    } else {
+                        expect(dirtyBranches).toEqual([
+                            {
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                            },
+                        ]);
+                    }
+                });
+
+                it('should notify all other devices connected to the branch', async () => {
+                    await connectionStore.saveConnection(device1Info);
+                    await connectionStore.saveConnection(device2Info);
+                    await connectionStore.saveConnection(device3Info);
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        'testBranch',
+                        ['111', '222'],
+                        6
+                    );
+
+                    await server.watchBranch(device2Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        protocol: 'updates',
+                    });
+
+                    await server.watchBranch(device3Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        protocol: 'updates',
+                    });
+
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['333'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(
+                        messenger.getMessages(device2Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['333'],
+                        },
+                    ]);
+
+                    expect(
+                        messenger.getMessages(device3Info.serverConnectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            initial: true,
+                        },
+                        {
+                            type: 'repo/watch_branch_result',
+                            success: true,
+                            inst,
+                            branch: 'testBranch',
+                            recordName: recordName,
+                        },
+
+                        {
+                            type: 'repo/add_updates',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['333'],
+                        },
+                    ]);
+                });
+
+                it('should immediately store the added atoms', async () => {
+                    await connectionStore.saveConnection(device1Info);
+
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: recordName,
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const updates = await instStore.getCurrentUpdates(
+                        recordName,
+                        inst,
+                        'testBranch'
+                    );
+
+                    expect(updates).toEqual({
+                        updates: ['111', '222'],
+                        timestamps: [expect.any(Number), expect.any(Number)],
+                        instSizeInBytes: 6,
+                    });
+                });
+
+                it('should ignore when given an event with a null branch', async () => {
+                    await connectionStore.saveConnection(device1Info);
+
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: recordName,
+                        inst,
+                        branch: null as any,
+                        updates: ['111'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                });
+
+                it('should not crash if adding atoms to a branch that does not exist', async () => {
+                    await connectionStore.saveConnection(device1Info);
+
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: recordName,
+                        inst,
+                        branch: 'abc',
+                        updates: ['111'],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(
+                        await instStore.getCurrentUpdates(
+                            recordName,
+                            inst,
+                            'abc'
+                        )
+                    ).toEqual({
+                        updates: ['111'],
+                        timestamps: [expect.any(Number)],
+                        instSizeInBytes: 3,
+                    });
+                });
+
+                it('should return a not_authorized error if recordless insts are not allowed', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withPublicInsts({
+                                allowed: false,
+                            })
+                    );
+
+                    await connectionStore.saveConnection(device1Info);
+
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Temporary insts are not allowed.',
+                    });
+
+                    expect(
+                        await instStore.getBranchByName(
+                            null,
+                            inst,
+                            'doesNotExist'
+                        )
+                    ).toEqual(null);
+                    // Should not create an inst when the record name is null.
+                    expect(await instStore.getInstByName(null, inst)).toBe(
+                        null
+                    );
+                });
+
+                it('should return a subscription_limit_reached error if it would exceed the maximum inst size for recordless insts', async () => {
+                    store.subscriptionConfiguration = buildSubscriptionConfig(
+                        (config) =>
+                            config.withPublicInsts({
+                                allowed: true,
+                                maxBytesPerInst: 1,
+                            })
+                    );
+
+                    await connectionStore.saveConnection(device1Info);
+
+                    const result = await server.addUserUpdates({
+                        userId: device1Info.userId,
+                        recordName: null,
+                        inst,
+                        branch: 'doesNotExist',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage: 'The inst has reached its maximum size.',
+                    });
+                });
+            });
+
+            describe('records', () => {
+                beforeEach(async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+                });
+
+                it('should return a record_not_found error if the record does not exist', async () => {
+                    connectionToken = generateV1ConnectionToken(
+                        connectionKey,
+                        connectionId,
+                        'otherRecord',
+                        inst
+                    );
+                    await server.login(serverConnectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+
+                    const result = await server.addUserUpdates({
+                        userId: userId,
+                        recordName: 'otherRecord',
+                        inst,
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'record_not_found',
+                        errorMessage: 'Record not found.',
+                    });
+
+                    // expect(messenger.getEvents(serverConnectionId)).toEqual([
+                    //     [
+                    //         WebsocketEventTypes.Error,
+                    //         -1,
+                    //         {
+                    //             success: false,
+                    //             errorCode: 'record_not_found',
+                    //             errorMessage: 'Record not found.',
+                    //             recordName: 'otherRecord',
+                    //             inst,
+                    //             branch: 'testBranch',
+                    //         },
+                    //     ],
+                    // ]);
+                    expect(
+                        messenger.getMessages(serverConnectionId).slice(1)
+                    ).toEqual([]);
+                });
+
+                describe('owner', () => {
+                    it('should create the inst if it does not exist', async () => {
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken,
+                        });
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        await instStore.addUpdates(
+                            recordName,
+                            inst,
+                            'testBranch',
+                            ['333'],
+                            3
+                        );
+
+                        await server.watchBranch(serverConnectionId, {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        });
+
+                        expect(
+                            await instStore.getBranchByName(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).toEqual({
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                            linkedInst: {
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            },
+                        });
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222', '333'],
+                                initial: true,
+                            },
+
+                            {
+                                type: 'repo/watch_branch_result',
+                                success: true,
+                                inst,
+                                branch: 'testBranch',
+                                recordName: recordName,
+                            },
+                        ]);
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            []
+                        );
+                    });
+
+                    it('should create the record if it matches the user ID', async () => {
+                        const recordName = userId;
+                        connectionToken = generateV1ConnectionToken(
+                            connectionKey,
+                            connectionId,
+                            recordName,
+                            inst
+                        );
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken,
+                        });
+
+                        await instStore.addUpdates(
+                            recordName,
+                            inst,
+                            'testBranch',
+                            ['333'],
+                            3
+                        );
+
+                        expect(messenger.getEvents(serverConnectionId)).toEqual(
+                            []
+                        );
+
+                        await server.watchBranch(serverConnectionId, {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        });
+
+                        expect(
+                            await instStore.getBranchByName(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).toEqual({
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                            linkedInst: {
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            },
+                        });
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222', '333'],
+                                initial: true,
+                            },
+
+                            {
+                                type: 'repo/watch_branch_result',
+                                success: true,
+                                inst,
+                                branch: 'testBranch',
+                                recordName: recordName,
+                            },
+                        ]);
+                    });
+
+                    it('should add the given updates to the given branch', async () => {
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        await server.login(serverConnectionId, 1, {
+                            type: 'login',
+                            connectionToken,
+                        });
+
+                        await instStore.addUpdates(
+                            recordName,
+                            inst,
+                            'testBranch',
+                            ['333'],
+                            3
+                        );
+
+                        await server.watchBranch(serverConnectionId, {
+                            type: 'repo/watch_branch',
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            protocol: 'updates',
+                        });
+
+                        expect(
+                            messenger.getMessages(serverConnectionId).slice(1)
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222', '333'],
+                                initial: true,
+                            },
+
+                            {
+                                type: 'repo/watch_branch_result',
+                                success: true,
+                                inst,
+                                branch: 'testBranch',
+                                recordName: recordName,
+                            },
+                        ]);
+
+                        const updates = await instStore.getCurrentUpdates(
+                            recordName,
+                            inst,
+                            'testBranch'
+                        );
+
+                        expect(updates).toEqual({
+                            updates: ['111', '222', '333'],
+                            timestamps: [
+                                expect.any(Number),
+                                expect.any(Number),
+                                expect.any(Number),
+                            ],
+                            instSizeInBytes: 9,
+                        });
+
+                        const dirtyBranches =
+                            await instStore.temp.listDirtyBranches();
+
+                        // Should not record the branch as dirty if it doesn't have a record name
+                        if (!recordName) {
+                            expect(dirtyBranches).toEqual([]);
+                        } else {
+                            expect(dirtyBranches).toEqual([
+                                {
+                                    recordName: recordName,
+                                    inst,
+                                    branch: 'testBranch',
+                                },
+                            ]);
+                        }
+                    });
+
+                    it('should notify all other devices connected to the branch', async () => {
+                        await connectionStore.saveConnection(device2Info);
+                        await connectionStore.saveConnection(device3Info);
+                        await connectionStore.saveBranchConnection({
+                            mode: 'branch',
+                            ...device2Info,
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                        });
+                        await connectionStore.saveBranchConnection({
+                            mode: 'branch',
+                            ...device3Info,
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                        });
+
+                        await instStore.addUpdates(
+                            recordName,
+                            inst,
+                            'testBranch',
+                            ['111', '222'],
+                            6
+                        );
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['333'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        expect(
+                            messenger.getMessages(
+                                device2Info.serverConnectionId
+                            )
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['333'],
+                            },
+                        ]);
+
+                        expect(
+                            messenger.getMessages(
+                                device3Info.serverConnectionId
+                            )
+                        ).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['333'],
+                            },
+                        ]);
+                    });
+
+                    it('should immediately store the added atoms', async () => {
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        const updates = await instStore.getCurrentUpdates(
+                            recordName,
+                            inst,
+                            'testBranch'
+                        );
+
+                        expect(updates).toEqual({
+                            updates: ['111', '222'],
+                            timestamps: [
+                                expect.any(Number),
+                                expect.any(Number),
+                            ],
+                            instSizeInBytes: 6,
+                        });
+                    });
+
+                    it('should ignore when given an event with a null branch', async () => {
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: null as any,
+                            updates: ['111'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+                    });
+
+                    it('should not crash if adding atoms to a branch that does not exist', async () => {
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'abc',
+                            updates: ['111'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        expect(
+                            await instStore.getCurrentUpdates(
+                                recordName,
+                                inst,
+                                'abc'
+                            )
+                        ).toEqual({
+                            updates: ['111'],
+                            timestamps: [expect.any(Number)],
+                            instSizeInBytes: 3,
+                        });
+                    });
+
+                    it('should return a not_authorized error if insts are not allowed', async () => {
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts({
+                                            allowed: false,
+                                        })
+                                )
+                            );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'Insts are not allowed for this subscription.',
+                        });
+                    });
+
+                    it('should return a subscription_limit_reached error if creating the inst would exceed the allowed max insts', async () => {
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxInsts(1)
+                                )
+                            );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        await instStore.saveInst({
+                            recordName,
+                            inst: 'otherInst',
+                            markers: [PRIVATE_MARKER],
+                        });
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The maximum number of insts has been reached.',
+                        });
+                    });
+
+                    it('should return a subscription_limit_reached error if adding the updates to a new inst would exceed the allowed inst size', async () => {
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxBytesPerInst(1)
+                                )
+                            );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The inst has reached its maximum size.',
+                        });
+                    });
+
+                    it('should return a subscription_limit_reached error if adding the updates to an existing inst would exceed the allowed inst size', async () => {
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxBytesPerInst(100)
+                                )
+                            );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        await instStore.saveInst({
+                            recordName,
+                            inst,
+                            markers: [PRIVATE_MARKER],
+                        });
+
+                        await instStore.saveBranch({
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                        });
+
+                        await instStore.addUpdates(
+                            recordName,
+                            inst,
+                            'testBranch',
+                            ['abc', 'def'],
+                            99
+                        );
+
+                        const result = await server.addUserUpdates({
+                            userId,
+                            recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The inst has reached its maximum size.',
+                        });
+                    });
+                });
+
+                describe('guest', () => {
+                    const otherUserConnectionId = 'otherConnectionId';
+                    let otherUserId: string;
+                    let otherUserConnectionKey: string;
+                    let otherUserToken: string;
+
+                    beforeEach(async () => {
+                        uuidMock.mockReturnValueOnce('otherUserId');
+                        const otherUser = await createTestUser(
+                            services,
+                            'other@example.com'
+                        );
+                        otherUserToken = generateV1ConnectionToken(
+                            otherUser.connectionKey,
+                            otherUserConnectionId,
+                            recordName,
+                            inst
+                        );
+                        otherUserId = otherUser.userId;
+                        otherUserConnectionKey = otherUser.connectionKey;
+                    });
+
+                    it('should send a not_authorized error if the user is not authorized to create insts', async () => {
+                        const result = await server.addUserUpdates({
+                            userId: otherUserId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'You are not authorized to perform this action.',
+                            reason: {
+                                type: 'missing_permission',
+                                recordName,
+                                resourceKind: 'inst',
+                                resourceId: inst,
+                                subjectType: 'user',
+                                subjectId: otherUserId,
+                                action: 'create',
+                            },
+                        });
+
+                        expect(
+                            await instStore.getBranchByName(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).toEqual(null);
+                    });
+
+                    describe('no branch', () => {
+                        beforeEach(async () => {
+                            await instStore.saveInst({
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            });
+                        });
+
+                        it('should send a not_authorized error if the user is not authorized to read insts', async () => {
+                            const result = await server.addUserUpdates({
+                                userId: otherUserId,
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222'],
+                            });
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                    action: 'read',
+                                },
+                            });
+
+                            expect(
+                                await instStore.getBranchByName(
+                                    recordName,
+                                    inst,
+                                    'testBranch'
+                                )
+                            ).toEqual(null);
+                        });
+
+                        it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
+
+                            services.policyStore.roles[recordName] = {
+                                [otherUserId]: new Set(['developer']),
+                            };
+
+                            const result = await server.addUserUpdates({
+                                userId: otherUserId,
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222'],
+                            });
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                    action: 'updateData',
+                                },
+                            });
+
+                            expect(
+                                await instStore.getBranchByName(
+                                    recordName,
+                                    inst,
+                                    'testBranch'
+                                )
+                            ).toEqual(null);
+                        });
+                    });
+
+                    describe('branch', () => {
+                        beforeEach(async () => {
+                            await instStore.saveInst({
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            });
+
+                            await instStore.saveBranch({
+                                recordName,
+                                inst,
+                                branch: 'testBranch',
+                                temporary: false,
+                            });
+                        });
+
+                        it('should send a not_authorized error if the user is not authorized to read insts', async () => {
+                            const result = await server.addUserUpdates({
+                                userId: otherUserId,
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222'],
+                            });
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                    action: 'read',
+                                },
+                            });
+                        });
+
+                        it('should send a not_authorized error if the user is not authorized to update inst data', async () => {
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
+
+                            services.policyStore.roles[recordName] = {
+                                [otherUserId]: new Set(['developer']),
+                            };
+
+                            const result = await server.addUserUpdates({
+                                userId: otherUserId,
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222'],
+                            });
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to perform this action.',
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    resourceKind: 'inst',
+                                    resourceId: inst,
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                    action: 'updateData',
+                                },
+                            });
+                        });
+
+                        it('should add the updates if the user is authorized to update the inst data', async () => {
+                            expect(
+                                await connectionStore.isAuthorizedInst(
+                                    serverConnectionId,
+                                    recordName,
+                                    inst,
+                                    'updateData'
+                                )
+                            ).toBe(false);
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'read',
+                                {},
+                                null
+                            );
+                            await services.policyStore.assignPermissionToSubjectAndMarker(
+                                recordName,
+                                'role',
+                                'developer',
+                                'inst',
+                                PRIVATE_MARKER,
+                                'updateData',
+                                {},
+                                null
+                            );
+
+                            services.policyStore.roles[recordName] = {
+                                [otherUserId]: new Set(['developer']),
+                            };
+
+                            const result = await server.addUserUpdates({
+                                userId: otherUserId,
+                                recordName: recordName,
+                                inst,
+                                branch: 'testBranch',
+                                updates: ['111', '222'],
+                            });
+
+                            expect(result).toEqual({
+                                success: true,
+                            });
+
+                            const updates = await instStore.getCurrentUpdates(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            );
+
+                            expect(updates).toEqual({
+                                updates: ['111', '222'],
+                                timestamps: [
+                                    expect.any(Number),
+                                    expect.any(Number),
+                                ],
+                                instSizeInBytes: 6,
+                            });
+                        });
+                    });
+
+                    it('should create the inst if the user is authorized to create it and update data', async () => {
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'create',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'marker',
+                            ACCOUNT_MARKER,
+                            'assign',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'updateData',
+                            {},
+                            null
+                        );
+
+                        services.policyStore.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        const result = await server.addUserUpdates({
+                            userId: otherUserId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+
+                        expect(
+                            await instStore.getBranchByName(
+                                recordName,
+                                inst,
+                                'testBranch'
+                            )
+                        ).toEqual({
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            temporary: false,
+                            linkedInst: {
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            },
+                        });
+                    });
+
+                    it('should return not_authorized if insts are not allowed', async () => {
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts({
+                                            allowed: false,
+                                        })
+                                )
+                            );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'create',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'marker',
+                            ACCOUNT_MARKER,
+                            'assign',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'updateData',
+                            {},
+                            null
+                        );
+
+                        services.policyStore.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        const result = await server.addUserUpdates({
+                            userId: otherUserId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'not_authorized',
+                            errorMessage:
+                                'Insts are not allowed for this subscription.',
+                        });
+                    });
+
+                    it('should return subscription_limit_reached if creating the inst would exceed the allowed max insts', async () => {
+                        store.subscriptionConfiguration =
+                            buildSubscriptionConfig((config) =>
+                                config.addSubscription('sub1', (sub) =>
+                                    sub
+                                        .withTier('tier1')
+                                        .withAllDefaultFeatures()
+                                        .withInsts()
+                                        .withMaxInsts(1)
+                                )
+                            );
+
+                        await store.saveUser({
+                            id: userId,
+                            allSessionRevokeTimeMs: null,
+                            currentLoginRequestId: null,
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                            subscriptionId: 'sub1',
+                            subscriptionStatus: 'active',
+                        });
+
+                        await instStore.saveInst({
+                            recordName,
+                            inst: 'otherInst',
+                            markers: [PRIVATE_MARKER],
+                        });
+
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'create',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'read',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'inst',
+                            PRIVATE_MARKER,
+                            'updateData',
+                            {},
+                            null
+                        );
+                        await services.policyStore.assignPermissionToSubjectAndMarker(
+                            recordName,
+                            'role',
+                            'developer',
+                            'marker',
+                            ACCOUNT_MARKER,
+                            'assign',
+                            {},
+                            null
+                        );
+
+                        services.policyStore.roles[recordName] = {
+                            [otherUserId]: new Set(['developer']),
+                        };
+
+                        const result = await server.addUserUpdates({
+                            userId: otherUserId,
+                            recordName: recordName,
+                            inst,
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                        });
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The maximum number of insts has been reached.',
+                        });
+                    });
+                });
+            });
         });
 
         describe('repo/send_action', () => {

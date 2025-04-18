@@ -64,6 +64,7 @@ import type {
     WatchBranchMessage,
     WebsocketErrorInfo,
     WebsocketEvent,
+    WebsocketPackage,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import {
     WebsocketErrorEvent,
@@ -90,6 +91,7 @@ import type {
     ServerError,
     NotSupportedError,
     PublicUserInfo,
+    KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
@@ -97,6 +99,7 @@ import {
     PUBLIC_WRITE_MARKER,
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
+    formatVersionNumber,
 } from '@casual-simulation/aux-common';
 import { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -114,11 +117,15 @@ import type {
 } from '../SubscriptionConfiguration';
 import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
 import type { MetricsStore } from '../MetricsStore';
-import type { AuthStore } from '../AuthStore';
+import type { AuthStore, UserRole } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
-import type { PackageVersionRecordsController } from '../packages/version';
+import type {
+    PackageRecordVersion,
+    PackageVersion,
+    PackageVersionRecordsController,
+} from '../packages/version';
 import { STORED_AUX_SCHEMA } from '../webhooks';
 import { tryParseJson } from '../Utils';
 import { formatInstId } from './Utils';
@@ -1085,6 +1092,254 @@ export class WebsocketController {
                 updateId: event.updateId,
             });
         }
+    }
+
+    @traced(TRACE_NAME)
+    async addUserUpdates(
+        request: AddUpdatesRequest
+    ): Promise<AddUpdatesResult> {
+        console.log(
+            `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}] Add Updates`
+        );
+
+        if (request.updates) {
+            let branch =
+                (await this._instStore.getBranchByName(
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                )) ??
+                (await this._temporaryStore.getBranchByName(
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                ));
+            const updateSize = sumBy(request.updates, (u) =>
+                Buffer.byteLength(u, 'utf8')
+            );
+            const config = await this._config.getSubscriptionConfiguration();
+            let features: FeaturesConfiguration = null;
+
+            if (!request.recordName) {
+                if (config?.defaultFeatures?.publicInsts?.allowed === false) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Temporary insts are not allowed.',
+                    };
+                }
+            }
+
+            if (!branch) {
+                console.log(
+                    `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Branch not found!`
+                );
+
+                const instResult = await this._getOrCreateInst(
+                    request.recordName,
+                    request.inst,
+                    request.userId,
+                    config
+                );
+
+                if (instResult.success === false) {
+                    return instResult;
+                } else if (request.recordName) {
+                    const authorizeResult =
+                        await this._policies.authorizeUserAndInstances(
+                            instResult.context,
+                            {
+                                resourceKind: 'inst',
+                                resourceId: request.inst,
+                                action: 'updateData',
+                                userId: request.userId,
+                                markers: instResult.inst.markers,
+                                instances: [],
+                            }
+                        );
+
+                    if (authorizeResult.success === false) {
+                        return authorizeResult;
+                    }
+                }
+
+                features = instResult.features;
+
+                const branchResult = await this._instStore.saveBranch({
+                    branch: request.branch,
+                    inst: request.inst,
+                    recordName: request.recordName,
+                    temporary: false,
+                });
+
+                if (branchResult.success === false) {
+                    return branchResult;
+                }
+                branch = await this._instStore.getBranchByName(
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                );
+            } else if (request.recordName) {
+                const contextResult =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (contextResult.success === false) {
+                    return contextResult;
+                }
+
+                const authorizeResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        contextResult.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'inst',
+                                    resourceId: request.inst,
+                                    action: 'read',
+                                    markers: branch.linkedInst.markers,
+                                },
+                                {
+                                    resourceKind: 'inst',
+                                    resourceId: request.inst,
+                                    action: 'updateData',
+                                    markers: branch.linkedInst.markers,
+                                },
+                            ],
+                        }
+                    );
+
+                if (authorizeResult.success === false) {
+                    return authorizeResult;
+                }
+            }
+
+            if (!features && branch.linkedInst) {
+                features = getSubscriptionFeatures(
+                    config,
+                    branch.linkedInst.subscriptionStatus,
+                    branch.linkedInst.subscriptionId,
+                    branch.linkedInst.subscriptionType
+                );
+            }
+
+            let maxInstSize: number = null;
+
+            if (
+                features &&
+                typeof features.insts.maxBytesPerInst === 'number'
+            ) {
+                maxInstSize = features.insts.maxBytesPerInst;
+            } else if (
+                !request.recordName &&
+                typeof config?.defaultFeatures?.publicInsts?.maxBytesPerInst ===
+                    'number'
+            ) {
+                maxInstSize =
+                    config.defaultFeatures.publicInsts.maxBytesPerInst;
+            }
+
+            if (maxInstSize) {
+                const currentSize = branch.temporary
+                    ? await this._temporaryStore.getInstSize(
+                          request.recordName,
+                          request.inst
+                      )
+                    : await this._instStore.getInstSize(
+                          request.recordName,
+                          request.inst
+                      );
+                const neededSizeInBytes = currentSize + updateSize;
+                if (neededSizeInBytes > maxInstSize) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage: 'The inst has reached its maximum size.',
+                    };
+                }
+            }
+
+            if (branch.temporary) {
+                // Temporary branches use a temporary inst data store.
+                // This is because temporary branches are never persisted to disk.
+                await this._temporaryStore.addUpdates(
+                    request.recordName,
+                    request.inst,
+                    request.branch,
+                    request.updates,
+                    updateSize
+                );
+            } else {
+                const result = await this._instStore.addUpdates(
+                    request.recordName,
+                    request.inst,
+                    request.branch,
+                    request.updates,
+                    updateSize
+                );
+
+                if (result.success === false) {
+                    console.log(
+                        `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Failed to add updates`,
+                        result
+                    );
+                    if (result.errorCode === 'max_size_reached') {
+                        if (result.success === false) {
+                            return {
+                                success: false,
+                                errorCode: 'subscription_limit_reached',
+                                errorMessage:
+                                    'The inst has reached its maximum size.',
+                            };
+                        }
+                    }
+                } else {
+                    if (
+                        request.recordName &&
+                        this._instStore instanceof SplitInstRecordsStore
+                    ) {
+                        this._instStore.temp.markBranchAsDirty({
+                            recordName: request.recordName,
+                            inst: request.inst,
+                            branch: request.branch,
+                        });
+                    }
+                }
+            }
+        }
+
+        const hasUpdates = request.updates && request.updates.length > 0;
+        if (hasUpdates) {
+            const connectedDevices =
+                await this._connectionStore.getConnectionsByBranch(
+                    'branch',
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                );
+
+            let ret: AddUpdatesMessage = {
+                type: 'repo/add_updates',
+                recordName: request.recordName,
+                inst: request.inst,
+                branch: request.branch,
+                updates: request.updates,
+            };
+
+            await this._messenger.sendMessage(
+                connectedDevices.map((c) => c.serverConnectionId),
+                ret
+            );
+        }
+
+        return {
+            success: true,
+        };
     }
 
     @traced(TRACE_NAME)
@@ -3035,6 +3290,75 @@ export interface EraseInstFailure {
         | ConstructAuthorizationContextFailure['errorCode']
         | AuthorizeSubjectFailure['errorCode']
         | GetOrCreateInstFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export interface AddUpdatesRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The branch that the updates are for.
+     */
+    branch: string;
+
+    /**
+     * The updates that should be added.
+     */
+    updates: string[];
+
+    // /**
+    //  * The ID for this "add update" event.
+    //  * Used in the subsequent "update received" event to indicate
+    //  * that this update was received and processed.
+    //  *
+    //  * This property is optional because update IDs are only needed for updates which are sent to the
+    //  * server to be saved. (i.e. the client needs confirmation that it was saved) The server needs no such
+    //  * confirmation, so it does not need to include an update ID.
+    //  */
+    // updateId?: number;
+
+    /**
+     * Whether this message should be treated as the first message
+     * after a watch_branch event.
+     * This flag MUST be included on the first message as large apiary messages may appear out of order.
+     */
+    initial?: boolean;
+
+    /**
+     * The list of timestamps that the updates occurred at.
+     */
+    timestamps?: number[];
+}
+
+export type AddUpdatesResult = AddUpdatesSuccess | AddUpdatesFailure;
+
+export interface AddUpdatesSuccess {
+    success: true;
+}
+
+export interface AddUpdatesFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
     errorMessage: string;
     reason?: DenialReason;
 }
