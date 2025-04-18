@@ -84,6 +84,18 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { BackSide, PCFShadowMap } from 'three';
+import {
+    OpenStreetMapsProvider,
+    MapView,
+    DebugProvider,
+    LODFrustum,
+} from 'geo-three';
+import type { Simulation3D } from './Simulation3D';
+
+/**
+ * The provider for the map view which renders a map within a three scene.
+ */
+const mapFormProvider = new DebugProvider(); //new OpenStreetMapsProvider();
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -321,16 +333,26 @@ export function createPlane(size: number): Mesh {
 /**
  * Creates a new map plane mesh.
  */
-export function createMapPlane(position: Vector3, size: number): Mesh {
-    const geometry = new PlaneBufferGeometry(size, size);
-    let material = new MeshBasicMaterial({
-        side: DoubleSide,
-    });
-
-    const plane = new Mesh(geometry, material);
-    plane.castShadow = false;
-    plane.receiveShadow = false;
-    return plane;
+export function createMapPlane(
+    position: Vector3,
+    size: number,
+    simulation3D: Simulation3D
+): Mesh {
+    const map = new MapView(MapView.PLANAR, mapFormProvider);
+    map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
+    map.scale.set(size, size, size);
+    // ! Testing of LOD, do not implement.
+    // TODO: Implement proper system to parse and translate address to lat/lon from vector3.
+    // const renderer = simulation3D.game.getRenderer();
+    // const int = setInterval(() => {
+    //     map.lod.updateLOD(
+    //         map,
+    //         simulation3D.game.getMainCameraRig().mainCamera,
+    //         renderer,
+    //         simulation3D.game.getScene()
+    //     );
+    // }, 1000);
+    return map;
 }
 
 /**
