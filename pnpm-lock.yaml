@@ -1163,8 +1163,8 @@ importers:
         specifier: ^1.2.1
         version: 1.2.8(filepond@3.9.0)
       geo-three:
-        specifier: ^0.1.15
-        version: 0.1.15(three@0.169.0)
+        specifier: 0.1.14
+        version: 0.1.14(three@0.169.0)
       hash.js:
         specifier: 1.1.7
         version: 1.1.7
@@ -16996,8 +16996,8 @@ packages:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
 
-  /geo-three@0.1.15(three@0.169.0):
-    resolution: {integrity: sha512-mU5K5QfnRwOawTjXg1zmAMTu+c/uC6cZFNGYqf41eCRXfX4bkDHFaPhXa08z1WjYzg5kq1BSjpFR9weW2vNJZg==}
+  /geo-three@0.1.14(three@0.169.0):
+    resolution: {integrity: sha512-ZSyVZwGuTIrjRE34yDr332ih3r6dSM6Sexq4T7IOOWyqqLyG3aCZ6WTtCSK9uJRbHfIF4WUMCTUDZBGOjfVr6A==}
     peerDependencies:
       three: '>0.120.0'
     dependencies:

@@ -118,6 +118,7 @@ import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
+import type { MapView } from 'geo-three';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -169,6 +170,7 @@ export class BotShapeDecorator
     private _game: Game;
     private _shapeSubscription: SubscriptionLike;
     private _finder: AuxBotVisualizerFinder;
+    private _mapView: MapView;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -208,6 +210,10 @@ export class BotShapeDecorator
             this.scene?.updateMatrixWorld(true);
         }
         this._updateLightTarget(null);
+
+        if (this._game && this._mapView) {
+            // Update LOD here
+        }
     }
 
     botUpdated(calc: BotCalculationContext): void {
@@ -619,6 +625,10 @@ export class BotShapeDecorator
 
         if (this._meshCancellationToken) {
             this._meshCancellationToken.isCanceled = true;
+        }
+
+        if (this._mapView) {
+            this._mapView = null;
         }
 
         this._animationMixer = null;
@@ -1557,11 +1567,10 @@ export class BotShapeDecorator
     }
 
     private _createMapPlane() {
-        this.mesh = this.collider = createMapPlane(
-            new Vector3(0, 0, 0),
-            0.5,
-            this.bot3D.dimensionGroup.simulation3D
-        );
+        this._mapView =
+            this.mesh =
+            this.collider =
+                createMapPlane(new Vector3(0, 0, 0), 0.5);
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
