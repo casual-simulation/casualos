@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.4.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where quickly typing in an input element could cause the cursor to jump to the end of the content in the input box.
+-   Fixed an issue where it was possible for the `@onInstJoined` shout to be sent before all initial tag mask have been processed.
+
 ## V3.4.5
 
 #### Date: 4/18/2025
