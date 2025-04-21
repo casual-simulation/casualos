@@ -1557,7 +1557,11 @@ export class BotShapeDecorator
     }
 
     private _createMapPlane() {
-        this.mesh = this.collider = createMapPlane(1, 1, 1);
+        this.mesh = this.collider = createMapPlane(
+            new Vector3(0, 0, 0),
+            0.5,
+            this.bot3D.dimensionGroup.simulation3D
+        );
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;

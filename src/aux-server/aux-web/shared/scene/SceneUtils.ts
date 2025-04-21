@@ -27,9 +27,9 @@ import type {
     LineBasicMaterial,
     Intersection,
     Float32BufferAttribute,
+    Texture,
     SpotLight,
 } from '@casual-simulation/three';
-import { Texture } from '@casual-simulation/three';
 import {
     Vector3,
     SphereBufferGeometry,
@@ -83,31 +83,19 @@ import {
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import {
-    BackSide,
-    CanvasTexture,
-    FrontSide,
-    LinearFilter,
-    LinearMipmapLinearFilter,
-    PCFShadowMap,
-    RepeatWrapping,
-    sRGBEncoding,
-    TextureLoader,
-} from 'three';
+import { BackSide, PCFShadowMap } from 'three';
 import {
     OpenStreetMapsProvider,
     MapView,
     DebugProvider,
     LODFrustum,
-    UnitsUtils,
 } from 'geo-three';
 import type { Simulation3D } from './Simulation3D';
 
 /**
  * The provider for the map view which renders a map within a three scene.
  */
-//const mapFormProvider = new DebugProvider();
-const mapFormProvider = new OpenStreetMapsProvider();
+const mapFormProvider = new DebugProvider(); //new OpenStreetMapsProvider();
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -346,82 +334,25 @@ export function createPlane(size: number): Mesh {
  * Creates a new map plane mesh.
  */
 export function createMapPlane(
-    width: number,
-    height: number,
-    tilePadding: number = 0,
-    latLonZ: Vector3 = new Vector3(59.876189, 10.883052, 5)
+    position: Vector3,
+    size: number,
+    simulation3D: Simulation3D
 ): Mesh {
-    const mapPlane = new PlaneBufferGeometry(width, height);
-    //mapPlane.rotateX(-Math.PI); // Rotate the plane to face up
-    const material = new MeshBasicMaterial({
-        side: DoubleSide,
-    });
-    const { x, y } = latLonToTile(latLonZ.x, latLonZ.y, latLonZ.z);
-    mapFormProvider.fetchTile(latLonZ.z, x, y).then((tile) => {
-        if (tile instanceof OffscreenCanvas) {
-            material.map = new CanvasTexture(tile.transferToImageBitmap());
-            material.needsUpdate = true;
-        } else {
-            const tex = new Texture(tile);
-            tex.encoding = sRGBEncoding;
-            tex.needsUpdate = true;
-            material.map = tex;
-            material.needsUpdate = true;
-        }
-    });
-    console.log(material);
-    return new Mesh(mapPlane, material);
-}
-
-/**
- * Creates a new map texture for the given material centered at the given latLonZ.
- * @param material
- * @param latLonZ
- * @param tilePadRadius
- * TODO: Implement iteration one of the map texture creation
- * * This should conditionally form a texture based on the latLonZ and tilePadRadius
- * * This should also be able to handle the case where the latLonZ is not a valid tile
- */
-async function createMapTexture(
-    material: MeshBasicMaterial,
-    latLonZ: Vector3,
-    tilePadRadius: number
-): Promise<Texture> {
-    const { x, y } = latLonToTile(latLonZ.x, latLonZ.y, latLonZ.z);
-    mapFormProvider.fetchTile(latLonZ.z, x, y).then((tile) => {
-        if (tile instanceof OffscreenCanvas) {
-            material.map = new CanvasTexture(tile.transferToImageBitmap());
-            material.needsUpdate = true;
-        } else if (tile instanceof HTMLImageElement) {
-            const tex = new Texture(tile);
-            tex.encoding = sRGBEncoding;
-            tex.needsUpdate = true;
-            material.map = tex;
-            material.needsUpdate = true;
-        }
-    });
-    // TODO: Implement.
-}
-
-/**
- * Converts the given latitude and longitude to a tile coordinate.
- * @param lat The latitude.
- * @param lon The longitude.
- * @param z The zoom level.
- */
-function latLonToTile(lat: number, lon: number, z: number) {
-    const xtile = Math.floor(((lon + 180) / 360) * Math.pow(2, z));
-    const ytile = Math.floor(
-        ((1 -
-            Math.log(
-                Math.tan((lat * Math.PI) / 180) +
-                    1 / Math.cos((lat * Math.PI) / 180)
-            ) /
-                Math.PI) /
-            2) *
-            Math.pow(2, z)
-    );
-    return { x: xtile, y: ytile };
+    const map = new MapView(MapView.PLANAR, mapFormProvider);
+    map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
+    map.scale.set(size, size, size);
+    // ! Testing of LOD, do not implement.
+    // TODO: Implement proper system to parse and translate address to lat/lon from vector3.
+    // const renderer = simulation3D.game.getRenderer();
+    // const int = setInterval(() => {
+    //     map.lod.updateLOD(
+    //         map,
+    //         simulation3D.game.getMainCameraRig().mainCamera,
+    //         renderer,
+    //         simulation3D.game.getScene()
+    //     );
+    // }, 1000);
+    return map;
 }
 
 /**
