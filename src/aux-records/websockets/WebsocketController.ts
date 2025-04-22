@@ -54,7 +54,6 @@ import type {
 } from './WebsocketConnectionStore';
 import type {
     AddUpdatesMessage,
-    LoadPackageRequestMessage,
     LoginMessage,
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
@@ -64,7 +63,6 @@ import type {
     WatchBranchMessage,
     WebsocketErrorInfo,
     WebsocketEvent,
-    WebsocketPackage,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import {
     WebsocketErrorEvent,
@@ -121,10 +119,12 @@ import type { AuthStore, UserRole } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
-import type {
-    PackageRecordVersion,
-    PackageVersion,
-    PackageVersionRecordsController,
+import {
+    formatVersionSpecifier,
+    type PackageRecordVersion,
+    type PackageVersion,
+    type PackageVersionRecordsController,
+    type PackageVersionSpecifier,
 } from '../packages/version';
 import { STORED_AUX_SCHEMA } from '../webhooks';
 import { tryParseJson } from '../Utils';
@@ -2313,23 +2313,19 @@ export class WebsocketController {
             };
         }
         const userId = request.userId;
+        const key = request.package.key ?? {};
         console.log(
             `[CausalRepoServer] [namespace: ${request.recordName}/${
                 request.inst
             }, ${userId}, package: ${request.package.recordName}/${
                 request.package.address
-            }@${formatVersionNumber(
-                request.package.key.major,
-                request.package.key.minor,
-                request.package.key.patch,
-                request.package.key.tag
-            )}] Install Package`
+            }@${formatVersionSpecifier(key)}] Install Package`
         );
 
         const p = await this._packageVersions.getItem({
             recordName: request.package.recordName,
             address: request.package.address,
-            key: request.package.key,
+            key,
             userId: userId,
             instances: [formatInstId(request.recordName, request.inst)],
         });
@@ -3367,7 +3363,7 @@ export interface LoadPackageRequest {
     /**
      * The package that should be loaded.
      */
-    package: WebsocketPackage;
+    package: PackageVersionSpecifier;
 }
 
 export type LoadPackageResult = LoadPackageSuccess | LoadPackageFailure;

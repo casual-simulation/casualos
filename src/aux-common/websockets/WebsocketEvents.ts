@@ -1115,28 +1115,6 @@ type ZodConnectionCountMessageAssertion = HasType<
     ConnectionCountMessage
 >;
 
-export interface WebsocketPackage {
-    /**
-     * The name of the record that the package should be loaded from.
-     */
-    recordName: string;
-
-    /**
-     * The address of the package to load.
-     */
-    address: string;
-
-    /**
-     * The version to load.
-     */
-    key: {
-        major: number;
-        minor: number;
-        patch: number;
-        tag: string | null;
-    };
-}
-
 /**
  * Defines an event which attempts to perform a time sync.
  */

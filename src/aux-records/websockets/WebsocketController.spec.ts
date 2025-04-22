@@ -9523,6 +9523,185 @@ describe('WebsocketController', () => {
                     await instStore.listLoadedPackages(recordName, inst)
                 ).toEqual([]);
             });
+
+            it('should be able to install the latest version of a package', async () => {
+                await recordPackage(
+                    recordName,
+                    'public',
+                    [PUBLIC_READ_MARKER],
+                    version(2),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'ghi',
+                            }),
+                        },
+                    }
+                );
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId: userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@2.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(2),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghi',
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'public',
+                        packageVersionId: 'public@2.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should be able to install a package based on the sha256', async () => {
+                await recordPackage(
+                    recordName,
+                    'public',
+                    [PUBLIC_READ_MARKER],
+                    version(2),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'ghi',
+                            }),
+                        },
+                    }
+                );
+
+                const info = await services.packageVersionStore.getItemByKey(
+                    recordName,
+                    'public',
+                    version(2)
+                );
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId: userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: {
+                            sha256: info.item?.sha256,
+                        },
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@2.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(2),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'ghi',
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'public',
+                        packageVersionId: 'public@2.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
         });
 
         describe('sync/time', () => {
