@@ -2298,10 +2298,11 @@ export class WebsocketController {
     }
 
     /**
-     * A request/response version of loadPackage()
+     * Attempts to install a package into an inst.
+     * @param request The request to load the package.
      */
     @traced(TRACE_NAME)
-    async loadPackageRequest(
+    async installPackage(
         request: LoadPackageRequest
     ): Promise<LoadPackageResult> {
         if (!this._packageVersions) {
@@ -2322,7 +2323,7 @@ export class WebsocketController {
                 request.package.key.minor,
                 request.package.key.patch,
                 request.package.key.tag
-            )}] Load Package`
+            )}] Install Package`
         );
 
         const p = await this._packageVersions.getItem({

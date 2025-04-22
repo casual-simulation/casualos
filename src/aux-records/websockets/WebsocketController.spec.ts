@@ -8811,7 +8811,7 @@ describe('WebsocketController', () => {
             });
         });
 
-        describe('loadPackageRequest()', () => {
+        describe('installPackage()', () => {
             async function recordPackage(
                 recordName: string,
                 address: string,
@@ -8920,7 +8920,7 @@ describe('WebsocketController', () => {
             it('should load the package into the default branch of the inst', async () => {
                 uuidv7Mock.mockReturnValueOnce('packageId');
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId: userId,
                     userRole: 'none',
                     recordName,
@@ -8992,7 +8992,7 @@ describe('WebsocketController', () => {
             it('should do nothing if the package is already loaded', async () => {
                 uuidv7Mock.mockReturnValueOnce('packageId');
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId,
                     userRole: 'none',
                     recordName,
@@ -9038,7 +9038,7 @@ describe('WebsocketController', () => {
                     success: true,
                 });
 
-                const result2 = await server.loadPackageRequest({
+                const result2 = await server.installPackage({
                     userId,
                     userRole: 'none',
                     recordName,
@@ -9113,7 +9113,7 @@ describe('WebsocketController', () => {
                     .mockReturnValueOnce('packageId')
                     .mockReturnValueOnce('packageId2');
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId,
                     userRole: 'none',
                     recordName,
@@ -9125,7 +9125,7 @@ describe('WebsocketController', () => {
                     },
                 });
 
-                const result2 = await server.loadPackageRequest({
+                const result2 = await server.installPackage({
                     userId,
                     userRole: 'none',
                     recordName,
@@ -9250,7 +9250,7 @@ describe('WebsocketController', () => {
 
                 uuidv7Mock.mockReturnValueOnce('packageId');
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId,
                     recordName,
                     inst,
@@ -9346,7 +9346,7 @@ describe('WebsocketController', () => {
 
                 uuidv7Mock.mockReturnValueOnce('packageId');
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId,
                     recordName,
                     inst,
@@ -9430,7 +9430,7 @@ describe('WebsocketController', () => {
                     }
                 );
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId: device1Info.userId,
                     recordName,
                     inst,
@@ -9485,7 +9485,7 @@ describe('WebsocketController', () => {
                     }
                 );
 
-                const result = await server.loadPackageRequest({
+                const result = await server.installPackage({
                     userId: device1Info.userId,
                     recordName,
                     inst,
