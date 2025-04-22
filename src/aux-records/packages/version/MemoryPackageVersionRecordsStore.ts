@@ -23,6 +23,7 @@ import type {
     PackageRecordVersionKey,
     PackageVersionReview,
     GetPackageVersionByKeyResult,
+    PackageRecordVersionKeySpecifier,
 } from './PackageVersionRecordsStore';
 import {
     PackageVersion,
@@ -53,6 +54,65 @@ export class MemoryPackageVersionRecordsStore
         const bucket = this.getItemRecord(recordName);
         const arr = bucket?.get(address);
         const item = arr?.find((i) => isEqual(this.getKey(i), key)) ?? null;
+        const recordItem = (await this.itemStore.getItemByAddress(
+            recordName,
+            address
+        )) as PackageRecord;
+
+        return {
+            item,
+            recordName: recordName,
+            parentMarkers: recordItem?.markers ?? null,
+            packageId: recordItem?.id ?? null,
+        };
+    }
+
+    async getItemBySpecifier(
+        recordName: string,
+        address: string,
+        specifier: PackageRecordVersionKeySpecifier
+    ): Promise<GetPackageVersionByKeyResult> {
+        const bucket = this.getItemRecord(recordName);
+        const arr = bucket?.get(address);
+        const sorted = orderBy(
+            arr ?? [],
+            [
+                (i) => i.key.major,
+                (i) => i.key.minor,
+                (i) => i.key.patch,
+                (i) => i.key.tag,
+            ],
+            ['desc', 'desc', 'desc', 'asc']
+        );
+        const item =
+            sorted.find((i) => {
+                if (
+                    typeof specifier.major === 'number' &&
+                    i.key.major !== specifier.major
+                ) {
+                    return false;
+                }
+                if (
+                    typeof specifier.minor === 'number' &&
+                    i.key.minor !== specifier.minor
+                ) {
+                    return false;
+                }
+                if (
+                    typeof specifier.patch === 'number' &&
+                    i.key.patch !== specifier.patch
+                ) {
+                    return false;
+                }
+                if (
+                    typeof specifier.tag === 'string' &&
+                    i.key.tag !== specifier.tag
+                ) {
+                    return false;
+                }
+
+                return true;
+            }) ?? null;
         const recordItem = (await this.itemStore.getItemByAddress(
             recordName,
             address

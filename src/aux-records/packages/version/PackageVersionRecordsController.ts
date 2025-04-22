@@ -62,6 +62,7 @@ import {
 import type {
     PackageRecordVersion,
     PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
     PackageRecordVersionWithMetadata,
     PackageVersionRecordsStore,
     PackageVersionReview,
@@ -518,7 +519,7 @@ export class PackageVersionRecordsController {
      */
     @traced(TRACE_NAME)
     async getItem(
-        request: SubCrudGetItemRequest<PackageRecordVersionKey>
+        request: SubCrudGetItemRequest<PackageRecordVersionKeySpecifier>
     ): Promise<GetPackageVersionResult> {
         try {
             const baseRequest = {
@@ -535,7 +536,7 @@ export class PackageVersionRecordsController {
                 return context;
             }
 
-            const result = await this._store.getItemByKey(
+            const result = await this._store.getItemBySpecifier(
                 context.context.recordName,
                 request.address,
                 request.key

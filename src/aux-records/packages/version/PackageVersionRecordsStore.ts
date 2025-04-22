@@ -41,7 +41,7 @@ import { parseVersionNumber } from '@casual-simulation/aux-common';
 export interface PackageVersionRecordsStore
     extends SubCrudRecordsStore<PackageRecordVersionKey, PackageRecordVersion> {
     /**
-     * Reads the item with the given address. Always returns an object with the item and any markers that are related to the item.
+     * Reads the item with the given address and key. Always returns an object with the item and any markers that are related to the item.
      * @param recordName The name of the record that the item lives in.
      * @param address The address of the record item.
      * @param key The key of the item to read.
@@ -50,6 +50,19 @@ export interface PackageVersionRecordsStore
         recordName: string,
         address: string,
         key: PackageRecordVersionKey
+    ): Promise<GetPackageVersionByKeyResult>;
+
+    /**
+     * Gets the package version that most closely matches the given specifier.
+     * Always returns an object with the item and any markers that are related to the item.
+     * @param recordName The name of the record.
+     * @param address The address of the item.
+     * @param specifier The specifier to use to find the item.
+     */
+    getItemBySpecifier(
+        recordName: string,
+        address: string,
+        specifier: PackageRecordVersionKeySpecifier
     ): Promise<GetPackageVersionByKeyResult>;
 
     /**
@@ -431,4 +444,56 @@ export interface GetPackageRecordKeyFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents a package specifier.
+ * That is, a way to identify a package version that is stored in a record.
+ */
+export interface PackageVersionSpecifier {
+    /**
+     * The name of the record that the package should be loaded from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the package to load.
+     */
+    address: string;
+
+    /**
+     * The version to load.
+     * If not specified, then the latest version will be installed.
+     */
+    key?: PackageRecordVersionKeySpecifier;
+}
+
+/**
+ * Defines an interface that represents a package version key specifier.
+ * That is, a way to identify a package version by its key.
+ */
+export interface PackageRecordVersionKeySpecifier {
+    /**
+     * The major number of the version to load.
+     * If omitted, then the latest major version will be loaded.
+     */
+    major?: number;
+
+    /**
+     * The minor number of the version to load.
+     * If not specifed, then the latest minor version will be loaded.
+     */
+    minor?: number;
+
+    /**
+     * The patch number of the version to load.
+     * If not specified, then the latest patch version will be loaded.
+     */
+    patch?: number;
+
+    /**
+     * The tag of the version to load.
+     * If not specified, then the untagged version will be loaded.
+     */
+    tag?: string | null;
 }
