@@ -504,3 +504,26 @@ export interface PackageRecordVersionKeySpecifier {
      */
     sha256?: string | null;
 }
+
+/**
+ * Formats the given version specifier into a string.
+ * @param specifier The specifier to format.
+ */
+export function formatVersionSpecifier(
+    specifier: PackageRecordVersionKeySpecifier
+): string {
+    if (specifier.sha256) {
+        return specifier.sha256;
+    }
+    if (typeof specifier.tag === 'string' && specifier.tag.length > 0) {
+        return `${specifier.major}.${specifier.minor}.${specifier.patch}-${specifier.tag}`;
+    } else if (typeof specifier.patch === 'number') {
+        return `${specifier.major}.${specifier.minor}.${specifier.patch}`;
+    } else if (typeof specifier.minor === 'number') {
+        return `${specifier.major}.${specifier.minor}.x`;
+    } else if (typeof specifier.major === 'number') {
+        return `${specifier.major}.x.x`;
+    } else {
+        return 'latest';
+    }
+}

@@ -15,7 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { getPackageVersionKey } from './PackageVersionRecordsStore';
+import type { PackageRecordVersionKeySpecifier } from './PackageVersionRecordsStore';
+import {
+    formatVersionSpecifier,
+    getPackageVersionKey,
+} from './PackageVersionRecordsStore';
 
 describe('getPackageVersionKey()', () => {
     it('should be able to parse the given key', () => {
@@ -40,5 +44,62 @@ describe('getPackageVersionKey()', () => {
                 tag: '',
             },
         });
+    });
+});
+
+describe('formatVersionSpecifier()', () => {
+    const cases: [PackageRecordVersionKeySpecifier, string][] = [
+        [{}, 'latest'],
+        [
+            {
+                major: 1,
+            },
+            '1.x.x',
+        ],
+        [
+            {
+                major: 1,
+                minor: 0,
+            },
+            '1.0.x',
+        ],
+        [
+            {
+                major: 1,
+                minor: 0,
+                patch: 0,
+            },
+            '1.0.0',
+        ],
+        [
+            {
+                major: 1,
+                minor: 0,
+                patch: 0,
+                tag: 'abc',
+            },
+            '1.0.0-abc',
+        ],
+        [
+            {
+                sha256: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+            },
+            '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        ],
+        [
+            {
+                major: 1,
+                minor: 0,
+                patch: 0,
+                tag: 'abc',
+                sha256: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+            },
+            '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        ],
+    ];
+
+    it.each(cases)('should format %j to %s', (input, expected) => {
+        const result = formatVersionSpecifier(input);
+        expect(result).toEqual(expected);
     });
 });
