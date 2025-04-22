@@ -29,7 +29,11 @@ import type {
     GenericQueryStringParameters,
     GenericWebsocketRequest,
 } from '@casual-simulation/aux-common';
-import { DEFAULT_BRANCH_NAME, procedure } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_BRANCH_NAME,
+    getStateFromUpdates,
+    procedure,
+} from '@casual-simulation/aux-common';
 import type { RelyingParty } from './AuthController';
 import {
     AuthController,
@@ -124,11 +128,14 @@ import type {
     WebsocketUploadRequestEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import type { StoredAuxVersion1 } from '@casual-simulation/aux-common/bots';
+import type {
+    StoredAuxVersion1,
+    StoredAux,
+} from '@casual-simulation/aux-common/bots';
 import {
     botAdded,
     createBot,
-    StoredAux,
+    getInstStateFromUpdates,
     toast,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -190,6 +197,8 @@ import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 import { OpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
+import type { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
+import { version } from './packages/version/PackageVersionRecordsStore';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -604,6 +613,22 @@ describe('RecordsServer', () => {
             windowMs: 1000,
         });
 
+        packageController = new PackageRecordsController({
+            config: store,
+            policies: policyController,
+            store: packageStore,
+        });
+
+        packageVersionController = new PackageVersionRecordsController({
+            config: store,
+            policies: policyController,
+            recordItemStore: packageStore,
+            store: packageVersionsStore,
+            files: filesController,
+            systemNotifications: store,
+            packages: packageController,
+        });
+
         websocketController = new WebsocketController(
             websocketConnectionStore,
             websocketMessenger,
@@ -613,7 +638,8 @@ describe('RecordsServer', () => {
             policyController,
             store,
             store,
-            store
+            store,
+            packageVersionController
         );
 
         webhookStore = new MemoryWebhookRecordsStore(store);
@@ -641,22 +667,6 @@ describe('RecordsServer', () => {
             policies: policyController,
             store: notificationStore,
             pushInterface: webPushInterface,
-        });
-
-        packageController = new PackageRecordsController({
-            config: store,
-            policies: policyController,
-            store: packageStore,
-        });
-
-        packageVersionController = new PackageVersionRecordsController({
-            config: store,
-            policies: policyController,
-            recordItemStore: packageStore,
-            store: packageVersionsStore,
-            files: filesController,
-            systemNotifications: store,
-            packages: packageController,
         });
 
         stripe = stripeMock = {
@@ -13650,9 +13660,452 @@ describe('RecordsServer', () => {
         );
     });
 
-    // describe("POST /api/v2/records/package/version/load", () => {
+    describe('POST /api/v2/records/package/install', () => {
+        const inst = 'myInst';
 
-    // });
+        async function recordPackage(
+            recordName: string,
+            address: string,
+            markers: string[],
+            key: PackageRecordVersionKey,
+            aux: StoredAux
+        ) {
+            const r = await store.getRecordByName(recordName);
+            if (!r) {
+                await recordsController.createRecord({
+                    recordName,
+                    userId: ownerId,
+                    ownerId: ownerId,
+                });
+            }
+            await packageStore.createItem(recordName, {
+                id: address,
+                address: address,
+                markers,
+            });
+
+            const json = JSON.stringify(aux);
+            const sha256 = getHash(json);
+
+            const result = await packageVersionController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+                item: {
+                    address,
+                    key,
+                    readme: '',
+                    entitlements: [],
+                    auxFileRequest: {
+                        fileSha256Hex: sha256,
+                        fileByteLength: json.length,
+                        fileDescription: 'aux.json',
+                        fileMimeType: 'application/json',
+                        headers: {},
+                    },
+                },
+                instances: [],
+            });
+            expect(result).toMatchObject({
+                success: true,
+            });
+            if (!result.success) {
+                console.error(result);
+                throw new Error('Failed to record package');
+            }
+
+            if (!result.auxFileResult.success) {
+                console.error(result.auxFileResult);
+                throw new Error('Failed to record file');
+            }
+
+            files.set(result.auxFileResult.uploadUrl, json);
+        }
+
+        let originalFetch: typeof fetch;
+        let fetchMock: jest.Mock;
+        let files: Map<string, string>;
+
+        beforeEach(async () => {
+            files = new Map();
+
+            originalFetch = global.fetch;
+            fetchMock = global.fetch = jest.fn(async (request) => {
+                const url =
+                    typeof request === 'string'
+                        ? request
+                        : request instanceof URL
+                        ? request.href
+                        : request.url;
+
+                const text = files.get(url);
+                return {
+                    status: text ? 200 : 404,
+                    text: async () => text,
+                } as Response;
+            });
+
+            await recordPackage(
+                recordName,
+                'public',
+                [PUBLIC_READ_MARKER],
+                version(1),
+                {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    },
+                }
+            );
+        });
+
+        afterEach(() => {
+            global.fetch = originalFetch;
+        });
+
+        it('should install the package version', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName: null,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: userId,
+                },
+            ]);
+        });
+
+        it('should support string version keys', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName: null,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: 'v1.0.0',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: userId,
+                },
+            ]);
+        });
+
+        it('should support installing into private insts', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                recordName,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(
+                await instStore.listLoadedPackages(recordName, inst)
+            ).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: userId,
+                },
+            ]);
+        });
+
+        it('should support anonymous users', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName: null,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: null,
+                },
+            ]);
+        });
+
+        testOrigin('POST', '/api/v2/records/package/install', () =>
+            JSON.stringify({
+                recordName: null,
+                inst,
+                package: {
+                    recordName,
+                    address: 'public',
+                    key: version(1),
+                },
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/records/package/install', body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/records/package/install',
+                JSON.stringify({
+                    recordName: null,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                }),
+                apiHeaders
+            )
+        );
+    });
 
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {

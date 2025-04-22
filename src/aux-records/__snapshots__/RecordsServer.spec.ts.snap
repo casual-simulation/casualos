@@ -2380,6 +2380,80 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/install",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "branch": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "package": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "key": Object {
+                "options": Array [
+                  Object {
+                    "type": "string",
+                  },
+                  Object {
+                    "schema": Object {
+                      "major": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "minor": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "patch": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "sha256": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "tag": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
+              },
+              "recordName": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "installPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -7056,6 +7130,80 @@ Object {
         "type": "object",
       },
       "name": "reviewPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/install",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "branch": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "package": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "key": Object {
+                "options": Array [
+                  Object {
+                    "type": "string",
+                  },
+                  Object {
+                    "schema": Object {
+                      "major": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "minor": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "patch": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "sha256": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "tag": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
+              },
+              "recordName": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "installPackage",
       "origins": "api",
     },
     Object {

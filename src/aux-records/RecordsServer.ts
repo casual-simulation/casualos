@@ -154,7 +154,10 @@ import type {
     PackageVersionRecordsController,
     PackageVersionReviewInput,
 } from './packages/version/PackageVersionRecordsController';
-import type { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
+import type {
+    PackageRecordVersionKey,
+    PackageVersionSpecifier,
+} from './packages/version/PackageVersionRecordsStore';
 import {
     getPackageVersionKey,
     getPackageVersionSpecifier,
@@ -2462,6 +2465,75 @@ export class RecordsServer {
 
                     return result;
                 }),
+
+            installPackage: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/package/install')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION.nullable(),
+                        inst: z.string().min(1),
+                        branch: z.string().optional().nullable(),
+                        package: z.object({
+                            recordName: RECORD_NAME_VALIDATION,
+                            address: ADDRESS_VALIDATION,
+                            key: z.union([
+                                z.string(),
+                                z.object({
+                                    major: z
+                                        .number()
+                                        .int()
+                                        .optional()
+                                        .nullable(),
+                                    minor: z
+                                        .number()
+                                        .int()
+                                        .optional()
+                                        .nullable(),
+                                    patch: z
+                                        .number()
+                                        .int()
+                                        .optional()
+                                        .nullable(),
+                                    tag: z.string().optional().nullable(),
+                                    sha256: z.string().optional().nullable(),
+                                }),
+                            ]),
+                        }),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, inst, branch, package: pkg },
+                        context
+                    ) => {
+                        if (!this._websocketController) {
+                            return INSTS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._websocketController.installPackage({
+                                userId: validation.userId,
+                                userRole: validation.role,
+                                recordName,
+                                inst,
+                                branch,
+                                package: pkg as PackageVersionSpecifier,
+                            });
+
+                        return result;
+                    }
+                ),
 
             listRecords: procedure()
                 .origins('api')
