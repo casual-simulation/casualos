@@ -334,6 +334,10 @@ export class HtmlAppBackend implements AppBackend {
                             }
                         } finally {
                             supressMutations(false);
+                            // clear the mutation queue so that we don't send useless
+                            // attribute modifications and potentially break something
+                            // (e.g. the user's selection if they happen to be typing very quickly)
+                            this._mutationObserver.takeRecords();
                         }
 
                         try {
