@@ -86,6 +86,9 @@ export class MemoryPackageVersionRecordsStore
         );
         const item =
             sorted.find((i) => {
+                if (typeof specifier.sha256 === 'string') {
+                    return i.sha256 === specifier.sha256;
+                }
                 if (
                     typeof specifier.major === 'number' &&
                     i.key.major !== specifier.major

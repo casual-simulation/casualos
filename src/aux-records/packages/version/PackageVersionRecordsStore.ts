@@ -496,4 +496,11 @@ export interface PackageRecordVersionKeySpecifier {
      * If not specified, then the untagged version will be loaded.
      */
     tag?: string | null;
+
+    /**
+     * The SHA-256 hash of the version to load.
+     * If not specified, then the SHA-256 will not be checked.
+     * If specified, then the SHA-256 will be checked against the version that is loaded.
+     */
+    sha256?: string | null;
 }
