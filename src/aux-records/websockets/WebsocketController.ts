@@ -2658,12 +2658,6 @@ export class WebsocketController {
             success: true,
             package: p.item,
         };
-
-        // await this._messenger.sendMessage([connectionId], {
-        //     type: 'repo/load_package/response',
-        //     success: true,
-        //     requestId: request.requestId,
-        // });
     }
 
     @traced(TRACE_NAME)

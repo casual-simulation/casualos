@@ -9651,6 +9651,541 @@ describe('WebsocketController', () => {
                     },
                 ]);
             });
+
+            it('should do nothing if the package is already loaded', async () => {
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.loadPackageRequest({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const addUpdatesResult = await server.addUserUpdates({
+                    userId,
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    updates: ['abc'],
+                });
+
+                expect(addUpdatesResult).toEqual({
+                    success: true,
+                });
+
+                const result2 = await server.loadPackageRequest({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(result2).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(updates.updates).toEqual([expect.any(String), 'abc']);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should be able to load multiple packages', async () => {
+                await recordPackage(
+                    recordName,
+                    'public2',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test2: createBot('test2', {
+                                value: 123,
+                            }),
+                        },
+                    }
+                );
+
+                uuidv7Mock
+                    .mockReturnValueOnce('packageId')
+                    .mockReturnValueOnce('packageId2');
+
+                const result = await server.loadPackageRequest({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                const result2 = await server.loadPackageRequest({
+                    userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public2',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                expect(result2).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public2@1.0.0',
+                        packageId: 'public2',
+                        address: 'public2',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                    test2: createBot('test2', {
+                        value: 123,
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
+                        userId: userId,
+                    },
+                    {
+                        id: 'packageId2',
+                        recordName,
+                        inst,
+                        packageId: 'public2',
+                        packageVersionId: 'public2@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should support version 2 states', async () => {
+                const updates = [
+                    constructInitializationUpdate(
+                        createInitializationUpdate([
+                            createBot('test', {
+                                abc: 'test123',
+                            }),
+                        ])
+                    ),
+                ];
+                await recordPackage(
+                    recordName,
+                    'public2',
+                    [PUBLIC_READ_MARKER],
+                    version(1),
+                    {
+                        version: 2,
+                        updates,
+                    }
+                );
+
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.loadPackageRequest({
+                    userId,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public2',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public2@1.0.0',
+                        packageId: 'public2',
+                        address: 'public2',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        instUpdates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'test123',
+                    }),
+                });
+
+                expect(instUpdates.updates).toEqual(
+                    updates.map((u) => u.update)
+                );
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'public2',
+                        packageVersionId: 'public2@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should load the package as the current user', async () => {
+                await recordPackage(
+                    recordName,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+
+                store.roles[recordName] = {
+                    [formatInstId(recordName, inst)]: new Set([
+                        ADMIN_ROLE_NAME,
+                    ]),
+                };
+
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.loadPackageRequest({
+                    userId,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'private',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'private@1.0.0',
+                        packageId: 'private',
+                        address: 'private',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PRIVATE_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        instUpdates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        packageId: 'private',
+                        packageVersionId: 'private@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should return not_authorized if the user is not authorized to read the package', async () => {
+                await recordPackage(
+                    recordName,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+
+                const result = await server.loadPackageRequest({
+                    userId: device1Info.userId,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'private',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'package.version',
+                        resourceId: 'private',
+                        subjectType: 'user',
+                        subjectId: device1Info.userId,
+                        action: 'read',
+                    },
+                });
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(instUpdates?.updates ?? []).toEqual([]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([]);
+            });
+
+            it('should return not_authorized if the inst is not authorized to read the package', async () => {
+                await recordPackage(
+                    device1Info.userId,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+
+                const result = await server.loadPackageRequest({
+                    userId: device1Info.userId,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName: device1Info.userId,
+                        address: 'private',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: device1Info.userId,
+                        resourceKind: 'package.version',
+                        resourceId: 'private',
+                        subjectType: 'inst',
+                        subjectId: formatInstId(recordName, inst),
+                        action: 'read',
+                    },
+                });
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(instUpdates?.updates ?? []).toEqual([]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([]);
+            });
         });
 
         describe('sync/time', () => {
