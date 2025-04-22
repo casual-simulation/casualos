@@ -235,8 +235,7 @@ export type WebsocketResponseMessage =
     | RateLimitExceededMessage
     | WebsocketHttpResponseMessage
     | WebsocketHttpPartialResponseMessage
-    | RequestMissingPermissionResponseMessage
-    | LoadPackageResponseMessage;
+    | RequestMissingPermissionResponseMessage;
 
 export type WebsocketRequestMessage =
     | LoginMessage
@@ -251,8 +250,7 @@ export type WebsocketRequestMessage =
     | GetUpdatesMessage
     | WebsocketHttpRequestMessage
     | RequestMissingPermissionMessage
-    | RequestMissingPermissionResponseMessage
-    | LoadPackageRequestMessage;
+    | RequestMissingPermissionResponseMessage;
 
 export type WebsocketMessage =
     | WebsocketRequestMessage
@@ -1139,99 +1137,6 @@ export interface WebsocketPackage {
     };
 }
 
-export interface LoadPackageRequestMessage {
-    type: 'repo/load_package';
-
-    /**
-     * The ID of the request.
-     */
-    requestId: string | number;
-
-    /**
-     * The name of the record that the package should be loaded into.
-     */
-    recordName: string;
-
-    /**
-     * The name of the inst that the package should be loaded into.
-     */
-    inst: string;
-
-    /**
-     * The branch that the package should be loaded into.
-     * If omitted, then the default branch will be used.
-     */
-    branch?: string;
-
-    /**
-     * The package that should be loaded.
-     */
-    package: WebsocketPackage;
-}
-export const loadPackageRequestMessageSchema = z.object({
-    type: z.literal('repo/load_package'),
-    recordName: z.string(),
-    inst: z.string(),
-    branch: z.string().optional(),
-    package: z.object({
-        recordName: z.string(),
-        address: z.string(),
-        key: z.object({
-            major: z.number(),
-            minor: z.number(),
-            patch: z.number(),
-            tag: z.string().nullable(),
-        }),
-    }),
-});
-type ZodLoadPackageRequestMessage = z.infer<
-    typeof loadPackageRequestMessageSchema
->;
-type ZodLoadPackageRequestMessageAssertion = HasType<
-    ZodLoadPackageRequestMessage,
-    LoadPackageRequestMessage
->;
-
-export type LoadPackageResponseMessage =
-    | LoadPackageResponseSuccessMessage
-    | LoadPackageResponseFailureMessage;
-
-export interface LoadPackageResponseSuccessMessage {
-    type: 'repo/load_package/response';
-    success: true;
-
-    /**
-     * The ID of the request.
-     */
-    requestId: string | number;
-}
-
-export interface LoadPackageResponseFailureMessage {
-    type: 'repo/load_package/response';
-
-    success: false;
-
-    /**
-     * The ID of the request.
-     */
-    requestId: string | number;
-
-    /**
-     * The error code that occurred.
-     */
-    errorCode: WebsocketErrorCode;
-
-    /**
-     * The error message that occurred.
-     */
-    errorMessage: string;
-
-    /**
-     * The list of parsing issues that occurred.
-     */
-    issues?: ZodIssue[];
-}
-
 /**
  * Defines an event which attempts to perform a time sync.
  */
@@ -1419,7 +1324,6 @@ export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
     websocketHttpRequestMessageSchema,
     requestMissingPermissionMessageSchema,
     requestMissingPermissionResponseMessageSchema,
-    loadPackageRequestMessageSchema,
 ]);
 type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketRequestMessageAssertion = HasType<
