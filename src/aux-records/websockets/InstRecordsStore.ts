@@ -215,6 +215,11 @@ export interface LoadedPackage {
     inst: string;
 
     /**
+     * The branch that the package was installed into.
+     */
+    branch: string;
+
+    /**
      * The ID of the user that loaded the package.
      */
     userId: string | null;

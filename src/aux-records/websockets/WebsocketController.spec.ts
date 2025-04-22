@@ -8982,6 +8982,223 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should load the package into a public inst', async () => {
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId: userId,
+                    userRole: 'none',
+                    recordName: null,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    null,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName: null,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
+                        userId: userId,
+                    },
+                ]);
+            });
+
+            it('should allow anonymous users to install packages into public insts', async () => {
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId: null,
+                    userRole: null,
+                    recordName: null,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    null,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName: null,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'public',
+                        packageVersionId: 'public@1.0.0',
+                        userId: null,
+                    },
+                ]);
+            });
+
+            it('should load the package into the specified branch of the inst', async () => {
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId: userId,
+                    userRole: 'none',
+                    recordName,
+                    inst,
+                    branch: 'test',
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    package: {
+                        id: 'public@1.0.0',
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const updates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    'test'
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        updates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        branch: 'test',
                         packageId: 'public',
                         packageVersionId: 'public@1.0.0',
                         userId: userId,
@@ -9086,6 +9303,7 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'public',
                         packageVersionId: 'public@1.0.0',
                         userId: userId,
@@ -9212,6 +9430,7 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'public',
                         packageVersionId: 'public@1.0.0',
                         userId: userId,
@@ -9220,6 +9439,7 @@ describe('WebsocketController', () => {
                         id: 'packageId2',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'public2',
                         packageVersionId: 'public2@1.0.0',
                         userId: userId,
@@ -9315,6 +9535,7 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'public2',
                         packageVersionId: 'public2@1.0.0',
                         userId: userId,
@@ -9407,6 +9628,7 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'private',
                         packageVersionId: 'private@1.0.0',
                         userId: userId,
@@ -9602,6 +9824,7 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'public',
                         packageVersionId: 'public@2.0.0',
                         userId: userId,
@@ -9696,6 +9919,7 @@ describe('WebsocketController', () => {
                         id: 'packageId',
                         recordName,
                         inst,
+                        branch: DEFAULT_BRANCH_NAME,
                         packageId: 'public',
                         packageVersionId: 'public@2.0.0',
                         userId: userId,

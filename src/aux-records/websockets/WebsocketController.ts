@@ -2449,6 +2449,7 @@ export class WebsocketController {
             id: loadedPackageId,
             recordName: request.recordName,
             inst: request.inst,
+            branch,
 
             packageId: p.item.packageId,
             packageVersionId: p.item.id,
@@ -3346,8 +3347,9 @@ export interface LoadPackageRequest {
 
     /**
      * The name of the record that the package should be loaded into.
+     * Null if the inst is a public inst.
      */
-    recordName: string;
+    recordName: string | null;
 
     /**
      * The inst that the package should be loaded into.
