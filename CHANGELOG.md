@@ -1,5 +1,34 @@
 # CasualOS Changelog
 
+## V3.4.6
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where quickly typing in an input element could cause the cursor to jump to the end of the content in the input box.
+-   Fixed an issue where it was possible for the `@onInstJoined` shout to be sent before all initial tag mask have been processed.
+
+## V3.4.5
+
+#### Date: 4/18/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `os.calculateViewportCoordinatesFromPosition()` function returned incorrect coordinate values when used in the mapPortal.
+    -   Function now properly converts longitude/latitude coordinates to accurate viewport positions, ensuring consistent behavior between gridPortal and mapPortal.
+-   Fixed an issue with custom apps where setting the `selected` property on an `<option>` element would appear to have no effect.
+-   Fixed an issue with custom apps where setting the `checked` property on `<input>` elements would have no effect.
+
+## V3.4.4
+
+#### Date: 4/17/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with custom apps where setting an attribute to `null` would not remove the attribute.
+-   Fixed an issue with custom apps where SVG elements would not work when DOM support is enabled.
+
 ## V3.4.3
 
 #### Date: 4/10/2025

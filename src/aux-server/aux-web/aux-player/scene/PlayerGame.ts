@@ -1144,18 +1144,42 @@ export class PlayerGame extends Game {
         sim: Simulation,
         e: CalculateViewportCoordinatesFromPositionAction
     ) {
-        const portalTag = getPortalTag(e.portal);
-        const _3dSim = this._findSimulationForPortalTag(sim, portalTag);
+        const _3dSim = this._findSimulationForPortalTag(
+            sim,
+            getPortalTag(e.portal)
+        );
+
         if (_3dSim) {
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
-            const vector = new Vector3(
-                e.position.x * gridScale,
-                e.position.y * gridScale,
-                e.position.z * gridScale
-            );
+
+            const position = {
+                x: e.position.x,
+                y: e.position.y,
+                z: e.position.z,
+            };
+
+            let vector;
+
+            const coordinateTransform = _3dSim.coordinateTransformer
+                ? _3dSim.coordinateTransformer(position)
+                : null;
+
+            if (coordinateTransform) {
+                vector = new Vector3(0, 0, 0);
+                vector.applyMatrix4(coordinateTransform);
+            } else {
+                vector = new Vector3(
+                    position.x * gridScale,
+                    position.y * gridScale,
+                    position.z * gridScale
+                );
+            }
+
             vector.project(rig.mainCamera);
+
             const viewportPosition = convertVector2(vector);
+
             sim.helper.transaction(
                 asyncResult(e.taskId, viewportPosition, true)
             );

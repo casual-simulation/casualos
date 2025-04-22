@@ -42,13 +42,14 @@ import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { bufferTime, first, map } from 'rxjs/operators';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 import {
+    DOM_NODE_REFERENCE_PROPERTIES,
     ELEMENT_NODE,
     ELEMENT_READ_ONLY_PROPERTIES,
     ELEMENT_SPECIFIC_PROPERTIES,
-    NODE_REFERENCE_PROPERTIES,
     TARGET_INPUT_PROPERTIES,
     TEXT_NODE,
     TEXT_REFERENCE_PROPERTIES,
+    UNDOM_NODE_REFERENCE_PROPERTIES,
 } from './HtmlAppConsts';
 
 export interface HtmlPortalSetupResult {
@@ -111,26 +112,34 @@ if (typeof Element !== 'undefined') {
     // when DOM is used when the value is set via the API.
     // This might break cases where code expects the value and attribute to be separate, but in practice
     // this is probably a much more rare case than the opposite.
-    const classes = [HTMLInputElement, HTMLTextAreaElement];
-    for (let C of classes) {
+    const classesAndProperties = [
+        [HTMLInputElement, ['value', 'checked']] as const,
+        [HTMLTextAreaElement, ['value']] as const,
+        [HTMLSelectElement, ['value', 'selectedIndex']] as const,
+        [HTMLOptionElement, ['selected']] as const,
+    ];
+
+    for (let [C, properties] of classesAndProperties) {
         const TargetClass = C;
-        const oldDescriptor = Object.getOwnPropertyDescriptor(
-            TargetClass.prototype,
-            'value'
-        );
-        Object.defineProperty(TargetClass.prototype, 'value', {
-            get: function (this: typeof TargetClass) {
-                // eslint-disable-next-line prefer-rest-params
-                return oldDescriptor.get.apply(this, arguments);
-            },
-            set: function (this: typeof TargetClass, value: string) {
-                // eslint-disable-next-line prefer-rest-params
-                oldDescriptor.set.apply(this, arguments);
-                if (this instanceof TargetClass) {
-                    this.setAttribute('value', value);
-                }
-            },
-        });
+        for (let prop of properties) {
+            const oldDescriptor = Object.getOwnPropertyDescriptor(
+                TargetClass.prototype,
+                prop
+            );
+            Object.defineProperty(TargetClass.prototype, prop, {
+                get: function (this: typeof TargetClass) {
+                    // eslint-disable-next-line prefer-rest-params
+                    return oldDescriptor.get.apply(this, arguments);
+                },
+                set: function (this: typeof TargetClass, value: string) {
+                    // eslint-disable-next-line prefer-rest-params
+                    oldDescriptor.set.apply(this, arguments);
+                    if (this instanceof TargetClass) {
+                        this.setAttribute(prop, value);
+                    }
+                },
+            });
+        }
     }
 }
 
@@ -325,6 +334,10 @@ export class HtmlAppBackend implements AppBackend {
                             }
                         } finally {
                             supressMutations(false);
+                            // clear the mutation queue so that we don't send useless
+                            // attribute modifications and potentially break something
+                            // (e.g. the user's selection if they happen to be typing very quickly)
+                            this._mutationObserver.takeRecords();
                         }
 
                         try {
@@ -729,12 +742,16 @@ export class HtmlAppBackend implements AppBackend {
             nodeType: obj.nodeType,
         } as any;
 
+        const domEnabled = isBrowserDocument();
+        const properties = domEnabled
+            ? DOM_NODE_REFERENCE_PROPERTIES
+            : UNDOM_NODE_REFERENCE_PROPERTIES;
         if (obj.nodeType === TEXT_NODE) {
             for (let prop of TEXT_REFERENCE_PROPERTIES) {
                 result[prop] = anyObj[prop];
             }
         } else if (obj.nodeType === ELEMENT_NODE) {
-            for (let prop of NODE_REFERENCE_PROPERTIES) {
+            for (let prop of properties) {
                 if (!prop.startsWith('_') || prop === '__id') {
                     const value = anyObj[prop];
                     if (hasValue(value)) {

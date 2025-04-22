@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { Subject, Subscription } from 'rxjs';
-import { Map as YMap } from 'yjs';
+import { skip, Subject, Subscription } from 'rxjs';
+import { Map as YMap, Text as YText } from 'yjs';
 import { waitAsync } from '../test/TestHelpers';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import type {
@@ -32,6 +32,7 @@ import { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { RemoteYjsSharedDocument } from './RemoteYjsSharedDocument';
 import type { SharedDocumentConfig } from './SharedDocumentConfig';
 import { testDocumentImplementation } from './test/DocumentTests';
+import { fromByteArray } from 'base64-js';
 
 console.log = jest.fn();
 
@@ -157,6 +158,65 @@ describe('RemoteYjsSharedDocument', () => {
                         recordName: recordName,
                         inst: 'inst',
                         branch: 'testBranch',
+                    },
+                ]);
+            });
+
+            it('should send the sync event after the updates have been processed', async () => {
+                setupPartition({
+                    recordName: recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                });
+
+                let events: (StatusUpdate | string)[] = [];
+                document.onStatusUpdated.subscribe((s) => {
+                    if (s.type === 'sync') {
+                        events.push(s);
+                    }
+                });
+                document.doc.on('update', (u: Uint8Array) => {
+                    events.push(fromByteArray(u));
+                });
+
+                const updates = [
+                    ...getUpdates((doc, bots) => {
+                        bots.set('bot1', new YMap([['tag1', 'abc']]));
+                    }),
+                    ...getUpdates((doc, bots) => {
+                        bots.set('bot2', new YMap([['tag2', 'def']]));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot3:tag3', new YText('ghi'));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot4:tag4', new YText('jfk'));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot5:tag5', new YText('lmn'));
+                    }),
+                ];
+
+                document.connect();
+
+                await waitAsync();
+
+                addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    ...updates,
+                    {
+                        type: 'sync',
+                        synced: true,
                     },
                 ]);
             });
