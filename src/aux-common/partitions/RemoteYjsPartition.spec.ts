@@ -21,6 +21,7 @@ import {
     Subscription,
     bufferCount,
     firstValueFrom,
+    skip,
     takeWhile,
 } from 'rxjs';
 import {
@@ -36,6 +37,7 @@ import { RemoteYjsPartitionImpl } from './RemoteYjsPartition';
 import type {
     AsyncAction,
     Bot,
+    BotSpace,
     InstUpdate,
     StateUpdatedEvent,
     UpdatedBot,
@@ -286,6 +288,111 @@ describe('RemoteYjsPartition', () => {
                         inst: 'inst',
                         branch: 'testBranch',
                     },
+                ]);
+            });
+
+            it('should send the sync event after the updates are processed', async () => {
+                partition.space = 'test';
+
+                let events: (StatusUpdate | StateUpdatedEvent)[] = [];
+                partition.onStatusUpdated.subscribe((s) => {
+                    if (s.type === 'sync') {
+                        events.push(s);
+                    }
+                });
+                partition.onStateUpdated
+                    .pipe(skip(1))
+                    .subscribe((s) => events.push(s));
+
+                partition.connect();
+
+                const updates = [
+                    ...getUpdates((doc, bots) => {
+                        bots.set('bot1', new YMap([['tag1', 'abc']]));
+                    }),
+                    ...getUpdates((doc, bots) => {
+                        bots.set('bot2', new YMap([['tag2', 'def']]));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot3:tag3', new YText('ghi'));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot4:tag4', new YText('jfk'));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot5:tag5', new YText('lmn'));
+                    }),
+                ];
+
+                addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    stateUpdatedEvent(
+                        {
+                            bot1: createBot(
+                                'bot1',
+                                { tag1: 'abc' },
+                                'test' as BotSpace
+                            ),
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot2: createBot(
+                                'bot2',
+                                { tag2: 'def' },
+                                'test' as BotSpace
+                            ),
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot3: {
+                                masks: {
+                                    test: {
+                                        tag3: 'ghi',
+                                    },
+                                },
+                            },
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot4: {
+                                masks: {
+                                    test: {
+                                        tag4: 'jfk',
+                                    },
+                                },
+                            },
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot5: {
+                                masks: {
+                                    test: {
+                                        tag5: 'lmn',
+                                    },
+                                },
+                            },
+                        },
+                        expect.any(Object)
+                    ),
+                    { type: 'sync', synced: true },
                 ]);
             });
 
