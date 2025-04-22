@@ -2103,27 +2103,29 @@ Object {
             "type": "string",
           },
           "major": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "minor": Object {
-            "defaultValue": 0,
-            "hasDefault": true,
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "patch": Object {
-            "defaultValue": 0,
-            "hasDefault": true,
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "recordName": Object {
             "type": "string",
           },
+          "sha256": Object {
+            "optional": true,
+            "type": "string",
+          },
           "tag": Object {
-            "defaultValue": "",
-            "hasDefault": true,
+            "nullable": true,
             "optional": true,
             "type": "string",
           },
@@ -6781,27 +6783,29 @@ Object {
             "type": "string",
           },
           "major": Object {
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "minor": Object {
-            "defaultValue": 0,
-            "hasDefault": true,
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "patch": Object {
-            "defaultValue": 0,
-            "hasDefault": true,
+            "nullable": true,
             "optional": true,
             "type": "number",
           },
           "recordName": Object {
             "type": "string",
           },
+          "sha256": Object {
+            "optional": true,
+            "type": "string",
+          },
           "tag": Object {
-            "defaultValue": "",
-            "hasDefault": true,
+            "nullable": true,
             "optional": true,
             "type": "string",
           },

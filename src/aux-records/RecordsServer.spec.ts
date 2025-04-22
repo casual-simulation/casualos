@@ -12901,6 +12901,207 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should get the latest package version', async () => {
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId2',
+                address: 'address',
+                key: {
+                    major: 2,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId2',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 2,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        readme: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the package version by SHA-256', async () => {
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId2',
+                address: 'address',
+                key: {
+                    major: 2,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'test',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&sha256=test`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId2',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 2,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        readme: '',
+                        requiresReview: false,
+                        sha256: 'test',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the latest version that matches the given major number', async () => {
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId2',
+                address: 'address',
+                key: {
+                    major: 2,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                readme: '',
+                requiresReview: false,
+                sha256: 'test',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        readme: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should get the package version by key', async () => {
             const result = await server.handleHttpRequest(
                 httpGet(
@@ -13448,6 +13649,10 @@ describe('RecordsServer', () => {
             () => apiHeaders
         );
     });
+
+    // describe("POST /api/v2/records/package/version/load", () => {
+
+    // });
 
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {

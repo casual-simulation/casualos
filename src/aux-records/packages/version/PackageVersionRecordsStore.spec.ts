@@ -19,6 +19,7 @@ import type { PackageRecordVersionKeySpecifier } from './PackageVersionRecordsSt
 import {
     formatVersionSpecifier,
     getPackageVersionKey,
+    getPackageVersionSpecifier,
 } from './PackageVersionRecordsStore';
 
 describe('getPackageVersionKey()', () => {
@@ -43,6 +44,77 @@ describe('getPackageVersionKey()', () => {
                 patch: 0,
                 tag: '',
             },
+        });
+    });
+});
+
+describe('getPackageVersionSpecifier()', () => {
+    it('should be able to parse the given key', () => {
+        expect(
+            getPackageVersionSpecifier('v1.0.0', null, null, null, null, null)
+        ).toEqual({
+            success: true,
+            key: {
+                major: 1,
+                minor: 0,
+                patch: 0,
+                tag: '',
+            },
+        });
+    });
+
+    it('should be able use the given major, minor, patch and tag', () => {
+        expect(getPackageVersionSpecifier(null, 1, 0, 0, '', null)).toEqual({
+            success: true,
+            key: {
+                major: 1,
+                minor: 0,
+                patch: 0,
+                tag: '',
+            },
+        });
+    });
+
+    it('should be able to use the given SHA-256', () => {
+        expect(
+            getPackageVersionSpecifier(null, null, null, null, null, 'hash')
+        ).toEqual({
+            success: true,
+            key: {
+                sha256: 'hash',
+            },
+        });
+    });
+
+    it('should be able to omit minor, patch and tag', () => {
+        expect(
+            getPackageVersionSpecifier(null, 1, null, null, null, null)
+        ).toEqual({
+            success: true,
+            key: {
+                major: 1,
+            },
+        });
+    });
+
+    it('should be able to patch and tag', () => {
+        expect(
+            getPackageVersionSpecifier(null, 1, 2, null, null, null)
+        ).toEqual({
+            success: true,
+            key: {
+                major: 1,
+                minor: 2,
+            },
+        });
+    });
+
+    it('should be able to omit all numbers', () => {
+        expect(
+            getPackageVersionSpecifier(null, null, null, null, null, null)
+        ).toEqual({
+            success: true,
+            key: {},
         });
     });
 });

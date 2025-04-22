@@ -431,6 +431,63 @@ export function getPackageVersionKey(
     };
 }
 
+export function getPackageVersionSpecifier(
+    key: string | null,
+    major: number | null,
+    minor: number | null,
+    patch: number | null,
+    tag: string | null,
+    sha256: string | null
+): GetPackageVersionSpecifierResult {
+    if (sha256 && key) {
+        return {
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage:
+                'You cannot provide both key and sha256 version number.',
+        };
+    } else if (sha256 && major) {
+        return {
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage:
+                'You cannot provide both major version number and sha256.',
+        };
+    } else if (key && major) {
+        return {
+            success: false,
+            errorCode: 'unacceptable_request',
+            errorMessage:
+                'You cannot provide both key and major version number.',
+        };
+    } else if (sha256) {
+        return {
+            success: true,
+            key: {
+                sha256,
+            },
+        };
+    } else if (key) {
+        const parsed = parseVersionNumber(key);
+        if (typeof parsed.major === 'number') {
+            major = parsed.major;
+            minor = parsed.minor;
+            patch = parsed.patch;
+            tag = parsed.tag ?? '';
+        }
+    }
+
+    return {
+        success: true,
+        key: {
+            major: major ?? undefined,
+            minor: minor ?? undefined,
+            patch: patch ?? undefined,
+            tag: tag ?? undefined,
+        },
+    };
+}
+
 export type GetPackageVersionKeyResult =
     | GetPackageRecordKeySuccess
     | GetPackageRecordKeyFailure;
@@ -441,6 +498,21 @@ export interface GetPackageRecordKeySuccess {
 }
 
 export interface GetPackageRecordKeyFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export type GetPackageVersionSpecifierResult =
+    | GetPackageVersionSpecifierSuccess
+    | GetPackageVersionSpecifierFailure;
+
+export interface GetPackageVersionSpecifierSuccess {
+    success: true;
+    key: PackageRecordVersionKeySpecifier;
+}
+
+export interface GetPackageVersionSpecifierFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;

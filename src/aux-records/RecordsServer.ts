@@ -155,7 +155,10 @@ import type {
     PackageVersionReviewInput,
 } from './packages/version/PackageVersionRecordsController';
 import type { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
-import { getPackageVersionKey } from './packages/version/PackageVersionRecordsStore';
+import {
+    getPackageVersionKey,
+    getPackageVersionSpecifier,
+} from './packages/version/PackageVersionRecordsStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -2178,10 +2181,11 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION,
                         address: ADDRESS_VALIDATION,
-                        major: z.coerce.number().int().optional(),
-                        minor: z.coerce.number().int().optional().default(0),
-                        patch: z.coerce.number().int().optional().default(0),
-                        tag: z.string().optional().default(''),
+                        major: z.coerce.number().int().optional().nullable(),
+                        minor: z.coerce.number().int().optional().nullable(),
+                        patch: z.coerce.number().int().optional().nullable(),
+                        tag: z.string().optional().nullable(),
+                        sha256: z.string().optional(),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         key: z.string().min(1).optional(),
                     })
@@ -2195,6 +2199,7 @@ export class RecordsServer {
                             minor,
                             patch,
                             tag,
+                            sha256,
                             key,
                             instances,
                         },
@@ -2218,12 +2223,13 @@ export class RecordsServer {
                             return validation;
                         }
 
-                        const keyResult = getPackageVersionKey(
+                        const keyResult = getPackageVersionSpecifier(
                             key,
                             major,
                             minor,
                             patch,
-                            tag
+                            tag,
+                            sha256
                         );
 
                         if (keyResult.success === false) {
