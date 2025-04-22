@@ -415,6 +415,26 @@ export class BotShapeDecorator
                 this._updateIframeHtml();
             }
         }
+        if (this._mapView && this._shape === 'map') {
+            const coords = this._parseMapAddress(address);
+            this._mapView.position.copy(coords);
+
+            // Force an update of the LOD system
+            if (this._game) {
+                const renderer = this._game.getRenderer();
+                const camera = this._game.getMainCameraRig()?.mainCamera;
+                const scene = this._game.getScene();
+
+                if (renderer && camera && scene) {
+                    this._mapView.lod.updateLOD(
+                        this._mapView,
+                        camera,
+                        renderer,
+                        scene
+                    );
+                }
+            }
+        }
     }
 
     private _updateAspectRatio(aspectRatio: number) {
@@ -1567,13 +1587,56 @@ export class BotShapeDecorator
     }
 
     private _createMapPlane() {
-        this._mapView =
-            this.mesh =
-            this.collider =
-                createMapPlane(new Vector3(0, 0, 0), 0.5);
+        const coords = this._parseMapAddress(this._address);
+
+        this._mapView = createMapPlane(coords, 0.5);
+
+        this.mesh = this.collider = this._mapView;
+
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
+
+        if (this._game) {
+            const renderer = this._game.getRenderer();
+            const camera = this._game.getMainCameraRig()?.mainCamera;
+            const scene = this._game.getScene();
+
+            if (renderer && camera && scene) {
+                this._mapView.lod.updateLOD(
+                    this._mapView,
+                    camera,
+                    renderer,
+                    scene
+                );
+            }
+        }
+    }
+
+    private _parseMapAddress(address: string): Vector3 {
+        if (!address) {
+            return new Vector3(0, 0, 0);
+        }
+
+        try {
+            const coords = JSON.parse(address);
+            if (coords.lat !== undefined && coords.lon !== undefined) {
+                return new Vector3(coords.lon, coords.lat, coords.zoom || 0);
+            }
+
+            const parts = address.split(',').map((p) => parseFloat(p.trim()));
+            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                return new Vector3(
+                    parts[1], // lon
+                    parts[0], // lat
+                    parts.length > 2 ? parts[2] : 0
+                );
+            }
+        } catch (e) {
+            console.warn('Failed to parse map address:', address, e);
+        }
+
+        return new Vector3(0, 0, 0);
     }
 
     private _createSphere() {

@@ -337,9 +337,11 @@ export function createPlane(size: number): Mesh {
  */
 export function createMapPlane(position: Vector3, size: number): MapView {
     const map = new MapView(MapView.PLANAR, mapFormProvider);
-    map.lod = new LODRadial();
+    map.lod = new LODFrustumOrthographic();
     map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
     map.scale.set(size, size, size);
+    map.position.copy(position);
+    map.preSubdivide();
     // ! Testing of LOD, do not implement.
     // TODO: Implement proper system to parse and translate address to lat/lon from vector3.
     // const renderer = simulation3D.game.getRenderer();
