@@ -34,7 +34,7 @@ const zoomLevelPixelRatios = [
  * Key 'P' navigates to a parent node
  * Key 'C' navigates to the first child node
  */
-export class LODFrustumOrthographic implements LODControl {
+export class LODDebugger implements LODControl {
     // The currently selected node
     private selectedNode: MapPlaneNode | null = null;
     // Store a reference to the view

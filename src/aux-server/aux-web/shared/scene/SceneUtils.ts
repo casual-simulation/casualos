@@ -92,7 +92,7 @@ import {
     LODRadial,
 } from 'geo-three';
 import type { Simulation3D } from './Simulation3D';
-import { LODFrustumOrthographic } from '../public/geo-three/LODFrustumOrthographic';
+import { LODDebugger } from '../public/geo-three/LODDebugger';
 
 /**
  * The provider for the map view which renders a map within a three scene.
@@ -337,7 +337,7 @@ export function createPlane(size: number): Mesh {
  */
 export function createMapPlane(position: Vector3, size: number): MapView {
     const map = new MapView(MapView.PLANAR, mapFormProvider);
-    map.lod = new LODFrustumOrthographic();
+    map.lod = new LODDebugger();
     map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
     map.scale.set(size, size, size);
     map.position.copy(position);
