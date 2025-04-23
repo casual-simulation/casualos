@@ -119,6 +119,7 @@ import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import type { MapView } from 'geo-three';
+import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -161,6 +162,8 @@ export class BotShapeDecorator
     private _keyboard: Keyboard = null;
     private _animationHandle: AnimationMixerHandle = null;
     private _meshCancellationToken: CancellationToken;
+    private _mapLODLevel: number = 0;
+    private _lodConstant: LODConstant | null = null;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -212,7 +215,18 @@ export class BotShapeDecorator
         this._updateLightTarget(null);
 
         if (this._game && this._mapView) {
-            // Update LOD here
+            const renderer = this._game.getRenderer();
+            const camera = this._game.getMainCameraRig()?.mainCamera;
+            const scene = this._game.getScene();
+
+            if (renderer && camera && scene) {
+                this._mapView.lod.updateLOD(
+                    this._mapView,
+                    camera,
+                    renderer,
+                    scene
+                );
+            }
         }
     }
 
@@ -298,6 +312,7 @@ export class BotShapeDecorator
         this._updateLightDecay(calc);
         this._updateLightGroundColor(calc);
         this._updateBuildStep(calc);
+        this._updateMapLOD(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -620,6 +635,10 @@ export class BotShapeDecorator
             });
         }
 
+        if (this._lodConstant) {
+            this._lodConstant = null;
+        }
+
         if (this._keyboard) {
             for (let key of (this._keyboard as any).keys) {
                 const index = this.bot3D.colliders.indexOf(key);
@@ -741,6 +760,24 @@ export class BotShapeDecorator
             'formLightGroundColor'
         );
         this._setLightGroundColor(groundColor);
+    }
+
+    private _updateMapLOD(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        const lodLevel = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapLOD',
+            0
+        );
+
+        if (this._mapLODLevel !== lodLevel) {
+            this._mapLODLevel = lodLevel;
+            this._setMapLOD(lodLevel);
+        }
     }
 
     private _updateOpacity(calc: BotCalculationContext) {
@@ -927,6 +964,34 @@ export class BotShapeDecorator
 
                 // Set the current backgroundOpacity for the key.
                 key.set({ backgroundOpacity: newOpacity });
+            }
+        }
+    }
+
+    private _setMapLOD(level: number): void {
+        if (!this._mapView) {
+            return;
+        }
+
+        if (!this._lodConstant) {
+            this._lodConstant = new LODConstant(level);
+            this._mapView.lod = this._lodConstant;
+        } else {
+            this._lodConstant.setTargetLevel(level);
+        }
+
+        if (this._game) {
+            const renderer = this._game.getRenderer();
+            const camera = this._game.getMainCameraRig()?.mainCamera;
+            const scene = this._game.getScene();
+
+            if (renderer && camera && scene) {
+                this._mapView.lod.updateLOD(
+                    this._mapView,
+                    camera,
+                    renderer,
+                    scene
+                );
             }
         }
     }
