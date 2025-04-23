@@ -14,16 +14,19 @@ export class LODConstant implements LODControl {
     private _targetLevel: number;
     private _initialized: boolean = false;
     private _needsSimplification: boolean = false;
+    private readonly _maxLevel: number = 5;
 
     constructor(targetLevel: number = 0) {
-        this._targetLevel = targetLevel;
+        this._targetLevel = Math.min(targetLevel, this._maxLevel);
     }
     
     public setTargetLevel(level: number): void {
-        if (level < this._targetLevel){
+        const cappedLevel = Math.min(level, this._maxLevel);
+
+        if (cappedLevel < this._targetLevel){
             this._needsSimplification = true;
         }
-        this._targetLevel = level;
+        this._targetLevel = cappedLevel;
 
         if (this._initialized && this._view) {
             this.applyLODLevel();
