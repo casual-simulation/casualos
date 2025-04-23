@@ -1741,6 +1741,24 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
+        if (this._packagesStore && this._packageVersionsStore) {
+            this._packagesController = new PackageRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._packagesStore,
+            });
+            this._packageVersionController =
+                new PackageVersionRecordsController({
+                    config: this._configStore,
+                    policies: this._policyController,
+                    recordItemStore: this._packagesStore,
+                    store: this._packageVersionsStore,
+                    files: this._filesController,
+                    systemNotifications: this._notificationMessenger,
+                    packages: this._packagesController,
+                });
+        }
+
         if (
             this._websocketConnectionStore &&
             this._websocketMessenger &&
@@ -1756,7 +1774,8 @@ export class ServerBuilder implements SubscriptionLike {
                 this._policyController,
                 this._configStore,
                 this._metricsStore,
-                this._authStore
+                this._authStore,
+                this._packageVersionController
             );
         }
 
@@ -1780,24 +1799,6 @@ export class ServerBuilder implements SubscriptionLike {
                 store: this._notificationsStore,
                 pushInterface: this._pushInterface,
             });
-        }
-
-        if (this._packagesStore && this._packageVersionsStore) {
-            this._packagesController = new PackageRecordsController({
-                config: this._configStore,
-                policies: this._policyController,
-                store: this._packagesStore,
-            });
-            this._packageVersionController =
-                new PackageVersionRecordsController({
-                    config: this._configStore,
-                    policies: this._policyController,
-                    recordItemStore: this._packagesStore,
-                    store: this._packageVersionsStore,
-                    files: this._filesController,
-                    systemNotifications: this._notificationMessenger,
-                    packages: this._packagesController,
-                });
         }
 
         const server = new RecordsServer({
