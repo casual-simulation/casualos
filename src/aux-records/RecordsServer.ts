@@ -2471,34 +2471,52 @@ export class RecordsServer {
                 .http('POST', '/api/v2/records/package/install')
                 .inputs(
                     z.object({
-                        recordName: RECORD_NAME_VALIDATION.nullable(),
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
                         inst: z.string().min(1),
                         branch: z.string().optional().nullable(),
                         package: z.object({
                             recordName: RECORD_NAME_VALIDATION,
                             address: ADDRESS_VALIDATION,
-                            key: z.union([
-                                z.string(),
-                                z.object({
-                                    major: z
-                                        .number()
-                                        .int()
-                                        .optional()
-                                        .nullable(),
-                                    minor: z
-                                        .number()
-                                        .int()
-                                        .optional()
-                                        .nullable(),
-                                    patch: z
-                                        .number()
-                                        .int()
-                                        .optional()
-                                        .nullable(),
-                                    tag: z.string().optional().nullable(),
-                                    sha256: z.string().optional().nullable(),
-                                }),
-                            ]),
+                            key: z
+                                .union([
+                                    z
+                                        .string()
+                                        .describe(
+                                            'The package version to install as a string'
+                                        ),
+                                    z
+                                        .object({
+                                            major: z
+                                                .number()
+                                                .int()
+                                                .optional()
+                                                .nullable(),
+                                            minor: z
+                                                .number()
+                                                .int()
+                                                .optional()
+                                                .nullable(),
+                                            patch: z
+                                                .number()
+                                                .int()
+                                                .optional()
+                                                .nullable(),
+                                            tag: z
+                                                .string()
+                                                .optional()
+                                                .nullable(),
+                                            sha256: z
+                                                .string()
+                                                .optional()
+                                                .nullable(),
+                                        })
+                                        .describe(
+                                            'The package version specifier to install'
+                                        ),
+                                ])
+                                .optional()
+                                .nullable(),
                         }),
                     })
                 )
@@ -2525,7 +2543,7 @@ export class RecordsServer {
                             await this._websocketController.installPackage({
                                 userId: validation.userId,
                                 userRole: validation.role,
-                                recordName,
+                                recordName: recordName ?? null,
                                 inst,
                                 branch,
                                 package: pkg as PackageVersionSpecifier,
