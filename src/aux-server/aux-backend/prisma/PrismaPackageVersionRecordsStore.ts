@@ -25,6 +25,7 @@ import type {
     GetPackageVersionByKeyResult,
     PackageRecordVersion,
     PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
     PackageVersionRecordsStore,
     PackageVersionReview,
     PackageVersionSubscriptionMetrics,
@@ -73,6 +74,72 @@ export class PrismaPackageVersionRecordsStore
                     tag: key.tag,
                 },
             },
+            include: {
+                package: true,
+            },
+        });
+
+        if (!item) {
+            return {
+                item: null,
+                parentMarkers: null,
+                recordName: null,
+                packageId: null,
+            };
+        }
+
+        return {
+            item: this._convertToItem(item),
+            parentMarkers: item.package.markers,
+            packageId: item.package.id,
+            recordName: item.package.recordName,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async getItemBySpecifier(
+        recordName: string,
+        address: string,
+        specifier: PackageRecordVersionKeySpecifier
+    ): Promise<GetPackageVersionByKeyResult> {
+        const where: Prisma.PackageRecordVersionWhereInput = {
+            recordName,
+            address,
+        };
+
+        if (typeof specifier.sha256 === 'string') {
+            where.sha256 = specifier.sha256;
+        } else {
+            if (typeof specifier.major === 'number') {
+                where.major = specifier.major;
+            }
+            if (typeof specifier.minor === 'number') {
+                where.minor = specifier.minor;
+            }
+            if (typeof specifier.patch === 'number') {
+                where.patch = specifier.patch;
+            }
+            if (typeof specifier.tag === 'string') {
+                where.tag = specifier.tag;
+            }
+        }
+
+        const item = await this._client.packageRecordVersion.findFirst({
+            where,
+            orderBy: [
+                {
+                    major: 'desc',
+                },
+                {
+                    minor: 'desc',
+                },
+                {
+                    patch: 'desc',
+                },
+                {
+                    tag: 'asc',
+                },
+            ],
             include: {
                 package: true,
             },
