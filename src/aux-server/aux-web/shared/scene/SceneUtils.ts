@@ -97,7 +97,7 @@ import { LODDebugger } from '../public/geo-three/LODDebugger';
 /**
  * The provider for the map view which renders a map within a three scene.
  */
-const mapFormProvider = new DebugProvider(); //new OpenStreetMapsProvider();
+const mapFormProvider = new OpenStreetMapsProvider();
 
 /**
  * Gets the direction of the up vector for 3D portals.
