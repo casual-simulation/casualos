@@ -20,13 +20,10 @@ import { LODFrustum } from 'geo-three';
  * Key 'C' navigates to the first child node
  */
 export class LODDebugger implements LODControl {
-    // The currently selected node
     private selectedNode: MapPlaneNode | null = null;
-    // Store a reference to the view
     private view: MapView | null = null;
     
     constructor() {
-        // Add event listeners for keyboard input
         window.addEventListener('keyup', this.handleKeyUp.bind(this));
     }
     
@@ -40,7 +37,6 @@ export class LODDebugger implements LODControl {
         }
         
         if (!this.selectedNode && this.view.children[0]) {
-            // Select the root node if no node is selected
             this.selectNode(this.view.children[0] as unknown as MapPlaneNode);
         }
         
@@ -54,6 +50,7 @@ export class LODDebugger implements LODControl {
         switch (event.key) {
             case 'a':
             case 'A':
+                //to subdivide
                 console.log('BEFORE - Selected node:', 
                     'level:', currentNode.level, 
                     'x:', currentNode.x, 
@@ -65,7 +62,6 @@ export class LODDebugger implements LODControl {
                     currentNode.subdivide();
                     console.log('Subdivision called');
                     
-                    // Check if subdivision worked
                     console.log('AFTER - Selected node:', 
                         'level:', currentNode.level, 
                         'x:', currentNode.x, 
@@ -73,7 +69,6 @@ export class LODDebugger implements LODControl {
                         'hasChildren:', currentNode.children.length > 0,
                         'children:', currentNode.children);
                     
-                    // If we have children now, select the first child
                     if (currentNode.children.length > 0) {
                         this.selectNode(currentNode.children[0] as unknown as MapPlaneNode);
                     }
@@ -84,6 +79,7 @@ export class LODDebugger implements LODControl {
                 
             case 'b':
             case 'B':
+                //to simplify
                 if (currentNode.parentNode) {
                     console.log('BEFORE - Parent node:', 
                         'level:', currentNode.parentNode.level, 
@@ -95,7 +91,6 @@ export class LODDebugger implements LODControl {
                         currentNode.parentNode.simplify();
                         console.log('Simplification called');
                         
-                        // Check if simplification worked and select the parent
                         this.selectNode(currentNode.parentNode);
                         
                         console.log('AFTER - Current node:', 
