@@ -549,7 +549,6 @@ export class PackageVersionRecordsController {
                     errorMessage: 'The item was not found.',
                 };
             }
-
             const markers = result.parentMarkers;
             const authorization =
                 await this._policies.authorizeUserAndInstances(

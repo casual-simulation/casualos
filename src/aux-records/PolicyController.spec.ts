@@ -38,6 +38,7 @@ import {
     ADMIN_ROLE_NAME,
     AvailablePermissions,
     DATA_RESOURCE_KIND,
+    DEFAULT_BRANCH_NAME,
     EVENT_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
     INST_RESOURCE_KIND,
@@ -3665,6 +3666,69 @@ describe('PolicyController', () => {
                         });
                     });
 
+                    it('should allow the action if the private inst was granted the admin role in the record', async () => {
+                        await services.recordsStore.addRecord({
+                            name: 'otherRecord',
+                            ownerId: userId,
+                            secretHashes: [],
+                            secretSalt: '',
+                            studioId: null,
+                        });
+                        await store.assignSubjectRole(
+                            recordName,
+                            formatInstId('otherRecord', 'myInst'),
+                            'inst',
+                            {
+                                expireTimeMs: null,
+                                role: ADMIN_ROLE_NAME,
+                            }
+                        );
+
+                        const context =
+                            await controller.constructAuthorizationContext({
+                                recordKeyOrRecordName: recordName,
+                                userId: userId,
+                            });
+
+                        const result = await controller.authorizeSubject(
+                            context,
+                            {
+                                subjectId: formatInstId(
+                                    'otherRecord',
+                                    'myInst'
+                                ),
+                                subjectType: 'inst',
+                                resourceKind: resourceKind,
+                                action: action,
+                                resourceId: resourceId,
+                                markers: [marker],
+                            }
+                        );
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            permission: {
+                                id: null,
+                                recordName,
+                                userId: null,
+
+                                subjectType: 'role',
+                                subjectId: ADMIN_ROLE_NAME,
+
+                                // resourceKind and action are null because this permission
+                                // applies to all resources and actions.
+                                resourceKind: null,
+                                action: null,
+
+                                marker: marker,
+                                options: {},
+                                expireTimeMs: null,
+                            },
+                            explanation: 'Inst is assigned the "admin" role.',
+                        });
+                    });
+
                     it('should allow the action if the role is the admin role', async () => {
                         const context =
                             await controller.constructAuthorizationContext({
@@ -6109,6 +6173,7 @@ describe('PolicyController', () => {
                     inst,
                     packageId: 'packageId',
                     packageVersionId: 'packageVersionId',
+                    branch: DEFAULT_BRANCH_NAME,
                 });
             });
 
@@ -6255,6 +6320,7 @@ describe('PolicyController', () => {
                                                 packageVersionId:
                                                     'packageVersionId',
                                                 userId: 'userId',
+                                                branch: DEFAULT_BRANCH_NAME,
                                             },
                                         },
                                         explanation: 'Inst has entitlement.',
@@ -6515,6 +6581,7 @@ describe('PolicyController', () => {
                                                 packageVersionId:
                                                     'packageVersionId',
                                                 userId: 'userId',
+                                                branch: DEFAULT_BRANCH_NAME,
                                             },
                                         },
                                         explanation: 'Inst has entitlement.',
@@ -6789,6 +6856,7 @@ describe('PolicyController', () => {
                                                 packageVersionId:
                                                     'packageVersionId',
                                                 userId: 'userId',
+                                                branch: DEFAULT_BRANCH_NAME,
                                             },
                                         },
                                         explanation: 'Inst has entitlement.',
@@ -7056,6 +7124,7 @@ describe('PolicyController', () => {
                                                 packageVersionId:
                                                     'packageVersionId',
                                                 userId: 'userId',
+                                                branch: DEFAULT_BRANCH_NAME,
                                             },
                                         },
                                         explanation: 'Inst has entitlement.',
@@ -7378,6 +7447,7 @@ describe('PolicyController', () => {
                                                 packageVersionId:
                                                     'packageVersionId',
                                                 userId: 'userId',
+                                                branch: DEFAULT_BRANCH_NAME,
                                             },
                                         },
                                         explanation: 'Inst has entitlement.',
