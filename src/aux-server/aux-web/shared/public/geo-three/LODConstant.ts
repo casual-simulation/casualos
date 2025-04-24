@@ -16,7 +16,7 @@ export class LODConstant implements LODControl {
     private _needsSimplification: boolean = false;
     private readonly _maxLevel: number = 5;
 
-    constructor(targetLevel: number = 0) {
+    constructor(targetLevel: number = 1) {
         this._targetLevel = Math.min(targetLevel, this._maxLevel);
     }
     

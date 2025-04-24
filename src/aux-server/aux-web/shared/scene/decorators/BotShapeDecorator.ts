@@ -162,7 +162,7 @@ export class BotShapeDecorator
     private _keyboard: Keyboard = null;
     private _animationHandle: AnimationMixerHandle = null;
     private _meshCancellationToken: CancellationToken;
-    private _mapLODLevel: number = 0;
+    private _mapLODLevel: number = 1;
     private _lodConstant: LODConstant | null = null;
 
     /**
@@ -771,7 +771,7 @@ export class BotShapeDecorator
             calc,
             this.bot3D.bot,
             'formMapLOD',
-            0
+            1
         );
 
         if (this._mapLODLevel !== lodLevel) {
@@ -1655,8 +1655,8 @@ export class BotShapeDecorator
         const coords = this._parseMapAddress(this._address);
 
         this._mapView = createMapPlane(coords, 0.5);
-
         this.mesh = this.collider = this._mapView;
+        this._setMapLOD(this._mapLODLevel);
 
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
