@@ -116,11 +116,23 @@ export class RedisTempInstRecordsStore implements TemporaryInstRecordsStore {
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean> {
-        return await this._redis.sIsMember(
-            this._getLoadedPackageIdsKey(recordName, inst),
-            packageId
-        );
+    ): Promise<LoadedPackage | null> {
+        const key = this._getLoadedPackageIdsKey(recordName, inst);
+        const isLoaded = await this._redis.sIsMember(key, packageId);
+
+        if (!isLoaded) {
+            return null;
+        }
+
+        const packages = await this._redis.lRange(key, 0, -1);
+        for (let p of packages) {
+            const loadedPackage = JSON.parse(p);
+            if (loadedPackage.id === packageId) {
+                return loadedPackage;
+            }
+        }
+
+        return null;
     }
 
     acquireLock(id: string, timeout: number): Promise<() => Promise<boolean>> {

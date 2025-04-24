@@ -8934,6 +8934,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9007,6 +9008,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9078,6 +9080,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9150,6 +9153,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9223,6 +9227,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9269,6 +9274,7 @@ describe('WebsocketController', () => {
 
                 expect(result2).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9357,6 +9363,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@1.0.0',
                         packageId: 'public',
@@ -9379,6 +9386,7 @@ describe('WebsocketController', () => {
 
                 expect(result2).toEqual({
                     success: true,
+                    packageLoadId: 'packageId2',
                     package: {
                         id: 'public2@1.0.0',
                         packageId: 'public2',
@@ -9483,6 +9491,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public2@1.0.0',
                         packageId: 'public2',
@@ -9580,6 +9589,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'private@1.0.0',
                         packageId: 'private',
@@ -9716,6 +9726,7 @@ describe('WebsocketController', () => {
                         address: 'private',
                         key: version(1),
                     },
+                    instances: [formatInstId(null, 'otherInst')],
                 });
 
                 expect(result).toEqual({
@@ -9729,7 +9740,7 @@ describe('WebsocketController', () => {
                         resourceKind: 'package.version',
                         resourceId: 'private',
                         subjectType: 'inst',
-                        subjectId: formatInstId(recordName, inst),
+                        subjectId: formatInstId(null, 'otherInst'),
                         action: 'read',
                     },
                 });
@@ -9744,6 +9755,205 @@ describe('WebsocketController', () => {
                 expect(
                     await instStore.listLoadedPackages(recordName, inst)
                 ).toEqual([]);
+            });
+
+            it('should return not_authorized if the target inst is not authorized to run the package', async () => {
+                await recordPackage(
+                    device1Info.userId,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+
+                store.roles[recordName] = {
+                    [device1Info.userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                await store.assignPermissionToSubjectAndMarker(
+                    device1Info.userId,
+                    'inst',
+                    formatInstId(null, 'otherInst'),
+                    'package.version',
+                    PRIVATE_MARKER,
+                    'read',
+                    {},
+                    null
+                );
+                await store.assignPermissionToSubjectAndMarker(
+                    recordName,
+                    'inst',
+                    formatInstId(null, 'otherInst'),
+                    'package.version',
+                    PRIVATE_MARKER,
+                    'read',
+                    {},
+                    null
+                );
+
+                const result = await server.installPackage({
+                    userId: device1Info.userId,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName: device1Info.userId,
+                        address: 'private',
+                        key: version(1),
+                    },
+                    instances: [formatInstId(null, 'otherInst')],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: device1Info.userId,
+                        resourceKind: 'package.version',
+                        resourceId: 'private',
+                        subjectType: 'inst',
+                        subjectId: formatInstId(recordName, inst),
+                        action: 'run',
+                    },
+                });
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                expect(instUpdates?.updates ?? []).toEqual([]);
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([]);
+            });
+
+            it('should load the package if both the originating and target insts are allowed to access the package', async () => {
+                await recordPackage(
+                    device1Info.userId,
+                    'private',
+                    [PRIVATE_MARKER],
+                    version(1),
+                    {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    }
+                );
+
+                // /otherInst needs access to read the package from the device1Info.userId record
+                await store.assignPermissionToSubjectAndMarker(
+                    device1Info.userId,
+                    'inst',
+                    formatInstId(null, 'otherInst'),
+                    'package.version',
+                    PRIVATE_MARKER,
+                    'read',
+                    {},
+                    null
+                );
+
+                // recordName/inst needs access to run the package from the device1Info.userId record
+                await store.assignPermissionToSubjectAndMarker(
+                    device1Info.userId,
+                    'inst',
+                    formatInstId(recordName, inst),
+                    'package.version',
+                    PRIVATE_MARKER,
+                    'run',
+                    {},
+                    null
+                );
+
+                // The user needs the ability to create the inst in recordName
+                store.roles[recordName] = {
+                    [device1Info.userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                uuidv7Mock.mockReturnValueOnce('packageId');
+
+                const result = await server.installPackage({
+                    userId: device1Info.userId,
+                    recordName,
+                    inst,
+                    package: {
+                        recordName: device1Info.userId,
+                        address: 'private',
+                        key: version(1),
+                    },
+                    instances: [formatInstId(null, 'otherInst')],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packageLoadId: 'packageId',
+                    package: {
+                        id: 'private@1.0.0',
+                        packageId: 'private',
+                        address: 'private',
+                        key: version(1),
+                        entitlements: [],
+                        readme: '',
+                        markers: [PRIVATE_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                });
+
+                const instUpdates = await instStore.getCurrentUpdates(
+                    recordName,
+                    inst,
+                    DEFAULT_BRANCH_NAME
+                );
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(
+                        instUpdates.updates.map((u, index) => ({
+                            id: index,
+                            update: u,
+                            timestamp: 123,
+                        }))
+                    )
+                );
+
+                expect(state).toEqual({
+                    test: createBot('test', {
+                        abc: 'def',
+                    }),
+                });
+
+                expect(
+                    await instStore.listLoadedPackages(recordName, inst)
+                ).toEqual([
+                    {
+                        id: 'packageId',
+                        recordName,
+                        inst,
+                        branch: DEFAULT_BRANCH_NAME,
+                        packageId: 'private',
+                        packageVersionId: 'private@1.0.0',
+                        userId: device1Info.userId,
+                    },
+                ]);
             });
 
             it('should be able to install the latest version of a package', async () => {
@@ -9776,6 +9986,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@2.0.0',
                         packageId: 'public',
@@ -9871,6 +10082,7 @@ describe('WebsocketController', () => {
 
                 expect(result).toEqual({
                     success: true,
+                    packageLoadId: 'packageId',
                     package: {
                         id: 'public@2.0.0',
                         packageId: 'public',

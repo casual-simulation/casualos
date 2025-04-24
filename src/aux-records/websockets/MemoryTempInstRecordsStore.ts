@@ -326,8 +326,8 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean> {
+    ): Promise<LoadedPackage | null> {
         const loaded = await this.listLoadedPackages(recordName, inst);
-        return loaded.some((l) => l.packageId === packageId);
+        return loaded.find((l) => l.packageId === packageId) ?? null;
     }
 }

@@ -940,7 +940,7 @@ export function getPublicReadPermission(
             };
         }
     } else if (resourceKind === 'package.version') {
-        if (action === 'read' || action === 'list') {
+        if (action === 'read' || action === 'list' || action === 'run') {
             return {
                 resourceKind,
                 action,

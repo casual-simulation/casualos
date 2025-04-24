@@ -1097,7 +1097,7 @@ export class WebsocketController {
     @traced(TRACE_NAME)
     async addUserUpdates(
         request: AddUpdatesRequest
-    ): Promise<AddUpdatesResult> {
+    ): Promise<AddInstUpdatesResult> {
         console.log(
             `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}] Add Updates`
         );
@@ -2327,7 +2327,7 @@ export class WebsocketController {
             address: request.package.address,
             key,
             userId: userId,
-            instances: [formatInstId(request.recordName, request.inst)],
+            instances: request.instances,
         });
 
         if (p.success === false) {
@@ -2347,21 +2347,47 @@ export class WebsocketController {
 
         const loadedPackageStore = this._instStore;
 
-        if (
-            await loadedPackageStore.isPackageLoaded(
-                request.recordName,
-                request.inst,
-                p.item.packageId
-            )
-        ) {
+        const loadedPackage = await loadedPackageStore.isPackageLoaded(
+            request.recordName,
+            request.inst,
+            p.item.packageId
+        );
+        if (loadedPackage) {
             // Already loaded
             console.log(
                 `[CausalRepoServer] [userId: ${userId}] Package already loaded.`
             );
             return {
                 success: true,
+                packageLoadId: loadedPackage.id,
                 package: p.item,
             };
+        }
+
+        // check that the user and target inst has the ability to run the package
+        const context = await this._policies.constructAuthorizationContext({
+            recordKeyOrRecordName: request.package.recordName,
+            userId,
+        });
+
+        if (context.success === false) {
+            return context;
+        }
+
+        const authorization = await this._policies.authorizeUserAndInstances(
+            context.context,
+            {
+                userId,
+                instances: [formatInstId(request.recordName, request.inst)],
+                resourceKind: 'package.version',
+                resourceId: p.item.address,
+                action: 'run',
+                markers: p.item.markers,
+            }
+        );
+
+        if (authorization.success === false) {
+            return authorization;
         }
 
         const fileResponse = await fetch(p.auxFile.requestUrl, {
@@ -2459,6 +2485,7 @@ export class WebsocketController {
 
         return {
             success: true,
+            packageLoadId: loadedPackageId,
             package: p.item,
         };
     }
@@ -3321,13 +3348,15 @@ export interface AddUpdatesRequest {
     timestamps?: number[];
 }
 
-export type AddUpdatesResult = AddUpdatesSuccess | AddUpdatesFailure;
+export type AddInstUpdatesResult =
+    | AddInstUpdatesSuccess
+    | AddInstUpdatesFailure;
 
-export interface AddUpdatesSuccess {
+export interface AddInstUpdatesSuccess {
     success: true;
 }
 
-export interface AddUpdatesFailure {
+export interface AddInstUpdatesFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
@@ -3366,12 +3395,22 @@ export interface LoadPackageRequest {
      * The package that should be loaded.
      */
     package: PackageVersionSpecifier;
+
+    /**
+     * The list of instances that are currently loaded.
+     */
+    instances?: string[];
 }
 
 export type LoadPackageResult = LoadPackageSuccess | LoadPackageFailure;
 
 export interface LoadPackageSuccess {
     success: true;
+
+    /**
+     * The ID of the record which records that the package was loaded into the inst.
+     */
+    packageLoadId: string;
 
     /**
      * The package that was loaded.

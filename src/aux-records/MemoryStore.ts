@@ -3131,9 +3131,9 @@ export class MemoryStore
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean> {
+    ): Promise<LoadedPackage | null> {
         const loaded = await this.listLoadedPackages(recordName, inst);
-        return loaded.some((p) => p.packageId === packageId);
+        return loaded.find((p) => p.packageId === packageId) ?? null;
     }
 
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {

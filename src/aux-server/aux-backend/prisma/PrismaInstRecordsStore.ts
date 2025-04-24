@@ -30,7 +30,6 @@ import type {
     SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
-import { InstRecord } from '@casual-simulation/aux-records';
 import type { PrismaClient } from './generated';
 import { Prisma } from './generated';
 import { v4 as uuid } from 'uuid';
@@ -58,6 +57,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
                 id: loadedPackage.id,
                 instRecordName: loadedPackage.recordName,
                 instName: loadedPackage.inst,
+                branch: loadedPackage.branch,
                 packageId: loadedPackage.packageId,
                 packageVersionId: loadedPackage.packageVersionId,
                 userId: loadedPackage.userId,
@@ -65,6 +65,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             update: {
                 instRecordName: loadedPackage.recordName,
                 instName: loadedPackage.inst,
+                branch: loadedPackage.branch,
                 packageId: loadedPackage.packageId,
                 packageVersionId: loadedPackage.packageVersionId,
                 userId: loadedPackage.userId,
@@ -88,6 +89,7 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
             id: p.id,
             recordName: p.instRecordName,
             inst: p.instName,
+            branch: p.branch,
             packageId: p.packageId,
             packageVersionId: p.packageVersionId,
             userId: p.userId,
@@ -99,10 +101,28 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean> {
-        const loaded: any = await this._prisma
-            .$queryRaw`SELECT (COUNT(*) > 0) AS "hasPackage" FROM public."LoadedPackage" WHERE "instRecordName" = ${recordName} AND "instName" = ${inst} AND "packageId" = ${packageId}`;
-        return loaded.hasPackage;
+    ): Promise<LoadedPackage | null> {
+        const loaded = await this._prisma.loadedPackage.findFirst({
+            where: {
+                instRecordName: recordName,
+                instName: inst,
+                packageId: packageId,
+            },
+        });
+
+        if (!loaded) {
+            return null;
+        }
+
+        return {
+            id: loaded.id,
+            recordName: loaded.instRecordName,
+            inst: loaded.instName,
+            branch: loaded.branch,
+            packageId: loaded.packageId,
+            packageVersionId: loaded.packageVersionId,
+            userId: loaded.userId,
+        };
     }
 
     @traced(TRACE_NAME)

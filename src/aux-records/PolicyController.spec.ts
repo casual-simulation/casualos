@@ -5332,6 +5332,7 @@ describe('PolicyController', () => {
                 'package.version',
                 [
                     ['read', 'resourceId'],
+                    ['run', 'resourceId'],
                     ['list', null],
                 ],
             ],

@@ -275,7 +275,7 @@ export interface TemporaryInstRecordsStore extends LockStore {
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean>;
+    ): Promise<LoadedPackage | null>;
 }
 
 export interface BranchUpdates extends CurrentUpdates {

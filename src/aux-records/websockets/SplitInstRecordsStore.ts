@@ -110,7 +110,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean> {
+    ): Promise<LoadedPackage | null> {
         if (recordName) {
             return await this._permanent.isPackageLoaded(
                 recordName,

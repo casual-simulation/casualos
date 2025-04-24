@@ -186,6 +186,7 @@ export interface InstRecordsStore {
 
     /**
      * Determines whether the package with the given ID is loaded into the given inst.
+     * Returns the package that was loaded if it is loaded, or null if it is not.
      * @param recordName The name of the record that the inst is in.
      * @param inst The inst.
      * @param packageId The ID of the package.
@@ -194,7 +195,7 @@ export interface InstRecordsStore {
         recordName: string | null,
         inst: string,
         packageId: string
-    ): Promise<boolean>;
+    ): Promise<LoadedPackage | null>;
 }
 
 export interface LoadedPackage {
