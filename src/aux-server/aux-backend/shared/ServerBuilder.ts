@@ -1463,6 +1463,7 @@ export class ServerBuilder implements SubscriptionLike {
                             apiKey: model.apiKey,
                             baseUrl: model.baseUrl,
                             name: model.name ?? model.provider,
+                            additionalProperties: model.additionalProperties,
                         });
                     for (let m of model.models) {
                         allowedChatModels.push({

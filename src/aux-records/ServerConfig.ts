@@ -639,6 +639,13 @@ const aiSchema = z.object({
                                 .describe(
                                     'The list of models that should be mapped to this provider'
                                 ),
+                            additionalProperties: z
+                                .object({})
+                                .passthrough()
+                                .describe(
+                                    'The additional properties that should be included in requests.'
+                                )
+                                .optional(),
                         }),
                     ])
                 )
