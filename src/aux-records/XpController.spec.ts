@@ -28,6 +28,7 @@ import { XpController } from '../aux-records/XpController';
 import type { XpUser } from './XpStore';
 import type { NotNullOrOptional, PromiseT } from './TypeUtils';
 import { v4 as uuid } from 'uuid';
+import type { MemoryFinancialInterface } from './financial/MemoryFinancialInterface';
 
 jest.mock('uuid');
 const uuidMock: jest.Mock = <any>uuid;

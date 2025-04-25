@@ -24,7 +24,7 @@
         "./aux-backend/**/*",
         "./shared/**/*",
         "./typings/**/*",
-        "../aux-records/TigerBeetleFinancialInterface.ts" // "./node_modules/@casual-simulation/aux-common/**/*"
+        "../aux-records/financial/TigerBeetleFinancialInterface.ts" // "./node_modules/@casual-simulation/aux-common/**/*"
     ],
     "exclude": [
         "**/node_modules/**",

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { FinancialInterface } from './financial/FinancialInterface';
+import type { FinancialInterface } from './FinancialInterface';
 import type {
     Client,
     id,
@@ -26,7 +26,7 @@ import type {
     AccountFilter,
     AccountBalance,
     QueryFilter,
-} from './financial/Types';
+} from './Types';
 
 /**
  * Configuration for the instantiation of the TigerBeetleFinancialInterface.
