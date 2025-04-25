@@ -546,8 +546,12 @@ export type SafeJSONSerializable<T, K extends keyof T = keyof T> = {
         ? SafeJSONSerializable<T[Key]>
         : T[Key] extends Date | bigint
         ? string
-        : T[Key] extends // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-          Function | symbol | undefined | Map<any, any> | Set<any>
+        : T[Key] extends  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+              | Function
+              | symbol
+              | undefined
+              | Map<any, any>
+              | Set<any>
         ? never
         : T[Key];
 };
@@ -557,3 +561,19 @@ export type SafeJSONSerializable<T, K extends keyof T = keyof T> = {
  * @template T The type of the promise to extract the resolved value from
  */
 export type PromiseT<T> = T extends Promise<infer U> ? U : T;
+
+/**
+ * A Generic utility type which extracts the keys of a type T which are not present in a type U
+ * @template T The type to extract keys from
+ * @template U The type to exclude keys from T
+ */
+export type Without<T, U> = { [K in Exclude<keyof T, keyof U>]?: never };
+
+/**
+ * A Generic utility type which represents an exclusive OR between two types
+ * @template T The first type
+ * @template U The second type
+ * @template B An optional base type to extend from
+ */
+export type XOR<T, U, B = object> = B &
+    ((T & Without<U, T>) | (U & Without<T, U>));
