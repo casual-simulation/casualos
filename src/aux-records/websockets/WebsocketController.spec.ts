@@ -10140,6 +10140,236 @@ describe('WebsocketController', () => {
             });
         });
 
+        describe('listInstalledPackages()', () => {
+            beforeEach(async () => {
+                const r = await services.recordsStore.getRecordByName(
+                    recordName
+                );
+                if (!r) {
+                    await services.records.createRecord({
+                        recordName,
+                        userId,
+                        ownerId: userId,
+                    });
+                }
+
+                await store.saveInst({
+                    recordName,
+                    inst,
+                    markers: [PRIVATE_MARKER],
+                });
+
+                await instStore.saveLoadedPackage({
+                    id: 'loadedPackageId',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    packageId: 'public',
+                    packageVersionId: 'public@1.0.0',
+                    userId: userId,
+                });
+
+                await instStore.saveLoadedPackage({
+                    id: 'loadedPackageId2',
+                    recordName,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    packageId: 'private',
+                    packageVersionId: 'private@1.0.0',
+                    userId: userId,
+                });
+
+                await instStore.saveLoadedPackage({
+                    id: 'loadedPackageId3',
+                    recordName: null,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    packageId: 'public',
+                    packageVersionId: 'public@1.0.0',
+                    userId: userId,
+                });
+
+                await instStore.saveLoadedPackage({
+                    id: 'loadedPackageId4',
+                    recordName: null,
+                    inst,
+                    branch: DEFAULT_BRANCH_NAME,
+                    packageId: 'private',
+                    packageVersionId: 'private@1.0.0',
+                    userId: userId,
+                });
+            });
+
+            it('should return the list of loaded packages for the private inst', async () => {
+                const result = await server.listInstalledPackages({
+                    userId,
+                    recordName,
+                    inst,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId2',
+                            recordName,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'private',
+                            packageVersionId: 'private@1.0.0',
+                            userId: userId,
+                        },
+                    ],
+                });
+            });
+
+            it('should return an empty list if there are no packages installed in the inst', async () => {
+                await instStore.saveInst({
+                    recordName,
+                    inst: 'otherInst',
+                    markers: [PRIVATE_MARKER],
+                });
+
+                const result = await server.listInstalledPackages({
+                    userId,
+                    recordName,
+                    inst: 'otherInst',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packages: [],
+                });
+            });
+
+            it('should return the list of loaded packages for the public inst', async () => {
+                const result = await server.listInstalledPackages({
+                    userId,
+                    recordName: null,
+                    inst,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId3',
+                            recordName: null,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId4',
+                            recordName: null,
+                            inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'private',
+                            packageVersionId: 'private@1.0.0',
+                            userId: userId,
+                        },
+                    ],
+                });
+            });
+
+            it('should return not_logged_in if the inst is non-public and the user isnt logged in', async () => {
+                const result = await server.listInstalledPackages({
+                    userId: null,
+                    recordName,
+                    inst,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should return not_authorized if the user doesnt have access to the inst', async () => {
+                await store.saveUser({
+                    id: 'otherUserId',
+                    email: 'other@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                const result = await server.listInstalledPackages({
+                    userId: 'otherUserId',
+                    recordName,
+                    inst,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: 'otherUserId',
+                        action: 'read',
+                    },
+                });
+            });
+
+            it('should return not_authorized if the current inst doesnt have access to the inst', async () => {
+                const result = await server.listInstalledPackages({
+                    userId,
+                    recordName,
+                    inst,
+                    instances: [formatInstId(null, 'otherInst')],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'inst',
+                        subjectId: formatInstId(null, 'otherInst'),
+                        action: 'read',
+                    },
+                });
+            });
+
+            it('should return inst_not_found if the inst does not exist', async () => {
+                const result = await server.listInstalledPackages({
+                    userId,
+                    recordName,
+                    inst: 'missing',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                });
+            });
+        });
+
         describe('sync/time', () => {
             let oldNow: typeof Date.now;
             let now: jest.Mock<number>;

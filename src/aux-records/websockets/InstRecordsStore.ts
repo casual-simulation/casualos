@@ -206,7 +206,7 @@ export interface LoadedPackage {
 
     /**
      * The name of the record that the inst is stored in.
-     * If null, then the inst is a temporary inst.
+     * If null, then the inst is a public inst.
      */
     recordName: string | null;
 

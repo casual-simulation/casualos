@@ -2491,6 +2491,80 @@ export class WebsocketController {
     }
 
     @traced(TRACE_NAME)
+    async listInstalledPackages(
+        request: ListInstalledPackagesRequest
+    ): Promise<ListInstalledPackagesResult> {
+        if (!this._packageVersions) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Packages are not supported.',
+            };
+        }
+
+        if (request.recordName) {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const instName = request.inst;
+
+            const savedInst = await this._instStore.getInstByName(
+                recordName,
+                instName
+            );
+
+            if (!savedInst) {
+                return {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                };
+            }
+
+            const authResult = await this._policies.authorizeUserAndInstances(
+                context.context,
+                {
+                    resourceKind: 'inst',
+                    resourceId: instName,
+                    action: 'read',
+                    markers: savedInst.markers,
+                    userId: request.userId,
+                    instances: request.instances,
+                }
+            );
+
+            if (authResult.success === false) {
+                return authResult;
+            }
+        }
+
+        const packages = await this._instStore.listLoadedPackages(
+            request.recordName,
+            request.inst
+        );
+
+        return {
+            success: true,
+            packages: packages.map((p) => ({
+                id: p.id,
+                recordName: p.recordName,
+                inst: p.inst,
+                branch: p.branch,
+                packageId: p.packageId,
+                packageVersionId: p.packageVersionId,
+                userId: p.userId,
+            })),
+        };
+    }
+
+    @traced(TRACE_NAME)
     async syncTime(
         connectionId: string,
         event: TimeSyncRequestMessage,
@@ -3419,6 +3493,51 @@ export interface LoadPackageSuccess {
 }
 
 export interface LoadPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
+    issues?: ZodIssue[];
+}
+
+export interface ListInstalledPackagesRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The name of the record that the installed packages should be listed from.
+     * If null, then the inst is a public inst.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that the installed packages should be listed from.
+     */
+    inst: string;
+
+    /**
+     * The instances that are trying to list the packages.
+     */
+    instances?: string[];
+}
+
+export type ListInstalledPackagesResult =
+    | ListInstalledPackagesRequestSuccess
+    | ListInstalledPackagesFailure;
+
+export interface ListInstalledPackagesRequestSuccess {
+    success: true;
+    packages: LoadedPackage[];
+}
+
+export interface ListInstalledPackagesFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
