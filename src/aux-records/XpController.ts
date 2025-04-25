@@ -23,6 +23,7 @@ import type {
     FailedResult,
     ReduceKeysToPrimitives,
     StatefulResult,
+    XOR,
 } from './TypeUtils';
 import { traced } from './tracing/TracingDecorators';
 import { tryScope } from './Utils';
@@ -77,16 +78,18 @@ export class XpController {
      * * Standardizes the account code for user accounts
      */
     private async _generateUserAccount(): Promise<Account['id']> {
-        return await this._financialController.nicheAccountGen({
-            accounts: [
-                {
-                    accountCode: AccountCodes.liabilities_customer,
-                    quantity: 1,
-                    flags: AccountFlags.debits_must_not_exceed_credits,
-                },
-            ],
-            onFail: (err) => console.error(err),
-        });
+        return (
+            await this._financialController.nicheAccountGen({
+                accounts: [
+                    {
+                        accountCode: AccountCodes.liabilities_customer,
+                        quantity: 1,
+                        flags: AccountFlags.debits_must_not_exceed_credits,
+                    },
+                ],
+                onFail: (err) => console.error(err),
+            })
+        )[0][0];
     }
 
     /**
@@ -94,16 +97,18 @@ export class XpController {
      * * Standardizes the account code for contracts
      */
     private async _generateContractAccount(): Promise<Account['id']> {
-        return await this._financialController.nicheAccountGen({
-            accounts: [
-                {
-                    accountCode: AccountCodes.liabilities_escrow,
-                    quantity: 1,
-                    flags: AccountFlags.debits_must_not_exceed_credits,
-                },
-            ],
-            onFail: (err) => console.error(err),
-        });
+        return (
+            await this._financialController.nicheAccountGen({
+                accounts: [
+                    {
+                        accountCode: AccountCodes.liabilities_escrow,
+                        quantity: 1,
+                        flags: AccountFlags.debits_must_not_exceed_credits,
+                    },
+                ],
+                onFail: (err) => console.error(err),
+            })
+        )[0][0];
     }
 
     /**
@@ -221,9 +226,9 @@ export class XpController {
             authIds: [],
         };
         if ('xpId' in config.issuingUserId) {
-            validationParams.authIds.push(config.issuingUserId.xpId);
+            validationParams.xpIds.push(config.issuingUserId.xpId);
         } else if ('userId' in config.issuingUserId) {
-            validationParams.xpIds.push(config.issuingUserId.userId);
+            validationParams.authIds.push(config.issuingUserId.userId);
         } else
             return {
                 success: false,
@@ -231,9 +236,9 @@ export class XpController {
                 errorMessage: 'The issuing user must have an xpId or userId.',
             };
         if ('xpId' in config.receivingUserId) {
-            validationParams.authIds.push(config.receivingUserId.xpId);
+            validationParams.xpIds.push(config.receivingUserId.xpId);
         } else if ('userId' in config.receivingUserId) {
-            validationParams.xpIds.push(config.receivingUserId.userId);
+            validationParams.authIds.push(config.receivingUserId.userId);
         } else
             return {
                 success: false,
@@ -476,8 +481,20 @@ export class XpController {
                                 amount: BigInt(config.offeredWorth ?? 0),
                                 code: TransferCodes.user_credits_contract,
                             },
-                            BigInt(Date.now())
+                            config.idempotencyKey
                         );
+                    if (transferResult.success === false) {
+                        if ('createTransfersErrors' in transferResult) {
+                            return {
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage:
+                                    'An error occurred while transferring the funds.',
+                            };
+                        } else {
+                            return transferResult;
+                        }
+                    }
                     if (transferResult.success === true) {
                         if (config.status === 'open') {
                             const contract =
@@ -667,15 +684,16 @@ export type CreateInvoiceResult =
     | CreateInvoiceResultSuccess
     | CreateInvoiceResultFailure;
 
-export type GetXpUserById =
-    | {
-          /** The xp Id of the xp user to get (mutually exclusive with userId) */
-          xpId: XpUser['id'];
-      }
-    | {
-          /** The auth Id of the xp user to get (mutually exclusive with xpId) */
-          userId: AuthUser['id'];
-      };
+export type GetXpUserById = XOR<
+    {
+        /** The xp Id of the xp user to get (mutually exclusive with userId) */
+        xpId: XpUser['id'];
+    },
+    {
+        /** The auth Id of the xp user to get (mutually exclusive with xpId) */
+        userId: AuthUser['id'];
+    }
+>;
 
 export type CreateXpUserResultSuccess = StatefulResult<true, { user: XpUser }>;
 export type CreateXpUserResultFailure = FailedResult;

@@ -240,17 +240,18 @@ describe('XpController', () => {
             });
         });
 
-        it('should fail to get an xp user due to use of multiple identifiers', async () => {
-            const xpUser = await xpController.getXpUser({
-                userId: _authUser.userId,
-                xpId: 'some-id',
-            });
-            expect(xpUser).toEqual({
-                success: false,
-                errorCode: 'invalid_request',
-                errorMessage: expect.any(String),
-            });
-        });
+        //* EOL test case now as parameters apply XOR typing making this syntactically invalid
+        // it('should fail to get an xp user due to use of multiple identifiers', async () => {
+        //     const xpUser = await xpController.getXpUser({
+        //         userId: _authUser.userId,
+        //         xpId: 'some-id',
+        //     });
+        //     expect(xpUser).toEqual({
+        //         success: false,
+        //         errorCode: 'invalid_request',
+        //         errorMessage: expect.any(String),
+        //     });
+        // });
 
         it('should fail to get an xp user by auth id due to user not found', async () => {
             const xpUser = await xpController.getXpUser({
@@ -340,12 +341,12 @@ describe('XpController', () => {
                     id,
                     accountId: String(fITracker),
                     issuerUserId: (
-                        _contractConfig.receivingUserId as {
+                        _contractConfig.issuingUserId as {
                             xpId: XpUser['id'];
                         }
                     ).xpId,
                     holdingUserId: (
-                        _contractConfig.issuingUserId as {
+                        _contractConfig.receivingUserId as {
                             xpId: XpUser['id'];
                         }
                     ).xpId,
@@ -382,6 +383,16 @@ describe('XpController', () => {
                     createdAtMs: _testDateNow,
                     updatedAtMs: _testDateNow,
                 },
+            });
+        });
+
+        it('should fail to create an open contract due to missing idempotency key', async () => {
+            _contractConfig.idempotencyKey = null as any;
+            const contract = await xpController.createContract(_contractConfig);
+            expect(contract).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: expect.any(String),
             });
         });
 
