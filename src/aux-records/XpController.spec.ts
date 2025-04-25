@@ -485,6 +485,7 @@ describe('XpController', () => {
             const contract = await xpController.issueDraftContract({
                 draftContractId: _draftContract.id,
                 receivingUserId: { xpId: _receivingUser.id },
+                idempotencyKey: ++fIIdempotencyKeyTracker,
             });
             expect(contract).toEqual({
                 success: true,
@@ -503,10 +504,24 @@ describe('XpController', () => {
             });
         });
 
+        it('should fail to issue a draft contract due to missing idempotency key', async () => {
+            const contract = await xpController.issueDraftContract({
+                draftContractId: _draftContract.id,
+                receivingUserId: { xpId: _receivingUser.id },
+                idempotencyKey: null as any,
+            });
+            expect(contract).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: expect.any(String),
+            });
+        });
+
         it('should fail to issue a draft contract due to missing draft contract', async () => {
             const contract = await xpController.issueDraftContract({
                 draftContractId: 'non-existent-id',
                 receivingUserId: { xpId: _receivingUser.id },
+                idempotencyKey: ++fIIdempotencyKeyTracker,
             });
             expect(contract).toEqual({
                 success: false,

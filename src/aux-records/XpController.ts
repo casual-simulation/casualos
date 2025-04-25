@@ -93,10 +93,10 @@ export class XpController {
     }
 
     /**
-     * Simple helper to generate a contract account
+     * Simple helper to create a contract account
      * * Standardizes the account code for contracts
      */
-    private async _generateContractAccount(): Promise<Account['id']> {
+    private async _createContractAccount(): Promise<Account['id']> {
         return (
             await this._financialController.nicheAccountGen({
                 accounts: [
@@ -291,6 +291,60 @@ export class XpController {
     }
 
     /**
+     * Performs the transfer of funds from the issuer to the contract account when the contract is issued (opened)
+     * @param config The configuration for the transfer
+     */
+    private async _issueContractTransfer(config: {
+        issuerAccountId: Account['id'];
+        contractAccountId: Account['id'];
+        contractId: XpContract['id'];
+        amount: bigint;
+        idempotencyKey: bigint;
+    }): Promise<
+        | StatefulResult<true, { contract: ReduceKeysToPrimitives<XpContract> }>
+        | FailedResult
+    > {
+        const transferResult =
+            await this._financialController.createIdempotentTransfer(
+                {
+                    debit: config.issuerAccountId,
+                    credit: config.contractAccountId,
+                    amount: config.amount,
+                    code: TransferCodes.user_credits_contract,
+                },
+                config.idempotencyKey
+            );
+        if (transferResult.success === false) {
+            if ('createTransfersErrors' in transferResult) {
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'An error occurred while transferring the funds.',
+                };
+            } else {
+                return transferResult;
+            }
+        }
+        if (transferResult.success === true) {
+            const contract = await this._xpStore.updateXpContract(
+                config.contractId,
+                { status: 'open' }
+            );
+            if (contract !== null) {
+                return {
+                    success: true,
+                    contract: contract,
+                };
+            } else {
+                throw new Error(
+                    'An error occurred while updating the contract.'
+                );
+            }
+        }
+    }
+
+    /**
      * Get an Xp user's meta data (Xp meta associated with an auth user)
      * Creates an Xp user for the auth user if one does not exist
      */
@@ -440,7 +494,7 @@ export class XpController {
                     });
                     if (validation.success === false) return validation;
                     receivingUser = validation.receivingUser;
-                    accountId = await this._generateContractAccount();
+                    accountId = await this._createContractAccount();
                     if (accountId === null)
                         return {
                             success: false,
@@ -472,48 +526,14 @@ export class XpController {
                     stagedDraftContract
                 );
 
-                if (draftContract !== null) {
-                    const transferResult =
-                        await this._financialController.createIdempotentTransfer(
-                            {
-                                debit: BigInt(issuer.user.accountId),
-                                credit: accountId,
-                                amount: BigInt(config.offeredWorth ?? 0),
-                                code: TransferCodes.user_credits_contract,
-                            },
-                            config.idempotencyKey
-                        );
-                    if (transferResult.success === false) {
-                        if ('createTransfersErrors' in transferResult) {
-                            return {
-                                success: false,
-                                errorCode: 'server_error',
-                                errorMessage:
-                                    'An error occurred while transferring the funds.',
-                            };
-                        } else {
-                            return transferResult;
-                        }
-                    }
-                    if (transferResult.success === true) {
-                        if (config.status === 'open') {
-                            const contract =
-                                await this._xpStore.updateXpContract(
-                                    stagedDraftContract.id,
-                                    { status: 'open' }
-                                );
-                            if (contract !== null) {
-                                return {
-                                    success: true,
-                                    contract: contract,
-                                };
-                            } else {
-                                throw new Error(
-                                    'An error occurred while updating the contract.'
-                                );
-                            }
-                        }
-                    }
+                if (draftContract !== null && config.status === 'open') {
+                    return await this._issueContractTransfer({
+                        issuerAccountId: BigInt(issuer.user.accountId),
+                        contractAccountId: BigInt(draftContract.accountId),
+                        contractId: draftContract.id,
+                        amount: BigInt(config.rate),
+                        idempotencyKey: config.idempotencyKey,
+                    });
                 }
 
                 return {
@@ -542,6 +562,7 @@ export class XpController {
     async issueDraftContract(config: {
         draftContractId: XpContract['id'];
         receivingUserId: GetXpUserById;
+        idempotencyKey: bigint;
     }) {
         return await tryScope(
             async () => {
@@ -568,15 +589,32 @@ export class XpController {
 
                 if (validation.success === false) return validation;
 
+                const contractAccountId =
+                    draftContract.contract.accountId === null
+                        ? await this._createContractAccount()
+                        : BigInt(draftContract.contract.accountId);
+
+                const issuanceTransferResult =
+                    await this._issueContractTransfer({
+                        issuerAccountId: BigInt(
+                            validation.issuingUser.accountId
+                        ),
+                        contractAccountId,
+                        contractId: draftContract.contract.id,
+                        amount: BigInt(draftContract.contract.rate),
+                        idempotencyKey: config.idempotencyKey,
+                    });
+
+                if (issuanceTransferResult.success === false)
+                    return issuanceTransferResult;
+
                 return {
                     success: true,
                     contract: await this._xpStore.updateXpContract(
                         draftContract.contract.id,
                         {
                             status: 'open',
-                            accountId: String(
-                                await this._generateContractAccount()
-                            ),
+                            accountId: String(contractAccountId),
                             holdingUserId: validation.receivingUser.id,
                         }
                     ),
