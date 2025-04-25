@@ -374,7 +374,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                             bot: newBot,
                             tags: changedTags,
                         });
-                    } else {
+                    } else if (!addedBots.has(event.id)) {
                         // No tags were changed, so the update should not be included in the updated state
                         delete updatedState[event.id];
                     }

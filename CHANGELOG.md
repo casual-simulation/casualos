@@ -2,12 +2,13 @@
 
 ## V3.4.6
 
-#### Date: 4/22/2025
+#### Date: 4/25/2025
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where quickly typing in an input element could cause the cursor to jump to the end of the content in the input box.
 -   Fixed an issue where it was possible for the `@onInstJoined` shout to be sent before all initial tag mask have been processed.
+-   Fixed an issue where updating a new bot could cause the new bot to not be properly synchronized throughout the system.
 
 ## V3.4.5
 
