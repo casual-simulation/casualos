@@ -15,4 +15,4 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-export * from '@casual-simulation/aux-records/TigerBeetleFinancialInterface';
+export * from '@casual-simulation/aux-records/financial';

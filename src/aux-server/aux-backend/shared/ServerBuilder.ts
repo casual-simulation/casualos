@@ -206,10 +206,13 @@ import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
 import { PrismaXpStore } from 'aux-backend/prisma/PrismaXpStore';
-import { TigerBeetleFinancialInterface } from 'aux-backend/tigerbeetle';
-import { createClient } from 'tigerbeetle-node';
+import { createClient, id } from 'tigerbeetle-node';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import {
+    FinancialController,
+    TigerBeetleFinancialInterface,
+} from '@casual-simulation/aux-records/financial';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -312,6 +315,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _xpStore: XpStore;
     private _xpController: XpController;
     private _financialInterface: FinancialInterface;
+    private _financialController: FinancialController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -1328,9 +1332,14 @@ export class ServerBuilder implements SubscriptionLike {
                     this._financialInterface =
                         new TigerBeetleFinancialInterface({
                             client,
+                            id,
                         });
+                    this._financialController = new FinancialController(
+                        this._financialInterface
+                    );
                 } catch (e) {
                     this._financialInterface = null;
+                    this._financialController = null;
                     client.destroy();
                     console.error(
                         '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
@@ -1709,11 +1718,17 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
-        if (!this._xpStore || !this._financialInterface) {
+        if (
+            !this._xpStore ||
+            !this._financialInterface ||
+            !this._financialController
+        ) {
             console.warn(
                 `[ServerBuilder] Not using XP API. The following required are missing in configuration: ${
-                    !this._financialInterface ? 'Financial Interface, ' : ''
-                }${!this._xpStore ? 'XP Store' : ''}`
+                    !this._financialController ? 'Financial Controller' : ''
+                } ${!this._financialInterface ? 'Financial Interface, ' : ''}${
+                    !this._xpStore ? 'XP Store' : ''
+                }`
             );
         }
 
@@ -1849,12 +1864,16 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
-        if (this._xpStore && this._financialInterface) {
+        if (
+            this._xpStore &&
+            this._financialInterface &&
+            this._financialController
+        ) {
             this._xpController = new XpController({
                 xpStore: this._xpStore,
                 authController: this._authController,
                 authStore: this._authStore,
-                financialInterface: this._financialInterface,
+                financialController: this._financialController,
             });
         }
 
