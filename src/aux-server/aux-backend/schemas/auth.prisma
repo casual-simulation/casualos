@@ -773,6 +773,7 @@ model LoadedPackage {
     // The inst that the package was loaded into
     instRecordName String @db.String(128)
     instName String @db.String(128)
+    branch String @db.String(512)
     inst InstRecord @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade, map: "LoadedPackage_inst_fkey1")
 
     createdAt DateTime @default(now())

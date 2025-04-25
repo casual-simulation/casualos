@@ -83,7 +83,8 @@
         "lint:redis": "eslint src/rate-limit-redis",
         "lint:tunnel": "eslint src/tunnel",
         "lint:undom": "eslint src/undom",
-        "lint:shortkey": "eslint src/vue-shortkey"
+        "lint:shortkey": "eslint src/vue-shortkey",
+        "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev"
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",
