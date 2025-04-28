@@ -1172,7 +1172,7 @@ describe('RemoteYjsPartition', () => {
                     });
                 });
 
-                describe.only('install_aux_file', () => {
+                describe('install_aux_file', () => {
                     it('should add the version 2 state to the inst', async () => {
                         setupPartition({
                             type: 'remote_yjs',

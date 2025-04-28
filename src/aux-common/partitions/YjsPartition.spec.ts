@@ -548,7 +548,7 @@ describe('YjsPartition', () => {
             });
         });
 
-        describe.only('install_aux_file', () => {
+        describe('install_aux_file', () => {
             it('should add the version 2 state to the inst', async () => {
                 partition.connect();
 
