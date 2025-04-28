@@ -2393,17 +2393,30 @@ Object {
           "inst": Object {
             "type": "string",
           },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
           "package": Object {
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "key": Object {
+                "nullable": true,
+                "optional": true,
                 "options": Array [
                   Object {
+                    "description": "The package version to install as a string",
                     "type": "string",
                   },
                   Object {
+                    "description": "The package version specifier to install",
                     "schema": Object {
                       "major": Object {
                         "nullable": true,
@@ -2444,12 +2457,43 @@ Object {
           },
           "recordName": Object {
             "nullable": true,
+            "optional": true,
             "type": "string",
           },
         },
         "type": "object",
       },
       "name": "installPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/install/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInstalledPackages",
       "origins": "api",
     },
     Object {
@@ -7147,17 +7191,30 @@ Object {
           "inst": Object {
             "type": "string",
           },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
           "package": Object {
             "schema": Object {
               "address": Object {
                 "type": "string",
               },
               "key": Object {
+                "nullable": true,
+                "optional": true,
                 "options": Array [
                   Object {
+                    "description": "The package version to install as a string",
                     "type": "string",
                   },
                   Object {
+                    "description": "The package version specifier to install",
                     "schema": Object {
                       "major": Object {
                         "nullable": true,
@@ -7198,12 +7255,43 @@ Object {
           },
           "recordName": Object {
             "nullable": true,
+            "optional": true,
             "type": "string",
           },
         },
         "type": "object",
       },
       "name": "installPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/install/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInstalledPackages",
       "origins": "api",
     },
     Object {

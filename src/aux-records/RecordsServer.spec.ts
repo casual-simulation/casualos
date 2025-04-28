@@ -13785,6 +13785,7 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    packageLoadId: expect.any(String),
                     package: {
                         id: expect.any(String),
                         packageId: 'public',
@@ -13836,6 +13837,7 @@ describe('RecordsServer', () => {
                     packageId: 'public',
                     packageVersionId: p.id,
                     userId: userId,
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
@@ -13861,6 +13863,7 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    packageLoadId: expect.any(String),
                     package: {
                         id: expect.any(String),
                         packageId: 'public',
@@ -13912,6 +13915,7 @@ describe('RecordsServer', () => {
                     packageId: 'public',
                     packageVersionId: p.id,
                     userId: userId,
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
@@ -13941,6 +13945,7 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    packageLoadId: expect.any(String),
                     package: {
                         id: expect.any(String),
                         packageId: 'public',
@@ -13994,6 +13999,7 @@ describe('RecordsServer', () => {
                     packageId: 'public',
                     packageVersionId: p.id,
                     userId: userId,
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
@@ -14021,6 +14027,7 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    packageLoadId: expect.any(String),
                     package: {
                         id: expect.any(String),
                         packageId: 'public',
@@ -14072,6 +14079,7 @@ describe('RecordsServer', () => {
                     packageId: 'public',
                     packageVersionId: p.id,
                     userId: null,
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
         });
@@ -14104,6 +14112,244 @@ describe('RecordsServer', () => {
                 }),
                 apiHeaders
             )
+        );
+    });
+
+    describe('GET /api/v2/records/package/install/list', () => {
+        const inst = 'myInst';
+
+        beforeEach(async () => {
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId',
+                recordName: null,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.0',
+                userId: userId,
+            });
+
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId2',
+                recordName: null,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.1',
+                userId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId3',
+                recordName,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.0',
+                userId: userId,
+            });
+
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId4',
+                recordName,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.1',
+                userId: userId,
+            });
+        });
+
+        it('should list the installed packages from a public inst', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId2',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.1',
+                            userId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should allow anonymous users to list packages in a public inst', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId2',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.1',
+                            userId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the installed packages from a private inst', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId3',
+                            recordName,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId4',
+                            recordName,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.1',
+                            userId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 if the user is not allowed to read the inst', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: userId,
+                        action: 'read',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 if the inst is not allowed to read the inst', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}&instances=/otherInst`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'inst',
+                        subjectId: '/otherInst',
+                        action: 'read',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
+            () => null,
+            () => apiHeaders
         );
     });
 

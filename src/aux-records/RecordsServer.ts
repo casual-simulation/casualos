@@ -2475,6 +2475,7 @@ export class RecordsServer {
                             RECORD_NAME_VALIDATION.optional().nullable(),
                         inst: z.string().min(1),
                         branch: z.string().optional().nullable(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
                         package: z.object({
                             recordName: RECORD_NAME_VALIDATION,
                             address: ADDRESS_VALIDATION,
@@ -2522,7 +2523,7 @@ export class RecordsServer {
                 )
                 .handler(
                     async (
-                        { recordName, inst, branch, package: pkg },
+                        { recordName, inst, branch, package: pkg, instances },
                         context
                     ) => {
                         if (!this._websocketController) {
@@ -2547,11 +2548,50 @@ export class RecordsServer {
                                 inst,
                                 branch,
                                 package: pkg as PackageVersionSpecifier,
+                                instances,
                             });
 
                         return result;
                     }
                 ),
+
+            listInstalledPackages: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/package/install/list')
+                .inputs(
+                    z.object({
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        inst: z.string().min(1),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName, inst, instances }, context) => {
+                    if (!this._websocketController) {
+                        return INSTS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        validation.success === false &&
+                        validation.errorCode !== 'no_session_key'
+                    ) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._websocketController.listInstalledPackages({
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            recordName: recordName ?? null,
+                            inst,
+                            instances,
+                        });
+
+                    return result;
+                }),
 
             listRecords: procedure()
                 .origins('api')
