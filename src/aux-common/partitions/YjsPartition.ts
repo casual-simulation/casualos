@@ -23,6 +23,7 @@ import type {
     InstUpdate,
     ApplyUpdatesToInstAction,
     GetCurrentInstUpdateAction,
+    InstallAuxAction,
 } from '../bots';
 import {
     isTagEdit,
@@ -33,6 +34,7 @@ import {
     GetRemoteCountAction,
     asyncResult,
     asyncError,
+    getInstStateFromUpdates,
 } from '../bots';
 import type { Observable } from 'rxjs';
 import { Subscription, Subject, BehaviorSubject } from 'rxjs';
@@ -86,11 +88,15 @@ import {
     getClock,
     getStateVector,
 } from '../yjs/YjsHelpers';
-import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
+import {
+    ensureTagIsSerializable,
+    getStateFromUpdates,
+    supportsRemoteEvent,
+} from './PartitionUtils';
 import type { RemoteActions, VersionVector } from '../common';
-import { Action, CurrentVersion, StatusUpdate } from '../common';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { YjsSharedDocument } from '../documents/YjsSharedDocument';
+import { v4 as uuid } from 'uuid';
 
 const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
 
@@ -324,6 +330,48 @@ export class YjsPartitionImpl
                         };
                         this._onEvents.next([
                             asyncResult(event.taskId, update, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'install_aux_file') {
+                    const action = <InstallAuxAction>event.event;
+                    try {
+                        if (action.mode === 'copy') {
+                            let bots: Bot[];
+                            if (action.aux.version === 2) {
+                                const state = getStateFromUpdates(
+                                    getInstStateFromUpdates(action.aux.updates)
+                                );
+                                bots = Object.values(state);
+                            } else {
+                                bots = Object.values(action.aux.state);
+                            }
+
+                            if (bots && bots.length > 0) {
+                                this._applyEvents(
+                                    bots.map(
+                                        (b) =>
+                                            botAdded(
+                                                createBot(uuid(), b.tags)
+                                            ) as AddBotAction
+                                    )
+                                );
+                            }
+                        } else {
+                            if (action.aux.version === 2) {
+                                this.applyStateUpdates(action.aux.updates);
+                            } else if (action.aux.version === 1) {
+                                this._applyEvents(
+                                    Object.values(action.aux.state).map((b) =>
+                                        botAdded(createBot(b.id, b.tags))
+                                    )
+                                );
+                            }
+                        }
+
+                        this._onEvents.next([
+                            asyncResult(event.taskId, null, false),
                         ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);
