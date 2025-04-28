@@ -6799,8 +6799,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets the JSON representation of the given bots as an .aux file.
+     *
+     * This function is useful for getting the contents of an aux file without downloading it.
+     *
      * @param bots The bots that should be converted to JSON.
      * @param options The options that should be used for the conversion.
+     *
+     * @example Get the current bot as an aux file.
+     * const myAux = os.getAuxFileForBots([bot]);
+     *
+     * @example Download the current bot as an aux file.
+     * const myAux = os.getAuxFileForBots([bot]);
+     * os.download(myAux, "myAux.aux");
+     *
+     * @example Get the current bot as an aux file with version 1.
+     * const myAux = os.getAuxFileForBots([bot], { version: 1 });
+     *
+     * @dochash actions/os/files
+     * @docname os.getAuxFileForBots
      */
     function getAuxFileForBots(
         bots: Bot[],
@@ -6837,12 +6853,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Installs the given aux file into the inst.
+     *
+     * Depending on the version of the aux file, this may overwrite existing bots.
+     *
      * @param aux The aux file that should be installed.
      * @param mode The mode that should be used to install the bots in the AUX file.
      * - `"default"` indicates that the aux file will be installed as-is.
      *    If the file was already installed, then it will either overwrite bots or do nothing depending on the version of the aux.
      *    Version 1 auxes will overwrite existing bots, while version 2 auxes will do nothing.
      * - `"copy"` indicates that all the bots in the aux file should be given new IDs. This is useful if you want to be able to install an AUX multiple times in the same inst.
+     *
+     * @example Install an aux file.
+     * await os.installAuxFile(myAux);
+     *
+     * @dochash actions/os/files
+     * @docname os.installAuxFile
      */
     function installAuxFile(
         aux: StoredAux,
