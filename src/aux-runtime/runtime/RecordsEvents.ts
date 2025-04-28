@@ -48,7 +48,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
-import type { PackageRecordVersionKey } from '@casual-simulation/aux-records/packages/version';
+import type {
+    PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
+    PackageRecordVersionWithMetadata,
+    PackageVersion,
+} from '@casual-simulation/aux-records/packages/version';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -880,7 +885,7 @@ export interface InstallPackageAction extends RecordsAction {
      * The key for the package version that should be loaded.
      * If null, then the latest version will be loaded.
      */
-    key: string | Partial<PackageRecordVersionKey> | null;
+    key: string | PackageRecordVersionKeySpecifier | null;
 
     /**
      * The options for the request.
@@ -895,16 +900,15 @@ export interface InstallPackageSuccess {
     success: true;
 
     /**
+     * The ID of the record which records that the package was loaded into the inst.
+     * Null if the inst is a local inst.
+     */
+    packageLoadId: string | null;
+
+    /**
      * The package that was loaded.
      */
-    package: {
-        version: string;
-        address: string;
-        key: PackageRecordVersionKey;
-        sha256: string;
-        readme: string;
-        entitlements: Entitlement[];
-    };
+    package: PackageRecordVersionWithMetadata;
 }
 
 export interface InstallPackageFailure {

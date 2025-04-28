@@ -119,6 +119,7 @@ import type { AuthStore, UserRole } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import type { PackageRecordVersionWithMetadata } from '../packages/version';
 import {
     formatVersionSpecifier,
     type PackageRecordVersion,
@@ -3489,7 +3490,7 @@ export interface LoadPackageSuccess {
     /**
      * The package that was loaded.
      */
-    package: PackageRecordVersion;
+    package: PackageRecordVersionWithMetadata;
 }
 
 export interface LoadPackageFailure {

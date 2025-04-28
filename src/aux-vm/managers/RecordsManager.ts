@@ -20,6 +20,7 @@ import type {
     RemoteCausalRepoProtocol,
     GenericHttpRequest,
     GetRecordsEndpointAction,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     BotAction,
@@ -31,6 +32,8 @@ import {
     iterableThrow,
     iterableComplete,
     formatVersionNumber,
+    remote,
+    installAuxFile,
 } from '@casual-simulation/aux-common';
 import type {
     ListRecordDataAction,
@@ -66,6 +69,8 @@ import type {
     RecordsCallProcedureAction,
     GrantEntitlementsAction,
     RecordPackageVersionAction,
+    InstallPackageAction,
+    InstallPackageSuccess,
 } from '@casual-simulation/aux-runtime';
 import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -90,6 +95,7 @@ import type {
     RevokePermissionResult,
     PublicRecordKeyPolicy,
     RecordFileFailure,
+    ReadFileSuccess,
 } from '@casual-simulation/aux-records';
 import {
     isRecordKey,
@@ -121,11 +127,11 @@ import type {
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
-import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
-import {
+import type {
+    RecordsClientActions,
     RecordsClientInputs,
-    createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
+import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -366,6 +372,8 @@ export class RecordsManager {
                 this._recordsCallProcedure(event);
             } else if (event.type === 'record_package_version') {
                 this._recordPackageVersion(event);
+            } else if (event.type === 'install_package') {
+                this._installPackage(event);
             }
         }
     }
@@ -1135,6 +1143,33 @@ export class RecordsManager {
                     asyncError(event.taskId, e.toString())
                 );
             }
+        }
+    }
+
+    private async _readFile(result: ReadFileSuccess) {
+        const getResult = await axios.request({
+            ...this._axiosOptions,
+            method: result.requestMethod as any,
+            url: result.requestUrl,
+            headers: result.requestHeaders,
+        });
+
+        if (getResult.status >= 200 && getResult.status < 300) {
+            return {
+                success: true,
+                data: getResult.data,
+            } as const;
+        } else {
+            return {
+                success: false,
+                errorCode:
+                    getResult.status === 404
+                        ? 'file_not_found'
+                        : getResult.status >= 500
+                        ? 'server_error'
+                        : 'not_authorized',
+                errorMessage: 'The file upload failed.',
+            } as ReadFileFailure;
         }
     }
 
@@ -2388,6 +2423,140 @@ export class RecordsManager {
                 '[RecordsManager] Error recording package version:',
                 e
             );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _installPackage(event: InstallPackageAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            if (this._helper.origin?.isStatic) {
+                // static origins need to install packages via fetching the package
+
+                const input: RecordsClientInputs['getPackageVersion'] = {
+                    recordName: event.recordName,
+                    address: event.address,
+                    instances,
+                };
+
+                if (typeof event.key === 'string') {
+                    input.key = event.key;
+                } else if (typeof event.key === 'object') {
+                    if (event.key.sha256) {
+                        input.sha256 = event.key.sha256;
+                    } else {
+                        input.major = event.key.major;
+                        input.minor = event.key.minor;
+                        input.patch = event.key.patch;
+                        input.tag = event.key.tag;
+                    }
+                }
+
+                const result = await this._client.getPackageVersion(input, {
+                    sessionKey: info.token,
+                    endpoint: info.recordsOrigin,
+                });
+
+                if (result.success === false) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, result)
+                        );
+                    }
+                    return;
+                }
+                if (result.auxFile.success === false) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, result.auxFile)
+                        );
+                    }
+                    return;
+                }
+
+                const fileResult = await this._readFile(result.auxFile);
+
+                if (fileResult.success === false) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, fileResult)
+                        );
+                    }
+                    return;
+                } else {
+                    // get json and apply it
+                    const aux: StoredAux = fileResult.data;
+
+                    await this._helper.transaction(
+                        remote(installAuxFile(aux, 'default'))
+                    );
+
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                packageLoadId: null,
+                                package: result.item,
+                            } as InstallPackageSuccess)
+                        );
+                    }
+                }
+            } else {
+                if (!this._helper.origin) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncError(
+                                event.taskId,
+                                'Unable to install package with no simulation origin!'
+                            )
+                        );
+                    }
+                    return;
+                }
+
+                // other origins can install via a HTTP request
+                const result = await this._client.installPackage(
+                    {
+                        recordName: this._helper.origin.recordName,
+                        inst: this._helper.origin.inst,
+                        package: {
+                            recordName: event.recordName,
+                            address: event.address,
+                            key: event.key,
+                        },
+                        instances,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error installing package:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
