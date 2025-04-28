@@ -42,6 +42,7 @@ import type {
     PartialBotsState,
     StoredAuxVersion2,
     InstUpdate,
+    StoredAux,
 } from '@casual-simulation/aux-common/bots';
 import {
     toast,
@@ -169,6 +170,7 @@ import {
     getLoomMetadata,
     loadSharedDocument,
     getBotsStateFromStoredAux,
+    installAuxFile,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -4609,6 +4611,7 @@ describe('AuxLibrary', () => {
                 );
             });
         });
+
         describe('os.downloadBotsAsInitalizationUpdate()', () => {
             let dateNowMock: jest.Mock<number>;
             let originalDateNow: (typeof Date)['now'];
@@ -4710,6 +4713,163 @@ describe('AuxLibrary', () => {
                     }),
                     test2: createBot('test2'),
                 });
+            });
+        });
+
+        describe('os.getAuxFileForBots()', () => {
+            let dateNowMock: jest.Mock<number>;
+            let originalDateNow: (typeof Date)['now'];
+
+            beforeEach(() => {
+                originalDateNow = Date.now;
+                Date.now = dateNowMock = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = originalDateNow;
+            });
+
+            it('should return the aux file for the given bots', () => {
+                dateNowMock.mockReturnValueOnce(1);
+                const json = library.api.os.getAuxFileForBots([
+                    bot1,
+                    bot2,
+                ]) as StoredAuxVersion2;
+                expect(json).toEqual({
+                    version: 2,
+                    updates: [
+                        {
+                            id: 0,
+                            timestamp: 1,
+                            update: expect.any(String),
+                        },
+                    ],
+                });
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(json.updates)
+                );
+
+                expect(state).toEqual({
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                });
+            });
+
+            it('should return a v1 aux file if specified', () => {
+                const json = library.api.os.getAuxFileForBots([bot1, bot2], {
+                    version: 1,
+                });
+                expect(json).toEqual({
+                    version: 1,
+                    state: {
+                        [bot1.id]: createBot(
+                            bot1.id,
+                            {
+                                ...bot1.tags,
+                            },
+                            bot1.space
+                        ),
+                        [bot2.id]: createBot(
+                            bot2.id,
+                            {
+                                ...bot2.tags,
+                            },
+                            bot2.space
+                        ),
+                    },
+                });
+            });
+        });
+
+        describe('os.installAuxFile()', () => {
+            it('should emit an InstallAuxFileAction', () => {
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.installAuxFile(state);
+                const expected = remote(
+                    installAuxFile(state, 'default'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to use the copy mode', () => {
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.installAuxFile(
+                    state,
+                    'copy'
+                );
+                const expected = remote(
+                    installAuxFile(state, 'copy'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support version 1 aux files', () => {
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        installed1: createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        installed2: createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    },
+                };
+
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.installAuxFile(state);
+                const expected = remote(
+                    installAuxFile(state, 'default'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

@@ -111,6 +111,7 @@ import type {
     RecordLoomOptions,
     LoomVideo,
     LoomVideoEmbedMetadata,
+    InstallAuxFileMode,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -277,6 +278,7 @@ import {
     getLoomMetadata,
     loadSharedDocument,
     LoadSharedDocumentAction,
+    installAuxFile as calcInstallAuxFile,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -1758,6 +1760,18 @@ export interface PausableDebugger extends DebuggerBase {
     changeState(bot: Bot, stateName: string, groupName?: string): Promise<void>;
 }
 
+export interface AuxFileOptions {
+    /**
+     * The version that should be used for the output file.
+     *
+     * Version 1 stores bots as pure JSON and is the original version of the file format.
+     * Version 2 stores bots as updates and is the new version of the file format.
+     *
+     * If not specifed, then version 2 will be used.
+     */
+    version?: 1 | 2;
+}
+
 /**
  * Defines an interface for a possible pause trigger location.
  *
@@ -3187,6 +3201,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 download: downloadData,
                 downloadBots,
                 downloadBotsAsInitialzationUpdate,
+
+                getAuxFileForBots,
+                installAuxFile,
 
                 downloadServer,
                 downloadInst: downloadServer,
@@ -6778,6 +6795,67 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 mime.getType(downloadedFilename) || 'application/json'
             )
         );
+    }
+
+    /**
+     * Gets the JSON representation of the given bots as an .aux file.
+     * @param bots The bots that should be converted to JSON.
+     * @param options The options that should be used for the conversion.
+     */
+    function getAuxFileForBots(
+        bots: Bot[],
+        options?: AuxFileOptions
+    ): StoredAux {
+        const version = options?.version ?? 2;
+
+        if (version === 1) {
+            let state: BotsState = {};
+            for (let bot of bots) {
+                if (isRuntimeBot(bot)) {
+                    state[bot.id] = createBot(
+                        bot.id,
+                        bot.tags.toJSON(),
+                        bot.space
+                    );
+                } else {
+                    state[bot.id] = bot;
+                }
+            }
+
+            return getVersion1DownloadState(state);
+        } else {
+            bots = bots.map((b) =>
+                isRuntimeBot(b) ? createBot(b.id, b.tags.toJSON(), b.space) : b
+            );
+            const update = constructInitializationUpdate(
+                calcCreateInitalizationUpdate(bots)
+            );
+
+            return getVersion2DownloadState(update);
+        }
+    }
+
+    /**
+     * Installs the given aux file into the inst.
+     * @param aux The aux file that should be installed.
+     * @param mode The mode that should be used to install the bots in the AUX file.
+     * - `"default"` indicates that the aux file will be installed as-is.
+     *    If the file was already installed, then it will either overwrite bots or do nothing depending on the version of the aux.
+     *    Version 1 auxes will overwrite existing bots, while version 2 auxes will do nothing.
+     * - `"copy"` indicates that all the bots in the aux file should be given new IDs. This is useful if you want to be able to install an AUX multiple times in the same inst.
+     */
+    function installAuxFile(
+        aux: StoredAux,
+        mode?: InstallAuxFileMode
+    ): Promise<void> {
+        const task = context.createTask(true, true);
+        const action = calcRemote(
+            calcInstallAuxFile(aux, mode ?? 'default'),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
     }
 
     /**
