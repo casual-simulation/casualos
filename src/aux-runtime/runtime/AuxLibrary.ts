@@ -299,7 +299,7 @@ import type {
     SendNotificationOptions,
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
-    LoadPackageResult,
+    InstallPackageResult,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -361,7 +361,7 @@ import {
     listPackageContainers as calcListPackageContainers,
     listPackageContainersByMarker as calcListPackageContainersByMarker,
     getPackageContainer as calcGetPackageContainer,
-    loadPackage as calcLoadPackage,
+    installPackage as calcInstallPackage,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -3435,7 +3435,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listPackageContainers,
                 listPackageContainersByMarker,
                 getPackageContainer,
-                loadPackage,
+                installPackage,
 
                 listUserStudios,
 
@@ -11096,21 +11096,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Attempts to load the given package into the inst.
+     * Attempts to install the given package into the inst.
      *
      * @param recordName the name of the record that the package is in.
      * @param address the address of the package that should be loaded.
      * @param key the key that specifies the version of the package that should be loaded. If not specified, then the latest version will be loaded.
      * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.installPackage
      */
-    function loadPackage(
+    function installPackage(
         recordName: string,
         address: string,
         key?: string | Partial<PackageRecordVersionKey>,
         options: RecordActionOptions = {}
-    ): Promise<LoadPackageResult> {
+    ): Promise<InstallPackageResult> {
         const task = context.createTask();
-        const event = calcLoadPackage(
+        const event = calcInstallPackage(
             recordName,
             address,
             key ?? null,

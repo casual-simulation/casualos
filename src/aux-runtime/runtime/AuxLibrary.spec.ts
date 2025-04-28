@@ -226,7 +226,7 @@ import {
     recordsCallProcedure,
     grantEntitlements,
     recordPackageVersion,
-    loadPackage,
+    installPackage,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -8978,14 +8978,14 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.loadPackage()', () => {
-            it('should emit a LoadPackageAction', async () => {
-                const action: any = library.api.os.loadPackage(
+        describe('os.installPackage()', () => {
+            it('should emit a InstallPackageAction', async () => {
+                const action: any = library.api.os.installPackage(
                     'test',
                     'address'
                 );
 
-                const expected = loadPackage(
+                const expected = installPackage(
                     'test',
                     'address',
                     null,
@@ -8997,13 +8997,13 @@ describe('AuxLibrary', () => {
             });
 
             it('should support specifying a key', async () => {
-                const action: any = library.api.os.loadPackage(
+                const action: any = library.api.os.installPackage(
                     'test',
                     'address',
                     'v1.0.0'
                 );
 
-                const expected = loadPackage(
+                const expected = installPackage(
                     'test',
                     'address',
                     'v1.0.0',
@@ -9015,7 +9015,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should support specifying a key object', async () => {
-                const action: any = library.api.os.loadPackage(
+                const action: any = library.api.os.installPackage(
                     'test',
                     'address',
                     {
@@ -9026,7 +9026,7 @@ describe('AuxLibrary', () => {
                     }
                 );
 
-                const expected = loadPackage(
+                const expected = installPackage(
                     'test',
                     'address',
                     {
@@ -9043,7 +9043,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should support specifying a key object with partial specifier', async () => {
-                const action: any = library.api.os.loadPackage(
+                const action: any = library.api.os.installPackage(
                     'test',
                     'address',
                     {
@@ -9051,7 +9051,7 @@ describe('AuxLibrary', () => {
                     }
                 );
 
-                const expected = loadPackage(
+                const expected = installPackage(
                     'test',
                     'address',
                     {

@@ -88,7 +88,7 @@ export type RecordsAsyncActions =
     | GrantEntitlementsAction
     | RevokeEntitlementGrantAction
     | RecordPackageVersionAction
-    | LoadPackageAction;
+    | InstallPackageAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -863,8 +863,8 @@ export interface GetEventCountAction extends RecordsAction {
     eventName: string;
 }
 
-export interface LoadPackageAction extends RecordsAction {
-    type: 'load_package';
+export interface InstallPackageAction extends RecordsAction {
+    type: 'install_package';
 
     /**
      * The name of the record that the package should be loaded from.
@@ -888,8 +888,10 @@ export interface LoadPackageAction extends RecordsAction {
     options: RecordActionOptions;
 }
 
-export type LoadPackageResult = LoadPackageSuccess | LoadPackageFailure;
-export interface LoadPackageSuccess {
+export type InstallPackageResult =
+    | InstallPackageSuccess
+    | InstallPackageFailure;
+export interface InstallPackageSuccess {
     success: true;
 
     /**
@@ -905,7 +907,7 @@ export interface LoadPackageSuccess {
     };
 }
 
-export interface LoadPackageFailure {
+export interface InstallPackageFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
@@ -2749,15 +2751,15 @@ export function getPackageContainer(
     );
 }
 
-export function loadPackage(
+export function installPackage(
     recordName: string,
     address: string,
     key: string | Partial<PackageRecordVersionKey> | null,
     options: RecordActionOptions,
     taskId?: number | string
-): LoadPackageAction {
+): InstallPackageAction {
     return {
-        type: 'load_package',
+        type: 'install_package',
         recordName,
         address,
         key,
