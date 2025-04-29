@@ -31,7 +31,12 @@ import AuthMarker from '../AuthMarker/AuthMarker';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import AuthPermissions from '../AuthPermissions/AuthPermissions';
 import axios from 'axios';
-import type { PackageRecordVersion } from '@casual-simulation/aux-records/packages/version';
+import type {
+    PackageRecordVersion,
+    PackageRecordVersionKey,
+} from '@casual-simulation/aux-records/packages/version';
+import { formatVersionNumber } from '@casual-simulation/aux-common';
+import DataSize from '../DataSize/DataSize';
 
 const PAGE_SIZE = 10;
 
@@ -40,6 +45,7 @@ const PAGE_SIZE = 10;
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
         'relative-time': RelativeTime,
+        'data-size': DataSize,
         'auth-permissions': AuthPermissions,
     },
 })

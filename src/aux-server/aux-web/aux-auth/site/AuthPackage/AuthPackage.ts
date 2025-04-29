@@ -34,6 +34,8 @@ import type {
     PackageRecordVersionKey,
 } from '@casual-simulation/aux-records/packages/version';
 import { formatVersionNumber } from '@casual-simulation/aux-common';
+import AuthPackageVersion from '../AuthPackageVersion/AuthPackageVersion';
+import DataSize from '../DataSize/DataSize';
 
 const PAGE_SIZE = 10;
 
@@ -42,6 +44,8 @@ const PAGE_SIZE = 10;
         'svg-icon': SvgIcon,
         'auth-marker': AuthMarker,
         'relative-time': RelativeTime,
+        'data-size': DataSize,
+        'package-version': AuthPackageVersion,
     },
 })
 export default class AuthPackage extends Vue {

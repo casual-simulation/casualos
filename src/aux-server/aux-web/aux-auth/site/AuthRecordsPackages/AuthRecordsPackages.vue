@@ -64,8 +64,8 @@
             </template>
         </md-table>
 
-        <auth-webhook v-if="selectedItem" :recordName="recordName" :webhook="selectedItem">
-        </auth-webhook>
+        <auth-package v-if="selectedItem" :recordName="recordName" :pkg="selectedItem">
+        </auth-package>
 
         <auth-permissions
             :recordName="recordName"

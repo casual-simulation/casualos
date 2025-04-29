@@ -86,6 +86,7 @@ import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
+import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -222,6 +223,11 @@ const routes: RouteConfig[] = [
                 path: 'notifications',
                 name: 'records-notifications',
                 component: AuthRecordsNotifications,
+            },
+            {
+                path: 'packages',
+                name: 'records-packages',
+                component: AuthRecordsPackages,
             },
         ],
     },

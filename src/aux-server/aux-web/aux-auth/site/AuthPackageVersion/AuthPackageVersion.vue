@@ -18,13 +18,13 @@
                             <md-list-item>
                                 <md-icon>schedule</md-icon>
                                 <span class="md-list-item-text"
-                                    >Size: {{ version.sizeInBytes }}</span
-                                >
+                                    >Size: <data-size :sizeInBytes="version.sizeInBytes"></data-size
+                                ></span>
                             </md-list-item>
                             <md-list-item>
                                 <md-icon>schedule</md-icon>
                                 <span class="md-list-item-text"
-                                    >Created: <relative-time :milis="version.createdAtMs"
+                                    >Created: <relative-time :millis="version.createdAtMs"
                                 /></span>
                             </md-list-item>
                             <md-list-item>

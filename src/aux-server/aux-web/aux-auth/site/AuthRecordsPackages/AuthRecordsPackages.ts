@@ -29,7 +29,7 @@ import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import AuthPermissions from '../AuthPermissions/AuthPermissions';
-import AuthWebhook from '../AuthWebhook/AuthWebhook';
+import AuthPackage from '../AuthPackage/AuthPackage';
 
 const PAGE_SIZE = 10;
 
@@ -39,6 +39,7 @@ const PAGE_SIZE = 10;
         'auth-marker': AuthMarker,
         'relative-time': RelativeTime,
         'auth-permissions': AuthPermissions,
+        'auth-package': AuthPackage,
         // 'auth-webhook': AuthWebhook,
     },
 })
