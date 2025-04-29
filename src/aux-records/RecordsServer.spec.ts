@@ -13342,7 +13342,7 @@ describe('RecordsServer', () => {
                     createdAtMs: 999,
                     createdFile: true,
                     entitlements: [],
-                    descriptionption: '',
+                    description: '',
                     requiresReview: false,
                     sha256: 'sha256',
                     markers: [PUBLIC_READ_MARKER],

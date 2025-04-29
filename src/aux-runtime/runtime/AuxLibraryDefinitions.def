@@ -12151,7 +12151,7 @@ export interface RecordPackageVersionApiRequest {
     /**
      * The description that should be included in the package version.
      */
-    descriptionption: string;
+    description: string;
 
     /**
      * The list of entitlements for the package version.

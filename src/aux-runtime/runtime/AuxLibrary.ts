@@ -11011,7 +11011,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getPackageVersion(
         recordName: string,
         address: string,
-        key: string | PackageRecordVersionKeySpecifier,
+        key?: string | PackageRecordVersionKeySpecifier,
         options: RecordActionOptions = {}
     ): Promise<CrudGetItemResult<PackageRecordVersion>> {
         const task = context.createTask();

@@ -8923,6 +8923,80 @@ describe('AuxLibrary', () => {
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            it('should support omitting the key', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support partial keys', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                major: 1,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support using sha256', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    {
+                        sha256: 'sha256',
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                sha256: 'sha256',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.erasePackageVersion()', () => {

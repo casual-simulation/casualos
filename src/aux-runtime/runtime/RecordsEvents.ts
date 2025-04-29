@@ -2612,7 +2612,7 @@ export function getPackageVersion(
 
     if (typeof key === 'string') {
         input.key = key;
-    } else {
+    } else if (key) {
         input = {
             ...input,
             ...key,
