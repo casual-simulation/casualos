@@ -34,7 +34,8 @@ import type { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
  */
 export class RedisWSWebsocketMessenger implements WebsocketMessenger {
     private _messenger: WSWebsocketMessenger;
-    private _redis: RedisClientType;
+    private _subscriber: RedisClientType;
+    private _publisher: RedisClientType;
     private _namespace: string;
 
     get connections() {
@@ -43,11 +44,13 @@ export class RedisWSWebsocketMessenger implements WebsocketMessenger {
 
     constructor(
         messenger: WSWebsocketMessenger,
-        redis: RedisClientType,
+        subscriber: RedisClientType,
+        publisher: RedisClientType,
         namespace: string
     ) {
         this._messenger = messenger;
-        this._redis = redis;
+        this._subscriber = subscriber;
+        this._publisher = publisher;
         this._namespace = namespace;
     }
 
@@ -55,23 +58,23 @@ export class RedisWSWebsocketMessenger implements WebsocketMessenger {
         return `${this._namespace}/${connectionId}`;
     }
 
-    async registerConnection(socket: WebSocket): Promise<string> {
+    registerConnection(socket: WebSocket): string {
         const id = this._messenger.registerConnection(socket);
 
         const key = this._pubSubKey(id);
-        await this._redis?.subscribe(key, (message: string) => {
+        this._subscriber?.subscribe(key, (message: string) => {
             const socket = this.connections.get(id);
             if (!socket) {
                 console.warn(
                     `[WSWebsocketMessenger] Connection ${id} not found.`
                 );
-                this._redis.unsubscribe(key);
+                this._subscriber.unsubscribe(key);
                 return;
             }
             if (message === 'close') {
                 console.log(`Connection ${id} closed.`);
                 socket.close();
-                this._redis.unsubscribe(key);
+                this._subscriber.unsubscribe(key);
             } else if (message.startsWith('msg:')) {
                 const data = message.substring(4);
                 socket.send(data);
@@ -81,17 +84,20 @@ export class RedisWSWebsocketMessenger implements WebsocketMessenger {
         return id;
     }
 
-    async removeConnection(connectionId: string): Promise<void> {
+    removeConnection(connectionId: string): void {
         this._messenger.removeConnection(connectionId);
-        await this._redis?.unsubscribe(this._pubSubKey(connectionId));
+        this._subscriber?.unsubscribe(this._pubSubKey(connectionId));
     }
 
     async disconnect(connectionId: string): Promise<void> {
         const con = this.connections.get(connectionId);
         if (con) {
             con.close();
-        } else if (this._redis) {
-            await this._redis.publish(this._pubSubKey(connectionId), 'close');
+        } else if (this._subscriber) {
+            await this._subscriber.publish(
+                this._pubSubKey(connectionId),
+                'close'
+            );
         } else {
             console.warn(
                 `[WSWebsocketMessenger] Connection ${connectionId} not found.`
@@ -145,8 +151,11 @@ export class RedisWSWebsocketMessenger implements WebsocketMessenger {
         const socket = this.connections.get(connectionId);
         if (socket) {
             socket.send(data);
-        } else if (this._redis) {
-            this._redis.publish(this._pubSubKey(connectionId), `msg:${data}`);
+        } else if (this._publisher) {
+            this._publisher.publish(
+                this._pubSubKey(connectionId),
+                `msg:${data}`
+            );
         } else {
             console.warn(
                 `[WSWebsocketMessenger] Connection ${connectionId} not found.`

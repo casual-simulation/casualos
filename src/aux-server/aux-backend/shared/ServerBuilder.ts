@@ -331,6 +331,8 @@ export class ServerBuilder implements SubscriptionLike {
     private _redisCaches: RedisClientType | null = null;
     private _redisInstData: RedisClientType | null = null;
     private _redisWebsocketConnections: RedisClientType | null = null;
+    private _redisSubscriber: RedisClientType | null = null;
+    private _redisPublisher: RedisClientType | null = null;
     private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
     private _s3Control: S3ControlClient;
@@ -911,10 +913,12 @@ export class ServerBuilder implements SubscriptionLike {
             options.redis.pubSubNamespace &&
             this._websocketMessenger instanceof WSWebsocketMessenger
         ) {
+            const [subscriber, publisher] = this._ensureRedisPubSub(options);
             console.log('[ServerBuilder] Using Redis PubSub.');
             this._websocketMessenger = new RedisWSWebsocketMessenger(
                 this._websocketMessenger,
-                redis,
+                subscriber,
+                publisher,
                 options.redis.pubSubNamespace
             );
         }
@@ -1929,6 +1933,21 @@ export class ServerBuilder implements SubscriptionLike {
         } else {
             return this._ensureRedis(options);
         }
+    }
+
+    private _ensureRedisPubSub(
+        options: Pick<ServerConfig, 'redis'>
+    ): [RedisClientType, RedisClientType] {
+        return [
+            (this._redisSubscriber = this._createRedisClient(
+                this._redisSubscriber,
+                options.redis.servers.pubSub ?? options.redis
+            )),
+            (this._redisPublisher = this._createRedisClient(
+                this._redisPublisher,
+                options.redis.servers.pubSub ?? options.redis
+            )),
+        ] as const;
     }
 
     private _ensureRedisCaches(

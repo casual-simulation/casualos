@@ -340,6 +340,11 @@ const redisSchema = z.object({
                     'The Redis server that should be used for rate limits. If omitted, then the default server will be used.'
                 )
                 .optional(),
+            pubSub: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for pubsub. If omitted, then the default server will be used.'
+                )
+                .optional(),
         })
         .describe(
             'The Redis servers that should be used for specific categories of data. If omitted, then the default server will be used.'
