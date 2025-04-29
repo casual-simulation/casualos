@@ -337,7 +337,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
                     if (
                         event.connection.connectionId ===
-                        this._client.connection.info.connectionId
+                        this._client.connection.info?.connectionId
                     ) {
                         return;
                     }
