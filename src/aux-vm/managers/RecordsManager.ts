@@ -1168,7 +1168,10 @@ export class RecordsManager {
                         : getResult.status >= 500
                         ? 'server_error'
                         : 'not_authorized',
-                errorMessage: 'The file upload failed.',
+                errorMessage:
+                    getResult.status === 404
+                        ? 'The file was not found.'
+                        : 'The file download failed.',
             } as ReadFileFailure;
         }
     }

@@ -10085,6 +10085,105 @@ describe('RecordsManager', () => {
                     }),
                 ]);
             });
+
+            it('should fail if the package file cannot be downloaded', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () =>
+                        ({
+                            success: true,
+                            item: {
+                                id: 'packageId',
+                                packageId: 'public',
+                                address: 'address',
+                                key: version(1),
+                                entitlements: [],
+                                readme: '',
+                                markers: [PUBLIC_READ_MARKER],
+                                createdAtMs: 123,
+                                sha256: 'sha256',
+                                auxSha256: 'auxSha256',
+                                auxFileName: 'fileName',
+                                createdFile: true,
+                                requiresReview: false,
+                                sizeInBytes: 123,
+                                approved: true,
+                                approvalType: 'normal',
+                            },
+                            auxFile: {
+                                success: true,
+                                requestMethod: 'GET',
+                                requestUrl: 'https://example.com/aux-file',
+                                requestHeaders: {
+                                    test: 'abc',
+                                },
+                            },
+                        } as GetPackageVersionResult),
+                });
+
+                setNextResponse({
+                    status: 404,
+                    data: 'File not found',
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'test',
+                    isStatic: true,
+                };
+
+                records.handleEvents([
+                    installPackage('test', 'address', 'v1.0.0', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'getPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        address: 'address',
+                        key: 'v1.0.0',
+                        instances: ['/test'],
+                    },
+                });
+
+                expect(getRequests()).toEqual([
+                    [
+                        'GET',
+                        'https://example.com/aux-file',
+                        undefined,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                            validateStatus: expect.any(Function),
+                        },
+                    ],
+                ]);
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'file_not_found',
+                        errorMessage: 'The file was not found.',
+                    }),
+                ]);
+            });
         });
 
         describe('Common Errors', () => {
