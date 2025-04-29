@@ -2601,7 +2601,7 @@ export function listPackageVersions(
 export function getPackageVersion(
     recordName: string,
     address: string,
-    key: string | PackageRecordVersionKey,
+    key: string | PackageRecordVersionKeySpecifier,
     options: RecordActionOptions,
     taskId?: number | string
 ) {

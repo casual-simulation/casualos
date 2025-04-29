@@ -536,6 +536,7 @@ import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-r
 import type {
     PackageRecordVersion,
     PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
 
@@ -10844,10 +10845,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Grants the given entitlements to a package.
      *
-     * @param request
-     * @param options
-     * @returns
+     * @param request The request to grant entitlements.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.grantEntitlements
      */
     function grantEntitlements(
         request: GrantEntitlementsRequest,
@@ -11006,7 +11011,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getPackageVersion(
         recordName: string,
         address: string,
-        key: string | PackageRecordVersionKey,
+        key: string | PackageRecordVersionKeySpecifier,
         options: RecordActionOptions = {}
     ): Promise<CrudGetItemResult<PackageRecordVersion>> {
         const task = context.createTask();
@@ -11217,7 +11222,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function installPackage(
         recordName: string,
         address: string,
-        key?: string | Partial<PackageRecordVersionKey>,
+        key?: string | PackageRecordVersionKeySpecifier,
         options: RecordActionOptions = {}
     ): Promise<InstallPackageResult> {
         const task = context.createTask();
