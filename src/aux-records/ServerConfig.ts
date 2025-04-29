@@ -449,6 +449,15 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         )
         .optional()
         .default(null),
+
+    pubSubNamespace: z
+        .string()
+        .describe(
+            'The namespace that should be used for pubsub subscriptions. Defaults to "pubsub". If set to null, then pubsub is disabled.'
+        )
+        .nullable()
+        .optional()
+        .default('pubsub'),
 });
 
 const rateLimitSchema = z.object({

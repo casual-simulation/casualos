@@ -208,6 +208,7 @@ import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAI
 import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
 import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
 import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
+import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -905,6 +906,18 @@ export class ServerBuilder implements SubscriptionLike {
 
         const redis = this._ensureRedisInstData(options);
         const prisma = this._ensurePrisma(options);
+
+        if (
+            options.redis.pubSubNamespace &&
+            this._websocketMessenger instanceof WSWebsocketMessenger
+        ) {
+            console.log('[ServerBuilder] Using Redis PubSub.');
+            this._websocketMessenger = new RedisWSWebsocketMessenger(
+                this._websocketMessenger,
+                redis,
+                options.redis.pubSubNamespace
+            );
+        }
 
         this._tempInstRecordsStore = new RedisTempInstRecordsStore(
             options.redis.tempInstRecordsStoreNamespace,
