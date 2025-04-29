@@ -2367,7 +2367,7 @@ export class RecordsManager {
                     item: {
                         address: event.request.address,
                         key: event.request.key,
-                        readme: event.request.readme,
+                        description: event.request.description,
                         entitlements: event.request.entitlements,
                         markers: event.request.markers as [string, ...string[]],
                         auxFileRequest: {

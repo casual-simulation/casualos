@@ -2277,7 +2277,7 @@ export class RecordsServer {
                                     .optional(),
                             }),
                             entitlements: z.array(ENTITLEMENT_VALIDATION),
-                            readme: z.string(),
+                            description: z.string(),
                             markers: MARKERS_VALIDATION.optional(),
                         }),
                         instances: INSTANCES_ARRAY_VALIDATION.optional(),
@@ -2313,7 +2313,7 @@ export class RecordsServer {
                                     item.auxFileRequest as PackageRecordVersionInput['auxFileRequest'],
                                 entitlements:
                                     item.entitlements as Entitlement[],
-                                readme: item.readme,
+                                description: item.description,
                                 markers: item.markers,
                             },
                             instances,

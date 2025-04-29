@@ -11910,9 +11910,9 @@ export interface PackageRecordVersion {
     requiresReview: boolean;
 
     /**
-     * The readme of the package.
+     * The description of the package.
      */
-    readme: string;
+    description: string;
 
     /**
      * The size of the package version in bytes.
@@ -12149,9 +12149,9 @@ export interface RecordPackageVersionApiRequest {
     key: PackageVersion;
 
     /**
-     * The readme that should be included in the package version.
+     * The description that should be included in the package version.
      */
-    readme: string;
+    descriptionption: string;
 
     /**
      * The list of entitlements for the package version.
@@ -14720,7 +14720,7 @@ interface Os {
      *   recordName: 'myRecord',
      *   address: 'myPackage',
      *   key: os.parseVersionKey('1.0.0'),
-     *   readme: 'description of the package',
+     *   description: 'description of the package',
      *   bots: getBots('color', 'red'),
      * });
      *
@@ -14729,7 +14729,7 @@ interface Os {
      *   recordName: 'myRecord',
      *   address: 'myPackage',
      *   key: os.parseVersionKey('1.0.0'),
-     *   readme: 'description of the package',
+     *   description: 'description of the package',
      *   entitlements: [
      *     {
      *        feature: 'data',

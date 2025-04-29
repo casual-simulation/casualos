@@ -840,9 +840,9 @@ export interface RecordPackageVersionApiRequest {
     key: PackageRecordVersionKey;
 
     /**
-     * The readme that should be included in the package version.
+     * The description that should be included in the package version.
      */
-    readme: string;
+    description: string;
 
     /**
      * The list of entitlements for the package version.
@@ -10913,7 +10913,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   recordName: 'myRecord',
      *   address: 'myPackage',
      *   key: os.parseVersionKey('1.0.0'),
-     *   readme: 'description of the package',
+     *   description: 'description of the package',
      *   bots: getBots('color', 'red'),
      * });
      *
@@ -10922,7 +10922,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   recordName: 'myRecord',
      *   address: 'myPackage',
      *   key: os.parseVersionKey('1.0.0'),
-     *   readme: 'description of the package',
+     *   description: 'description of the package',
      *   entitlements: [
      *     {
      *        feature: 'data',
@@ -10950,7 +10950,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 address: request.address,
                 key: request.key,
                 entitlements: request.entitlements ?? [],
-                readme: request.readme,
+                description: request.description,
                 markers: request.markers,
                 state: {
                     version: 2,

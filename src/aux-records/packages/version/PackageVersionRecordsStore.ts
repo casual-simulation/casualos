@@ -169,9 +169,9 @@ export interface PackageRecordVersion
     requiresReview: boolean;
 
     /**
-     * The readme of the package.
+     * The description of the package.
      */
-    readme: string;
+    description: string;
 
     /**
      * The size of the package version in bytes.

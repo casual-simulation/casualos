@@ -8720,7 +8720,7 @@ describe('AuxLibrary', () => {
                         patch: 0,
                         tag: '',
                     },
-                    readme: 'This is my first package!',
+                    description: 'This is my first package!',
                     bots: [bot1, bot2],
                     entitlements: [
                         {
@@ -8740,7 +8740,7 @@ describe('AuxLibrary', () => {
                             patch: 0,
                             tag: '',
                         },
-                        readme: 'This is my first package!',
+                        description: 'This is my first package!',
                         state: {
                             version: 2,
                             updates: [
@@ -8785,7 +8785,7 @@ describe('AuxLibrary', () => {
                         patch: 0,
                         tag: '',
                     },
-                    readme: 'This is my first package!',
+                    description: 'This is my first package!',
                     bots: [bot1, bot2],
                     entitlements: [
                         {
@@ -8806,7 +8806,7 @@ describe('AuxLibrary', () => {
                             patch: 0,
                             tag: '',
                         },
-                        readme: 'This is my first package!',
+                        description: 'This is my first package!',
                         state: {
                             version: 2,
                             updates: [

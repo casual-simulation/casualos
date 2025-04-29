@@ -1017,9 +1017,9 @@ export interface RecordPackageVersionRequest {
     entitlements: Entitlement[];
 
     /**
-     * The readme for the package version.
+     * The description for the package version.
      */
-    readme: string;
+    description: string;
 
     /**
      * The state that should be saved in the package.

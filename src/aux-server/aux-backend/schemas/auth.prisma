@@ -1020,7 +1020,7 @@ model PackageRecordVersion {
     requiresReview Boolean
 
     // The README of the package
-    readme String
+    description String
 
     // The markers that the package version has
     markers String[]

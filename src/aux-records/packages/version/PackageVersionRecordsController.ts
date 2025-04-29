@@ -334,7 +334,7 @@ export class PackageVersionRecordsController {
                     auxSha256: request.item.auxFileRequest.fileSha256Hex,
                     createdAtMs: existingItem.item.createdAtMs,
                     entitlements: request.item.entitlements,
-                    readme: request.item.readme,
+                    description: request.item.description,
                     sizeInBytes: sizeInBytes,
                 });
                 if (sha256 !== existingItem.item.sha256) {
@@ -443,7 +443,7 @@ export class PackageVersionRecordsController {
                     auxSha256: request.item.auxFileRequest.fileSha256Hex,
                     createdAtMs: createdAtMs,
                     entitlements: request.item.entitlements,
-                    readme: request.item.readme,
+                    description: request.item.description,
                     sizeInBytes: sizeInBytes,
                 });
                 item = {
@@ -451,7 +451,7 @@ export class PackageVersionRecordsController {
                     address: address,
                     entitlements: request.item.entitlements,
                     key: request.item.key,
-                    readme: request.item.readme,
+                    description: request.item.description,
                     auxFileName: fileName,
                     auxSha256: request.item.auxFileRequest.fileSha256Hex,
                     sha256,
@@ -577,7 +577,7 @@ export class PackageVersionRecordsController {
                 createdFile: result.item.createdFile,
                 entitlements: result.item.entitlements,
                 markers: result.item.markers,
-                readme: result.item.readme,
+                description: result.item.description,
                 requiresReview: result.item.requiresReview,
                 sha256: result.item.sha256,
                 sizeInBytes: result.item.sizeInBytes,

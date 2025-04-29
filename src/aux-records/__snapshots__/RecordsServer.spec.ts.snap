@@ -2241,7 +2241,7 @@ Object {
                 },
                 "type": "array",
               },
-              "readme": Object {
+              "description": Object {
                 "type": "string",
               },
             },
@@ -7039,7 +7039,7 @@ Object {
                 },
                 "type": "array",
               },
-              "readme": Object {
+              "description": Object {
                 "type": "string",
               },
             },
