@@ -2264,7 +2264,12 @@ export class RecordsServer {
                                 major: z.number().int(),
                                 minor: z.number().int(),
                                 patch: z.number().int(),
-                                tag: z.string().max(16).default(''),
+                                tag: z
+                                    .string()
+                                    .max(16)
+                                    .nullable()
+                                    .optional()
+                                    .default(''),
                             }),
                             auxFileRequest: z.object({
                                 fileSha256Hex: z.string().min(1).max(123),
@@ -2308,7 +2313,12 @@ export class RecordsServer {
                             userId: validation.userId,
                             item: {
                                 address: item.address,
-                                key: item.key as PackageRecordVersionKey,
+                                key: {
+                                    major: item.key.major,
+                                    minor: item.key.minor,
+                                    patch: item.key.patch,
+                                    tag: item.key.tag ?? '',
+                                },
                                 auxFileRequest:
                                     item.auxFileRequest as PackageRecordVersionInput['auxFileRequest'],
                                 entitlements:
