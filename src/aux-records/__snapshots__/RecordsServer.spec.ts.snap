@@ -2174,6 +2174,9 @@ Object {
                 },
                 "type": "object",
               },
+              "description": Object {
+                "type": "string",
+              },
               "entitlements": Object {
                 "schema": Object {
                   "schema": Object {
@@ -2227,6 +2230,8 @@ Object {
                   "tag": Object {
                     "defaultValue": "",
                     "hasDefault": true,
+                    "nullable": true,
+                    "optional": true,
                     "type": "string",
                   },
                 },
@@ -2240,9 +2245,6 @@ Object {
                   "type": "string",
                 },
                 "type": "array",
-              },
-              "description": Object {
-                "type": "string",
               },
             },
             "type": "object",
@@ -6972,6 +6974,9 @@ Object {
                 },
                 "type": "object",
               },
+              "description": Object {
+                "type": "string",
+              },
               "entitlements": Object {
                 "schema": Object {
                   "schema": Object {
@@ -7025,6 +7030,8 @@ Object {
                   "tag": Object {
                     "defaultValue": "",
                     "hasDefault": true,
+                    "nullable": true,
+                    "optional": true,
                     "type": "string",
                   },
                 },
@@ -7038,9 +7045,6 @@ Object {
                   "type": "string",
                 },
                 "type": "array",
-              },
-              "description": Object {
-                "type": "string",
               },
             },
             "type": "object",
