@@ -24,14 +24,14 @@ import {
     stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
-import type { RuntimeAsyncActions } from '@casual-simulation/aux-runtime';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();
 
 describe('BaseSimulation', () => {
     let sim: BaseSimulation;
     let vm: TestAuxVM;
-    let localEvents: Subject<(LocalActions | RuntimeAsyncActions)[]>;
+    let localEvents: Subject<RuntimeActions[]>;
 
     beforeEach(() => {
         vm = new TestAuxVM('sim');

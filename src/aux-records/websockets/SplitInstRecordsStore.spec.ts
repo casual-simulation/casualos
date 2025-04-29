@@ -18,7 +18,10 @@
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_BRANCH_NAME,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import { MemoryStore } from '../MemoryStore';
 
 describe('SplitInstRecordsStore', () => {
@@ -457,6 +460,7 @@ describe('SplitInstRecordsStore', () => {
                 packageId: 'packageId',
                 packageVersionId: 'packageVersionId',
                 userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
             });
 
             expect(await store.listLoadedPackages(null, 'test')).toEqual([
@@ -467,6 +471,7 @@ describe('SplitInstRecordsStore', () => {
                     packageId: 'packageId',
                     packageVersionId: 'packageVersionId',
                     userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
             expect(await temp.listLoadedPackages(null, 'test')).toEqual([
@@ -477,6 +482,7 @@ describe('SplitInstRecordsStore', () => {
                     packageId: 'packageId',
                     packageVersionId: 'packageVersionId',
                     userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
             expect(await perm.listLoadedPackages(null, 'test')).toEqual([]);
@@ -490,6 +496,7 @@ describe('SplitInstRecordsStore', () => {
                 packageId: 'packageId',
                 packageVersionId: 'packageVersionId',
                 userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
             });
 
             expect(await store.listLoadedPackages('record', 'test')).toEqual([
@@ -500,6 +507,7 @@ describe('SplitInstRecordsStore', () => {
                     packageId: 'packageId',
                     packageVersionId: 'packageVersionId',
                     userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
             expect(await perm.listLoadedPackages('record', 'test')).toEqual([
@@ -510,6 +518,7 @@ describe('SplitInstRecordsStore', () => {
                     packageId: 'packageId',
                     packageVersionId: 'packageVersionId',
                     userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
                 },
             ]);
             expect(await temp.listLoadedPackages('record', 'test')).toEqual([]);

@@ -58,35 +58,6 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         this._permanent = permanent;
     }
 
-    // async listGrantedEntitlementsByFeatureAndUserId(
-    //     recordName: string | null,
-    //     inst: string,
-    //     feature: Entitlement['feature'],
-    //     userId: string
-    // ): Promise<GrantedPackageEntitlement[]> {
-    //     if (recordName) {
-    //         return await this._permanent.listGrantedEntitlementsByFeatureAndUserId(
-    //             recordName,
-    //             inst,
-    //             feature,
-    //             userId
-    //         );
-    //     } else {
-    //         return await this._temp.listGrantedEntitlementsByFeatureAndUserId(
-    //             recordName,
-    //             inst,
-    //             feature,
-    //             userId
-    //         );
-    //     }
-    // }
-
-    // async saveGrantedPackageEntitlement(
-    //     grantedEntitlement: GrantedPackageEntitlement
-    // ): Promise<void> {
-    //     await this._permanent.saveGrantedPackageEntitlement(grantedEntitlement);
-    // }
-
     async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
         if (loadedPackage.recordName) {
             await this._permanent.saveLoadedPackage(loadedPackage);
