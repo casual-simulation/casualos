@@ -93,7 +93,8 @@ export type RecordsAsyncActions =
     | GrantEntitlementsAction
     | RevokeEntitlementGrantAction
     | RecordPackageVersionAction
-    | InstallPackageAction;
+    | InstallPackageAction
+    | ListInstalledPackagesAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -915,6 +916,10 @@ export interface InstallPackageFailure {
     success: false;
     errorCode: KnownErrorCodes;
     errorMessage: string;
+}
+
+export interface ListInstalledPackagesAction extends RecordsAction {
+    type: 'list_installed_packages';
 }
 
 /**
@@ -2767,6 +2772,17 @@ export function installPackage(
         recordName,
         address,
         key,
+        options,
+        taskId,
+    };
+}
+
+export function listInstalledPackages(
+    options: RecordActionOptions,
+    taskId?: number | string
+): ListInstalledPackagesAction {
+    return {
+        type: 'list_installed_packages',
         options,
         taskId,
     };

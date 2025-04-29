@@ -71,6 +71,7 @@ import type {
     RecordPackageVersionAction,
     InstallPackageAction,
     InstallPackageSuccess,
+    ListInstalledPackagesAction,
 } from '@casual-simulation/aux-runtime';
 import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -374,6 +375,8 @@ export class RecordsManager {
                 this._recordPackageVersion(event);
             } else if (event.type === 'install_package') {
                 this._installPackage(event);
+            } else if (event.type === 'list_installed_packages') {
+                this._listInstalledPackages(event);
             }
         }
     }
@@ -2560,6 +2563,68 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error installing package:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _listInstalledPackages(event: ListInstalledPackagesAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            if (
+                !hasValue(this._helper.origin) ||
+                this._helper.origin.isStatic
+            ) {
+                console.warn(
+                    `[RecordsManager] Unable to list packages for local insts.`
+                );
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Listing packages is not supported for local insts.',
+                        })
+                    );
+                }
+            } else {
+                const result = await this._client.listInstalledPackages(
+                    {
+                        recordName: this._helper.origin.recordName,
+                        inst: this._helper.origin.inst,
+                        instances,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error listing packages:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())

@@ -36,6 +36,7 @@ import {
     PUBLIC_READ_MARKER,
     installAuxFile,
     remote as calcRemote,
+    DEFAULT_BRANCH_NAME,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -71,6 +72,7 @@ import {
     recordsCallProcedure,
     recordPackageVersion,
     installPackage,
+    listInstalledPackages,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -10181,6 +10183,169 @@ describe('RecordsManager', () => {
                         success: false,
                         errorCode: 'file_not_found',
                         errorMessage: 'The file was not found.',
+                    }),
+                ]);
+            });
+        });
+
+        describe('list_installed_packages', () => {
+            let fetch: jest.Mock<
+                Promise<{
+                    status: number;
+                    headers?: Headers;
+                    json?: () => Promise<any>;
+                    text?: () => Promise<string>;
+                    body?: ReadableStream;
+                }>
+            >;
+
+            const originalFetch = globalThis.fetch;
+
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+                fetch = globalThis.fetch = jest.fn();
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                };
+            });
+
+            afterAll(() => {
+                globalThis.fetch = originalFetch;
+            });
+
+            it('should call the API to get the list of installed packages', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        packages: [
+                            {
+                                id: 'loadedPackageId',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.0',
+                                userId: userId,
+                            },
+                            {
+                                id: 'loadedPackageId2',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.1',
+                                userId: userId,
+                            },
+                        ],
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([listInstalledPackages({}, 1)]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'listInstalledPackages',
+                    input: {
+                        recordName: null,
+                        inst: 'myInst',
+                        instances: ['/myInst'],
+                    },
+                });
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        packages: [
+                            {
+                                id: 'loadedPackageId',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.0',
+                                userId: userId,
+                            },
+                            {
+                                id: 'loadedPackageId2',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.1',
+                                userId: userId,
+                            },
+                        ],
+                    }),
+                ]);
+            });
+
+            it('should return an error if the inst is a static inst', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        packages: [
+                            {
+                                id: 'loadedPackageId',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.0',
+                                userId: userId,
+                            },
+                            {
+                                id: 'loadedPackageId2',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.1',
+                                userId: userId,
+                            },
+                        ],
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'myInst',
+                    isStatic: true,
+                };
+
+                records.handleEvents([listInstalledPackages({}, 1)]);
+
+                await waitAsync();
+
+                expect(fetch).not.toHaveBeenCalled();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage:
+                            'Listing packages is not supported for local insts.',
                     }),
                 ]);
             });
