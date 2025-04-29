@@ -229,6 +229,7 @@ import {
     grantEntitlements,
     recordPackageVersion,
     installPackage,
+    listInstalledPackages,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -9220,6 +9221,16 @@ describe('AuxLibrary', () => {
                     {},
                     context.tasks.size
                 );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInstalledPackages()', () => {
+            it('should emit a ListInstalledPackagesAction', async () => {
+                const action: any = library.api.os.listInstalledPackages();
+
+                const expected = listInstalledPackages({}, context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

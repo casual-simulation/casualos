@@ -302,6 +302,7 @@ import type {
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
     InstallPackageResult,
+    ListInstalledPackagesAction,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -364,6 +365,7 @@ import {
     listPackageContainersByMarker as calcListPackageContainersByMarker,
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
+    listInstalledPackages as calcListInstalledPackages,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -484,6 +486,7 @@ import type {
     GrantRoleResult,
     RevokeRoleResult,
     PackageRecord,
+    ListInstalledPackagesResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3453,6 +3456,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listPackageContainersByMarker,
                 getPackageContainer,
                 installPackage,
+                listInstalledPackages,
 
                 listUserStudios,
 
@@ -11224,6 +11228,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of packages that are installed in the inst.
+     * @param options the options for the request.
+     *
+     * @example List all installed packages
+     * const result = await os.listInstalledPackages();
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listInstalledPackages
+     */
+    function listInstalledPackages(
+        options: RecordActionOptions = {}
+    ): Promise<ListInstalledPackagesResult> {
+        const task = context.createTask();
+        const event = calcListInstalledPackages(options, task.taskId);
         return addAsyncAction(task, event);
     }
 
