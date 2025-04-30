@@ -200,7 +200,7 @@
             "@mdx-js/mdx@3.0.0": "patches/@mdx-js/mdx@3.0.0.patch",
             "fake-indexeddb@5.0.1": "patches/fake-indexeddb@5.0.1.patch",
             "acorn-typescript@1.4.13": "patches/acorn-typescript@1.4.13.patch",
-            "deno-vm@0.12.0": "patches/deno-vm@0.12.0.patch",
+            "deno-vm@0.13.0": "patches/deno-vm@0.13.0.patch",
             "eslint-plugin-header@3.1.1": "patches/eslint-plugin-header@3.1.1.patch"
         }
     },

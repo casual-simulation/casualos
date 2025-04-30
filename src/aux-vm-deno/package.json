@@ -46,7 +46,7 @@
         "@casual-simulation/crypto": "^3.4.0",
         "@casual-simulation/crypto-browser": "^3.4.0",
         "comlink": "4.3.1",
-        "deno-vm": "^0.12.0",
+        "deno-vm": "0.13.0",
         "lodash": "4.17.21",
         "rxjs": "8.0.0-alpha.14",
         "uuid": "10.0.0"
