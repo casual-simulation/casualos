@@ -9,6 +9,7 @@
 -   Fixed an issue where quickly typing in an input element could cause the cursor to jump to the end of the content in the input box.
 -   Fixed an issue where it was possible for the `@onInstJoined` shout to be sent before all initial tag mask have been processed.
 -   Fixed an issue where updating a new bot could cause the new bot to not be properly synchronized throughout the system.
+-   Fixed an issue where it was impossible to upload files to records that have spaces in their names.
 
 ## V3.4.5
 
