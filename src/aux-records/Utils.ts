@@ -237,6 +237,7 @@ const _dash = '-'.charCodeAt(0);
 const _squiggle = '~'.charCodeAt(0);
 const _dot = '.'.charCodeAt(0);
 const _slash = '/'.charCodeAt(0);
+const _percent = '%'.charCodeAt(0);
 
 /**
  * URI Encodes the given string according to AWS Signature Version 4.
@@ -248,6 +249,7 @@ export function canonicalUriEncode(
     input: string,
     encodeSlash: boolean
 ): string {
+    let warned = false;
     const textEncoder = new TextEncoder();
     const bytes = textEncoder.encode(input);
     const textDecoder = new TextDecoder();
@@ -271,6 +273,12 @@ export function canonicalUriEncode(
                 result.push(ch);
             }
         } else {
+            if (ch === _percent && !warned) {
+                warned = true;
+                console.warn(
+                    '[canonicalUriEncode] Percent sign found in string to encode. This may be the result of double encoding, which would cause signatures to fail if it is the case.'
+                );
+            }
             result.push(...textEncoder.encode(encodeHexUtf8(ch)));
         }
     }

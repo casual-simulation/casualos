@@ -153,6 +153,29 @@ describe('createCanonicalRequest()', () => {
         );
     });
 
+    it('should URL encode the path', () => {
+        const result = createCanonicalRequest({
+            method: 'POST',
+            path: '/this is*a:test.png',
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': '123',
+                'X-Amz-Date': '20211221T000000Z',
+                ABC: ' def ',
+            },
+            queryString: {
+                'Hello World': 'jkl',
+                zyx: '123',
+                abc: 'def',
+            },
+            payloadSha256Hex: 'payload-hash',
+        });
+
+        expect(result).toEqual(
+            'POST\n/this%20is%2Aa%3Atest.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20211221T000000Z\n\nabc;content-length;content-type;x-amz-date\npayload-hash'
+        );
+    });
+
     it('should lowercase the payload SHA-256 hex', () => {
         const result = createCanonicalRequest({
             method: 'POST',
