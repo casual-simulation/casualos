@@ -1513,6 +1513,8 @@ export class ServerBuilder implements SubscriptionLike {
         if (env.type === 'deno') {
             console.log('[ServerBuilder] Using Deno Webhook Environment.');
 
+            configParameters.debug = env.debugLogs;
+
             const anyGlobalThis = globalThis as any;
             anyGlobalThis.MessageChannel = MessageChannel;
             anyGlobalThis.MessagePort = MessagePort;

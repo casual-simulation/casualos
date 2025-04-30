@@ -983,6 +983,12 @@ const webhooksSchema = z.object({
                 .min(1)
                 .optional()
                 .nullable(),
+            debugLogs: z
+                .boolean()
+                .describe(
+                    'Whether to enable debug logs for the Deno environment. This will log all Deno output to the console.'
+                )
+                .default(false),
         }),
         z.object({
             type: z.literal('node'),
