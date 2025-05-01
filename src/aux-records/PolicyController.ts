@@ -758,7 +758,7 @@ export class PolicyController {
 
         if (result.success) {
             console.log(
-                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, ${request.subjectType}: ${request.subjectId}, userId: ${context.userId}] Request authorized.`
+                `[PolicyController] [action: ${request.resourceKind}.${request.action} resourceId: ${request.resourceId} recordName: ${context.recordName}, ${request.subjectType}: ${request.subjectId}, userId: ${context.userId}] Request authorized: ${result.explanation}`
             );
         } else {
             console.log(
@@ -819,7 +819,20 @@ export class PolicyController {
             }
 
             const recordName = context.recordName;
-            if (context.userRole === 'superUser') {
+            const subjectType = request.subjectType;
+            let subjectId = request.subjectId;
+
+            if (subjectType === 'inst') {
+                subjectId = normalizeInstId(subjectId);
+            }
+
+            if (
+                context.userRole === 'superUser' &&
+                request.subjectType !== 'inst'
+            ) {
+                // super users are allowed to do anything for any user
+                // insts need to be authorized separately so that a malicious inst can't just do anything
+                // if a super user happens to visit it
                 return {
                     success: true,
                     recordName: recordName,
@@ -865,7 +878,13 @@ export class PolicyController {
                     },
                     explanation: `The system is requesting the action.`,
                 };
-            } else if (context.userRole === 'moderator') {
+            } else if (
+                context.userRole === 'moderator' &&
+                request.subjectType !== 'inst'
+            ) {
+                // moderators are allowed to read anything for any user
+                // insts need to be authorized separately so that a malicious inst can't just read everything
+                // if a moderator happens to visit it
                 if (
                     isAllowedModeratorResource(
                         request.resourceKind,
@@ -895,13 +914,6 @@ export class PolicyController {
                         explanation: `User is a moderator.`,
                     };
                 }
-            }
-
-            const subjectType = request.subjectType;
-            let subjectId = request.subjectId;
-
-            if (subjectType === 'inst') {
-                subjectId = normalizeInstId(subjectId);
             }
 
             const publicPermission = getPublicMarkersPermission(
@@ -3029,11 +3041,12 @@ export interface AuthorizationContext {
 
     /**
      * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
      */
-    userId: string;
+    userId: string | null;
 
     /**
-     * The role of the user.
+     * The role of the user that is currently logged in.
      */
     userRole: UserRole;
 
@@ -3688,6 +3701,7 @@ export interface AuthorizeSubjectRequest {
 
     /**
      * The ID of the subject that should be authorized.
+     * If null, then the currently logged in user will be used if available.
      */
     subjectId: string | null;
 
