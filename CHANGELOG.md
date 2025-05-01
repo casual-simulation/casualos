@@ -37,6 +37,9 @@
     -   `os.listInstalledPackages()`: Gets the list of packages that have been installed in this inst.
     -   `os.installAuxFile(state, mode?)`: Installs the given AUX file in this inst. `mode` can be set to "copy" to force CasualOS to always produce new copies of bots.
     -   `os.getAuxFileForBots(bots, options?)`: Gets an AUX file that represents the given bots. `options` can be used to specify which version of the AUX file format you want to receive. This function works like `os.downloadBots()`, but it returns the AUX file instead of downloading it to the user's device.
+-   Added support for multi-server websocket deployments of CasualOS.
+    -   Uses Redis pub/sub as a message broker.
+    -   Individual CasualOS deployments are still stateless: they only need to be able to access Redis and the DB.
 
 ### :bug: Bug Fixes
 
