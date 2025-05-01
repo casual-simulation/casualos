@@ -27,6 +27,19 @@ import type {
     UnionSchemaMetadata,
 } from '../aux-common';
 
+/**
+ * A symbol that represents an undefined value.
+ * This is used to indicate that a value is not set or not applicable.
+ */
+const UNDEFINED_SYMBOL = Symbol('undefined');
+
+function resolveValue(value: any): any {
+    if (value === UNDEFINED_SYMBOL) {
+        return undefined;
+    }
+    return value;
+}
+
 export interface PromptState {
     aborted: boolean;
 }
@@ -247,7 +260,7 @@ function getOptionalChoices(
             {
                 title: '(undefined)',
                 description: 'A undefined value.',
-                value: undefined,
+                value: UNDEFINED_SYMBOL,
             },
             ...choices,
         ];
@@ -270,21 +283,13 @@ async function askForEnumInputs(
     );
     const response = await prompts({
         type: 'select',
-        name: 'value',
+        name: 'choice',
         message: `Select a value for ${name}.`,
         choices: choices,
         onState,
     });
 
-    if (response.value === '') {
-        if (inputs.nullable) {
-            return null;
-        } else {
-            return undefined;
-        }
-    }
-
-    return response.value;
+    return resolveValue(response.choice);
 }
 
 async function askForUnionInputs(
@@ -316,7 +321,9 @@ async function askForUnionInputs(
                         return {
                             title: `(null)`,
                             description: option.description,
-                            value: null,
+                            value: {
+                                type: 'null',
+                            },
                         };
                     }
 
@@ -330,7 +337,12 @@ async function askForUnionInputs(
             onState,
         });
 
-        return await askForInputs(kind.kind, name, repl);
+        const option = resolveValue(kind.kind);
+        if (!option) {
+            return option;
+        }
+
+        return await askForInputs(option, name, repl);
     }
 }
 
@@ -404,11 +416,13 @@ async function askForDiscriminatedUnionInputs(
         onState,
     });
 
-    if (kind.kind === null || kind.kind === undefined) {
-        return kind.kind;
+    const option = resolveValue(kind.kind);
+
+    if (option === null || option === undefined) {
+        return option;
     }
 
-    return await askForInputs(kind.kind, name, repl);
+    return await askForInputs(option, name, repl);
 }
 
 async function askForAnyInputs(
