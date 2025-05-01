@@ -2431,9 +2431,9 @@ export class RecordsServer {
                 .http('POST', '/api/v2/records/package/version/review')
                 .inputs(
                     z.object({
-                        packageVersionId: z.string().min(1).max(32),
+                        packageVersionId: z.string().min(1).max(36),
                         review: z.object({
-                            id: z.string().min(1).max(32).optional(),
+                            id: z.string().min(1).max(36).optional(),
                             approved: z.boolean(),
                             approvalType: z
                                 .enum(['normal', 'super'])
@@ -3138,7 +3138,7 @@ export class RecordsServer {
                 .http('POST', '/api/v2/records/entitlement/grants')
                 .inputs(
                     z.object({
-                        packageId: z.string().min(1).max(32),
+                        packageId: z.string().min(1).max(36),
                         userId: z.string().optional().nullable(),
                         recordName: RECORD_NAME_VALIDATION,
                         feature: ENTITLEMENT_FEATURE_VALIDATION,
@@ -3226,7 +3226,7 @@ export class RecordsServer {
                         packageId: z
                             .string()
                             .min(1)
-                            .max(32)
+                            .max(36)
                             .optional()
                             .nullable(),
                     })
