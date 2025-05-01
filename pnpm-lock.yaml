@@ -15,9 +15,9 @@ patchedDependencies:
   acorn-typescript@1.4.13:
     hash: 6c2dd2yvtei2d4lpomumi2s22q
     path: patches/acorn-typescript@1.4.13.patch
-  deno-vm@0.12.0:
+  deno-vm@0.13.0:
     hash: 4b6o6pkokhnxhk5mw3ayiagdxm
-    path: patches/deno-vm@0.12.0.patch
+    path: patches/deno-vm@0.13.0.patch
   eslint-plugin-header@3.1.1:
     hash: b3o5exenray2xkoqu5gm4rau54
     path: patches/eslint-plugin-header@3.1.1.patch
@@ -1139,8 +1139,8 @@ importers:
         specifier: 2.8.5
         version: 2.8.5
       deno-vm:
-        specifier: ^0.12.0
-        version: 0.12.0(patch_hash=4b6o6pkokhnxhk5mw3ayiagdxm)
+        specifier: 0.13.0
+        version: 0.13.0(patch_hash=4b6o6pkokhnxhk5mw3ayiagdxm)
       downloadjs:
         specifier: ^1.4.7
         version: 1.4.7
@@ -1536,8 +1536,8 @@ importers:
         specifier: 4.3.1
         version: 4.3.1
       deno-vm:
-        specifier: ^0.12.0
-        version: 0.12.0(patch_hash=4b6o6pkokhnxhk5mw3ayiagdxm)
+        specifier: 0.13.0
+        version: 0.13.0(patch_hash=4b6o6pkokhnxhk5mw3ayiagdxm)
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -15369,8 +15369,8 @@ packages:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
     dev: true
 
-  /deno-vm@0.12.0(patch_hash=4b6o6pkokhnxhk5mw3ayiagdxm):
-    resolution: {integrity: sha512-JcQroHIjemG7kwADvdW9mjVqSuCsTHyQbL8INwZFAch+kKNUvhWiDcBG3KBCSeIRoErW3MoU5/7riPyimzTFUg==}
+  /deno-vm@0.13.0(patch_hash=4b6o6pkokhnxhk5mw3ayiagdxm):
+    resolution: {integrity: sha512-Y91XNeNxRF/CoqMxPUuPXBBvjkqfZ3Kb7SxSGQnxPdOoGUzEToOLqkOOxPBWqfLMf7ntB5dOZSilGAa8G7Rsug==}
     engines: {node: '>= 12'}
     dependencies:
       base64-js: 1.5.1

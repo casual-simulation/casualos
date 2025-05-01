@@ -121,7 +121,7 @@
         "comlink": "4.3.1",
         "compression": "1.7.4",
         "cors": "2.8.5",
-        "deno-vm": "^0.12.0",
+        "deno-vm": "0.13.0",
         "downloadjs": "^1.4.7",
         "esri-loader": "3.7.0",
         "estraverse": "^5.2.0",
