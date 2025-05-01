@@ -340,6 +340,11 @@ const redisSchema = z.object({
                     'The Redis server that should be used for rate limits. If omitted, then the default server will be used.'
                 )
                 .optional(),
+            pubSub: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for pubsub. If omitted, then the default server will be used.'
+                )
+                .optional(),
         })
         .describe(
             'The Redis servers that should be used for specific categories of data. If omitted, then the default server will be used.'
@@ -449,6 +454,15 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         )
         .optional()
         .default(null),
+
+    pubSubNamespace: z
+        .string()
+        .describe(
+            'The namespace that should be used for pubsub subscriptions. Defaults to "pubsub". If set to null, then pubsub is disabled.'
+        )
+        .nullable()
+        .optional()
+        .default('pubsub'),
 });
 
 const rateLimitSchema = z.object({

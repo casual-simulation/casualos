@@ -13,7 +13,7 @@
         "watch:server": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch",
         "watch:server:player": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch:player",
         "watch:server:secure": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run watch:secure",
-        "watch:libs": "tsc --build --watch",
+        "watch:libs": "tsc --build --watch --preserveWatchOutput",
         "watch:docs": "cd docs && npm start",
         "serverless": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run serverless",
         "merge:secrets": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run merge:secrets",
@@ -83,7 +83,8 @@
         "lint:redis": "eslint src/rate-limit-redis",
         "lint:tunnel": "eslint src/tunnel",
         "lint:undom": "eslint src/undom",
-        "lint:shortkey": "eslint src/vue-shortkey"
+        "lint:shortkey": "eslint src/vue-shortkey",
+        "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev"
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",

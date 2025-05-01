@@ -19,16 +19,21 @@ import type {
     BotAction,
     InstUpdate,
     StoredAux,
+    BotsState,
 } from '@casual-simulation/aux-common/bots';
 import {
     action,
     botAdded,
     createBot,
+    createInitializationUpdate,
     hasValue,
     isBot,
     ON_WEBHOOK_ACTION_NAME,
 } from '@casual-simulation/aux-common/bots';
-import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
+import {
+    constructInitializationUpdate,
+    YjsPartitionImpl,
+} from '@casual-simulation/aux-common/partitions';
 import type { WebsocketMessenger } from './WebsocketMessenger';
 import type {
     DeviceSelector,
@@ -70,6 +75,7 @@ import type {
     InstRecord,
     InstRecordsStore,
     InstWithSubscriptionInfo,
+    LoadedPackage,
     SaveInstFailure,
 } from './InstRecordsStore';
 import { StoredUpdates } from './InstRecordsStore';
@@ -83,6 +89,7 @@ import type {
     ServerError,
     NotSupportedError,
     PublicUserInfo,
+    KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
@@ -90,10 +97,11 @@ import {
     PUBLIC_WRITE_MARKER,
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
+    formatVersionNumber,
 } from '@casual-simulation/aux-common';
-import { ZodIssue } from 'zod';
+import type { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, v7 as uuidv7 } from 'uuid';
 import type {
     AuthorizationContext,
     AuthorizeSubjectFailure,
@@ -107,10 +115,21 @@ import type {
 } from '../SubscriptionConfiguration';
 import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
 import type { MetricsStore } from '../MetricsStore';
-import type { AuthStore } from '../AuthStore';
+import type { AuthStore, UserRole } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import type { PackageRecordVersionWithMetadata } from '../packages/version';
+import {
+    formatVersionSpecifier,
+    type PackageRecordVersion,
+    type PackageVersion,
+    type PackageVersionRecordsController,
+    type PackageVersionSpecifier,
+} from '../packages/version';
+import { STORED_AUX_SCHEMA } from '../webhooks';
+import { tryParseJson } from '../Utils';
+import { formatInstId } from './Utils';
 
 const TRACE_NAME = 'WebsocketController';
 
@@ -129,6 +148,7 @@ export class WebsocketController {
     private _config: ConfigurationStore;
     private _metrics: MetricsStore;
     private _authStore: AuthStore;
+    private _packageVersions: PackageVersionRecordsController | null;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -150,7 +170,8 @@ export class WebsocketController {
         policies: PolicyController,
         config: ConfigurationStore,
         metrics: MetricsStore,
-        authStore: AuthStore
+        authStore: AuthStore,
+        packageVersions: PackageVersionRecordsController = null
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
@@ -161,6 +182,7 @@ export class WebsocketController {
         this._policies = policies;
         this._config = config;
         this._metrics = metrics;
+        this._packageVersions = packageVersions;
     }
 
     /**
@@ -1071,6 +1093,254 @@ export class WebsocketController {
                 updateId: event.updateId,
             });
         }
+    }
+
+    @traced(TRACE_NAME)
+    async addUserUpdates(
+        request: AddUpdatesRequest
+    ): Promise<AddInstUpdatesResult> {
+        console.log(
+            `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}] Add Updates`
+        );
+
+        if (request.updates) {
+            let branch =
+                (await this._instStore.getBranchByName(
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                )) ??
+                (await this._temporaryStore.getBranchByName(
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                ));
+            const updateSize = sumBy(request.updates, (u) =>
+                Buffer.byteLength(u, 'utf8')
+            );
+            const config = await this._config.getSubscriptionConfiguration();
+            let features: FeaturesConfiguration = null;
+
+            if (!request.recordName) {
+                if (config?.defaultFeatures?.publicInsts?.allowed === false) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: 'Temporary insts are not allowed.',
+                    };
+                }
+            }
+
+            if (!branch) {
+                console.log(
+                    `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Branch not found!`
+                );
+
+                const instResult = await this._getOrCreateInst(
+                    request.recordName,
+                    request.inst,
+                    request.userId,
+                    config
+                );
+
+                if (instResult.success === false) {
+                    return instResult;
+                } else if (request.recordName) {
+                    const authorizeResult =
+                        await this._policies.authorizeUserAndInstances(
+                            instResult.context,
+                            {
+                                resourceKind: 'inst',
+                                resourceId: request.inst,
+                                action: 'updateData',
+                                userId: request.userId,
+                                markers: instResult.inst.markers,
+                                instances: [],
+                            }
+                        );
+
+                    if (authorizeResult.success === false) {
+                        return authorizeResult;
+                    }
+                }
+
+                features = instResult.features;
+
+                const branchResult = await this._instStore.saveBranch({
+                    branch: request.branch,
+                    inst: request.inst,
+                    recordName: request.recordName,
+                    temporary: false,
+                });
+
+                if (branchResult.success === false) {
+                    return branchResult;
+                }
+                branch = await this._instStore.getBranchByName(
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                );
+            } else if (request.recordName) {
+                const contextResult =
+                    await this._policies.constructAuthorizationContext({
+                        recordKeyOrRecordName: request.recordName,
+                        userId: request.userId,
+                    });
+
+                if (contextResult.success === false) {
+                    return contextResult;
+                }
+
+                const authorizeResult =
+                    await this._policies.authorizeUserAndInstancesForResources(
+                        contextResult.context,
+                        {
+                            userId: request.userId,
+                            instances: [],
+                            resources: [
+                                {
+                                    resourceKind: 'inst',
+                                    resourceId: request.inst,
+                                    action: 'read',
+                                    markers: branch.linkedInst.markers,
+                                },
+                                {
+                                    resourceKind: 'inst',
+                                    resourceId: request.inst,
+                                    action: 'updateData',
+                                    markers: branch.linkedInst.markers,
+                                },
+                            ],
+                        }
+                    );
+
+                if (authorizeResult.success === false) {
+                    return authorizeResult;
+                }
+            }
+
+            if (!features && branch.linkedInst) {
+                features = getSubscriptionFeatures(
+                    config,
+                    branch.linkedInst.subscriptionStatus,
+                    branch.linkedInst.subscriptionId,
+                    branch.linkedInst.subscriptionType
+                );
+            }
+
+            let maxInstSize: number = null;
+
+            if (
+                features &&
+                typeof features.insts.maxBytesPerInst === 'number'
+            ) {
+                maxInstSize = features.insts.maxBytesPerInst;
+            } else if (
+                !request.recordName &&
+                typeof config?.defaultFeatures?.publicInsts?.maxBytesPerInst ===
+                    'number'
+            ) {
+                maxInstSize =
+                    config.defaultFeatures.publicInsts.maxBytesPerInst;
+            }
+
+            if (maxInstSize) {
+                const currentSize = branch.temporary
+                    ? await this._temporaryStore.getInstSize(
+                          request.recordName,
+                          request.inst
+                      )
+                    : await this._instStore.getInstSize(
+                          request.recordName,
+                          request.inst
+                      );
+                const neededSizeInBytes = currentSize + updateSize;
+                if (neededSizeInBytes > maxInstSize) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage: 'The inst has reached its maximum size.',
+                    };
+                }
+            }
+
+            if (branch.temporary) {
+                // Temporary branches use a temporary inst data store.
+                // This is because temporary branches are never persisted to disk.
+                await this._temporaryStore.addUpdates(
+                    request.recordName,
+                    request.inst,
+                    request.branch,
+                    request.updates,
+                    updateSize
+                );
+            } else {
+                const result = await this._instStore.addUpdates(
+                    request.recordName,
+                    request.inst,
+                    request.branch,
+                    request.updates,
+                    updateSize
+                );
+
+                if (result.success === false) {
+                    console.log(
+                        `[CausalRepoServer] [namespace: ${request.recordName}/${request.inst}/${request.branch}, userId: ${request.userId}]  Failed to add updates`,
+                        result
+                    );
+                    if (result.errorCode === 'max_size_reached') {
+                        if (result.success === false) {
+                            return {
+                                success: false,
+                                errorCode: 'subscription_limit_reached',
+                                errorMessage:
+                                    'The inst has reached its maximum size.',
+                            };
+                        }
+                    }
+                } else {
+                    if (
+                        request.recordName &&
+                        this._instStore instanceof SplitInstRecordsStore
+                    ) {
+                        this._instStore.temp.markBranchAsDirty({
+                            recordName: request.recordName,
+                            inst: request.inst,
+                            branch: request.branch,
+                        });
+                    }
+                }
+            }
+        }
+
+        const hasUpdates = request.updates && request.updates.length > 0;
+        if (hasUpdates) {
+            const connectedDevices =
+                await this._connectionStore.getConnectionsByBranch(
+                    'branch',
+                    request.recordName,
+                    request.inst,
+                    request.branch
+                );
+
+            let ret: AddUpdatesMessage = {
+                type: 'repo/add_updates',
+                recordName: request.recordName,
+                inst: request.inst,
+                branch: request.branch,
+                updates: request.updates,
+            };
+
+            await this._messenger.sendMessage(
+                connectedDevices.map((c) => c.serverConnectionId),
+                ret
+            );
+        }
+
+        return {
+            success: true,
+        };
     }
 
     @traced(TRACE_NAME)
@@ -2028,6 +2298,273 @@ export class WebsocketController {
         }
     }
 
+    /**
+     * Attempts to install a package into an inst.
+     * @param request The request to load the package.
+     */
+    @traced(TRACE_NAME)
+    async installPackage(
+        request: LoadPackageRequest
+    ): Promise<LoadPackageResult> {
+        if (!this._packageVersions) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Package loading is not supported.',
+            };
+        }
+        const userId = request.userId;
+        const key = request.package.key ?? {};
+        console.log(
+            `[CausalRepoServer] [namespace: ${request.recordName}/${
+                request.inst
+            }, ${userId}, package: ${request.package.recordName}/${
+                request.package.address
+            }@${formatVersionSpecifier(key)}] Install Package`
+        );
+
+        const p = await this._packageVersions.getItem({
+            recordName: request.package.recordName,
+            address: request.package.address,
+            key,
+            userId: userId,
+            instances: request.instances,
+        });
+
+        if (p.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to load package.`,
+                p
+            );
+            return p;
+        }
+        if (p.auxFile.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to load package file.`,
+                p.auxFile
+            );
+            return p.auxFile;
+        }
+
+        const loadedPackageStore = this._instStore;
+
+        const loadedPackage = await loadedPackageStore.isPackageLoaded(
+            request.recordName,
+            request.inst,
+            p.item.packageId
+        );
+        if (loadedPackage) {
+            // Already loaded
+            console.log(
+                `[CausalRepoServer] [userId: ${userId}] Package already loaded.`
+            );
+            return {
+                success: true,
+                packageLoadId: loadedPackage.id,
+                package: p.item,
+            };
+        }
+
+        // check that the user and target inst has the ability to run the package
+        const context = await this._policies.constructAuthorizationContext({
+            recordKeyOrRecordName: request.package.recordName,
+            userId,
+        });
+
+        if (context.success === false) {
+            return context;
+        }
+
+        const authorization = await this._policies.authorizeUserAndInstances(
+            context.context,
+            {
+                userId,
+                instances: [formatInstId(request.recordName, request.inst)],
+                resourceKind: 'package.version',
+                resourceId: p.item.address,
+                action: 'run',
+                markers: p.item.markers,
+            }
+        );
+
+        if (authorization.success === false) {
+            return authorization;
+        }
+
+        const fileResponse = await fetch(p.auxFile.requestUrl, {
+            method: p.auxFile.requestMethod,
+            headers: new Headers(p.auxFile.requestHeaders),
+        });
+
+        if (fileResponse.status >= 300) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to load package file.`
+            );
+
+            // Failed
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage: 'The package file could not be loaded.',
+            };
+        }
+
+        const json = await fileResponse.text();
+
+        const packageData = tryParseJson(json);
+
+        if (packageData.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to parse package file.`,
+                packageData
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage:
+                    'The package file could not be parsed. It must be valid JSON.',
+            };
+        }
+
+        const parsed = STORED_AUX_SCHEMA.safeParse(packageData.value);
+        if (parsed.success === false) {
+            console.error(
+                `[CausalRepoServer] [userId: ${userId}] Unable to parse package file.`,
+                packageData
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage: 'The package file could not be parsed.',
+                issues: parsed.error.issues,
+            };
+        }
+
+        const updates =
+            parsed.data.version === 2
+                ? parsed.data.updates.map((u) => u.update)
+                : [
+                      constructInitializationUpdate(
+                          createInitializationUpdate(
+                              Object.values(parsed.data.state as BotsState)
+                          )
+                      ).update,
+                  ];
+        const timestamps =
+            parsed.data.version === 2
+                ? parsed.data.updates.map((u) => u.timestamp)
+                : [0];
+
+        const branch = request.branch ?? DEFAULT_BRANCH_NAME;
+
+        const result = await this.addUserUpdates({
+            userId: request.userId,
+            userRole: request.userRole,
+            recordName: request.recordName,
+            inst: request.inst,
+            branch,
+            updates: updates,
+            timestamps: timestamps,
+        });
+
+        if (result.success === false) {
+            return result;
+        }
+
+        const loadedPackageId = uuidv7();
+        await loadedPackageStore.saveLoadedPackage({
+            id: loadedPackageId,
+            recordName: request.recordName,
+            inst: request.inst,
+            branch,
+
+            packageId: p.item.packageId,
+            packageVersionId: p.item.id,
+
+            userId: userId,
+        });
+
+        return {
+            success: true,
+            packageLoadId: loadedPackageId,
+            package: p.item,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async listInstalledPackages(
+        request: ListInstalledPackagesRequest
+    ): Promise<ListInstalledPackagesResult> {
+        if (!this._packageVersions) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Packages are not supported.',
+            };
+        }
+
+        if (request.recordName) {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const instName = request.inst;
+
+            const savedInst = await this._instStore.getInstByName(
+                recordName,
+                instName
+            );
+
+            if (!savedInst) {
+                return {
+                    success: false,
+                    errorCode: 'inst_not_found',
+                    errorMessage: 'The inst was not found.',
+                };
+            }
+
+            const authResult = await this._policies.authorizeUserAndInstances(
+                context.context,
+                {
+                    resourceKind: 'inst',
+                    resourceId: instName,
+                    action: 'read',
+                    markers: savedInst.markers,
+                    userId: request.userId,
+                    instances: request.instances,
+                }
+            );
+
+            if (authResult.success === false) {
+                return authResult;
+            }
+        }
+
+        const packages = await this._instStore.listLoadedPackages(
+            request.recordName,
+            request.inst
+        );
+
+        return {
+            success: true,
+            packages: packages.map((p) => ({
+                id: p.id,
+                recordName: p.recordName,
+                inst: p.inst,
+                branch: p.branch,
+                packageId: p.packageId,
+                packageVersionId: p.packageVersionId,
+                userId: p.userId,
+            })),
+        };
+    }
+
     @traced(TRACE_NAME)
     async syncTime(
         connectionId: string,
@@ -2828,4 +3365,183 @@ export interface EraseInstFailure {
         | GetOrCreateInstFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
+}
+
+export interface AddUpdatesRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The branch that the updates are for.
+     */
+    branch: string;
+
+    /**
+     * The updates that should be added.
+     */
+    updates: string[];
+
+    // /**
+    //  * The ID for this "add update" event.
+    //  * Used in the subsequent "update received" event to indicate
+    //  * that this update was received and processed.
+    //  *
+    //  * This property is optional because update IDs are only needed for updates which are sent to the
+    //  * server to be saved. (i.e. the client needs confirmation that it was saved) The server needs no such
+    //  * confirmation, so it does not need to include an update ID.
+    //  */
+    // updateId?: number;
+
+    /**
+     * Whether this message should be treated as the first message
+     * after a watch_branch event.
+     * This flag MUST be included on the first message as large apiary messages may appear out of order.
+     */
+    initial?: boolean;
+
+    /**
+     * The list of timestamps that the updates occurred at.
+     */
+    timestamps?: number[];
+}
+
+export type AddInstUpdatesResult =
+    | AddInstUpdatesSuccess
+    | AddInstUpdatesFailure;
+
+export interface AddInstUpdatesSuccess {
+    success: true;
+}
+
+export interface AddInstUpdatesFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export interface LoadPackageRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The name of the record that the package should be loaded into.
+     * Null if the inst is a public inst.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that the package should be loaded into.
+     */
+    inst: string;
+
+    /**
+     * The branch that the package should be loaded into.
+     * If omitted, then the default branch will be used.
+     */
+    branch?: string;
+
+    /**
+     * The package that should be loaded.
+     */
+    package: PackageVersionSpecifier;
+
+    /**
+     * The list of instances that are currently loaded.
+     */
+    instances?: string[];
+}
+
+export type LoadPackageResult = LoadPackageSuccess | LoadPackageFailure;
+
+export interface LoadPackageSuccess {
+    success: true;
+
+    /**
+     * The ID of the record which records that the package was loaded into the inst.
+     */
+    packageLoadId: string;
+
+    /**
+     * The package that was loaded.
+     */
+    package: PackageRecordVersionWithMetadata;
+}
+
+export interface LoadPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
+    issues?: ZodIssue[];
+}
+
+export interface ListInstalledPackagesRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The name of the record that the installed packages should be listed from.
+     * If null, then the inst is a public inst.
+     */
+    recordName: string | null;
+
+    /**
+     * The inst that the installed packages should be listed from.
+     */
+    inst: string;
+
+    /**
+     * The instances that are trying to list the packages.
+     */
+    instances?: string[];
+}
+
+export type ListInstalledPackagesResult =
+    | ListInstalledPackagesRequestSuccess
+    | ListInstalledPackagesFailure;
+
+export interface ListInstalledPackagesRequestSuccess {
+    success: true;
+    packages: LoadedPackage[];
+}
+
+export interface ListInstalledPackagesFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+    reason?: DenialReason;
+    issues?: ZodIssue[];
 }

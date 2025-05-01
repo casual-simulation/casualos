@@ -390,8 +390,18 @@ export function verifyConnectionToken(
  * Determines whether the given role is a super user role.
  * @param role The role to check.
  */
-export function isSuperUserRole(role: UserRole): boolean {
-    return role === 'superUser';
+export function isSuperUserRole(role: UserRole | null | undefined): boolean {
+    return role === 'superUser' || role === 'system';
+}
+
+/**
+ * Determines wether the given role is suitable for a package reviewer.
+ * @param role The role.
+ */
+export function isPackageReviewerRole(
+    role: UserRole | null | undefined
+): boolean {
+    return role === 'superUser' || role === 'moderator' || role === 'system';
 }
 
 /**

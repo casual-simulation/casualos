@@ -96,7 +96,7 @@ export class OutlineDecorator
 
     botUpdated(calc: BotCalculationContext): void {
         // Color
-        const colorValue = calculateBotValue(
+        const colorValue: string = calculateBotValue(
             calc,
             this.bot3D.bot,
             'auxStrokeColor'
@@ -108,7 +108,7 @@ export class OutlineDecorator
         }
 
         // Width
-        const widthValue = calculateBotValue(
+        const widthValue: number = calculateBotValue(
             calc,
             this.bot3D.bot,
             'auxStrokeWidth'

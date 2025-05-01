@@ -16,8 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { UserInstReport } from './ModerationStore';
-import { formatNotificationAsString } from './SystemNotificationMessenger';
+import {
+    formatNotificationAsString,
+    formatPackageVersionPublishNotification,
+} from './SystemNotificationMessenger';
 import type { StudioComIdRequest } from './RecordsStore';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 
 describe('formatNotificationAsString()', () => {
     it('should consistently format user inst report notifications', () => {
@@ -69,7 +73,8 @@ describe('formatNotificationAsString()', () => {
 
     it('should consistently format file scan notifications', () => {
         const result = formatNotificationAsString({
-            resource: 'file',
+            resource: 'moderation_scan',
+            resourceKind: 'file',
             action: 'scanned',
             resourceId: 'fileName.txt',
             recordName: 'test_record',
@@ -102,5 +107,76 @@ describe('formatNotificationAsString()', () => {
             timeMs: 123,
         } as any);
         expect(result).toMatchSnapshot();
+    });
+
+    it('should consistently format package version publish notifications', () => {
+        const result = formatPackageVersionPublishNotification({
+            resource: 'package_version_publish',
+            action: 'created',
+            recordName: 'test_record',
+            resourceId: 'test_id',
+            timeMs: 123,
+            package: {
+                id: 'package_id',
+                address: 'test_id',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'test',
+                createdAtMs: 123,
+                createdFile: true,
+                entitlements: [],
+                requiresReview: false,
+                description: 'abc',
+                sha256: 'test',
+                sizeInBytes: 123,
+                markers: [PUBLIC_READ_MARKER],
+            },
+        });
+
+        expect(result).toMatchSnapshot();
+
+        const result2 = formatPackageVersionPublishNotification({
+            resource: 'package_version_publish',
+            action: 'created',
+            recordName: 'test_record',
+            resourceId: 'test_id',
+            timeMs: 123,
+            package: {
+                id: 'package_id',
+                address: 'test_id',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: 'tag',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'test',
+                createdAtMs: 123,
+                createdFile: true,
+                entitlements: [
+                    {
+                        feature: 'data',
+                        scope: 'shared',
+                    },
+                    {
+                        feature: 'file',
+                        scope: 'owned',
+                    },
+                ],
+                requiresReview: true,
+                description: 'abc',
+                sha256: 'test',
+                sizeInBytes: 123,
+                markers: [PUBLIC_READ_MARKER],
+            },
+        });
+
+        expect(result2).toMatchSnapshot();
     });
 });

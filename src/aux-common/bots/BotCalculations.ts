@@ -159,7 +159,9 @@ export interface BotsStateDiff {
  * it represents nothing.
  * @param value The value.
  */
-export function hasValue(value: unknown) {
+export function hasValue(
+    value: unknown
+): value is string | number | boolean | object {
     return !(value === null || typeof value === 'undefined' || value === '');
 }
 

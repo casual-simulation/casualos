@@ -21,6 +21,7 @@ import type {
     GetRemoteCountAction,
     AsyncAction,
     ShoutAction,
+    InstallAuxAction,
 } from '../bots';
 import {
     isTagEdit,
@@ -30,6 +31,7 @@ import {
     edit,
     ON_REMOTE_WHISPER_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
+    getInstStateFromUpdates,
 } from '../bots';
 import type { Observable } from 'rxjs';
 import { Subscription, Subject, BehaviorSubject, firstValueFrom } from 'rxjs';
@@ -96,7 +98,11 @@ import {
 } from '../yjs/YjsHelpers';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { YjsPartitionImpl } from './YjsPartition';
-import { ensureTagIsSerializable, supportsRemoteEvent } from './PartitionUtils';
+import {
+    ensureTagIsSerializable,
+    getStateFromUpdates,
+    supportsRemoteEvent,
+} from './PartitionUtils';
 import type { RemoteActions, CurrentVersion, VersionVector } from '../common';
 import { device } from '../common';
 import type {
@@ -107,6 +113,7 @@ import type {
 } from '../websockets';
 import type { PartitionAuthSource } from './PartitionAuthSource';
 import { RemoteYjsSharedDocument } from '../documents/RemoteYjsSharedDocument';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Attempts to create a YjsPartition from the given config.
@@ -391,6 +398,48 @@ export class RemoteYjsPartitionImpl
                         const update = this.getStateUpdate();
                         this._onEvents.next([
                             asyncResult(event.taskId, update, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'install_aux_file') {
+                    const action = <InstallAuxAction>event.event;
+                    try {
+                        if (action.mode === 'copy') {
+                            let bots: Bot[];
+                            if (action.aux.version === 2) {
+                                const state = getStateFromUpdates(
+                                    getInstStateFromUpdates(action.aux.updates)
+                                );
+                                bots = Object.values(state);
+                            } else {
+                                bots = Object.values(action.aux.state);
+                            }
+
+                            if (bots && bots.length > 0) {
+                                this._applyEvents(
+                                    bots.map(
+                                        (b) =>
+                                            botAdded(
+                                                createBot(uuid(), b.tags)
+                                            ) as AddBotAction
+                                    )
+                                );
+                            }
+                        } else {
+                            if (action.aux.version === 2) {
+                                this.applyStateUpdates(action.aux.updates);
+                            } else if (action.aux.version === 1) {
+                                this._applyEvents(
+                                    Object.values(action.aux.state).map((b) =>
+                                        botAdded(createBot(b.id, b.tags))
+                                    )
+                                );
+                            }
+                        }
+
+                        this._onEvents.next([
+                            asyncResult(event.taskId, null, false),
                         ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);

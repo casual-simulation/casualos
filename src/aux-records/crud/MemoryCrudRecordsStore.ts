@@ -23,6 +23,7 @@ import type {
     CrudSubscriptionMetrics,
     ListCrudStoreByMarkerRequest,
     ListCrudStoreSuccess,
+    PartialExcept,
 } from './CrudRecordsStore';
 import { orderBy, sortBy } from 'lodash';
 
@@ -54,7 +55,10 @@ export class MemoryCrudRecordsStore<
         }
     }
 
-    async getItemByAddress(recordName: string, address: string): Promise<T> {
+    async getItemByAddress(
+        recordName: string,
+        address: string
+    ): Promise<T | null> {
         const bucket = this._itemBuckets.get(recordName);
         if (!bucket) {
             return null;
@@ -63,7 +67,10 @@ export class MemoryCrudRecordsStore<
         return bucket.get(address) || null;
     }
 
-    async updateItem(recordName: string, item: Partial<T>): Promise<void> {
+    async updateItem(
+        recordName: string,
+        item: PartialExcept<T, 'address'>
+    ): Promise<void> {
         const existing = await this.getItemByAddress(recordName, item.address);
         if (!existing) {
             return;
@@ -82,7 +89,10 @@ export class MemoryCrudRecordsStore<
         bucket.set(updated.address, updated as T);
     }
 
-    async putItem(recordName: string, item: Partial<T>): Promise<void> {
+    async putItem(
+        recordName: string,
+        item: PartialExcept<T, 'address'>
+    ): Promise<void> {
         const existing = await this.getItemByAddress(recordName, item.address);
         if (!existing) {
             await this.createItem(recordName, item as T);

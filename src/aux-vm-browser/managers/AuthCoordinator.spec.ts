@@ -17,6 +17,7 @@
  */
 import { Subject, Subscription } from 'rxjs';
 import type {
+    GrantEntitlementsEvent,
     MissingPermissionEvent,
     NotAuthorizedEvent,
     ShowAccountInfoEvent,
@@ -58,6 +59,7 @@ import {
     generateV1ConnectionToken,
 } from '@casual-simulation/aux-records/AuthUtils';
 import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import { grantEntitlements } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();
 
@@ -942,6 +944,47 @@ describe('AuthCoordinator', () => {
 
             const vm = vms.get('sim-1');
             expect(vm?.sentAuthMessages).toEqual([]);
+        });
+    });
+
+    describe('grant_entitlements', () => {
+        it('should send a grant_entitlements message', async () => {
+            let events: GrantEntitlementsEvent[] = [];
+            manager.onGrantEntitlements.subscribe((e) => events.push(e));
+
+            const vm = vms.get('sim-1');
+            vm.localEvents.next([
+                grantEntitlements(
+                    {
+                        packageId: 'packageId',
+                        features: ['data'],
+                        scope: 'designated',
+                        expireTimeMs: 1000,
+                        recordName: 'recordName',
+                    },
+                    {},
+                    1
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                {
+                    simulationId: 'sim-1',
+                    action: grantEntitlements(
+                        {
+                            packageId: 'packageId',
+                            features: ['data'],
+                            scope: 'designated',
+                            expireTimeMs: 1000,
+                            recordName: 'recordName',
+                        },
+                        {},
+                        1
+                    ),
+                },
+            ]);
         });
     });
 });

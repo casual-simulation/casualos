@@ -1,8 +1,45 @@
 # CasualOS Changelog
 
-## V3.4.6
+## V3.5.0
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Added Package Records
+    -   Packages make it easy to save and load different versions of AUX files.
+    -   Packages are organized by record name, address, and then key.
+        -   Keys help differentiate between package versions and they look like this: `v1.0.0`
+        -   Each key has four components:
+            -   `major` number
+            -   `minor` number
+            -   `patch` number
+            -   `tag` string
+        -   When formatted, a key looks like this: `v{major}.{minor}.{patch}`.
+        -   When a tag is specified, then the key looks like this: `v{major}.{minor}.{patch}-{tag}`.
+    -   Packages are easy to install, and scripts have the ability to request a particular version of a package to install.
+    -   Packages can request entitlements, which will make it easier to manage permissions for insts.
+    -   Once recorded, the contents of a package version cannot be updated.
+-   Added the following functions:
+    -   `os.grantEntitlements(request)`: Requests that a package be granted a list of entitlement features for a record.
+    -   `os.parseVersionKey(key)`: Parses the given string into a package version key.
+    -   `os.formatVersionKey(key)`: Formats the given version key as a string.
+    -   `os.recordPackageVersion(request)`: Records a package version to the given record name, address, and key.
+    -   `os.listPackageVersions(recordName, address)`: Gets the list of package versions that are available for the given record name and address.
+    -   `os.getPackageVersion(recordName, address, key?)`: Gets the package version with the given key. If the key is omitted, then the latest package version will be retrieved. The returned package includes information about the file that should be downloaded to get the package contents.
+    -   `os.erasePackageVersion(recordName, address, key)`: Deletes the given package version.
+    -   `os.recordPackageContainer(recordName, address, markers?)`: Creates a new container for package versions. The given marker can be used to restrict who is able to list package versions.
+    -   `os.erasePackageContainer(recordName, address)`: Deletes the given package container and all packages stored in it.
+    -   `os.listPackageContainers(recordName, address?)`: Lists package containers in the given record.
+    -   `os.listPackageContainersByMarker(recordName, marker, address?)`: Lists package containers with the given marker.
+    -   `os.getPackageContainer(recordName, address)`: Gets a package container by address.
+    -   `os.installPackage(recordName, address, key?)`: Installs the specified package version in the current inst. If key is omitted, then the latest package version will be installed.
+    -   `os.listInstalledPackages()`: Gets the list of packages that have been installed in this inst.
+    -   `os.installAuxFile(state, mode?)`: Installs the given AUX file in this inst. `mode` can be set to "copy" to force CasualOS to always produce new copies of bots.
+    -   `os.getAuxFileForBots(bots, options?)`: Gets an AUX file that represents the given bots. `options` can be used to specify which version of the AUX file format you want to receive. This function works like `os.downloadBots()`, but it returns the AUX file instead of downloading it to the user's device.
+-   Added support for multi-server websocket deployments of CasualOS.
+    -   Uses Redis pub/sub as a message broker.
+    -   Individual CasualOS deployments are still stateless: they only need to be able to access Redis and the DB.
 
 ### :bug: Bug Fixes
 
@@ -10,6 +47,7 @@
 -   Fixed an issue where it was possible for the `@onInstJoined` shout to be sent before all initial tag mask have been processed.
 -   Fixed an issue where updating a new bot could cause the new bot to not be properly synchronized throughout the system.
 -   Fixed an issue where it was impossible to upload files to records that have spaces in their names.
+-   Fixed an issue where bots in the `tempShared` space might not re-appear on other devices after reconnecting.
 
 ## V3.4.5
 

@@ -29,6 +29,7 @@ import type {
 import {
     AuxPartitionConfig,
     getUploadState,
+    parseVersionNumber,
     remapProgressPercent,
     remote,
 } from '@casual-simulation/aux-common';
@@ -48,10 +49,7 @@ import type {
     SimulationOrigin,
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
-import {
-    SimulationManager,
-    parseVersionNumber,
-} from '@casual-simulation/aux-vm';
+import { SimulationManager } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     AuthCoordinator,

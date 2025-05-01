@@ -229,18 +229,6 @@ export class InstRecordsClient {
                 }
 
                 this._client.send(branchEvent);
-
-                let list = this._getSentUpdates(recordName, inst, branch);
-
-                for (let [key, value] of list) {
-                    this._sendAddUpdates(
-                        recordName,
-                        inst,
-                        branch,
-                        value.updates,
-                        key
-                    );
-                }
             }),
             switchMap((connected) =>
                 merge(
@@ -251,8 +239,26 @@ export class InstRecordsClient {
                                 event.inst === inst &&
                                 event.branch === branch
                         ),
-                        tap(() => {
+                        tap((e) => {
                             this._connectedBranches.add(watchedBranchKey);
+
+                            if (e.success) {
+                                let list = this._getSentUpdates(
+                                    recordName,
+                                    inst,
+                                    branch
+                                );
+
+                                for (let [key, value] of list) {
+                                    this._sendAddUpdates(
+                                        recordName,
+                                        inst,
+                                        branch,
+                                        value.updates,
+                                        key
+                                    );
+                                }
+                            }
                         })
                     ),
                     this._client.event('repo/add_updates').pipe(

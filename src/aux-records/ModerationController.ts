@@ -296,7 +296,8 @@ export class ModerationController {
 
                     if (label.actions.includes('notify') && this._messenger) {
                         await this._messenger.sendRecordNotification({
-                            resource: 'file',
+                            resource: 'moderation_scan',
+                            resourceKind: 'file',
                             action: 'scanned',
                             recordName: request.recordName,
                             resourceId: request.fileName,

@@ -22,12 +22,24 @@ import type {
     WebhookRecord,
     NotificationRecord,
     PushNotificationPayload,
+    GrantEntitlementRequest,
+    RevokeEntitlementRequest,
+    GrantEntitlementFailure,
 } from '@casual-simulation/aux-records';
-import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
+import type {
+    RecordsClientActions,
+    RecordsClientInputs,
+} from '@casual-simulation/aux-records/RecordsClient';
 import type {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+    BotsState,
+    Entitlement,
+    EntitlementFeature,
+    GrantedEntitlementScope,
+    KnownErrorCodes,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     ProcedureInputs,
@@ -36,6 +48,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import type {
+    PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
+    PackageRecordVersionWithMetadata,
+    PackageVersion,
+} from '@casual-simulation/aux-records/packages/version';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -71,7 +89,12 @@ export type RecordsAsyncActions =
     | SetRoomTrackOptionsAction
     | GetRoomRemoteOptionsAction
     | RecordsCallProcedureAction
-    | SubscribeToNotificationAction;
+    | SubscribeToNotificationAction
+    | GrantEntitlementsAction
+    | RevokeEntitlementGrantAction
+    | RecordPackageVersionAction
+    | InstallPackageAction
+    | ListInstalledPackagesAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -844,6 +867,175 @@ export interface GetEventCountAction extends RecordsAction {
      * The name of the event.
      */
     eventName: string;
+}
+
+export interface InstallPackageAction extends RecordsAction {
+    type: 'install_package';
+
+    /**
+     * The name of the record that the package should be loaded from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the package that should be loaded.
+     */
+    address: string;
+
+    /**
+     * The key for the package version that should be loaded.
+     * If null, then the latest version will be loaded.
+     */
+    key: string | PackageRecordVersionKeySpecifier | null;
+
+    /**
+     * The options for the request.
+     */
+    options: RecordActionOptions;
+}
+
+export type InstallPackageResult =
+    | InstallPackageSuccess
+    | InstallPackageFailure;
+export interface InstallPackageSuccess {
+    success: true;
+
+    /**
+     * The ID of the record which records that the package was loaded into the inst.
+     * Null if the inst is a local inst.
+     */
+    packageLoadId: string | null;
+
+    /**
+     * The package that was loaded.
+     */
+    package: PackageRecordVersionWithMetadata;
+}
+
+export interface InstallPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export interface ListInstalledPackagesAction extends RecordsAction {
+    type: 'list_installed_packages';
+}
+
+/**
+ * Defines a request that grants a package entitlements to access a record.
+ *
+ * @dochash types/records/packages
+ * @docname GrantEntitlementsRequest
+ */
+export interface GrantEntitlementsRequest {
+    /**
+     * The ID of the package that should be granted entitlements.
+     */
+    packageId: string;
+
+    /**
+     * The scope that the entitlements should have.
+     */
+    scope: GrantedEntitlementScope;
+
+    /**
+     * The name of the record that the entitlements cover.
+     */
+    recordName: string;
+
+    /**
+     * The time that the entitlements should expire.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The features that should be granted.
+     */
+    features: EntitlementFeature[];
+}
+
+export type GrantEntitlementsResult =
+    | GrantEntitlementFailure
+    | GrantEntitlementsSuccess;
+
+export interface GrantEntitlementsSuccess {
+    success: true;
+
+    grantedEntitlements: {
+        grantId: string;
+        feature: EntitlementFeature;
+    }[];
+}
+
+/**
+ * Defines an action that grants a package entitlements to access a record.
+ */
+export interface GrantEntitlementsAction extends RecordsAction {
+    type: 'grant_record_entitlements';
+
+    request: GrantEntitlementsRequest;
+}
+
+/**
+ * Defines a request that revokes an entitlement grant from a package.
+ * @dochash types/records/packages
+ * @docname GrantRecordEntitlementsRequest
+ */
+export interface RevokeEntitlementGrantRequest {
+    /**
+     * The ID of the entitlement grant to revoke.
+     */
+    grantId: string;
+}
+
+export interface RevokeEntitlementGrantAction extends RecordsAction {
+    type: 'revoke_record_entitlements';
+
+    request: RevokeEntitlementGrantRequest;
+}
+
+export interface RecordPackageVersionRequest {
+    /**
+     * The record that the package version should be stored in.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be stored in.
+     */
+    address: string;
+
+    /**
+     * The key for the package version.
+     */
+    key: PackageRecordVersionKey;
+
+    /**
+     * The list of entitlements that the package version can request.
+     */
+    entitlements: Entitlement[];
+
+    /**
+     * The description for the package version.
+     */
+    description: string;
+
+    /**
+     * The state that should be saved in the package.
+     */
+    state: StoredAux;
+
+    /**
+     * The markers that should be set on the package version.
+     */
+    markers?: string[];
+}
+
+export interface RecordPackageVersionAction extends RecordsAction {
+    type: 'record_package_version';
+
+    request: RecordPackageVersionRequest;
 }
 
 /**
@@ -2330,6 +2522,267 @@ export function getEventCount(
         type: 'get_event_count',
         recordName,
         eventName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRecordEntitlementsAction.
+ * @param request The request that should be used to grant the entitlements.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantEntitlements(
+    request: GrantEntitlementsRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GrantEntitlementsAction {
+    return {
+        type: 'grant_record_entitlements',
+        request,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RevokeEntitlementGrantAction.
+ * @param request The request that should be used to revoke the entitlement.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeEntitlement(
+    request: RevokeEntitlementGrantRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RevokeEntitlementGrantAction {
+    return {
+        type: 'revoke_record_entitlements',
+        request,
+        options,
+        taskId,
+    };
+}
+
+export function recordPackageVersion(
+    request: RecordPackageVersionRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordPackageVersionAction {
+    return {
+        type: 'record_package_version',
+        request,
+        options,
+        taskId,
+    };
+}
+
+export function listPackageVersions(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackageVersions: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function getPackageVersion(
+    recordName: string,
+    address: string,
+    key: string | PackageRecordVersionKeySpecifier,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    let input: RecordsClientInputs['getPackageVersion'] = {
+        recordName,
+        address,
+    };
+
+    if (typeof key === 'string') {
+        input.key = key;
+    } else if (key) {
+        input = {
+            ...input,
+            ...key,
+        };
+    }
+
+    return recordsCallProcedure(
+        {
+            getPackageVersion: {
+                input,
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function erasePackageVersion(
+    recordName: string,
+    address: string,
+    key: PackageRecordVersionKey,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            erasePackageVersion: {
+                input: {
+                    recordName,
+                    address,
+                    key,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function recordPackageContainer(
+    recordName: string,
+    address: string,
+    markers: string[],
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            recordPackage: {
+                input: {
+                    recordName,
+                    item: {
+                        address,
+                        markers: markers as [string, ...string[]],
+                    },
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function erasePackageContaienr(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            erasePackage: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function listPackageContainers(
+    recordName: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackages: {
+                input: {
+                    recordName,
+                    address,
+                    sort: options?.sort,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function listPackageContainersByMarker(
+    recordName: string,
+    marker: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackages: {
+                input: {
+                    recordName,
+                    address,
+                    sort: options?.sort,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function getPackageContainer(
+    recordName: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            getPackage: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function installPackage(
+    recordName: string,
+    address: string,
+    key: string | Partial<PackageRecordVersionKey> | null,
+    options: RecordActionOptions,
+    taskId?: number | string
+): InstallPackageAction {
+    return {
+        type: 'install_package',
+        recordName,
+        address,
+        key,
+        options,
+        taskId,
+    };
+}
+
+export function listInstalledPackages(
+    options: RecordActionOptions,
+    taskId?: number | string
+): ListInstalledPackagesAction {
+    return {
+        type: 'list_installed_packages',
         options,
         taskId,
     };

@@ -26,7 +26,7 @@ export default function (): Config {
 
     const config: Config = {
         collaboration: {
-            httpPort: 2999,
+            httpPort: parseInt(process.env.NODE_PORT) || 2999,
             tls: null,
             player: playerConfig,
             proxy: {
@@ -37,7 +37,7 @@ export default function (): Config {
             debug: false,
         },
         backend: {
-            httpPort: 2998,
+            httpPort: parseInt(process.env.BACKEND_PORT) || 2998,
             dist: path.resolve(
                 __dirname,
                 '..',
