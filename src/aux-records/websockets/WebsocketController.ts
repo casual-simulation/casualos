@@ -352,7 +352,7 @@ export class WebsocketController {
         }
 
         console.log(
-            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Watch`
+            `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Watch`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -360,7 +360,7 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to watch branch. Connection not found!`
+                `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to watch branch. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
@@ -529,7 +529,7 @@ export class WebsocketController {
             );
 
         console.log(
-            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Connected.`
+            `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Connected.`
         );
         const promises = [
             this._messenger.sendMessage(
@@ -575,7 +575,7 @@ export class WebsocketController {
         }
 
         console.log(
-            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, ${connectionId}] Unwatch`
+            `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}, ${connectionId}] Unwatch`
         );
 
         const connection = await this._connectionStore.getBranchConnection(
@@ -664,7 +664,7 @@ export class WebsocketController {
         }
 
         console.log(
-            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Add Updates`
+            `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Add Updates`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -672,7 +672,7 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to add updates. Connection not found!`
+                `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to add updates. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
@@ -744,7 +744,7 @@ export class WebsocketController {
 
             if (!branch) {
                 console.log(
-                    `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Branch not found!`
+                    `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Branch not found!`
                 );
 
                 const instResult = await this._getOrCreateInst(
@@ -999,7 +999,7 @@ export class WebsocketController {
 
                 if (result.success === false) {
                     console.log(
-                        `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Failed to add updates`,
+                        `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Failed to add updates`,
                         result
                     );
                     if (result.errorCode === 'max_size_reached') {
@@ -1234,7 +1234,7 @@ export class WebsocketController {
         branch: string
     ) {
         console.log(
-            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Watch devices for branch`
+            `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Watch devices for branch`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -1242,7 +1242,7 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unable to watch_branch_devices. Connection not found!`
+                `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unable to watch_branch_devices. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
@@ -1438,7 +1438,7 @@ export class WebsocketController {
         auxVersion: 1 | 2 = 1
     ): Promise<GetBranchDataResult> {
         console.log(
-            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}] Get Data`
+            `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}] Get Data`
         );
 
         if (recordName) {
@@ -1609,7 +1609,7 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unable to get_updates. Connection not found!`
+                `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Unable to get_updates. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
@@ -1649,7 +1649,7 @@ export class WebsocketController {
 
         // const namespace = branchNamespace(recordName, inst, branch);
         console.log(
-            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
+            `[WebsocketController] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
         );
         const config = await this._config.getSubscriptionConfiguration();
         const instResult = await this._getInst(
@@ -1854,7 +1854,7 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to request permission. Connection not found!`
+                `[WebsocketController] [connectionId: ${connectionId}] Unable to request permission. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
@@ -1986,7 +1986,7 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[CausalRepoServer] [connectionId: ${connectionId}] Unable to respond to permission request. Connection not found!`
+                `[WebsocketController] [connectionId: ${connectionId}] Unable to respond to permission request. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
