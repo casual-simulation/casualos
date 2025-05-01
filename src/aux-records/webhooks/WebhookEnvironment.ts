@@ -124,7 +124,7 @@ export interface HandleHttpRequestRequest {
      * The name of the record that the webhook state came from.
      * Null if the webhook state is not from a record (i.e. it is from a public inst).
      */
-    recordName: string;
+    recordName: string | null;
 
     /**
      * The inst that the webhook state came from.
