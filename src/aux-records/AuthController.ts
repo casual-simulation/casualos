@@ -3189,6 +3189,10 @@ export class AuthController {
             },
         };
 
+        console.log(
+            `[AuthController] [issueSession userId: ${userId} newSessionId: ${newSessionId} expiresAt: ${newSession.expireTimeMs}] Issued session.`
+        );
+
         return {
             newSession,
             info,
