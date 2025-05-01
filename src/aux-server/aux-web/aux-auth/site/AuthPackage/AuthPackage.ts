@@ -141,4 +141,24 @@ export default class AuthPackage extends Vue {
     formatKey(key: PackageRecordVersionKey) {
         return formatVersionNumber(key.major, key.minor, key.patch, key.tag);
     }
+
+    async deleteVersion(item: PackageRecordVersion) {
+        const result = await authManager.client.erasePackageVersion({
+            recordName: this.recordName,
+            address: item.address,
+            key: item.key,
+        });
+        if (result.success === true) {
+            this.items.mdData = this.items.mdData.filter(
+                (i) =>
+                    i.address !== item.address &&
+                    !(
+                        item.key.major === i.key.major &&
+                        item.key.minor === i.key.minor &&
+                        item.key.patch === i.key.patch &&
+                        item.key.tag === i.key.tag
+                    )
+            );
+        }
+    }
 }

@@ -136,7 +136,14 @@ export default class AuthGrantedEntitlements extends Vue {
         return true;
     }
 
-    // formatKey(key: PackageRecordVersionKey) {
-    //     return formatVersionNumber(key.major, key.minor, key.patch, key.tag);
-    // }
+    async revokeEntitlement(grant: GrantedPackageEntitlement) {
+        const result = await authManager.client.revokeEntitlement({
+            grantId: grant.id,
+        });
+        if (result.success === true) {
+            this.items.mdData = this.items.mdData.filter(
+                (i) => i.id !== grant.id
+            );
+        }
+    }
 }

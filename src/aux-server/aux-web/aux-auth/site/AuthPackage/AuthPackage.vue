@@ -40,6 +40,20 @@
                             {{ item.sha256 }}
                         </md-tooltip>
                     </md-table-cell>
+                    <md-table-cell md-label="Options">
+                        <md-menu md-align-trigger>
+                            <md-button md-menu-trigger class="md-icon-button">
+                                <md-icon>more_vert</md-icon>
+                                <span class="sr-only">Version Options</span>
+                                <md-tooltip>Version Options</md-tooltip>
+                            </md-button>
+                            <md-menu-content>
+                                <md-menu-item @click="deleteVersion(item)"
+                                    >Delete Version</md-menu-item
+                                >
+                            </md-menu-content>
+                        </md-menu>
+                    </md-table-cell>
                 </md-table-row>
             </template>
 
