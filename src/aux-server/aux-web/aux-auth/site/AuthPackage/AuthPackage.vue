@@ -19,9 +19,12 @@
 
             <template v-slot:md-table-row="{ item }">
                 <md-table-row md-selectable="single">
-                    <md-table-cell md-label="ID" md-sort-by="id">{{
-                        item.id.substring(0, 8)
-                    }}</md-table-cell>
+                    <md-table-cell md-label="ID" md-sort-by="id">
+                        <span>{{ item.id.substring(0, 8) }}</span>
+                        <md-tooltip md-direction="bottom">
+                            {{ item.id }}
+                        </md-tooltip>
+                    </md-table-cell>
                     <md-table-cell md-label="Key" md-sort-by="key">
                         <span>{{ formatKey(item.key) }}</span>
                     </md-table-cell>
@@ -33,6 +36,9 @@
                     </md-table-cell>
                     <md-table-cell md-label="SHA-256" md-sort-by="sha256">
                         <span>{{ item.sha256.substring(0, 8) }}</span>
+                        <md-tooltip md-direction="bottom">
+                            {{ item.sha256 }}
+                        </md-tooltip>
                     </md-table-cell>
                 </md-table-row>
             </template>

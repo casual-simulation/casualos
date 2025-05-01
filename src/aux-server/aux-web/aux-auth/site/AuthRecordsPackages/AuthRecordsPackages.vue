@@ -16,6 +16,12 @@
                     <md-table-cell md-label="Address" md-sort-by="address">{{
                         item.address
                     }}</md-table-cell>
+                    <md-table-cell md-label="ID" md-sort-by="id">
+                        <span>{{ item.id.substring(0, 8) }}</span>
+                        <md-tooltip md-direction="bottom">
+                            {{ item.id }}
+                        </md-tooltip>
+                    </md-table-cell>
                     <md-table-cell md-label="Markers" md-sort-by="markers">
                         <auth-marker
                             v-for="marker in item.markers"

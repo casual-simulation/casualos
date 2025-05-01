@@ -84,7 +84,7 @@ export default class AuthGrantedEntitlements extends Vue {
 
     recordNameForGrant(grant: GrantedPackageEntitlement) {
         if (grant.recordName === authManager.userId) {
-            return `User Record (${grant.recordName})`;
+            return `User Record`;
         }
         return grant.recordName;
     }

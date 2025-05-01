@@ -19,14 +19,23 @@
 
             <template v-slot:md-table-row="{ item }">
                 <md-table-row md-selectable="single">
-                    <md-table-cell md-label="ID" md-sort-by="id">{{
-                        item.id.substring(0, 8)
-                    }}</md-table-cell>
+                    <md-table-cell md-label="ID" md-sort-by="id">
+                        <span>{{ item.id.substring(0, 8) }}</span>
+                        <md-tooltip md-direction="bottom">
+                            {{ item.id }}
+                        </md-tooltip>
+                    </md-table-cell>
                     <md-table-cell md-label="Package ID" md-sort-by="packageId">
                         <span>{{ item.packageId.substring(0, 8) }}</span>
+                        <md-tooltip md-direction="bottom">
+                            {{ item.packageId }}
+                        </md-tooltip>
                     </md-table-cell>
                     <md-table-cell md-label="Record Name" md-sort-by="recordName">
                         <span>{{ recordNameForGrant(item) }}</span>
+                        <md-tooltip md-direction="bottom">
+                            {{ item.recordName }}
+                        </md-tooltip>
                     </md-table-cell>
                     <md-table-cell md-label="Feature" md-sort-by="feature">
                         <span>{{ item.feature }}</span>
