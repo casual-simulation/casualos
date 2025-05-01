@@ -87,6 +87,7 @@ import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
+import AuthGrantedEntitlements from './AuthGrantedEntitlements/AuthGrantedEntitlements';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -180,6 +181,11 @@ const routes: RouteConfig[] = [
         path: '/account',
         name: 'home',
         component: AuthHome,
+    },
+    {
+        path: '/granted-entitlements',
+        name: 'granted-entitlements',
+        component: AuthGrantedEntitlements,
     },
     {
         path: '/records/:recordName',
