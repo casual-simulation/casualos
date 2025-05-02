@@ -118,8 +118,8 @@ import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
-import type { MapView } from 'geo-three';
-import { LODConstant } from '../../public/geo-three/LODConstant';
+import { MapView } from '../map/MapView';
+// import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -163,7 +163,7 @@ export class BotShapeDecorator
     private _animationHandle: AnimationMixerHandle = null;
     private _meshCancellationToken: CancellationToken;
     private _mapLODLevel: number = 1;
-    private _lodConstant: LODConstant | null = null;
+    // private _lodConstant: LODConstant | null = null;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -214,20 +214,20 @@ export class BotShapeDecorator
         }
         this._updateLightTarget(null);
 
-        if (this._game && this._mapView) {
-            const renderer = this._game.getRenderer();
-            const camera = this._game.getMainCameraRig()?.mainCamera;
-            const scene = this._game.getScene();
+        // if (this._game && this._mapView) {
+        //     const renderer = this._game.getRenderer();
+        //     const camera = this._game.getMainCameraRig()?.mainCamera;
+        //     const scene = this._game.getScene();
 
-            if (renderer && camera && scene) {
-                this._mapView.lod.updateLOD(
-                    this._mapView,
-                    camera,
-                    renderer,
-                    scene
-                );
-            }
-        }
+        //     if (renderer && camera && scene) {
+        //         this._mapView.lod.updateLOD(
+        //             this._mapView,
+        //             camera,
+        //             renderer,
+        //             scene
+        //         );
+        //     }
+        // }
     }
 
     botUpdated(calc: BotCalculationContext): void {
@@ -430,26 +430,26 @@ export class BotShapeDecorator
                 this._updateIframeHtml();
             }
         }
-        if (this._mapView && this._shape === 'map') {
-            const coords = this._parseMapAddress(address);
-            this._mapView.position.copy(coords);
+        // if (this._mapView && this._shape === 'map') {
+        //     const coords = this._parseMapAddress(address);
+        //     this._mapView.position.copy(coords);
 
-            // Force an update of the LOD system
-            if (this._game) {
-                const renderer = this._game.getRenderer();
-                const camera = this._game.getMainCameraRig()?.mainCamera;
-                const scene = this._game.getScene();
+        //     // Force an update of the LOD system
+        //     if (this._game) {
+        //         const renderer = this._game.getRenderer();
+        //         const camera = this._game.getMainCameraRig()?.mainCamera;
+        //         const scene = this._game.getScene();
 
-                if (renderer && camera && scene) {
-                    this._mapView.lod.updateLOD(
-                        this._mapView,
-                        camera,
-                        renderer,
-                        scene
-                    );
-                }
-            }
-        }
+        //         if (renderer && camera && scene) {
+        //             this._mapView.lod.updateLOD(
+        //                 this._mapView,
+        //                 camera,
+        //                 renderer,
+        //                 scene
+        //             );
+        //         }
+        //     }
+        // }
     }
 
     private _updateAspectRatio(aspectRatio: number) {
@@ -635,9 +635,9 @@ export class BotShapeDecorator
             });
         }
 
-        if (this._lodConstant) {
-            this._lodConstant = null;
-        }
+        // if (this._lodConstant) {
+        //     this._lodConstant = null;
+        // }
 
         if (this._keyboard) {
             for (let key of (this._keyboard as any).keys) {
@@ -973,27 +973,27 @@ export class BotShapeDecorator
             return;
         }
 
-        if (!this._lodConstant) {
-            this._lodConstant = new LODConstant(level);
-            this._mapView.lod = this._lodConstant;
-        } else {
-            this._lodConstant.setTargetLevel(level);
-        }
+        // if (!this._lodConstant) {
+        //     this._lodConstant = new LODConstant(level);
+        //     this._mapView.lod = this._lodConstant;
+        // } else {
+        //     this._lodConstant.setTargetLevel(level);
+        // }
 
-        if (this._game) {
-            const renderer = this._game.getRenderer();
-            const camera = this._game.getMainCameraRig()?.mainCamera;
-            const scene = this._game.getScene();
+        // if (this._game) {
+        //     const renderer = this._game.getRenderer();
+        //     const camera = this._game.getMainCameraRig()?.mainCamera;
+        //     const scene = this._game.getScene();
 
-            if (renderer && camera && scene) {
-                this._mapView.lod.updateLOD(
-                    this._mapView,
-                    camera,
-                    renderer,
-                    scene
-                );
-            }
-        }
+        //     if (renderer && camera && scene) {
+        //         this._mapView.lod.updateLOD(
+        //             this._mapView,
+        //             camera,
+        //             renderer,
+        //             scene
+        //         );
+        //     }
+        // }
     }
 
     private _updateRenderOrder(calc: BotCalculationContext) {
@@ -1654,28 +1654,29 @@ export class BotShapeDecorator
     private _createMapPlane() {
         const coords = this._parseMapAddress(this._address);
 
-        this._mapView = createMapPlane(coords, 0.5);
-        this.mesh = this.collider = this._mapView;
+        this._mapView = createMapPlane(coords, 1);
+        this.mesh = null;
+        this.collider = this._mapView;
         this._setMapLOD(this._mapLODLevel);
 
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
 
-        if (this._game) {
-            const renderer = this._game.getRenderer();
-            const camera = this._game.getMainCameraRig()?.mainCamera;
-            const scene = this._game.getScene();
+        // if (this._game) {
+        //     const renderer = this._game.getRenderer();
+        //     const camera = this._game.getMainCameraRig()?.mainCamera;
+        //     const scene = this._game.getScene();
 
-            if (renderer && camera && scene) {
-                this._mapView.lod.updateLOD(
-                    this._mapView,
-                    camera,
-                    renderer,
-                    scene
-                );
-            }
-        }
+        //     if (renderer && camera && scene) {
+        //         this._mapView.lod.updateLOD(
+        //             this._mapView,
+        //             camera,
+        //             renderer,
+        //             scene
+        //         );
+        //     }
+        // }
     }
 
     private _parseMapAddress(address: string): Vector3 {

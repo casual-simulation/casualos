@@ -85,19 +85,25 @@ import { getOptionalValue } from '../SharedUtils';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { BackSide, PCFShadowMap } from 'three';
 import {
-    OpenStreetMapsProvider,
-    MapView,
-    DebugProvider,
-    LODFrustum,
-    LODRadial,
+    // OpenStreetMapsProvider,
+    // MapView,
+    // DebugProvider,
+    // LODFrustum,
+    // LODRadial,
+    BingMapsProvider,
 } from 'geo-three';
 import type { Simulation3D } from './Simulation3D';
 import { LODDebugger } from '../public/geo-three/LODDebugger';
+import { OffsetProvider } from '../public/geo-three/OffsetProvider';
+import { LODConstant } from '../public/geo-three/LODConstant';
+import { MapView } from './map/MapView';
 
 /**
  * The provider for the map view which renders a map within a three scene.
  */
-const mapFormProvider = new OpenStreetMapsProvider();
+const mapFormProvider = new BingMapsProvider();//new OffsetProvider(new BingMapsProvider(), OffsetProvider.calculateOffset(3, -85.694158, 42.903638));
+
+
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -336,12 +342,13 @@ export function createPlane(size: number): Mesh {
  * Creates a new map plane mesh.
  */
 export function createMapPlane(position: Vector3, size: number): MapView {
-    const map = new MapView(MapView.PLANAR, mapFormProvider);
-    map.lod = new LODDebugger();
+    const map = new MapView(mapFormProvider);
+    // map.lod = new LODConstant(3);
     map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
     map.scale.set(size, size, size);
     map.position.copy(position);
-    map.preSubdivide();
+    map.setCenter(10, -85.694158, 42.903638);
+    // map.preSubdivide();
     // ! Testing of LOD, do not implement.
     // TODO: Implement proper system to parse and translate address to lat/lon from vector3.
     // const renderer = simulation3D.game.getRenderer();
