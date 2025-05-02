@@ -124,6 +124,10 @@ export class MapTile extends Object3D {
         texture.minFilter = LinearFilter;
         texture.needsUpdate = true;
 
+        if (this._material.map) {
+            this._material.map.dispose();
+        }
+
         this._material.map = texture;
         this._material.needsUpdate = true;
     }
