@@ -131,4 +131,16 @@ export class MapTile extends Object3D {
         this._material.map = texture;
         this._material.needsUpdate = true;
     }
+
+    dispose() {
+        if (this._material.map) {
+            this._material.map.dispose();
+        }
+        this._material.dispose();
+        this._plane.geometry.dispose();
+        this._container.remove(this._plane);
+        this.remove(this._scaleContainer);
+        this._scaleContainer.remove(this._container);
+        this._provider = null;
+    }
 }

@@ -60,7 +60,6 @@ export class MapView extends Object3D {
         const tileX = Math.floor(pixelX / TILE_SIZE);
         const tileY = Math.floor(pixelY / TILE_SIZE);
 
-        console.log(`Tile coordinates: (${tileX}, ${tileY})`);
         return [tileX, tileY];
     }
 
@@ -71,7 +70,6 @@ export class MapView extends Object3D {
         const percentageX = (pixelX % TILE_SIZE) / TILE_SIZE;
         const percentageY = (pixelY % TILE_SIZE) / TILE_SIZE;
 
-        console.log(`Tile percent: (${percentageX}, ${percentageY})`);
         return [percentageX, percentageY];
     }
 
@@ -83,7 +81,6 @@ export class MapView extends Object3D {
         const [pixelX, pixelY] = MapView.calculatePixel(zoom, x, y);
         const [tileX, tileY] = MapView.calculateTileFromPixel(pixelX, pixelY);
 
-        console.log(`Tile coordinates: (${tileX}, ${tileY})`);
         return [zoom, tileX, tileY];
     }
 
@@ -111,12 +108,6 @@ export class MapView extends Object3D {
 
                 const relativeX = tileX + x;
                 const relativeY = tileY + y;
-                console.log(
-                    `Setting ${x + halfGridSize}x${y + halfGridSize} tile to:`,
-                    zoom,
-                    relativeX,
-                    relativeY
-                );
 
                 tile.position.set(
                     x * this.tileSize + centerOffsetX,
@@ -201,6 +192,16 @@ export class MapView extends Object3D {
         this.gridSize = gridSize;
 
         this._createGrid();
+    }
+
+    dispose() {
+        for (let row of this._tiles) {
+            for (let tile of row) {
+                tile.dispose();
+                this.remove(tile);
+            }
+        }
+        this._tiles = [];
     }
 
     private _createGrid() {

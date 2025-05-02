@@ -667,6 +667,8 @@ export class BotShapeDecorator
         }
 
         if (this._mapView) {
+            this._mapView.dispose();
+            this.container.remove(this._mapView);
             this._mapView = null;
         }
 
@@ -1662,21 +1664,6 @@ export class BotShapeDecorator
         this.container.add(this._mapView);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
-
-        // if (this._game) {
-        //     const renderer = this._game.getRenderer();
-        //     const camera = this._game.getMainCameraRig()?.mainCamera;
-        //     const scene = this._game.getScene();
-
-        //     if (renderer && camera && scene) {
-        //         this._mapView.lod.updateLOD(
-        //             this._mapView,
-        //             camera,
-        //             renderer,
-        //             scene
-        //         );
-        //     }
-        // }
     }
 
     private _parseMapAddress(address: string): Vector3 {
