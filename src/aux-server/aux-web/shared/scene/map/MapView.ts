@@ -17,7 +17,8 @@
  */
 import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
-import { Object3D } from 'three';
+import { Object3D, Vector3 } from 'three';
+import { Box3 } from '@casual-simulation/three';
 
 const TILE_SIZE = 256;
 
@@ -28,6 +29,10 @@ export class MapView extends Object3D {
     private _provider: MapProvider;
 
     private _tiles: MapTile[][] = [];
+    private _clippingBox: Box3 = new Box3(
+        new Vector3(-0.5, -0.5, -0.5),
+        new Vector3(0.5, 0.5, 0.5)
+    );
 
     static calculatePixel(
         zoom: number,
@@ -97,17 +102,9 @@ export class MapView extends Object3D {
         const centerOffsetX = 0.5 - percentageX;
         const centerOffsetY = 0.5 - percentageY;
 
-        // const [offsetZoom, offsetLongitude, offsetLatitude] = MapView.calculateOffset(zoom, longitude, latitude);
-
         console.log('Setting center tile to:', zoom, tileX, tileY);
 
-        // 00 01 02
-        // 10 11 12
-        // 20 21 22
-
-        // -1-1 -10 -11
-        // 0-1 00 01
-        // 1-1 10 11
+        const tileBox = new Box3();
 
         const halfGridSize = Math.floor(this.gridSize / 2);
         for (let x = -halfGridSize; x <= halfGridSize; x++) {
@@ -122,7 +119,6 @@ export class MapView extends Object3D {
                     relativeX,
                     relativeY
                 );
-                tile.setTile(zoom, relativeX, relativeY);
 
                 tile.position.set(
                     x * this.tileSize + centerOffsetX,
@@ -130,6 +126,16 @@ export class MapView extends Object3D {
                     y * this.tileSize + centerOffsetY
                 );
                 tile.updateMatrixWorld(true);
+                tileBox.setFromObject(tile);
+
+                const visible = tileBox.intersectsBox(this._clippingBox);
+
+                if (visible) {
+                    tile.visible = true;
+                    tile.setTile(zoom, relativeX, relativeY);
+                } else {
+                    tile.visible = false;
+                }
             }
         }
     }
