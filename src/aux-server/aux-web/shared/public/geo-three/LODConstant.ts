@@ -3,7 +3,8 @@ import {
     type Object3D,
     type WebGLRenderer
 } from 'three';
-import type { MapView, MapPlaneNode, LODControl } from 'geo-three';
+import type { MapPlaneNode, LODControl } from 'geo-three';
+import { MapView } from 'aux-web/shared/scene/map/MapView';
 
 /**
  * LOD control that maintains a constant level of detail.
@@ -22,14 +23,20 @@ export class LODConstant implements LODControl {
     
     public setTargetLevel(level: number): void {
         const cappedLevel = Math.min(level, this._maxLevel);
-
+    
         if (cappedLevel < this._targetLevel){
             this._needsSimplification = true;
         }
         this._targetLevel = cappedLevel;
-
+    
         if (this._initialized && this._view) {
             this.applyLODLevel();
+            
+            // Trigger a map refresh by forcing an update
+            if (this._view instanceof MapView) {
+                // The view will handle the zoom level update when LOD changes
+                this._view.refreshTiles();
+            }
         }
     }
 
@@ -117,9 +124,9 @@ export class LODConstant implements LODControl {
         }
     }
     
-    public updateLOD(view: MapView, camera: Camera, renderer: WebGLRenderer, scene: Object3D): void {
-        this._view = view;
-
+    public updateLOD(view: Object3D, camera: Camera, renderer: WebGLRenderer, scene: Object3D): void {
+        this._view = view as MapView;
+        
         if (!this._initialized) {
             this._initialized = true;
             this.applyLODLevel();

@@ -119,6 +119,7 @@ import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import type { MapView } from '../map/MapView';
+import { OffsetProvider } from '../../public/geo-three/OffsetProvider';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
@@ -779,6 +780,20 @@ export class BotShapeDecorator
         if (this._mapLODLevel !== lodLevel) {
             this._mapLODLevel = lodLevel;
             this._setMapLOD(lodLevel);
+
+            // Get the current center coordinates
+            const centerCoords = this._parseMapAddress(this._address);
+
+            // Update the offset provider with the new zoom level
+            if (this._mapView.provider instanceof OffsetProvider) {
+                this._mapView.provider.offset = OffsetProvider.calculateOffset(
+                    lodLevel,
+                    centerCoords.x, // longitude
+                    centerCoords.y // latitude
+                );
+            }
+
+            this._mapView.setCenter(lodLevel, centerCoords.x, centerCoords.y);
         }
     }
 

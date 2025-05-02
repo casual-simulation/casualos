@@ -25,6 +25,7 @@ const TILE_SIZE = 256;
 export class MapView extends Object3D {
     private tileSize: number;
     private gridSize: number;
+    private zoom: number;
 
     private _provider: MapProvider;
 
@@ -33,6 +34,15 @@ export class MapView extends Object3D {
         new Vector3(-0.5, -0.5, -0.5),
         new Vector3(0.5, 0.5, 0.5)
     );
+
+    public get provider(): MapProvider {
+        return this._provider;
+    }
+    public refreshTiles(): void {
+        // Re-use current center coordinates with potentially new zoom level
+        const centerTile = this._tiles[1][1]; // Center tile in a 3x3 grid
+        this.setCenter(this.zoom, centerTile.x, centerTile.y);
+    }
 
     static calculatePixel(
         zoom: number,
