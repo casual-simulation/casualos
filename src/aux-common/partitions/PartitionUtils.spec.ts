@@ -78,6 +78,51 @@ describe('constructInitializationUpdate()', () => {
             }),
         });
     });
+
+    it('should support two different initialization updates', async () => {
+        const action1 = createInitializationUpdate([
+            createBot('test1', {
+                abc: 'def',
+            }),
+            createBot('test2', {
+                num: 123,
+            }),
+        ]);
+
+        const update1 = constructInitializationUpdate(action1);
+
+        const action2 = createInitializationUpdate([
+            createBot('test3', {
+                val: true,
+            }),
+            createBot('test4', {
+                str: 'hello',
+            }),
+        ]);
+
+        const update2 = constructInitializationUpdate(action2);
+
+        const validationPartition = new YjsPartitionImpl({
+            type: 'yjs',
+        });
+        applyUpdate(validationPartition.doc, toByteArray(update1.update));
+        applyUpdate(validationPartition.doc, toByteArray(update2.update));
+
+        expect(validationPartition.state).toEqual({
+            test1: createBot('test1', {
+                abc: 'def',
+            }),
+            test2: createBot('test2', {
+                num: 123,
+            }),
+            test3: createBot('test3', {
+                val: true,
+            }),
+            test4: createBot('test4', {
+                str: 'hello',
+            }),
+        });
+    });
 });
 
 describe('getStateFromUpdates()', () => {

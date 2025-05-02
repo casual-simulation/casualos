@@ -165,7 +165,7 @@ export class AnimationHelper {
         bot: Bot,
         options: StartFormAnimationAction
     ) {
-        const animationAddress =
+        const animationAddress: string =
             options.animationAddress ??
             calculateBotValue(null, bot, 'auxFormAddress');
         if (!hasValue(animationAddress)) {

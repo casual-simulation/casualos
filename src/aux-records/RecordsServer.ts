@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 import { tryDecodeUriComponent, tryParseJson } from './Utils';
 import type {
     AuthController,
@@ -47,6 +48,7 @@ import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
 import type { RateLimitController } from './RateLimitController';
 import type {
     DenialReason,
+    Entitlement,
     Procedure,
     ProcedureOutput,
     ProcedureOutputStream,
@@ -55,6 +57,8 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
+    ENTITLEMENT_FEATURE_VALIDATION,
+    ENTITLEMENT_VALIDATION,
     PRIVATE_MARKER,
     RESOURCE_KIND_VALIDATION,
     getProcedureMetadata,
@@ -144,6 +148,20 @@ import {
     PUSH_NOTIFICATION_PAYLOAD,
     PUSH_SUBSCRIPTION_SCHEMA,
 } from './notifications';
+import type { PackageRecordsController } from './packages/PackageRecordsController';
+import type {
+    PackageRecordVersionInput,
+    PackageVersionRecordsController,
+    PackageVersionReviewInput,
+} from './packages/version/PackageVersionRecordsController';
+import type {
+    PackageRecordVersionKey,
+    PackageVersionSpecifier,
+} from './packages/version/PackageVersionRecordsStore';
+import {
+    getPackageVersionKey,
+    getPackageVersionSpecifier,
+} from './packages/version/PackageVersionRecordsStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -380,6 +398,18 @@ export interface RecordsServerOptions {
      * If null, then notifications are not supported.
      */
     notificationsController?: NotificationRecordsController | null;
+
+    /**
+     * The controller that should be used for handling packages.
+     * If null, then packages are not supported.
+     */
+    packagesController?: PackageRecordsController | null;
+
+    /**
+     * The controller that should be used for handling package versions.
+     * If null, then package versions are not supported.
+     */
+    packageVersionController?: PackageVersionRecordsController | null;
 }
 
 /**
@@ -400,6 +430,8 @@ export class RecordsServer {
     private _loomController: LoomController | null;
     private _webhooksController: WebhookRecordsController | null;
     private _notificationsController: NotificationRecordsController | null;
+    private _packagesController: PackageRecordsController | null;
+    private _packageVersionController: PackageVersionRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -467,6 +499,8 @@ export class RecordsServer {
         loomController,
         webhooksController,
         notificationsController,
+        packagesController,
+        packageVersionController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -488,6 +522,8 @@ export class RecordsServer {
         this._loomController = loomController;
         this._webhooksController = webhooksController;
         this._notificationsController = notificationsController;
+        this._packagesController = packagesController;
+        this._packageVersionController = packageVersionController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2105,6 +2141,468 @@ export class RecordsServer {
                     return result;
                 }),
 
+            getPackage: getItemProcedure(
+                this._auth,
+                this._packagesController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/package')
+            ),
+
+            recordPackage: recordItemProcedure(
+                this._auth,
+                this._packagesController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    markers: MARKERS_VALIDATION,
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/package')
+            ),
+
+            erasePackage: eraseItemProcedure(
+                this._auth,
+                this._packagesController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/package')
+            ),
+
+            listPackages: listItemsProcedure(
+                this._auth,
+                this._packagesController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/package/list')
+            ),
+
+            getPackageVersion: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/package/version')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        major: z.coerce.number().int().optional().nullable(),
+                        minor: z.coerce.number().int().optional().nullable(),
+                        patch: z.coerce.number().int().optional().nullable(),
+                        tag: z.string().optional().nullable(),
+                        sha256: z.string().optional(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        key: z.string().min(1).optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            major,
+                            minor,
+                            patch,
+                            tag,
+                            sha256,
+                            key,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const keyResult = getPackageVersionSpecifier(
+                            key,
+                            major,
+                            minor,
+                            patch,
+                            tag,
+                            sha256
+                        );
+
+                        if (keyResult.success === false) {
+                            return keyResult;
+                        }
+
+                        const result =
+                            await this._packageVersionController.getItem({
+                                recordName,
+                                address,
+                                userId: validation.userId,
+                                key: keyResult.key,
+                                instances,
+                            });
+
+                        return result;
+                    }
+                ),
+
+            recordPackageVersion: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/package/version')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        item: z.object({
+                            address: ADDRESS_VALIDATION,
+                            key: z.object({
+                                major: z.number().int(),
+                                minor: z.number().int(),
+                                patch: z.number().int(),
+                                tag: z
+                                    .string()
+                                    .max(16)
+                                    .nullable()
+                                    .optional()
+                                    .default(''),
+                            }),
+                            auxFileRequest: z.object({
+                                fileSha256Hex: z.string().min(1).max(123),
+                                fileByteLength: z.number().positive().int(),
+                                fileMimeType: z.string().min(1).max(128),
+                                fileDescription: z
+                                    .string()
+                                    .min(1)
+                                    .max(128)
+                                    .optional(),
+                            }),
+                            entitlements: z.array(ENTITLEMENT_VALIDATION),
+                            description: z.string(),
+                            markers: MARKERS_VALIDATION.optional(),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName, item, instances }, context) => {
+                    if (!this._packageVersionController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._packageVersionController.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId: validation.userId,
+                            item: {
+                                address: item.address,
+                                key: {
+                                    major: item.key.major,
+                                    minor: item.key.minor,
+                                    patch: item.key.patch,
+                                    tag: item.key.tag ?? '',
+                                },
+                                auxFileRequest:
+                                    item.auxFileRequest as PackageRecordVersionInput['auxFileRequest'],
+                                entitlements:
+                                    item.entitlements as Entitlement[],
+                                description: item.description,
+                                markers: item.markers,
+                            },
+                            instances,
+                        });
+
+                    return result;
+                }),
+
+            listPackageVersions: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/package/version/list')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._packageVersionController.listItems({
+                                userId: validation.userId,
+                                recordName: recordName,
+                                address: address,
+                                instances: instances ?? [],
+                            });
+
+                        return result;
+                    }
+                ),
+
+            erasePackageVersion: procedure()
+                .origins('api')
+                .http('DELETE', '/api/v2/records/package/version')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        key: z.object({
+                            major: z.number().int(),
+                            minor: z.number().int(),
+                            patch: z.number().int(),
+                            tag: z.string().max(16).default(''),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, key, instances },
+                        context
+                    ) => {
+                        if (!this._packageVersionController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._packageVersionController.eraseItem({
+                                recordName,
+                                address,
+                                key: key as PackageRecordVersionKey,
+                                userId: validation.userId,
+                                instances: instances ?? [],
+                            });
+
+                        return result;
+                    }
+                ),
+
+            reviewPackageVersion: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/package/version/review')
+                .inputs(
+                    z.object({
+                        packageVersionId: z.string().min(1).max(36),
+                        review: z.object({
+                            id: z.string().min(1).max(36).optional(),
+                            approved: z.boolean(),
+                            approvalType: z
+                                .enum(['normal', 'super'])
+                                .nullable(),
+                            reviewStatus: z.enum([
+                                'pending',
+                                'approved',
+                                'rejected',
+                            ]),
+                            reviewComments: z.string().min(1).max(4096),
+                        }),
+                    })
+                )
+                .handler(async ({ packageVersionId, review }, context) => {
+                    if (!this._packageVersionController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result =
+                        await this._packageVersionController.reviewItem({
+                            packageVersionId,
+                            userId: validation.userId,
+                            review: review as PackageVersionReviewInput,
+                        });
+
+                    return result;
+                }),
+
+            installPackage: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/package/install')
+                .inputs(
+                    z.object({
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        inst: z.string().min(1),
+                        branch: z.string().optional().nullable(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        package: z.object({
+                            recordName: RECORD_NAME_VALIDATION,
+                            address: ADDRESS_VALIDATION,
+                            key: z
+                                .union([
+                                    z
+                                        .string()
+                                        .describe(
+                                            'The package version to install as a string'
+                                        ),
+                                    z
+                                        .object({
+                                            major: z
+                                                .number()
+                                                .int()
+                                                .optional()
+                                                .nullable(),
+                                            minor: z
+                                                .number()
+                                                .int()
+                                                .optional()
+                                                .nullable(),
+                                            patch: z
+                                                .number()
+                                                .int()
+                                                .optional()
+                                                .nullable(),
+                                            tag: z
+                                                .string()
+                                                .optional()
+                                                .nullable(),
+                                            sha256: z
+                                                .string()
+                                                .optional()
+                                                .nullable(),
+                                        })
+                                        .describe(
+                                            'The package version specifier to install'
+                                        ),
+                                ])
+                                .optional()
+                                .nullable(),
+                        }),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, inst, branch, package: pkg, instances },
+                        context
+                    ) => {
+                        if (!this._websocketController) {
+                            return INSTS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._websocketController.installPackage({
+                                userId: validation.userId,
+                                userRole: validation.role,
+                                recordName: recordName ?? null,
+                                inst,
+                                branch,
+                                package: pkg as PackageVersionSpecifier,
+                                instances,
+                            });
+
+                        return result;
+                    }
+                ),
+
+            listInstalledPackages: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/package/install/list')
+                .inputs(
+                    z.object({
+                        recordName:
+                            RECORD_NAME_VALIDATION.optional().nullable(),
+                        inst: z.string().min(1),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ recordName, inst, instances }, context) => {
+                    if (!this._websocketController) {
+                        return INSTS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        validation.success === false &&
+                        validation.errorCode !== 'no_session_key'
+                    ) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._websocketController.listInstalledPackages({
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            recordName: recordName ?? null,
+                            inst,
+                            instances,
+                        });
+
+                    return result;
+                }),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
@@ -2634,6 +3132,126 @@ export class RecordsServer {
                         return result;
                     }
                 ),
+
+            grantEntitlement: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/entitlement/grants')
+                .inputs(
+                    z.object({
+                        packageId: z.string().min(1).max(36),
+                        userId: z.string().optional().nullable(),
+                        recordName: RECORD_NAME_VALIDATION,
+                        feature: ENTITLEMENT_FEATURE_VALIDATION,
+                        scope: z.literal('designated'),
+                        expireTimeMs: z.number().min(1),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            packageId,
+                            userId,
+                            recordName,
+                            feature,
+                            scope,
+                            expireTimeMs,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._policyController.grantEntitlement({
+                                packageId,
+                                userId: sessionKeyValidation.userId,
+                                userRole: sessionKeyValidation.role,
+                                grantingUserId:
+                                    userId ?? sessionKeyValidation.userId,
+                                recordName,
+                                feature,
+                                scope,
+                                expireTimeMs,
+                            });
+
+                        return result;
+                    }
+                ),
+
+            revokeEntitlement: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/entitlement/revoke')
+                .inputs(
+                    z.object({
+                        grantId: z.string(),
+                    })
+                )
+                .handler(async ({ grantId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._policyController.revokeEntitlement({
+                            userId: sessionKeyValidation.userId,
+                            userRole: sessionKeyValidation.role,
+                            grantId,
+                        });
+
+                    return result;
+                }),
+
+            listGrantedEntitlements: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/records/entitlement/grants/list')
+                .inputs(
+                    z.object({
+                        packageId: z
+                            .string()
+                            .min(1)
+                            .max(36)
+                            .optional()
+                            .nullable(),
+                    })
+                )
+                .handler(async ({ packageId }, context) => {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result =
+                        await this._policyController.listGrantedEntitlements({
+                            userId: sessionKeyValidation.userId,
+                            packageId: packageId,
+                        });
+
+                    return result;
+                }),
 
             aiChat: procedure()
                 .origins('api')

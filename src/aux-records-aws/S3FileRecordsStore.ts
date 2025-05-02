@@ -281,7 +281,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
                     ...requiredHeaders,
                 },
                 queryString: {},
-                path: fileUrl.pathname,
+                path: decodeURI(fileUrl.pathname),
             },
             secretAccessKey,
             accessKeyId,
@@ -338,7 +338,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
                 queryString: {
                     'response-cache-control': 'max-age=31536000',
                 },
-                path: fileUrl.pathname,
+                path: decodeURI(fileUrl.pathname),
             },
             secretAccessKey,
             accessKeyId,

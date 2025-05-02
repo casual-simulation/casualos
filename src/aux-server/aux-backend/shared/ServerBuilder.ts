@@ -69,6 +69,7 @@ import {
     WebhookRecordsController,
     cleanupObject,
     NotificationRecordsController,
+    PackageRecordsController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -201,9 +202,13 @@ import { getConnectionId } from '@casual-simulation/aux-common';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
-import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { PrismaNotificationRecordsStore } from '../prisma/PrismaNotificationRecordsStore';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
+import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
+import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
+import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -224,6 +229,8 @@ export interface BuildReturn {
     websocketRateLimitController: RateLimitController;
     policyController: PolicyController;
     websocketController: WebsocketController;
+    packagesController: PackageRecordsController;
+    packageVersionController: PackageVersionRecordsController;
     dynamodbClient: DocumentClient;
     mongoClient: MongoClient;
     mongoDatabase: Db;
@@ -324,6 +331,8 @@ export class ServerBuilder implements SubscriptionLike {
     private _redisCaches: RedisClientType | null = null;
     private _redisInstData: RedisClientType | null = null;
     private _redisWebsocketConnections: RedisClientType | null = null;
+    private _redisSubscriber: RedisClientType | null = null;
+    private _redisPublisher: RedisClientType | null = null;
     private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
     private _s3Control: S3ControlClient;
@@ -366,6 +375,10 @@ export class ServerBuilder implements SubscriptionLike {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
+    private _packagesStore: PrismaPackageRecordsStore;
+    private _packageVersionsStore: PrismaPackageVersionRecordsStore;
+    private _packagesController: PackageRecordsController;
+    private _packageVersionController: PackageVersionRecordsController;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -695,6 +708,14 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             metricsStore
         );
+        this._packagesStore = new PrismaPackageRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
+            prismaClient,
+            metricsStore
+        );
 
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
         return {
@@ -887,6 +908,20 @@ export class ServerBuilder implements SubscriptionLike {
 
         const redis = this._ensureRedisInstData(options);
         const prisma = this._ensurePrisma(options);
+
+        if (
+            options.redis.pubSubNamespace &&
+            this._websocketMessenger instanceof WSWebsocketMessenger
+        ) {
+            const [subscriber, publisher] = this._ensureRedisPubSub(options);
+            console.log('[ServerBuilder] Using Redis PubSub.');
+            this._websocketMessenger = new RedisWSWebsocketMessenger(
+                this._websocketMessenger,
+                subscriber,
+                publisher,
+                options.redis.pubSubNamespace
+            );
+        }
 
         this._tempInstRecordsStore = new RedisTempInstRecordsStore(
             options.redis.tempInstRecordsStoreNamespace,
@@ -1513,6 +1548,8 @@ export class ServerBuilder implements SubscriptionLike {
         if (env.type === 'deno') {
             console.log('[ServerBuilder] Using Deno Webhook Environment.');
 
+            configParameters.debug = env.debugLogs;
+
             const anyGlobalThis = globalThis as any;
             anyGlobalThis.MessageChannel = MessageChannel;
             anyGlobalThis.MessagePort = MessagePort;
@@ -1723,6 +1760,24 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
+        if (this._packagesStore && this._packageVersionsStore) {
+            this._packagesController = new PackageRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._packagesStore,
+            });
+            this._packageVersionController =
+                new PackageVersionRecordsController({
+                    config: this._configStore,
+                    policies: this._policyController,
+                    recordItemStore: this._packagesStore,
+                    store: this._packageVersionsStore,
+                    files: this._filesController,
+                    systemNotifications: this._notificationMessenger,
+                    packages: this._packagesController,
+                });
+        }
+
         if (
             this._websocketConnectionStore &&
             this._websocketMessenger &&
@@ -1738,7 +1793,8 @@ export class ServerBuilder implements SubscriptionLike {
                 this._policyController,
                 this._configStore,
                 this._metricsStore,
-                this._authStore
+                this._authStore,
+                this._packageVersionController
             );
         }
 
@@ -1784,6 +1840,8 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
+            packagesController: this._packagesController,
+            packageVersionController: this._packageVersionController,
         });
 
         const buildReturn: BuildReturn = {
@@ -1800,6 +1858,8 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
+            packagesController: this._packagesController,
+            packageVersionController: this._packageVersionController,
 
             moderationController: this._moderationController,
             moderationJobProvider: this._moderationJobProvider,
@@ -1875,6 +1935,21 @@ export class ServerBuilder implements SubscriptionLike {
         } else {
             return this._ensureRedis(options);
         }
+    }
+
+    private _ensureRedisPubSub(
+        options: Pick<ServerConfig, 'redis'>
+    ): [RedisClientType, RedisClientType] {
+        return [
+            (this._redisSubscriber = this._createRedisClient(
+                this._redisSubscriber,
+                options.redis.servers.pubSub ?? options.redis
+            )),
+            (this._redisPublisher = this._createRedisClient(
+                this._redisPublisher,
+                options.redis.servers.pubSub ?? options.redis
+            )),
+        ] as const;
     }
 
     private _ensureRedisCaches(

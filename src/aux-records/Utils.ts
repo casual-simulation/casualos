@@ -17,8 +17,13 @@
  */
 import _, { omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    hasValue,
+    KnownErrorCodes,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import axios from 'axios';
+import { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
 
 /**
  * Signs the given request and adds the related headers to it.
@@ -153,6 +158,7 @@ export function createSigningKey(
 
 function createHmac(key: string | number[], data: string): number[];
 function createHmac(key: string | number[], data: string, enc: 'hex'): string;
+function createHmac(key: string | number[], data: string, enc?: 'hex'): string;
 function createHmac(key: string | number[], data: string, enc?: 'hex') {
     const hmacSha256 = hmac(<any>sha256, key);
     hmacSha256.update(data);
@@ -237,6 +243,7 @@ const _dash = '-'.charCodeAt(0);
 const _squiggle = '~'.charCodeAt(0);
 const _dot = '.'.charCodeAt(0);
 const _slash = '/'.charCodeAt(0);
+const _percent = '%'.charCodeAt(0);
 
 /**
  * URI Encodes the given string according to AWS Signature Version 4.
@@ -248,6 +255,7 @@ export function canonicalUriEncode(
     input: string,
     encodeSlash: boolean
 ): string {
+    let warned = false;
     const textEncoder = new TextEncoder();
     const bytes = textEncoder.encode(input);
     const textDecoder = new TextDecoder();
@@ -271,6 +279,12 @@ export function canonicalUriEncode(
                 result.push(ch);
             }
         } else {
+            if (ch === _percent && !warned) {
+                warned = true;
+                console.warn(
+                    '[canonicalUriEncode] Percent sign found in string to encode. This may be the result of double encoding, which would cause signatures to fail if it is the case.'
+                );
+            }
             result.push(...textEncoder.encode(encodeHexUtf8(ch)));
         }
     }
@@ -310,7 +324,7 @@ function getAmzDateString(date: Date): string {
  * Parses the given string of instance names into an array of instance names.
  * @param instances The names of the instances.
  */
-export function parseInstancesList(instances: string): string[] {
+export function parseInstancesList(instances: string): string[] | undefined {
     if (!instances) {
         return undefined;
     }
@@ -358,7 +372,7 @@ export interface JsonParseSuccess {
 
 export interface JsonParseFailure {
     success: false;
-    error: Error;
+    error: unknown;
 }
 
 export interface RegexRule {
@@ -421,8 +435,8 @@ export function tryDecodeUriComponent(component: string): string | null {
  */
 export function isActiveSubscription(
     status: string,
-    periodStartMs?: number,
-    periodEndMs?: number,
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
     nowMs: number = Date.now()
 ): boolean {
     const active = status === 'active' || status === 'trialing';
@@ -505,11 +519,11 @@ export function handleAxiosErrors(err: any) {
         console.error(
             'An axios error occcurred:',
             '\nStatus:',
-            err.response.status,
+            err.response?.status,
             '\nHeaders:',
-            err.response.headers,
+            err.response?.headers,
             '\nData:',
-            err.response.data,
+            err.response?.data,
             '\nRequest:',
             err.request
         );

@@ -126,7 +126,6 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
                 ? new Vector3()
                 : this._label.text3D.position;
         if (elementsBoundingBox) {
-            console.log('size', elementsBoundingBox, arrowPoint, labelPosition);
             this.wordBubble.update(
                 arrowPoint,
                 labelPosition,

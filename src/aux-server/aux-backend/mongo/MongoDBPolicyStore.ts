@@ -17,6 +17,9 @@
  */
 import type {
     ActionKinds,
+    Entitlement,
+    EntitlementFeature,
+    GrantedEntitlementScope,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
@@ -40,6 +43,7 @@ import type {
     ListPermissionsInRecordResult,
     MarkerPermissionAssignment,
     ResourcePermissionAssignment,
+    GrantedPackageEntitlement,
 } from '@casual-simulation/aux-records';
 import { getExpireTime } from '@casual-simulation/aux-records';
 import type { Collection, FilterQuery } from 'mongodb';
@@ -65,6 +69,53 @@ export class MongoDBPolicyStore implements PolicyStore {
         this._users = users;
         this._resourcePermissions = resourcePermissions;
         this._markerPermissions = markerPermissions;
+    }
+
+    listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string,
+        recordName: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: EntitlementFeature,
+        scope: GrantedEntitlementScope,
+        recordName: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        throw new Error('Method not implemented.');
+    }
+
+    findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        throw new Error('Method not implemented.');
+    }
+
+    listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        throw new Error('Method not implemented.');
     }
 
     async getUserPrivacyFeatures(userId: string): Promise<PrivacyFeatures> {

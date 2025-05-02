@@ -22,6 +22,10 @@ import type {
     ResourceKinds,
     SubjectType,
     PrivacyFeatures,
+    Entitlement,
+    EntitlementScope,
+    EntitlementFeature,
+    GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
 import {
     PUBLIC_READ_MARKER,
@@ -338,6 +342,127 @@ export interface PolicyStore {
         type: 'user' | 'inst',
         role: string
     ): Promise<UpdateUserRolesResult>;
+
+    /**
+     * Gets the list of non-revoked granted entitlements for the given package IDs, feature, and userId.
+     * @param packageIds The IDs of the packages to list the entitlements for.
+     * @param feature The feature that the entitlements are granted for.
+     * @param userId The ID of the user that the entitlements are granted to.
+     * @param recordName The name of the record that the entitlements are granted for.
+     * @param nowMs The current unix time in milliseconds.
+     */
+    listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string,
+        recordName: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]>;
+
+    /**
+     * Saves the given granted entitlement.
+     * @param grantedEntitlement The entitlement that should be saved.
+     */
+    saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void>;
+
+    /**
+     * Attempts to find the non-revoked granted entitlement for the given user, package, feature, and scope.
+     * @param userId The ID of the user that granted the entitlement.
+     * @param packageId The ID of the package that the entitlement is granted for.
+     * @param feature The feature that was granted.
+     * @param scope The scope that was granted.
+     * @param recordName The name of the record that the entitlement was granted for.
+     */
+    findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: EntitlementFeature,
+        scope: GrantedEntitlementScope,
+        recordName: string
+    ): Promise<GrantedPackageEntitlement | null>;
+
+    /**
+     * Attempts to find the granted entitlement for the given ID.
+     * @param id The ID of the entitlement.
+     */
+    findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null>;
+
+    /**
+     * Lists all the active entitlements that the user has granted.
+     * @param userId The ID of the user.
+     * @param nowMs The current unix time in milliseconds.
+     */
+    listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]>;
+
+    /**
+     * Lists all the active entitlements that the user has granted for the given package.
+     * @param userId The ID of the user.
+     * @param packageId The ID of the package.
+     * @param nowMs The current unix time in milliseconds.
+     */
+    listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]>;
+}
+
+/**
+ * Defines an interface that represents an entitlement that has been granted to a package.
+ */
+export interface GrantedPackageEntitlement {
+    /**
+     * The ID of the entitlement.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that granted the entitlement.
+     */
+    userId: string;
+
+    /**
+     * The ID of the package that the entitlement is granted for.
+     */
+    packageId: string;
+
+    /**
+     * The feature that was granted.
+     */
+    feature: EntitlementFeature;
+
+    /**
+     * The scope of the granted entitlement.
+     */
+    scope: GrantedEntitlementScope;
+
+    /**
+     * The record that the entitlement was granted for.
+     */
+    recordName: string;
+
+    /**
+     * The unix time that the entitlement expires in miliseconds.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The unix time that the entitlement was revoked at in miliseconds.
+     * If null, then the entitlement has not been revoked.
+     */
+    revokeTimeMs: number | null;
+
+    /**
+     * The unix time that the grant was created at in miliseconds.
+     */
+    createdAtMs: number;
 }
 
 // /**
@@ -807,6 +932,20 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if (resourceKind === 'package') {
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'package.version') {
+        if (action === 'read' || action === 'list' || action === 'run') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     // All other actions are not allowed.
@@ -875,6 +1014,20 @@ export function getPublicWritePermission(
         }
     } else if (resourceKind === 'notification') {
         if (action === 'read' || action === 'list' || action === 'subscribe') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'package') {
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'package.version') {
+        if (action === 'read' || action === 'list' || action === 'run') {
             return {
                 resourceKind,
                 action,

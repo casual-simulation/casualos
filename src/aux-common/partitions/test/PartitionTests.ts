@@ -598,6 +598,39 @@ export function testPartitionImplementation(
             expect(updated).toEqual([]);
         });
 
+        it('should not remove the new bot from the state update if processed in the same update as an update that changes no tags', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+                example: 123,
+            });
+
+            // Run the bot added and updated
+            // in the same batch to ensure that the state update will
+            // contain the new bot even if the update changes no tags
+            await partition.applyEvents([
+                botAdded(bot),
+                botUpdated('test', {
+                    tags: {
+                        example: 123,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updates).toEqual([
+                stateUpdatedEvent(
+                    {
+                        test: createBot('test', {
+                            abc: 'def',
+                            example: 123,
+                        }),
+                    },
+                    expect.any(Object)
+                ),
+            ]);
+        });
+
         it('should ignore updates that set tag values to the same value that it is currently at', async () => {
             const bot = createBot('test', {
                 abc: 'def',

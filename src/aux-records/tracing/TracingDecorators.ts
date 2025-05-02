@@ -154,7 +154,7 @@ export function traced(
                         return ret.then(
                             (result) => {
                                 span.end();
-                                if (histogram) {
+                                if (histogram && startTime) {
                                     const endTime = Date.now();
                                     histogram.record(
                                         endTime - startTime,
@@ -191,10 +191,12 @@ export function traced(
                     } else {
                         span.end();
                         const endTime = Date.now();
-                        histogram?.record(
-                            endTime - startTime,
-                            metricOptions.histogram?.attributes?.(args, ret)
-                        );
+                        if (histogram && startTime) {
+                            histogram?.record(
+                                endTime - startTime,
+                                metricOptions.histogram?.attributes?.(args, ret)
+                            );
+                        }
                         return ret;
                     }
                 } catch (err) {
@@ -202,7 +204,9 @@ export function traced(
                         1,
                         metricOptions.errorCounter?.attributes?.(args, err)
                     );
-                    span.recordException(err);
+                    if (err instanceof Error) {
+                        span.recordException(err);
+                    }
                     span.setStatus({ code: SpanStatusCode.ERROR });
                     throw err;
                 }
@@ -216,7 +220,7 @@ export function traced(
  * Gets the histogram for the given meter config.
  * @param meter The meter config.
  */
-function getHistogram(meter: MeterConfig) {
+function getHistogram(meter: MeterConfig | null | undefined) {
     if (!meter) {
         return null;
     }
@@ -228,7 +232,7 @@ function getHistogram(meter: MeterConfig) {
         .createHistogram(meter.name, meter.options);
 }
 
-function getCounter(meter: MeterConfig) {
+function getCounter(meter: MeterConfig | null | undefined) {
     if (!meter) {
         return null;
     }

@@ -21,7 +21,7 @@ import type {
     SharedPartitionsVersion,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
-import { hasValue } from '@casual-simulation/aux-common';
+import { hasValue, parseVersionNumber } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**
@@ -166,40 +166,5 @@ export function buildVersionNumber(config: AuxConfigParameters) {
         hash: config.versionHash,
         ...parseVersionNumber(config.version),
         playerMode: config.playerMode ?? 'builder',
-    };
-}
-
-/**
- * Parses the given version number.
- * @param version The version number.
- */
-export function parseVersionNumber(version: string) {
-    if (!version) {
-        return {
-            version: null,
-            major: null,
-            minor: null,
-            patch: null,
-            alpha: null,
-        };
-    }
-    const versionRegex = /^v(\d+)\.(\d+)\.(\d+)((:|-)\w+\.?\d*)*$/i;
-    const [str, major, minor, patch, prerelease] = versionRegex.exec(version);
-
-    let alpha: boolean | number = false;
-    if (hasValue(prerelease)) {
-        alpha = true;
-        const [first, number] = prerelease.split('.');
-        if (hasValue(number)) {
-            alpha = parseInt(number);
-        }
-    }
-
-    return {
-        version: str,
-        major: parseInt(major),
-        minor: parseInt(minor),
-        patch: parseInt(patch),
-        alpha,
     };
 }

@@ -411,9 +411,11 @@ export class RemoteYjsSharedDocument
             });
         }
         this._synced = synced;
-        this._onStatusUpdated.next({
-            type: 'sync',
-            synced: synced,
+        queueMicrotask(() => {
+            this._onStatusUpdated.next({
+                type: 'sync',
+                synced: synced,
+            });
         });
     }
 }

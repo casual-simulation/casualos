@@ -3189,6 +3189,10 @@ export class AuthController {
             },
         };
 
+        console.log(
+            `[AuthController] [issueSession userId: ${userId} newSessionId: ${newSessionId} expiresAt: ${newSession.expireTimeMs}] Issued session.`
+        );
+
         return {
             newSession,
             info,
@@ -3208,6 +3212,7 @@ export async function validateSessionKey(
         return {
             success: false,
             userId: null,
+            role: null,
             errorCode: 'no_session_key',
             errorMessage:
                 'A session key was not provided, but it is required for this operation.',
@@ -3333,6 +3338,7 @@ export interface AuthSessionInfo {
 export interface NoSessionKeyResult {
     success: false;
     userId: null;
+    role: null;
     errorCode: 'no_session_key';
     errorMessage: string;
 }

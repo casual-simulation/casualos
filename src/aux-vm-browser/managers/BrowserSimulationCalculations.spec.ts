@@ -45,6 +45,7 @@ import {
     wait,
 } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, firstValueFrom } from 'rxjs';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();
 
@@ -54,7 +55,7 @@ describe('BrowserSimulationCalculations', () => {
     let portals: PortalManager;
     let index: BotIndex;
     let vm: TestAuxVM;
-    let localEvents: Subject<LocalActions[]>;
+    let localEvents: Subject<RuntimeActions[]>;
     let userId = 'user';
 
     beforeEach(() => {

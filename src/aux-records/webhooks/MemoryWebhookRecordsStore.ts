@@ -77,7 +77,7 @@ export class MemoryWebhookRecordsStore
 
         const records = filter.ownerId
             ? await this.store.listRecordsByOwnerId(filter.ownerId)
-            : await this.store.listRecordsByStudioId(filter.studioId);
+            : await this.store.listRecordsByStudioId(filter.studioId!);
         for (let record of records) {
             totalItems += this.getItemRecord(record.name).size;
         }
@@ -89,6 +89,7 @@ export class MemoryWebhookRecordsStore
 
             if (
                 !info.currentPeriodStartMs ||
+                !info.currentPeriodEndMs ||
                 run.requestTimeMs >= info.currentPeriodStartMs ||
                 run.requestTimeMs <= info.currentPeriodEndMs
             ) {

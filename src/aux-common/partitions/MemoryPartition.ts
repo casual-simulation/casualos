@@ -317,7 +317,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             bot: newBot,
                             tags: changedTags,
                         });
-                    } else {
+                    } else if (!added.has(event.id)) {
                         delete updatedState[event.id];
                     }
                 }

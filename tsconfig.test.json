@@ -1,6 +1,7 @@
 {
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
+        "resolveJsonModule": true,
         "typeRoots": [
             "node_modules/@types",
             "src/aux-server/typings",

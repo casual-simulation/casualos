@@ -111,6 +111,7 @@ import type {
     RecordLoomOptions,
     LoomVideo,
     LoomVideoEmbedMetadata,
+    InstallAuxFileMode,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -277,6 +278,7 @@ import {
     getLoomMetadata,
     loadSharedDocument,
     LoadSharedDocumentAction,
+    installAuxFile as calcInstallAuxFile,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -297,6 +299,10 @@ import type {
     ListWebhooksOptions,
     ListNotificationsOptions,
     SendNotificationOptions,
+    GrantEntitlementsRequest,
+    GrantEntitlementsResult,
+    InstallPackageResult,
+    ListInstalledPackagesAction,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -348,6 +354,18 @@ import {
     listNotificationSubscriptions as calcListNotificationSubscriptions,
     listUserNotificationSubscriptions as calcListUserNotificationSubscriptions,
     aiOpenAICreateRealtimeSession,
+    grantEntitlements as calcGrantEntitlements,
+    recordPackageVersion as calcRecordPackageVersion,
+    erasePackageVersion as calcErasePackageVersion,
+    listPackageVersions as calcListPackageVersions,
+    getPackageVersion as calcGetPackageVersion,
+    recordPackageContainer as calcRecordPackageContainer,
+    erasePackageContaienr as calcErasePackageContainer,
+    listPackageContainers as calcListPackageContainers,
+    listPackageContainersByMarker as calcListPackageContainersByMarker,
+    getPackageContainer as calcGetPackageContainer,
+    installPackage as calcInstallPackage,
+    listInstalledPackages as calcListInstalledPackages,
 } from './RecordsEvents';
 import {
     sortBy,
@@ -362,11 +380,16 @@ import type {
     DeviceSelector,
     RemoteAction,
     AvailablePermissions,
+    Entitlement,
+    VersionNumber,
 } from '@casual-simulation/aux-common';
 import {
     Action,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
+    formatVersionNumber,
+    parseVersionNumber,
+    PRIVATE_MARKER,
 } from '@casual-simulation/aux-common';
 import { RanOutOfEnergyError } from './AuxResults';
 import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
@@ -462,6 +485,8 @@ import type {
     GrantMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
+    PackageRecord,
+    ListInstalledPackagesResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -508,6 +533,12 @@ import type {
 import type { HandleWebhookResult } from '@casual-simulation/aux-records/webhooks/WebhookRecordsController';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import type {
+    PackageRecordVersion,
+    PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
+    RecordPackageVersionResult,
+} from '@casual-simulation/aux-records/packages/version';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -790,6 +821,44 @@ export interface AIGeneratedImageAPI {
      * The MIME Type of the image data.
      */
     mimeType: string;
+}
+
+export interface RecordPackageVersionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The version of the package that should be recorded.
+     */
+    key: PackageRecordVersionKey;
+
+    /**
+     * The description that should be included in the package version.
+     */
+    description: string;
+
+    /**
+     * The list of entitlements for the package version.
+     * If omitted, then the package version will be recorded without any entitlements.
+     */
+    entitlements?: Entitlement[];
+
+    /**
+     * The bots that should be saved to the package.
+     */
+    bots: Bot[];
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
 }
 
 /**
@@ -1693,6 +1762,18 @@ export interface PausableDebugger extends DebuggerBase {
      * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
      */
     changeState(bot: Bot, stateName: string, groupName?: string): Promise<void>;
+}
+
+export interface AuxFileOptions {
+    /**
+     * The version that should be used for the output file.
+     *
+     * Version 1 stores bots as pure JSON and is the original version of the file format.
+     * Version 2 stores bots as updates and is the new version of the file format.
+     *
+     * If not specifed, then version 2 will be used.
+     */
+    version?: 1 | 2;
 }
 
 /**
@@ -3125,6 +3206,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 downloadBots,
                 downloadBotsAsInitialzationUpdate,
 
+                getAuxFileForBots,
+                installAuxFile,
+
                 downloadServer,
                 downloadInst: downloadServer,
 
@@ -3357,6 +3441,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordEvent,
                 countEvents,
+
+                parseVersionKey,
+                formatVersionKey,
+
+                grantEntitlements,
+                recordPackageVersion,
+                erasePackageVersion,
+                listPackageVersions,
+                getPackageVersion,
+
+                recordPackageContainer,
+                erasePackageContainer,
+                listPackageContainers,
+                listPackageContainersByMarker,
+                getPackageContainer,
+                installPackage,
+                listInstalledPackages,
 
                 listUserStudios,
 
@@ -4040,7 +4141,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             tagsObj = bot.tags;
             botTags = tagsOnBot(bot);
         } else if (hasValue(bot[ORIGINAL_OBJECT])) {
-            tagsObj = bot[ORIGINAL_OBJECT];
+            tagsObj = bot[ORIGINAL_OBJECT] as BotTags;
             botTags = Object.keys(tagsObj);
         } else {
             tagsObj = bot;
@@ -6702,6 +6803,92 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the JSON representation of the given bots as an .aux file.
+     *
+     * This function is useful for getting the contents of an aux file without downloading it.
+     *
+     * @param bots The bots that should be converted to JSON.
+     * @param options The options that should be used for the conversion.
+     *
+     * @example Get the current bot as an aux file.
+     * const myAux = os.getAuxFileForBots([bot]);
+     *
+     * @example Download the current bot as an aux file.
+     * const myAux = os.getAuxFileForBots([bot]);
+     * os.download(myAux, "myAux.aux");
+     *
+     * @example Get the current bot as an aux file with version 1.
+     * const myAux = os.getAuxFileForBots([bot], { version: 1 });
+     *
+     * @dochash actions/os/files
+     * @docname os.getAuxFileForBots
+     */
+    function getAuxFileForBots(
+        bots: Bot[],
+        options?: AuxFileOptions
+    ): StoredAux {
+        const version = options?.version ?? 2;
+
+        if (version === 1) {
+            let state: BotsState = {};
+            for (let bot of bots) {
+                if (isRuntimeBot(bot)) {
+                    state[bot.id] = createBot(
+                        bot.id,
+                        bot.tags.toJSON(),
+                        bot.space
+                    );
+                } else {
+                    state[bot.id] = bot;
+                }
+            }
+
+            return getVersion1DownloadState(state);
+        } else {
+            bots = bots.map((b) =>
+                isRuntimeBot(b) ? createBot(b.id, b.tags.toJSON(), b.space) : b
+            );
+            const update = constructInitializationUpdate(
+                calcCreateInitalizationUpdate(bots)
+            );
+
+            return getVersion2DownloadState(update);
+        }
+    }
+
+    /**
+     * Installs the given aux file into the inst.
+     *
+     * Depending on the version of the aux file, this may overwrite existing bots.
+     *
+     * @param aux The aux file that should be installed.
+     * @param mode The mode that should be used to install the bots in the AUX file.
+     * - `"default"` indicates that the aux file will be installed as-is.
+     *    If the file was already installed, then it will either overwrite bots or do nothing depending on the version of the aux.
+     *    Version 1 auxes will overwrite existing bots, while version 2 auxes will do nothing.
+     * - `"copy"` indicates that all the bots in the aux file should be given new IDs. This is useful if you want to be able to install an AUX multiple times in the same inst.
+     *
+     * @example Install an aux file.
+     * await os.installAuxFile(myAux);
+     *
+     * @dochash actions/os/files
+     * @docname os.installAuxFile
+     */
+    function installAuxFile(
+        aux: StoredAux,
+        mode?: InstallAuxFileMode
+    ): Promise<void> {
+        const task = context.createTask(true, true);
+        const action = calcRemote(
+            calcInstallAuxFile(aux, mode ?? 'default'),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
      * Downloads all of the shared bots into a `.aux` file on the player's computer. The file will have the same name as the inst.
      *
      * Note that this function is almost exactly the same as {@link os.downloadBots}. The only difference is that all bots in the shared space are included and the file is named for you automatically.
@@ -7232,7 +7419,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return null;
         }
 
-        const state = getUploadState(data);
+        const state = getUploadState(data as StoredAux | BotsState);
         let bots = [] as Bot[];
 
         for (let bot in state) {
@@ -7285,7 +7472,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return null;
         }
 
-        return data;
+        return data as StoredAux;
     }
 
     /**
@@ -10658,6 +10845,417 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Grants the given entitlements to a package.
+     *
+     * @param request The request to grant entitlements.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.grantEntitlements
+     */
+    function grantEntitlements(
+        request: GrantEntitlementsRequest,
+        options: RecordActionOptions = {}
+    ): Promise<GrantEntitlementsResult> {
+        const task = context.createTask();
+        const event = calcGrantEntitlements(request, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Parses the given version number into a version key.
+     * @param version The version number to parse.
+     *
+     * @example Parse a version number
+     * const key = os.parseVersionKey('1.0.0');
+     * os.toast(key.major); // 1
+     * os.toast(key.minor); // 0
+     * os.toast(key.patch); // 0
+     * os.toast(key.tag); // null
+     *
+     * @dochash actions/os/records
+     * @docname os.parseVersionKey
+     */
+    function parseVersionKey(version: string): VersionNumber {
+        const key = parseVersionNumber(version);
+        if (key.major === null) {
+            return null;
+        }
+
+        return key;
+    }
+
+    /**
+     * Formats the given version key into a string.
+     *
+     * @example Print the version key
+     * os.toast(os.formatVersionKey({ major: 1, minor: 0, patch: 0, tag: 'alpha' }));
+     *
+     * @param key The key to format.
+     *
+     * @dochash actions/os/records
+     * @docname os.formatVersionKey
+     */
+    function formatVersionKey(key: PackageRecordVersionKey): string {
+        return formatVersionNumber(key.major, key.minor, key.patch, key.tag);
+    }
+
+    /**
+     * Records the given package version. Package versions are useful for storing multiple distinct versions of the same AUX.
+     * Package versions live inside package containers (also known simply as packages) and are distinguished by `key`.
+     *
+     * If the package container does not exist, then it will be automatically created with the `private` marker.
+     * If no markers are specified, then the markers from the package container are used.
+     *
+     * @example Record a v1.0.0 package version
+     * const result = await os.recordPackageVersion({
+     *   recordName: 'myRecord',
+     *   address: 'myPackage',
+     *   key: os.parseVersionKey('1.0.0'),
+     *   description: 'description of the package',
+     *   bots: getBots('color', 'red'),
+     * });
+     *
+     * @example Record a package version that can request access to the user's data
+     * const result = await os.recordPackageVersion({
+     *   recordName: 'myRecord',
+     *   address: 'myPackage',
+     *   key: os.parseVersionKey('1.0.0'),
+     *   description: 'description of the package',
+     *   entitlements: [
+     *     {
+     *        feature: 'data',
+     *        scope: 'personal',
+     *     }
+     *   ],
+     *   bots: getBots('color', 'red),
+     * });
+     *
+     * @param request the information about the package version that should be recorded.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.recordPackageVersion
+     */
+    function recordPackageVersion(
+        request: RecordPackageVersionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<RecordPackageVersionResult> {
+        const task = context.createTask();
+        const event = calcRecordPackageVersion(
+            {
+                recordName: request.recordName,
+                address: request.address,
+                key: request.key,
+                entitlements: request.entitlements ?? [],
+                description: request.description,
+                markers: request.markers,
+                state: {
+                    version: 2,
+                    updates: [
+                        constructInitializationUpdate(
+                            calcCreateInitalizationUpdate(request.bots)
+                        ),
+                    ],
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of versions for the given package.
+     * @param recordName The name of the record that the package is stored in.
+     * @param address The address of the package.
+     *
+     * @example List all the versions of a package
+     * const result = await os.listPackageVersions('myRecord', 'myPackage');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageVersions
+     */
+    function listPackageVersions(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudListItemsResult<PackageRecordVersion>> {
+        const task = context.createTask();
+        const event = calcListPackageVersions(
+            recordName,
+            address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets metadata about the given package version.
+     * @param recordName The name of the record that the package version is stored in.
+     * @param address The address of the package version.
+     * @param key The key of the package version.
+     * @param options The options for the package version.
+     *
+     * @example Get info about a package version
+     * const result = await os.getPackageVersion('myRecord', 'myPackage', os.parseVersionKey('1.0.0'));
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.getPackageVersion
+     */
+    function getPackageVersion(
+        recordName: string,
+        address: string,
+        key?: string | PackageRecordVersionKeySpecifier,
+        options: RecordActionOptions = {}
+    ): Promise<CrudGetItemResult<PackageRecordVersion>> {
+        const task = context.createTask();
+        const event = calcGetPackageVersion(
+            recordName,
+            address,
+            key,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the given package version.
+     * @param recordName the name of the record that the package version should be erased from.
+     * @param address the address of the package version that should be erased.
+     * @param key the key of the package version that should be erased.
+     *
+     * @example Erase a package version
+     * const result = await os.erasePackageVersion('myRecord', 'myPackage', os.parseVersionKey('1.0.0'));
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.erasePackageVersion
+     */
+    function erasePackageVersion(
+        recordName: string,
+        address: string,
+        key: PackageRecordVersionKey,
+        options: RecordActionOptions = {}
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcErasePackageVersion(
+            recordName,
+            address,
+            key,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records the given package container.
+     * Package containers (also known simply as packages) are ways to group multiple package versions together.
+     *
+     * Markers that are applied to the package container control whether all the package versions can be deleted and also will be used as the default markers for package versions if the version isn't created with a marker.
+     *
+     * @param recordName The name of the record that the package should be stored in.
+     * @param address The address of the package.
+     * @param markers The markers that should be applied to the package.
+     * @param options The options.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.recordPackageContainer
+     */
+    function recordPackageContainer(
+        recordName: string,
+        address: string,
+        markers?: string | string[],
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordPackageContainer(
+            recordName,
+            address,
+            typeof markers === 'string'
+                ? [markers]
+                : markers ?? [PRIVATE_MARKER],
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the given package container and any package versions that it contains.
+     *
+     * @param recordName the name of the record that the package container is in.
+     * @param address the address of the package container.
+     * @param options the options to use for the request.
+     */
+    function erasePackageContainer(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcErasePackageContainer(
+            recordName,
+            address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists all the package containers that are in the given record.
+     * You must have access to the `account` marker in order to list all package containers in a record.
+     *
+     * @param recordName the name of the record that the package containers should be listed from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     *
+     * @example List package containers in a record
+     * const result = await os.listPackageContainers('myRecord');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageContainers
+     */
+    function listPackageContainers(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<PackageRecord>> {
+        const task = context.createTask();
+        const event = calcListPackageContainers(
+            recordName,
+            startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the package containers that have the given marker in the given record.
+     * You must have access to the specified marker in order to list the package containers.
+     *
+     * @param recordName the name of the record that the package containers should be listed from.
+     * @param marker the marker that the package containers should have.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     *
+     * @example List public package containers in a record
+     * const result = await os.listPackageContainersByMarker('myRecord', 'publicRead');
+     *
+     * @example List private package containers in a record
+     * const result = await os.listPackageContainersByMarker('myRecord', 'private');
+     *
+     * @example List public package containers stored at "myNamespace"
+     * const result = await os.listPackageContainersByMarker('myRecord', 'publicRead:myNamespace');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageContainersByMarker
+     */
+    function listPackageContainersByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<PackageRecord>> {
+        const task = context.createTask();
+        const event = calcListPackageContainersByMarker(
+            recordName,
+            marker,
+            startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the package container in the given record at the given address.
+     *
+     * @param recordName the name of the record that the package container is in.
+     * @param address the address that the package container is stored at.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.getPackageContainer
+     */
+    function getPackageContainer(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudGetItemResult<PackageRecord>> {
+        const task = context.createTask();
+        const event = calcGetPackageContainer(
+            recordName,
+            address,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to install the given package into the inst.
+     *
+     * @param recordName the name of the record that the package is in.
+     * @param address the address of the package that should be loaded.
+     * @param key the key that specifies the version of the package that should be loaded. If not specified, then the latest version will be loaded.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.installPackage
+     */
+    function installPackage(
+        recordName: string,
+        address: string,
+        key?: string | PackageRecordVersionKeySpecifier,
+        options: RecordActionOptions = {}
+    ): Promise<InstallPackageResult> {
+        const task = context.createTask();
+        const event = calcInstallPackage(
+            recordName,
+            address,
+            key ?? null,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of packages that are installed in the inst.
+     * @param options the options for the request.
+     *
+     * @example List all installed packages
+     * const result = await os.listInstalledPackages();
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listInstalledPackages
+     */
+    function listInstalledPackages(
+        options: RecordActionOptions = {}
+    ): Promise<ListInstalledPackagesResult> {
+        const task = context.createTask();
+        const event = calcListInstalledPackages(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Gets the list of studios that the currently logged in user has access to.
      *
      * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
@@ -13930,7 +14528,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
-            const v = vectors[i] as any;
+            const v = vectors[i] as Record<string, number>;
             if (!hasValue(v)) {
                 continue;
             }
@@ -13992,7 +14590,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let result = {} as any;
 
         for (let i = 0; i < vectors.length; i++) {
-            const v = vectors[i] as any;
+            const v = vectors[i] as Record<string, number>;
             if (!hasValue(v)) {
                 continue;
             }
@@ -15542,7 +16140,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 if (mod && BOT_SPACE_TAG in mod) {
                     const space = mod[BOT_SPACE_TAG];
                     if (hasValue(space)) {
-                        bot.space = space;
+                        bot.space = space as BotSpace;
                     }
                     break;
                 }

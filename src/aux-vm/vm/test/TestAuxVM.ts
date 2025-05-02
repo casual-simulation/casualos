@@ -42,6 +42,8 @@ import { union } from 'lodash';
 import type { ChannelActionResult } from '../../vm';
 import type {
     AuxDevice,
+    RecordsActions,
+    RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
 import { AuxRuntime, isPromise } from '@casual-simulation/aux-runtime';
@@ -60,7 +62,7 @@ export class TestAuxVM implements AuxVM {
 
     processEvents: boolean;
     state: BotsState;
-    localEvents: Subject<LocalActions[]>;
+    localEvents: Subject<RuntimeActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     versionUpdated: Subject<RuntimeStateVersion>;

@@ -213,12 +213,12 @@ export interface SubscriptionFilter {
     /**
      * The ID of the user that owns the subscription.
      */
-    ownerId?: string;
+    ownerId?: string | null;
 
     /**
      * The ID of the studio that owns the subscription.
      */
-    studioId?: string;
+    studioId?: string | null;
 }
 
 export interface AIChatSubscriptionMetrics extends SubscriptionMetrics {

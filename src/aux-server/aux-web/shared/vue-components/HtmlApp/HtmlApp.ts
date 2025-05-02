@@ -466,10 +466,20 @@ export default class HtmlApp extends Vue {
             }
         } else if (
             (node instanceof HTMLInputElement ||
-                node instanceof HTMLTextAreaElement) &&
+                node instanceof HTMLTextAreaElement ||
+                node instanceof HTMLSelectElement) &&
             (attributeName === 'value' || attributeName === 'checked')
         ) {
-            (<any>node)[attributeName] = value;
+            if (attributeName === 'checked') {
+                (<any>node)[attributeName] = value === true || value === 'true';
+            } else {
+                (<any>node)[attributeName] = value;
+            }
+        } else if (
+            node instanceof HTMLOptionElement &&
+            attributeName === 'selected'
+        ) {
+            (<any>node)[attributeName] = value === true || value === 'true';
         } else if (
             node instanceof HTMLVideoElement &&
             attributeName === 'src' &&

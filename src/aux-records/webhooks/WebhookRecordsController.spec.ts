@@ -325,12 +325,12 @@ describe('WebhookRecordsController', () => {
                     'item1'
                 );
 
-                expect(item.userId).toBeTruthy();
+                expect(item?.userId).toBeTruthy();
 
-                const user = await store.findUser(item.userId);
+                const user = await store.findUser(item!.userId!);
 
                 expect(user).toEqual({
-                    id: item.userId,
+                    id: item?.userId,
                     email: null,
                     phoneNumber: null,
                     allSessionRevokeTimeMs: null,
@@ -614,7 +614,7 @@ describe('WebhookRecordsController', () => {
 
             const file = await store.getFileRecord(
                 webhookUserId,
-                runs.items[0].infoFileName
+                runs.items[0].infoFileName!
             );
             expect(file).toEqual({
                 success: true,
