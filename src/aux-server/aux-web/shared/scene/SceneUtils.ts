@@ -101,9 +101,7 @@ import { MapView } from './map/MapView';
 /**
  * The provider for the map view which renders a map within a three scene.
  */
-const mapFormProvider = new BingMapsProvider();//new OffsetProvider(new BingMapsProvider(), OffsetProvider.calculateOffset(3, -85.694158, 42.903638));
-
-
+const mapFormProvider = new BingMapsProvider(); //new OffsetProvider(new BingMapsProvider(), OffsetProvider.calculateOffset(3, -85.694158, 42.903638));
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -347,7 +345,7 @@ export function createMapPlane(position: Vector3, size: number): MapView {
     map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
     map.scale.set(size, size, size);
     map.position.copy(position);
-    map.setCenter(10, -85.694158, 42.903638);
+    map.setCenter(3, -85.694158, 42.903638);
     // map.preSubdivide();
     // ! Testing of LOD, do not implement.
     // TODO: Implement proper system to parse and translate address to lat/lon from vector3.

@@ -15,16 +15,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { DoubleSide, Vector3 } from '@casual-simulation/three';
 import type { MapProvider } from 'geo-three';
-import { FrontSide, LinearFilter, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, RGBAFormat, Side, Texture } from 'three';
-
+import {
+    FrontSide,
+    LinearFilter,
+    Mesh,
+    MeshBasicMaterial,
+    Object3D,
+    PlaneGeometry,
+    RGBAFormat,
+    Side,
+    Texture,
+} from 'three';
 
 export class MapTile extends Object3D {
     private _provider: MapProvider;
     private _plane: THREE.Mesh;
 
-    latitude: number = 0;
-    longitude: number = 0;
+    y: number = 0;
+    x: number = 0;
     zoom: number = 0;
 
     private get _material(): THREE.MeshBasicMaterial {
@@ -36,27 +46,36 @@ export class MapTile extends Object3D {
         this._provider = provider;
         this._plane = new Mesh(
             new PlaneGeometry(1, 1),
-            new MeshBasicMaterial({ side: FrontSide })
+            new MeshBasicMaterial({ wireframe: false, side: FrontSide })
         );
+        this._plane.setRotationFromAxisAngle(
+            new Vector3(1, 0, 0),
+            -Math.PI / 2
+        );
+        this.add(this._plane);
     }
 
-    setTile(zoom: number, latitude: number, longitude: number) {
+    setTile(zoom: number, x: number, y: number) {
         this.zoom = zoom;
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.y = y;
+        this.x = x;
 
         this._loadTexture();
     }
 
     private async _loadTexture() {
-        const image: HTMLImageElement = await this._provider.fetchTile(this.zoom, this.latitude, this.longitude);
+        const image: HTMLImageElement = await this._provider.fetchTile(
+            this.zoom,
+            this.x,
+            this.y
+        );
         const texture = new Texture(image);
         texture.generateMipmaps = false;
         texture.format = RGBAFormat;
         texture.magFilter = LinearFilter;
         texture.minFilter = LinearFilter;
         texture.needsUpdate = true;
-        
+
         this._material.map = texture;
         this._material.needsUpdate = true;
     }

@@ -118,7 +118,7 @@ import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
-import { MapView } from '../map/MapView';
+import type { MapView } from '../map/MapView';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
@@ -1659,7 +1659,7 @@ export class BotShapeDecorator
         this.collider = this._mapView;
         this._setMapLOD(this._mapLODLevel);
 
-        this.container.add(this.mesh);
+        this.container.add(this._mapView);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
 
