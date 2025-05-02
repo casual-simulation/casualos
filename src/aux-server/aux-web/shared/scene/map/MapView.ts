@@ -102,8 +102,6 @@ export class MapView extends Object3D {
         const centerOffsetX = 0.5 - percentageX;
         const centerOffsetY = 0.5 - percentageY;
 
-        console.log('Setting center tile to:', zoom, tileX, tileY);
-
         const tileBox = new Box3();
 
         const halfGridSize = Math.floor(this.gridSize / 2);
@@ -126,13 +124,65 @@ export class MapView extends Object3D {
                     y * this.tileSize + centerOffsetY
                 );
                 tile.updateMatrixWorld(true);
-                tileBox.setFromObject(tile);
+                const halfTileSize = this.tileSize * 0.5;
+                tileBox.set(
+                    new Vector3(
+                        -halfTileSize + tile.position.x,
+                        0,
+                        -halfTileSize + tile.position.z
+                    ),
+                    new Vector3(
+                        halfTileSize + tile.position.x,
+                        0,
+                        halfTileSize + tile.position.z
+                    )
+                );
 
                 const visible = tileBox.intersectsBox(this._clippingBox);
 
                 if (visible) {
                     tile.visible = true;
                     tile.setTile(zoom, relativeX, relativeY);
+
+                    let yClip = 1;
+                    let yAnchor = 0;
+
+                    if (tile.position.z > 0) {
+                        // if tile is above the clipping box, then the tile needs to be clipped along
+                        // the clipping box's top y axis
+                        // and anchored to the bottom of the tile
+                        yClip = this._clippingBox.max.z - tileBox.min.z;
+                        yAnchor = -0.5;
+                    } else if (tile.position.z < 0) {
+                        // if tile is above the clipping box, then the tile needs to be clipped along
+                        // the clipping box's bottom y axis
+                        // and anchored to the top of the tile
+                        yClip = tileBox.max.z - this._clippingBox.min.z;
+                        yAnchor = 0.5;
+                    }
+
+                    let xClip = 1;
+                    let xAnchor = 0;
+                    if (tile.position.x > 0) {
+                        // if tile is to the right of the clipping box, then the tile needs to be clipped along
+                        // the clipping box's rightmost x axis
+                        // and anchored to the left of the tile
+                        xClip = this._clippingBox.max.x - tileBox.min.x;
+                        xAnchor = -0.5;
+                        // tile.visible = true;
+                    } else if (tile.position.x < 0) {
+                        // if tile is to the left of the clipping box, then the tile needs to be clipped along
+                        // the clipping box's leftmost x axis
+                        // and anchored to the right of the tile
+                        xClip = tileBox.max.x - this._clippingBox.min.x;
+                        xAnchor = 0.5;
+                    }
+
+                    tile.setClip(
+                        xClip,
+                        yClip,
+                        new Vector3(xAnchor, 0, yAnchor)
+                    );
                 } else {
                     tile.visible = false;
                 }

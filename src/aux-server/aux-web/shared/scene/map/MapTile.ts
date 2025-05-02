@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { DoubleSide, Vector3 } from '@casual-simulation/three';
+import { Color, DoubleSide, Vector3 } from '@casual-simulation/three';
 import type { MapProvider } from 'geo-three';
 import {
     FrontSide,
@@ -28,10 +28,14 @@ import {
     Side,
     Texture,
 } from 'three';
+import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
+import { createCube } from '../SceneUtils';
 
 export class MapTile extends Object3D {
     private _provider: MapProvider;
-    private _plane: THREE.Mesh;
+    private _plane: Mesh;
+    private _container: Object3D;
+    private _scaleContainer: Object3D;
 
     y: number = 0;
     x: number = 0;
@@ -52,7 +56,12 @@ export class MapTile extends Object3D {
             new Vector3(1, 0, 0),
             -Math.PI / 2
         );
-        this.add(this._plane);
+        this._container = new Object3D();
+        this._container.add(this._plane);
+
+        this._scaleContainer = new Object3D();
+        this._scaleContainer.add(this._container);
+        this.add(this._scaleContainer);
     }
 
     setTile(zoom: number, x: number, y: number) {
@@ -61,6 +70,45 @@ export class MapTile extends Object3D {
         this.x = x;
 
         this._loadTexture();
+    }
+
+    setClip(width: number, height: number, anchor: Vector3) {
+        this._scaleContainer.position.set(anchor.x, anchor.y, anchor.z);
+        this._plane.position.set(-anchor.x, -anchor.y, -anchor.z);
+
+        this._scaleContainer.scale.set(width, 1, height);
+        this._scaleContainer.updateMatrixWorld(true);
+
+        // update UVs so that there is new stretching/squishing
+        const geometry = this._plane.geometry as PlaneGeometry;
+        const uvAttribute = geometry.attributes.uv;
+
+        let uvLeft = 0;
+        let uvRight = 1;
+        if (anchor.x > 0) {
+            uvLeft = 1 - width;
+        } else if (anchor.x < 0) {
+            uvRight = width;
+        }
+
+        let uvTop = 1;
+        let uvBottom = 0;
+        if (anchor.z > 0) {
+            uvTop = height;
+        } else if (anchor.z < 0) {
+            uvBottom = 1 - height;
+        }
+
+        uvAttribute.setXY(0, uvLeft, uvTop);
+        uvAttribute.setXY(1, uvRight, uvTop);
+        uvAttribute.setXY(2, uvLeft, uvBottom);
+        uvAttribute.setXY(3, uvRight, uvBottom);
+
+        uvAttribute.needsUpdate = true;
+        if (this._material.map) {
+            this._material.map.needsUpdate = true;
+        }
+        this._material.needsUpdate = true;
     }
 
     private async _loadTexture() {
