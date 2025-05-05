@@ -235,21 +235,6 @@ export class BotShapeDecorator
             this.scene?.updateMatrixWorld(true);
         }
         this._updateLightTarget(null);
-
-        // if (this._game && this._mapView) {
-        //     const renderer = this._game.getRenderer();
-        //     const camera = this._game.getMainCameraRig()?.mainCamera;
-        //     const scene = this._game.getScene();
-
-        //     if (renderer && camera && scene) {
-        //         this._mapView.lod.updateLOD(
-        //             this._mapView,
-        //             camera,
-        //             renderer,
-        //             scene
-        //         );
-        //     }
-        // }
     }
 
     botUpdated(calc: BotCalculationContext): void {
@@ -798,23 +783,7 @@ export class BotShapeDecorator
 
         if (this._mapLODLevel !== lodLevel) {
             this._mapLODLevel = lodLevel;
-            //this._setMapLOD(lodLevel);
-
-            // Get the current center coordinates
-            //     const centerCoords = this._parseMapAddress(this._address);
-
-            //     console.log('Updating map zoom to:', lodLevel, 'with center:', centerCoords);
-
-            //     // Update the offset provider with the new zoom level
-            //     if (this._mapView.provider instanceof OffsetProvider) {
-            //         this._mapView.provider.offset = OffsetProvider.calculateOffset(
-            //             lodLevel,
-            //             centerCoords.x, // longitude
-            //             centerCoords.y // latitude
-            //         );
-            //     }
-
-            //     this._mapView.setCenter(lodLevel, centerCoords.x, centerCoords.y);
+            this._setMapLOD(this._mapLODLevel);
         }
     }
 
@@ -1012,28 +981,6 @@ export class BotShapeDecorator
         }
 
         this._mapView.setZoom(level);
-
-        // if (!this._lodConstant) {
-        //     this._lodConstant = new LODConstant(level);
-        //     this._mapView.lod = this._lodConstant;
-        // } else {
-        //     this._lodConstant.setTargetLevel(level);
-        // }
-
-        // if (this._game) {
-        //     const renderer = this._game.getRenderer();
-        //     const camera = this._game.getMainCameraRig()?.mainCamera;
-        //     const scene = this._game.getScene();
-
-        //     if (renderer && camera && scene) {
-        //         this._mapView.lod.updateLOD(
-        //             this._mapView,
-        //             camera,
-        //             renderer,
-        //             scene
-        //         );
-        //     }
-        // }
     }
 
     private _updateRenderOrder(calc: BotCalculationContext) {
@@ -1692,40 +1639,14 @@ export class BotShapeDecorator
     }
 
     private _createMapPlane() {
-        //const coords = this._parseMapAddress(this._address);
-
         this._mapView = createMapPlane(new Vector3(), 1);
         this.mesh = null;
         this.collider = this._mapView;
-        this._setMapLOD(this._mapLODLevel);
 
         this.container.add(this._mapView);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
     }
-
-    // private _parseMapAddress(address: string): Vector3 {
-    //     if (!address) {
-    //         return new Vector3(0, 0, 0);
-    //     }
-
-    //     const vectorValue = calculateBotVectorTagValue(
-    //         null,
-    //         this.bot3D.bot,
-    //         'formAddress',
-    //         null
-    //     );
-
-    //     if (vectorValue) {
-    //         if (vectorValue instanceof Vector2) {
-    //             return new Vector3(vectorValue.x, vectorValue.y, this._mapLODLevel || 0);
-    //         } else if (vectorValue instanceof Vector3) {
-    //             return vectorValue;
-    //         }
-    //     }
-
-    //     return new Vector3(0, 0, 0);
-    // }
 
     private _createSphere() {
         this.mesh = this.collider = createSphere(
