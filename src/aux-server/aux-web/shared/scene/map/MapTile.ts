@@ -22,8 +22,7 @@ import {
     MeshPhongMaterial,
     Vector3,
 } from '@casual-simulation/three';
-import type { MapProvider } from 'geo-three';
-import { MapHeightNodeShader, TextureUtils } from 'geo-three';
+import { MapHeightNodeShader, TextureUtils, type MapProvider } from 'geo-three';
 import {
     FrontSide,
     LinearFilter,
@@ -36,7 +35,7 @@ import {
     ShaderMaterial,
     Side,
     Texture,
-} from '@casual-simulation/three';
+} from 'three';
 // import VertexShader from './shaders/VertexShader.glsl?raw';
 // import FragmentShader from './shaders/FragmentShader.glsl?raw';
 
@@ -72,12 +71,12 @@ export class MapTile extends Object3D {
     private _plane: Mesh;
     private _container: Object3D;
     private _scaleContainer: Object3D;
-    private _heightOffset: number = 0.0;
+    private _heightOffset: number = 0;
 
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
 
-    // private static _SEA_LEVEL_TEXTURE = TextureUtils.createFillTexture('#000000');
+    // private static _SEA_LEVEL_TEXTURE = TextureUtils.createFillTexture('#0186a0');
 
     y: number = 0;
     x: number = 0;
@@ -89,7 +88,7 @@ export class MapTile extends Object3D {
 
     setHeightProvider(provider: MapProvider | null) {
         this._heightProvider = provider;
-        // this._loadHeightTexture();
+        this._loadHeightTexture();
     }
 
     constructor(
@@ -102,10 +101,10 @@ export class MapTile extends Object3D {
         this._plane = new Mesh(
             // new PlaneGeometry(1, 1),
             new PlaneGeometry(1, 1, MapTile._GRID_WIDTH, MapTile._GRID_HEIGHT),
-            new MeshBasicMaterial({ wireframe: false, side: FrontSide })
-            // MapTile.prepareMaterial(
-            //     new MeshBasicMaterial({ wireframe: false, side: DoubleSide })
-            // )
+            // new MeshBasicMaterial({ wireframe: false, side: FrontSide }),
+            MapTile.prepareMaterial(
+                new MeshBasicMaterial({ wireframe: false, side: DoubleSide })
+            )
             // MapTile.prepareMaterial(new MeshPhongMaterial({ wireframe: false, side: FrontSide })),
         );
         this._plane.setRotationFromAxisAngle(
@@ -198,48 +197,47 @@ export class MapTile extends Object3D {
         this._material.needsUpdate = true;
     }
 
-    // TODO: Get this working again
-    // static prepareMaterial(material: Material): Material {
-    //     material.userData = {
-    //         heightMap: { value: MapTile._SEA_LEVEL_TEXTURE },
-    //         heightScale: { value: 0.0 },
-    //         heightOffset: { value: 0.0 },
-    //     };
+    static prepareMaterial(material: Material): Material {
+        material.userData = {
+            heightMap: { value: null },
+            heightScale: { value: 0.0 },
+            heightOffset: { value: 0.0 },
+        };
 
-    //     material.onBeforeCompile = (shader: any) => {
-    //         // Pass uniforms from userData to the
-    //         for (const i in material.userData) {
-    //             shader.uniforms[i] = material.userData[i];
-    //         }
+        material.onBeforeCompile = (shader: any) => {
+            // Pass uniforms from userData to the
+            for (const i in material.userData) {
+                shader.uniforms[i] = material.userData[i];
+            }
 
-    //         // Vertex variables
-    //         shader.vertexShader =
-    //             `
-    //         uniform sampler2D heightMap;
-    //         uniform highp float heightScale;
-    //         // uniform highp float heightOffset;
-    //         // varying vec2 vUv;
-    //         ` + shader.vertexShader;
+            // Vertex variables
+            shader.vertexShader =
+                `
+            uniform sampler2D heightMap;
+            uniform float heightScale;
+            uniform float heightOffset;
+            // varying vec2 vUv;
+            ` + shader.vertexShader;
 
-    //         // Vertex depth logic
-    //         shader.vertexShader = shader.vertexShader.replace(
-    //             '#include <fog_vertex>',
-    //             `
-    //         #include <fog_vertex>
+            // Vertex depth logic
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <fog_vertex>',
+                `
+            #include <fog_vertex>
 
-    //         // Calculate height of the title
-    //         vec4 _theight = texture2D(heightMap, vUv);
-    //         float _height = ((_theight.r * 256.0 * 256.0 + _theight.g * 256.0 + _theight.b) * heightScale) - (390.0 * heightScale * 0.0039);// + heightOffset;
-    //         vec3 _transformed = position + _height * normal;
+            // Calculate height of the title
+            vec4 _theight = texture2D(heightMap, vUv);
+            float _height = ((_theight.r * 256.0 * 256.0 + _theight.g * 256.0 + _theight.b) * heightScale) - (390.0 * heightScale * 0.0039) + heightOffset;
+            vec3 _transformed = position + _height * normal;
 
-    //         // Vertex position based on height
-    //         gl_Position = projectionMatrix * modelViewMatrix * vec4(_transformed, 1.0);
-    //         `
-    //         );
-    //     };
+            // Vertex position based on height
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(_transformed, 1.0);
+            `
+            );
+        };
 
-    //     return material;
-    // }
+        return material;
+    }
 
     private async _loadTexture() {
         const image: HTMLImageElement = await this._provider.fetchTile(
@@ -261,55 +259,53 @@ export class MapTile extends Object3D {
         this._material.map = texture;
         this._material.needsUpdate = true;
 
-        // this._loadHeightTexture();
+        this._loadHeightTexture();
     }
 
-    // TODO: Get this working again
-    // private async _loadHeightTexture() {
-    //     if (this._heightProvider) {
-    //         const heightImage: HTMLImageElement =
-    //             await this._heightProvider.fetchTile(this.zoom, this.x, this.y);
-    //         const heightTexture = new Texture(heightImage);
-    //         heightTexture.generateMipmaps = false;
-    //         heightTexture.format = RGBAFormat;
-    //         heightTexture.magFilter = LinearFilter;
-    //         heightTexture.minFilter = LinearFilter;
-    //         heightTexture.needsUpdate = true;
+    private async _loadHeightTexture() {
+        if (this._heightProvider) {
+            const heightImage: HTMLImageElement =
+                await this._heightProvider.fetchTile(this.zoom, this.x, this.y);
+            const heightTexture = new Texture(heightImage);
+            heightTexture.generateMipmaps = false;
+            heightTexture.format = RGBAFormat;
+            heightTexture.magFilter = LinearFilter;
+            heightTexture.minFilter = LinearFilter;
+            heightTexture.needsUpdate = true;
 
-    //         // const heightMap: { value: unknown } =
-    //         //     this._material.userData.heightMap;
-    //         // if (
-    //         //     heightMap &&
-    //         //     heightMap.value &&
-    //         //     heightMap.value instanceof Texture
-    //         // ) {
-    //         //     heightMap.value.dispose();
-    //         // }
-    //         const scale = (this._material.userData.heightScale.value =
-    //             ZOOM_SCALES.get(this.zoom));
-    //         console.log(this._heightOffset);
-    //         console.log(scale);
-    //         this._material.userData.heightOffset.value = 0.0;
-    //         this._material.userData.heightMap.value = heightTexture;
-    //         this._plane.frustumCulled = false;
-    //     } else {
-    //         const heightMap: { value: unknown } =
-    //             this._material.userData.heightMap;
-    //         // if (
-    //         //     heightMap &&
-    //         //     heightMap.value &&
-    //         //     heightMap.value instanceof Texture
-    //         // ) {
-    //         //     heightMap.value.dispose();
-    //         // }
-    //         this._material.userData.heightScale.value = 0.0;
-    //         this._material.userData.heightOffset.value = 0.0;
-    //         this._material.userData.heightMap.value = MapTile._SEA_LEVEL_TEXTURE;
-    //         this._plane.frustumCulled = true;
-    //     }
+            const heightMap: { value: unknown } =
+                this._material.userData.heightMap;
+            if (
+                heightMap &&
+                heightMap.value &&
+                heightMap.value instanceof Texture
+            ) {
+                heightMap.value.dispose();
+            }
+            this._material.userData.heightScale.value = ZOOM_SCALES.get(
+                this.zoom
+            );
+            this._material.userData.heightOffset.value = 0.0;
+            this._material.userData.heightMap.value = heightTexture;
+            this._plane.frustumCulled = false;
+        } else {
+            const heightMap: { value: unknown } =
+                this._material.userData.heightMap;
+            if (
+                heightMap &&
+                heightMap.value &&
+                heightMap.value instanceof Texture
+            ) {
+                heightMap.value.dispose();
+            }
+            this._material.userData.heightScale.value = 0.0;
+            this._material.userData.heightOffset.value = 0.0;
+            this._material.userData.heightMap.value = null;
+            this._plane.frustumCulled = true;
+        }
 
-    //     this._material.needsUpdate = true;
-    // }
+        this._material.needsUpdate = true;
+    }
 
     dispose() {
         if (this._material.map) {
