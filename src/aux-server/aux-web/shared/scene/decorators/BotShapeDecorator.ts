@@ -1646,6 +1646,14 @@ export class BotShapeDecorator
         this.container.add(this._mapView);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
+
+        const coords = parseBotVector(this._address) ?? new Vector2(0, 0);
+
+        this._mapView.setCenter(
+            this._mapLODLevel,
+            coords.x, // lon
+            coords.y // lat
+        );
     }
 
     private _createSphere() {

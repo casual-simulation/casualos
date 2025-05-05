@@ -341,23 +341,9 @@ export function createPlane(size: number): Mesh {
  */
 export function createMapPlane(position: Vector3, size: number): MapView {
     const map = new MapView(mapFormProvider);
-    // map.lod = new LODConstant(3);
     map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
     map.scale.set(size, size, size);
     map.position.copy(position);
-    map.setCenter(3, -85.694158, 42.903638);
-    // map.preSubdivide();
-    // ! Testing of LOD, do not implement.
-    // TODO: Implement proper system to parse and translate address to lat/lon from vector3.
-    // const renderer = simulation3D.game.getRenderer();
-    // const int = setInterval(() => {
-    //     map.lod.updateLOD(
-    //         map,
-    //         simulation3D.game.getMainCameraRig().mainCamera,
-    //         renderer,
-    //         simulation3D.game.getScene()
-    //     );
-    // }, 1000);
     return map;
 }
 
