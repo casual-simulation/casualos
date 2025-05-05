@@ -41,8 +41,8 @@ export class MapView extends Object3D {
     );
 
     setZoom(zoom: number) {
-        // this._zoom = zoom;
-        // this.setCenter(zoom, this._longitude, this._latitude);
+        this._zoom = zoom;
+        this.setCenter(zoom, this._longitude, this._latitude);
     }
 
     static calculatePixel(
