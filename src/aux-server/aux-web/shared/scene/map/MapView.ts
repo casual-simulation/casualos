@@ -23,9 +23,13 @@ import { Box3 } from '@casual-simulation/three';
 const TILE_SIZE = 256;
 
 export class MapView extends Object3D {
-    private tileSize: number;
-    private gridSize: number;
-    private zoom: number;
+    private _tileSize: number;
+    private _gridSize: number;
+    private _zoom: number;
+    private _x: number;
+    private _y: number;
+    private _longitude: number;
+    private _latitude: number;
 
     private _provider: MapProvider;
 
@@ -35,13 +39,13 @@ export class MapView extends Object3D {
         new Vector3(0.5, 0.5, 0.5)
     );
 
-    public get provider(): MapProvider {
-        return this._provider;
-    }
-    public refreshTiles(): void {
-        // Re-use current center coordinates with potentially new zoom level
-        const centerTile = this._tiles[1][1]; // Center tile in a 3x3 grid
-        this.setCenter(this.zoom, centerTile.x, centerTile.y);
+    // public get provider(): MapProvider {
+    //     return this._provider;
+    // }
+
+    setZoom(zoom: number) {
+        this._zoom = zoom;
+        this.setCenter(zoom, this._longitude, this._latitude);
     }
 
     static calculatePixel(
@@ -95,6 +99,9 @@ export class MapView extends Object3D {
     }
 
     setCenter(zoom: number, longitude: number, latitude: number) {
+        this._zoom = zoom;
+        this._longitude = longitude;
+        this._latitude = latitude;
         const [pixelX, pixelY] = MapView.calculatePixel(
             zoom,
             longitude,
@@ -105,13 +112,15 @@ export class MapView extends Object3D {
             pixelX,
             pixelY
         );
+        this._x = tileX;
+        this._y = tileY;
 
         const centerOffsetX = 0.5 - percentageX;
         const centerOffsetY = 0.5 - percentageY;
 
         const tileBox = new Box3();
 
-        const halfGridSize = Math.floor(this.gridSize / 2);
+        const halfGridSize = Math.floor(this._gridSize / 2);
         for (let x = -halfGridSize; x <= halfGridSize; x++) {
             for (let y = -halfGridSize; y <= halfGridSize; y++) {
                 const tile = this._tiles[x + halfGridSize][y + halfGridSize];
@@ -120,12 +129,12 @@ export class MapView extends Object3D {
                 const relativeY = tileY + y;
 
                 tile.position.set(
-                    x * this.tileSize + centerOffsetX,
+                    x * this._tileSize + centerOffsetX,
                     0,
-                    y * this.tileSize + centerOffsetY
+                    y * this._tileSize + centerOffsetY
                 );
                 tile.updateMatrixWorld(true);
-                const halfTileSize = this.tileSize * 0.5;
+                const halfTileSize = this._tileSize * 0.5;
                 tileBox.set(
                     new Vector3(
                         -halfTileSize + tile.position.x,
@@ -198,8 +207,8 @@ export class MapView extends Object3D {
     ) {
         super();
         this._provider = provider;
-        this.tileSize = tileSize;
-        this.gridSize = gridSize;
+        this._tileSize = tileSize;
+        this._gridSize = gridSize;
 
         this._createGrid();
     }
@@ -215,15 +224,15 @@ export class MapView extends Object3D {
     }
 
     private _createGrid() {
-        const halfGridSize = Math.floor(this.gridSize / 2);
+        const halfGridSize = Math.floor(this._gridSize / 2);
         for (let x = -halfGridSize; x <= halfGridSize; x++) {
             const tileX = x + halfGridSize;
-            this._tiles[tileX] = new Array(this.gridSize);
+            this._tiles[tileX] = new Array(this._gridSize);
             for (let y = -halfGridSize; y <= halfGridSize; y++) {
                 const tileY = y + halfGridSize;
 
                 const tile = this._createTile();
-                tile.position.set(x * this.tileSize, 0, y * this.tileSize);
+                tile.position.set(x * this._tileSize, 0, y * this._tileSize);
                 console.log(
                     `Tile ${x}x${y} position: ${tile.position.x}, ${tile.position.y}, ${tile.position.z}`
                 );
@@ -251,7 +260,7 @@ export class MapView extends Object3D {
 
     private _createTile(): MapTile {
         const tile = new MapTile(this._provider);
-        tile.scale.setScalar(this.tileSize);
+        tile.scale.setScalar(this._tileSize);
         this.add(tile);
         return tile;
     }
