@@ -135,6 +135,31 @@ Here is a brief list of tags that are used to help generate the documentation:
 -   `{@link [ref]}` - Renders a link to the type with `@docid` matching `[ref]`.
 -   `{@tag [tag]}` - Renders a link to the given `[tag]`. Prefix the tag with `@` to link to listen tags.
 
+## Code Style
+
+We use prettier and git hooks to enforce syntax formatting across the entire repo.
+
+Here are a couple conventions that we follow:
+
+-   Naming:
+    -   camelCase for methods/properties/variables.
+    -   PascalCase for classes/interfaces.
+    -   SCREAMING_CASE for constants.
+    -   private properties/methods should use the `private` keyword and start with an underscore (`_`).
+    -   public properties/methods should not have any access modifiers, using TypeScript's default visibility of public.
+-   Structure
+    -   Use an interface if it is already available and suitable.
+    -   Use interfaces for data transfer objects and for defining the structure of plain javascript objects.
+    -   Only use classes if you need methods attached to data/implementations.
+        -   Prefer interfaces if you just need data objects.
+        -   Prefer standalone functions if you just need to process data once.
+        -   Classes are best for scenarios where we need to process data across multiple different runs.
+    -   Don't write a new interface for a class unless you have a good reason to believe you will have/need multiple different implementations for the interface.
+        -   Controllers should pretty much never be used through an interface.
+        -   Stores should pretty much always be used through an interface.
+-   Coding
+    -   Don't make major refactors without consulting the architect.
+
 ## Projects
 
 ### [AUX Server](./src/aux-server/)
