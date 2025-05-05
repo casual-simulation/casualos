@@ -801,20 +801,18 @@ export class BotShapeDecorator
             //this._setMapLOD(lodLevel);
 
             // Get the current center coordinates
-            //     const centerCoords = this._parseMapAddress(this._address);
+            // const centerCoords = this._parseMapAddress(this._address);
 
-            //     console.log('Updating map zoom to:', lodLevel, 'with center:', centerCoords);
+            // // Update the offset provider with the new zoom level
+            // if (this._mapView.provider instanceof OffsetProvider) {
+            //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
+            //         lodLevel,
+            //         centerCoords.x, // longitude
+            //         centerCoords.y // latitude
+            //     );
+            // }
 
-            //     // Update the offset provider with the new zoom level
-            //     if (this._mapView.provider instanceof OffsetProvider) {
-            //         this._mapView.provider.offset = OffsetProvider.calculateOffset(
-            //             lodLevel,
-            //             centerCoords.x, // longitude
-            //             centerCoords.y // latitude
-            //         );
-            //     }
-
-            //     this._mapView.setCenter(lodLevel, centerCoords.x, centerCoords.y);
+            // this._mapView.setCenter(lodLevel, centerCoords.x, centerCoords.y);
         }
     }
 
@@ -1011,17 +1009,29 @@ export class BotShapeDecorator
             return;
         }
 
-        // const centerCoords = this._parseMapAddress(this._address);
+        this._mapView.setZoom(level);
 
-        // if (this._mapView.provider instanceof OffsetProvider) {
-        //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
-        //         level,
-        //         centerCoords.x, // lon
-        //         centerCoords.y  // lat
-        //     );
+        // if (!this._lodConstant) {
+        //     this._lodConstant = new LODConstant(level);
+        //     this._mapView.lod = this._lodConstant;
+        // } else {
+        //     this._lodConstant.setTargetLevel(level);
         // }
 
-        // this._mapView.setCenter(level, centerCoords.x, centerCoords.y);
+        // if (this._game) {
+        //     const renderer = this._game.getRenderer();
+        //     const camera = this._game.getMainCameraRig()?.mainCamera;
+        //     const scene = this._game.getScene();
+
+        //     if (renderer && camera && scene) {
+        //         this._mapView.lod.updateLOD(
+        //             this._mapView,
+        //             camera,
+        //             renderer,
+        //             scene
+        //         );
+        //     }
+        // }
     }
 
     private _updateRenderOrder(calc: BotCalculationContext) {
