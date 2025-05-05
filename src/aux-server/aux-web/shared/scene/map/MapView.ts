@@ -26,6 +26,9 @@ export class MapView extends Object3D {
     private tileSize: number;
     private gridSize: number;
     private zoom: number;
+    private _currentZoom: number = 3;
+    private _currentLat: number = 0;
+    private _currentLon: number = 0;
 
     private _provider: MapProvider;
 
@@ -39,10 +42,12 @@ export class MapView extends Object3D {
         return this._provider;
     }
     public refreshTiles(): void {
-        // Re-use current center coordinates with potentially new zoom level
         const centerTile = this._tiles[1][1]; // Center tile in a 3x3 grid
         this.setCenter(this.zoom, centerTile.x, centerTile.y);
     }
+    // public updateZoom(zoom: number): void {
+    //     this.setCenter(zoom, this._currentLon, this._currentLat);
+    // }
 
     static calculatePixel(
         zoom: number,
@@ -95,6 +100,10 @@ export class MapView extends Object3D {
     }
 
     setCenter(zoom: number, longitude: number, latitude: number) {
+        this._currentZoom = zoom;
+        this._currentLat = latitude;
+        this._currentLon = longitude;
+
         const [pixelX, pixelY] = MapView.calculatePixel(
             zoom,
             longitude,
