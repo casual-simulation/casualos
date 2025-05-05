@@ -17,7 +17,7 @@
  */
 import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
-import { Object3D, Vector3 } from 'three';
+import { Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
 
 const TILE_SIZE = 256;
@@ -40,17 +40,10 @@ export class MapView extends Object3D {
         new Vector3(0.5, 0.5, 0.5)
     );
 
-    // public get provider(): MapProvider {
-    //     return this._provider;
-    // }
-
     setZoom(zoom: number) {
-        // this._zoom = zoom;
-        // this.setCenter(zoom, this._longitude, this._latitude);
+        this._zoom = zoom;
+        this.setCenter(zoom, this._longitude, this._latitude);
     }
-    // public updateZoom(zoom: number): void {
-    //     this.setCenter(zoom, this._currentLon, this._currentLat);
-    // }
 
     static calculatePixel(
         zoom: number,

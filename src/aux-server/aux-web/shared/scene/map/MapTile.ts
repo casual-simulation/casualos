@@ -22,7 +22,7 @@ import {
     MeshPhongMaterial,
     Vector3,
 } from '@casual-simulation/three';
-import { MapHeightNodeShader, TextureUtils, type MapProvider } from 'geo-three';
+import type { MapHeightNodeShader, TextureUtils, MapProvider } from 'geo-three';
 import {
     FrontSide,
     LinearFilter,
@@ -35,7 +35,7 @@ import {
     ShaderMaterial,
     Side,
     Texture,
-} from 'three';
+} from '@casual-simulation/three';
 // import VertexShader from './shaders/VertexShader.glsl?raw';
 // import FragmentShader from './shaders/FragmentShader.glsl?raw';
 
@@ -71,7 +71,7 @@ export class MapTile extends Object3D {
     private _plane: Mesh;
     private _container: Object3D;
     private _scaleContainer: Object3D;
-    private _heightOffset: number = 0;
+    private _heightOffset: number = 0.0;
 
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
@@ -80,7 +80,7 @@ export class MapTile extends Object3D {
 
     y: number = 0;
     x: number = 0;
-    zoom: number = 0;
+    zoom: number = 1;
 
     private get _material(): THREE.MeshBasicMaterial {
         return this._plane.material as THREE.MeshBasicMaterial;
@@ -120,6 +120,7 @@ export class MapTile extends Object3D {
     }
 
     setTile(zoom: number, x: number, y: number) {
+        console.log('Set tile', zoom, x, y);
         this.zoom = zoom;
         this.y = y;
         this.x = x;
@@ -213,8 +214,8 @@ export class MapTile extends Object3D {
             shader.vertexShader =
                 `
             uniform sampler2D heightMap;
-            uniform float heightScale;
-            uniform float heightOffset;
+            uniform highp float heightScale;
+            uniform highp float heightOffset;
             // varying vec2 vUv;
             ` + shader.vertexShader;
 
@@ -281,9 +282,10 @@ export class MapTile extends Object3D {
             ) {
                 heightMap.value.dispose();
             }
-            this._material.userData.heightScale.value = ZOOM_SCALES.get(
-                this.zoom
-            );
+            const scale = (this._material.userData.heightScale.value =
+                ZOOM_SCALES.get(this.zoom));
+            console.log(this._heightOffset);
+            console.log(scale);
             this._material.userData.heightOffset.value = 0.0;
             this._material.userData.heightMap.value = heightTexture;
             this._plane.frustumCulled = false;
