@@ -15,6 +15,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { ZERO } from './../../../../../aux-common/math/Vector3';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import type {
     BotCalculationContext,
     BotMeshPositioningMode,
@@ -28,6 +46,7 @@ import {
     calculateBooleanTagValue,
     calculateBotIds,
     calculateBotValue,
+    calculateBotVectorTagValue,
     calculateNumericalTagValue,
     calculateStringTagValue,
     getBotMeshPositioningMode,
@@ -36,6 +55,7 @@ import {
     getBotSubShape,
     hasValue,
     isBotPointable,
+    parseBotVector,
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { AnimationAction } from '@casual-simulation/three';
@@ -58,6 +78,7 @@ import {
     Light,
     Material,
     ObjectLoader,
+    Vector2,
 } from '@casual-simulation/three';
 import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
@@ -431,26 +452,24 @@ export class BotShapeDecorator
                 this._updateIframeHtml();
             }
         }
-        // if (this._mapView && this._shape === 'map') {
-        //     const coords = this._parseMapAddress(address);
-        //     this._mapView.position.copy(coords);
 
-        //     // Force an update of the LOD system
-        //     if (this._game) {
-        //         const renderer = this._game.getRenderer();
-        //         const camera = this._game.getMainCameraRig()?.mainCamera;
-        //         const scene = this._game.getScene();
+        if (this._mapView && this._shape === 'map') {
+            const coords = parseBotVector(address) ?? new Vector2(0, 0);
 
-        //         if (renderer && camera && scene) {
-        //             this._mapView.lod.updateLOD(
-        //                 this._mapView,
-        //                 camera,
-        //                 renderer,
-        //                 scene
-        //             );
-        //         }
-        //     }
-        // }
+            this._mapView.setCenter(
+                this._mapLODLevel,
+                coords.x, // lon
+                coords.y // lat
+            );
+
+            // if (this._mapView.provider instanceof OffsetProvider) {
+            //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
+            //         this._mapLODLevel,
+            //         coords.x,
+            //         coords.y
+            //     );
+            // }
+        }
     }
 
     private _updateAspectRatio(aspectRatio: number) {
@@ -779,21 +798,23 @@ export class BotShapeDecorator
 
         if (this._mapLODLevel !== lodLevel) {
             this._mapLODLevel = lodLevel;
-            this._setMapLOD(lodLevel);
+            //this._setMapLOD(lodLevel);
 
             // Get the current center coordinates
-            // const centerCoords = this._parseMapAddress(this._address);
+            //     const centerCoords = this._parseMapAddress(this._address);
 
-            // // Update the offset provider with the new zoom level
-            // if (this._mapView.provider instanceof OffsetProvider) {
-            //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
-            //         lodLevel,
-            //         centerCoords.x, // longitude
-            //         centerCoords.y // latitude
-            //     );
-            // }
+            //     console.log('Updating map zoom to:', lodLevel, 'with center:', centerCoords);
 
-            // this._mapView.setCenter(lodLevel, centerCoords.x, centerCoords.y);
+            //     // Update the offset provider with the new zoom level
+            //     if (this._mapView.provider instanceof OffsetProvider) {
+            //         this._mapView.provider.offset = OffsetProvider.calculateOffset(
+            //             lodLevel,
+            //             centerCoords.x, // longitude
+            //             centerCoords.y // latitude
+            //         );
+            //     }
+
+            //     this._mapView.setCenter(lodLevel, centerCoords.x, centerCoords.y);
         }
     }
 
@@ -1530,40 +1551,40 @@ export class BotShapeDecorator
         }
     }
 
-    // private async _parseJsonObject(
-    //     text: string,
-    //     cancellationToken: CancellationToken
-    // ) {
-    //     try {
-    //         if (!ldrawLoader) {
-    //             ldrawLoader = new LDrawLoader();
-    //         }
-    //         (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
-    //         const ldraw = await new Promise<Group>((resolve, reject) => {
-    //             try {
-    //                 (ldrawLoader.parse as any)(text, (group: Group) =>
-    //                     resolve(group)
-    //                 );
-    //             } catch (err) {
-    //                 reject(err);
-    //             }
-    //         });
-    //         if (!this.container || cancellationToken.isCanceled) {
-    //             // The decorator was disposed of by the Bot.
-    //             return false;
-    //         }
-    //         this._setLDraw(ldraw);
-    //         return true;
-    //     } catch (err) {
-    //         console.error(
-    //             '[BotShapeDecorator] Unable to parse LDraw:',
-    //             text,
-    //             err
-    //         );
+    private async _parseJsonObject(
+        text: string,
+        cancellationToken: CancellationToken
+    ) {
+        try {
+            if (!ldrawLoader) {
+                ldrawLoader = new LDrawLoader();
+            }
+            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
+            const ldraw = await new Promise<Group>((resolve, reject) => {
+                try {
+                    (ldrawLoader.parse as any)(text, (group: Group) =>
+                        resolve(group)
+                    );
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            if (!this.container || cancellationToken.isCanceled) {
+                // The decorator was disposed of by the Bot.
+                return false;
+            }
+            this._setLDraw(ldraw);
+            return true;
+        } catch (err) {
+            console.error(
+                '[BotShapeDecorator] Unable to parse LDraw:',
+                text,
+                err
+            );
 
-    //         return false;
-    //     }
-    // }
+            return false;
+        }
+    }
 
     private _setJsonObject(obj: Object3D) {
         const group = new Group();
@@ -1671,9 +1692,9 @@ export class BotShapeDecorator
     }
 
     private _createMapPlane() {
-        const coords = this._parseMapAddress(this._address);
+        //const coords = this._parseMapAddress(this._address);
 
-        this._mapView = createMapPlane(coords, 1);
+        this._mapView = createMapPlane(new Vector3(), 1);
         this.mesh = null;
         this.collider = this._mapView;
         this._setMapLOD(this._mapLODLevel);
@@ -1683,31 +1704,28 @@ export class BotShapeDecorator
         this.stroke = null;
     }
 
-    private _parseMapAddress(address: string): Vector3 {
-        if (!address) {
-            return new Vector3(0, 0, 0);
-        }
+    // private _parseMapAddress(address: string): Vector3 {
+    //     if (!address) {
+    //         return new Vector3(0, 0, 0);
+    //     }
 
-        try {
-            const coords = JSON.parse(address);
-            if (coords.lat !== undefined && coords.lon !== undefined) {
-                return new Vector3(coords.lon, coords.lat, coords.zoom || 0);
-            }
+    //     const vectorValue = calculateBotVectorTagValue(
+    //         null,
+    //         this.bot3D.bot,
+    //         'formAddress',
+    //         null
+    //     );
 
-            const parts = address.split(',').map((p) => parseFloat(p.trim()));
-            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-                return new Vector3(
-                    parts[1], // lon
-                    parts[0], // lat
-                    parts.length > 2 ? parts[2] : 0
-                );
-            }
-        } catch (e) {
-            console.warn('Failed to parse map address:', address, e);
-        }
+    //     if (vectorValue) {
+    //         if (vectorValue instanceof Vector2) {
+    //             return new Vector3(vectorValue.x, vectorValue.y, this._mapLODLevel || 0);
+    //         } else if (vectorValue instanceof Vector3) {
+    //             return vectorValue;
+    //         }
+    //     }
 
-        return new Vector3(0, 0, 0);
-    }
+    //     return new Vector3(0, 0, 0);
+    // }
 
     private _createSphere() {
         this.mesh = this.collider = createSphere(
