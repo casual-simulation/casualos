@@ -32,6 +32,7 @@ export class MapView extends Object3D {
     private _latitude: number;
 
     private _provider: MapProvider;
+    private _heightProvider: MapProvider | null = null;
 
     private _tiles: MapTile[][] = [];
     private _clippingBox: Box3 = new Box3(
@@ -44,8 +45,8 @@ export class MapView extends Object3D {
     // }
 
     setZoom(zoom: number) {
-        this._zoom = zoom;
-        this.setCenter(zoom, this._longitude, this._latitude);
+        // this._zoom = zoom;
+        // this.setCenter(zoom, this._longitude, this._latitude);
     }
 
     static calculatePixel(
@@ -202,11 +203,13 @@ export class MapView extends Object3D {
 
     constructor(
         provider: MapProvider,
+        heightProvider: MapProvider | null = null,
         tileSize: number = 1,
         gridSize: number = 3
     ) {
         super();
         this._provider = provider;
+        this._heightProvider = heightProvider;
         this._tileSize = tileSize;
         this._gridSize = gridSize;
 
@@ -238,28 +241,12 @@ export class MapView extends Object3D {
                 );
                 tile.updateMatrixWorld(true);
                 this._tiles[tileX][tileY] = tile;
-
-                // const tileX = offsetLongitude + x;
-                // const tileY = offsetLatitude + y;
-                // console.log(`Setting ${x + halfGridSize}x${y + halfGridSize} tile to:`, offsetZoom, tileX, tileY);
-                // tile.setTile(offsetZoom, tileX, tileY);
             }
         }
-
-        // for (let x = 0; x < 3; x++) {
-        //     this._tiles[x] = [];
-        //     for (let y = 0; y < 3; y++) {
-        //         const tile = this._createTile();
-        //         tile.position.set(x * this.tileSize, 0, y * this.tileSize);
-        //         console.log(`Tile ${x}x${y} position: ${tile.position.x}, ${tile.position.y}, ${tile.position.z}`);
-        //         tile.updateMatrixWorld(true);
-        //         this._tiles[x][y] = tile;
-        //     }
-        // }
     }
 
     private _createTile(): MapTile {
-        const tile = new MapTile(this._provider);
+        const tile = new MapTile(this._provider, this._heightProvider);
         tile.scale.setScalar(this._tileSize);
         this.add(tile);
         return tile;
