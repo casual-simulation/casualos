@@ -37,59 +37,96 @@ import {
     Side,
     Texture,
 } from '@casual-simulation/three';
-// import VertexShader from './shaders/VertexShader.glsl?raw';
-// import FragmentShader from './shaders/FragmentShader.glsl?raw';
 
+/**
+ * Map of zoom levels to scale values.
+ * The scale values map 1 unit to 1 pixel.
+ */
 const ZOOM_SCALES = new Map<number, number>([
-    [1, 1 / 78271.517],
-    [2, 1 / 39135.7585],
-    [3, 1 / 19567.8792],
-    [4, 1 / 9783.9396],
-    [5, 1 / 4891.9698],
-    [6, 1 / 2445.9849],
-    [7, 1 / 1222.9925],
-    [8, 1 / 611.4962],
-    [9, 1 / 305.7481],
-    [10, 1 / 152.8741],
-    [11, 1 / 76.437],
-    [12, 1 / 38.2185],
-    [13, 1 / 19.1093],
-    [14, 1 / 9.5546],
-    [15, 1 / 4.7773],
-    [16, 1 / 2.3887],
-    [17, 1 / 1.1943],
-    [18, 1 / 0.5972],
-    [19, 1 / 0.2986],
-    [20, 1 / 0.1493],
-    [21, 1 / 0.0746],
-    [22, 1 / 0.0373],
-    [23, 1 / 0.0187],
+    [1, 0.00001277603959049369],
+    [2, 0.00002555207918098738],
+    [3, 0.00005110415849255652],
+    [4, 0.00010220831698511304],
+    [5, 0.00020441663397022608],
+    [6, 0.00040883326794045215],
+    [7, 0.0008176665024519774],
+    [8, 0.0016353331386196675],
+    [9, 0.003270666277239335],
+    [10, 0.0065413304150277905],
+    [11, 0.0130826693878619],
+    [12, 0.0261653387757238],
+    [13, 0.05233054062681521],
+    [14, 0.10466162895359303],
+    [15, 0.20932325790718606],
+    [16, 0.4186377527525432],
+    [17, 0.8373105584861426],
+    [18, 1.6744809109176158],
+    [19, 3.3489618218352315],
+    [20, 6.697923643670463],
+    [21, 13.404825737265416],
+    [22, 26.80965147453083],
+    [23, 53.475935828877],
 ]);
 
 export class MapTile extends Object3D {
     private _provider: MapProvider;
-    private _heightProvider: MapProvider;
+    private _heightProvider: MapProvider | null;
     private _plane: Mesh;
     private _container: Object3D;
     private _scaleContainer: Object3D;
     private _heightOffset: number = 0.0;
+    private _usingHeightMaterial: boolean = false;
+    private _y: number = 0;
+    private _x: number = 0;
+    private _zoom: number = 1;
 
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
-
-    // private static _SEA_LEVEL_TEXTURE = TextureUtils.createFillTexture('#000000');
-
-    y: number = 0;
-    x: number = 0;
-    zoom: number = 1;
+    private static _SEA_LEVEL_TEXTURE =
+        TextureUtils.createFillTexture('#000000');
 
     private get _material(): THREE.MeshBasicMaterial {
         return this._plane.material as THREE.MeshBasicMaterial;
     }
 
+    /**
+     * Sets the height offset for the tile.
+     * @param heightOffset The height offset to set.
+     */
+    setHeightOffset(heightOffset: number) {
+        this._heightOffset = heightOffset;
+        if (this._usingHeightMaterial) {
+            const heightOffsetUniform: { value: number } =
+                this._material.userData.heightOffset;
+            if (heightOffsetUniform) {
+                heightOffsetUniform.value = this._heightOffset;
+            }
+            this._material.needsUpdate = true;
+        }
+    }
+
+    /**
+     * Sets the height provider for the tile.
+     * If null, then the tile will not display height information.
+     * @param provider
+     */
     setHeightProvider(provider: MapProvider | null) {
         this._heightProvider = provider;
-        // this._loadHeightTexture();
+        this._setupMaterial();
+        this._loadHeightTexture();
+    }
+
+    private _setupMaterial() {
+        if (this._heightProvider && !this._usingHeightMaterial) {
+            this._plane.material = MapTile.prepareMaterial(
+                new MeshBasicMaterial({ wireframe: false, side: FrontSide })
+            );
+        } else if (!this._heightProvider && this._usingHeightMaterial) {
+            this._plane.material = new MeshBasicMaterial({
+                wireframe: false,
+                side: FrontSide,
+            });
+        }
     }
 
     constructor(
@@ -100,13 +137,8 @@ export class MapTile extends Object3D {
         this._provider = provider;
         this._heightProvider = heightProvider;
         this._plane = new Mesh(
-            // new PlaneGeometry(1, 1),
             new PlaneGeometry(1, 1, MapTile._GRID_WIDTH, MapTile._GRID_HEIGHT),
             new MeshBasicMaterial({ wireframe: false, side: FrontSide })
-            // MapTile.prepareMaterial(
-            //     new MeshBasicMaterial({ wireframe: false, side: DoubleSide })
-            // )
-            // MapTile.prepareMaterial(new MeshPhongMaterial({ wireframe: false, side: FrontSide })),
         );
         this._plane.setRotationFromAxisAngle(
             new Vector3(1, 0, 0),
@@ -118,17 +150,31 @@ export class MapTile extends Object3D {
         this._scaleContainer = new Object3D();
         this._scaleContainer.add(this._container);
         this.add(this._scaleContainer);
+
+        this._setupMaterial();
     }
 
+    /**
+     * Sets the tile that should be displayed.
+     * @param zoom The zoom level of the tile.
+     * @param x The x coordinate of the tile.
+     * @param y The Y coordinate of the tile.
+     */
     setTile(zoom: number, x: number, y: number) {
-        console.log('Set tile', zoom, x, y);
-        this.zoom = zoom;
-        this.y = y;
-        this.x = x;
+        this._zoom = zoom;
+        this._y = y;
+        this._x = x;
 
         this._loadTexture();
     }
 
+    /**
+     * Positions and clips the tile to the given width, height, and anchor.
+     * This function is used to adjust a tile so that it only displays a portion of the tile.
+     * @param width The ideal width of the tile.
+     * @param height The ideal height of the tile.
+     * @param anchor The point that the tile is anchored to.
+     */
     setClip(width: number, height: number, anchor: Vector3) {
         this._scaleContainer.position.set(anchor.x, anchor.y, anchor.z);
         this._plane.position.set(-anchor.x, -anchor.y, -anchor.z);
@@ -188,64 +234,53 @@ export class MapTile extends Object3D {
         this._material.needsUpdate = true;
     }
 
-    setHeightOffset(heightOffset: number) {
-        this._heightOffset = heightOffset;
-        const heightOffsetUniform: { value: number } =
-            this._material.userData.heightOffset;
-        if (heightOffsetUniform && heightOffsetUniform.value) {
-            heightOffsetUniform.value = this._heightOffset;
-        }
-        this._material.needsUpdate = true;
+    static prepareMaterial(material: Material): Material {
+        material.userData = {
+            heightMap: { value: MapTile._SEA_LEVEL_TEXTURE },
+            heightScale: { value: 0.0 },
+            heightOffset: { value: 0.0 },
+        };
+
+        material.onBeforeCompile = (shader: any) => {
+            // Pass uniforms from userData to the
+            for (const i in material.userData) {
+                shader.uniforms[i] = material.userData[i];
+            }
+
+            // Vertex variables
+            shader.vertexShader =
+                `
+            uniform sampler2D heightMap;
+            uniform highp float heightScale;
+            // uniform highp float heightOffset;
+            // varying vec2 vUv;
+            ` + shader.vertexShader;
+
+            // Vertex depth logic
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <fog_vertex>',
+                `
+            #include <fog_vertex>
+
+            // Calculate height of the title
+            vec4 _theight = texture2D(heightMap, vUv);
+            float _height = ((_theight.r * 256.0 * 256.0 + _theight.g * 256.0 + _theight.b) * heightScale) - (390.0 * heightScale * 0.0039) + heightOffset;
+            vec3 _transformed = position + _height * normal;
+
+            // Vertex position based on height
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(_transformed, 1.0);
+            `
+            );
+        };
+
+        return material;
     }
-
-    // TODO: Get this working again
-    // static prepareMaterial(material: Material): Material {
-    //     material.userData = {
-    //         heightMap: { value: MapTile._SEA_LEVEL_TEXTURE },
-    //         heightScale: { value: 0.0 },
-    //         heightOffset: { value: 0.0 },
-    //     };
-
-    //     material.onBeforeCompile = (shader: any) => {
-    //         // Pass uniforms from userData to the
-    //         for (const i in material.userData) {
-    //             shader.uniforms[i] = material.userData[i];
-    //         }
-
-    //         // Vertex variables
-    //         shader.vertexShader =
-    //             `
-    //         uniform sampler2D heightMap;
-    //         uniform highp float heightScale;
-    //         // uniform highp float heightOffset;
-    //         // varying vec2 vUv;
-    //         ` + shader.vertexShader;
-
-    //         // Vertex depth logic
-    //         shader.vertexShader = shader.vertexShader.replace(
-    //             '#include <fog_vertex>',
-    //             `
-    //         #include <fog_vertex>
-
-    //         // Calculate height of the title
-    //         vec4 _theight = texture2D(heightMap, vUv);
-    //         float _height = ((_theight.r * 256.0 * 256.0 + _theight.g * 256.0 + _theight.b) * heightScale) - (390.0 * heightScale * 0.0039);// + heightOffset;
-    //         vec3 _transformed = position + _height * normal;
-
-    //         // Vertex position based on height
-    //         gl_Position = projectionMatrix * modelViewMatrix * vec4(_transformed, 1.0);
-    //         `
-    //         );
-    //     };
-
-    //     return material;
-    // }
 
     private async _loadTexture() {
         const image: HTMLImageElement = await this._provider.fetchTile(
-            this.zoom,
-            this.x,
-            this.y
+            this._zoom,
+            this._x,
+            this._y
         );
         const texture = new Texture(image);
         texture.generateMipmaps = false;
@@ -261,55 +296,61 @@ export class MapTile extends Object3D {
         this._material.map = texture;
         this._material.needsUpdate = true;
 
-        // this._loadHeightTexture();
+        this._loadHeightTexture();
     }
 
-    // TODO: Get this working again
-    // private async _loadHeightTexture() {
-    //     if (this._heightProvider) {
-    //         const heightImage: HTMLImageElement =
-    //             await this._heightProvider.fetchTile(this.zoom, this.x, this.y);
-    //         const heightTexture = new Texture(heightImage);
-    //         heightTexture.generateMipmaps = false;
-    //         heightTexture.format = RGBAFormat;
-    //         heightTexture.magFilter = LinearFilter;
-    //         heightTexture.minFilter = LinearFilter;
-    //         heightTexture.needsUpdate = true;
+    private async _loadHeightTexture() {
+        if (!this._usingHeightMaterial) {
+            return;
+        }
+        if (this._heightProvider) {
+            const heightImage: HTMLImageElement =
+                await this._heightProvider.fetchTile(
+                    this._zoom,
+                    this._x,
+                    this._y
+                );
+            const heightTexture = new Texture(heightImage);
+            heightTexture.generateMipmaps = false;
+            heightTexture.format = RGBAFormat;
+            heightTexture.magFilter = LinearFilter;
+            heightTexture.minFilter = LinearFilter;
+            heightTexture.needsUpdate = true;
 
-    //         // const heightMap: { value: unknown } =
-    //         //     this._material.userData.heightMap;
-    //         // if (
-    //         //     heightMap &&
-    //         //     heightMap.value &&
-    //         //     heightMap.value instanceof Texture
-    //         // ) {
-    //         //     heightMap.value.dispose();
-    //         // }
-    //         const scale = (this._material.userData.heightScale.value =
-    //             ZOOM_SCALES.get(this.zoom));
-    //         console.log(this._heightOffset);
-    //         console.log(scale);
-    //         this._material.userData.heightOffset.value = 0.0;
-    //         this._material.userData.heightMap.value = heightTexture;
-    //         this._plane.frustumCulled = false;
-    //     } else {
-    //         const heightMap: { value: unknown } =
-    //             this._material.userData.heightMap;
-    //         // if (
-    //         //     heightMap &&
-    //         //     heightMap.value &&
-    //         //     heightMap.value instanceof Texture
-    //         // ) {
-    //         //     heightMap.value.dispose();
-    //         // }
-    //         this._material.userData.heightScale.value = 0.0;
-    //         this._material.userData.heightOffset.value = 0.0;
-    //         this._material.userData.heightMap.value = MapTile._SEA_LEVEL_TEXTURE;
-    //         this._plane.frustumCulled = true;
-    //     }
+            const heightMap: { value: unknown } =
+                this._material.userData.heightMap;
+            if (
+                heightMap &&
+                heightMap.value &&
+                heightMap.value instanceof Texture
+            ) {
+                heightMap.value.dispose();
+            }
+            const scale = (this._material.userData.heightScale.value =
+                ZOOM_SCALES.get(this._zoom));
+            this._material.userData.heightScale.value = scale;
+            this._material.userData.heightOffset.value = this._heightOffset;
+            this._material.userData.heightMap.value = heightTexture;
+            this._plane.frustumCulled = false;
+        } else {
+            const heightMap: { value: unknown } =
+                this._material.userData.heightMap;
+            if (
+                heightMap &&
+                heightMap.value &&
+                heightMap.value instanceof Texture
+            ) {
+                heightMap.value.dispose();
+            }
+            this._material.userData.heightScale.value = 0.0;
+            this._material.userData.heightOffset.value = 0.0;
+            this._material.userData.heightMap.value =
+                MapTile._SEA_LEVEL_TEXTURE;
+            this._plane.frustumCulled = true;
+        }
 
-    //     this._material.needsUpdate = true;
-    // }
+        this._material.needsUpdate = true;
+    }
 
     dispose() {
         if (this._material.map) {
