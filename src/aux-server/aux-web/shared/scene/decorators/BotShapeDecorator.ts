@@ -806,7 +806,7 @@ export class BotShapeDecorator
             const mapTilerApiKey = calculateStringTagValue(
                 calc,
                 this.bot3D.bot,
-                'formMapTilerApiKey',
+                'formMapTilerAPIKey',
                 null
             );
             if (
