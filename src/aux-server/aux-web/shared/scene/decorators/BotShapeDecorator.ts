@@ -142,6 +142,7 @@ import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import type { MapView } from '../map/MapView';
 import { OffsetProvider } from '../../public/geo-three/OffsetProvider';
+import { MapTilerProvider } from 'geo-three';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
@@ -321,6 +322,7 @@ export class BotShapeDecorator
         this._updateLightGroundColor(calc);
         this._updateBuildStep(calc);
         this._updateMapLOD(calc);
+        this._updateMapTags(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -786,6 +788,52 @@ export class BotShapeDecorator
             this._mapLODLevel = lodLevel;
             this._setMapLOD(this._mapLODLevel);
         }
+    }
+
+    private _updateMapTags(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        const heightProvider = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapHeightProvider',
+            null
+        );
+
+        if (heightProvider === 'maptiler') {
+            const mapTilerApiKey = calculateStringTagValue(
+                calc,
+                this.bot3D.bot,
+                'formMapTilerApiKey',
+                null
+            );
+            if (
+                !(this._mapView.heightProvider instanceof MapTilerProvider) ||
+                this._mapView.heightProvider.apiKey !== mapTilerApiKey
+            ) {
+                this._mapView.setHeightProvider(
+                    new MapTilerProvider(
+                        mapTilerApiKey,
+                        'tiles',
+                        'terrain-rgb-v2',
+                        'webp'
+                    )
+                );
+            }
+        } else {
+            this._mapView.setHeightProvider(null);
+        }
+
+        const heightOffset = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapHeightOffset',
+            0
+        );
+
+        this._mapView.setHeightOffset(heightOffset);
     }
 
     private _updateOpacity(calc: BotCalculationContext) {
