@@ -122,6 +122,7 @@ import {
     setLightDecay,
     setLightGroundColor,
     createMapPlane,
+    createPlane,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -1641,9 +1642,11 @@ export class BotShapeDecorator
     private _createMapPlane() {
         this._mapView = createMapPlane(new Vector3(), 1);
         this.mesh = null;
-        this.collider = this._mapView;
+        const colliderPlane = (this.collider = createPlane(1));
+        setColor(colliderPlane, 'clear');
 
         this.container.add(this._mapView);
+        this.container.add(this.collider);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
 
