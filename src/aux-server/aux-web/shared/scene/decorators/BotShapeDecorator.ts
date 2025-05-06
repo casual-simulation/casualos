@@ -123,6 +123,8 @@ import {
     setLightGroundColor,
     createMapPlane,
     createPlane,
+    defaultMapProvider,
+    getMapProvider,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -198,6 +200,7 @@ export class BotShapeDecorator
     private _shapeSubscription: SubscriptionLike;
     private _finder: AuxBotVisualizerFinder;
     private _mapView: MapView;
+    private _mapProviderName: string;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -324,19 +327,11 @@ export class BotShapeDecorator
         this._updateMapLOD(calc);
         this._updateMapTags(calc);
 
-        if (this._iframe) {
-            const gridScale = this.bot3D.gridScale;
-            const scale = calculateScale(calc, this.bot3D.bot, gridScale);
-            if (scale.x > scale.y) {
-                const widthToHeightRatio = scale.y / scale.x;
-                this._iframe.setPlaneSize(1, widthToHeightRatio);
-            } else {
-                const heightToWidthRatio = scale.x / scale.y;
-                this._iframe.setPlaneSize(heightToWidthRatio, 1);
-            }
-
-            const pointable = isBotPointable(calc, this.bot3D.bot);
-            this._iframe.setInteractable(pointable);
+        // For map forms, update map-specific properties
+        if (this._shape === 'map') {
+            this._updateMapLOD(calc);
+            this._updateMapProvider(calc);
+            this._updateCustomMapProviderURL(calc);
         }
     }
 
@@ -1687,11 +1682,45 @@ export class BotShapeDecorator
         this._canHaveStroke = false;
     }
 
+    private _updateMapProvider(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        // Get the map provider name from the tag
+        const providerName = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapProvider',
+            defaultMapProvider
+        );
+
+        // Check if provider has changed
+        if (this._mapProviderName !== providerName) {
+            this._mapView.setProvider(getMapProvider(providerName));
+
+            console.log(`Changed map provider to ${providerName}`);
+            this._mapProviderName = providerName;
+        }
+    }
+
     private _createMapPlane() {
-        this._mapView = createMapPlane(new Vector3(), 1);
+        // Get the provider name from the tag
+        const providerName = calculateStringTagValue(
+            null,
+            this.bot3D.bot,
+            'formMapProvider',
+            defaultMapProvider
+        );
+
+        // Create the map view with the specified provider
+        this._mapView = createMapPlane(new Vector3(), 1, providerName);
         this.mesh = null;
         const colliderPlane = (this.collider = createPlane(1));
         setColor(colliderPlane, 'clear');
+
+        this.collider = this._mapView;
+        this._mapProviderName = providerName;
 
         this.container.add(this._mapView);
         this.container.add(this.collider);
@@ -1704,6 +1733,20 @@ export class BotShapeDecorator
             this._mapLODLevel,
             coords.x, // lon
             coords.y // lat
+        );
+    }
+
+    private _updateCustomMapProviderURL(calc: BotCalculationContext) {
+        if (!this._mapView || this._shape !== 'map') {
+            return;
+        }
+
+        // Get custom URL template for tile provider (if any)
+        const customURL = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'mapProviderURL',
+            null
         );
     }
 

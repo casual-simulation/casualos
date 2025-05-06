@@ -19,6 +19,7 @@ import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
 import { Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
+import { forEach } from 'lodash';
 
 const TILE_SIZE = 256;
 
@@ -47,6 +48,15 @@ export class MapView extends Object3D {
     setZoom(zoom: number) {
         this._zoom = zoom;
         this.setCenter(zoom, this._longitude, this._latitude);
+    }
+
+    setProvider(provider: MapProvider) {
+        this._provider = provider;
+        this._tiles.forEach((array) => {
+            array.forEach((tile) => {
+                tile.setProvider(provider);
+            });
+        });
     }
 
     /**

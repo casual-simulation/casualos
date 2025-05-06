@@ -139,6 +139,11 @@ export class MapTile extends Object3D {
         }
     }
 
+    setProvider(provider: MapProvider) {
+        this._provider = provider;
+        this._loadTexture();
+    }
+
     constructor(
         provider: MapProvider,
         heightProvider: MapProvider | null = null
