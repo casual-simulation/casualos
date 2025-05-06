@@ -2755,7 +2755,7 @@ export const KNOWN_TAGS: string[] = [
     'formLDrawPartsAddress',
     'formMapLOD',
     'formMapHeightProvider',
-    'formMapTilerAPIKey',
+    'formMapHeightProviderAPIKey',
     'formMapHeightOffset',
     'meshPositioningMode',
     'orientationMode',
