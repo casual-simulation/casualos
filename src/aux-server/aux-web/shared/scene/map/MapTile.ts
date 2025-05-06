@@ -46,17 +46,17 @@ const ZOOM_SCALES = new Map<number, number>([
     [1, 0.00001277603959049369],
     [2, 0.00002555207918098738],
     [3, 0.00005110415849255652],
-    [4, 0.00010220831698511304],
-    [5, 0.00020441663397022608],
-    [6, 0.00040883326794045215],
-    [7, 0.0008176665024519774],
-    [8, 0.0016353331386196675],
-    [9, 0.003270666277239335],
-    [10, 0.0065413304150277905],
-    [11, 0.0130826693878619],
-    [12, 0.0261653387757238],
-    [13, 0.05233054062681521],
-    [14, 0.10466162895359303],
+    [4, 0.00002555207924627826],
+    [5, 0.00005110415849255652],
+    [6, 0.00010220831698511304],
+    [7, 0.00020441662561299434],
+    [8, 0.0004088332846549169],
+    [9, 0.0008176665693098337],
+    [10, 0.0016353326037569476],
+    [11, 0.003270667346965475],
+    [12, 0.00654133469393095],
+    [13, 0.013082635156703803],
+    [14, 0.026165407238398258],
     [15, 0.20932325790718606],
     [16, 0.4186377527525432],
     [17, 0.8373105584861426],
@@ -96,6 +96,9 @@ export class MapTile extends Object3D {
      * @param heightOffset The height offset to set.
      */
     setHeightOffset(heightOffset: number) {
+        if (this._heightOffset === heightOffset) {
+            return;
+        }
         this._heightOffset = heightOffset;
         if (this._usingHeightMaterial) {
             const heightOffsetUniform: { value: number } =
@@ -119,15 +122,20 @@ export class MapTile extends Object3D {
     }
 
     private _setupMaterial() {
+        const previousMaterial = this._material;
         if (this._heightProvider && !this._usingHeightMaterial) {
+            this._usingHeightMaterial = true;
             this._plane.material = MapTile.prepareMaterial(
                 new MeshBasicMaterial({ wireframe: false, side: FrontSide })
             );
+            this._material.map = previousMaterial.map;
         } else if (!this._heightProvider && this._usingHeightMaterial) {
+            this._usingHeightMaterial = false;
             this._plane.material = new MeshBasicMaterial({
                 wireframe: false,
                 side: FrontSide,
             });
+            this._material.map = previousMaterial.map;
         }
     }
 
@@ -254,7 +262,7 @@ export class MapTile extends Object3D {
                 `
             uniform sampler2D heightMap;
             uniform highp float heightScale;
-            // uniform highp float heightOffset;
+            uniform highp float heightOffset;
             // varying vec2 vUv;
             ` + shader.vertexShader;
 
@@ -266,7 +274,7 @@ export class MapTile extends Object3D {
 
             // Calculate height of the title
             vec4 _theight = texture2D(heightMap, vUv);
-            float _height = ((_theight.r * 256.0 * 256.0 + _theight.g * 256.0 + _theight.b) * heightScale) - (390.0 * heightScale * 0.0039) + heightOffset;
+            float _height = ((_theight.r * 256.0 * 256.0 + _theight.g * 256.0 + _theight.b) * heightScale) - (390.0 * heightScale) + heightOffset;
             vec3 _transformed = position + _height * normal;
 
             // Vertex position based on height
@@ -307,7 +315,7 @@ export class MapTile extends Object3D {
     }
 
     private async _loadHeightTexture() {
-        if (!this._usingHeightMaterial) {
+        if (!this._usingHeightMaterial || !this.visible) {
             return;
         }
         if (this._heightProvider) {

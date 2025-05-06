@@ -40,6 +40,10 @@ export class MapView extends Object3D {
         new Vector3(0.5, 0.5, 0.5)
     );
 
+    get heightProvider() {
+        return this._heightProvider;
+    }
+
     setZoom(zoom: number) {
         this._zoom = zoom;
         this.setCenter(zoom, this._longitude, this._latitude);
@@ -250,7 +254,9 @@ export class MapView extends Object3D {
     setHeightOffset(offset: number) {
         for (let row of this._tiles) {
             for (let tile of row) {
-                tile.setHeightOffset(offset);
+                if (tile.visible) {
+                    tile.setHeightOffset(offset);
+                }
             }
         }
     }
