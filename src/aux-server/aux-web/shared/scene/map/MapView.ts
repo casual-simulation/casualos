@@ -45,15 +45,20 @@ export class MapView extends Object3D {
         this.setCenter(zoom, this._longitude, this._latitude);
     }
 
+    /**
+     * Calculates the pixel coordinates of the given zoom, longitude and latitude.
+     * Pixel coordinates are able to be used to determine where inside a tile a particular geographic point is.
+     * See https://learn.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system for more information.
+     */
     static calculatePixel(
         zoom: number,
-        x: number,
-        y: number
+        longitude: number,
+        latitude: number
     ): [number, number] {
-        const sinLatitude = Math.sin((y * Math.PI) / 180);
+        const sinLatitude = Math.sin((latitude * Math.PI) / 180);
         const powZoom = Math.pow(2, zoom);
         const mapSize = powZoom * TILE_SIZE;
-        const pixelX = ((x + 180) / 360) * mapSize + 0.5;
+        const pixelX = ((longitude + 180) / 360) * mapSize + 0.5;
         const pixelY =
             (0.5 -
                 Math.log((1 + sinLatitude) / (1 - sinLatitude)) /
@@ -64,16 +69,30 @@ export class MapView extends Object3D {
         return [pixelX, pixelY];
     }
 
+    /**
+     * Calculates the tileX and tileY from the given pixel coordinates.
+     * @param pixelX The x coordinate of the pixel.
+     * @param pixelY The y coordinate of the pixel.
+     * @param tileSize The size of the tile. Default is 256.
+     */
     static calculateTileFromPixel(
         pixelX: number,
-        pixelY: number
+        pixelY: number,
+        tileSize: number = TILE_SIZE
     ): [number, number] {
-        const tileX = Math.floor(pixelX / TILE_SIZE);
-        const tileY = Math.floor(pixelY / TILE_SIZE);
+        const tileX = Math.floor(pixelX / tileSize);
+        const tileY = Math.floor(pixelY / tileSize);
 
         return [tileX, tileY];
     }
 
+    /**
+     * Calculates the percentage of the tile that the given pixel coordinates are at.
+     * For example, if the pixel is in the center of the tile, then the percentage is 0.5, 0.5.
+     * @param pixelX The x coordinate of the pixel.
+     * @param pixelY The y coordinate of the pixel.
+     * @returns
+     */
     static calculateTilePercentage(
         pixelX: number,
         pixelY: number
@@ -84,17 +103,30 @@ export class MapView extends Object3D {
         return [percentageX, percentageY];
     }
 
+    /**
+     * Calculates the tileX and tileY from the given zoom, longitude and latitude.
+     */
     static calculateOffset(
         zoom: number,
-        x: number,
-        y: number
+        longitude: number,
+        latitude: number
     ): [number, number, number] {
-        const [pixelX, pixelY] = MapView.calculatePixel(zoom, x, y);
+        const [pixelX, pixelY] = MapView.calculatePixel(
+            zoom,
+            longitude,
+            latitude
+        );
         const [tileX, tileY] = MapView.calculateTileFromPixel(pixelX, pixelY);
 
         return [zoom, tileX, tileY];
     }
 
+    /**
+     * Sets the center of the map view.
+     * @param zoom The zoom level of the map.
+     * @param longitude The longitude of the center of the map.
+     * @param latitude The latitude of the center of the map.
+     */
     setCenter(zoom: number, longitude: number, latitude: number) {
         this._zoom = zoom;
         this._longitude = longitude;
@@ -193,6 +225,32 @@ export class MapView extends Object3D {
                 } else {
                     tile.visible = false;
                 }
+            }
+        }
+    }
+
+    /**
+     * Sets the height provider that should be used for the map tiles.
+     * If null, then no height information will be used.
+     * @param provider The provider to use for height map information.
+     */
+    setHeightProvider(provider: MapProvider | null) {
+        this._heightProvider = provider;
+        for (let row of this._tiles) {
+            for (let tile of row) {
+                tile.setHeightProvider(provider);
+            }
+        }
+    }
+
+    /**
+     * Sets the offset that should be used to move the height of the tiles.
+     * @param offset
+     */
+    setHeightOffset(offset: number) {
+        for (let row of this._tiles) {
+            for (let tile of row) {
+                tile.setHeightOffset(offset);
             }
         }
     }
