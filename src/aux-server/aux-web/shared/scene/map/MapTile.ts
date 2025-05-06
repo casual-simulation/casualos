@@ -79,6 +79,8 @@ export class MapTile extends Object3D {
     private _y: number = 0;
     private _x: number = 0;
     private _zoom: number = 1;
+    private _currentTileRequestId: number = 0;
+    private _currentHeightTileRequestId: number = 0;
 
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
@@ -277,11 +279,16 @@ export class MapTile extends Object3D {
     }
 
     private async _loadTexture() {
+        const requestId = ++this._currentTileRequestId;
         const image: HTMLImageElement = await this._provider.fetchTile(
             this._zoom,
             this._x,
             this._y
         );
+        if (requestId !== this._currentTileRequestId) {
+            // A second request was made, so we don't need to use this texture.
+            return;
+        }
         const texture = new Texture(image);
         texture.generateMipmaps = false;
         texture.format = RGBAFormat;
@@ -304,12 +311,19 @@ export class MapTile extends Object3D {
             return;
         }
         if (this._heightProvider) {
+            const requestId = ++this._currentHeightTileRequestId;
             const heightImage: HTMLImageElement =
                 await this._heightProvider.fetchTile(
                     this._zoom,
                     this._x,
                     this._y
                 );
+
+            if (requestId !== this._currentHeightTileRequestId) {
+                // A second request was made, so we don't need to use this texture.
+                return;
+            }
+
             const heightTexture = new Texture(heightImage);
             heightTexture.generateMipmaps = false;
             heightTexture.format = RGBAFormat;
