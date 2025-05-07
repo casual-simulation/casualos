@@ -138,7 +138,7 @@ export function getMapProvider(name: string, apiKey?: string): MapProvider {
         case 'googleMaps':
             return new GoogleMapsProvider(apiKey);
         case 'maptiler':
-            return new MapTilerProvider(apiKey, 'tiles', 'satelite', 'jpg');
+            return new MapTilerProvider(apiKey, 'tiles', 'satellite', 'jpg');
         case 'openmaptiles':
         case 'openmaptile':
         case 'omt':

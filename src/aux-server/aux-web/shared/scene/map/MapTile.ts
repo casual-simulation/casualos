@@ -293,30 +293,39 @@ export class MapTile extends Object3D {
 
     private async _loadTexture() {
         const requestId = ++this._currentTileRequestId;
-        const image: HTMLImageElement = await this._provider.fetchTile(
-            this._zoom,
-            this._x,
-            this._y
-        );
-        if (requestId !== this._currentTileRequestId) {
-            // A second request was made, so we don't need to use this texture.
-            return;
+        try {
+            const image: HTMLImageElement = await this._provider.fetchTile(
+                this._zoom,
+                this._x,
+                this._y
+            );
+
+            if (requestId !== this._currentTileRequestId) {
+                // A second request was made, so we don't need to use this texture.
+                return;
+            }
+
+            const texture = new Texture(image);
+            texture.generateMipmaps = false;
+            texture.format = RGBAFormat;
+            texture.magFilter = LinearFilter;
+            texture.minFilter = LinearFilter;
+            texture.needsUpdate = true;
+
+            if (this._material.map) {
+                this._material.map.dispose();
+            }
+
+            this._material.map = texture;
+            this._material.needsUpdate = true;
+
+            this._loadHeightTexture();
+        } catch (error) {
+            console.error(
+                `Tile loading failed for zoom=${this._zoom}, x=${this._x}, y=${this._y}:`,
+                error
+            );
         }
-        const texture = new Texture(image);
-        texture.generateMipmaps = false;
-        texture.format = RGBAFormat;
-        texture.magFilter = LinearFilter;
-        texture.minFilter = LinearFilter;
-        texture.needsUpdate = true;
-
-        if (this._material.map) {
-            this._material.map.dispose();
-        }
-
-        this._material.map = texture;
-        this._material.needsUpdate = true;
-
-        this._loadHeightTexture();
     }
 
     private async _loadHeightTexture() {

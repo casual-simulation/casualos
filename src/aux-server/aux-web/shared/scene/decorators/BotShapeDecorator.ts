@@ -201,6 +201,7 @@ export class BotShapeDecorator
     private _finder: AuxBotVisualizerFinder;
     private _mapView: MapView;
     private _mapProviderName: string;
+    private _mapProviderApiKey: string;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -787,7 +788,6 @@ export class BotShapeDecorator
                     `Map LOD level ${lodLevel} was clamped to ${lodLimit} (valid range: 1-20)`
                 );
             }
-            console.log(lodLimit);
             this._mapLODLevel = lodLimit;
             this._setMapLOD(this._mapLODLevel);
         }
@@ -1711,12 +1711,17 @@ export class BotShapeDecorator
         );
 
         // Check if provider has changed
-        if (this._mapProviderName !== providerName) {
+        if (
+            this._mapProviderName !== providerName ||
+            this._mapProviderApiKey !== apiKey
+        ) {
             const provider = getMapProvider(providerName, apiKey);
             this._mapView.setProvider(provider);
 
-            console.log(`Changed map provider to ${providerName}`);
+            this._mapProviderApiKey = apiKey;
             this._mapProviderName = providerName;
+
+            console.log(`Changed map provider to ${providerName}`);
         }
     }
 
