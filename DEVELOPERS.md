@@ -7,9 +7,9 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) v18.17.1 or later.
+-   [Node.js](https://nodejs.org/en/download/) v20.18.1 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
-    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v18.17.1` in your favorite terminal.
+    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v20.18.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
 -   [Rancher Desktop](https://rancherdesktop.io/)
     -   Used to make development with extra services (MongoDB, Redis, etc.) easy.
@@ -29,6 +29,10 @@ Make sure you have all the prerequisite tools installed:
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. Enable corepack
     - `corepack enable`
+    - If you are trying to update PNPM, follow these steps:
+        1. Install the latest corepack: `npm install --global corepack@latest`
+        2. Enable pnpm with corepack: `corepack enable pnpm`
+        3. Use the latest PNPM version: `corepack use pnpm@latest-10`
 4. Start CockroachDB
     - Use a separate terminal tab
     - `npm run cockroach`
