@@ -18,9 +18,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import type { ShoutAction } from '@casual-simulation/aux-common';
+import type { ShoutAction, Bot } from '@casual-simulation/aux-common';
 import {
-    Bot,
     hasValue,
     BotTags,
     BotAction,
@@ -169,7 +168,7 @@ export default class UploadFiles extends Vue {
                 for (let sim of appManager.simulationManager.simulations.values()) {
                     let actions: ShoutAction[] = sim.helper.actions(
                         finalFiles.map((f) => ({
-                            bots: null,
+                            bots: null as Bot[],
                             eventName: ON_FILE_UPLOAD_ACTION_NAME,
                             arg: {
                                 file: f,
