@@ -779,8 +779,16 @@ export class BotShapeDecorator
             1
         );
 
-        if (this._mapLODLevel !== lodLevel) {
-            this._mapLODLevel = lodLevel;
+        const lodLimit = Math.max(1, Math.min(20, Math.floor(lodLevel)));
+
+        if (this._mapLODLevel !== lodLimit) {
+            if (lodLevel !== lodLimit) {
+                console.warn(
+                    `Map LOD level ${lodLevel} was clamped to ${lodLimit} (valid range: 1-20)`
+                );
+            }
+            console.log(lodLimit);
+            this._mapLODLevel = lodLimit;
             this._setMapLOD(this._mapLODLevel);
         }
     }
