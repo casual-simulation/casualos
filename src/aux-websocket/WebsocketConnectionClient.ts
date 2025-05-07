@@ -117,19 +117,25 @@ export class WebsocketConnectionClient implements ConnectionClient {
 
         const connected = this._socket.onOpen.pipe(
             tap(() => console.log('[ApiaryConnectionClient] Connected.')),
-            map(() => ({
-                connected: true,
-                info: null,
-            }))
+            map(
+                () =>
+                    ({
+                        connected: true,
+                        info: null,
+                    } as ClientConnectionState)
+            )
         );
         const disconnected = this._socket.onClose.pipe(
             tap((reason) =>
                 console.log('[SocketManger] Disconnected. Reason:', reason)
             ),
-            map(() => ({
-                connected: false,
-                info: null,
-            }))
+            map(
+                () =>
+                    ({
+                        connected: false,
+                        info: null,
+                    } as ClientConnectionState)
+            )
         );
 
         merge(connected, disconnected).subscribe(this._connectionStateChanged);

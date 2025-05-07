@@ -1466,6 +1466,10 @@ importers:
       uuid:
         specifier: 10.0.0
         version: 10.0.0
+    devDependencies:
+      base64-js:
+        specifier: ^1.5.1
+        version: 1.5.1
 
   src/aux-vm-client:
     dependencies:
