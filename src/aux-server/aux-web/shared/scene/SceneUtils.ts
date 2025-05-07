@@ -146,7 +146,7 @@ export function getMapProvider(name: string, apiKey?: string): MapProvider {
         case 'here':
         case 'heremap':
         case 'heremaps':
-            return new HereMapsProvider();
+            return new HereMapsProvider(); //requires login?
 
         default:
             console.warn(
@@ -395,10 +395,11 @@ export function createPlane(size: number): Mesh {
 export function createMapPlane(
     position: Vector3,
     size: number = 0.5,
-    providerName: string = defaultMapProvider
+    providerName: string = defaultMapProvider,
+    apiKey: string = null
 ): MapView {
     //const provider = mapProviders[providerName] || mapProviders[defaultMapProvider];
-    const provider = getMapProvider(providerName);
+    const provider = getMapProvider(providerName, apiKey);
 
     const map = new MapView(provider);
     map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);

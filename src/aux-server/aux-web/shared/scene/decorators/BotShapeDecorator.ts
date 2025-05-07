@@ -142,7 +142,7 @@ import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
-import type { MapView } from '../map/MapView';
+import { MapView } from '../map/MapView';
 import { OffsetProvider } from '../../public/geo-three/OffsetProvider';
 import { MapTilerProvider } from 'geo-three';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
@@ -1695,9 +1695,17 @@ export class BotShapeDecorator
             defaultMapProvider
         );
 
+        const apiKey = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapProviderAPIKey',
+            null
+        );
+
         // Check if provider has changed
         if (this._mapProviderName !== providerName) {
-            this._mapView.setProvider(getMapProvider(providerName));
+            const provider = getMapProvider(providerName, apiKey);
+            this._mapView.setProvider(provider);
 
             console.log(`Changed map provider to ${providerName}`);
             this._mapProviderName = providerName;
@@ -1713,8 +1721,22 @@ export class BotShapeDecorator
             defaultMapProvider
         );
 
-        // Create the map view with the specified provider
-        this._mapView = createMapPlane(new Vector3(), 1, providerName);
+        const apiKey = calculateStringTagValue(
+            null,
+            this.bot3D.bot,
+            'formMapProviderAPIKey',
+            null
+        );
+
+        const provider = getMapProvider(providerName, apiKey);
+
+        this._mapView = new MapView(provider);
+        this._mapView.setRotationFromAxisAngle(
+            new Vector3(1, 0, 0),
+            Math.PI / 2
+        );
+        this._mapView.scale.set(1, 1, 1);
+
         this.mesh = null;
         const colliderPlane = (this.collider = createPlane(1));
         setColor(colliderPlane, 'clear');
