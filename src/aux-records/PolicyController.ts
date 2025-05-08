@@ -44,7 +44,6 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
     ACCOUNT_MARKER,
-    PUBLIC_WRITE_MARKER,
     PRIVATE_MARKER,
 } from '@casual-simulation/aux-common';
 import type {
@@ -63,7 +62,7 @@ import type {
     UserPrivacyFeatures,
 } from './PolicyStore';
 import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
-import { get, sortBy, union, without } from 'lodash';
+import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import { normalizeInstId, parseInstId } from './websockets/Utils';
 import type {

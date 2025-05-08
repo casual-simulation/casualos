@@ -58,8 +58,6 @@ import type { AuxDevice } from './AuxDevice';
 import {
     applyTagEdit,
     del,
-    edit,
-    edits,
     insert,
     isTagEdit,
     preserve,
@@ -68,15 +66,12 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { DateTime } from 'luxon';
 import {
-    InterpreterContinuation,
-    InterpreterStop,
     INTERPRETER_OBJECT,
     IS_PROXY_OBJECT,
     REGULAR_OBJECT,
     UNCOPIABLE,
 } from '@casual-simulation/js-interpreter';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
-import { replace } from 'lodash';
 
 describe('RuntimeBot', () => {
     let precalc: CompiledBot;

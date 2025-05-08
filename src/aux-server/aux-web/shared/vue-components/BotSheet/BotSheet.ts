@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import type {
     Bot,
     BotTags,
@@ -34,22 +33,19 @@ import {
     CLICK_ACTION_NAME,
     onClickArg,
     getPortalTag,
-    createBotLink,
 } from '@casual-simulation/aux-common';
 import type {
     BotManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
-import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import type { TableBot } from '../BotTable/BotTable';
 import BotTable from '../BotTable/BotTable';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SheetPortalConfig } from './SheetPortalConfig';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import { flatMap } from 'lodash';
 
 interface SheetState {
     bots: Bot[];

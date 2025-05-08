@@ -16,11 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { ConnectionIndicator } from '../common';
-import {
-    ConnectionIndicatorId,
-    ConnectionIndicatorToken,
-    ConnectionInfo,
-} from '../common';
+
 import { AuthenticatedConnectionClient } from './AuthenticatedConnectionClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { waitAsync } from '../test/TestHelpers';
@@ -31,7 +27,6 @@ import type {
     RequestMissingPermissionMessage,
     RequestMissingPermissionResponseMessage,
 } from './WebsocketEvents';
-import { WebsocketMessage } from './WebsocketEvents';
 import type {
     PartitionAuthExternalPermissionResult,
     PartitionAuthExternalRequestPermission,

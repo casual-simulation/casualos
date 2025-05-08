@@ -29,7 +29,6 @@ import {
     verifyConnectionToken,
     isSuperUserRole,
     isExpired,
-    REFRESH_LIFETIME_MS,
     willExpire,
     getSessionKeyExpiration,
     canExpire,

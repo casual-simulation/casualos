@@ -42,7 +42,6 @@ import { forOwn } from 'lodash';
 import '../BlobPolyfill';
 import type { PartitionRemoteEvents } from './AuxPartitionConfig';
 import type { RemoteActions } from '../common';
-import { RemoteAction } from '../common';
 
 /**
  * Creates a new initialization update using the given action.

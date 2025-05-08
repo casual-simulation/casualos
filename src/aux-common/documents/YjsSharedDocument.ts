@@ -17,8 +17,6 @@
  */
 import {
     BehaviorSubject,
-    filter,
-    firstValueFrom,
     Observable,
     startWith,
     Subject,
@@ -36,7 +34,6 @@ import {
     createRelativePositionFromTypeIndex,
     createAbsolutePositionFromRelativePosition,
     Doc,
-    Transaction,
     applyUpdate,
     encodeStateAsUpdate,
 } from 'yjs';

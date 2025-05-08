@@ -20,13 +20,8 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { Resource } from '@opentelemetry/resources';
 import {
-    Aggregation,
     ConsoleMetricExporter,
-    ExplicitBucketHistogramAggregation,
-    InstrumentType,
-    MeterProvider,
     PeriodicExportingMetricReader,
-    View,
 } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';

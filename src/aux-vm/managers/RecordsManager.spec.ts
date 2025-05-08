@@ -37,7 +37,6 @@ import {
     installAuxFile,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
-    formatInstId,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -62,21 +61,18 @@ import {
     eraseFile,
     eraseRecordData,
     getRecordData,
-    AuxRuntime,
     listDataRecordByMarker,
     grantRecordPermission,
     revokeRecordPermission,
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
-    recordWebhook,
     recordsCallProcedure,
     recordPackageVersion,
     installPackage,
     listInstalledPackages,
 } from '@casual-simulation/aux-runtime';
 import { Subject, Subscription } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import type {
     GetEndpointInfoFunction,

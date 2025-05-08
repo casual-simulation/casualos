@@ -23,7 +23,6 @@ import type {
     SubjectType,
     PrivacyFeatures,
     Entitlement,
-    EntitlementScope,
     EntitlementFeature,
     GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';

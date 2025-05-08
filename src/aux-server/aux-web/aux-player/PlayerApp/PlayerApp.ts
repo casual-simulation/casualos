@@ -123,7 +123,6 @@ import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
-import type { NotificationRecord } from '@casual-simulation/aux-records';
 
 let syntheticVoices = [] as SyntheticVoice[];
 

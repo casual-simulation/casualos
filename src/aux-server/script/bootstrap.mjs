@@ -19,7 +19,6 @@ import { S3 } from '@aws-sdk/client-s3';
 import { readFileSync } from 'fs';
 import path from 'path';
 import YAML from 'yaml';
-import { v4 as uuid } from 'uuid';
 import root from '../../../script/root-path.cjs';
 
 const region = 'us-east-1';

@@ -34,12 +34,11 @@ import {
     getInstStateFromUpdates,
 } from '../bots';
 import type { Observable } from 'rxjs';
-import { Subscription, Subject, BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
 } from './AuxPartition';
-import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
 import type {
     BotAction,
     Bot,
@@ -58,10 +57,7 @@ import type {
     GetCurrentInstUpdateAction,
 } from '../bots';
 import {
-    getActiveObjects,
     breakIntoIndividualEvents,
-    stateUpdatedEvent,
-    PartialBotsState,
     botAdded,
     createBot,
     botRemoved,
@@ -88,7 +84,6 @@ import {
     YMapEvent,
     createAbsolutePositionFromRelativePosition,
     YTextEvent,
-    encodeStateAsUpdate,
 } from 'yjs';
 import { MemoryPartitionImpl } from './MemoryPartition';
 import {

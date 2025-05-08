@@ -23,7 +23,6 @@ import {
     Subscription,
     filter,
     firstValueFrom,
-    startWith,
     switchMap,
 } from 'rxjs';
 import type { BrowserSimulation } from './BrowserSimulation';
@@ -31,7 +30,6 @@ import type {
     AuthHelperInterface,
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
-import { Simulation } from '@casual-simulation/aux-vm/managers';
 import type { AuthHelper } from './AuthHelper';
 import type {
     ActionKinds,
@@ -48,7 +46,6 @@ import {
     generateV1ConnectionToken,
 } from '@casual-simulation/aux-common';
 import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
-import { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 import type {
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,

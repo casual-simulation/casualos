@@ -17,7 +17,7 @@
  */
 import { fromBase64String, toBase64String } from '../utils';
 import { sha256, hmac } from 'hash.js';
-import { fromByteArray, toByteArray } from 'base64-js';
+import { toByteArray } from 'base64-js';
 import {
     formatV1ConnectionToken,
     parseV1ConnectionToken,

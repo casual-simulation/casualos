@@ -19,26 +19,13 @@ import {
     BehaviorSubject,
     NEVER,
     Observable,
-    concat,
-    concatMap,
-    defer,
     distinctUntilChanged,
-    distinctUntilKeyChanged,
     filter,
-    first,
     firstValueFrom,
-    from,
     map,
-    mergeMap,
-    mergeWith,
     of,
-    share,
-    shareReplay,
-    skip,
     startWith,
     switchMap,
-    takeUntil,
-    tap,
 } from 'rxjs';
 import type {
     ClientConnectionState,
@@ -46,25 +33,7 @@ import type {
     WebsocketType,
 } from './ConnectionClient';
 import type { WebsocketMessage } from './WebsocketEvents';
-import {
-    LoginMessage,
-    WatchBranchMessage,
-    UnwatchBranchMessage,
-    AddUpdatesMessage,
-    SendActionMessage,
-    WatchBranchDevicesMessage,
-    UnwatchBranchDevicesMessage,
-    ConnectionCountMessage,
-    TimeSyncRequestMessage,
-    GetUpdatesMessage,
-    LoginResultMessage,
-    TimeSyncResponseMessage,
-    UpdatesReceivedMessage,
-    ReceiveDeviceActionMessage,
-    ConnectedToBranchMessage,
-    DisconnectedFromBranchMessage,
-    RateLimitExceededMessage,
-} from './WebsocketEvents';
+
 import type { ConnectionIndicator } from '../common';
 import type {
     PartitionAuthResponse,

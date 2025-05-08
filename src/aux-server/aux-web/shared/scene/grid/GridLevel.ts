@@ -17,7 +17,6 @@
  */
 import type { GridTile } from './GridTile';
 import type { Vector3 } from '@casual-simulation/three';
-import { Box3 } from '@casual-simulation/three';
 
 /**
  * Defines an interface that represents a single level of a square grid.

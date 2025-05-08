@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { InputlessProcedureBuilder } from '@casual-simulation/aux-common';
-import { procedure, ProcedureBuilder } from '@casual-simulation/aux-common';
 import type { CrudRecordsController } from './CrudRecordsController';
 import { z } from 'zod';
 import {

@@ -41,14 +41,12 @@ import {
     Box3,
     Layers,
     BoxBufferGeometry,
-    BufferAttribute,
     ConeGeometry,
     DoubleSide,
     AmbientLight,
     DirectionalLight,
     MathUtils as ThreeMath,
     Euler,
-    SpriteMaterial,
     PlaneBufferGeometry,
     Color,
     MeshStandardMaterial,
@@ -58,18 +56,15 @@ import {
     PerspectiveCamera,
     MeshToonMaterial,
     CircleBufferGeometry,
-    MeshNormalMaterial,
     Cache,
     PointLight,
     WebGLRenderer,
     PCFSoftShadowMap,
     PlaneGeometry,
     SphereGeometry,
-    CameraHelper,
     Light,
     HemisphereLight,
 } from '@casual-simulation/three';
-import { flatMap } from 'lodash';
 import type {
     BotCalculationContext,
     Bot,
@@ -78,12 +73,11 @@ import type {
 import {
     getBotScale,
     getBotTransformer,
-    CameraType,
     clamp,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import { BackSide, PCFShadowMap } from 'three';
+import { BackSide } from 'three';
 
 /**
  * Gets the direction of the up vector for 3D portals.

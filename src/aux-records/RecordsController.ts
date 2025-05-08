@@ -25,10 +25,7 @@ import type {
     LoomConfig,
     HumeConfig,
 } from './RecordsStore';
-import {
-    toBase64String,
-    fromBase64String,
-} from '@casual-simulation/aux-common';
+
 import {
     hashHighEntropyPasswordWithSalt,
     hashLowEntropyPasswordWithSalt,
@@ -53,7 +50,6 @@ import type {
     StudioLoomFeaturesConfiguration,
 } from './SubscriptionConfiguration';
 import {
-    SubscriptionConfiguration,
     getComIdFeatures,
     getHumeAiFeatures,
     getLoomFeatures,
@@ -66,10 +62,7 @@ import type { SystemNotificationMessenger } from './SystemNotificationMessenger'
 import { isSuperUserRole } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import type {
-    PrivoClientInterface,
-    PrivoGetUserInfoResponse,
-} from './PrivoClient';
+import type { PrivoClientInterface } from './PrivoClient';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import {
     DEFAULT_RECORD_KEY_POLICY,

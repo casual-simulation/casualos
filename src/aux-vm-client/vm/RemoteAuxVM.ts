@@ -24,7 +24,6 @@ import type {
 import type {
     AuxChannel,
     AuxChannelErrorType,
-    AuxConfig,
     AuxSubChannel,
     AuxSubVM,
     AuxVM,

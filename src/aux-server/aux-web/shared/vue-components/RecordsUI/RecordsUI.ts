@@ -24,18 +24,13 @@ import type {
     AuthHelperInterface,
     Simulation,
 } from '@casual-simulation/aux-vm';
-import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { AuthHelper } from '@casual-simulation/aux-vm-browser';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
 import {
     asyncResult,
     asyncError,
     approveAction,
-    APPROVED_SYMBOL,
     hasValue,
-    cleanPhoneNumber,
-    mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
 import type {
     RecordDataAction,

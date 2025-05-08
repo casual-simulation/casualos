@@ -45,7 +45,7 @@ import type {
     DeviceActionError,
 } from '../common/RemoteActions';
 import { device, remote } from '../common/RemoteActions';
-import { ConnectionInfo, connectionInfo } from '../common/ConnectionInfo';
+import { connectionInfo } from '../common/ConnectionInfo';
 import type { TimeSample } from '@casual-simulation/timesync';
 
 describe('InstRecordsClient', () => {

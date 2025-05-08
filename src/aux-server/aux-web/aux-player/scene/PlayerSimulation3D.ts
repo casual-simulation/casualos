@@ -21,35 +21,10 @@ import type {
     PrecalculatedBot,
     BotIndexEvent,
 } from '@casual-simulation/aux-common';
-import {
-    hasValue,
-    DEFAULT_SCENE_BACKGROUND_COLOR,
-    isDimensionLocked,
-    calculateGridScale,
-    toast,
-    calculateBotValue,
-    calculateBooleanTagValue,
-    calculateNumericalTagValue,
-    DEFAULT_MINI_PORTAL_VISIBLE,
-    getPortalConfigBotID,
-    DEFAULT_PORTAL_ROTATABLE,
-    DEFAULT_PORTAL_PANNABLE,
-    DEFAULT_PORTAL_ZOOMABLE,
-} from '@casual-simulation/aux-common';
+import { hasValue } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import {
-    userBotChanged,
-    userBotTagsChanged,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
-import {
-    tap,
-    filter,
-    map,
-    distinctUntilChanged,
-    switchMap,
-} from 'rxjs/operators';
+
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import type { CameraRig } from '../../shared/scene/CameraRigFactory';
 import type { Game } from '../../shared/scene/Game';
@@ -58,10 +33,7 @@ import type {
     BotDimensionEvent,
     DimensionAddedEvent,
 } from '@casual-simulation/aux-vm';
-import {
-    UpdatedBotInfo,
-    DimensionRemovedEvent,
-} from '@casual-simulation/aux-vm';
+
 import { PortalConfig } from './PortalConfig';
 import type { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { CompoundGrid3D } from '../../shared/scene/CompoundGrid3D';

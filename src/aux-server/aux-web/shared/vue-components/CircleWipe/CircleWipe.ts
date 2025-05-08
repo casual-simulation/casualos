@@ -23,8 +23,6 @@ import { appManager } from '../../AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import type { AsyncAction, BotAction } from '@casual-simulation/aux-common';
 import {
-    ON_PASTE_ACTION_NAME,
-    onPasteArg,
     enqueueAsyncResult,
     enqueueAsyncError,
     hasValue,

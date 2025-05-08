@@ -35,10 +35,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
-    StartFormAnimationOptions,
     hasValue,
-    asyncResult,
-    asyncError,
     realNumberOrDefault,
     ON_FORM_ANIMATION_STARTED,
     ON_ANY_FORM_ANIMATION_STARTED,
@@ -49,7 +46,6 @@ import {
     ON_FORM_ANIMATION_STOPPED,
     ON_ANY_FORM_ANIMATION_STOPPED,
 } from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import type { Simulation } from '@casual-simulation/aux-vm';
 
 const CANCEL_SYMBOL = Symbol('cancel');

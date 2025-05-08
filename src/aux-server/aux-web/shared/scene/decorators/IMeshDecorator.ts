@@ -23,7 +23,6 @@ import type {
 } from '@casual-simulation/three';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { ArgEvent } from '@casual-simulation/aux-common/Event';
-import { Event } from '@casual-simulation/aux-common/Event';
 
 export interface IMeshDecorator {
     bot3D: AuxBot3D;

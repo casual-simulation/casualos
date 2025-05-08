@@ -17,7 +17,6 @@
  */
 import type {
     CallProcedureOptions,
-    Procedure,
     ProcedureActions,
     ProcedureInputs,
     ProcedureQueries,

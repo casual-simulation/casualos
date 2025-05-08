@@ -38,7 +38,6 @@ import {
     botUpdated,
     breakIntoIndividualEvents,
     getActiveObjects,
-    tagsOnBot,
     hasValue,
     stateUpdatedEvent,
     merge,

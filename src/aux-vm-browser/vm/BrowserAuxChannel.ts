@@ -21,11 +21,7 @@ import type {
     AuxPartition,
     AuxPartitionServices,
 } from '@casual-simulation/aux-common';
-import {
-    BotAction,
-    createAuxPartition,
-    ConnectionIndicator,
-} from '@casual-simulation/aux-common';
+import { createAuxPartition } from '@casual-simulation/aux-common';
 import type {
     AuxConfig,
     AuxSubChannel,

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Remote } from 'comlink';
-import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import { wrap, proxy } from 'comlink';
 import type {
     AuthHelperInterface,
     AuxAuth,
@@ -28,7 +28,7 @@ import type {
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import type {
     AuthData,
     AvailablePermissions,

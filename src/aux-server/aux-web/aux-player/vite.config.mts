@@ -7,11 +7,7 @@ import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 import virtual from '@rollup/plugin-virtual';
 import { generateDependencyGraphRollupPlugin } from '../../script/vite-helpers';
-import {
-    getPolicies,
-    listEnvironmentFiles,
-    loadEnvFiles,
-} from '../../script/vite-utils';
+import { getPolicies } from '../../script/vite-utils';
 import writeFilesPlugin from '../../plugins/write-files-plugin';
 import md from '../../plugins/markdown-plugin';
 import { visualizer } from 'rollup-plugin-visualizer';

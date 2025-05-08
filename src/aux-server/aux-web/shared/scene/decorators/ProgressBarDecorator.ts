@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type {
     BotCalculationContext,
@@ -24,11 +24,8 @@ import type {
 import {
     calculateNumericalTagValue,
     calculateBotValue,
-    getBotShape,
-    BotShape,
     clamp,
     hasValue,
-    calculateStringTagValue,
     getBotTagAnchor,
 } from '@casual-simulation/aux-common';
 import type {
@@ -37,7 +34,6 @@ import type {
     MeshToonMaterial,
 } from '@casual-simulation/three';
 import {
-    Color,
     Group,
     Vector3,
     Euler,
@@ -47,7 +43,6 @@ import {
     isTransparent,
     disposeMesh,
     createPlane,
-    calculateAnchorPosition,
     buildSRGBColor,
 } from '../SceneUtils';
 import type { IMeshDecorator } from './IMeshDecorator';

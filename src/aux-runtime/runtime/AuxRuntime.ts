@@ -37,7 +37,6 @@ import type {
     ImportMetadata,
 } from '@casual-simulation/aux-common/bots';
 import {
-    BotAction,
     hasValue,
     tagsOnBot,
     isFormula,
@@ -56,9 +55,6 @@ import {
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
     ON_BOT_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
-    getTagMask,
-    hasTagOrMask,
-    ON_SERVER_STREAM_LOST_ACTION_NAME,
     updatedBot,
     TAG_MASK_SPACE_PRIORITIES,
     CLEAR_CHANGES_SYMBOL,
@@ -69,9 +65,7 @@ import {
     action,
     isBotInDimension,
     asyncResult,
-    BotActions,
     registerBuiltinPortal,
-    botAdded,
     defineGlobalBot,
     isBotLink,
     parseBotLink,
@@ -104,10 +98,7 @@ import type {
 import {
     AuxCompiler,
     getInterpretableFunction,
-    AuxCompilerBreakpoint,
     isInterpretableFunction,
-    FUNCTION_METADATA,
-    AuxScriptMetadata,
     IMPORT_META_FACTORY,
     IMPORT_FACTORY,
     EXPORT_FACTORY,
@@ -118,7 +109,6 @@ import {
     MemoryGlobalContext,
     removeFromContext,
     isInContext,
-    WatchBotTimer,
 } from './AuxGlobalContext';
 import type {
     AuxDebuggerOptions,
@@ -163,24 +153,16 @@ import {
 } from './Utils';
 import type { AuxRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
-import {
-    applyTagEdit,
-    isTagEdit,
-    mergeVersions,
-} from '@casual-simulation/aux-common/bots';
+import { sortBy, forOwn, merge, union } from 'lodash';
+import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
 import type { CurrentVersion } from '@casual-simulation/aux-common';
-import { VersionVector } from '@casual-simulation/aux-common';
 import type { RuntimeStateVersion } from './RuntimeStateVersion';
 import { updateRuntimeVersion } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '@casual-simulation/aux-common/math';
 import type {
-    Breakpoint,
     Interpreter as InterpreterType,
-    InterpreterAfterStop,
-    InterpreterBeforeStop,
     InterpreterContinuation,
     InterpreterStop,
 } from '@casual-simulation/js-interpreter';
@@ -195,7 +177,6 @@ import {
     isGenerator,
     markAsUncopiableObject,
     UNCOPIABLE,
-    unwind,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
@@ -205,10 +186,7 @@ import type {
     DebuggerTagUpdate,
     RuntimeActions,
 } from './RuntimeEvents';
-import {
-    DebuggerScriptEnterTrace,
-    DebuggerScriptExitTrace,
-} from './RuntimeEvents';
+
 import {
     DeepObjectError,
     convertToCopiableValue,

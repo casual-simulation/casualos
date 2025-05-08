@@ -25,16 +25,12 @@ import type {
     AuthUser,
     UpdateSubscriptionPeriodRequest,
 } from './AuthStore';
-import { AuthInvoice, AuthSession } from './AuthStore';
 import type {
     StripeEvent,
     StripeInterface,
     StripeInvoice,
 } from './StripeInterface';
-import {
-    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
-    StripeCheckoutResponse,
-} from './StripeInterface';
+import { STRIPE_EVENT_INVOICE_PAID_SCHEMA } from './StripeInterface';
 import type {
     NotAuthorizedError,
     NotLoggedInError,

@@ -24,7 +24,6 @@ import type {
 import {
     PolicyController,
     explainationForPermissionAssignment,
-    getMarkerResourcesForCreation,
     willMarkersBeRemaining,
 } from './PolicyController';
 import type {
@@ -36,34 +35,22 @@ import type {
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
-    AvailablePermissions,
-    DATA_RESOURCE_KIND,
     DEFAULT_BRANCH_NAME,
-    EVENT_RESOURCE_KIND,
-    FILE_RESOURCE_KIND,
-    INST_RESOURCE_KIND,
-    MARKER_RESOURCE_KIND,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
-    ROLE_RESOURCE_KIND,
 } from '@casual-simulation/aux-common';
 import type {
     CreateRecordSuccess,
     CreateStudioSuccess,
 } from './RecordsController';
 import {
-    CreateStudioResult,
     formatV1RecordKey,
     parseRecordKey,
     RecordsController,
 } from './RecordsController';
 import type { TestServices } from './TestUtils';
-import {
-    createTestControllers,
-    createTestRecordKey,
-    createTestUser,
-} from './TestUtils';
+import { createTestControllers, createTestRecordKey } from './TestUtils';
 import type {
     AssignPermissionToSubjectAndMarkerSuccess,
     AssignPermissionToSubjectAndResourceSuccess,

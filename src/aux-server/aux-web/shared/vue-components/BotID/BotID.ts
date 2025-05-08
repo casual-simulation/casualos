@@ -19,9 +19,6 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import type { Bot } from '@casual-simulation/aux-common';
-import { toast } from '@casual-simulation/aux-common';
-import { copyToClipboard } from '../../SharedUtils';
-import { appManager } from '../../AppManager';
 
 @Component({
     components: {},

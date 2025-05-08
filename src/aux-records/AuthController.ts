@@ -55,7 +55,6 @@ import type {
 import {
     parseConnectionToken,
     formatV1ConnectionKey,
-    formatV1OpenAiKey,
     formatV1SessionKey,
     isSuperUserRole,
     parseSessionKey,
@@ -77,7 +76,6 @@ import type {
     AuthenticationResponseJSON,
 } from '@simplewebauthn/types';
 import {
-    VerifiedAuthenticationResponse,
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,

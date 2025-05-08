@@ -16,15 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { RealtimeEditMode } from './RuntimeBot';
-import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import type { AuxPartitionRealtimeStrategy } from '@casual-simulation/aux-common/partitions/AuxPartition';
-import { forOwn } from 'lodash';
-import {
-    Easing,
-    EaseMode,
-    EaseType,
-    Bot,
-} from '@casual-simulation/aux-common/bots';
+
 import '@casual-simulation/aux-common/BlobPolyfill';
 
 export function realtimeStrategyToRealtimeEditMode(

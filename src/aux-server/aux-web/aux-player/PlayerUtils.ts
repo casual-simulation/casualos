@@ -16,10 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
-import {
-    calculateBotValue,
-    getBotConfigDimensions,
-} from '@casual-simulation/aux-common';
+import { getBotConfigDimensions } from '@casual-simulation/aux-common';
 import { sortBy } from 'lodash';
 
 interface PlayerContextSearchResult {

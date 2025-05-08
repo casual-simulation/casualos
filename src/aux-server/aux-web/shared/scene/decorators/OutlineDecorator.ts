@@ -18,15 +18,13 @@
 import {
     Group,
     Mesh,
-    MathUtils as ThreeMath,
-    Color,
     MeshBasicMaterial,
     BackSide,
 } from '@casual-simulation/three';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import { calculateBotValue, hasValue } from '@casual-simulation/aux-common';
 import { disposeMesh, isTransparent, buildSRGBColor } from '../SceneUtils';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';

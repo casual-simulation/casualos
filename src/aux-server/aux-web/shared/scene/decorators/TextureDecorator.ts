@@ -24,12 +24,8 @@ import type {
 } from '@casual-simulation/three';
 import { sRGBEncoding } from '@casual-simulation/three';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
-import {
-    calculateBotValue,
-    hasValue,
-    getBotShape,
-} from '@casual-simulation/aux-common';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { calculateBotValue, hasValue } from '@casual-simulation/aux-common';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { IMeshDecorator } from './IMeshDecorator';
 import { AuxTextureLoader } from '../AuxTextureLoader';

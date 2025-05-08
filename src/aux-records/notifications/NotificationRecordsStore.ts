@@ -25,7 +25,6 @@ import type {
     CrudSubscriptionMetrics,
 } from '../crud';
 import type { SubscriptionFilter } from '../MetricsStore';
-import { PushSubscriptionType } from './WebPushInterface';
 
 /**
  * Defines a store that contains notification records.

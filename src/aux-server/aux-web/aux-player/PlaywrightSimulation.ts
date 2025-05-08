@@ -23,19 +23,11 @@ import type {
     ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import {
-    merge,
     parseSimulationId,
     createBot,
-    DEVICE_BOT_ID,
-    LOCAL_BOT_ID,
-    botUpdated,
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
-    COOKIE_BOT_ID,
-    isBotTags,
     isBot,
-    ADMIN_PARTITION_ID,
-    ADMIN_BRANCH_NAME,
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     BOOTSTRAP_PARTITION_ID,
@@ -49,8 +41,6 @@ import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     BaseSimulation,
     LoginManager,
-    getTreeName,
-    Simulation,
     RecordsManager,
 } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -65,8 +55,6 @@ import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
 import { filter, tap } from 'rxjs/operators';
 import type { ConsoleMessages } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
-import { fromEventPattern, Subscription } from 'rxjs';
-import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import type {
     AuthHelperInterface,
     RecordsEndpointInfo,

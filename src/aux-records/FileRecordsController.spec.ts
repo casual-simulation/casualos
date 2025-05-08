@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { RecordsStore } from './RecordsStore';
 import type { RecordsController } from './RecordsController';
 import type {
     EraseFileFailure,
@@ -32,7 +31,6 @@ import type {
     GetFileRecordSuccess,
     UpdateFileFailure,
 } from './FileRecordsStore';
-import { FileRecordsStore } from './FileRecordsStore';
 import type { PolicyController } from './PolicyController';
 import {
     createTestControllers,

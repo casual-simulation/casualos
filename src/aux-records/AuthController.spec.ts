@@ -36,28 +36,20 @@ import {
 } from './AuthController';
 import {
     formatV1ConnectionKey,
-    formatV1OpenAiKey,
     formatV1SessionKey,
     generateV1ConnectionToken,
-    parseSessionKey,
 } from './AuthUtils';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
-import { fromByteArray, toByteArray } from 'base64-js';
+import { fromByteArray } from 'base64-js';
 import {
     hashHighEntropyPasswordWithSalt,
     hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
-import {
-    fromBase64String,
-    toBase64String,
-} from '@casual-simulation/aux-common';
+import { toBase64String } from '@casual-simulation/aux-common';
 import { padStart } from 'lodash';
-import {
-    allowAllFeatures,
-    SubscriptionConfiguration,
-} from './SubscriptionConfiguration';
+import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
 import type { PrivoClientInterface } from './PrivoClient';

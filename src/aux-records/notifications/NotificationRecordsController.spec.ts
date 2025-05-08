@@ -35,7 +35,6 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import {
-    action,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     SUBSCRIPTION_ID_NAMESPACE,

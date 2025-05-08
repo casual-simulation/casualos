@@ -21,7 +21,6 @@ import {
     CODE_FIELD,
     DISPLAY_NAME_FIELD,
     EMAIL_FIELD,
-    FormError,
     PARENT_EMAIL_FIELD,
     getFormErrors,
 } from './FormError';

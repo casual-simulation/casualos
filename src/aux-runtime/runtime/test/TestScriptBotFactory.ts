@@ -24,10 +24,8 @@ import type {
     RuntimeBot,
 } from '@casual-simulation/aux-common/bots';
 import {
-    botsFromShortIds,
     TAG_MASK_SPACE_PRIORITIES,
     hasValue,
-    BotAction,
 } from '@casual-simulation/aux-common/bots';
 import type { RuntimeBotInterface, RuntimeBotFactory } from '../RuntimeBot';
 import { createRuntimeBot, RealtimeEditMode } from '../RuntimeBot';

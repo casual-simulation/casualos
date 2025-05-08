@@ -15,15 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import _, { omitBy, padStart, sortBy } from 'lodash';
+import { omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import {
-    hasValue,
-    KnownErrorCodes,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';
-import { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
 
 /**
  * Signs the given request and adds the related headers to it.

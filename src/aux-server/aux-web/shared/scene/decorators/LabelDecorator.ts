@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type {
     BotCalculationContext,
@@ -23,21 +23,17 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
-    isFormula,
     calculateFormattedBotValue,
     calculateNumericalTagValue,
     getBotLabelAnchor,
-    BotLabelAnchor,
     getBotScale,
     getBotLabelAlignment,
     calculateStringTagValue,
     DEFAULT_LABEL_FONT_ADDRESS,
     calculateLabelFontSize,
-    BotLabelAlignment,
     calculateLabelWordWrapMode,
     getBotLabelPadding,
     getBotOrientationMode,
-    isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import type { Object3D } from '@casual-simulation/three';
@@ -46,12 +42,11 @@ import {
     Vector3,
     Vector2,
     PerspectiveCamera,
-    Group,
 } from '@casual-simulation/three';
 import type { WordBubbleElement } from '../WordBubbleElement';
 import type { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
-import { calculateScale, buildSRGBColor } from '../SceneUtils';
+import { buildSRGBColor } from '../SceneUtils';
 import NotoSansKR from '@casual-simulation/aux-components/fonts/NotoSansKR/NotoSansKR-Regular.otf';
 import Roboto from '@casual-simulation/aux-components/fonts/Roboto/roboto-v18-latin-regular.woff';
 import { WordBubbleDecorator } from './WordBubbleDecorator';

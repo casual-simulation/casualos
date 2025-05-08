@@ -20,18 +20,13 @@ import { IdePortalManager } from './IdePortalManager';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
     createBot,
-    createPrecalculatedBot,
     botAdded,
-    PrecalculatedBot,
     BotIndex,
     botUpdated,
-    botRemoved,
     registerPrefix,
-    BotsState,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject } from 'rxjs';
-import { locale } from 'faker';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 

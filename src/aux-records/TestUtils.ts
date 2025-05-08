@@ -21,7 +21,6 @@ import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
 import type { PublicRecordKeyPolicy } from './RecordsStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { parseSessionKey } from './AuthUtils';
 import type { PrivoConfiguration } from './PrivoConfiguration';

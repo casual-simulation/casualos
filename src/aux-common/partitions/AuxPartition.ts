@@ -29,7 +29,6 @@ import type {
     StateUpdatedEvent,
 } from '../bots';
 import {
-    PartialBotsState,
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
     BOOTSTRAP_PARTITION_ID,

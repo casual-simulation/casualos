@@ -17,7 +17,6 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { OAUTH_LOGIN_CHANNEL_NAME } from '../../shared/AuthManager';
 

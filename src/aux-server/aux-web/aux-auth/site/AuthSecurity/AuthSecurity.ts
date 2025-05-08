@@ -15,27 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {
-    AppMetadata,
-    UserMetadata,
-} from '../../../../aux-backend/shared/AuthMetadata';
+
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import type { Subscription } from 'rxjs';
-import { debounce, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 import { tap } from 'rxjs/operators';
 import type { ListedSession } from '@casual-simulation/aux-records/AuthController';
-import { DateTime } from 'luxon';
 import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import type { AuthenticatorKind } from '@casual-simulation/aux-common/AAGUID';
-import {
-    AAGUIDInfo,
-    getInfoForAAGUID,
-} from '@casual-simulation/aux-common/AAGUID';
+import { getInfoForAAGUID } from '@casual-simulation/aux-common/AAGUID';
 import Bowser from 'bowser';
 
 @Component({

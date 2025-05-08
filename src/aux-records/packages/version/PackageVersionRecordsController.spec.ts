@@ -23,7 +23,6 @@ import {
 } from '../../crud/sub/SubCrudRecordsControllerTests';
 import {
     entitlementRequiresApproval,
-    PackageRecordVersionInput,
     PackageVersionRecordsController,
 } from './PackageVersionRecordsController';
 import {
@@ -35,13 +34,9 @@ import type { RecordsController } from '../../RecordsController';
 import type { PolicyController } from '../../PolicyController';
 import type { Entitlement, StoredAux } from '@casual-simulation/aux-common';
 import {
-    action,
-    BotsState,
-    createBot,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { v5 as uuidv5 } from 'uuid';
 import type {
     PackageRecordVersion,
     PackageRecordVersionKey,
@@ -54,7 +49,6 @@ import type { PackageRecordsStore } from '../PackageRecordsStore';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
-import { v7 as uuid } from 'uuid';
 import type { UserRole } from '../../AuthStore';
 import { PackageRecordsController } from '../PackageRecordsController';
 

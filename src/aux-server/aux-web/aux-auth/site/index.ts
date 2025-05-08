@@ -64,10 +64,7 @@ import AuthRecordsFiles from './AuthRecordsFiles/AuthRecordsFiles';
 import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
-import {
-    listenForChannel,
-    setupChannel,
-} from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
+import { setupChannel } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
 import { skip } from 'rxjs/operators';
 import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';

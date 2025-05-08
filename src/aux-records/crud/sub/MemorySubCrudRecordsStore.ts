@@ -24,7 +24,7 @@ import type {
     SubCrudRecord,
     SubCrudRecordsStore,
 } from './SubCrudRecordsStore';
-import { isEqual, orderBy, sortBy } from 'lodash';
+import { isEqual } from 'lodash';
 import type {
     CrudRecord,
     CrudRecordsStore,

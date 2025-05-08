@@ -29,12 +29,7 @@ import type {
     AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
-import {
-    listenForChannel,
-    listenForChannels,
-    setupChannel,
-    waitForLoad,
-} from '../../../../aux-vm-browser/html/IFrameHelpers';
+import { listenForChannels } from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
 import type {
     CreatePublicRecordKeyResult,
@@ -85,10 +80,7 @@ import {
 } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { OAUTH_LOGIN_CHANNEL_NAME } from '../shared/AuthManager';
-import {
-    browserSupportsWebAuthn,
-    browserSupportsWebAuthnAutofill,
-} from '@simplewebauthn/browser';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;

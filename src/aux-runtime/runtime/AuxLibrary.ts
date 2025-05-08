@@ -21,11 +21,7 @@ import type {
     TimeoutOrIntervalTimer,
     AsyncIterableTask,
 } from './AuxGlobalContext';
-import {
-    BotTimer,
-    DEBUG_STRING,
-    debugStringifyFunction,
-} from './AuxGlobalContext';
+import { DEBUG_STRING, debugStringifyFunction } from './AuxGlobalContext';
 import type {
     BotTags,
     Bot,
@@ -165,7 +161,6 @@ import {
     registerPrefix as calcRegisterPrefix,
     localPositionTween as calcLocalPositionTween,
     localRotationTween as calcLocalRotationTween,
-    animateTag as calcAnimateTag,
     showUploadFiles as calcShowUploadFiles,
     download,
     loadSimulation,
@@ -188,8 +183,6 @@ import {
     listInstUpdates as calcListInstUpdates,
     getInstStateFromUpdates as calcGetInstStateFromUpdates,
     action,
-    LocalPositionTweenAction,
-    LocalRotationTweenAction,
     calculateAnchorPoint,
     calculateAnchorPointOffset,
     getBotPosition as calcGetBotPosition,
@@ -200,11 +193,9 @@ import {
     getBotScale,
     EDIT_TAG_SYMBOL,
     EDIT_TAG_MASK_SYMBOL,
-    AnimateTagOptions,
     circleWipe,
     addDropSnap as calcAddDropSnap,
     addDropGrid as calcAddDropGrid,
-    ImportAUXAction,
     animateToPosition,
     beginAudioRecording as calcBeginAudioRecording,
     endAudioRecording as calcEndAudioRecording,
@@ -214,7 +205,6 @@ import {
     getVoices as calcGetVoices,
     getGeolocation as calcGetGeolocation,
     cancelAnimation,
-    SpeakTextOptions,
     disablePOV,
     enablePOV,
     enableCustomDragging as calcEnableCustomDragging,
@@ -233,12 +223,9 @@ import {
     createBotLink,
     convertGeolocationToWhat3Words as calcConvertGeolocationToWhat3Words,
     meetCommand as calcMeetCommand,
-    MeetCommandAction,
     meetFunction as calcMeetFunction,
-    MediaPermissionAction,
     openImageClassifier as calcOpenImageClassifier,
     classifyImages as calcOpenClassifyImages,
-    OpenImageClassifierAction,
     isBotDate,
     DATE_TAG_PREFIX,
     parseBotDate,
@@ -270,14 +257,12 @@ import {
     calculateViewportCoordinatesFromPosition as calcCalculateViewportCoordinatesFromPosition,
     calculateScreenCoordinatesFromViewportCoordinates as calcCalculateScreenCoordinatesFromViewportCoordinates,
     calculateViewportCoordinatesFromScreenCoordinates as calcCalculateViewportCoordinatesFromScreenCoordinates,
-    CameraPortal,
     capturePortalScreenshot as calcCapturePortalScreenshot,
     createStaticHtml as calcCreateStaticHtmlFromBots,
     recordLoom,
     watchLoom,
     getLoomMetadata,
     loadSharedDocument,
-    LoadSharedDocumentAction,
     installAuxFile as calcInstallAuxFile,
 } from '@casual-simulation/aux-common/bots';
 import type {
@@ -302,7 +287,6 @@ import type {
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
     InstallPackageResult,
-    ListInstalledPackagesAction,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -367,15 +351,7 @@ import {
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
 } from './RecordsEvents';
-import {
-    sortBy,
-    every,
-    cloneDeep,
-    union,
-    isEqual,
-    flatMap,
-    indexOf,
-} from 'lodash';
+import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import type {
     DeviceSelector,
     RemoteAction,
@@ -384,7 +360,6 @@ import type {
     VersionNumber,
 } from '@casual-simulation/aux-common';
 import {
-    Action,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
     formatVersionNumber,
@@ -428,13 +403,7 @@ import {
     isTagEdit,
     preserve,
 } from '@casual-simulation/aux-common/bots';
-import {
-    Euler,
-    Vector3 as ThreeVector3,
-    Plane,
-    Ray,
-    RGBA_ASTC_10x10_Format,
-} from '@casual-simulation/three';
+import { Vector3 as ThreeVector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
 import './PerformanceNowPolyfill';
@@ -464,8 +433,6 @@ import type {
     ListSubscriptionsResult,
     NotificationRecord,
     PushNotificationPayload,
-    PushSubscriptionType,
-    ReportInstResult,
     RevokePermissionResult,
     SendNotificationResult,
     SubscribeToNotificationResult,
@@ -507,7 +474,7 @@ import {
     constructInitializationUpdate,
     mergeInstUpdates as calcMergeInstUpdates,
 } from '@casual-simulation/aux-common/partitions/PartitionUtils';
-import type { AxiosResponse, AxiosError } from 'axios';
+import type { AxiosResponse } from 'axios';
 import { CasualOSError } from './CasualOSError';
 import type {
     AICreateOpenAIRealtimeSessionTokenResult,

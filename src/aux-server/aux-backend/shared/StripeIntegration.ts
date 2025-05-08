@@ -36,7 +36,6 @@ import { SpanKind } from '@opentelemetry/api';
 import {
     SEMATTRS_PEER_SERVICE,
     SEMRESATTRS_SERVICE_NAME,
-    SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import type Stripe from 'stripe';
 

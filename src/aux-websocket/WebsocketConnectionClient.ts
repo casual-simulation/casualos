@@ -16,18 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Observable } from 'rxjs';
-import { fromEventPattern, BehaviorSubject, Subject, merge, of } from 'rxjs';
+import { BehaviorSubject, merge } from 'rxjs';
 import type { ReconnectableSocketInterface } from '@casual-simulation/websocket';
-import {
-    map,
-    tap,
-    concatMap,
-    first,
-    takeUntil,
-    filter,
-    mapTo,
-    share,
-} from 'rxjs/operators';
+import { map, tap, filter, share } from 'rxjs/operators';
 import type {
     ConnectionClient,
     ClientConnectionState,
@@ -39,10 +30,7 @@ import type {
     WebsocketErrorInfo,
     ConnectionIndicator,
 } from '@casual-simulation/aux-common';
-import {
-    ConnectionIndicatorToken,
-    WebsocketEventTypes,
-} from '@casual-simulation/aux-common';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common';
 
 export class WebsocketConnectionClient implements ConnectionClient {
     private _socket: ReconnectableSocketInterface;

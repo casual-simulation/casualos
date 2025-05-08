@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import Axios from 'axios';
-import Vue, { inject } from 'vue';
 import type { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { filter, first, map, scan, tap } from 'rxjs/operators';
@@ -27,19 +26,15 @@ import type {
     ProgressMessage,
 } from '@casual-simulation/aux-common';
 import {
-    AuxPartitionConfig,
     getUploadState,
     parseVersionNumber,
     remapProgressPercent,
-    remote,
 } from '@casual-simulation/aux-common';
 import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
 import {
     hasValue,
     KNOWN_PORTALS,
-    normalizeAUXBotURL,
     getBotsStateFromStoredAux,
-    applyUpdatesToInst,
     isStoredVersion2,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
@@ -58,11 +53,10 @@ import {
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
-import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
-import { isEqual, merge } from 'lodash';
+import { merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-common';
 import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';

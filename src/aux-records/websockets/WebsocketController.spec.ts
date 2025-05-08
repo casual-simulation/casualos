@@ -29,7 +29,6 @@ import {
     action,
     botAdded,
     ON_WEBHOOK_ACTION_NAME,
-    botRemoved,
     getInstStateFromUpdates,
     createInitializationUpdate,
 } from '@casual-simulation/aux-common/bots';
@@ -63,15 +62,11 @@ import {
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
     constructInitializationUpdate,
-    merge,
 } from '@casual-simulation/aux-common';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
 import type { MemoryStore } from '../MemoryStore';
 import type { SubscriptionConfiguration } from '../SubscriptionConfiguration';
-import {
-    FeaturesConfiguration,
-    allowAllFeatures,
-} from '../SubscriptionConfiguration';
+
 import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
 import type { PackageRecordVersionKey } from '../packages/version';
 import { version } from '../packages/version';

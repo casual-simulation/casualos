@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { RegexRule } from '@casual-simulation/aux-records';
-import { cleanupObject } from '@casual-simulation/aux-records';
 import type {
     AddressType,
     AuthInvoice,
@@ -45,7 +44,7 @@ import type {
     Subscription as PrismaSubscription,
     SubscriptionPeriod,
 } from './generated';
-import { LoginRequest, Prisma } from './generated';
+import { Prisma } from './generated';
 // import { PrismaClientKnownRequestError } from './generated/runtime';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';

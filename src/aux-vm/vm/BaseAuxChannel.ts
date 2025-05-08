@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Observable, SubscriptionLike } from 'rxjs';
-import { Subject, Subscription, firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { tap, first, startWith } from 'rxjs/operators';
 import type {
     AuxChannel,
@@ -55,7 +55,6 @@ import {
     stateUpdatedEvent,
     registerBuiltinPortal,
     defineGlobalBot,
-    createPrecalculatedBot,
     merge,
     asyncError,
     botAdded,
@@ -63,8 +62,6 @@ import {
     createBot,
     getBotSpace,
     remapProgressPercent,
-    ConnectionIndicator,
-    getConnectionId,
     PartitionAuthSource,
     action,
     ON_COLLABORATION_ENABLED,
@@ -80,7 +77,6 @@ import type {
     AuxDevice,
 } from '@casual-simulation/aux-runtime';
 import {
-    realtimeStrategyToRealtimeEditMode,
     AuxPartitionRealtimeEditModeProvider,
     AuxRuntime,
     isPromise,
@@ -90,14 +86,7 @@ import type { AuxConfig } from './AuxConfig';
 import { buildVersionNumber } from './AuxConfig';
 import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
-import {
-    flatMap,
-    mapKeys,
-    mapValues,
-    partition,
-    pick,
-    transform,
-} from 'lodash';
+import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import type { TimeSyncController } from '@casual-simulation/timesync';

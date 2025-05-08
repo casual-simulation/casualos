@@ -28,7 +28,6 @@ import type {
     SubscriptionFilter,
     UserPushSubscription,
 } from '@casual-simulation/aux-records';
-import { PUSH_SUBSCRIPTION_SCHEMA } from '@casual-simulation/aux-records';
 import type {
     ListCrudStoreSuccess,
     ListCrudStoreByMarkerRequest,

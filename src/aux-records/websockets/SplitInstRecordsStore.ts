@@ -31,9 +31,7 @@ import type {
     SaveInstResult,
     StoredUpdates,
 } from './InstRecordsStore';
-import type { InstRecord, SaveBranchFailure } from './InstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
-import type { Entitlement } from '@casual-simulation/aux-common';
 
 /**
  * Defines a class that implements the InstRecordsStore interface by first storing updates in a temporary store and then sending them to a permanent store.

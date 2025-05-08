@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import '@casual-simulation/aux-vm/globalThis-polyfill';
-import { Message } from 'comlink/dist/umd/protocol';
 import { Observable } from 'rxjs';
 
 /**

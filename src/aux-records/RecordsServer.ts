@@ -23,10 +23,8 @@ import type {
     ValidateSessionKeyResult,
 } from './AuthController';
 import {
-    INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
     MAX_EMAIL_ADDRESS_LENGTH,
-    MAX_OPEN_AI_API_KEY_LENGTH,
     MAX_SMS_ADDRESS_LENGTH,
     PRIVO_OPEN_ID_PROVIDER,
     validateSessionKey,
@@ -65,7 +63,6 @@ import {
     procedure,
 } from '@casual-simulation/aux-common';
 import type { PolicyController } from './PolicyController';
-import { GrantResourcePermissionRequest } from './PolicyController';
 import type { AIController } from './AIController';
 import type { AIChatMessage } from './AIChatInterface';
 import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
@@ -81,10 +78,7 @@ import type {
     WebsocketRequestMessage,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import {
-    UnwatchBranchMessage,
-    WebsocketErrorEvent,
     WebsocketEventTypes,
-    WebsocketMessage,
     websocketEventSchema,
     websocketRequestMessageSchema,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
@@ -101,14 +95,12 @@ import type { ModerationController } from './ModerationController';
 import { COM_ID_CONFIG_SCHEMA, COM_ID_PLAYER_CONFIG } from './ComIdConfig';
 import type { LoomController } from './LoomController';
 import type { Tracer } from '@opentelemetry/api';
-import { SpanKind, ValueType, metrics, trace } from '@opentelemetry/api';
+import { SpanKind, ValueType, trace } from '@opentelemetry/api';
 import { traceHttpResponse, traced } from './tracing/TracingDecorators';
 import {
-    SEMATTRS_ENDUSER_ID,
     SEMATTRS_HTTP_CLIENT_IP,
     SEMATTRS_HTTP_HOST,
     SEMATTRS_HTTP_METHOD,
-    SEMATTRS_HTTP_ROUTE,
     SEMATTRS_HTTP_TARGET,
     SEMATTRS_HTTP_URL,
     SEMATTRS_HTTP_USER_AGENT,
@@ -158,10 +150,7 @@ import type {
     PackageRecordVersionKey,
     PackageVersionSpecifier,
 } from './packages/version/PackageVersionRecordsStore';
-import {
-    getPackageVersionKey,
-    getPackageVersionSpecifier,
-} from './packages/version/PackageVersionRecordsStore';
+import { getPackageVersionSpecifier } from './packages/version/PackageVersionRecordsStore';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 
 declare const GIT_TAG: string;

@@ -21,7 +21,7 @@ import type {
     SharedPartitionsVersion,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
-import { hasValue, parseVersionNumber } from '@casual-simulation/aux-common';
+import { parseVersionNumber } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 
 /**

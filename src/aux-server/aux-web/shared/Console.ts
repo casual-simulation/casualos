@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Observer } from 'rxjs';
-import { Observable, Subscription, merge, Subject, ReplaySubject } from 'rxjs';
-import { share, shareReplay } from 'rxjs/operators';
+import { Observable, Subscription, merge, ReplaySubject } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import type { ConsoleMessages } from '@casual-simulation/aux-common';
 
 const externalMessages = new ReplaySubject<ConsoleMessages>(1000);

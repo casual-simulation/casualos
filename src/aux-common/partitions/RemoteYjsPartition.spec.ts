@@ -46,7 +46,6 @@ import type {
 import {
     action,
     applyUpdatesToInst,
-    asyncError,
     asyncResult,
     botAdded,
     botUpdated,
@@ -64,7 +63,7 @@ import {
     installAuxFile,
 } from '../bots';
 import type { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
-import { wait, waitAsync } from '../test/TestHelpers';
+import { waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../bots';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
@@ -77,11 +76,7 @@ import type {
     UpdatesReceivedMessage,
     WatchBranchResultMessage,
 } from '../websockets';
-import {
-    DEFAULT_BRANCH_NAME,
-    InstRecordsClient,
-    MemoryConnectionClient,
-} from '../websockets';
+import { InstRecordsClient, MemoryConnectionClient } from '../websockets';
 import type { Action, CurrentVersion, StatusUpdate } from '../common';
 import { connectionInfo, device, remote } from '../common';
 import {
