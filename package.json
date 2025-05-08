@@ -176,6 +176,7 @@
         "ts-jest": "29.0.5",
         "typescript": "^5.0.2",
         "typescript-eslint": "^8.26.1",
+        "@typescript-eslint/utils": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
         "wait-on": "7"

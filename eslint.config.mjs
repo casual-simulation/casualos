@@ -3,6 +3,8 @@ import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import header from 'eslint-plugin-header';
+import noNonTypeImports from './rules/no-non-type-imports.mjs';
+
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
@@ -29,12 +31,34 @@ export default defineConfig([
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
     {
+        plugins: {
+            custom: noNonTypeImports,
+        },
+    },
+    {
         rules: {
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 {
                     fixStyle: 'separate-type-imports',
                     prefer: 'type-imports',
+                },
+            ],
+        },
+    },
+    {
+        files: ['src/**/*.{js,ts,vue}'],
+        ignores: [
+            'src/aux-records-aws/**/*.{js,ts,vue}',
+            'src/aux-records/**/*.{js,ts,vue}',
+        ],
+        rules: {
+            'custom/no-non-type-imports': [
+                'error',
+                {
+                    patterns: {
+                        '@casual-simulation/aux-records': {},
+                    },
                 },
             ],
         },
