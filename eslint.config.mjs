@@ -3,6 +3,7 @@ import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import header from 'eslint-plugin-header';
+import pluginUnusedImports from 'eslint-plugin-unused-imports';
 import noNonTypeImports from './rules/no-non-type-imports.mjs';
 
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -33,6 +34,7 @@ export default defineConfig([
     {
         plugins: {
             casualos: noNonTypeImports,
+            'unused-imports': pluginUnusedImports,
         },
     },
     {
@@ -44,6 +46,7 @@ export default defineConfig([
                     prefer: 'type-imports',
                 },
             ],
+            'unused-imports/no-unused-imports': 'error',
         },
     },
     {
