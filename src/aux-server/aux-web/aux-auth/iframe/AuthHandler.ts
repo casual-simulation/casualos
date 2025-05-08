@@ -749,7 +749,7 @@ export class AuthHandler implements AuxAuth {
             let cancelSignal = {
                 canceled: false,
             };
-            canceled.then(() => {
+            canceled.then((): string => {
                 cancelSignal.canceled = true;
                 return null;
             });

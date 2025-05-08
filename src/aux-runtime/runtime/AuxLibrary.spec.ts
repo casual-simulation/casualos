@@ -16155,7 +16155,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should short circuit when null is returned', () => {
-                const abc1 = (bot1.listeners.abc = jest.fn(() => null));
+                const abc1 = (bot1.listeners.abc = jest.fn(() => null as any));
                 const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
 
                 const def1 = (bot1.listeners.def = jest.fn(() => 789));

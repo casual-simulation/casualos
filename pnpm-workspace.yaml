@@ -3,3 +3,5 @@ packages:
     - 'src/*'
     - '*'
     - 'xpexchange/*'
+linkWorkspacePackages: true
+preferWorkspacePackages: true

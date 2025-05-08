@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Updated to Node 20.18 and PNPM 10.10.
+    -   Updating PNPM required updating the `pnpm-lock.yaml` file.
+
 ### :rocket: Features
 
 -   Added Package Records
