@@ -21,7 +21,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import UpdatePasswordCard from '../UpdatePasswordCard/UpdatePasswordCard';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
-import type { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
 import {
     DATE_OF_BIRTH_FIELD,
     DISPLAY_NAME_FIELD,
@@ -29,7 +29,7 @@ import {
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
     getFormErrors,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
 
 @Component({
     components: {

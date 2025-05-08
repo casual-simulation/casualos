@@ -27,10 +27,6 @@ import type { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
 import Security from '../AuthSecurity/AuthSecurity';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
-import {
-    isOpenAiKey,
-    parseOpenAiKey,
-} from '@casual-simulation/aux-records/AuthUtils';
 import type { PrivacyFeatures } from '@casual-simulation/aux-common';
 import PrivacyItem from '../PrivacyItem/PrivacyItem';
 

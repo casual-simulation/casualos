@@ -31,11 +31,11 @@ import { DateTime } from 'luxon';
 import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
-import type { AuthenticatorKind } from '@casual-simulation/aux-records/AAGUID';
+import type { AuthenticatorKind } from '@casual-simulation/aux-common/AAGUID';
 import {
     AAGUIDInfo,
     getInfoForAAGUID,
-} from '@casual-simulation/aux-records/AAGUID';
+} from '@casual-simulation/aux-common/AAGUID';
 import Bowser from 'bowser';
 
 @Component({

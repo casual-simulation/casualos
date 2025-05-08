@@ -454,10 +454,8 @@ import type { Tester } from '@casual-simulation/expect';
 import expect, { iterableEquality } from '@casual-simulation/expect';
 import {
     parseRecordKey,
-    RecordFileResult,
     isRecordKey as calcIsRecordKey,
-    RevokeMarkerPermissionResult,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
 import type {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
@@ -517,7 +515,6 @@ import type {
     AIHumeGetAccessTokenResult,
     AISloydGenerateModelResponse,
 } from '@casual-simulation/aux-records/AIController';
-import { AIGenerateImageResponse } from '@casual-simulation/aux-records/AIController';
 import type {
     RuntimeActions,
     RuntimeAsyncActions,

@@ -90,6 +90,7 @@ import type {
     NotSupportedError,
     PublicUserInfo,
     KnownErrorCodes,
+    UserRole,
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
@@ -98,6 +99,7 @@ import {
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
     formatVersionNumber,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -115,7 +117,7 @@ import type {
 } from '../SubscriptionConfiguration';
 import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
 import type { MetricsStore } from '../MetricsStore';
-import type { AuthStore, UserRole } from '../AuthStore';
+import type { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
@@ -128,8 +130,7 @@ import {
     type PackageVersionSpecifier,
 } from '../packages/version';
 import { STORED_AUX_SCHEMA } from '../webhooks';
-import { tryParseJson } from '../Utils';
-import { formatInstId } from './Utils';
+import { formatInstId } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'WebsocketController';
 

@@ -19,45 +19,7 @@ import axios from 'axios';
 import type { Subject, Observable } from 'rxjs';
 import { BehaviorSubject, from } from 'rxjs';
 import type { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
-import type {
-    CreatePublicRecordKeyResult,
-    PublicRecordKeyPolicy,
-    ListDataResult,
-    ListedRecord,
-    ListRecordsResult,
-    ListFilesResult,
-    EraseFileResult,
-    EraseDataResult,
-    ListEventsResult,
-    ListRoleAssignmentsResult,
-    ListStudiosResult,
-    ListedStudio,
-    Studio,
-    CreateStudioResult,
-    ListedStudioMember,
-    ListStudioMembersResult,
-    AddStudioMemberRequest,
-    AddStudioMemberResult,
-    RemoveStudioMemberRequest,
-    RemoveStudioMemberResult,
-    CreateRecordRequest,
-    CreateRecordResult,
-    ListInstsResult,
-    EraseInstResult,
-    GetStudioResult,
-    UpdateStudioRequest,
-    UpdateStudioResult,
-    ComIdRequestResult,
-    GetPlayerConfigResult,
-    ListPermissionsResult,
-    GrantMarkerPermissionResult,
-    GrantResourcePermissionResult,
-    AuthListedUserAuthenticator,
-} from '@casual-simulation/aux-records';
-import {
-    isExpired,
-    parseSessionKey,
-} from '@casual-simulation/aux-records/AuthUtils';
+import { isExpired, parseSessionKey } from '@casual-simulation/aux-common';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
@@ -108,6 +70,8 @@ import {
     startAuthentication,
     startRegistration,
 } from '@simplewebauthn/browser';
+
+/* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 
 const EMAIL_KEY = 'userEmail';

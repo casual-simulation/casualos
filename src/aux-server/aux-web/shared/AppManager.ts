@@ -64,9 +64,9 @@ import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { isEqual, merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
-import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
+import { generateV1ConnectionToken } from '@casual-simulation/aux-common';
 import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
-import { ComIdConfig, tryParseJson } from '@casual-simulation/aux-records';
+import { tryParseJson } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
 

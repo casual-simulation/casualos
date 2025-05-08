@@ -22,13 +22,12 @@ import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
 } from '@casual-simulation/aux-common';
-import { asyncResult, Bot, toast } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
 import type { LoginStatus } from '@casual-simulation/aux-vm';
 import FieldErrors from '../FieldErrors/FieldErrors';
-import type { FormError } from '@casual-simulation/aux-records';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
+import { getFormErrors } from '@casual-simulation/aux-common';
 import type { GrantEntitlementsEvent } from '@casual-simulation/aux-vm-browser';
 
 @Component({

@@ -345,36 +345,6 @@ export function cleanupObject<T extends object>(obj: T): Partial<T> {
     ) as Partial<T>;
 }
 
-/**
- * Tries to parse the given JSON string into a JavaScript Value.
- * @param json The JSON to parse.
- */
-export function tryParseJson(json: string): JsonParseResult {
-    try {
-        return {
-            success: true,
-            value: JSON.parse(json),
-        };
-    } catch (err) {
-        return {
-            success: false,
-            error: err,
-        };
-    }
-}
-
-export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
-
-export interface JsonParseSuccess {
-    success: true;
-    value: any;
-}
-
-export interface JsonParseFailure {
-    success: false;
-    error: unknown;
-}
-
 export interface RegexRule {
     type: 'allow' | 'deny';
     pattern: string;

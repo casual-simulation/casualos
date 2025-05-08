@@ -37,6 +37,7 @@ import {
     installAuxFile,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
+    formatInstId,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -94,15 +95,12 @@ import 'aux-jest-matchers';
 import { DateTime } from 'luxon';
 import type { ListedStudio } from '@casual-simulation/aux-records';
 import {
-    formatInstId,
-    formatV2RecordKey,
-} from '@casual-simulation/aux-records';
-import {
     asyncIterable,
     readableFromAsyncIterable,
 } from '@casual-simulation/aux-records/TestUtils';
 import type { GetPackageVersionResult } from '@casual-simulation/aux-records/packages/version';
 import { version } from '@casual-simulation/aux-records/packages/version';
+import { formatV2RecordKey } from '@casual-simulation/aux-common/records/RecordKeys';
 
 jest.mock('axios');
 

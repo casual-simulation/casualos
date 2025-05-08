@@ -27,6 +27,7 @@ import type {
 import { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { AuthHelper } from '@casual-simulation/aux-vm-browser';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
 import {
     asyncResult,
     asyncError,
@@ -43,17 +44,8 @@ import type {
     EraseRecordDataAction,
     GrantInstAdminPermissionAction,
 } from '@casual-simulation/aux-runtime';
-import type {
-    CreatePublicRecordKeyResult,
-    PublicRecordKeyPolicy,
-} from '@casual-simulation/aux-records';
-import {
-    DISPLAY_NAME_FIELD,
-    EMAIL_FIELD,
-    FormError,
-    getFormErrors,
-    parseRecordKey,
-} from '@casual-simulation/aux-records';
+import type { CreatePublicRecordKeyResult } from '@casual-simulation/aux-records';
+import { parseRecordKey } from '@casual-simulation/aux-common';
 
 @Component({
     components: {},

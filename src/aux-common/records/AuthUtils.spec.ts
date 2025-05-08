@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { UserRole } from './AuthStore';
+// import type { UserRole } from '../../aux-records/AuthStore';
 import {
     formatV1OpenAiKey,
     formatV1SessionKey,
@@ -37,11 +37,8 @@ import {
     timeUntilRefresh,
     isPackageReviewerRole,
 } from './AuthUtils';
-import {
-    toBase64String,
-    formatV1ConnectionToken,
-    parseConnectionToken,
-} from '@casual-simulation/aux-common';
+import { toBase64String } from '../utils';
+import { formatV1ConnectionToken, parseConnectionToken } from '../common';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;

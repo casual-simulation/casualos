@@ -19,7 +19,11 @@ import type {
     ActionKinds,
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
-import { PRIVATE_MARKER, ServerError } from '@casual-simulation/aux-common';
+import {
+    PRIVATE_MARKER,
+    ServerError,
+    SUBSCRIPTION_ID_NAMESPACE,
+} from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
@@ -56,7 +60,6 @@ import type {
     SendPushNotificationResult,
     WebPushInterface,
 } from './WebPushInterface';
-import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
 
 const TRACE_NAME = 'NotificationRecordsController';
 

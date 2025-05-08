@@ -46,6 +46,7 @@ const casualOsPackages = fs
 const policies = getPolicies(true);
 
 export default defineConfig(({ command, mode }) => ({
+    logLevel: 'info',
     cacheDir: path.resolve(
         __dirname,
         '..',
@@ -78,6 +79,9 @@ export default defineConfig(({ command, mode }) => ({
                               'loading-oauth.html'
                           ),
                       },
+            // output: {
+            //     inlineDynamicImports: false,
+            // }
         },
         sourcemap: true,
         target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
@@ -274,6 +278,31 @@ export default defineConfig(({ command, mode }) => ({
                               'shared',
                               'EmptyModule.ts'
                           ),
+                      '@casual-simulation/aux-records/index.ts': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+
+                      openai: path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      '@anthropic-ai/sdk': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      '@google+generative-ai': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
                   }
                 : {}),
         },

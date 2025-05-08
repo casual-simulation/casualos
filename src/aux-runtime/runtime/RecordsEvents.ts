@@ -17,7 +17,6 @@
  */
 import type {
     AIChatMessage,
-    PublicRecordKeyPolicy,
     RecordFileFailure,
     WebhookRecord,
     NotificationRecord,
@@ -39,6 +38,7 @@ import type {
     EntitlementFeature,
     GrantedEntitlementScope,
     KnownErrorCodes,
+    PublicRecordKeyPolicy,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
@@ -46,7 +46,6 @@ import {
     ProcedureQueries,
     Procedures,
 } from '@casual-simulation/aux-common';
-import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
 import type {
     PackageRecordVersionKey,

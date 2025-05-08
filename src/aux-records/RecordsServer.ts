@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { tryDecodeUriComponent, tryParseJson } from './Utils';
+import { tryDecodeUriComponent } from './Utils';
 import type {
     AuthController,
     NoSessionKeyResult,
@@ -43,7 +43,6 @@ import type {
 } from './SubscriptionController';
 import type { ZodError } from 'zod';
 import { z } from 'zod';
-import type { PublicRecordKeyPolicy } from './RecordsStore';
 import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
 import type { RateLimitController } from './RateLimitController';
 import type {
@@ -54,6 +53,7 @@ import type {
     ProcedureOutputStream,
     Procedures,
     RPCContext,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
@@ -162,6 +162,7 @@ import {
     getPackageVersionKey,
     getPackageVersionSpecifier,
 } from './packages/version/PackageVersionRecordsStore';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;

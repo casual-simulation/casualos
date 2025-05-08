@@ -23,11 +23,9 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
-import type {
-    CompleteOpenIDLoginSuccess,
-    FormError,
-} from '@casual-simulation/aux-records';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import type { CompleteOpenIDLoginSuccess } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
+import { getFormErrors } from '@casual-simulation/aux-common';
 import HasAccountCard from '../HasAccountCard/HasAccountCard';
 import {
     browserSupportsWebAuthnAutofill,

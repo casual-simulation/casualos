@@ -20,6 +20,7 @@ import type {
     AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import type {
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
@@ -30,7 +31,6 @@ import type {
     GrantResourcePermissionResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import type {

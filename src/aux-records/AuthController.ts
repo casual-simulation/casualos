@@ -26,7 +26,6 @@ import type {
     AuthUserAuthenticator,
     SaveNewUserFailure,
     UserLoginMetadata,
-    UserRole,
 } from './AuthStore';
 import type {
     NotAuthorizedError,
@@ -45,22 +44,23 @@ import { fromByteArray } from 'base64-js';
 import type { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
-import {
-    formatV1ConnectionKey,
-    formatV1OpenAiKey,
-    formatV1SessionKey,
-    isSuperUserRole,
-    parseSessionKey,
-    verifyConnectionToken,
-} from './AuthUtils';
 import { randomCode } from './CryptoUtils';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type {
     PrivacyFeatures,
     PublicUserInfo,
+    UserRole,
 } from '@casual-simulation/aux-common';
-import { parseConnectionToken } from '@casual-simulation/aux-common';
+import {
+    parseConnectionToken,
+    formatV1ConnectionKey,
+    formatV1OpenAiKey,
+    formatV1SessionKey,
+    isSuperUserRole,
+    parseSessionKey,
+    verifyConnectionToken,
+} from '@casual-simulation/aux-common';
 import type {
     PrivoClientInterface,
     PrivoFeatureStatus,

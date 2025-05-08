@@ -15,10 +15,4 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-export * from './WebsocketEvents';
-export * from './ConnectionClient';
-export * from './InstRecordsClient';
-export * from './MemoryConnectionClient';
-export * from './InstRecordsClientTimeSyncConnection';
-export * from './AuthenticatedConnectionClient';
-export * from './Utils';
+export const SUBSCRIPTION_ID_NAMESPACE = 'f12953a9-21e2-47d4-b7b7-f699bd9a5550';

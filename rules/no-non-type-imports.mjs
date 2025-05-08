@@ -11,35 +11,37 @@ export const rule = createRule({
 
         return {
             ImportDeclaration(node) {
-                for (let pattern in patterns) {
-                    if (node.source.value.startsWith(pattern)) {
-                        const { deny, allow } = patterns[pattern];
-                        for (let specifier of node.specifiers) {
-                            if (
-                                !Array.isArray(deny) ||
-                                deny.length <= 0 ||
-                                deny.some((d) =>
-                                    specifier.local.name.startsWith(d)
-                                )
-                            ) {
+                if (node.importKind !== 'type') {
+                    for (let pattern in patterns) {
+                        if (node.source.value.startsWith(pattern)) {
+                            const { deny, allow } = patterns[pattern];
+                            for (let specifier of node.specifiers) {
                                 if (
-                                    Array.isArray(allow) &&
-                                    allow.length > 0 &&
-                                    allow.some((a) =>
-                                        specifier.local.name.startsWith(a)
+                                    !Array.isArray(deny) ||
+                                    deny.length <= 0 ||
+                                    deny.some((d) =>
+                                        specifier.local.name.startsWith(d)
                                     )
                                 ) {
-                                    continue;
-                                }
+                                    if (
+                                        Array.isArray(allow) &&
+                                        allow.length > 0 &&
+                                        allow.some((a) =>
+                                            specifier.local.name.startsWith(a)
+                                        )
+                                    ) {
+                                        continue;
+                                    }
 
-                                if (specifier.importKind !== 'type') {
-                                    context.report({
-                                        messageId: 'denied',
-                                        node: specifier.local,
-                                        data: {
-                                            name: specifier.local.name,
-                                        },
-                                    });
+                                    if (specifier.importKind !== 'type') {
+                                        context.report({
+                                            messageId: 'denied',
+                                            node: specifier.local,
+                                            data: {
+                                                name: specifier.local.name,
+                                            },
+                                        });
+                                    }
                                 }
                             }
                         }

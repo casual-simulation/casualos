@@ -18,7 +18,6 @@
 import type {
     ListedRecord,
     ListedStudioAssignment,
-    PublicRecordKeyPolicy,
     RecordsStore,
     Studio,
     StudioAssignmentRole,
@@ -64,13 +63,19 @@ import {
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
 import { isActiveSubscription } from './Utils';
 import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
-import { isSuperUserRole } from './AuthUtils';
+import { isSuperUserRole } from '@casual-simulation/aux-common';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type {
     PrivoClientInterface,
     PrivoGetUserInfoResponse,
 } from './PrivoClient';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
+import {
+    DEFAULT_RECORD_KEY_POLICY,
+    formatV2RecordKey,
+    parseRecordKey,
+} from '@casual-simulation/aux-common/records/RecordKeys';
 
 const TRACE_NAME = 'RecordsController';
 
@@ -2551,151 +2556,4 @@ export interface ComIdRequestFailure {
         | 'not_authorized'
         | ServerError;
     errorMessage: string;
-}
-
-/**
- * The default policy for keys that do not have a specified record key.
- */
-export const DEFAULT_RECORD_KEY_POLICY: PublicRecordKeyPolicy = 'subjectfull';
-
-/**
- * Formats the given record name and record secret into a record key.
- * @param recordName The name of the record.
- * @param recordSecret The secret that is used to access the record.
- */
-export function formatV1RecordKey(
-    recordName: string,
-    recordSecret: string
-): string {
-    return `vRK1.${toBase64String(recordName)}.${toBase64String(recordSecret)}`;
-}
-
-/**
- * Formats the given record name and record secret into a record key.
- * @param recordName The name of the record.
- * @param recordSecret The secret that is used to access the record.
- * @param keyPolicy The policy that the key uses.
- */
-export function formatV2RecordKey(
-    recordName: string,
-    recordSecret: string,
-    keyPolicy: PublicRecordKeyPolicy
-): string {
-    return `vRK2.${toBase64String(recordName)}.${toBase64String(
-        recordSecret
-    )}.${keyPolicy ?? DEFAULT_RECORD_KEY_POLICY}`;
-}
-
-/**
- * Parses the given record key into a name and password pair.
- * Returns null if the key cannot be parsed.
- * @param key The key to parse.
- */
-export function parseRecordKey(
-    key: string
-): [name: string, password: string, policy: PublicRecordKeyPolicy] {
-    return parseV2RecordKey(key) ?? parseV1RecordKey(key);
-}
-
-/**
- * Parses a version 2 record key into a name, password, and policy trio.
- * Returns null if the key cannot be parsed or if it is not a V2 key.
- * @param key The key to parse.
- */
-export function parseV2RecordKey(
-    key: string
-): [name: string, password: string, policy: PublicRecordKeyPolicy] {
-    if (!key) {
-        return null;
-    }
-
-    if (!key.startsWith('vRK2.')) {
-        return null;
-    }
-
-    const withoutVersion = key.slice('vRK2.'.length);
-    let periodAfterName = withoutVersion.indexOf('.');
-    if (periodAfterName < 0) {
-        return null;
-    }
-
-    const nameBase64 = withoutVersion.slice(0, periodAfterName);
-    const passwordPlusPolicy = withoutVersion.slice(periodAfterName + 1);
-
-    if (nameBase64.length <= 0 || passwordPlusPolicy.length <= 0) {
-        return null;
-    }
-
-    const periodAfterPassword = passwordPlusPolicy.indexOf('.');
-    if (periodAfterPassword < 0) {
-        return null;
-    }
-
-    const passwordBase64 = passwordPlusPolicy.slice(0, periodAfterPassword);
-    const policy = passwordPlusPolicy.slice(periodAfterPassword + 1);
-
-    if (passwordBase64.length <= 0 || policy.length <= 0) {
-        return null;
-    }
-
-    if (policy !== 'subjectfull' && policy !== 'subjectless') {
-        return null;
-    }
-
-    try {
-        const name = fromBase64String(nameBase64);
-        const password = fromBase64String(passwordBase64);
-
-        return [name, password, policy];
-    } catch (err) {
-        return null;
-    }
-}
-
-/**
- * Parses a version 1 record key into a name and password pair.
- * Returns null if the key cannot be parsed or if it is not a V1 key.
- * @param key The key to parse.
- */
-export function parseV1RecordKey(
-    key: string
-): [name: string, password: string, policy: PublicRecordKeyPolicy] {
-    if (!key) {
-        return null;
-    }
-
-    if (!key.startsWith('vRK1.')) {
-        return null;
-    }
-
-    const withoutVersion = key.slice('vRK1.'.length);
-    let nextPeriod = withoutVersion.indexOf('.');
-    if (nextPeriod < 0) {
-        return null;
-    }
-
-    const nameBase64 = withoutVersion.slice(0, nextPeriod);
-    const passwordBase64 = withoutVersion.slice(nextPeriod + 1);
-
-    if (nameBase64.length <= 0 || passwordBase64.length <= 0) {
-        return null;
-    }
-
-    try {
-        const name = fromBase64String(nameBase64);
-        const password = fromBase64String(passwordBase64);
-
-        return [name, password, DEFAULT_RECORD_KEY_POLICY];
-    } catch (err) {
-        return null;
-    }
-}
-
-/**
- * Determines if the given value is a record key.
- * @param key The value to check.
- * @returns
- */
-export function isRecordKey(key: unknown): key is string {
-    return typeof key === 'string' && parseRecordKey(key) !== null;
 }

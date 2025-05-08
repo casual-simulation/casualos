@@ -38,9 +38,9 @@ import {
     action,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
+    SUBSCRIPTION_ID_NAMESPACE,
 } from '@casual-simulation/aux-common';
 import type { WebPushInterface } from './WebPushInterface';
-import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 
 console.log = jest.fn();

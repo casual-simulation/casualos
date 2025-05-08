@@ -278,11 +278,6 @@ import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 import type { AIChatInterfaceStreamResponse } from '@casual-simulation/aux-records';
 import {
-    AIChatMessage,
-    formatV1RecordKey,
-    formatV2RecordKey,
-} from '@casual-simulation/aux-records';
-import {
     isGenerator,
     UNCOPIABLE,
     unwind,
@@ -311,6 +306,10 @@ import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
 import { JSDOM } from 'jsdom';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
+import {
+    formatV1RecordKey,
+    formatV2RecordKey,
+} from '@casual-simulation/aux-common/records/RecordKeys';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');

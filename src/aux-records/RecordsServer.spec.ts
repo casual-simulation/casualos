@@ -28,11 +28,17 @@ import type {
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
+    UserRole,
 } from '@casual-simulation/aux-common';
 import {
     DEFAULT_BRANCH_NAME,
+    formatV1SessionKey,
+    generateV1ConnectionToken,
     getStateFromUpdates,
+    isRecordKey,
+    parseSessionKey,
     procedure,
+    SUBSCRIPTION_ID_NAMESPACE,
 } from '@casual-simulation/aux-common';
 import type { RelyingParty } from './AuthController';
 import {
@@ -41,18 +47,11 @@ import {
     PRIVO_OPEN_ID_PROVIDER,
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import {
-    formatV1OpenAiKey,
-    formatV1SessionKey,
-    generateV1ConnectionToken,
-    parseSessionKey,
-} from './AuthUtils';
-import type { AuthSession, AuthUser, UserRole } from './AuthStore';
+import type { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import type { CreateStudioSuccess } from './RecordsController';
 import {
     CreateStudioInComIdResult,
-    isRecordKey,
     RecordsController,
 } from './RecordsController';
 import type { Studio } from './RecordsStore';
@@ -146,6 +145,7 @@ import type { ConnectionInfo } from '@casual-simulation/aux-common/common/Connec
 import {
     YjsPartitionImpl,
     constructInitializationUpdate,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
@@ -190,10 +190,8 @@ import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
-import { tryParseJson } from './Utils';
 import { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import type { WebPushInterface } from './notifications/WebPushInterface';
-import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 import { OpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';

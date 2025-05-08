@@ -27,6 +27,7 @@ import {
     BotsState,
     DEFAULT_BRANCH_NAME,
     getBotsStateFromStoredAux,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type {
     AuthorizeUserAndInstancesSuccess,
@@ -80,7 +81,6 @@ import type {
     ReadFileFailure,
     ReadFileResult,
 } from '../FileRecordsController';
-import { tryParseJson } from '../Utils';
 import type { z } from 'zod';
 import { v7 as uuidv7 } from 'uuid';
 import stringify from '@casual-simulation/fast-json-stable-stringify';

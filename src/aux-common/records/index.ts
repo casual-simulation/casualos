@@ -15,10 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-export * from './WebsocketEvents';
-export * from './ConnectionClient';
-export * from './InstRecordsClient';
-export * from './MemoryConnectionClient';
-export * from './InstRecordsClientTimeSyncConnection';
-export * from './AuthenticatedConnectionClient';
-export * from './Utils';
+export * from './RecordKeys';
+export * from './AuthUtils';
+export * from './WebPush';

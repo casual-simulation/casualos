@@ -32,7 +32,7 @@ export default defineConfig([
     ...tseslint.configs.recommended,
     {
         plugins: {
-            custom: noNonTypeImports,
+            casualos: noNonTypeImports,
         },
     },
     {
@@ -51,9 +51,11 @@ export default defineConfig([
         ignores: [
             'src/aux-records-aws/**/*.{js,ts,vue}',
             'src/aux-records/**/*.{js,ts,vue}',
+            'src/aux-server/aux-backend/**/*.{js,ts,vue}',
+            '**/*.spec.{js,ts,vue}',
         ],
         rules: {
-            'custom/no-non-type-imports': [
+            'casualos/no-non-type-imports': [
                 'error',
                 {
                     patterns: {

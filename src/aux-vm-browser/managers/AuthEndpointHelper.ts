@@ -33,21 +33,20 @@ import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
-import { hasValue } from '@casual-simulation/aux-common';
+import { hasValue, parseRecordKey } from '@casual-simulation/aux-common';
 import type {
     GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
-import { parseRecordKey } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
