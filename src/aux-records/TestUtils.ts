@@ -19,10 +19,8 @@ import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
-import type { PublicRecordKeyPolicy } from './RecordsStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
-import { parseSessionKey } from './AuthUtils';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
@@ -35,6 +33,8 @@ import {
     PackageVersionRecordsController,
 } from './packages/version';
 import { FileRecordsController } from './FileRecordsController';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
+import { parseSessionKey } from '@casual-simulation/aux-common';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 

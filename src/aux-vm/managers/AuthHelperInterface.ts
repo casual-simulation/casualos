@@ -19,6 +19,7 @@ import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
 import type {
     CompleteLoginSuccess,
@@ -29,7 +30,6 @@ import type {
     GrantResourcePermissionResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import type { Observable, SubscriptionLike } from 'rxjs';

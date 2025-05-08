@@ -25,12 +25,12 @@ import type {
     Entitlement,
     EntitlementFeature,
     GrantedEntitlementScope,
+    UserRole,
 } from '@casual-simulation/aux-common';
 import {
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
 } from '@casual-simulation/aux-common';
-import type { UserRole } from './AuthStore';
 
 /**
  * Defines an interface for objects that are able to store and retrieve policy documents.

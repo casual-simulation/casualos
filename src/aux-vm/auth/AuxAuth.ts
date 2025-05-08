@@ -19,13 +19,13 @@ import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    FormError,
 } from '@casual-simulation/aux-common';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import type {
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
-    FormError,
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,

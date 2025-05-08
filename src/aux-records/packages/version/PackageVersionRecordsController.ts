@@ -21,8 +21,12 @@ import type {
     Entitlement,
     KnownErrorCodes,
     ResourceKinds,
+    UserRole,
 } from '@casual-simulation/aux-common';
-import { PRIVATE_MARKER } from '@casual-simulation/aux-common';
+import {
+    PRIVATE_MARKER,
+    isPackageReviewerRole,
+} from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
@@ -81,8 +85,6 @@ import type { ConfigurationStore } from '../../ConfigurationStore';
 import { traced } from '../../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
-import type { UserRole } from '../../AuthStore';
-import { isPackageReviewerRole } from '../../AuthUtils';
 import { v7 as uuid } from 'uuid';
 import type { PackageRecordsController } from '../PackageRecordsController';
 import { isEqual } from 'lodash';

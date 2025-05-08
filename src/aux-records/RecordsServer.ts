@@ -29,7 +29,10 @@ import {
     PRIVO_OPEN_ID_PROVIDER,
     validateSessionKey,
 } from './AuthController';
-import { isSuperUserRole, parseSessionKey } from './AuthUtils';
+import {
+    isSuperUserRole,
+    parseSessionKey,
+} from '@casual-simulation/aux-common';
 import type { LivekitController } from './LivekitController';
 import type { RecordsController } from './RecordsController';
 import type { EventRecordsController } from './EventRecordsController';
@@ -43,16 +46,7 @@ import type { ZodError } from 'zod';
 import { z } from 'zod';
 import { HUME_CONFIG, LOOM_CONFIG } from './RecordsStore';
 import type { RateLimitController } from './RateLimitController';
-import type {
-    DenialReason,
-    Entitlement,
-    Procedure,
-    ProcedureOutput,
-    ProcedureOutputStream,
-    Procedures,
-    RPCContext,
-    tryParseJson,
-} from '@casual-simulation/aux-common';
+import { tryParseJson } from '@casual-simulation/aux-common';
 import {
     AVAILABLE_PERMISSIONS_VALIDATION,
     ENTITLEMENT_FEATURE_VALIDATION,
@@ -89,6 +83,13 @@ import type {
     GenericHttpResponse,
     GenericWebsocketRequest,
     KnownErrorCodes,
+    DenialReason,
+    Entitlement,
+    Procedure,
+    ProcedureOutput,
+    ProcedureOutputStream,
+    Procedures,
+    RPCContext,
 } from '@casual-simulation/aux-common';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import type { ModerationController } from './ModerationController';

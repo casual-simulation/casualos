@@ -34,7 +34,6 @@ import type {
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
-    UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import type {
     PrismaClient,
@@ -49,6 +48,7 @@ import { Prisma } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import type { UserRole } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'PrismaAuthStore';
 

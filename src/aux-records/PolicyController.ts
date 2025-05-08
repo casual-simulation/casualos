@@ -21,7 +21,6 @@ import type {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import { isRecordKey } from './RecordsController';
 import type {
     NotSupportedError,
     ServerError,
@@ -39,17 +38,20 @@ import type {
     KnownErrorCodes,
     GrantedEntitlementScope,
     EntitlementFeature,
+    PublicRecordKeyPolicy,
+    UserRole,
 } from '@casual-simulation/aux-common';
 import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
     ACCOUNT_MARKER,
     PRIVATE_MARKER,
+    isRecordKey,
+    isSuperUserRole,
+    normalizeInstId,
+    parseInstId,
 } from '@casual-simulation/aux-common';
-import type {
-    ListedStudioAssignment,
-    PublicRecordKeyPolicy,
-} from './RecordsStore';
+import type { ListedStudioAssignment } from './RecordsStore';
 import type {
     AssignedRole,
     AssignPermissionToSubjectAndMarkerFailure,
@@ -64,15 +66,12 @@ import type {
 import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
 import { sortBy, without } from 'lodash';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
-import { normalizeInstId, parseInstId } from './websockets/Utils';
 import type {
     InstRecordsStore,
     LoadedPackage,
 } from './websockets/InstRecordsStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import type { UserRole } from './AuthStore';
-import { isSuperUserRole } from './AuthUtils';
 import type { PackageVersionRecordsStore } from './packages/version';
 import { v7 as uuidv7 } from 'uuid';
 

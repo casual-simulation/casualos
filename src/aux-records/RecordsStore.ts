@@ -17,7 +17,7 @@
  */
 import { z } from 'zod';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
-import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for objects that can store records.

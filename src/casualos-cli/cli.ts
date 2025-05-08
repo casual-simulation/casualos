@@ -34,7 +34,7 @@ import {
     isExpired,
     parseSessionKey,
     willExpire,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import type {
     AddressType,
     CompleteLoginSuccess,

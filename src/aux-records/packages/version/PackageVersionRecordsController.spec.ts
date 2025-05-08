@@ -49,7 +49,7 @@ import type { PackageRecordsStore } from '../PackageRecordsStore';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
-import type { UserRole } from '../../AuthStore';
+import type { UserRole } from '@casual-simulation/aux-common';
 import { PackageRecordsController } from '../PackageRecordsController';
 
 console.log = jest.fn();

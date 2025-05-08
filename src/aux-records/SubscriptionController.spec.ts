@@ -19,7 +19,10 @@ import { SubscriptionController } from './SubscriptionController';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type { AuthUser } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
+import {
+    formatV1SessionKey,
+    parseSessionKey,
+} from '@casual-simulation/aux-common';
 import type { StripeInterface, StripeProduct } from './StripeInterface';
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import type { Studio } from './RecordsStore';

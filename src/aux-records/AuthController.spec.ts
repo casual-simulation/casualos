@@ -38,7 +38,7 @@ import {
     formatV1ConnectionKey,
     formatV1SessionKey,
     generateV1ConnectionToken,
-} from './AuthUtils';
+} from '@casual-simulation/aux-common';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';

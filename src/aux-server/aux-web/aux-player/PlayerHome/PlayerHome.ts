@@ -60,7 +60,7 @@ import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import type { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
 import { sortInsts } from '../PlayerUtils';
