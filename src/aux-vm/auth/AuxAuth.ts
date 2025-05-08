@@ -345,6 +345,15 @@ export interface AuxAuth {
     logout(): Promise<void>;
 
     /**
+     * Ensures that the user is logged in.
+     * Validates the current session and re-authenticates the user if necessary.
+     * Returns a promise that resolves with data about the user.
+     *
+     * Only supported on protocol version 12 or more.
+     */
+    relogin(): Promise<AuthData>;
+
+    /**
      * Gets a record key for the given record.
      * @param recordName The name of the record.
      * @param policy The policy that the record should have. Only supported on protocol version 5 or more.

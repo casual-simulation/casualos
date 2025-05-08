@@ -96,7 +96,7 @@ import {
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 
-const CURRENT_PROTOCOL_VERSION = 11;
+const CURRENT_PROTOCOL_VERSION = 12;
 
 /**
  * Defines a class that implements the backend for an AuxAuth instance.
@@ -105,8 +105,6 @@ export class AuthHandler implements AuxAuth {
     private _loggedIn: boolean = false;
     private _loginData: AuthData;
     private _userId: string;
-    private _token: string;
-    private _connectionKey: string;
     private _refreshTimeout: any;
     private _loginStatus: BehaviorSubject<LoginStatus> = new BehaviorSubject(
         {}
@@ -147,10 +145,38 @@ export class AuthHandler implements AuxAuth {
         });
     }
 
+    get connectionKey() {
+        return authManager.currentConnectionKey;
+    }
+
+    get sessionKey() {
+        return authManager.currentSessionKey;
+    }
+
     async provideLoginResult(
         result: CompleteLoginSuccess | CompleteWebAuthnLoginSuccess
     ): Promise<void> {
         this._providedLoginResults.next(result);
+    }
+
+    async relogin(): Promise<AuthData> {
+        if (!(await this.isLoggedIn())) {
+            // login again
+            return await this.login();
+        }
+
+        // check session validity
+        const result = await authManager.client.getUserInfo({
+            userId: authManager.userId,
+        });
+
+        if (result.success === false) {
+            this._loggedIn = false;
+            await authManager.logout(false);
+            return await this.login();
+        }
+
+        return this._loginData;
     }
 
     private _init() {
@@ -194,7 +220,7 @@ export class AuthHandler implements AuxAuth {
     async isLoggedIn(): Promise<boolean> {
         await this._init();
         if (this._loggedIn) {
-            const expiry = getSessionKeyExpiration(this._token);
+            const expiry = getSessionKeyExpiration(this.sessionKey);
             if (!isExpired(expiry)) {
                 return true;
             }
@@ -322,7 +348,6 @@ export class AuthHandler implements AuxAuth {
                 key.errorCode === 'session_expired'
             ) {
                 this._loggedIn = false;
-                this._token = null;
                 await authManager.logout(false);
                 return await this.createPublicRecordKey(recordName, policy);
             }
@@ -333,7 +358,7 @@ export class AuthHandler implements AuxAuth {
 
     async getAuthToken(): Promise<string> {
         if (await this.isLoggedIn()) {
-            return this._token;
+            return this.sessionKey;
         }
 
         return null;
@@ -341,7 +366,7 @@ export class AuthHandler implements AuxAuth {
 
     async getConnectionKey(): Promise<string> {
         if (await this.isLoggedIn()) {
-            return this._connectionKey;
+            return this.connectionKey;
         }
 
         return null;
@@ -693,8 +718,6 @@ export class AuthHandler implements AuxAuth {
         if (!authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
-        this._token = authManager.currentSessionKey;
-        this._connectionKey = authManager.currentConnectionKey;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
             avatarUrl: authManager.avatarUrl,
@@ -706,7 +729,7 @@ export class AuthHandler implements AuxAuth {
             privacyFeatures: authManager.privacyFeatures,
         };
 
-        this._queueTokenRefresh(this._token);
+        this._queueTokenRefresh(this.sessionKey);
         this._loggedIn = true;
         console.log('[AuthHandler] Logged In!');
 
@@ -1168,7 +1191,6 @@ export class AuthHandler implements AuxAuth {
         }
         const result = await authManager.replaceSession();
         if (result.success) {
-            this._token = result.sessionKey;
             console.log('[AuthHandler] Token refreshed!');
         } else {
             console.error('[AuthHandler] Failed to refresh token.', result);

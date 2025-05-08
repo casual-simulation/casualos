@@ -211,6 +211,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
     logout(): Promise<void>;
 
     /**
+     * Ensures that the user is logged in with a valid session.
+     * If the current session is invalid, then the user will be prompted to log in again.
+     */
+    relogin(): Promise<void>;
+
+    /**
      * Gets the URLs for the different policies (privacy policy, terms of service, etc.).
      */
     getPolicyUrls(): Promise<PolicyUrls>;

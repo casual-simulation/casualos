@@ -40,6 +40,7 @@ import type {
 import { PartitionAuthSource } from '../partitions';
 
 console.log = jest.fn();
+console.error = jest.fn();
 
 describe('AuthenticatedConnectionClient', () => {
     let subject: AuthenticatedConnectionClient;
@@ -217,6 +218,7 @@ describe('AuthenticatedConnectionClient', () => {
         let indicator: ConnectionIndicator;
         let loginResult: Subject<LoginResultMessage>;
         let connectionStates: ClientConnectionState[];
+        let requests = [] as PartitionAuthRequest[];
         beforeEach(() => {
             indicator = { connectionToken: 'test_connection_token' };
             inner = new MemoryConnectionClient();
@@ -224,6 +226,7 @@ describe('AuthenticatedConnectionClient', () => {
             authSource = new PartitionAuthSource(
                 new Map([['http://localhost', indicator]])
             );
+            authSource.onAuthRequest.subscribe((r) => requests.push(r));
             subject = new AuthenticatedConnectionClient(inner, authSource);
 
             loginResult = new Subject<LoginResultMessage>();
@@ -306,7 +309,93 @@ describe('AuthenticatedConnectionClient', () => {
                 },
             });
 
+            await waitAsync();
+
             expect(connectionStates.slice(2)).toEqual([
+                {
+                    connected: true,
+                    info: {
+                        userId: null,
+                        sessionId: null,
+                        connectionId: 'test_connection_id_2',
+                    },
+                },
+            ]);
+        });
+
+        it('should send a invalid_indicator when the login result is unsucessful', async () => {
+            inner.connect();
+
+            await waitAsync();
+
+            expect(inner.sentMessages).toEqual([
+                {
+                    type: 'login',
+                    ...indicator,
+                },
+            ]);
+            expect(connectionStates).toEqual([
+                {
+                    connected: false,
+                    info: null,
+                },
+            ]);
+
+            loginResult.next({
+                type: 'login_result',
+                success: false,
+                errorCode: 'invalid_token',
+                errorMessage: 'Invalid token',
+            });
+
+            await waitAsync();
+
+            expect(connectionStates.slice(1)).toEqual([]);
+            expect(requests).toEqual([
+                {
+                    type: 'request',
+                    origin: subject.origin,
+                    kind: 'invalid_indicator',
+                    indicator: indicator,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'Invalid token',
+                },
+            ]);
+
+            authSource.sendAuthResponse({
+                type: 'response',
+                success: true,
+                origin: subject.origin,
+                indicator: {
+                    connectionToken: 'test_connection_token_2',
+                },
+            });
+
+            await waitAsync();
+
+            expect(inner.sentMessages.slice(1)).toEqual([
+                {
+                    type: 'login',
+                    connectionToken: 'test_connection_token_2',
+                },
+            ]);
+
+            expect(connectionStates.slice(1)).toEqual([]);
+
+            loginResult.next({
+                type: 'login_result',
+                success: true,
+                info: {
+                    userId: null,
+                    sessionId: null,
+                    connectionId: 'test_connection_id_2',
+                },
+            });
+
+            await waitAsync();
+            await waitAsync();
+
+            expect(connectionStates.slice(1)).toEqual([
                 {
                     connected: true,
                     info: {

@@ -536,8 +536,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 console.log(
                     `[AuthCoordinator] [${sim.id}] Logging out and back in...`
                 );
-                await endpoint.logout();
-                await endpoint.authenticate();
+                await endpoint.relogin();
             }
         } else {
             key = await endpoint.getConnectionKey();

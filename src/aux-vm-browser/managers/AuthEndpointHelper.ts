@@ -276,6 +276,22 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         return await this._proxy.isLoggedIn();
     }
 
+    async relogin(): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 12) {
+            await this._proxy.logout();
+            await this._proxy.login(true);
+        } else {
+            await this._proxy.relogin();
+        }
+    }
+
     /**
      * Requests that the user become authenticated if they are not already.
      */
