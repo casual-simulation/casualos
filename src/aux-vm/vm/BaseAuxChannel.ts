@@ -434,14 +434,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         for (let [key, partitionConfig] of iteratePartitions(
             this._config.partitions
         )) {
-            if (
-                !Object.prototype.hasOwnProperty.call(
-                    this._config.partitions,
-                    key
-                )
-            ) {
-                continue;
-            }
             const partition = await this._createPartition(
                 partitionConfig,
                 this._services
@@ -451,6 +443,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._partitions[key] = partition;
                 partitions.push(partition);
             } else {
+                console.error(
+                    '[BaseAuxChannel] Unable to create partition:',
+                    key,
+                    partitionConfig
+                );
                 throw new Error(
                     `[BaseAuxChannel] Unable to build partition: ${key}`
                 );

@@ -31,6 +31,7 @@ import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxC
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 import { proxy } from 'comlink';
 import type { AuxRuntime } from '@casual-simulation/aux-runtime';
+import { createLocalStoragePartition } from '../partitions/LocalStoragePartition';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
     static defaultHost: string;
@@ -49,7 +50,8 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
             partition = await createAuxPartition(
                 config,
                 services,
-                createProxyClientPartition
+                createProxyClientPartition,
+                createLocalStoragePartition
             );
         }
 

@@ -316,6 +316,10 @@ export function* iteratePartitions<T extends DictionaryLike>(
             continue;
         }
 
-        yield [key, partitions[key]] as const;
+        const val = partitions[key];
+        if (!val) {
+            continue;
+        }
+        yield [key, val] as const;
     }
 }

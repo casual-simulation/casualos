@@ -154,16 +154,25 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     ...initialTempState,
                 },
             },
-            [COOKIE_BOT_PARTITION_ID]: {
-                type: 'proxy',
-                partition: new LocalStoragePartitionImpl({
-                    type: 'local_storage',
-                    namespace: !origin.recordName
-                        ? `aux/${origin.inst}`
-                        : `aux/${origin.recordName}/${origin.inst}`,
-                    private: true,
-                }),
-            },
+            [COOKIE_BOT_PARTITION_ID]:
+                (import.meta as any).env?.MODE === 'static'
+                    ? {
+                          type: 'local_storage',
+                          namespace: !origin.recordName
+                              ? `aux/${origin.inst}`
+                              : `aux/${origin.recordName}/${origin.inst}`,
+                          private: true,
+                      }
+                    : {
+                          type: 'proxy',
+                          partition: new LocalStoragePartitionImpl({
+                              type: 'local_storage',
+                              namespace: !origin.recordName
+                                  ? `aux/${origin.inst}`
+                                  : `aux/${origin.recordName}/${origin.inst}`,
+                              private: true,
+                          }),
+                      },
             [BOOTSTRAP_PARTITION_ID]: {
                 type: 'memory',
                 initialState: config.bootstrapState
