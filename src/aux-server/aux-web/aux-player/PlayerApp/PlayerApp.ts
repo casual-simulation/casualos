@@ -117,9 +117,9 @@ import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
 import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRModal';
-import { oembed } from '@loomhq/loom-embed';
+// import { oembed } from '@loomhq/loom-embed';
 import type { SDKResult as LoomSDKResult } from '@loomhq/record-sdk';
-import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
+// import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
@@ -1602,6 +1602,15 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            if (import.meta.env.MODE === 'static') {
+                simulation.helper.transaction(
+                    asyncError(
+                        e.taskId,
+                        'getScriptIssues() is not supported in static mode.'
+                    )
+                );
+                return;
+            }
             const helpers = await import('../../shared/MonacoHelpers');
             const bot = simulation.helper.botsState[e.botId];
             const issues = await helpers.getScriptIssues(
@@ -1626,6 +1635,7 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            const { oembed } = await import('@loomhq/loom-embed');
             const metadata = await oembed(e.sharedUrl);
 
             if (hasValue(e.taskId)) {
@@ -1646,6 +1656,7 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            const { oembed } = await import('@loomhq/loom-embed');
             const metadata = await oembed(e.sharedUrl);
             this.loomEmbedHtml = metadata.html;
             this.showLoom = true;
@@ -1669,6 +1680,9 @@ export default class PlayerApp extends Vue {
                 throw new Error(error);
             }
 
+            const { createInstance: createLoomInstance } = await import(
+                '@loomhq/record-sdk'
+            );
             let result: LoomSDKResult;
             if (hasValue(e.options.publicAppId)) {
                 result = await createLoomInstance({
