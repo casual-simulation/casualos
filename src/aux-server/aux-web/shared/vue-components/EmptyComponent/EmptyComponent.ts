@@ -15,25 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import MonacoLoader from '../MonacoLoader/MonacoLoader';
-import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
-import EmptyComponent from '../EmptyComponent/EmptyComponent';
+import Vue from 'vue';
+import Component from 'vue-class-component';
 
-const MonacoAsync = () => ({
-    component:
-        import.meta.env.MODE === 'static'
-            ? Promise.resolve(EmptyComponent)
-            : import('../MonacoTagDiffEditor/MonacoTagDiffEditor').catch(
-                  (err) => {
-                      console.error('Unable to load Monaco diff editor:', err);
-                      throw err;
-                  }
-              ),
-    loading: MonacoLoader,
-    error: MonacoLoaderError,
-
-    delay: 50,
-    timeout: 1000 * 60 * 5, // 5 minutes
-});
-
-export default MonacoAsync;
+@Component({
+    components: {},
+})
+export default class EmptyComponent extends Vue {}
