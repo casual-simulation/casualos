@@ -28,6 +28,7 @@ import {
     DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
+    generateV1ConnectionToken,
 } from '@casual-simulation/aux-common';
 import type { TestControllers } from '../crud/CrudRecordsControllerTests';
 import {
@@ -59,7 +60,6 @@ import {
     SplitInstRecordsStore,
     WebsocketController,
 } from '../websockets';
-import { generateV1ConnectionToken } from '../AuthUtils';
 
 console.log = jest.fn();
 

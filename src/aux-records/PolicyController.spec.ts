@@ -36,6 +36,9 @@ import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     DEFAULT_BRANCH_NAME,
+    formatInstId,
+    formatV1RecordKey,
+    parseRecordKey,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
@@ -44,11 +47,7 @@ import type {
     CreateRecordSuccess,
     CreateStudioSuccess,
 } from './RecordsController';
-import {
-    formatV1RecordKey,
-    parseRecordKey,
-    RecordsController,
-} from './RecordsController';
+import { RecordsController } from './RecordsController';
 import type { TestServices } from './TestUtils';
 import { createTestControllers, createTestRecordKey } from './TestUtils';
 import type {
@@ -57,7 +56,6 @@ import type {
     MarkerPermissionAssignment,
     ResourcePermissionAssignment,
 } from './PolicyStore';
-import { formatInstId } from './websockets';
 import { AuthController } from './AuthController';
 import type { PrivoClientInterface } from './PrivoClient';
 import { version } from './packages/version';

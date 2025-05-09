@@ -17,6 +17,7 @@
  */
 
 // import type { UserRole } from '../../aux-records/AuthStore';
+import type { UserRole } from './AuthUtils';
 import {
     formatV1OpenAiKey,
     formatV1SessionKey,

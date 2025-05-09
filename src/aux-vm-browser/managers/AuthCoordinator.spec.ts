@@ -47,7 +47,7 @@ import { SESSION_SECRET_BYTE_LENGTH } from '@casual-simulation/aux-records';
 import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
 import { grantEntitlements } from '@casual-simulation/aux-runtime';
 
