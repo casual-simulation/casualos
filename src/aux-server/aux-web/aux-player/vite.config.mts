@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import { defineConfig, splitVendorChunkPlugin, mergeConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
@@ -51,37 +51,46 @@ export default defineConfig(({ command, mode }) => ({
         '.vite',
         mode === 'static' ? '.aux-player-static' : '.aux-player'
     ),
-    build: {
-        outDir: distDir,
-        emptyOutDir: false,
-        rollupOptions: {
-            input:
-                mode === 'static'
-                    ? path.resolve(__dirname, 'static.html')
-                    : {
-                          main: path.resolve(__dirname, 'index.html'),
-                          player: path.resolve(__dirname, 'player.html'),
-                          vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
-                          vmDom: path.resolve(
-                              __dirname,
-                              'aux-vm-iframe-dom.html'
-                          ),
-                          playwright: path.resolve(
-                              __dirname,
-                              'playwright.html'
-                          ),
-                          'loading-oauth': path.resolve(
-                              __dirname,
-                              'loading-oauth.html'
-                          ),
-                      },
-            // output: {
-            //     inlineDynamicImports: false,
-            // }
+    build: mergeConfig(
+        {
+            outDir: distDir,
+            emptyOutDir: false,
+            rollupOptions: {
+                input: {
+                    main: path.resolve(__dirname, 'index.html'),
+                    player: path.resolve(__dirname, 'player.html'),
+                    vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
+                    vmDom: path.resolve(__dirname, 'aux-vm-iframe-dom.html'),
+                    playwright: path.resolve(__dirname, 'playwright.html'),
+                    'loading-oauth': path.resolve(
+                        __dirname,
+                        'loading-oauth.html'
+                    ),
+                },
+            },
+            sourcemap: true,
+            target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
         },
-        sourcemap: true,
-        target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
-    },
+        mode === 'static'
+            ? {
+                  rollupOptions: {
+                      input: path.resolve(__dirname, 'static.html'),
+                      output: {
+                          inlineDynamicImports: false,
+                      },
+                  },
+                  assetsInlineLimit: (filePath: string, content: Buffer) => {
+                      console.log('\nInlining:', filePath);
+                      return false;
+                  },
+                  chunkSizeWarningLimit: 10000000,
+                  cssCodeSplit: false,
+                  base: './',
+                  assetsDir: '',
+                  minify: false,
+              }
+            : {}
+    ),
     esbuild: {
         charset: 'ascii',
     },
@@ -121,7 +130,16 @@ export default defineConfig(({ command, mode }) => ({
             enforce: 'pre',
         } as any,
         ...(mode === 'static'
-            ? [viteSingleFile({})]
+            ? [
+                  viteSingleFile({
+                      useRecommendedBuildConfig: false,
+                      inlinePattern: [
+                          'static-*.js',
+                          'style-*.css',
+                          'ResizeObserver-*.css',
+                      ],
+                  }),
+              ]
             : [
                   virtual({
                       ...policies.virtualModules,
@@ -230,18 +248,30 @@ export default defineConfig(({ command, mode }) => ({
                       ),
                       '@casual-simulation/aux-vm-browser/vm/AuxVMImpl':
                           '@casual-simulation/aux-vm-browser/vm/StaticAuxVMImpl.ts',
-                      '../../MonacoHelpers': path.resolve(
-                          __dirname,
-                          '..',
-                          'shared',
-                          'StaticMonacoHelpers.ts'
-                      ),
-                      '../../MonacoLibs': path.resolve(
-                          __dirname,
-                          '..',
-                          'shared',
-                          'StaticMonacoHelpers.ts'
-                      ),
+                      // 'MonacoHelpers': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'StaticMonacoHelpers.ts'
+                      // ),
+                      // 'MonacoLibs': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'StaticMonacoHelpers.ts'
+                      // ),
+                      // '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'EmptyModule.ts'
+                      // ),
+                      // '@casual-simulation/monaco-editor': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'EmptyModule.ts'
+                      // ),
                       '@teachablemachine/image': path.resolve(
                           __dirname,
                           '..',
