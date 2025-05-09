@@ -104,13 +104,6 @@ import { CustomMapProvider } from './map/CustomMapProvider';
 /**
  * The available map providers that can be used for map forms.
  */
-// export const mapProviders = {
-//     openStreetMaps: new OpenStreetMapsProvider(),
-//     bingMaps: new BingMapsProvider(),
-//     mapbox: new MapBoxProvider('MAPBOX_TOKEN'), // Replace with actual token
-//     // Add more providers as needed
-// };
-
 // The default provider to use when none is specified
 export const defaultMapProvider = 'bingMaps';
 
