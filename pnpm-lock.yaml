@@ -1340,6 +1340,9 @@ importers:
       vite:
         specifier: 5.4.10
         version: 5.4.10(@types/node@18.19.98)(sass@1.56.1)(terser@5.39.0)
+      vite-plugin-commonjs:
+        specifier: 0.10.4
+        version: 0.10.4
       vite-plugin-html:
         specifier: 2.1.1
         version: 2.1.1(vite@5.4.10(@types/node@18.19.98)(sass@1.56.1)(terser@5.39.0))
@@ -13826,6 +13829,12 @@ packages:
   vhost@3.0.2:
     resolution: {integrity: sha512-S3pJdWrpFWrKMboRU4dLYgMrTgoPALsmYwOvyebK2M6X95b9kQrjZy5rwl3uzzpfpENe/XrNYu/2U+e7/bmT5g==}
     engines: {node: '>= 0.8.0'}
+
+  vite-plugin-commonjs@0.10.4:
+    resolution: {integrity: sha512-eWQuvQKCcx0QYB5e5xfxBNjQKyrjEWZIR9UOkOV6JAgxVhtbZvCOF+FNC2ZijBJ3U3Px04ZMMyyMyFBVWIJ5+g==}
+
+  vite-plugin-dynamic-import@1.6.0:
+    resolution: {integrity: sha512-TM0sz70wfzTIo9YCxVFwS8OA9lNREsh+0vMHGSkWDTZ7bgd1Yjs5RV8EgB634l/91IsXJReg0xtmuQqP0mf+rg==}
 
   vite-plugin-html@2.1.1:
     resolution: {integrity: sha512-TCLLYzibNDEMwbtRYAYYmI7CqMuU0qFFfoTVhEQ8w4P9Tjfe5Xrh/0+XXydifgd/H7xzuWkFUjSYT6Egy7Y27Q==}
@@ -30660,6 +30669,19 @@ snapshots:
       vfile-message: 4.0.2
 
   vhost@3.0.2: {}
+
+  vite-plugin-commonjs@0.10.4:
+    dependencies:
+      acorn: 8.14.1
+      magic-string: 0.30.17
+      vite-plugin-dynamic-import: 1.6.0
+
+  vite-plugin-dynamic-import@1.6.0:
+    dependencies:
+      acorn: 8.14.1
+      es-module-lexer: 1.7.0
+      fast-glob: 3.3.3
+      magic-string: 0.30.17
 
   vite-plugin-html@2.1.1(vite@5.4.10(@types/node@18.19.98)(sass@1.56.1)(terser@5.39.0)):
     dependencies:

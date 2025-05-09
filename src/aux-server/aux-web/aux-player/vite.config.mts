@@ -13,6 +13,7 @@ import md from '../../plugins/markdown-plugin';
 import { visualizer } from 'rollup-plugin-visualizer';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import commonjs from 'vite-plugin-commonjs';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -95,6 +96,7 @@ export default defineConfig(({ command, mode }) => ({
         charset: 'ascii',
     },
     plugins: [
+        commonjs(),
         md(),
         vue(),
         createSvgIconsPlugin({
