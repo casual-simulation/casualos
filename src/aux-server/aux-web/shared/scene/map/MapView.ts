@@ -286,6 +286,39 @@ export class MapView extends Object3D {
         this._createGrid();
     }
 
+    /**
+     * Converts tile coordinates to longitude and latitude
+     * @param zoom Zoom level
+     * @param tileX Tile X coordinate
+     * @param tileY Tile Y coordinate
+     * @returns [longitude, latitude]
+     */
+    static tileToLonLat(
+        zoom: number,
+        tileX: number,
+        tileY: number
+    ): [number, number] {
+        // Calculate the northwest corner of the tile
+        const n = Math.pow(2, zoom);
+        const lon = (tileX / n) * 360 - 180;
+        const lat =
+            (Math.atan(Math.sinh(Math.PI * (1 - (2 * tileY) / n))) * 180) /
+            Math.PI;
+
+        // Return the center of the tile (add half a tile in each direction)
+        return [
+            lon + 360 / n / 2,
+            lat -
+                (lat -
+                    (Math.atan(
+                        Math.sinh(Math.PI * (1 - (2 * (tileY + 1)) / n))
+                    ) *
+                        180) /
+                        Math.PI) /
+                    2,
+        ];
+    }
+
     dispose() {
         for (let row of this._tiles) {
             for (let tile of row) {

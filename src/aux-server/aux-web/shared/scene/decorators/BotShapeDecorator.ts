@@ -127,6 +127,7 @@ import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
 import { OffsetProvider } from '../../public/geo-three/OffsetProvider';
 import { MapTilerProvider } from 'geo-three';
+import { CustomMapProvider } from '../map/CustomMapProvider';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
@@ -420,21 +421,92 @@ export class BotShapeDecorator
         }
 
         if (this._mapView && this._shape === 'map') {
-            const coords = parseBotVector(address) ?? new Vector2(0, 0);
+            {
+                // Check if the address is a URL
+                if (
+                    address &&
+                    (address.startsWith('http://') ||
+                        address.startsWith('https://'))
+                ) {
+                    // This appears to be a URL - create or update a custom map provider
+                    this._updateCustomMapProviderForURL(address);
+                } else {
+                    // Treat as coordinates
+                    const coords = parseBotVector(address) ?? new Vector2(0, 0);
+                    this._mapView.setCenter(
+                        this._mapLODLevel,
+                        coords.x, // lon
+                        coords.y // lat
+                    );
+                }
+                // if (this._mapView.provider instanceof OffsetProvider) {
+                //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
+                //         this._mapLODLevel,
+                //         coords.x,
+                //         coords.y
+                //     );
+                // }
+            }
+        }
+    }
 
-            this._mapView.setCenter(
-                this._mapLODLevel,
-                coords.x, // lon
-                coords.y // lat
-            );
+    private _updateCustomMapProviderForURL(url: string) {
+        // Parse the URL
+        try {
+            const urlObj = new URL(url);
+            const pathParts = urlObj.pathname
+                .split('/')
+                .filter((p) => p.length > 0);
 
-            // if (this._mapView.provider instanceof OffsetProvider) {
-            //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
-            //         this._mapLODLevel,
-            //         coords.x,
-            //         coords.y
-            //     );
-            // }
+            // Identify URL pattern
+            if (pathParts.length >= 3) {
+                // Possible patterns: domain/zoom/x/y.png or domain/tiles/zoom/x/y.png
+                let zoom, x, y;
+
+                const tilesDirIndex = pathParts.findIndex((p) => p === 'tiles');
+
+                if (
+                    tilesDirIndex >= 0 &&
+                    pathParts.length >= tilesDirIndex + 4
+                ) {
+                    zoom = parseInt(pathParts[tilesDirIndex + 1]);
+                    x = parseInt(pathParts[tilesDirIndex + 2]);
+                    y = parseInt(pathParts[tilesDirIndex + 3].split('.')[0]);
+                } else {
+                    zoom = parseInt(pathParts[pathParts.length - 3]);
+                    x = parseInt(pathParts[pathParts.length - 2]);
+                    y = parseInt(pathParts[pathParts.length - 1].split('.')[0]);
+                }
+
+                if (!isNaN(zoom) && !isNaN(x) && !isNaN(y)) {
+                    // Create URL template
+                    let template = CustomMapProvider.createTemplateFromUrl(
+                        url,
+                        zoom,
+                        x,
+                        y
+                    );
+
+                    // Set or update a custom provider
+                    const customProvider = new CustomMapProvider(template);
+                    this._mapView.setProvider(customProvider);
+
+                    // Convert tile coordinates to longitude/latitude
+                    const [lon, lat] = MapView.tileToLonLat(zoom, x, y);
+
+                    // Center the map on these coordinates
+                    this._mapView.setZoom(zoom);
+                    this._mapView.setCenter(zoom, lon, lat);
+                    return;
+                }
+            }
+
+            // If the URL pattern couldn't be parsed, use it directly as a single tile
+            const customProvider = new CustomMapProvider(url);
+            customProvider.setUrlTemplate(url);
+            this._mapView.setProvider(customProvider);
+        } catch (error) {
+            console.error('Failed to parse map tile URL:', error);
         }
     }
 

@@ -99,6 +99,7 @@ import { LODDebugger } from '../public/geo-three/LODDebugger';
 import { OffsetProvider } from '../public/geo-three/OffsetProvider';
 import { LODConstant } from '../public/geo-three/LODConstant';
 import { MapView } from './map/MapView';
+import { CustomMapProvider } from './map/CustomMapProvider';
 
 /**
  * The available map providers that can be used for map forms.
@@ -120,6 +121,10 @@ export const defaultMapProvider = 'bingMaps';
  * @returns A map provider instance
  */
 export function getMapProvider(name: string, apiKey?: string): MapProvider {
+    // Check if name is a URL
+    if (name && (name.startsWith('http://') || name.startsWith('https://'))) {
+        return new CustomMapProvider(name);
+    }
     if (!name) {
         return new BingMapsProvider();
     }
@@ -146,7 +151,9 @@ export function getMapProvider(name: string, apiKey?: string): MapProvider {
         case 'here':
         case 'heremap':
         case 'heremaps':
-            return new HereMapsProvider(); //requires login?
+            return new HereMapsProvider();
+        case 'custom':
+            return new CustomMapProvider();
 
         default:
             console.warn(
