@@ -59,8 +59,6 @@ export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
  * This implementation works similarly to the one in AuxVMImpl, but instead of using an iframe, it loads the web worker directly.
  */
 export default class StaticAuxVMImpl implements AuxVM {
-    // private _worker: Worker;
-
     protected _localEvents: Subject<RuntimeActions[]>;
     protected _deviceEvents: Subject<DeviceAction[]>;
     protected _connectionStateChanged: Subject<StatusUpdate>;
@@ -178,92 +176,23 @@ export default class StaticAuxVMImpl implements AuxVM {
     }
 
     protected async _init(): Promise<void> {
-        // let origin = getVMOrigin(
-        //     this._config.config.vmOrigin,
-        //     location.origin,
-        //     this._id
-        // );
-        // if (this._relaxOrigin) {
-        //     const baseOrigin = getBaseOrigin(origin);
-        //     console.log('[AuxVMImpl] Relaxing origin to:', baseOrigin);
-        //     origin = baseOrigin;
-        // }
-        // const iframeUrl = new URL('/aux-vm-iframe.html', origin).href;
-
-        // this._connectionStateChanged.next({
-        //     type: 'progress',
-        //     message: 'Getting web manifest...',
-        //     progress: 0.05,
-        // });
-
-        // this._connectionStateChanged.next({
-        //     type: 'progress',
-        //     message: 'Initializing web worker...',
-        //     progress: 0.1,
-        // });
-        // this._iframe = document.createElement('iframe');
-        // this._iframe.src = iframeUrl;
-        // this._iframe.style.display = 'none';
-        // this._iframe.setAttribute('allow', DEFAULT_IFRAME_ALLOW_ATTRIBUTE);
-        // this._iframe.setAttribute('sandbox', DEFAULT_IFRAME_SANDBOX_ATTRIBUTE);
-
-        // let promise = waitForLoad(this._iframe);
-        // document.body.insertBefore(this._iframe, document.body.firstChild);
-
-        // await promise;
-
-        // this._channel = setupChannel(this._iframe.contentWindow);
-
-        // this._connectionStateChanged.next({
-        //     type: 'progress',
-        //     message: 'Creating VM...',
-        //     progress: 0.2,
-        // });
-        // const wrapper = wrap<AuxStatic>(this._channel.port1);
-        // this._proxy = await new wrapper(
-        //     location.origin,
-        //     processPartitions(this._config)
-        // );
-
-        // let statusMapper = remapProgressPercent(0.2, 1);
-        // return await this._proxy.init(
-        //     proxy((events) => this._localEvents.next(events)),
-        //     proxy((events) => this._deviceEvents.next(events)),
-        //     proxy((state) => this._stateUpdated.next(state)),
-        //     proxy((version) => this._versionUpdated.next(version)),
-        //     proxy((state) =>
-        //         this._connectionStateChanged.next(statusMapper(state))
-        //     ),
-        //     proxy((err) => this._onError.next(err)),
-        //     proxy((channel) => this._handleAddedSubChannel(channel)),
-        //     proxy((id) => this._handleRemovedSubChannel(id)),
-        //     proxy((message) => this._onAuthMessage.next(message))
-        // );
-
         this._connectionStateChanged.next({
             type: 'progress',
             message: 'Initializing web worker...',
             progress: 0.1,
         });
-        // this._worker = new Worker();
-        // this._channel = setupChannel(this._worker);
 
         this._connectionStateChanged.next({
             type: 'progress',
             message: 'Creating VM...',
             progress: 0.2,
         });
-        // const wrapper = wrap<AuxStatic>(this._channel.port1);
         if (!this._channel) {
             this._channel = new BrowserAuxChannel(
                 location.origin,
                 this._config
             );
         }
-        // this._proxy = await new wrapper(
-        //     location.origin,
-        //     processPartitions(this._config)
-        // );
 
         return await this._connect();
     }
@@ -289,30 +218,6 @@ export default class StaticAuxVMImpl implements AuxVM {
      */
     async sendEvents(events: BotAction[]): Promise<void> {
         if (!this._channel) return null;
-        // if (events && events.length) {
-        //     const transferables: Transferable[] = [];
-        //     for (let event of events) {
-        //         if (event.type === 'async_result') {
-        //             if (event.result instanceof OffscreenCanvas) {
-        //                 console.log(
-        //                     `[AuxVMImpl] marked OffscreenCanvas as transferable in AsyncResultAction`,
-        //                     event
-        //                 );
-        //                 transferables.push(event.result);
-        //             }
-        //         }
-        //     }
-
-        //     if (transferables.length > 0) {
-        //         console.log(
-        //             `[AuxVMImpl] sendEvents marking transferables from events`,
-        //             events,
-        //             transferables
-        //         );
-        //         events = transfer(events, transferables);
-        //     }
-        // }
-
         return await this._channel.sendEvents(events);
     }
 
@@ -388,13 +293,6 @@ export default class StaticAuxVMImpl implements AuxVM {
             this._channel.unsubscribe();
             this._channel = null;
         }
-        // this._proxy = null;
-        // if (this._iframe) {
-        //     if (this._iframe.parentNode) {
-        //         this._iframe.parentNode.removeChild(this._iframe);
-        //     }
-        //     this._iframe = null;
-        // }
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
         this._localEvents.unsubscribe();
