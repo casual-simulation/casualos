@@ -133,7 +133,7 @@ export function getMapProvider(name: string, apiKey?: string): MapProvider {
         case 'mapbox':
             return new MapBoxProvider(apiKey);
         case 'google':
-        case 'googleMaps':
+        case 'googlemaps':
             return new GoogleMapsProvider(apiKey);
         case 'maptiler':
             return new MapTilerProvider(apiKey, 'tiles', 'satellite', 'jpg');

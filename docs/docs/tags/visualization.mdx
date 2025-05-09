@@ -716,6 +716,10 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
+When <TagLink tag='form'/> is set to `map` use <TagLink tag='Vector Tags'/> `➡️1,2`, `➡️-1,-2`, `➡️1.23,4.56` to control longitude and latitude to set the center of the `map`.
+
+When <TagLink tag='form'/> is set to `map` and <TagLink tag='formMapProvider'/> is set to `custom` the address should be the URL of the map tile that should be displayed. `https://example.com/tiles/{z}/{x}/{y}.png`
+
 When the bot is in the menu portal, this is the URL of the image or video that should be shown on the menu item.
 It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
 If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
@@ -795,10 +799,48 @@ Only works for bots that have a <TagLink tag='form'/> of `map`.
   <PossibleValueCode value='1'>
     (default)
   </PossibleValueCode>
-  <PossibleValue value='Any Integer >= 0 and <= 15'>
+  <PossibleValue value='Any Integer >= 0 and <= 20'>
     The LOD to display the map at.
   </PossibleValue>
 </PossibleValuesTable>
+
+### `formMapProvider`
+
+Specifies the tile provider used to render the map in a map form.
+This determines the source of map tiles (visual and data layers) the bot will display.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='bing, bing maps'>
+    (default) Bing Maps. No API key required.
+  </PossibleValueCode>
+  <PossibleValue value='openstreetmap, openstreetmaps, osm'>
+    OpenStreetMap. No API key required.
+  </PossibleValue>
+  <PossibleValue value='mapbox'>
+    Mapbox. Requires an API key.
+  </PossibleValue>
+  <PossibleValue value='google, googlemaps'>
+    Google Maps. Requires an API key
+  </PossibleValue>
+  <PossibleValue value='maptiler'>
+    MapTiler. Requires an API key.
+  </PossibleValue>
+  <PossibleValue value='openmaptiles, openmaptile, omt'>
+    OpenMapTiles. Requires an API key.
+  </PossibleValue>
+  <PossibleValue value='here, heremap, heremaps'>
+    HERE Maps. No API key required by default, but advanced features may require one.
+  </PossibleValue>
+  <PossibleValue value='custom'>
+    Custom tile provider. Configuration and key requirements depend on setup.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formMapProviderAPIKey`
+
+The API key that the current bot uses.
+
+When <TagLink tag='form'/> is set to `map` and the <TagLink tag='formMapProvider'/> requires an API key. The API key should be a string from the provider.
 
 ### `formMapHeightProvider`
 
