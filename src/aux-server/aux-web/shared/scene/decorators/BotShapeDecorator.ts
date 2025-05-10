@@ -308,14 +308,28 @@ export class BotShapeDecorator
         this._updateLightDecay(calc);
         this._updateLightGroundColor(calc);
         this._updateBuildStep(calc);
-        this._updateMapLOD(calc);
-        this._updateMapTags(calc);
 
         // For map forms, update map-specific properties
-        if (this._shape === 'map') {
+        if (this._shape === 'map' && this._mapView) {
             this._updateMapLOD(calc);
+            this._updateMapTags(calc);
             this._updateMapProvider(calc);
             this._updateCustomMapProviderURL(calc);
+        }
+
+        if (this._iframe) {
+            const gridScale = this.bot3D.gridScale;
+            const scale = calculateScale(calc, this.bot3D.bot, gridScale);
+            if (scale.x > scale.y) {
+                const widthToHeightRatio = scale.y / scale.x;
+                this._iframe.setPlaneSize(1, widthToHeightRatio);
+            } else {
+                const heightToWidthRatio = scale.x / scale.y;
+                this._iframe.setPlaneSize(heightToWidthRatio, 1);
+            }
+
+            const pointable = isBotPointable(calc, this.bot3D.bot);
+            this._iframe.setInteractable(pointable);
         }
     }
 
@@ -420,32 +434,23 @@ export class BotShapeDecorator
             }
         }
 
-        if (this._mapView && this._shape === 'map') {
-            {
-                // Check if the address is a URL
-                if (
-                    address &&
-                    (address.startsWith('http://') ||
-                        address.startsWith('https://'))
-                ) {
-                    // This appears to be a URL - create or update a custom map provider
-                    this._updateCustomMapProviderForURL(address);
-                } else {
-                    // Treat as coordinates
-                    const coords = parseBotVector(address) ?? new Vector2(0, 0);
-                    this._mapView.setCenter(
-                        this._mapLODLevel,
-                        coords.x, // lon
-                        coords.y // lat
-                    );
-                }
-                // if (this._mapView.provider instanceof OffsetProvider) {
-                //     this._mapView.provider.offset = OffsetProvider.calculateOffset(
-                //         this._mapLODLevel,
-                //         coords.x,
-                //         coords.y
-                //     );
-                // }
+        if (this._mapView) {
+            // Check if the address is a URL
+            if (
+                address &&
+                (address.startsWith('http://') ||
+                    address.startsWith('https://'))
+            ) {
+                // This appears to be a URL - create or update a custom map provider
+                this._updateCustomMapProviderForURL(address);
+            } else {
+                // Treat as coordinates
+                const coords = parseBotVector(address) ?? new Vector2(0, 0);
+                this._mapView.setCenter(
+                    this._mapLODLevel,
+                    coords.x, // lon
+                    coords.y // lat
+                );
             }
         }
     }
@@ -692,10 +697,6 @@ export class BotShapeDecorator
                 }
             });
         }
-
-        // if (this._lodConstant) {
-        //     this._lodConstant = null;
-        // }
 
         if (this._keyboard) {
             for (let key of (this._keyboard as any).keys) {
@@ -1604,41 +1605,6 @@ export class BotShapeDecorator
         }
     }
 
-    private async _parseJsonObject(
-        text: string,
-        cancellationToken: CancellationToken
-    ) {
-        try {
-            if (!ldrawLoader) {
-                ldrawLoader = new LDrawLoader();
-            }
-            (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
-            const ldraw = await new Promise<Group>((resolve, reject) => {
-                try {
-                    (ldrawLoader.parse as any)(text, (group: Group) =>
-                        resolve(group)
-                    );
-                } catch (err) {
-                    reject(err);
-                }
-            });
-            if (!this.container || cancellationToken.isCanceled) {
-                // The decorator was disposed of by the Bot.
-                return false;
-            }
-            this._setLDraw(ldraw);
-            return true;
-        } catch (err) {
-            console.error(
-                '[BotShapeDecorator] Unable to parse LDraw:',
-                text,
-                err
-            );
-
-            return false;
-        }
-    }
-
     private _setJsonObject(obj: Object3D) {
         const group = new Group();
         group.add(obj);
@@ -1795,14 +1761,12 @@ export class BotShapeDecorator
             null
         );
 
-        const provider = getMapProvider(providerName, apiKey);
-
-        this._mapView = new MapView(provider);
-        this._mapView.setRotationFromAxisAngle(
-            new Vector3(1, 0, 0),
-            Math.PI / 2
+        this._mapView = createMapPlane(
+            new Vector3(0, 0, 0),
+            1,
+            providerName,
+            apiKey
         );
-        this._mapView.scale.set(1, 1, 1);
 
         this.mesh = null;
         const colliderPlane = (this.collider = createPlane(1));
@@ -1826,7 +1790,7 @@ export class BotShapeDecorator
     }
 
     private _updateCustomMapProviderURL(calc: BotCalculationContext) {
-        if (!this._mapView || this._shape !== 'map') {
+        if (!this._mapView) {
             return;
         }
 

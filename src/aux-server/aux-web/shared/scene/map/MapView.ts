@@ -19,7 +19,6 @@ import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
 import { Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
-import { forEach } from 'lodash';
 
 const TILE_SIZE = 256;
 
@@ -339,9 +338,6 @@ export class MapView extends Object3D {
 
                 const tile = this._createTile();
                 tile.position.set(x * this._tileSize, 0, y * this._tileSize);
-                console.log(
-                    `Tile ${x}x${y} position: ${tile.position.x}, ${tile.position.y}, ${tile.position.z}`
-                );
                 tile.updateMatrixWorld(true);
                 this._tiles[tileX][tileY] = tile;
             }

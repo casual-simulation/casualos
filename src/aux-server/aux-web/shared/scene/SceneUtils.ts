@@ -398,7 +398,6 @@ export function createMapPlane(
     providerName: string = defaultMapProvider,
     apiKey: string = null
 ): MapView {
-    //const provider = mapProviders[providerName] || mapProviders[defaultMapProvider];
     const provider = getMapProvider(providerName, apiKey);
 
     const map = new MapView(provider);

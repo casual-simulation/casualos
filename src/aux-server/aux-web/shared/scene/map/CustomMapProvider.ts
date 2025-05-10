@@ -127,12 +127,3 @@ export class CustomMapProvider extends OpenStreetMapsProvider {
         });
     }
 }
-
-// Add to mapProviders
-export const mapProviders = {
-    openStreetMaps: new OpenStreetMapsProvider(),
-    bingMaps: new BingMapsProvider(),
-    mapbox: new MapBoxProvider('YOUR_MAPBOX_TOKEN'),
-    custom: new CustomMapProvider(),
-    // Add more providers as needed
-};
