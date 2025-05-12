@@ -199,6 +199,8 @@ export class AppManager {
                         );
                     }
                 }
+
+                config.staticRepoLocalPersistence = false;
             }
 
             const partitions = isStatic
