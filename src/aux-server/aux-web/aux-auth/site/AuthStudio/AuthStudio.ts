@@ -15,26 +15,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Provide, Watch } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
 import type {
     AIHumeFeaturesConfiguration,
     AllowedStudioCreators,
-    FormError,
     ListedStudioMember,
     StudioAssignmentRole,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
     UpdateStudioRequest,
 } from '@casual-simulation/aux-records';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
-import type { BiosOption } from '@casual-simulation/aux-common';
+import type { BiosOption, FormError } from '@casual-simulation/aux-common';
 import { isEqual } from 'lodash';
 import type { RecordsClientInputs } from '@casual-simulation/aux-records/RecordsClient';
 

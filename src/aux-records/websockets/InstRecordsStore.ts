@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 import type { ServerError } from '@casual-simulation/aux-common';
 
 /**
@@ -165,6 +166,73 @@ export interface InstRecordsStore {
      * @param inst The name of the inst.
      */
     deleteInst(recordName: string | null, inst: string): Promise<void>;
+
+    /**
+     * Saves the given loaded package.
+     * @param loadedPackage The package that should be saved.
+     */
+    saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void>;
+
+    /**
+     * Gets the list of loaded packages for the given record and inst.
+     * @param recordName The name of the record.
+     * @param inst The inst.
+     */
+    listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]>;
+
+    /**
+     * Determines whether the package with the given ID is loaded into the given inst.
+     * Returns the package that was loaded if it is loaded, or null if it is not.
+     * @param recordName The name of the record that the inst is in.
+     * @param inst The inst.
+     * @param packageId The ID of the package.
+     */
+    isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null>;
+}
+
+export interface LoadedPackage {
+    /**
+     * The ID of the loaded package.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the inst is stored in.
+     * If null, then the inst is a public inst.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the package was loaded into.
+     */
+    inst: string;
+
+    /**
+     * The branch that the package was installed into.
+     */
+    branch: string;
+
+    /**
+     * The ID of the user that loaded the package.
+     */
+    userId: string | null;
+
+    /**
+     * The ID of the pacakge that was loaded.
+     */
+    packageId: string;
+
+    /**
+     * The ID of the package version that was loaded.
+     */
+    packageVersionId: string;
 }
 
 export interface StoredUpdates {

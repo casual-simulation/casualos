@@ -52,11 +52,9 @@ import {
     Object3D,
     PointLight,
     SpotLight,
-    MathUtils as ThreeMath,
     Vector3,
     AmbientLight,
     Light,
-    Material,
     ObjectLoader,
 } from '@casual-simulation/three';
 import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
@@ -65,10 +63,9 @@ import type { SubscriptionLike } from 'rxjs';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { AuxBot3D } from '../AuxBot3D';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { getGLTFPool } from '../GLTFHelpers';
 import type { Game } from '../Game';
-import { GameObject } from '../GameObject';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import type { LineSegments } from '../LineSegments';
 import { createCubeStroke } from '../MeshUtils';
@@ -77,7 +74,6 @@ import {
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
     baseAuxMeshMaterial,
-    baseAuxPointLight,
     buildSRGBColor,
     calculateScale,
     createCircle,
@@ -85,7 +81,6 @@ import {
     createSkybox,
     createSphere,
     createSprite,
-    disposeGroup,
     disposeMesh,
     disposeObject3D,
     isTransparent,
@@ -108,7 +103,7 @@ import type { IMeshDecorator } from './IMeshDecorator';
 import type { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
-import { Block, Keyboard, update as updateMeshUI } from 'three-mesh-ui';
+import { Keyboard, update as updateMeshUI } from 'three-mesh-ui';
 import FontJSON from 'three-mesh-ui/examples/assets/Roboto-msdf.json';
 import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';

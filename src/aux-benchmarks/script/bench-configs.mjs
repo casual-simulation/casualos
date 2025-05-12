@@ -2,13 +2,8 @@ import path from 'path';
 import {
     paths,
     cleanDirectory,
-    watch,
-    setup,
     getExternals,
-    replaceEsbuildPlugin,
-    replaceThreePlugin,
 } from '../../../script/build-helpers.mjs';
-import fs from 'fs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 
 const src = path.resolve(paths.root, 'src');

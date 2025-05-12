@@ -21,7 +21,6 @@ import { DNA_TAG_PREFIX } from '@casual-simulation/aux-common';
 import type { TranspilerResult } from './Transpiler';
 import {
     Transpiler,
-    anyArgument,
     replaceMacros,
     calculateOriginalLineLocation,
     calculateFinalLineLocation,

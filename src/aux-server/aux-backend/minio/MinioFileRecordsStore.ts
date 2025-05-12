@@ -376,7 +376,7 @@ export class MinioFileRecordsStore
                     ...requiredHeaders,
                 },
                 queryString: {},
-                path: fileUrl.pathname,
+                path: decodeURI(fileUrl.pathname),
             },
             secretAccessKey,
             accessKeyId,
@@ -432,7 +432,7 @@ export class MinioFileRecordsStore
                 queryString: {
                     'response-cache-control': 'max-age=31536000',
                 },
-                path: fileUrl.pathname,
+                path: decodeURI(fileUrl.pathname),
             },
             secretAccessKey,
             accessKeyId,

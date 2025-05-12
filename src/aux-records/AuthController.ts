@@ -26,7 +26,6 @@ import type {
     AuthUserAuthenticator,
     SaveNewUserFailure,
     UserLoginMetadata,
-    UserRole,
 } from './AuthStore';
 import type {
     NotAuthorizedError,
@@ -45,22 +44,22 @@ import { fromByteArray } from 'base64-js';
 import type { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
-import {
-    formatV1ConnectionKey,
-    formatV1OpenAiKey,
-    formatV1SessionKey,
-    isSuperUserRole,
-    parseSessionKey,
-    verifyConnectionToken,
-} from './AuthUtils';
 import { randomCode } from './CryptoUtils';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type {
     PrivacyFeatures,
     PublicUserInfo,
+    UserRole,
 } from '@casual-simulation/aux-common';
-import { parseConnectionToken } from '@casual-simulation/aux-common';
+import {
+    parseConnectionToken,
+    formatV1ConnectionKey,
+    formatV1SessionKey,
+    isSuperUserRole,
+    parseSessionKey,
+    verifyConnectionToken,
+} from '@casual-simulation/aux-common';
 import type {
     PrivoClientInterface,
     PrivoFeatureStatus,
@@ -77,7 +76,6 @@ import type {
     AuthenticationResponseJSON,
 } from '@simplewebauthn/types';
 import {
-    VerifiedAuthenticationResponse,
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,
@@ -3189,6 +3187,10 @@ export class AuthController {
             },
         };
 
+        console.log(
+            `[AuthController] [issueSession userId: ${userId} newSessionId: ${newSessionId} expiresAt: ${newSession.expireTimeMs}] Issued session.`
+        );
+
         return {
             newSession,
             info,
@@ -3208,6 +3210,7 @@ export async function validateSessionKey(
         return {
             success: false,
             userId: null,
+            role: null,
             errorCode: 'no_session_key',
             errorMessage:
                 'A session key was not provided, but it is required for this operation.',
@@ -3333,6 +3336,7 @@ export interface AuthSessionInfo {
 export interface NoSessionKeyResult {
     success: false;
     userId: null;
+    role: null;
     errorCode: 'no_session_key';
     errorMessage: string;
 }

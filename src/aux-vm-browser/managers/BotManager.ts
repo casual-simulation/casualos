@@ -19,48 +19,32 @@ import type {
     Bot,
     BotTags,
     AuxPartitionConfig,
-    BotAction,
     BotsState,
 } from '@casual-simulation/aux-common';
 import {
-    merge,
-    parseSimulationId,
     createBot,
-    DEVICE_BOT_ID,
-    LOCAL_BOT_ID,
-    botUpdated,
     TEMPORARY_BOT_PARTITION_ID,
     COOKIE_BOT_PARTITION_ID,
-    COOKIE_BOT_ID,
-    isBotTags,
     isBot,
-    ADMIN_PARTITION_ID,
-    ADMIN_BRANCH_NAME,
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
     getBotsStateFromStoredAux,
-    BotActions,
-    ConnectionIndicator,
-    getConnectionId,
     DEFAULT_BRANCH_NAME,
     hasValue,
-    asyncResult,
 } from '@casual-simulation/aux-common';
 import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     BaseSimulation,
     LoginManager,
-    getTreeName,
-    Simulation,
     RecordsManager,
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
 import type { BrowserSimulation } from './BrowserSimulation';
 import { PortalManager, ProgressManager } from '@casual-simulation/aux-vm';
-import { filter, tap, map } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import type { ConsoleMessages } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
@@ -170,16 +154,25 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     ...initialTempState,
                 },
             },
-            [COOKIE_BOT_PARTITION_ID]: {
-                type: 'proxy',
-                partition: new LocalStoragePartitionImpl({
-                    type: 'local_storage',
-                    namespace: !origin.recordName
-                        ? `aux/${origin.inst}`
-                        : `aux/${origin.recordName}/${origin.inst}`,
-                    private: true,
-                }),
-            },
+            [COOKIE_BOT_PARTITION_ID]:
+                (import.meta as any).env?.MODE === 'static'
+                    ? {
+                          type: 'local_storage',
+                          namespace: !origin.recordName
+                              ? `aux/${origin.inst}`
+                              : `aux/${origin.recordName}/${origin.inst}`,
+                          private: true,
+                      }
+                    : {
+                          type: 'proxy',
+                          partition: new LocalStoragePartitionImpl({
+                              type: 'local_storage',
+                              namespace: !origin.recordName
+                                  ? `aux/${origin.inst}`
+                                  : `aux/${origin.recordName}/${origin.inst}`,
+                              private: true,
+                          }),
+                      },
             [BOOTSTRAP_PARTITION_ID]: {
                 type: 'memory',
                 initialState: config.bootstrapState
@@ -412,11 +405,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(
             this._vm.localEvents
-                .pipe(
-                    tap((e) =>
-                        this._recordsManager.handleEvents(e as BotAction[])
-                    )
-                )
+                .pipe(tap((e) => this._recordsManager.handleEvents(e)))
                 .subscribe()
         );
         this._subscriptions.push(
@@ -434,11 +423,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 this._livekitManager.getRoomOptions(set)
             ),
             this._vm.localEvents
-                .pipe(
-                    tap((e) =>
-                        this._livekitManager.handleEvents(e as BotAction[])
-                    )
-                )
+                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
                 .subscribe()
         );
     }

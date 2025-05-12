@@ -35,13 +35,7 @@ import type {
     RecordSubscriptionMetrics,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
-import {
-    MemoryConfiguration,
-    SUBSCRIPTIONS_CONFIG_KEY,
-    SubscriptionConfiguration,
-    isActiveSubscription,
-    parseSubscriptionConfig,
-} from '@casual-simulation/aux-records';
+import { isActiveSubscription } from '@casual-simulation/aux-records';
 import type { PrismaClient, Prisma } from './generated';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';

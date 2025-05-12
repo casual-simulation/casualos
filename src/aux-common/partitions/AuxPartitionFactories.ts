@@ -17,9 +17,6 @@
  */
 import type { PartitionConfig } from './AuxPartitionConfig';
 import type { AuxPartition } from './AuxPartition';
-import { MemoryPartition } from './AuxPartition';
-import { BotsState, BotAction, Bot, UpdatedBot } from '../bots';
-import { Observable, Subject } from 'rxjs';
 import type { PartitionAuthSource } from './PartitionAuthSource';
 
 export interface AuxPartitionServices {

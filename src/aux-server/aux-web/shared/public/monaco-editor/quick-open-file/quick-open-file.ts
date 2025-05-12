@@ -10,7 +10,7 @@ import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/
 import { EditorContextKeys } from 'monaco-editor/esm/vs/editor/common/editorContextKeys';
 import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import { appManager } from '../../../../shared/AppManager';
-import { calculateBotValue, getShortId, goToTag, hasValue, SHEET_PORTAL, SYSTEM_PORTAL, tagsOnBot, tweenTo } from '@casual-simulation/aux-common';
+import { calculateBotValue, hasValue, SHEET_PORTAL, SYSTEM_PORTAL, tagsOnBot, tweenTo } from '@casual-simulation/aux-common';
 import { KeyCode, KeyMod } from '../KeyCodes';
 interface IDisposable {
     dispose(): void;

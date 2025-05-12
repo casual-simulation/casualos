@@ -15,20 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import BotTag from '../BotTag/BotTag';
 import BotValue from '../BotValue/BotValue';
 import type { SystemPortalDiffSelectionTag } from '@casual-simulation/aux-vm-browser';
-import {
-    BrowserSimulation,
-    SystemPortalBot,
-    SystemPortalItem,
-    SystemPortalSelectionTag,
-    TagSortMode,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+
 import type { Bot } from '@casual-simulation/aux-common';
 import { getBotTag, getShortId } from '@casual-simulation/aux-common';
 import DiffStatus from '../DiffStatus/DiffStatus';

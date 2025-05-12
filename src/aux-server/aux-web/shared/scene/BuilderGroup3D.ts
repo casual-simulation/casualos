@@ -22,7 +22,6 @@ import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFac
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import {
     getDimensionPosition,
-    TagUpdatedEvent,
     isDimension,
     getDimensionVisualizeMode,
     isMinimized,

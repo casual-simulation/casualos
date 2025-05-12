@@ -23,7 +23,6 @@ import type {
     HandleWebhookOptions,
     WebhookState,
 } from '@casual-simulation/aux-records';
-import { WEBHOOK_STATE_SCHEMA } from '@casual-simulation/aux-records';
 import { resolve } from 'path';
 import type { HandleWebhookPayload } from '../../../../shared/webhooks/LambdaWebhookPayload';
 import { HANDLE_WEBHOOK_PAYLOAD_SCHEMA } from '../../../../shared/webhooks/LambdaWebhookPayload';
@@ -40,9 +39,22 @@ const scriptPath = `file://${script}`;
 console.log('[webhooks] Deno Script path:', scriptPath);
 console.log('[webhooks] script stat:', statSync(script));
 
-export async function handleWebhook(payload: HandleWebhookPayload) {
-    const parseResult = HANDLE_WEBHOOK_PAYLOAD_SCHEMA.safeParse(payload);
-    if (!parseResult.success) {
+export async function handleWebhook(payload: HandleWebhookPayload | string) {
+    let webhookPayload: HandleWebhookPayload;
+    if (typeof payload === 'string') {
+        try {
+            webhookPayload = JSON.parse(payload);
+        } catch (e) {
+            console.error('[webhooks] Invalid payload JSON:', e);
+            throw new Error('Invalid payload!');
+        }
+    } else {
+        webhookPayload = payload;
+    }
+
+    const parseResult = HANDLE_WEBHOOK_PAYLOAD_SCHEMA.safeParse(webhookPayload);
+    if (parseResult.success === false) {
+        console.error('[webhooks] Invalid payload:', parseResult.error);
         throw new Error('Invalid payload!');
     }
     const request = parseResult.data;
@@ -73,7 +85,7 @@ export async function handleWebhook(payload: HandleWebhookPayload) {
             };
         },
         {
-            configParameters: payload.configParameters as AuxConfigParameters,
+            configParameters: request.configParameters as AuxConfigParameters,
         }
     );
 

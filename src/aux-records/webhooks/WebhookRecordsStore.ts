@@ -207,8 +207,9 @@ export interface WebhookInfoFile {
 
     /**
      * The response that was recieved from the webhook.
+     * Null if the request failed before a response was recieved.
      */
-    response: GenericHttpResponse;
+    response: GenericHttpResponse | null;
 
     /**
      * The state that was passed to the webhook.

@@ -21,3 +21,4 @@ export * from './InstRecordsClient';
 export * from './MemoryConnectionClient';
 export * from './InstRecordsClientTimeSyncConnection';
 export * from './AuthenticatedConnectionClient';
+export * from './Utils';

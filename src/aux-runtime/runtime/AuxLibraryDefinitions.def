@@ -1309,6 +1309,32 @@ declare interface DownloadAction extends Action {
     mimeType: string;
 }
 
+export type StoredAux = StoredAuxVersion1 | StoredAuxVersion2;
+
+export interface StoredAuxVersion1 {
+    version: 1;
+    state: BotsState;
+}
+
+export interface StoredAuxVersion2 {
+    version: 2;
+    updates: InstUpdate[];
+}
+
+export interface AuxFileOptions {
+    /**
+     * The version that should be used for the output file.
+     *
+     * Version 1 stores bots as pure JSON and is the original version of the file format.
+     * Version 2 stores bots as updates and is the new version of the file format.
+     *
+     * If not specifed, then version 2 will be used.
+     */
+    version?: 1 | 2;
+}
+
+export type InstallAuxFileMode = 'default' | 'copy';
+
 /**
  * Defines an interface for options that a show input event can use.
  */
@@ -12099,6 +12125,434 @@ export interface SharedTextDeleteOp {
 
 export interface RelativePosition {}
 
+/**
+ * Defines a record that represents a notification.
+ * That is, a way for users to be notified of something.
+ *
+ * @dochash types/records/packages
+ * @docName PackageRecord
+ */
+export interface PackageRecord {
+    /**
+     * The address of the package.
+     */
+    address: string;
+
+    /**
+     * The ID of the package.
+     */
+    id: string;
+}
+
+/**
+ * The scopes that can be used for requested entitlements.
+ * This can be used to limit the entitlement to requesting a category of resources.
+ * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
+ *
+ * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in the user's player record. Once granted, the package would have access to the user's personal record.
+ * - "owned" - The entitlement is for user (user-owned) records. This would allow the package to request access to resources in a record that the user owns. Once granted, the package would have access to the user's owned records.
+ * - "studio" - The entitlement is for studio records. This would allow the package to request access to resources in studios in which the user is an admin or member of.
+ * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
+ * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
+ */
+export type EntitlementScope =
+    | 'personal'
+    | 'owned'
+    | 'studio'
+    | 'shared'
+    | 'designated';
+
+/**
+ * The feature categories that entitlements support.
+ * Generally, features align with resource kinds, but don't have to.
+ */
+export type EntitlementFeature =
+    | 'data'
+    | 'file'
+    | 'event'
+    | 'inst'
+    | 'notification'
+    | 'package'
+    | 'permissions'
+    | 'webhook'
+    | 'ai';
+
+/**
+ * Defines an interface that represents an entitlement.
+ * That is, a feature that can be granted to a package but still requires user approval.
+ *
+ * In essence, this allows a package to ask the user for permission for a category of permissions.
+ */
+export interface Entitlement {
+    /**
+     * The feature category that the entitlement is for.
+     * Generally, features align with resource kinds, but don't have to.
+     */
+    feature: EntitlementFeature;
+
+    /**
+     * The scope of the entitlement.
+     * This can be used to limit the entitlement to a category of resources.
+     * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
+     *
+     *
+     * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in the user's player record.
+     * - "owned" - The entitlement is for user (user-owned) records. This would allow the package to request access to resources in a record that the user owns.
+     * - "studio" - The entitlement is for studio records. This would allow the package to request access to resources in studios in which the user is an admin or member of.
+     * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
+     * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
+     */
+    scope: EntitlementScope;
+
+    /**
+     * The list of records that the entitlement is for.
+     */
+    designatedRecords?: string[];
+}
+
+
+export interface PackageVersion {
+    /**
+     * The major version of the package.
+     */
+    major: number;
+
+    /**
+     * The minor version of the package.
+     */
+    minor: number;
+
+    /**
+     * The patch version of the package.
+     */
+    patch: number;
+
+    /**
+     * The pre-release version of the package.
+     * If empty or null, then this is a stable release.
+     */
+    tag: string | null;
+}
+
+export interface PackageRecordVersion {
+    /**
+     * The address that the item is stored under.
+     */
+    address: string;
+
+    /**
+     * The key of the item.
+     */
+    key: PackageVersion;
+
+    /**
+     * The ID of the package version.
+     */
+    id: string;
+
+    /**
+     * The name of the aux file that is stored for this version.
+     */
+    auxFileName: string;
+
+    /**
+     * Whether the aux file was created for this version.
+     */
+    createdFile: boolean;
+
+    /**
+     * The SHA-256 hash of the package version.
+     */
+    sha256: string;
+
+    /**
+     * The SHA-256 hash of the aux.
+     */
+    auxSha256: string;
+
+    /**
+     * The list of entitlements that the package requires.
+     */
+    entitlements: Entitlement[];
+
+    /**
+     * Whether the package version requires review.
+     * Packages that do not require review are automatically approved and cannot have entitlements that require review.
+     */
+    requiresReview: boolean;
+
+    /**
+     * The description of the package.
+     */
+    description: string;
+
+    /**
+     * The size of the package version in bytes.
+     */
+    sizeInBytes: number;
+
+    /**
+     * The unix time in miliseconds that this package version was created at.
+     */
+    createdAtMs: number;
+
+    /**
+     * The markers for the package version.
+     */
+    markers: string[];
+}
+
+export interface PackageRecordVersionWithMetadata extends PackageRecordVersion {
+    /**
+     * The ID of the package that the version is stored under.
+     */
+    packageId: string;
+
+    /**
+     * Whether the package version has been approved.
+     * If true, then the package either has been manually approved or does not require approval.
+     */
+    approved: boolean;
+
+    /**
+     * The type of approval that was given to the package.
+     *
+     * - null means that the package has not been approved.
+     * - "normal" means that the package was approved by the reviewer, but that individual permissions still need to be approved by the user.
+     * - "super" means that the package was approved by the reviewer and that individual permissions will not need to be approved by the user.
+     */
+    approvalType: null | 'normal' | 'super';
+}
+
+/**
+ * Defines an interface that represents a package version key specifier.
+ * That is, a way to identify a package version by its key.
+ */
+export interface PackageRecordVersionKeySpecifier {
+    /**
+     * The major number of the version to load.
+     * If omitted, then the latest major version will be loaded.
+     */
+    major?: number;
+
+    /**
+     * The minor number of the version to load.
+     * If not specifed, then the latest minor version will be loaded.
+     */
+    minor?: number;
+
+    /**
+     * The patch number of the version to load.
+     * If not specified, then the latest patch version will be loaded.
+     */
+    patch?: number;
+
+    /**
+     * The tag of the version to load.
+     * If not specified, then the untagged version will be loaded.
+     */
+    tag?: string | null;
+
+    /**
+     * The SHA-256 hash of the version to load.
+     * If not specified, then the SHA-256 will not be checked.
+     * If specified, then the SHA-256 will be checked against the version that is loaded.
+     */
+    sha256?: string | null;
+}
+
+
+export type InstallPackageResult =
+    | InstallPackageSuccess
+    | InstallPackageFailure;
+export interface InstallPackageSuccess {
+    success: true;
+
+    /**
+     * The ID of the record which records that the package was loaded into the inst.
+     * Null if the inst is a local inst.
+     */
+    packageLoadId: string | null;
+
+    /**
+     * The package that was loaded.
+     */
+    package: PackageRecordVersionWithMetadata;
+}
+
+export interface InstallPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+
+export interface LoadedPackage {
+    /**
+     * The ID of the loaded package.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the inst is stored in.
+     * If null, then the inst is a public inst.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the package was loaded into.
+     */
+    inst: string;
+
+    /**
+     * The branch that the package was installed into.
+     */
+    branch: string;
+
+    /**
+     * The ID of the user that loaded the package.
+     */
+    userId: string | null;
+
+    /**
+     * The ID of the pacakge that was loaded.
+     */
+    packageId: string;
+
+    /**
+     * The ID of the package version that was loaded.
+     */
+    packageVersionId: string;
+}
+
+export type ListInstalledPackagesResult =
+    | ListInstalledPackagesRequestSuccess
+    | ListInstalledPackagesFailure;
+
+export interface ListInstalledPackagesRequestSuccess {
+    success: true;
+    packages: LoadedPackage[];
+}
+
+export interface ListInstalledPackagesFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+/**
+ * The scopes that can be granted for entitlements.
+ * Compared to the requested entitlement scopes, the granted entitlement scopes are more restrictive.
+ *
+ * This ultimately means that while a package can have the ability to request access to a bunch of different records,
+ * they can only be granted access to a single record at once (for now).
+ *
+ * - "designated" - The entitlement is for specific records. This would allow the package to access specific records.
+ */
+export type GrantedEntitlementScope = 'designated';
+
+/**
+ * Defines a request that grants a package entitlements to access a record.
+ *
+ * @dochash types/records/packages
+ * @docname GrantEntitlementsRequest
+ */
+export interface GrantEntitlementsRequest {
+    /**
+     * The ID of the package that should be granted entitlements.
+     */
+    packageId: string;
+
+    /**
+     * The scope that the entitlements should have.
+     */
+    scope: GrantedEntitlementScope;
+
+    /**
+     * The name of the record that the entitlements cover.
+     */
+    recordName: string;
+
+    /**
+     * The time that the entitlements should expire.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The features that should be granted.
+     */
+    features: EntitlementFeature[];
+}
+
+export type GrantEntitlementsResult =
+    | GrantEntitlementFailure
+    | GrantEntitlementsSuccess;
+
+export interface GrantEntitlementsSuccess {
+    success: true;
+
+    grantedEntitlements: {
+        grantId: string;
+        feature: EntitlementFeature;
+    }[];
+}
+
+export interface GrantEntitlementFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+
+export interface RecordPackageVersionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The version of the package that should be recorded.
+     */
+    key: PackageVersion;
+
+    /**
+     * The description that should be included in the package version.
+     */
+    description: string;
+
+    /**
+     * The list of entitlements for the package version.
+     * If omitted, then the package version will be recorded without any entitlements.
+     */
+    entitlements?: Entitlement[];
+
+    /**
+     * The bots that should be saved to the package.
+     */
+    bots: Bot[];
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
+}
+
+
+export type RecordPackageVersionResult =
+    | RecordPackageVersionSuccess
+    | CrudRecordItemFailure;
+
+export interface RecordPackageVersionSuccess extends CrudRecordItemSuccess {
+    /**
+     * The result of recording the aux file.
+     */
+    auxFileResult: RecordFileResult;
+}
 
 interface Ai {
     /**
@@ -13403,6 +13857,55 @@ interface Os {
     ): DownloadAction;
 
     /**
+     * Gets the JSON representation of the given bots as an .aux file.
+     * 
+     * This function is useful for getting the contents of an aux file without downloading it.
+     * 
+     * @param bots The bots that should be converted to JSON.
+     * @param options The options that should be used for the conversion.
+     * 
+     * @example Get the current bot as an aux file.
+     * const myAux = os.getAuxFileForBots([bot]);
+     * 
+     * @example Download the current bot as an aux file.
+     * const myAux = os.getAuxFileForBots([bot]);
+     * os.download(myAux, "myAux.aux");
+     * 
+     * @example Get the current bot as an aux file with version 1.
+     * const myAux = os.getAuxFileForBots([bot], { version: 1 });
+     * 
+     * @dochash actions/os/files
+     * @docname os.getAuxFileForBots
+     */
+    getAuxFileForBots(
+        bots: Bot[],
+        options?: AuxFileOptions
+    ): StoredAux;
+
+    /**
+     * Installs the given aux file into the inst.
+     * 
+     * Depending on the version of the aux file, this may overwrite existing bots.
+     * 
+     * @param aux The aux file that should be installed.
+     * @param mode The mode that should be used to install the bots in the AUX file.
+     * - `"default"` indicates that the aux file will be installed as-is.
+     *    If the file was already installed, then it will either overwrite bots or do nothing depending on the version of the aux.
+     *    Version 1 auxes will overwrite existing bots, while version 2 auxes will do nothing.
+     * - `"copy"` indicates that all the bots in the aux file should be given new IDs. This is useful if you want to be able to install an AUX multiple times in the same inst.
+     * 
+     * @example Install an aux file.
+     * await os.installAuxFile(myAux);
+     * 
+     * @dochash actions/os/files
+     * @docname os.installAuxFile
+     */
+    installAuxFile(
+        aux: StoredAux,
+        mode?: InstallAuxFileMode
+    ): Promise<void>;
+
+    /**
      * Downloads all the shared bots in the inst.
      */
     downloadInst(): DownloadAction;
@@ -14626,6 +15129,285 @@ interface Os {
         eventName: string,
         endpoint?: string
     ): Promise<GetCountResult>;
+
+    /**
+     * Grants the given entitlements to a package.
+     * 
+     * @param request The request to grant entitlements.
+     * @param options the options for the request.
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.grantEntitlements
+     */
+    grantEntitlements(
+        request: GrantEntitlementsRequest,
+        options?: RecordActionOptions
+    ): Promise<GrantEntitlementsResult>;
+
+    /**
+     * Parses the given version number into a version key.
+     * @param version The version number to parse.
+     *
+     * @example Parse a version number
+     * const key = os.parseVersionKey('1.0.0');
+     * os.toast(key.major); // 1
+     * os.toast(key.minor); // 0
+     * os.toast(key.patch); // 0
+     * os.toast(key.tag); // null
+     *
+     * @dochash actions/os/records
+     * @docname os.parseVersionKey
+     */
+    parseVersionKey(version: string): PackageVersion;
+
+    /**
+     * Formats the given version key into a string.
+     *
+     * @example Print the version key
+     * os.toast(os.formatVersionKey({ major: 1, minor: 0, patch: 0, tag: 'alpha' }));
+     *
+     * @param key The key to format.
+     *
+     * @dochash actions/os/records
+     * @docname os.formatVersionKey
+     */
+    formatVersionKey(key: PackageVersion): string;
+
+    /**
+     * Records the given package version. Package versions are useful for storing multiple distinct versions of the same AUX.
+     * Package versions live inside package containers (also known simply as packages) and are distinguished by `key`.
+     *
+     * If the package container does not exist, then it will be automatically created with the `private` marker.
+     * If no markers are specified, then the markers from the package container are used.
+     *
+     * @example Record a v1.0.0 package version
+     * const result = await os.recordPackageVersion({
+     *   recordName: 'myRecord',
+     *   address: 'myPackage',
+     *   key: os.parseVersionKey('1.0.0'),
+     *   description: 'description of the package',
+     *   bots: getBots('color', 'red'),
+     * });
+     *
+     * @example Record a package version that can request access to the user's data
+     * const result = await os.recordPackageVersion({
+     *   recordName: 'myRecord',
+     *   address: 'myPackage',
+     *   key: os.parseVersionKey('1.0.0'),
+     *   description: 'description of the package',
+     *   entitlements: [
+     *     {
+     *        feature: 'data',
+     *        scope: 'personal',
+     *     }
+     *   ],
+     *   bots: getBots('color', 'red),
+     * });
+     *
+     * @param request the information about the package version that should be recorded.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.recordPackageVersion
+     */
+    recordPackageVersion(
+        request: RecordPackageVersionApiRequest,
+        options?: RecordActionOptions
+    ): Promise<RecordPackageVersionResult>;
+
+    /**
+     * Gets the list of versions for the given package.
+     * @param recordName The name of the record that the package is stored in.
+     * @param address The address of the package.
+     *
+     * @example List all the versions of a package
+     * const result = await os.listPackageVersions('myRecord', 'myPackage');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageVersions
+     */
+    listPackageVersions(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudListItemsResult<PackageRecordVersion>>;
+
+    /**
+     * Gets metadata about the given package version.
+     * @param recordName The name of the record that the package version is stored in.
+     * @param address The address of the package version.
+     * @param key The key of the package version.
+     * @param options The options for the package version.
+     *
+     * @example Get info about a package version
+     * const result = await os.getPackageVersion('myRecord', 'myPackage', os.parseVersionKey('1.0.0'));
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.getPackageVersion
+     */
+    getPackageVersion(
+        recordName: string,
+        address: string,
+        key: string | PackageRecordVersionKeySpecifier,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<PackageRecordVersion>>;
+
+    /**
+     * Erases the given package version.
+     * @param recordName the name of the record that the package version should be erased from.
+     * @param address the address of the package version that should be erased.
+     * @param key the key of the package version that should be erased.
+     *
+     * @example Erase a package version
+     * const result = await os.erasePackageVersion('myRecord', 'myPackage', os.parseVersionKey('1.0.0'));
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.erasePackageVersion
+     */
+    erasePackageVersion(
+        recordName: string,
+        address: string,
+        key: PackageVersion,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult>;
+
+    /**
+     * Records the given package container.
+     * Package containers (also known simply as packages) are ways to group multiple package versions together.
+     *
+     * Markers that are applied to the package container control whether all the package versions can be deleted and also will be used as the default markers for package versions if the version isn't created with a marker.
+     *
+     * @param recordName The name of the record that the package should be stored in.
+     * @param address The address of the package.
+     * @param markers The markers that should be applied to the package.
+     * @param options The options.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.recordPackageContainer
+     */
+    recordPackageContainer(
+        recordName: string,
+        address: string,
+        markers?: string | string[],
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult>;
+
+    /**
+     * Erases the given package container and any package versions that it contains.
+     *
+     * @param recordName the name of the record that the package container is in.
+     * @param address the address of the package container.
+     * @param options the options to use for the request.
+     */
+    erasePackageContainer(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudEraseItemResult>;
+
+    /**
+     * Lists all the package containers that are in the given record.
+     * You must have access to the `account` marker in order to list all package containers in a record.
+     *
+     * @param recordName the name of the record that the package containers should be listed from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     *
+     * @example List package containers in a record
+     * const result = await os.listPackageContainers('myRecord');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageContainers
+     */
+    listPackageContainers(
+        recordName: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<CrudListItemsResult<PackageRecord>>;
+
+    /**
+     * Lists the package containers that have the given marker in the given record.
+     * You must have access to the specified marker in order to list the package containers.
+     *
+     * @param recordName the name of the record that the package containers should be listed from.
+     * @param marker the marker that the package containers should have.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     *
+     * @example List public package containers in a record
+     * const result = await os.listPackageContainersByMarker('myRecord', 'publicRead');
+     *
+     * @example List private package containers in a record
+     * const result = await os.listPackageContainersByMarker('myRecord', 'private');
+     *
+     * @example List public package containers stored at "myNamespace"
+     * const result = await os.listPackageContainersByMarker('myRecord', 'publicRead:myNamespace');
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listPackageContainersByMarker
+     */
+    listPackageContainersByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<CrudListItemsResult<PackageRecord>>;
+
+    /**
+     * Gets the package container in the given record at the given address.
+     *
+     * @param recordName the name of the record that the package container is in.
+     * @param address the address that the package container is stored at.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.getPackageContainer
+     */
+    getPackageContainer(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudGetItemResult<PackageRecord>>;
+
+    /**
+     * Attempts to install the given package into the inst.
+     *
+     * @param recordName the name of the record that the package is in.
+     * @param address the address of the package that should be loaded.
+     * @param key the key that specifies the version of the package that should be loaded. If not specified, then the latest version will be loaded.
+     * @param options the options for the request.
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.installPackage
+     */
+    installPackage(
+        recordName: string,
+        address: string,
+        key?: string | PackageRecordVersionKeySpecifier,
+    ): Promise<InstallPackageResult>;
+    
+    /**
+     * Gets the list of packages that are installed in the inst.
+     * @param options the options for the request.
+     * 
+     * @example List all installed packages
+     * const result = await os.listInstalledPackages();
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-packages
+     * @docname os.listInstalledPackages
+     */
+    listInstalledPackages(options?: RecordActionOptions): Promise<ListInstalledPackagesResult>;
 
     /**
      * Gets the list of studios that the currently logged in user has access to.

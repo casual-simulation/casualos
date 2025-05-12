@@ -20,6 +20,7 @@ import {
     dotCaseToCamelCase,
     toBase64String,
     fromBase64String,
+    tryParseJson,
 } from './utils';
 
 describe('utils', () => {
@@ -131,5 +132,23 @@ describe('utils', () => {
         const result = fromBase64String(output);
 
         expect(result).toBe(input);
+    });
+
+    describe('tryParseJson()', () => {
+        it('should be able to parse the given JSON into a value', () => {
+            expect(tryParseJson('{ "hello": 123 }')).toEqual({
+                success: true,
+                value: {
+                    hello: 123,
+                },
+            });
+        });
+
+        it('should return an unsucessful result if the string is not JSON', () => {
+            expect(tryParseJson('{')).toEqual({
+                success: false,
+                error: expect.any(Error),
+            });
+        });
     });
 });

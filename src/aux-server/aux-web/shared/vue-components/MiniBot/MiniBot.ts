@@ -19,7 +19,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
 import type { Bot } from '@casual-simulation/aux-common';
-import { tagsOnBot, botTags } from '@casual-simulation/aux-common';
+import { tagsOnBot } from '@casual-simulation/aux-common';
 import type { BotRenderer } from '../../scene/BotRenderer';
 import { appManager } from '../../AppManager';
 import TagColor from '../TagColor/TagColor';

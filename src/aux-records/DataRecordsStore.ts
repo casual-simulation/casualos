@@ -194,11 +194,11 @@ export function isValidUserPolicy(value: unknown): boolean {
  */
 export function doesSubjectMatchPolicy(
     policy: UserPolicy,
-    subjectId: string
+    subjectId: string | null
 ): boolean {
-    if (policy === true) {
+    if (policy === true || !policy) {
         return true;
     } else {
-        return policy.some((id) => id === subjectId);
+        return policy!.some((id) => id === subjectId);
     }
 }

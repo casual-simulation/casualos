@@ -20,29 +20,15 @@ import type {
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import {
-    isDimensionLocked,
-    DEFAULT_PORTAL_ZOOMABLE,
-    DEFAULT_PORTAL_PANNABLE,
-    hasValue,
-    calculateBotValue,
     calculateGridScale,
-    calculateBooleanTagValue,
     calculateNumericalTagValue,
-    DEFAULT_PORTAL_ROTATABLE,
-    DEFAULT_MINI_PORTAL_RESIZABLE,
-    DEFAULT_MINI_PORTAL_HEIGHT,
     DEFAULT_WRIST_PORTAL_WIDTH,
     DEFAULT_WRIST_PORTAL_HEIGHT,
-    DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WRIST_PORTAL_GRID_SCALE,
     calculateGridScaleFromConstants,
 } from '@casual-simulation/aux-common';
-import { Color } from '@casual-simulation/three';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
-import { tap } from 'rxjs/operators';
-import { SubscriptionLike, Subscription } from 'rxjs';
 import { PortalConfig } from './PortalConfig';
 
 /**

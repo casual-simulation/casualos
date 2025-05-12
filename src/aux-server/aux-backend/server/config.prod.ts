@@ -42,7 +42,7 @@ export default function (): Config {
             debug: debug,
         },
         backend: {
-            httpPort: 3002,
+            httpPort: parseInt(process.env.BACKEND_PORT as string) || 3002,
             dist: path.resolve(
                 __dirname,
                 '..',

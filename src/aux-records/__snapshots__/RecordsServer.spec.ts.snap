@@ -1943,6 +1943,564 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/package",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/package",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPackages",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "key": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "major": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "minor": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "patch": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sha256": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "tag": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "auxFileRequest": Object {
+                "schema": Object {
+                  "fileByteLength": Object {
+                    "type": "number",
+                  },
+                  "fileDescription": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "fileMimeType": Object {
+                    "type": "string",
+                  },
+                  "fileSha256Hex": Object {
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "description": Object {
+                "type": "string",
+              },
+              "entitlements": Object {
+                "schema": Object {
+                  "schema": Object {
+                    "designatedRecords": Object {
+                      "optional": true,
+                      "schema": Object {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                    "feature": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "data",
+                        "file",
+                        "event",
+                        "inst",
+                        "notification",
+                        "package",
+                        "permissions",
+                        "webhook",
+                        "ai",
+                      ],
+                    },
+                    "scope": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "personal",
+                        "owned",
+                        "studio",
+                        "shared",
+                        "designated",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "key": Object {
+                "schema": Object {
+                  "major": Object {
+                    "type": "number",
+                  },
+                  "minor": Object {
+                    "type": "number",
+                  },
+                  "patch": Object {
+                    "type": "number",
+                  },
+                  "tag": Object {
+                    "defaultValue": "",
+                    "hasDefault": true,
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/version/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPackageVersions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "key": Object {
+            "schema": Object {
+              "major": Object {
+                "type": "number",
+              },
+              "minor": Object {
+                "type": "number",
+              },
+              "patch": Object {
+                "type": "number",
+              },
+              "tag": Object {
+                "defaultValue": "",
+                "hasDefault": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version/review",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "packageVersionId": Object {
+            "type": "string",
+          },
+          "review": Object {
+            "schema": Object {
+              "approvalType": Object {
+                "nullable": true,
+                "type": "enum",
+                "values": Array [
+                  "normal",
+                  "super",
+                ],
+              },
+              "approved": Object {
+                "type": "boolean",
+              },
+              "id": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "reviewComments": Object {
+                "type": "string",
+              },
+              "reviewStatus": Object {
+                "type": "enum",
+                "values": Array [
+                  "pending",
+                  "approved",
+                  "rejected",
+                ],
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "reviewPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/install",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "branch": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "package": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "key": Object {
+                "nullable": true,
+                "optional": true,
+                "options": Array [
+                  Object {
+                    "description": "The package version to install as a string",
+                    "type": "string",
+                  },
+                  Object {
+                    "description": "The package version specifier to install",
+                    "schema": Object {
+                      "major": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "minor": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "patch": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "sha256": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "tag": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
+              },
+              "recordName": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "installPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/install/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInstalledPackages",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/xp/user",
       },
       "inputs": Object {
@@ -2687,6 +3245,96 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package.version",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -2758,6 +3406,8 @@ Object {
               "ai.openai.realtime",
               "webhook",
               "notification",
+              "package",
+              "package.version",
             ],
           },
         },
@@ -2929,6 +3579,85 @@ Object {
         "type": "object",
       },
       "name": "revokeRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/grants",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "type": "number",
+          },
+          "feature": Object {
+            "type": "enum",
+            "values": Array [
+              "data",
+              "file",
+              "event",
+              "inst",
+              "notification",
+              "package",
+              "permissions",
+              "webhook",
+              "ai",
+            ],
+          },
+          "packageId": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "scope": Object {
+            "type": "literal",
+            "value": "designated",
+          },
+          "userId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "grantId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/entitlement/grants/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "packageId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listGrantedEntitlements",
       "origins": "api",
     },
     Object {
@@ -6151,6 +6880,564 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/records/package",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/package",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPackages",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "key": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "major": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "minor": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "patch": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "number",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sha256": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "tag": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "auxFileRequest": Object {
+                "schema": Object {
+                  "fileByteLength": Object {
+                    "type": "number",
+                  },
+                  "fileDescription": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "fileMimeType": Object {
+                    "type": "string",
+                  },
+                  "fileSha256Hex": Object {
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "description": Object {
+                "type": "string",
+              },
+              "entitlements": Object {
+                "schema": Object {
+                  "schema": Object {
+                    "designatedRecords": Object {
+                      "optional": true,
+                      "schema": Object {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                    "feature": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "data",
+                        "file",
+                        "event",
+                        "inst",
+                        "notification",
+                        "package",
+                        "permissions",
+                        "webhook",
+                        "ai",
+                      ],
+                    },
+                    "scope": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "personal",
+                        "owned",
+                        "studio",
+                        "shared",
+                        "designated",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "key": Object {
+                "schema": Object {
+                  "major": Object {
+                    "type": "number",
+                  },
+                  "minor": Object {
+                    "type": "number",
+                  },
+                  "patch": Object {
+                    "type": "number",
+                  },
+                  "tag": Object {
+                    "defaultValue": "",
+                    "hasDefault": true,
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                },
+                "type": "object",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "optional": true,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/version/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listPackageVersions",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/package/version",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "key": Object {
+            "schema": Object {
+              "major": Object {
+                "type": "number",
+              },
+              "minor": Object {
+                "type": "number",
+              },
+              "patch": Object {
+                "type": "number",
+              },
+              "tag": Object {
+                "defaultValue": "",
+                "hasDefault": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "erasePackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/version/review",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "packageVersionId": Object {
+            "type": "string",
+          },
+          "review": Object {
+            "schema": Object {
+              "approvalType": Object {
+                "nullable": true,
+                "type": "enum",
+                "values": Array [
+                  "normal",
+                  "super",
+                ],
+              },
+              "approved": Object {
+                "type": "boolean",
+              },
+              "id": Object {
+                "optional": true,
+                "type": "string",
+              },
+              "reviewComments": Object {
+                "type": "string",
+              },
+              "reviewStatus": Object {
+                "type": "enum",
+                "values": Array [
+                  "pending",
+                  "approved",
+                  "rejected",
+                ],
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "name": "reviewPackageVersion",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/package/install",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "branch": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "package": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "key": Object {
+                "nullable": true,
+                "optional": true,
+                "options": Array [
+                  Object {
+                    "description": "The package version to install as a string",
+                    "type": "string",
+                  },
+                  Object {
+                    "description": "The package version specifier to install",
+                    "schema": Object {
+                      "major": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "minor": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "patch": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "number",
+                      },
+                      "sha256": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                      "tag": Object {
+                        "nullable": true,
+                        "optional": true,
+                        "type": "string",
+                      },
+                    },
+                    "type": "object",
+                  },
+                ],
+                "type": "union",
+              },
+              "recordName": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "installPackage",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/package/install/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "inst": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listInstalledPackages",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/xp/user",
       },
       "inputs": Object {
@@ -6895,6 +8182,96 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "run",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "package.version",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -6966,6 +8343,8 @@ Object {
               "ai.openai.realtime",
               "webhook",
               "notification",
+              "package",
+              "package.version",
             ],
           },
         },
@@ -7137,6 +8516,85 @@ Object {
         "type": "object",
       },
       "name": "revokeRole",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/grants",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "expireTimeMs": Object {
+            "type": "number",
+          },
+          "feature": Object {
+            "type": "enum",
+            "values": Array [
+              "data",
+              "file",
+              "event",
+              "inst",
+              "notification",
+              "package",
+              "permissions",
+              "webhook",
+              "ai",
+            ],
+          },
+          "packageId": Object {
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "scope": Object {
+            "type": "literal",
+            "value": "designated",
+          },
+          "userId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "grantEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/entitlement/revoke",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "grantId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "revokeEntitlement",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/entitlement/grants/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "packageId": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listGrantedEntitlements",
       "origins": "api",
     },
     Object {

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import * as Acorn from 'acorn';
-import AcornJSX from 'acorn-jsx';
 import { generate, GENERATOR } from 'astring';
 import LRUCache from 'lru-cache';
 import { traverse, VisitorKeys } from 'estraverse';

@@ -19,14 +19,22 @@ import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
-import type { PublicRecordKeyPolicy } from './RecordsStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
-import { parseSessionKey } from './AuthUtils';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import {
+    MemoryPackageRecordsStore,
+    PackageRecordsController,
+} from './packages';
+import {
+    MemoryPackageVersionRecordsStore,
+    PackageVersionRecordsController,
+} from './packages/version';
+import { FileRecordsController } from './FileRecordsController';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
+import { parseSessionKey } from '@casual-simulation/aux-common';
 import { XpController } from './XpController';
 import { FinancialController, MemoryFinancialInterface } from './financial';
 
@@ -96,9 +104,41 @@ export function createTestControllers(
         messenger: store,
         privo: null,
     });
+    const packagesStore = new MemoryPackageRecordsStore(store);
+    const packageVersionStore = new MemoryPackageVersionRecordsStore(
+        store,
+        packagesStore
+    );
     const financialInterface = new MemoryFinancialInterface();
     const financialController = new FinancialController(financialInterface);
-    const policies = new PolicyController(auth, records, store);
+    const policies = new PolicyController(
+        auth,
+        records,
+        store,
+        store,
+        packageVersionStore
+    );
+    const files = new FileRecordsController({
+        config: store,
+        metrics: store,
+        store: store,
+        policies,
+    });
+
+    const packages = new PackageRecordsController({
+        config: store,
+        policies,
+        store: packagesStore,
+    });
+    const packageVersions = new PackageVersionRecordsController({
+        config: store,
+        policies,
+        packages,
+        files,
+        systemNotifications: store,
+        recordItemStore: packagesStore,
+        store: packageVersionStore,
+    });
     const xpController = new XpController({
         authController: auth,
         authStore: store,
@@ -116,6 +156,11 @@ export function createTestControllers(
         policyStore: store,
         policies,
         configStore: store,
+        files,
+        packagesStore,
+        packages,
+        packageVersionStore,
+        packageVersions,
         xpController,
         financialController,
         financialInterface,

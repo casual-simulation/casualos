@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import type {
     Bot,
     BotTags,
@@ -25,7 +24,6 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     hasValue,
-    calculateBotValue,
     calculateStringTagValue,
     TAG_PORTAL,
     calculateMeetPortalAnchorPointOffset,
@@ -34,20 +32,15 @@ import {
     TAG_PORTAL_SPACE,
     registerBuiltinPortal,
     getPortalTag,
-    FocusOnBotAction,
     formatValue,
     getTagValueForSpace,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { tap } from 'rxjs/operators';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import {
-    BotManager,
-    watchPortalConfigBot,
-    userBotChanged,
-} from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { TagPortalConfig } from './TagPortalConfig';
 import { EventBus } from '@casual-simulation/aux-components';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';

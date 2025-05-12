@@ -24,7 +24,7 @@ import type {
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { Remote, Endpoint } from 'comlink';
-import { wrap, proxy, expose, transfer } from 'comlink';
+import { wrap, proxy } from 'comlink';
 import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import type {
     AuxConfig,
@@ -177,6 +177,7 @@ export class DenoVM implements AuxVM {
         const permissions: DenoWorkerOptions['permissions'] = {
             allowNet: true,
         };
+        const extraFlags: string[] = [];
 
         if (this._script instanceof URL) {
             console.log('[DenoVM] Script:', this._script.href);
@@ -193,6 +194,12 @@ export class DenoVM implements AuxVM {
 
                 // Allow read access to the script file.
                 permissions.allowRead = [path];
+            } else {
+                console.log(
+                    '[DenoVM] Allowing read for script host:',
+                    this._script.host
+                );
+                extraFlags.push(`--allow-import=${this._script.host}`);
             }
         }
 
@@ -201,6 +208,7 @@ export class DenoVM implements AuxVM {
             logStderr: debug,
             logStdout: debug,
             permissions,
+            denoExtraFlags: extraFlags,
         };
         if (this.denoExecutable) {
             workerOptions.denoExecutable = this.denoExecutable;

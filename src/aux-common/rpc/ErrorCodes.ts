@@ -92,6 +92,7 @@ export type KnownErrorCodes =
     | 'hume_api_error'
     | 'invalid_webhook_target'
     | 'took_too_long'
+    | 'parent_not_found'
     | 'insufficient_funds';
 
 /**

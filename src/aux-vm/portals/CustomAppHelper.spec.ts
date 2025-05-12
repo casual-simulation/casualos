@@ -21,9 +21,7 @@ import type {
     RegisterHtmlAppAction,
 } from '@casual-simulation/aux-common';
 import {
-    action,
     asyncResult,
-    BotAction,
     botAdded,
     createBot,
     createMemoryPartition,

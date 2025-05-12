@@ -23,7 +23,6 @@ import type {
     BotCursorType,
 } from '@casual-simulation/aux-common';
 import {
-    isDimensionLocked,
     DEFAULT_PORTAL_ZOOMABLE,
     DEFAULT_PORTAL_PANNABLE,
     hasValue,
@@ -37,19 +36,16 @@ import {
     getCameraType,
     getPortalCursor,
     getTagPosition,
-    getTagRotation,
     DEFAULT_GRID_PORTAL_LIGHTING,
 } from '@casual-simulation/aux-common';
-import { Color, Texture } from '@casual-simulation/three';
+import { Color } from '@casual-simulation/three';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { BoundedGrid3D } from '../../shared/scene/BoundedGrid3D';
-import { AuxTextureLoader } from '../../shared/scene/AuxTextureLoader';
 import type { TileableGrid3D } from '../../shared/scene/Grid3D';
-import { Grid3D } from '../../shared/scene/Grid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -384,7 +380,7 @@ export class PortalConfig implements SubscriptionLike {
         portalTag: string
     ) {
         // Update the dimension background color.
-        let dimensionBackgroundColor = calculateBotValue(
+        let dimensionBackgroundColor: string = calculateBotValue(
             calc,
             bot,
             `auxPortalColor`

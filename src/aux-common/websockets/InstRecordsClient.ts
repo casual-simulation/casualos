@@ -22,7 +22,6 @@ import type {
 import {
     filter,
     map,
-    distinctUntilChanged,
     switchMap,
     tap,
     finalize,
@@ -45,11 +44,9 @@ import type {
     DeviceActionError,
     RemoteActions,
 } from '../common/RemoteActions';
-import { RemoteAction } from '../common/RemoteActions';
 import type { ConnectionInfo } from '../common/ConnectionInfo';
-import { flatMap, flatMap as lodashFlatMap, sortBy } from 'lodash';
+import { flatMap as lodashFlatMap } from 'lodash';
 import type { TimeSample } from '@casual-simulation/timesync';
-import { TimeSyncConnection } from '@casual-simulation/timesync';
 
 export const DEFAULT_BRANCH_NAME = 'default';
 
@@ -229,18 +226,6 @@ export class InstRecordsClient {
                 }
 
                 this._client.send(branchEvent);
-
-                let list = this._getSentUpdates(recordName, inst, branch);
-
-                for (let [key, value] of list) {
-                    this._sendAddUpdates(
-                        recordName,
-                        inst,
-                        branch,
-                        value.updates,
-                        key
-                    );
-                }
             }),
             switchMap((connected) =>
                 merge(
@@ -251,8 +236,26 @@ export class InstRecordsClient {
                                 event.inst === inst &&
                                 event.branch === branch
                         ),
-                        tap(() => {
+                        tap((e) => {
                             this._connectedBranches.add(watchedBranchKey);
+
+                            if (e.success) {
+                                let list = this._getSentUpdates(
+                                    recordName,
+                                    inst,
+                                    branch
+                                );
+
+                                for (let [key, value] of list) {
+                                    this._sendAddUpdates(
+                                        recordName,
+                                        inst,
+                                        branch,
+                                        value.updates,
+                                        key
+                                    );
+                                }
+                            }
                         })
                     ),
                     this._client.event('repo/add_updates').pipe(

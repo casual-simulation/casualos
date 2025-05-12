@@ -22,6 +22,7 @@ import type {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
+    GrantedPackageEntitlement,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -29,23 +30,26 @@ import type {
     ResourcePermissionAssignment,
     UpdateUserRolesResult,
     UserPrivacyFeatures,
-    UserRole,
 } from '@casual-simulation/aux-records';
-import { RoleAssignment, getExpireTime } from '@casual-simulation/aux-records';
-import type { PrismaClient } from './generated';
+import { getExpireTime } from '@casual-simulation/aux-records';
+import type {
+    PrismaClient,
+    GrantedPackageEntitlement as PrismaGrantedPackageEntitlement,
+} from './generated';
 import { Prisma } from './generated';
-import { convertMarkers, convertToDate, convertToMillis } from './Utils';
+import { convertToDate, convertToMillis } from './Utils';
 import type {
     ActionKinds,
+    Entitlement,
+    EntitlementFeature,
+    GrantedEntitlementScope,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
+    UserRole,
 } from '@casual-simulation/aux-common';
-import {
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-} from '@casual-simulation/aux-common';
+
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
@@ -59,6 +63,151 @@ export class PrismaPolicyStore implements PolicyStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    @traced(TRACE_NAME)
+    async listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string,
+        recordName: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        const entitlements =
+            await this._client.grantedPackageEntitlement.findMany({
+                where: {
+                    userId,
+                    feature,
+                    recordName,
+                    expireTime: { gt: convertToDate(nowMs) },
+                    revokeTime: { equals: null },
+                    packageId: {
+                        in: packageIds,
+                    },
+                },
+            });
+
+        return entitlements.map((e) => this._convertEntitlement(e));
+    }
+
+    @traced(TRACE_NAME)
+    async saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        await this._client.grantedPackageEntitlement.upsert({
+            where: {
+                id: grantedEntitlement.id,
+            },
+            create: {
+                id: grantedEntitlement.id,
+                packageId: grantedEntitlement.packageId,
+                feature: grantedEntitlement.feature,
+                scope: grantedEntitlement.scope as GrantedEntitlementScope,
+                userId: grantedEntitlement.userId,
+                recordName: grantedEntitlement.recordName,
+                expireTime: convertToDate(grantedEntitlement.expireTimeMs),
+                revokeTime: convertToDate(grantedEntitlement.revokeTimeMs),
+                createdAt: convertToDate(grantedEntitlement.createdAtMs),
+            },
+            update: {
+                packageId: grantedEntitlement.packageId,
+                feature: grantedEntitlement.feature,
+                scope: grantedEntitlement.scope as GrantedEntitlementScope,
+                userId: grantedEntitlement.userId,
+                recordName: grantedEntitlement.recordName,
+                expireTime: convertToDate(grantedEntitlement.expireTimeMs),
+                revokeTime: convertToDate(grantedEntitlement.revokeTimeMs),
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: EntitlementFeature,
+        scope: GrantedEntitlementScope,
+        recordName: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        const e = await this._client.grantedPackageEntitlement.findFirst({
+            where: {
+                userId,
+                packageId,
+                feature,
+                scope,
+                revokeTime: { equals: null },
+                recordName,
+            },
+        });
+
+        return this._convertEntitlement(e);
+    }
+
+    @traced(TRACE_NAME)
+    async findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        const e = await this._client.grantedPackageEntitlement.findUnique({
+            where: {
+                id,
+            },
+        });
+        return this._convertEntitlement(e);
+    }
+
+    @traced(TRACE_NAME)
+    async listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        const entitlements =
+            await this._client.grantedPackageEntitlement.findMany({
+                where: {
+                    userId,
+                    expireTime: { gt: convertToDate(nowMs) },
+                    revokeTime: { equals: null },
+                },
+            });
+
+        return entitlements.map((e) => this._convertEntitlement(e));
+    }
+
+    @traced(TRACE_NAME)
+    async listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        const entitlements =
+            await this._client.grantedPackageEntitlement.findMany({
+                where: {
+                    userId,
+                    packageId,
+                    expireTime: { gt: convertToDate(nowMs) },
+                    revokeTime: { equals: null },
+                },
+            });
+
+        return entitlements.map((e) => this._convertEntitlement(e));
+    }
+
+    private _convertEntitlement(
+        e: PrismaGrantedPackageEntitlement
+    ): GrantedPackageEntitlement {
+        if (!e) {
+            return null;
+        }
+        return {
+            id: e.id,
+            packageId: e.packageId,
+            feature: e.feature as EntitlementFeature,
+            scope: e.scope as GrantedEntitlementScope,
+            userId: e.userId,
+            recordName: e.recordName,
+            expireTimeMs: convertToMillis(e.expireTime),
+            revokeTimeMs: convertToMillis(e.revokeTime),
+            createdAtMs: convertToMillis(e.createdAt),
+        };
     }
 
     @traced(TRACE_NAME)

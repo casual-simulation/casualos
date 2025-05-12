@@ -17,7 +17,6 @@
  */
 import {
     Vector3,
-    Euler,
     OrthographicCamera,
     Quaternion,
 } from '@casual-simulation/three';
@@ -29,7 +28,7 @@ import {
     normalize,
     lerp,
 } from '@casual-simulation/aux-common';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import { calculateScale } from '../SceneUtils';
 import {

@@ -84,6 +84,10 @@ model User {
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentPushNotification[]
 
+    packageReviews PackageRecordVersionReview[]
+    grantedPackageEntitlements GrantedPackageEntitlement[]
+    loadedPackages LoadedPackage[]
+
     xpUser XpUser?
     isXpAdmin Boolean?
 
@@ -336,12 +340,17 @@ model Record {
     targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
     webhookRuns WebhookRun[]
 
+    packageRecords PackageRecord[]
+    packageRecordVersions PackageRecordVersion[]
+
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
+
+    grantedEntitlements GrantedPackageEntitlement[]
 
     userInstReports UserInstReport[]
 
@@ -553,6 +562,37 @@ model MarkerPermissionAssignment {
     @@index([recordName, marker, action, subjectType, subjectId])
 }
 
+model GrantedPackageEntitlement {
+    id String @db.Uuid @id
+
+    // The ID of the user that granted the entitlement
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GrantedPackageEntitlement_userId_fkey1")
+
+    // The ID of the package that the entitlement is granted for
+    packageId String @db.Uuid
+    package PackageRecord @relation(fields: [packageId], references: [id], onDelete: Cascade, map: "GrantedPackageEntitlement_packageId_fkey1")
+
+    // The feature that the entitlement covers
+    feature String @db.String(32)
+
+    // The scope of the entitlement
+    scope String @db.String(32)
+
+    // The record that was designated by the entitlement
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "GrantedPackageEntitlement_recordName_fkey1")
+
+    // The time that the entitlement grant expires
+    expireTime DateTime
+
+    // The time that the entitlement was revoked
+    revokeTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 // Example query:
 // SELECT * FROM "ResourcePermissionAssignment"
 // WHERE "recordName" = recordName AND "marker" = marker AND "action" = action
@@ -639,6 +679,7 @@ model FileRecord {
     targetWebhookRecords WebhookRecord[]
 
     webhookRuns WebhookRun[]
+    packageVersions PackageRecordVersion[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -672,6 +713,7 @@ model InstRecord {
     updates BranchUpdate[]
     userInstReports UserInstReport[]
     webhookRecords WebhookRecord[]
+    loadedPackages LoadedPackage[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -714,6 +756,31 @@ model BranchUpdate {
     updated DateTime @updatedAt
 
     @@index([recordName, instName, branchName, id])
+}
+
+// A package that has been loaded into an inst
+model LoadedPackage {
+    id String @id @db.Uuid
+
+    // The ID of the user that loaded the package
+    // Null if the user was deleted or if the package was loaded by the system
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "LoadedPackage_user_fkey1")
+
+    packageId String @db.Uuid
+    package PackageRecord @relation(fields: [packageId], references: [id], onDelete: Cascade, map: "LoadedPackage_packageId_fkey1")
+
+    packageVersionId String @db.Uuid
+    packageVersion PackageRecordVersion @relation(fields: [packageVersionId], references: [id], onDelete: Cascade, map: "LoadedPackage_packageVersionId_fkey1")
+
+    // The inst that the package was loaded into
+    instRecordName String @db.String(128)
+    instName String @db.String(128)
+    branch String @db.String(512)
+    inst InstRecord @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade, map: "LoadedPackage_inst_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model WebhookRecord {
@@ -893,6 +960,112 @@ model SentPushNotification {
 
     success Boolean
     errorCode String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PackageRecord {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PackageRecord_recordName_fkey1")
+
+    address String @db.String(128)
+
+    markers String[]
+
+    versions PackageRecordVersion[]
+    grantedEntitlements GrantedPackageEntitlement[]
+    loadedPackages LoadedPackage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([recordName, address])
+}
+
+model PackageRecordVersion {
+    id String @db.Uuid @id
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PackageRecordVersion_recordName_fkey1")
+
+    address String @db.String(128)
+    package PackageRecord @relation(fields: [recordName, address], references: [recordName, address], onDelete: Cascade, map: "PackageRecordVersion_address_fkey1")
+
+    // The major version of the package
+    major Int
+
+    // The minor version of the package
+    minor Int
+
+    // The patch version of the package
+    patch Int
+
+    // The tag of the package
+    tag String? @db.String(16)
+
+    // The SHA256 hash of the package
+    sha256 String @db.String(64) @unique
+
+    // The SHA256 hash of the package aux data
+    auxSha256 String @db.String(64)
+
+    // The aux data of the package
+    auxFileName String
+    fileRecord FileRecord @relation(fields: [recordName, auxFileName], references: [recordName, fileName], onDelete: Restrict, map: "PackageRecordVersion_auxFileName_fkey1")
+
+    // The list of entitlements that this package version requires
+    entitlements Json
+
+    // Whether the package version requires review
+    requiresReview Boolean
+
+    // The README of the package
+    description String
+
+    // The markers that the package version has
+    markers String[]
+
+    // The size of the package version in bytes
+    sizeInBytes Int
+
+    // Whether the file was created by this version being uploaded
+    createdFile Boolean
+
+    // The list of reviews for the package version
+    reviews PackageRecordVersionReview[]
+    loadedPackages LoadedPackage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([recordName, address, major, minor, patch, tag])
+}
+
+model PackageRecordVersionReview {
+    id String @id @db.Uuid
+
+    packageVersionId String @db.Uuid
+    package PackageRecordVersion @relation(fields: [packageVersionId], references: [id], onDelete: Cascade, map: "PackageRecordVersionReview_packageVersionId_fkey1")
+
+    // Whether the package version was approved for use
+    approved Boolean
+
+    // The type of approval
+    approvalType String?
+
+    // The status of the review
+    // can be "pending", "approved", "rejected"
+    reviewStatus String
+
+    // Any additional comments by the reviewer
+    reviewComments String @db.String(4096)
+
+    // The ID of the user that reviewed the package version
+    reviewingUserId String @db.String(128)
+    reviewingUser User @relation(fields: [reviewingUserId], references: [id], onDelete: Cascade, map: "PackageRecordVersionReview_reviewingUserId_fkey1")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

@@ -1,22 +1,19 @@
 import path from 'path';
 import fs from 'fs';
-import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import { defineConfig, splitVendorChunkPlugin, mergeConfig } from 'vite';
 import vue from '@vitejs/plugin-vue2';
 import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 import virtual from '@rollup/plugin-virtual';
 import { generateDependencyGraphRollupPlugin } from '../../script/vite-helpers';
-import {
-    getPolicies,
-    listEnvironmentFiles,
-    loadEnvFiles,
-} from '../../script/vite-utils';
+import { getPolicies } from '../../script/vite-utils';
 import writeFilesPlugin from '../../plugins/write-files-plugin';
 import md from '../../plugins/markdown-plugin';
 import { visualizer } from 'rollup-plugin-visualizer';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import commonjs from 'vite-plugin-commonjs';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -46,6 +43,7 @@ const casualOsPackages = fs
 const policies = getPolicies(true);
 
 export default defineConfig(({ command, mode }) => ({
+    logLevel: 'info',
     cacheDir: path.resolve(
         __dirname,
         '..',
@@ -54,38 +52,57 @@ export default defineConfig(({ command, mode }) => ({
         '.vite',
         mode === 'static' ? '.aux-player-static' : '.aux-player'
     ),
-    build: {
-        outDir: distDir,
-        emptyOutDir: false,
-        rollupOptions: {
-            input:
-                mode === 'static'
-                    ? path.resolve(__dirname, 'static.html')
-                    : {
-                          main: path.resolve(__dirname, 'index.html'),
-                          player: path.resolve(__dirname, 'player.html'),
-                          vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
-                          vmDom: path.resolve(
-                              __dirname,
-                              'aux-vm-iframe-dom.html'
-                          ),
-                          playwright: path.resolve(
-                              __dirname,
-                              'playwright.html'
-                          ),
-                          'loading-oauth': path.resolve(
-                              __dirname,
-                              'loading-oauth.html'
-                          ),
-                      },
+    build: mergeConfig(
+        {
+            outDir: distDir,
+            emptyOutDir: false,
+            rollupOptions: {
+                input: {
+                    main: path.resolve(__dirname, 'index.html'),
+                    player: path.resolve(__dirname, 'player.html'),
+                    vm: path.resolve(__dirname, 'aux-vm-iframe.html'),
+                    vmDom: path.resolve(__dirname, 'aux-vm-iframe-dom.html'),
+                    playwright: path.resolve(__dirname, 'playwright.html'),
+                    'loading-oauth': path.resolve(
+                        __dirname,
+                        'loading-oauth.html'
+                    ),
+                },
+            },
+            sourcemap: true,
+            target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
         },
-        sourcemap: true,
-        target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
-    },
+        mode === 'static'
+            ? {
+                  rollupOptions: {
+                      input: path.resolve(__dirname, 'static.html'),
+                      output: {
+                          inlineDynamicImports: false,
+                      },
+                  },
+                  assetsInlineLimit: (filePath: string, content: Buffer) => {
+                      if (
+                          filePath.endsWith('.glb') ||
+                          filePath.endsWith('.gltf')
+                      ) {
+                          console.log('\nInlining:', filePath);
+                          return true;
+                      }
+                      return false;
+                  },
+                  chunkSizeWarningLimit: 10000000,
+                  cssCodeSplit: false,
+                  base: './',
+                  assetsDir: '',
+                  minify: false,
+              }
+            : {}
+    ),
     esbuild: {
         charset: 'ascii',
     },
     plugins: [
+        commonjs(),
         md(),
         vue(),
         createSvgIconsPlugin({
@@ -121,7 +138,16 @@ export default defineConfig(({ command, mode }) => ({
             enforce: 'pre',
         } as any,
         ...(mode === 'static'
-            ? [viteSingleFile({})]
+            ? [
+                  viteSingleFile({
+                      useRecommendedBuildConfig: false,
+                      inlinePattern: [
+                          'static-*.js',
+                          'style-*.css',
+                          'ResizeObserver-*.css',
+                      ],
+                  }),
+              ]
             : [
                   virtual({
                       ...policies.virtualModules,
@@ -230,18 +256,30 @@ export default defineConfig(({ command, mode }) => ({
                       ),
                       '@casual-simulation/aux-vm-browser/vm/AuxVMImpl':
                           '@casual-simulation/aux-vm-browser/vm/StaticAuxVMImpl.ts',
-                      '../../MonacoHelpers': path.resolve(
-                          __dirname,
-                          '..',
-                          'shared',
-                          'StaticMonacoHelpers.ts'
-                      ),
-                      '../../MonacoLibs': path.resolve(
-                          __dirname,
-                          '..',
-                          'shared',
-                          'StaticMonacoHelpers.ts'
-                      ),
+                      // 'MonacoHelpers': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'StaticMonacoHelpers.ts'
+                      // ),
+                      // 'MonacoLibs': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'StaticMonacoHelpers.ts'
+                      // ),
+                      // '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'EmptyModule.ts'
+                      // ),
+                      // '@casual-simulation/monaco-editor': path.resolve(
+                      //     __dirname,
+                      //     '..',
+                      //     'shared',
+                      //     'EmptyModule.ts'
+                      // ),
                       '@teachablemachine/image': path.resolve(
                           __dirname,
                           '..',
@@ -274,6 +312,31 @@ export default defineConfig(({ command, mode }) => ({
                               'shared',
                               'EmptyModule.ts'
                           ),
+                      '@casual-simulation/aux-records/index.ts': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+
+                      openai: path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      '@anthropic-ai/sdk': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
+                      '@google+generative-ai': path.resolve(
+                          __dirname,
+                          '..',
+                          'shared',
+                          'EmptyModule.ts'
+                      ),
                   }
                 : {}),
         },

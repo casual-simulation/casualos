@@ -27,8 +27,6 @@ import {
     ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME,
     ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
     ON_IMAGE_CLASSIFIED_ACTION_NAME,
-    ClassifyImagesAction,
-    action,
     asyncResult,
     asyncError,
 } from '@casual-simulation/aux-common';
@@ -36,7 +34,6 @@ import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { getImageClassifierUrls } from './ImageClassifierUtils';
 import { pick } from 'lodash';
 import type {

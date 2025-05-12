@@ -40,11 +40,8 @@ import {
     Vector3,
     Vector2,
     Mesh,
-    WebGLRenderer,
-    sRGBEncoding,
     Ray,
     MathUtils as ThreeMath,
-    Plane,
     SphereGeometry,
     MeshBasicMaterial,
     PerspectiveCamera,
@@ -95,12 +92,10 @@ import {
     enqueueAsyncError,
     isBot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    getPortalConfigBotID,
     asyncResult,
     getPortalTag,
     DEFAULT_MAP_PORTAL_VISIBLE,
     DEFAULT_MAP_PORTAL_BASEMAP,
-    getEasing,
     getDefaultEasing,
     DEFAULT_MINI_PORTAL_HEIGHT,
     realNumberOrDefault,
@@ -130,7 +125,6 @@ import TWEEN from '@tweenjs/tween.js';
 import { TweenCameraToOperation } from '../../shared/interaction/TweenCameraToOperation';
 import { Input, MouseButtonId } from '../../shared/scene/Input';
 import type { MapSimulation3D } from './MapSimulation3D';
-import { CoordinateSystem } from '../../shared/scene/CoordinateSystem';
 import { ExternalRenderers, SpatialReference } from '../MapUtils';
 import { PlayerMapSimulation3D } from './PlayerMapSimulation3D';
 import { MiniMapSimulation3D } from './MiniMapSimulation3D';

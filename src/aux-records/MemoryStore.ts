@@ -78,11 +78,6 @@ import type {
     PresignFileUploadResult,
     UpdateFileResult,
 } from './FileRecordsStore';
-import {
-    FileRecord,
-    FileRecordsLookup,
-    ListFilesLookupResult,
-} from './FileRecordsStore';
 import type {
     AddEventCountStoreResult,
     EventRecordUpdate,
@@ -98,6 +93,7 @@ import type {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
+    GrantedPackageEntitlement,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -114,12 +110,8 @@ import type {
     ResourceKinds,
     SubjectType,
     PrivacyFeatures,
-} from '@casual-simulation/aux-common';
-import {
-    ADMIN_ROLE_NAME,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-    ACCOUNT_MARKER,
+    Entitlement,
+    GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
 import type {
     AIChatMetrics,
@@ -154,6 +146,7 @@ import type {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
@@ -171,7 +164,6 @@ import type {
     RecordsNotification,
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
-import { uniq } from 'lodash';
 import type { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
 
 export interface MemoryConfiguration {
@@ -236,8 +228,11 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    private _grantedPackageEntitlements: GrantedPackageEntitlement[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
+
+    private _loadedPackages: Map<string, LoadedPackage> = new Map();
 
     private _xpUsers: Map<XpUser['id'], XpUser> = new Map();
     private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
@@ -374,6 +369,10 @@ export class MemoryStore
 
     get comIdRequests() {
         return this._comIdRequests;
+    }
+
+    get grantedPackageEntitlements() {
+        return this._grantedPackageEntitlements;
     }
 
     constructor(config: MemoryConfiguration) {
@@ -1278,6 +1277,94 @@ export class MemoryStore
             resourceAssignments,
             markerAssignments,
         };
+    }
+
+    async saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        const existingIndex = this._grantedPackageEntitlements.findIndex(
+            (e) => e.id === grantedEntitlement.id
+        );
+
+        if (existingIndex >= 0) {
+            this._grantedPackageEntitlements[existingIndex] = {
+                ...grantedEntitlement,
+            };
+        } else {
+            this._grantedPackageEntitlements.push({
+                ...grantedEntitlement,
+            });
+        }
+    }
+
+    async listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string,
+        recordName: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.feature === feature &&
+                e.recordName === recordName &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null &&
+                packageIds.includes(e.packageId)
+        );
+    }
+
+    async findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: Entitlement['feature'],
+        scope: GrantedEntitlementScope,
+        recordName: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return (
+            this._grantedPackageEntitlements.find(
+                (e) =>
+                    e.userId === userId &&
+                    e.packageId === packageId &&
+                    e.feature === feature &&
+                    e.scope === scope &&
+                    e.revokeTimeMs === null &&
+                    e.recordName === recordName
+            ) ?? null
+        );
+    }
+
+    async findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return this._grantedPackageEntitlements.find((e) => e.id === id);
+    }
+
+    async listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null
+        );
+    }
+
+    async listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.packageId === packageId &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null
+        );
     }
 
     async countRecords(filter: CountRecordsFilter): Promise<number> {
@@ -2197,8 +2284,8 @@ export class MemoryStore
     async addFileRecord(
         recordName: string,
         fileName: string,
-        publisherId: string,
-        subjectId: string,
+        publisherId: string | null,
+        subjectId: string | null,
         sizeInBytes: number,
         description: string,
         markers: string[]
@@ -3110,6 +3197,36 @@ export class MemoryStore
         };
     }
 
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        this._loadedPackages.set(loadedPackage.id, { ...loadedPackage });
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        let loadedPackages: LoadedPackage[] = [];
+        for (let [id, loadedPackage] of this._loadedPackages) {
+            if (
+                loadedPackage.recordName === recordName &&
+                loadedPackage.inst === inst
+            ) {
+                loadedPackages.push(loadedPackage);
+            }
+        }
+
+        return loadedPackages;
+    }
+
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null> {
+        const loaded = await this.listLoadedPackages(recordName, inst);
+        return loaded.find((p) => p.packageId === packageId) ?? null;
+    }
+
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
         const r = await this._getInstRecord(inst.recordName);
 
@@ -3148,7 +3265,7 @@ export class MemoryStore
                         updates: [],
                         timestamps: [],
                     },
-                };
+                } as BranchWithUpdates;
             });
         } else if (!update.branches) {
             update.branches = [];
@@ -3492,8 +3609,8 @@ interface EventData {
 interface StoredFile {
     fileName: string;
     recordName: string;
-    publisherId: string;
-    subjectId: string;
+    publisherId: string | null;
+    subjectId: string | null;
     sizeInBytes: number;
     uploaded: boolean;
     description: string;

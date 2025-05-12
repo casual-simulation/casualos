@@ -31,7 +31,7 @@ export async function createMotionController(inputSource: XRInputSource) {
     );
     const { profile, assetPath } = await promise.catch((err: any) => {
         console.log('[WebXRHelpers]', err);
-        return { profile: null, assetPath: null };
+        return { profile: null as any, assetPath: null as string };
     });
     if (!profile) {
         console.log('[WebXRHelpers] No profile found for input source!');

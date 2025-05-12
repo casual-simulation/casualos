@@ -15,8 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AuxPartitions, iteratePartitions } from './AuxPartition';
-import { MemoryPartitionImpl } from './MemoryPartition';
+import { iteratePartitions } from './AuxPartition';
 
 describe('iteratePartitions()', () => {
     const shared = { shared: true };
