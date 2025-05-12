@@ -16,9 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { cloneDeep } from 'lodash';
+import { orderBy } from 'lodash';
 import type { FinancialInterface } from './FinancialInterface';
-import { AccountCodes } from './FinancialInterface';
 import type {
     Account,
     AccountBalance,
@@ -28,9 +27,10 @@ import type {
     QueryFilter,
     Transfer,
 } from './Types';
+import { CreateAccountError } from './Types';
 import {
+    AccountFilterFlags,
     AccountFlags,
-    CreateAccountError,
     CreateTransferError,
     TransferFlags,
 } from './Types';
@@ -42,27 +42,28 @@ const MAX_BIGINT_128 = BigInt('340282366920938463463374607431768211454');
 
 export class MemoryFinancialInterface implements FinancialInterface {
     private _accounts: Map<Account['id'], Account> = new Map();
+    private _balances: Map<Account['id'], AccountBalance[]> = new Map();
     private _transfers: Transfer[] = [];
     private _currentId = 0n;
 
-    private _validateAccount(account: Account): CreateAccountError {
-        if (this._accounts.has(account.id)) {
-            return CreateAccountError.exists;
-        } else if (account.id === 0n) {
-            return CreateAccountError.id_must_not_be_zero;
-        } else if (account.code > MAX_BIGINT_128) {
-            return CreateAccountError.id_must_not_be_int_max;
-        } else if (
-            account.timestamp !== 0n &&
-            account.flags & AccountFlags.imported
-        ) {
-            return CreateAccountError.timestamp_must_be_zero;
-        } else {
-            return CreateAccountError.ok;
-        }
+    // private _validateAccount(account: Account): CreateAccountError {
+    //     if (this._accounts.has(account.id)) {
+    //         return CreateAccountError.exists;
+    //     } else if (account.id === 0n) {
+    //         return CreateAccountError.id_must_not_be_zero;
+    //     } else if (account.code > MAX_BIGINT_128) {
+    //         return CreateAccountError.id_must_not_be_int_max;
+    //     } else if (
+    //         account.timestamp !== 0n &&
+    //         account.flags & AccountFlags.imported
+    //     ) {
+    //         return CreateAccountError.timestamp_must_be_zero;
+    //     } else {
+    //         return CreateAccountError.ok;
+    //     }
 
-        //? Possibly add more validation
-    }
+    //     //? Possibly add more validation
+    // }
 
     private _validateTransfer(transfer: Transfer): CreateTransferError {
         /**
@@ -231,39 +232,79 @@ export class MemoryFinancialInterface implements FinancialInterface {
         return CreateTransferError.ok;
     }
 
-    generateId = () => {
+    generateId() {
         return this._currentId++;
-    };
+    }
 
     async createAccount(account: Account): Promise<CreateAccountsError[]> {
-        const errs = [{ index: 0, result: this._validateAccount(account) }];
-        if (errs[0].result === CreateAccountError.ok)
-            this._accounts.set(account.id, account);
-        return errs;
+        this._accounts.set(account.id, account);
+        return [{ index: 0, result: CreateAccountError.ok }];
     }
 
     async createAccounts(batch: Account[]): Promise<CreateAccountsError[]> {
         return batch.map((account, index) => {
-            const error = this._validateAccount(account);
-            if (error === CreateAccountError.ok) {
-                this._accounts.set(account.id, account);
-            }
-            return { index, result: error };
+            this._accounts.set(account.id, account);
+            return { index, result: CreateAccountError.ok };
         });
     }
 
     async createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
         const errs: CreateTransfersError[] = [];
         for (let i = 0; i < batch.length; i++) {
+            const transfer = batch[i];
             errs.push({
                 index: i,
-                result: this._validateTransfer(batch[i]),
+                result: this._validateTransfer(transfer),
             });
             if (errs[i].result === CreateTransferError.ok) {
-                this._transfers.push(batch[i]);
+                this._transfers.push(transfer);
+
+                const creditAccount = this._accounts.get(
+                    transfer.credit_account_id
+                );
+                const debitAccount = this._accounts.get(
+                    transfer.debit_account_id
+                );
+
+                if (transfer.flags & TransferFlags.pending) {
+                    throw new Error('Not implemented yet!');
+                } else if (
+                    transfer.flags & TransferFlags.post_pending_transfer
+                ) {
+                    throw new Error('Not implemented yet!');
+                } else if (
+                    transfer.flags & TransferFlags.void_pending_transfer
+                ) {
+                    throw new Error('Not implemented yet!');
+                } else {
+                    creditAccount.credits_posted += transfer.amount;
+                    debitAccount.debits_posted += transfer.amount;
+
+                    this._recordBalance(creditAccount, transfer.timestamp);
+                    this._recordBalance(debitAccount, transfer.timestamp);
+                }
             }
         }
         return errs;
+    }
+
+    private _recordBalance(account: Account, timestamp: bigint) {
+        if ((account.flags & AccountFlags.history) !== AccountFlags.history) {
+            return;
+        }
+        let accountBalances = this._balances.get(account.id);
+        if (!accountBalances) {
+            accountBalances = [];
+            this._balances.set(account.id, accountBalances);
+        }
+
+        accountBalances.push({
+            debits_pending: account.debits_pending,
+            credits_pending: account.credits_pending,
+            credits_posted: account.credits_posted,
+            debits_posted: account.debits_posted,
+            timestamp: timestamp,
+        });
     }
 
     async lookupAccounts(batch: Account['id'][]): Promise<Account[]> {
@@ -271,29 +312,199 @@ export class MemoryFinancialInterface implements FinancialInterface {
         for (const id of batch) {
             const account = this._accounts.get(id);
             if (account) {
-                accounts.push(cloneDeep(account));
+                accounts.push({
+                    ...account,
+                });
             }
         }
         return accounts;
     }
 
-    lookupTransfers(batch: Transfer['id'][]): Promise<Transfer[]> {
-        throw new Error('Method not implemented.');
+    async lookupTransfers(batch: Transfer['id'][]): Promise<Transfer[]> {
+        const transfers: Transfer[] = [];
+        for (const id of batch) {
+            const transfer = this._transfers.find((t) => t.id === id);
+            if (transfer) {
+                transfers.push({
+                    ...transfer,
+                });
+            }
+        }
+        return transfers;
     }
 
-    getAccountTransfers(filter: AccountFilter): Promise<Transfer[]> {
-        throw new Error('Method not implemented.');
+    async getAccountTransfers(filter: AccountFilter): Promise<Transfer[]> {
+        let transfers = this._transfers.filter((t) => {
+            if (
+                t.credit_account_id !== filter.account_id &&
+                t.debit_account_id !== filter.account_id
+            ) {
+                return false;
+            }
+
+            if (filter.timestamp_min && t.timestamp < filter.timestamp_min) {
+                return false;
+            }
+            if (filter.timestamp_max && t.timestamp > filter.timestamp_max) {
+                return false;
+            }
+            if (
+                filter.user_data_128 &&
+                t.user_data_128 !== filter.user_data_128
+            ) {
+                return false;
+            }
+            if (filter.user_data_64 && t.user_data_64 !== filter.user_data_64) {
+                return false;
+            }
+            if (filter.user_data_32 && t.user_data_32 !== filter.user_data_32) {
+                return false;
+            }
+            if (filter.code && t.code !== filter.code) {
+                return false;
+            }
+            if (filter.flags) {
+                if (filter.flags & AccountFilterFlags.debits) {
+                    if (t.debit_account_id !== filter.account_id) {
+                        return false;
+                    }
+                }
+                if (filter.flags & AccountFilterFlags.credits) {
+                    if (t.credit_account_id !== filter.account_id) {
+                        return false;
+                    }
+                }
+            }
+        });
+
+        if (filter.flags & AccountFilterFlags.reversed) {
+            transfers = orderBy(transfers, ['timestamp'], ['desc']);
+        } else {
+            transfers = orderBy(transfers, ['timestamp'], ['asc']);
+        }
+
+        if (filter.limit) {
+            transfers = transfers.slice(0, filter.limit);
+        }
+
+        return transfers;
     }
 
-    getAccountBalances(filter: AccountFilter): Promise<AccountBalance[]> {
-        throw new Error('Method not implemented.');
+    async getAccountBalances(filter: AccountFilter): Promise<AccountBalance[]> {
+        return this._balances.get(filter.account_id) || [];
     }
 
-    queryAccounts(filter: QueryFilter): Promise<Account[]> {
-        throw new Error('Method not implemented.');
+    async queryAccounts(filter: QueryFilter): Promise<Account[]> {
+        let accounts: Account[] = [];
+        for (let account of this._accounts.values()) {
+            if (
+                filter.user_data_128 &&
+                account.user_data_128 !== filter.user_data_128
+            ) {
+                continue;
+            }
+            if (
+                filter.user_data_64 &&
+                account.user_data_64 !== filter.user_data_64
+            ) {
+                continue;
+            }
+            if (
+                filter.user_data_32 &&
+                account.user_data_32 !== filter.user_data_32
+            ) {
+                continue;
+            }
+
+            if (filter.ledger && account.ledger !== filter.ledger) {
+                continue;
+            }
+            if (filter.code && account.code !== filter.code) {
+                continue;
+            }
+            if (
+                filter.timestamp_max &&
+                account.timestamp > filter.timestamp_max
+            ) {
+                continue;
+            }
+            if (
+                filter.timestamp_min &&
+                account.timestamp < filter.timestamp_min
+            ) {
+                continue;
+            }
+
+            accounts.push({
+                ...account,
+            });
+        }
+
+        if (filter.flags & AccountFilterFlags.reversed) {
+            accounts = orderBy(accounts, ['timestamp'], ['desc']);
+        } else {
+            accounts = orderBy(accounts, ['timestamp'], ['asc']);
+        }
+
+        if (filter.limit) {
+            accounts = accounts.slice(0, filter.limit);
+        }
+
+        return accounts;
     }
 
-    queryTransfers(filter: QueryFilter): Promise<Transfer[]> {
-        throw new Error('Method not implemented.');
+    async queryTransfers(filter: QueryFilter): Promise<Transfer[]> {
+        let transfers: Transfer[] = [];
+        for (let transfer of this._transfers) {
+            if (
+                filter.user_data_128 &&
+                transfer.user_data_128 !== filter.user_data_128
+            ) {
+                continue;
+            }
+            if (
+                filter.user_data_64 &&
+                transfer.user_data_64 !== filter.user_data_64
+            ) {
+                continue;
+            }
+            if (
+                filter.user_data_32 &&
+                transfer.user_data_32 !== filter.user_data_32
+            ) {
+                continue;
+            }
+
+            if (filter.ledger && transfer.ledger !== filter.ledger) {
+                continue;
+            }
+            if (filter.code && transfer.code !== filter.code) {
+                continue;
+            }
+            if (
+                filter.timestamp_max &&
+                transfer.timestamp > filter.timestamp_max
+            ) {
+                continue;
+            }
+            if (
+                filter.timestamp_min &&
+                transfer.timestamp < filter.timestamp_min
+            ) {
+                continue;
+            }
+        }
+
+        if (filter.flags & AccountFilterFlags.reversed) {
+            transfers = orderBy(transfers, ['timestamp'], ['desc']);
+        } else {
+            transfers = orderBy(transfers, ['timestamp'], ['asc']);
+        }
+
+        if (filter.limit) {
+            transfers = transfers.slice(0, filter.limit);
+        }
+
+        return transfers;
     }
 }

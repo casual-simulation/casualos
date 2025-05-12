@@ -152,7 +152,7 @@ export enum QueryFilterFlags {
 /**
  * See [Account](https://docs.tigerbeetle.com/reference/account/#)
  */
-export type Account = {
+export interface Account {
     /**
      * See [id](https://docs.tigerbeetle.com/reference/account/#id)
      */
@@ -217,12 +217,12 @@ export type Account = {
      * See [timestamp](https://docs.tigerbeetle.com/reference/account/#timestamp)
      */
     timestamp: bigint;
-};
+}
 
 /**
  * See [Transfer](https://docs.tigerbeetle.com/reference/transfer/#)
  */
-export type Transfer = {
+export interface Transfer {
     /**
      * See [id](https://docs.tigerbeetle.com/reference/transfer/#id)
      */
@@ -287,7 +287,7 @@ export type Transfer = {
      * See [timestamp](https://docs.tigerbeetle.com/reference/transfer/#timestamp)
      */
     timestamp: bigint;
-};
+}
 
 /**
  * See [CreateAccountError](https://docs.tigerbeetle.com/reference/requests/create_accounts#)
@@ -779,20 +779,20 @@ export enum CreateTransferError {
     exceeds_debits = 55,
 }
 
-export type CreateAccountsError = {
+export interface CreateAccountsError {
     index: number;
     result: CreateAccountError;
-};
+}
 
-export type CreateTransfersError = {
+export interface CreateTransfersError {
     index: number;
     result: CreateTransferError;
-};
+}
 
 /**
  * See [AccountFilter](https://docs.tigerbeetle.com/reference/account-filter#)
  */
-export type AccountFilter = {
+export interface AccountFilter {
     /**
      * See [account_id](https://docs.tigerbeetle.com/reference/account-filter#account_id)
      */
@@ -837,12 +837,12 @@ export type AccountFilter = {
      * See [flags](https://docs.tigerbeetle.com/reference/account-filter#flags)
      */
     flags: number;
-};
+}
 
 /**
  * See [QueryFilter](https://docs.tigerbeetle.com/reference/query-filter#)
  */
-export type QueryFilter = {
+export interface QueryFilter {
     /**
      * See [user_data_128](https://docs.tigerbeetle.com/reference/query-filter#user_data_128)
      */
@@ -887,12 +887,12 @@ export type QueryFilter = {
      * See [flags](https://docs.tigerbeetle.com/reference/query-filter#flags)
      */
     flags: number;
-};
+}
 
 /**
  * See [AccountBalance](https://docs.tigerbeetle.com/reference/account-balances#)
  */
-export type AccountBalance = {
+export interface AccountBalance {
     /**
      * See [debits_pending](https://docs.tigerbeetle.com/reference/account-balances#debits_pending)
      */
@@ -917,7 +917,7 @@ export type AccountBalance = {
      * See [timestamp](https://docs.tigerbeetle.com/reference/account-balances#timestamp)
      */
     timestamp: bigint;
-};
+}
 
 export enum Operation {
     pulse = 128,

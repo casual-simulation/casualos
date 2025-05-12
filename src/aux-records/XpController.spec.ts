@@ -84,6 +84,7 @@ describe('XpController', () => {
      */
     const initServices = () => {
         services = createTestControllers();
+        financialInterface = services.financialInterface;
         xpController = new XpController({
             xpStore: services.store,
             authController: services.auth,
