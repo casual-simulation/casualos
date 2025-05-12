@@ -167,10 +167,18 @@ export function createTestControllers(
     };
 }
 
+export interface TestUser {
+    emailAddress: string;
+    userId: string;
+    sessionKey: string;
+    connectionKey: string;
+    sessionId: string;
+}
+
 export async function createTestUser(
     { auth, authMessenger }: Pick<TestServices, 'auth' | 'authMessenger'>,
     emailAddress: string = 'test@example.com'
-) {
+): Promise<TestUser> {
     const loginRequest = await auth.requestLogin({
         address: emailAddress,
         addressType: 'email',

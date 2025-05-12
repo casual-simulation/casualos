@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { TestUser } from './TestUtils';
 import {
     createTestControllers,
     createTestUser,
@@ -26,9 +27,10 @@ import type { MemoryStore } from './MemoryStore';
 import type { CreateContractResultSuccess } from '../aux-records/XpController';
 import { XpController } from '../aux-records/XpController';
 import type { XpUser } from './XpStore';
-import type { NotNullOrOptional, PromiseT } from './TypeUtils';
+import type { NotNullOrOptional } from './TypeUtils';
 import { v4 as uuid } from 'uuid';
-import type { MemoryFinancialInterface } from './financial/MemoryFinancialInterface';
+
+console.log = jest.fn();
 
 jest.mock('uuid');
 const uuidMock: jest.Mock = <any>uuid;
@@ -64,10 +66,8 @@ describe('XpController', () => {
     let memoryStore: MemoryStore;
     let authController: AuthController;
     let authMessenger: MemoryAuthMessenger;
-    let fITracker = 0n;
-    let financialInterface: MemoryFinancialInterface;
     let _testDateNow: number;
-    let fIIdempotencyKeyTracker = 0n;
+    let idempotencyKeyTracker = 0n;
     //* EOCS: Init services
 
     //* BOCS: Mocking Date.now
@@ -76,15 +76,13 @@ describe('XpController', () => {
      */
     const dateNowRef = Date.now;
     let nowMock: jest.Mock<number>;
-    let financialInterfaceMockId: jest.Mock<bigint>;
     //* EOC: Mocking Date.now
 
     /**
-     * (Re-)Initialize services required for tests
+     * Runs before each test
      */
-    const initServices = () => {
+    beforeEach(() => {
         services = createTestControllers();
-        financialInterface = services.financialInterface;
         xpController = new XpController({
             xpStore: services.store,
             authController: services.auth,
@@ -94,18 +92,7 @@ describe('XpController', () => {
         memoryStore = services.store;
         authController = services.auth;
         authMessenger = services.authMessenger;
-    };
-
-    /**
-     * Runs before each test
-     */
-    beforeEach(() => {
-        initServices();
-        fITracker = 0n;
-        fIIdempotencyKeyTracker = 0n;
-        financialInterfaceMockId = services.financialInterface.generateId =
-            jest.fn();
-        financialInterfaceMockId.mockImplementation(() => ++fITracker);
+        idempotencyKeyTracker = 0n;
         _testDateNow = dateNowRef();
         nowMock = Date.now = jest.fn();
         nowMock.mockReturnValue(_testDateNow);
@@ -117,7 +104,6 @@ describe('XpController', () => {
     afterEach(() => {
         //* Reset the uuid mock to ensure that it is clean for the next test
         uuidMock.mockReset();
-        financialInterfaceMockId.mockReset();
         nowMock.mockReset();
         Date.now = dateNowRef;
     });
@@ -128,10 +114,11 @@ describe('XpController', () => {
         expect(xpController).toBeTruthy(); // Instance
     });
 
-    describe('[Testing Function] createTestXpUser', () => {
-        const uConf = { name: 'createTestXpUser' };
+    describe('createTestXpUser()', () => {
         it('should create an xp user using test function', async () => {
-            const [userId, id] = manyUniqueWithMock(uConf, 2);
+            uuidMock
+                .mockReturnValueOnce('userId')
+                .mockReturnValueOnce('xpUserId');
 
             const xpUser = await createTestXpUser(
                 xpController,
@@ -140,9 +127,9 @@ describe('XpController', () => {
             );
 
             expect(xpUser).toEqual({
-                id,
-                userId,
-                accountId: String(fITracker),
+                id: 'xpUserId',
+                userId: 'userId',
+                accountId: '0',
                 requestedRate: null,
                 createdAtMs: _testDateNow,
                 updatedAtMs: _testDateNow,
@@ -156,18 +143,15 @@ describe('XpController', () => {
      */
     describe('getXpUser', () => {
         //* An auth user for use in testing getXpUser
-        let _authUser: PromiseT<ReturnType<typeof createTestUser>>;
+        let user: TestUser;
 
-        //* The expected result of a successful getXpUser call
-        let _xpUser: XpUser;
-
-        //* Unique function config
-        const uConf = { name: 'getXpUser' };
+        const id = 'xpUserId';
+        const userId = 'userId';
 
         beforeEach(async () => {
-            const [_, id] = manyUniqueWithMock(uConf, 2);
+            uuidMock.mockReturnValueOnce(userId).mockReturnValueOnce(id);
 
-            _authUser = await createTestUser(
+            user = await createTestUser(
                 {
                     auth: authController,
                     authMessenger: authMessenger,
@@ -177,7 +161,7 @@ describe('XpController', () => {
 
             const xpUser: XpUser = {
                 id,
-                userId: _authUser.userId,
+                userId: user.userId,
                 accountId: String(services.financialInterface.generateId()),
                 requestedRate: null,
                 createdAtMs: _testDateNow,
@@ -186,13 +170,15 @@ describe('XpController', () => {
 
             await memoryStore.saveXpUser(xpUser.id, xpUser);
 
-            _xpUser = xpUser;
+            // _xpUser = xpUser;
 
             uuidMock.mockReset();
         });
 
         it('should create and return a new xp user when given a valid userId whose respective auth user does not have an xp user identity', async () => {
-            const [userId, id] = manyUniqueWithMock(uConf, 2);
+            uuidMock
+                .mockReturnValueOnce('newUserId')
+                .mockReturnValueOnce('newXpUserId');
 
             const newAuthUser = await createTestUser(
                 {
@@ -209,9 +195,9 @@ describe('XpController', () => {
             ).toEqual({
                 success: true,
                 user: {
-                    id,
-                    userId,
-                    accountId: String(fITracker),
+                    id: 'newXpUserId',
+                    userId: 'newUserId',
+                    accountId: '1',
                     requestedRate: null,
                     createdAtMs: _testDateNow,
                     updatedAtMs: _testDateNow,
@@ -222,22 +208,36 @@ describe('XpController', () => {
         it('should get an xp user by auth id', async () => {
             expect(
                 await xpController.getXpUser({
-                    userId: _authUser.userId,
+                    userId: user.userId,
                 })
             ).toEqual({
                 success: true,
-                user: _xpUser,
+                user: {
+                    id: id,
+                    userId: userId,
+                    accountId: '0',
+                    requestedRate: null,
+                    createdAtMs: expect.any(Number),
+                    updatedAtMs: expect.any(Number),
+                },
             });
         });
 
         it('should get an xp user by xp id', async () => {
             expect(
                 await xpController.getXpUser({
-                    xpId: _xpUser.id,
+                    xpId: id,
                 })
             ).toEqual({
                 success: true,
-                user: _xpUser,
+                user: {
+                    id: id,
+                    userId: userId,
+                    accountId: '0',
+                    requestedRate: null,
+                    createdAtMs: expect.any(Number),
+                    updatedAtMs: expect.any(Number),
+                },
             });
         });
 
@@ -261,7 +261,7 @@ describe('XpController', () => {
             expect(xpUser).toEqual({
                 success: false,
                 errorCode: 'user_not_found',
-                errorMessage: expect.any(String),
+                errorMessage: 'The user was not found.',
             });
         });
 
@@ -272,7 +272,7 @@ describe('XpController', () => {
             expect(xpUser).toEqual({
                 success: false,
                 errorCode: 'user_not_found',
-                errorMessage: expect.any(String),
+                errorMessage: 'The user was not found.',
             });
         });
     });
@@ -327,7 +327,7 @@ describe('XpController', () => {
                 rate: 80.0, // 80 cents per 6 minutes
                 offeredWorth: 800,
                 status: 'open',
-                idempotencyKey: ++fIIdempotencyKeyTracker,
+                idempotencyKey: ++idempotencyKeyTracker,
             };
 
             uuidMock.mockReset();
@@ -340,7 +340,7 @@ describe('XpController', () => {
                 success: true,
                 contract: {
                     id,
-                    accountId: String(fITracker),
+                    accountId: '2',
                     issuerUserId: (
                         _contractConfig.issuingUserId as {
                             xpId: XpUser['id'];
@@ -473,7 +473,7 @@ describe('XpController', () => {
                 rate: 80.0,
                 offeredWorth: 800,
                 status: 'draft',
-                idempotencyKey: ++fIIdempotencyKeyTracker,
+                idempotencyKey: ++idempotencyKeyTracker,
             });
 
             if (!contract.success) fail('Failed to create draft contract');
@@ -486,13 +486,13 @@ describe('XpController', () => {
             const contract = await xpController.issueDraftContract({
                 draftContractId: _draftContract.id,
                 receivingUserId: { xpId: _receivingUser.id },
-                idempotencyKey: ++fIIdempotencyKeyTracker,
+                idempotencyKey: ++idempotencyKeyTracker,
             });
             expect(contract).toEqual({
                 success: true,
                 contract: {
                     id: _draftContract.id,
-                    accountId: String(fITracker),
+                    accountId: '2',
                     issuerUserId: _draftContract.issuerUserId,
                     holdingUserId: _receivingUser.id,
                     rate: _draftContract.rate,
@@ -522,7 +522,7 @@ describe('XpController', () => {
             const contract = await xpController.issueDraftContract({
                 draftContractId: 'non-existent-id',
                 receivingUserId: { xpId: _receivingUser.id },
-                idempotencyKey: ++fIIdempotencyKeyTracker,
+                idempotencyKey: ++idempotencyKeyTracker,
             });
             expect(contract).toEqual({
                 success: false,
@@ -570,7 +570,7 @@ describe('XpController', () => {
                 rate: 80.0, // 80 cents
                 status: 'open',
                 offeredWorth: 800,
-                idempotencyKey: ++fIIdempotencyKeyTracker,
+                idempotencyKey: ++idempotencyKeyTracker,
             });
 
             if (!contract.success) fail('Failed to create contract');
