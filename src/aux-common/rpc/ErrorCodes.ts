@@ -186,6 +186,7 @@ export function getStatusCode(
                 address_type_not_supported: 501,
                 invalid_webhook_target: 501,
                 took_too_long: 504,
+                parent_not_found: 400,
             }[response.errorCode] ?? 400
         );
     }

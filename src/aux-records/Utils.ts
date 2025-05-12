@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { omitBy, padStart, sortBy } from 'lodash';
+import { cloneDeep, omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';
@@ -826,7 +826,7 @@ export function isOfXType<T>(
 export function cloneDeepNull<T extends Record<keyof any, any>>(
     record: T | undefined
 ) {
-    return record ? _.cloneDeep(record) : null;
+    return record ? cloneDeep(record) : null;
 }
 
 /**
