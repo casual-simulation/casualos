@@ -45,6 +45,13 @@
 -   Added support for multi-server websocket deployments of CasualOS.
     -   Uses Redis pub/sub as a message broker.
     -   Individual CasualOS deployments are still stateless: they only need to be able to access Redis and the DB.
+-   Improved `experiment.createStaticHtmlFromBots()` to return a smaller file and also better support alternative enviroments.
+    -   There is no background thread when bots are running in static HTML, so they have full access to everything in CasualOS and also the main thread.
+    -   Static HTML also doesn't have access to every CasualOS feature. Non-essential features have been removed, like:
+        -   The multi-line code editor.
+        -   Some built-in fonts like `noto-sans-kr`.
+        -   Some built-in GLTF models (like VR controller models).
+        -   Some icons (some CasualOS-custom icons in the sheet portal and system portal).
 
 ### :bug: Bug Fixes
 
