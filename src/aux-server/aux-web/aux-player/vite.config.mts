@@ -81,7 +81,13 @@ export default defineConfig(({ command, mode }) => ({
                       },
                   },
                   assetsInlineLimit: (filePath: string, content: Buffer) => {
-                      console.log('\nInlining:', filePath);
+                      if (
+                          filePath.endsWith('.glb') ||
+                          filePath.endsWith('.gltf')
+                      ) {
+                          console.log('\nInlining:', filePath);
+                          return true;
+                      }
                       return false;
                   },
                   chunkSizeWarningLimit: 10000000,
