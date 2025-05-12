@@ -20,7 +20,6 @@ import type {
     BranchRecordWithInst,
     CurrentUpdates,
     LoadedPackage,
-    BranchRecord,
 } from './InstRecordsStore';
 import type { LockStore } from '../LockStore';
 

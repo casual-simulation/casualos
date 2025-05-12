@@ -24,7 +24,7 @@ import type {
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { Remote, Endpoint } from 'comlink';
-import { wrap, proxy, expose, transfer } from 'comlink';
+import { wrap, proxy } from 'comlink';
 import type { SimulationOrigin } from '@casual-simulation/aux-vm';
 import type {
     AuxConfig,

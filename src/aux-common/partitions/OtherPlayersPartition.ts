@@ -37,23 +37,18 @@ import type {
 } from '../bots';
 import {
     getActiveObjects,
-    breakIntoIndividualEvents,
-    AddBotAction,
-    RemoveBotAction,
-    UpdateBotAction,
     asyncResult,
     action,
     ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
     ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
     stateUpdatedEvent,
     applyUpdates,
-    isBot,
     ON_REMOTE_JOINED_ACTION_NAME,
     ON_REMOTE_LEAVE_ACTION_NAME,
 } from '../bots';
 import type { Observable } from 'rxjs';
 import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
-import { filter, first, skip, startWith } from 'rxjs/operators';
+import { filter, skip, startWith } from 'rxjs/operators';
 import { sortBy } from 'lodash';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
 import type { InstRecordsClient } from '../websockets';

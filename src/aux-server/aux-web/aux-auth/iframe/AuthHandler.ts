@@ -29,19 +29,12 @@ import type {
     AvailablePermissions,
     RemoteCausalRepoProtocol,
 } from '@casual-simulation/aux-common';
-import {
-    listenForChannel,
-    listenForChannels,
-    setupChannel,
-    waitForLoad,
-} from '../../../../aux-vm-browser/html/IFrameHelpers';
+import { listenForChannels } from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
 import type {
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
-    FormError,
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
@@ -49,8 +42,8 @@ import type {
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common/forms';
 import {
-    CompleteOpenIDLoginSuccess,
     getFormErrors,
     CODE_FIELD,
     DATE_OF_BIRTH_FIELD,
@@ -60,15 +53,13 @@ import {
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
     ADDRESS_FIELD,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common/forms';
 import {
     canExpire,
     getSessionKeyExpiration,
     isExpired,
-    parseSessionKey,
     timeUntilRefresh,
-    willExpire,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import {
     BehaviorSubject,
     Subject,
@@ -89,10 +80,8 @@ import {
 } from 'rxjs/operators';
 import { DateTime } from 'luxon';
 import { OAUTH_LOGIN_CHANNEL_NAME } from '../shared/AuthManager';
-import {
-    browserSupportsWebAuthn,
-    browserSupportsWebAuthnAutofill,
-} from '@simplewebauthn/browser';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 
 declare let ENABLE_SMS_AUTHENTICATION: boolean;
 

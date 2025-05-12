@@ -24,13 +24,9 @@ import type {
     UserPolicy,
     ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
-import {
-    Record,
-    RecordsStore,
-    cleanupObject,
-} from '@casual-simulation/aux-records';
+
 import type { PrismaClient } from './generated';
-import { DataRecord as PrismaDataRecord, Prisma } from './generated';
+import { Prisma } from './generated';
 import z from 'zod';
 import { convertMarkers } from './Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';

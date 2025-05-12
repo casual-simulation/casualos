@@ -15,15 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {
-    fromBase64String,
-    toBase64String,
-    parseV1ConnectionToken,
-    formatV1ConnectionToken,
-} from '@casual-simulation/aux-common';
+import { fromBase64String, toBase64String } from '../utils';
 import { sha256, hmac } from 'hash.js';
-import { fromByteArray, toByteArray } from 'base64-js';
-import type { UserRole } from './AuthStore';
+import { toByteArray } from 'base64-js';
+import {
+    formatV1ConnectionToken,
+    parseV1ConnectionToken,
+} from '../common/ConnectionToken';
+
+/**
+ * Defines an interface that represents the role that a user can have.
+ *
+ * - "none" means that the user has no special permissions.
+ * - "superUser" means that the user has additional permissions that only special users should have.
+ * - "system" means that the user is the system and is performing a system operation.
+ * - "moderator" means that the user is a moderator and has additional permissions to moderate content.
+ */
+export type UserRole = 'none' | 'superUser' | 'system' | 'moderator';
 
 /**
  * The default lifetime at which a session key should be refreshed.

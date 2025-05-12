@@ -28,7 +28,6 @@ import {
 } from './AuxLibrary';
 import type { WatchBotTimer, WatchPortalTimer } from './AuxGlobalContext';
 import {
-    AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
@@ -98,7 +97,6 @@ import {
     localRotationTween,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
-    animateTag,
     showUploadFiles,
     registerPrefix,
     circleWipe,
@@ -250,12 +248,10 @@ import type {
 } from './RuntimeBot';
 import type { AuxVersion } from './AuxVersion';
 import type { AuxDevice } from './AuxDevice';
-import { shuffle } from 'lodash';
 import {
     asymmetricDecryptV1,
     asymmetricKeypairV1,
     decryptV1,
-    keypair,
 } from '@casual-simulation/crypto';
 import {
     del,
@@ -266,22 +262,16 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { RanOutOfEnergyError } from './AuxResults';
 import type { SubscriptionLike } from 'rxjs';
-import { Subscription } from 'rxjs';
 import {
     waitAsync,
     customDataTypeCases,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import { embedBase64InPdf, formatAuthToken, fromHexString } from './Utils';
+import { embedBase64InPdf, fromHexString } from './Utils';
 import { convertErrorToCopiableValue } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 import type { AIChatInterfaceStreamResponse } from '@casual-simulation/aux-records';
-import {
-    AIChatMessage,
-    formatV1RecordKey,
-    formatV2RecordKey,
-} from '@casual-simulation/aux-records';
 import {
     isGenerator,
     UNCOPIABLE,
@@ -309,8 +299,11 @@ import {
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
-import { JSDOM } from 'jsdom';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
+import {
+    formatV1RecordKey,
+    formatV2RecordKey,
+} from '@casual-simulation/aux-common/records/RecordKeys';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');

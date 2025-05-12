@@ -25,7 +25,6 @@ import {
     signRequest,
     createSigningKey,
     cleanupObject,
-    tryParseJson,
     isStringValid,
     isActiveSubscription,
     getRootMarkersOrDefault,
@@ -497,24 +496,6 @@ describe('cleanupObject()', () => {
             test: 0,
             value: false,
             empty: '',
-        });
-    });
-});
-
-describe('tryParseJson()', () => {
-    it('should be able to parse the given JSON into a value', () => {
-        expect(tryParseJson('{ "hello": 123 }')).toEqual({
-            success: true,
-            value: {
-                hello: 123,
-            },
-        });
-    });
-
-    it('should return an unsucessful result if the string is not JSON', () => {
-        expect(tryParseJson('{')).toEqual({
-            success: false,
-            error: expect.any(Error),
         });
     });
 });

@@ -17,7 +17,6 @@
  */
 import type { Vector2 } from '@casual-simulation/three';
 import {
-    Mesh,
     Object3D,
     Line,
     Vector3,

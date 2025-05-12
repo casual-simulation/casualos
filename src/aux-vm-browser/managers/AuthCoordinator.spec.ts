@@ -26,19 +26,12 @@ import { AuthCoordinator } from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import type { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
-import {
-    SimulationManager,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm/managers';
+import { SimulationManager } from '@casual-simulation/aux-vm/managers';
 import type {
     AuthData,
     PartitionAuthResponse,
 } from '@casual-simulation/aux-common';
 import {
-    AsyncErrorAction,
-    AsyncResultAction,
-    ConnectionInfo,
-    PartitionAuthMessage,
     asyncResult,
     botAdded,
     createBot,
@@ -50,14 +43,11 @@ import { AuthHelper } from './AuthHelper';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
 import type { GrantResourcePermissionResult } from '@casual-simulation/aux-records';
-import {
-    GrantMarkerPermissionResult,
-    SESSION_SECRET_BYTE_LENGTH,
-} from '@casual-simulation/aux-records';
+import { SESSION_SECRET_BYTE_LENGTH } from '@casual-simulation/aux-records';
 import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
 import { grantEntitlements } from '@casual-simulation/aux-runtime';
 

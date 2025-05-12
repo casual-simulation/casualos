@@ -15,33 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
-    calculateStringTagValue,
     getBotLabelAnchor,
     isFloatingAnchor,
 } from '@casual-simulation/aux-common';
 import { WordBubble3D } from '../WordBubble3D';
-import { WordBubbleElement } from '../WordBubbleElement';
-import {
-    setLayer,
-    convertToBox2,
-    objectUpwardRay,
-    objectWorldDirectionRay,
-    setColor,
-} from '../SceneUtils';
+import { setColor } from '../SceneUtils';
 import type { Vector2 } from '@casual-simulation/three';
-import {
-    Scene,
-    Box3,
-    Vector3,
-    Color,
-    Box2,
-    Quaternion,
-} from '@casual-simulation/three';
+import { Vector3 } from '@casual-simulation/three';
 import type { LabelDecorator } from './LabelDecorator';
 
 export class WordBubbleDecorator extends AuxBot3DDecoratorBase {

@@ -21,9 +21,9 @@ import type {
     GenericHttpRequest,
     GetRecordsEndpointAction,
     StoredAux,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
 import {
-    BotAction,
     hasValue,
     asyncResult,
     asyncError,
@@ -34,6 +34,9 @@ import {
     formatVersionNumber,
     remote,
     installAuxFile,
+    formatInstId,
+    isRecordKey,
+    parseRecordKey,
 } from '@casual-simulation/aux-common';
 import type {
     ListRecordDataAction,
@@ -76,35 +79,7 @@ import type {
 import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
-import { AuthHelperInterface } from './AuthHelperInterface';
 import type { BotHelper } from './BotHelper';
-import type {
-    EraseFileResult,
-    GetDataResult,
-    ListDataResult,
-    RecordDataResult,
-    RecordFileResult,
-    IssueMeetTokenResult,
-    GrantMarkerPermissionResult,
-    GrantRoleResult,
-    RevokeRoleResult,
-    ReadFileResult,
-    ReadFileFailure,
-    ReportInstRequest,
-    ReportInstResult,
-    GrantResourcePermissionResult,
-    RevokePermissionResult,
-    PublicRecordKeyPolicy,
-    RecordFileFailure,
-    ReadFileSuccess,
-} from '@casual-simulation/aux-records';
-import {
-    isRecordKey,
-    RevokeMarkerPermissionResult,
-    GetFileRecordResult,
-    formatInstId,
-    parseRecordKey,
-} from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
@@ -112,12 +87,10 @@ import type { Observable } from 'rxjs';
 import {
     ReplaySubject,
     Subject,
-    connectable,
     filter,
     firstValueFrom,
     map,
     share,
-    takeUntil,
     takeWhile,
 } from 'rxjs';
 import { DateTime } from 'luxon';
@@ -132,7 +105,28 @@ import type {
     RecordsClientActions,
     RecordsClientInputs,
 } from '@casual-simulation/aux-records/RecordsClient';
+
+/* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
+import type {
+    EraseFileResult,
+    GetDataResult,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
+    GrantRoleResult,
+    IssueMeetTokenResult,
+    ListDataResult,
+    ReadFileFailure,
+    ReadFileResult,
+    ReadFileSuccess,
+    RecordDataResult,
+    RecordFileFailure,
+    RecordFileResult,
+    ReportInstRequest,
+    ReportInstResult,
+    RevokePermissionResult,
+    RevokeRoleResult,
+} from '@casual-simulation/aux-records';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.

@@ -39,7 +39,6 @@ import type {
     XRHandJoint,
     XRHandedness,
 } from './xr/WebXRTypes';
-import { XRJointPose } from './xr/WebXRTypes';
 import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';

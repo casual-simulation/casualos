@@ -35,12 +35,7 @@ import type {
     DeviceActionError,
     Action,
 } from '../common';
-import {
-    DeviceSelector,
-    remoteError,
-    remoteResult,
-    RemoteActions,
-} from '../common';
+import { remoteError, remoteResult } from '../common';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.

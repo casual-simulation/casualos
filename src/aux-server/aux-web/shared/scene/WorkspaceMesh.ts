@@ -17,14 +17,7 @@
  */
 import type { Vector3, Color } from '@casual-simulation/three';
 import { Object3D, Vector2 } from '@casual-simulation/three';
-import {
-    HexGridMesh,
-    HexGrid,
-    HexMesh,
-    keyToPos,
-    Axial,
-    realPosToGridPos,
-} from './hex';
+import { HexGridMesh, HexMesh, Axial, realPosToGridPos } from './hex';
 import { GridMesh } from './grid/GridMesh';
 import type {
     AuxDomain,

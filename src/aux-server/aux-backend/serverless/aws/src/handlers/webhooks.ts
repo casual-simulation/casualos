@@ -23,7 +23,6 @@ import type {
     HandleWebhookOptions,
     WebhookState,
 } from '@casual-simulation/aux-records';
-import { WEBHOOK_STATE_SCHEMA } from '@casual-simulation/aux-records';
 import { resolve } from 'path';
 import type { HandleWebhookPayload } from '../../../../shared/webhooks/LambdaWebhookPayload';
 import { HANDLE_WEBHOOK_PAYLOAD_SCHEMA } from '../../../../shared/webhooks/LambdaWebhookPayload';

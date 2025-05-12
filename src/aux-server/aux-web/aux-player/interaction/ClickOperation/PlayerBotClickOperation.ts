@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
-import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import type { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import type { Intersection, Vector2 } from '@casual-simulation/three';
 import type { PlayerInteractionManager } from '../PlayerInteractionManager';
@@ -24,10 +23,6 @@ import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
     getBotPosition,
     objectsAtDimensionGridPosition,
-    getBotIndex,
-    duplicateBot,
-    Bot,
-    tagsOnBot,
     CLICK_ACTION_NAME,
     ANY_CLICK_ACTION_NAME,
     onClickArg,
@@ -38,13 +33,11 @@ import type { BaseBotDragOperation } from '../../../shared/interaction/DragOpera
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
 import { dropWhile } from 'lodash';
 import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
-import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
 import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import type { Simulation3D } from '../../../shared/scene/Simulation3D';
 import type { PlayerGame } from '../../scene/PlayerGame';
 import type { InputMethod, InputModality } from '../../../shared/scene/Input';
 import {
-    ControllerData,
     getModalityHand,
     getModalityFinger,
     getModalityButtonId,

@@ -18,12 +18,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import {
-    Bot,
-    hasValue,
-    mightBeEmailAddress,
-    toast,
-} from '@casual-simulation/aux-common';
+
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
 import type {
@@ -31,9 +26,8 @@ import type {
     LoginUIPrivoSignUp,
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
-import { LoginStatus } from '@casual-simulation/aux-vm';
 import { DateTime } from 'luxon';
-import type { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
 import {
     DATE_OF_BIRTH_FIELD,
     DISPLAY_NAME_FIELD,
@@ -41,7 +35,7 @@ import {
     NAME_FIELD,
     PARENT_EMAIL_FIELD,
     getFormErrors,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
 import FieldErrors from '../FieldErrors/FieldErrors';
 
 @Component({

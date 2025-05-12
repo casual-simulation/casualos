@@ -23,7 +23,7 @@ import type {
     Ray,
     Sphere,
 } from '@casual-simulation/three';
-import { OrthographicCamera, Color } from '@casual-simulation/three';
+import { OrthographicCamera } from '@casual-simulation/three';
 import type { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import type {
     BotCalculationContext,
@@ -46,8 +46,6 @@ import {
     MOUSE_INPUT_METHOD_IDENTIFIER,
     getFingerModality,
     getModalityKey,
-    getModalityHand,
-    formatModalityButtonId,
     modalityForInputMethod,
 } from '../scene/Input';
 import { appManager } from '../AppManager';

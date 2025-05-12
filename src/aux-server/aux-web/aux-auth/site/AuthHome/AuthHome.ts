@@ -21,16 +21,12 @@ import type {
 } from '../../../../aux-backend/shared/AuthMetadata';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
+import { Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import type { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
 import Security from '../AuthSecurity/AuthSecurity';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
-import {
-    isOpenAiKey,
-    parseOpenAiKey,
-} from '@casual-simulation/aux-records/AuthUtils';
 import type { PrivacyFeatures } from '@casual-simulation/aux-common';
 import PrivacyItem from '../PrivacyItem/PrivacyItem';
 

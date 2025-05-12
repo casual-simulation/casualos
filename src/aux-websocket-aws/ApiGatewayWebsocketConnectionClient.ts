@@ -16,26 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Observable } from 'rxjs';
-import {
-    fromEventPattern,
-    BehaviorSubject,
-    Subject,
-    merge,
-    of,
-    NEVER,
-} from 'rxjs';
-import {
-    map,
-    tap,
-    concatMap,
-    first,
-    takeUntil,
-    mapTo,
-    share,
-    filter,
-} from 'rxjs/operators';
+import { BehaviorSubject, Subject, merge, NEVER } from 'rxjs';
+import { map, tap, concatMap, filter } from 'rxjs/operators';
 import type { ReconnectableSocketInterface } from '@casual-simulation/websocket';
-import { ReconnectableSocket } from '@casual-simulation/websocket';
 import type {
     ClientConnectionState,
     ConnectionClient,
@@ -49,10 +32,7 @@ import type {
     WebsocketUploadRequestEvent,
     WebsocketUploadResponseEvent,
 } from '@casual-simulation/aux-common';
-import {
-    WebsocketEventTypes,
-    WebsocketType,
-} from '@casual-simulation/aux-common';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common';
 import type { Method } from 'axios';
 import axios from 'axios';
 

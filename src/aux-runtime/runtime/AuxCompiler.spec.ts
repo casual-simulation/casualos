@@ -38,7 +38,6 @@ import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import { calculateIndexFromLocation } from './TranspilerUtils';
 import {
     CreateDataProperty,
-    Realm,
     runJobQueue,
     Value,
 } from '@casual-simulation/engine262';

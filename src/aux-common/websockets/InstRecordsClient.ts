@@ -22,7 +22,6 @@ import type {
 import {
     filter,
     map,
-    distinctUntilChanged,
     switchMap,
     tap,
     finalize,
@@ -45,11 +44,9 @@ import type {
     DeviceActionError,
     RemoteActions,
 } from '../common/RemoteActions';
-import { RemoteAction } from '../common/RemoteActions';
 import type { ConnectionInfo } from '../common/ConnectionInfo';
-import { flatMap, flatMap as lodashFlatMap, sortBy } from 'lodash';
+import { flatMap as lodashFlatMap } from 'lodash';
 import type { TimeSample } from '@casual-simulation/timesync';
-import { TimeSyncConnection } from '@casual-simulation/timesync';
 
 export const DEFAULT_BRANCH_NAME = 'default';
 

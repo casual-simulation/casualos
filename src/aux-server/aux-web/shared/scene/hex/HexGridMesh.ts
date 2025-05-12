@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { Mesh, Object3D } from '@casual-simulation/three';
+import { Object3D } from '@casual-simulation/three';
 import { HexGrid, hexesInRadius } from './HexGrid';
 import { HexMesh } from './HexMesh';
 import type { Axial } from './Axial';

@@ -22,7 +22,6 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     asyncResult,
-    BotAction,
     botAdded,
     createBot,
     createMemoryPartition,
@@ -31,7 +30,6 @@ import {
     ON_APP_SETUP_ACTION_NAME,
     registerHtmlApp,
     setAppOutput,
-    stateUpdatedEvent,
     toast,
     unregisterHtmlApp,
     updateHtmlApp,
@@ -43,7 +41,7 @@ import { Subscription } from 'rxjs';
 import { HtmlAppBackend } from './HtmlAppBackend';
 import { v4 as uuid } from 'uuid';
 import { AuxHelper } from '../vm';
-import { skip, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { h } from 'preact';
 import htm from 'htm';
 import { htmlAppMethod } from '@casual-simulation/aux-common/bots/BotEvents';

@@ -44,8 +44,6 @@ import { genericHttpRequestSchema } from '../http/GenericHttpInterface';
 import type { PublicUserInfo, ResourceKinds, SubjectType } from '../common';
 import {
     ACTION_KINDS_VALIDATION,
-    INST_ACTION_KINDS_VALIDATION,
-    READ_ACTION,
     RESOURCE_KIND_VALIDATION,
     SUBJECT_TYPE_VALIDATION,
 } from '../common';

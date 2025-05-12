@@ -23,7 +23,7 @@ import type {
 } from '../TunnelServer';
 import type { Server as HttpServer, IncomingMessage } from 'http';
 import type { Socket } from 'net';
-import { createServer, AddressInfo } from 'net';
+import { createServer } from 'net';
 import type {
     TunnelRequest,
     ForwardTunnelRequest,
@@ -40,7 +40,7 @@ import {
     completeWith,
 } from './utils';
 import type { Observable } from 'rxjs';
-import { Subject, Subscription, Connectable, connectable } from 'rxjs';
+import { Subject, Subscription, connectable } from 'rxjs';
 import { mergeMap, tap, finalize, map } from 'rxjs/operators';
 
 export interface ServerOptions {

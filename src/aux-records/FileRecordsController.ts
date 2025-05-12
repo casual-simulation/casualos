@@ -31,8 +31,7 @@ import type {
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
-import { RecordsController } from './RecordsController';
-import { getExtension, getType } from 'mime';
+import { getExtension } from 'mime';
 import type {
     AuthorizeSubjectFailure,
     PolicyController,
@@ -41,19 +40,14 @@ import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
-import {
-    ACCOUNT_MARKER,
-    PRIVATE_MARKER,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
+import type { UserRole } from '@casual-simulation/aux-common';
+import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
 import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
-import { without } from 'lodash';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import type { UserRole } from './AuthStore';
 
 const TRACE_NAME = 'FileRecordsController';
 

@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import type {
     Bot,
     BotTags,
@@ -25,11 +24,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     hasValue,
-    ON_SHEET_TAG_CLICK,
-    ON_SHEET_BOT_ID_CLICK,
-    ON_SHEET_BOT_CLICK,
     toast,
-    tweenTo,
     SHEET_PORTAL,
     CLICK_ACTION_NAME,
     onClickArg,
@@ -43,25 +38,16 @@ import {
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
     SYSTEM_TAG,
-    calculateStringListTagValue,
     calculateStringTagValue,
     getShortId,
     createBotLink,
     SYSTEM_PORTAL_SEARCH,
-    tagsOnBot,
-    isScript,
     SYSTEM_PORTAL_DIFF_BOT,
     getBotTag,
-    getTagMask,
-    isFormula,
-    isBotLink,
-    getScriptPrefix,
-    KNOWN_TAG_PREFIXES,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
     SYSTEM_PORTAL_DIFF,
     getPortalTag,
-    getTag,
     getTagValueForSpace,
     SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
@@ -73,21 +59,16 @@ import type {
     TagSortMode,
     BotManager,
 } from '@casual-simulation/aux-vm-browser';
-import {
-    userBotChanged,
-    getSystemArea,
-} from '@casual-simulation/aux-vm-browser';
+import { getSystemArea } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import type { SubscriptionLike } from 'rxjs';
-import { Subject, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
-import { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { debounce, mapValues, unionBy, uniq } from 'lodash';
-import { onMonacoLoaded } from '../../MonacoAsync';
+import { mapValues, uniq } from 'lodash';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
@@ -101,7 +82,6 @@ import type {
     SystemPortalSearchMatch,
     SystemPortalSearchTag,
 } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
-import { SystemPortalRecentsUpdate } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 import SystemPortalTag from '../SystemPortalTag/SystemPortalTag';
 import SystemPortalDiffTag from '../SystemPortalDiffTag/SystemPortalDiffTag';
 import TagEditor from '../TagEditor/TagEditor';
@@ -114,7 +94,6 @@ import { getModelUriFromId } from '../../MonacoUtils';
 import type monaco from '@casual-simulation/monaco-editor';
 import { getActiveTheme } from '../utils';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import { SimulationManager } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
 

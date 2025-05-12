@@ -21,11 +21,11 @@ import type {
     Entitlement,
     KnownErrorCodes,
     ResourceKinds,
+    UserRole,
 } from '@casual-simulation/aux-common';
 import {
-    ACCOUNT_MARKER,
     PRIVATE_MARKER,
-    ServerError,
+    isPackageReviewerRole,
 } from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
@@ -37,7 +37,6 @@ import type {
     ResourceInfo,
 } from '../../PolicyController';
 import {
-    AuthorizeSubjectFailure,
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from '../../PolicyController';
@@ -52,13 +51,7 @@ import type {
     CrudGetItemFailure,
     CrudGetItemSuccess,
 } from '../../crud';
-import {
-    CheckSubscriptionMetricsResult,
-    CrudRecordsConfiguration,
-    CrudRecordsController,
-    CrudGetItemResult,
-    CrudRecordItemResult,
-} from '../../crud';
+
 import type {
     PackageRecordVersion,
     PackageRecordVersionKey,
@@ -72,18 +65,13 @@ import type {
     PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../../SubscriptionConfiguration';
-import {
-    getNotificationFeatures,
-    getPackageFeatures,
-    NotificationFeaturesConfiguration,
-} from '../../SubscriptionConfiguration';
+import { getPackageFeatures } from '../../SubscriptionConfiguration';
 import type {
     SubCrudEraseItemRequest,
     SubCrudGetItemRequest,
     SubCrudListItemsRequest,
     SubCrudRecordsConfiguration,
 } from '../../crud/sub/SubCrudRecordsController';
-import { SubCrudRecordsController } from '../../crud/sub/SubCrudRecordsController';
 import type { PackageRecordsStore } from '../PackageRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import type {
@@ -92,20 +80,14 @@ import type {
     RecordFileRequest,
     RecordFileResult,
 } from '../../FileRecordsController';
-import {
-    ReadFileSuccess,
-    RecordFileSuccess,
-} from '../../FileRecordsController';
+
 import type { ConfigurationStore } from '../../ConfigurationStore';
 import { traced } from '../../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
-import type { UserRole } from '../../AuthStore';
-import { isPackageReviewerRole, isSuperUserRole } from '../../AuthUtils';
 import { v7 as uuid } from 'uuid';
 import type { PackageRecordsController } from '../PackageRecordsController';
 import { isEqual } from 'lodash';
-import { record } from 'zod';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 

@@ -16,11 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type {
-    CurrentUpdates,
-    LoadedPackage,
-    StoredUpdates,
-} from './InstRecordsStore';
+import type { LoadedPackage, StoredUpdates } from './InstRecordsStore';
 import type {
     BranchName,
     BranchUpdates,

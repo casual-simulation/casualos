@@ -82,7 +82,6 @@ export * from './SystemNotificationMessenger';
 export * from './LoomController';
 
 export * from './websockets';
-export * from './forms';
 
 export * from './ComIdConfig';
 export * from './ServerConfig';

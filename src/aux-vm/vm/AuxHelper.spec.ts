@@ -47,12 +47,8 @@ import {
     remoteError,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
-import {
-    waitAsync,
-    wait,
-} from '@casual-simulation/aux-common/test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import type { SubscriptionLike } from 'rxjs';
-import { Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 const uuidMock: jest.Mock = <any>uuid;

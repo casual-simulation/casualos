@@ -29,7 +29,6 @@ import {
     action,
     botAdded,
     ON_WEBHOOK_ACTION_NAME,
-    botRemoved,
     getInstStateFromUpdates,
     createInitializationUpdate,
 } from '@casual-simulation/aux-common/bots';
@@ -50,7 +49,6 @@ import {
 import type { RequestMissingPermissionResponseSuccessMessage } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { createTestControllers, createTestUser } from '../TestUtils';
-import { generateV1ConnectionToken } from '../AuthUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
@@ -63,20 +61,19 @@ import {
     PUBLIC_READ_MARKER,
     PUBLIC_WRITE_MARKER,
     constructInitializationUpdate,
-    merge,
 } from '@casual-simulation/aux-common';
 import { getStateFromUpdates } from '@casual-simulation/aux-common';
 import type { MemoryStore } from '../MemoryStore';
 import type { SubscriptionConfiguration } from '../SubscriptionConfiguration';
-import {
-    FeaturesConfiguration,
-    allowAllFeatures,
-} from '../SubscriptionConfiguration';
+
 import { buildSubscriptionConfig } from '../SubscriptionConfigBuilder';
 import type { PackageRecordVersionKey } from '../packages/version';
 import { version } from '../packages/version';
 import { getHash } from '@casual-simulation/crypto';
-import { formatInstId } from './Utils';
+import {
+    formatInstId,
+    generateV1ConnectionToken,
+} from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;

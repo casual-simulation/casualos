@@ -40,7 +40,6 @@ import { RealtimeEditMode } from './RuntimeBot';
 import {
     waitAsync,
     allDataTypeCases,
-    customDataTypeCases,
 } from '@casual-simulation/aux-common/test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
 import { v4 as uuid } from 'uuid';

@@ -23,11 +23,7 @@ import type {
 } from '@casual-simulation/aux-common/bots';
 import {
     action,
-    botAdded,
-    createBot,
     createInitializationUpdate,
-    hasValue,
-    isBot,
     ON_WEBHOOK_ACTION_NAME,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -47,7 +43,7 @@ import {
     deviceResult,
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, Doc, encodeStateAsUpdate, mergeUpdates } from 'yjs';
+import { applyUpdate, Doc, encodeStateAsUpdate } from 'yjs';
 import type {
     DeviceConnection,
     WebsocketConnectionStore,
@@ -64,10 +60,7 @@ import type {
     WebsocketErrorInfo,
     WebsocketEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import {
-    WebsocketErrorEvent,
-    WebsocketEventTypes,
-} from '@casual-simulation/aux-common/websockets/WebsocketEvents';
+import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import type { AuthController } from '../AuthController';
 import type {
@@ -78,7 +71,6 @@ import type {
     LoadedPackage,
     SaveInstFailure,
 } from './InstRecordsStore';
-import { StoredUpdates } from './InstRecordsStore';
 import type {
     BranchName,
     TemporaryInstRecordsStore,
@@ -90,14 +82,13 @@ import type {
     NotSupportedError,
     PublicUserInfo,
     KnownErrorCodes,
+    UserRole,
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
     ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
-    formatVersionNumber,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
@@ -115,21 +106,18 @@ import type {
 } from '../SubscriptionConfiguration';
 import { getSubscriptionFeatures } from '../SubscriptionConfiguration';
 import type { MetricsStore } from '../MetricsStore';
-import type { AuthStore, UserRole } from '../AuthStore';
+import type { AuthStore } from '../AuthStore';
 import { traced } from '../tracing/TracingDecorators';
 import { trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
 import type { PackageRecordVersionWithMetadata } from '../packages/version';
 import {
     formatVersionSpecifier,
-    type PackageRecordVersion,
-    type PackageVersion,
     type PackageVersionRecordsController,
     type PackageVersionSpecifier,
 } from '../packages/version';
 import { STORED_AUX_SCHEMA } from '../webhooks';
-import { tryParseJson } from '../Utils';
-import { formatInstId } from './Utils';
+import { formatInstId } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'WebsocketController';
 

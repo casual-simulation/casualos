@@ -23,18 +23,13 @@ import type {
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import {
-    calculateBotValue,
-    parseBotConfigDimensions,
     isBotInDimension,
     calculateStringTagValue,
-    BotTagAddedEvent,
-    BotTagRemovedEvent,
     calculateDimensions,
 } from '@casual-simulation/aux-common';
 import type { UpdatedBotInfo } from './BotWatcher';
 import type { Observable } from 'rxjs';
-import { Subject } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import type { BotHelper } from './BotHelper';
 import { difference, union } from 'lodash';
 

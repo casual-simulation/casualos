@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate, encodeStateAsUpdate } from 'yjs';
+import { applyUpdate } from 'yjs';
 import type { InstUpdate } from '../bots';
 import {
     ORIGINAL_OBJECT,

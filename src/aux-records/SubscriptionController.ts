@@ -24,24 +24,19 @@ import type {
     AuthStore,
     AuthUser,
     UpdateSubscriptionPeriodRequest,
-    UserRole,
 } from './AuthStore';
-import { AuthInvoice, AuthSession } from './AuthStore';
 import type {
     StripeEvent,
     StripeInterface,
     StripeInvoice,
 } from './StripeInterface';
-import {
-    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
-    StripeCheckoutResponse,
-} from './StripeInterface';
+import { STRIPE_EVENT_INVOICE_PAID_SCHEMA } from './StripeInterface';
 import type {
     NotAuthorizedError,
     NotLoggedInError,
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
-import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
+import { isActiveSubscription } from './Utils';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import type {
     ListedStudioAssignment,
@@ -49,9 +44,10 @@ import type {
     Studio,
 } from './RecordsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
-import { isSuperUserRole } from './AuthUtils';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import type { UserRole } from '@casual-simulation/aux-common';
+import { isSuperUserRole } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'SubscriptionController';
 

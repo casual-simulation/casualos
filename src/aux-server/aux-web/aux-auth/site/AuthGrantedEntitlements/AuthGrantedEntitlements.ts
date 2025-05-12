@@ -15,27 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import type {
-    GrantedPackageEntitlement,
-    PackageRecord,
-    WebhookRecord,
-    WebhookRunInfo,
-} from '@casual-simulation/aux-records';
+import type { GrantedPackageEntitlement } from '@casual-simulation/aux-records';
 import { LoadingHelper } from '../LoadingHelper';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import RelativeTime from '../RelativeTime/RelativeTime';
-import type {
-    PackageRecordVersion,
-    PackageRecordVersionKey,
-} from '@casual-simulation/aux-records/packages/version';
-import { formatVersionNumber } from '@casual-simulation/aux-common';
-import AuthPackageVersion from '../AuthPackageVersion/AuthPackageVersion';
+
 import DataSize from '../DataSize/DataSize';
 
 const PAGE_SIZE = 10;

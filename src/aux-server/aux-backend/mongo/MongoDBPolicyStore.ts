@@ -25,10 +25,7 @@ import type {
     ResourceKinds,
     SubjectType,
 } from '@casual-simulation/aux-common';
-import {
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-} from '@casual-simulation/aux-common';
+
 import type {
     AssignedRole,
     ListedRoleAssignments,
