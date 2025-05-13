@@ -176,6 +176,7 @@ export default class ReportInstDialog extends Vue {
                 this.hideDialog();
             }
         } catch (err) {
+            console.error(err);
             if (hasValue(this._openEvent?.taskId) && this._currentSimulation) {
                 this._currentSimulation.helper.transaction(
                     asyncError(
