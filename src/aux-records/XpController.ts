@@ -16,8 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import './BigIntPatch';
-import type { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
-import type { AuthController } from './AuthController';
+import type {
+    XpContract,
+    XpInvoice,
+    XpStore,
+    XpUser,
+    XpUserWithUserInfo,
+} from './XpStore';
+import type { AuthController, UserInfo } from './AuthController';
 import type { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';
 import type { FailedResult, StatefulResult } from './TypeUtils';
@@ -419,15 +425,15 @@ export class XpController {
      * Creates an Xp user for the auth user if one does not exist
      */
     async getXpUser(request: GetXpUserRequest): Promise<GetXpUserResult> {
-        let user: XpUser;
+        let user: XpUserWithUserInfo;
         if (request.requestedXpId) {
-            user = await this._xpStore.getXpUserById(request.requestedXpId);
+            user = await this._xpStore.getXpUserByXpId(request.requestedXpId);
         } else if (request.requestedUserId) {
-            user = await this._xpStore.getXpUserByAuthId(
+            user = await this._xpStore.getXpUserByUserId(
                 request.requestedUserId
             );
         } else {
-            user = await this._xpStore.getXpUserByAuthId(request.userId);
+            user = await this._xpStore.getXpUserByUserId(request.userId);
         }
 
         if (!user) {
@@ -460,14 +466,17 @@ export class XpController {
             });
         }
 
+        const { success: _, ...info } = await this._auth.getPrivateInfoForUser(
+            user
+        );
+
         return success({
             user: {
-                id: user.id,
-                userId: user.userId,
+                ...info,
+                accountBalance: 0,
+                accountCurrency: 'USD',
                 accountId: user.accountId,
                 requestedRate: user.requestedRate,
-                createdAtMs: user.createdAtMs,
-                updatedAtMs: user.updatedAtMs,
             },
         });
     }
@@ -848,11 +857,28 @@ export type CreateXpUserResult = Result<
     SimpleError
 >;
 
+export interface XpApiUser extends UserInfo {
+    /**
+     * The balance of their account.
+     */
+    accountBalance: number;
+
+    /**
+     * The currency of their account.
+     */
+    accountCurrency: string;
+
+    /**
+     * The rate that the user is requesting.
+     */
+    requestedRate: number | null;
+}
+
 export type GetXpUserResultSuccess = StatefulResult<true, { user: XpUser }>;
 export type GetXpUserResultFailure = FailedResult;
 export type GetXpUserResult = Result<
     {
-        user: XpUser;
+        user: XpApiUser;
     },
     SimpleError
 >;

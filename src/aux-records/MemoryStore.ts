@@ -164,7 +164,13 @@ import type {
     RecordsNotification,
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
-import type { XpContract, XpInvoice, XpStore, XpUser } from './XpStore';
+import type {
+    XpContract,
+    XpInvoice,
+    XpStore,
+    XpUser,
+    XpUserWithUserInfo,
+} from './XpStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -234,7 +240,7 @@ export class MemoryStore
 
     private _loadedPackages: Map<string, LoadedPackage> = new Map();
 
-    private _xpUsers: Map<XpUser['id'], XpUser> = new Map();
+    private _xpUsers: Map<string, XpUser> = new Map();
     private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
     private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
 
@@ -384,42 +390,41 @@ export class MemoryStore
         this.roleAssignments = {};
     }
 
-    async batchQueryXpUsers(
-        queryOptions:
-            | {
-                  xpId: XpUser['id'][];
-                  authId?: AuthUser['id'][];
-              }
-            | {
-                  authId: AuthUser['id'][];
-                  xpId?: XpUser['id'][];
-              }
-    ): Promise<XpUser[]> {
-        const users = [];
-        if ('xpId' in queryOptions) {
-            for (const id of queryOptions.xpId) {
-                const user = this._xpUsers.get(id);
-                if (user) {
-                    users.push(cloneDeep(user));
-                }
-            }
-        }
-        if ('authId' in queryOptions) {
-            const xpUsers = Array.from(this._xpUsers.values());
-            for (const id of queryOptions.authId) {
-                const user = xpUsers.find((u: XpUser) => u.userId === id);
-                if (user) {
-                    users.push(cloneDeep(user));
-                }
-            }
-        }
-        return users;
-    }
+    // async batchQueryXpUsers(
+    //     queryOptions:
+    //         | {
+    //               xpId: XpUser['id'][];
+    //               authId?: AuthUser['id'][];
+    //           }
+    //         | {
+    //               authId: AuthUser['id'][];
+    //               xpId?: XpUser['id'][];
+    //           }
+    // ): Promise<XpUser[]> {
+    //     const users = [];
+    //     if ('xpId' in queryOptions) {
+    //         for (const id of queryOptions.xpId) {
+    //             const user = this._xpUsers.get(id);
+    //             if (user) {
+    //                 users.push(cloneDeep(user));
+    //             }
+    //         }
+    //     }
+    //     if ('authId' in queryOptions) {
+    //         const xpUsers = Array.from(this._xpUsers.values());
+    //         for (const id of queryOptions.authId) {
+    //             const user = xpUsers.find((u: XpUser) => u.userId === id);
+    //             if (user) {
+    //                 users.push(cloneDeep(user));
+    //             }
+    //         }
+    //     }
+    //     return users;
+    // }
 
-    async saveXpUser(id: XpUser['id'], user: XpUser) {
+    async saveXpUser(user: XpUser) {
         const u = cloneDeep(user);
-        this._xpUsers.set(id, u);
-        return u;
+        this._xpUsers.set(u.xpId, u);
     }
 
     async saveXpContract(contract: XpContract) {
@@ -449,15 +454,42 @@ export class MemoryStore
         return i;
     }
 
-    async getXpUserByAuthId(id: AuthUser['id']): Promise<XpUser> {
-        const user = Array.from(this._xpUsers.values()).find(
-            (u: XpUser) => u.userId === id
-        );
-        return cloneDeepNull(user ?? undefined);
+    async getXpUserByUserId(id: AuthUser['id']): Promise<XpUserWithUserInfo> {
+        const xpUser = this._xpUsers.get(id);
+        if (!xpUser) {
+            return null;
+        }
+
+        const authUser = this._users.find((u) => u.id === xpUser.userId);
+
+        if (!authUser) {
+            console.warn('No auth user found for xp user', xpUser);
+            return null;
+        }
+
+        return {
+            ...xpUser,
+            ...authUser,
+        };
     }
 
-    async getXpUserById(id: XpUser['id']): Promise<XpUser> {
-        return cloneDeep(this._xpUsers.get(id) ?? undefined);
+    async getXpUserByXpId(id: string): Promise<XpUserWithUserInfo> {
+        const xpUser = this._xpUsers.get(id);
+        if (!xpUser) {
+            return null;
+        }
+
+        const authUser = this._users.find((u) => u.id === xpUser.userId);
+
+        if (!authUser) {
+            console.warn('No auth user found for xp user', xpUser);
+            return null;
+        }
+
+        return {
+            ...xpUser,
+            ...authUser,
+        };
     }
 
     async getXpContract(contractId: XpContract['id']): Promise<XpContract> {

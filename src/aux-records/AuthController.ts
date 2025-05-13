@@ -2524,71 +2524,7 @@ export class AuthController {
                     errorMessage: 'The user was not found.',
                 };
             }
-
-            const { hasActiveSubscription, subscriptionTier: tier } =
-                await this._getSubscriptionInfo(result);
-
-            let privacyFeatures: PrivacyFeatures;
-            let displayName: string = null;
-            let email: string = result.email;
-            let name: string = result.name;
-            const privoConfig = await this._config.getPrivoConfiguration();
-            if (privoConfig && result.privoServiceId) {
-                const userInfo = await this._privoClient.getUserInfo(
-                    result.privoServiceId
-                );
-                privacyFeatures = getPrivacyFeaturesFromPermissions(
-                    privoConfig.featureIds,
-                    userInfo.permissions
-                );
-                displayName = userInfo.displayName;
-                email = userInfo.email;
-                name = userInfo.givenName;
-
-                if (
-                    result.privacyFeatures?.publishData !==
-                        privacyFeatures.publishData ||
-                    result.privacyFeatures?.allowPublicData !==
-                        privacyFeatures.allowPublicData ||
-                    result.privacyFeatures?.allowAI !==
-                        privacyFeatures.allowAI ||
-                    result.privacyFeatures?.allowPublicInsts !==
-                        privacyFeatures.allowPublicInsts
-                ) {
-                    await this._store.saveUser({
-                        ...result,
-                        privacyFeatures: {
-                            ...privacyFeatures,
-                        },
-                    });
-                }
-            } else if (result.privacyFeatures) {
-                privacyFeatures = {
-                    ...result.privacyFeatures,
-                };
-            } else {
-                privacyFeatures = {
-                    publishData: true,
-                    allowPublicData: true,
-                    allowAI: true,
-                    allowPublicInsts: true,
-                };
-            }
-
-            return {
-                success: true,
-                userId: result.id,
-                name: name,
-                displayName,
-                email: email,
-                phoneNumber: result.phoneNumber,
-                avatarPortraitUrl: result.avatarPortraitUrl,
-                avatarUrl: result.avatarUrl,
-                hasActiveSubscription: hasActiveSubscription,
-                subscriptionTier: tier ?? null,
-                privacyFeatures: privacyFeatures,
-                role: result.role ?? 'none',
-            };
+            return await this.getPrivateInfoForUser(result);
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -2604,6 +2540,90 @@ export class AuthController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Gets the user info for the given auth user.
+     *
+     * Not for public use.
+     * @param user The user to get the info for.
+     * @returns
+     */
+    async getPrivateInfoForUser(user: AuthUser): Promise<GetUserInfoSuccess> {
+        const { hasActiveSubscription, subscriptionTier: tier } =
+            await this._getSubscriptionInfo(user);
+        const { privacyFeatures, displayName, email, name } =
+            await this._getUserPrivoInfo(user);
+
+        return {
+            success: true,
+            userId: user.id,
+            name: name,
+            displayName,
+            email: email,
+            phoneNumber: user.phoneNumber,
+            avatarPortraitUrl: user.avatarPortraitUrl,
+            avatarUrl: user.avatarUrl,
+            hasActiveSubscription: hasActiveSubscription,
+            subscriptionTier: tier ?? null,
+            privacyFeatures: privacyFeatures,
+            role: user.role ?? 'none',
+        };
+    }
+
+    private async _getUserPrivoInfo(user: AuthUser) {
+        let privacyFeatures: PrivacyFeatures;
+        let displayName: string = null;
+        let email: string = user.email;
+        let name: string = user.name;
+        const privoConfig = await this._config.getPrivoConfiguration();
+        if (privoConfig && user.privoServiceId) {
+            const userInfo = await this._privoClient.getUserInfo(
+                user.privoServiceId
+            );
+            privacyFeatures = getPrivacyFeaturesFromPermissions(
+                privoConfig.featureIds,
+                userInfo.permissions
+            );
+            displayName = userInfo.displayName;
+            email = userInfo.email;
+            name = userInfo.givenName;
+
+            if (
+                user.privacyFeatures?.publishData !==
+                    privacyFeatures.publishData ||
+                user.privacyFeatures?.allowPublicData !==
+                    privacyFeatures.allowPublicData ||
+                user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
+                user.privacyFeatures?.allowPublicInsts !==
+                    privacyFeatures.allowPublicInsts
+            ) {
+                await this._store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        ...privacyFeatures,
+                    },
+                });
+            }
+        } else if (user.privacyFeatures) {
+            privacyFeatures = {
+                ...user.privacyFeatures,
+            };
+        } else {
+            privacyFeatures = {
+                publishData: true,
+                allowPublicData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            };
+        }
+
+        return {
+            privacyFeatures,
+            displayName,
+            email,
+            name,
+        };
     }
 
     /**
@@ -2714,6 +2734,17 @@ export class AuthController {
             subscriptionId: sub?.id,
             subscriptionTier: tier,
         };
+    }
+
+    /**
+     * Gets the subscription information for a user.
+     *
+     * Not for public use.
+     * @param user The user to get the subscription information for.
+     * @returns
+     */
+    getUserSubscriptionInfo(user: AuthUser) {
+        return this._getSubscriptionInfo(user);
     }
 
     /**

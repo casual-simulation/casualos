@@ -42,13 +42,13 @@ export type XpStore = {
      * Get an xp user by their auth id
      * @param id The auth user id of the user to get
      */
-    getXpUserByAuthId: (id: AuthUser['id']) => Promise<DataBaseM<XpUser>>;
+    getXpUserByUserId: (id: string) => Promise<XpUserWithUserInfo>;
 
     /**
-     * Get an xp user by their xp id
-     * @param id The xp user id of the xp user to get
+     * Get an xp user by their xp id.
+     * @param id The xp user id of the xp user to get.
      */
-    getXpUserById: (id: XpUser['id']) => Promise<DataBaseM<XpUser>>;
+    getXpUserByXpId: (id: string) => Promise<XpUserWithUserInfo>;
 
     /**
      * Save an xp contract with an associated account
@@ -65,10 +65,10 @@ export type XpStore = {
 
     /**
      * Save an xp user associated with the given auth user
-     * @param id The id of the xp user to create an account for (uuid) not the auth user id
+     * @param id The id of the xp user to create an account for (uuid) not the auth user id.
      * @param user The meta data to associate with the user
      */
-    saveXpUser: (id: XpUser['id'], user: XpUser) => Promise<DataBaseM<XpUser>>;
+    saveXpUser: (user: XpUser) => Promise<void>;
 
     /**
      * Updates an Xp contract
@@ -81,24 +81,24 @@ export type XpStore = {
         config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
     ) => Promise<DataBaseM<XpContract>>;
 
-    /**
-     * Batch query xp users by their xp user ids
-     * @param queryOptions Must contain at least an authId or xpId, can contain both
-     * @param queryOptions.xpId The xp user ids to query
-     * @param queryOptions.authId The auth user ids to query
-     * * Returns all xp users that match the query (if any) includes all results if both id types are provided
-     */
-    batchQueryXpUsers: (
-        queryOptions:
-            | {
-                  xpId: XpUser['id'][];
-                  authId?: AuthUser['id'][];
-              }
-            | {
-                  authId: AuthUser['id'][];
-                  xpId?: XpUser['id'][];
-              }
-    ) => Promise<DataBaseM<XpUser>[]>;
+    // /**
+    //  * Batch query xp users by their xp user ids
+    //  * @param queryOptions Must contain at least an authId or xpId, can contain both
+    //  * @param queryOptions.xpId The xp user ids to query
+    //  * @param queryOptions.authId The auth user ids to query
+    //  * * Returns all xp users that match the query (if any) includes all results if both id types are provided
+    //  */
+    // batchQueryXpUsers: (
+    //     queryOptions:
+    //         | {
+    //             xpId: XpUser['id'][];
+    //             authId?: AuthUser['id'][];
+    //         }
+    //         | {
+    //             authId: AuthUser['id'][];
+    //             xpId?: XpUser['id'][];
+    //         }
+    // ) => Promise<DataBaseM<XpUser>[]>;
 };
 
 type DataBaseM<M> = ReduceKeysToPrimitives<M>;
@@ -111,17 +111,32 @@ export interface ModelBase extends GenericTimeKeys {
     id: string;
 }
 
+export interface XpUser {
+    /**
+     * The id of the user in the xp system.
+     */
+    xpId: string;
+
+    /**
+     * The ID of the user in the auth system.
+     */
+    userId: string;
+
+    /**
+     * The id of the associated account
+     */
+    accountId: string;
+
+    /**
+     * The rate at which the user is requesting payment (null if not yet specified)
+     */
+    requestedRate: CurrencySFU | null;
+}
+
 /**
  * Data to be returned within get invocation results on each model
  */
-export interface XpUser extends ModelBase {
-    /** The id of the associated account */
-    accountId: string;
-    /** The rate at which the user is requesting payment (null if not yet specified) */
-    requestedRate: CurrencySFU | null;
-    /** The users unique id from the Auth system */
-    userId: string;
-}
+export interface XpUserWithUserInfo extends XpUser, AuthUser {}
 
 /**
  * Mimics a "Smart Contract" (crypto/blockchain) data model for the xp system
