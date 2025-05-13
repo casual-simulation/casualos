@@ -53,6 +53,7 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
         this._client = config.client;
         this._id = config.id;
     }
+
     generateId(): Account['id'] {
         return this._id();
     }

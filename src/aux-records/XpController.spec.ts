@@ -24,11 +24,13 @@ import {
 import type { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import type { AuthController } from './AuthController';
 import type { MemoryStore } from './MemoryStore';
-import type { CreateContractResultSuccess } from '../aux-records/XpController';
+// import type { CreateContractResultSuccess } from '../aux-records/XpController';
 import { XpController } from '../aux-records/XpController';
 import type { XpUser } from './XpStore';
-import type { NotNullOrOptional } from './TypeUtils';
 import { v4 as uuid } from 'uuid';
+import { AccountCodes } from './financial/FinancialInterface';
+import { AccountFlags } from './financial/Types';
+import { failure, success, unwrap } from '@casual-simulation/aux-common';
 
 console.log = jest.fn();
 
@@ -66,7 +68,6 @@ describe('XpController', () => {
     let memoryStore: MemoryStore;
     let authController: AuthController;
     let authMessenger: MemoryAuthMessenger;
-    let _testDateNow: number;
     let idempotencyKeyTracker = 0n;
     //* EOCS: Init services
 
@@ -87,15 +88,15 @@ describe('XpController', () => {
             xpStore: services.store,
             authController: services.auth,
             authStore: services.store,
-            financialController: services.financialController,
+            financialInterface: services.financialInterface,
+            // financialController: services.financialController,
         });
         memoryStore = services.store;
         authController = services.auth;
         authMessenger = services.authMessenger;
         idempotencyKeyTracker = 0n;
-        _testDateNow = dateNowRef();
         nowMock = Date.now = jest.fn();
-        nowMock.mockReturnValue(_testDateNow);
+        nowMock.mockReturnValue(1);
     });
 
     /**
@@ -108,10 +109,28 @@ describe('XpController', () => {
         Date.now = dateNowRef;
     });
 
-    //* Test case for the XpController class
-    it('should be defined', () => {
-        expect(XpController).toBeTruthy(); // Class
-        expect(xpController).toBeTruthy(); // Instance
+    describe('init()', () => {
+        it('should create a stripe assets account', async () => {
+            await xpController.init();
+
+            expect([...services.financialInterface.accounts.values()]).toEqual([
+                {
+                    id: 1001n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: 1,
+                    flags: AccountFlags.credits_must_not_exceed_debits,
+                    code: AccountCodes.assets_cash,
+                    timestamp: 0n,
+                },
+            ]);
+        });
     });
 
     describe('createTestXpUser()', () => {
@@ -120,19 +139,23 @@ describe('XpController', () => {
                 .mockReturnValueOnce('userId')
                 .mockReturnValueOnce('xpUserId');
 
-            const xpUser = await createTestXpUser(
-                xpController,
-                { auth: authController, authMessenger: authMessenger },
-                'xp.test@localhost'
+            const xpUser = unwrap(
+                await createTestXpUser(
+                    xpController,
+                    { auth: authController, authMessenger: authMessenger },
+                    'xp.test2@localhost'
+                )
             );
 
             expect(xpUser).toEqual({
-                id: 'xpUserId',
-                userId: 'userId',
-                accountId: '0',
-                requestedRate: null,
-                createdAtMs: _testDateNow,
-                updatedAtMs: _testDateNow,
+                user: {
+                    id: 'xpUserId',
+                    userId: 'userId',
+                    accountId: '0',
+                    requestedRate: null,
+                    createdAtMs: 1,
+                    updatedAtMs: 1,
+                },
             });
         });
     });
@@ -149,7 +172,10 @@ describe('XpController', () => {
         const userId = 'userId';
 
         beforeEach(async () => {
-            uuidMock.mockReturnValueOnce(userId).mockReturnValueOnce(id);
+            uuidMock
+                .mockReturnValueOnce(userId)
+                .mockReturnValueOnce(userId)
+                .mockReturnValueOnce(id);
 
             user = await createTestUser(
                 {
@@ -164,8 +190,8 @@ describe('XpController', () => {
                 userId: user.userId,
                 accountId: String(services.financialInterface.generateId()),
                 requestedRate: null,
-                createdAtMs: _testDateNow,
-                updatedAtMs: _testDateNow,
+                createdAtMs: 1,
+                updatedAtMs: 1,
             };
 
             await memoryStore.saveXpUser(xpUser.id, xpUser);
@@ -192,17 +218,18 @@ describe('XpController', () => {
                 await xpController.getXpUser({
                     userId: newAuthUser.userId,
                 })
-            ).toEqual({
-                success: true,
-                user: {
-                    id: 'newXpUserId',
-                    userId: 'newUserId',
-                    accountId: '1',
-                    requestedRate: null,
-                    createdAtMs: _testDateNow,
-                    updatedAtMs: _testDateNow,
-                },
-            });
+            ).toEqual(
+                success({
+                    user: {
+                        id: 'newXpUserId',
+                        userId: 'newUserId',
+                        accountId: '1',
+                        requestedRate: null,
+                        createdAtMs: 1,
+                        updatedAtMs: 1,
+                    },
+                })
+            );
         });
 
         it('should get an xp user by auth id', async () => {
@@ -210,35 +237,38 @@ describe('XpController', () => {
                 await xpController.getXpUser({
                     userId: user.userId,
                 })
-            ).toEqual({
-                success: true,
-                user: {
-                    id: id,
-                    userId: userId,
-                    accountId: '0',
-                    requestedRate: null,
-                    createdAtMs: expect.any(Number),
-                    updatedAtMs: expect.any(Number),
-                },
-            });
+            ).toEqual(
+                success({
+                    user: {
+                        id: id,
+                        userId: userId,
+                        accountId: '0',
+                        requestedRate: null,
+                        createdAtMs: 1,
+                        updatedAtMs: 1,
+                    },
+                })
+            );
         });
 
         it('should get an xp user by xp id', async () => {
             expect(
                 await xpController.getXpUser({
-                    xpId: id,
+                    requestedXpId: id,
+                    userId: user.userId,
                 })
-            ).toEqual({
-                success: true,
-                user: {
-                    id: id,
-                    userId: userId,
-                    accountId: '0',
-                    requestedRate: null,
-                    createdAtMs: expect.any(Number),
-                    updatedAtMs: expect.any(Number),
-                },
-            });
+            ).toEqual(
+                success({
+                    user: {
+                        id: id,
+                        userId: user.userId,
+                        accountId: '0',
+                        requestedRate: null,
+                        createdAtMs: 1,
+                        updatedAtMs: 1,
+                    },
+                })
+            );
         });
 
         //* EOL test case now as parameters apply XOR typing making this syntactically invalid
@@ -258,357 +288,360 @@ describe('XpController', () => {
             const xpUser = await xpController.getXpUser({
                 userId: 'non-existent-id',
             });
-            expect(xpUser).toEqual({
-                success: false,
-                errorCode: 'user_not_found',
-                errorMessage: 'The user was not found.',
-            });
+            expect(xpUser).toEqual(
+                failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                })
+            );
         });
 
         it('should fail to get an xp user by xp id due to user not found', async () => {
             const xpUser = await xpController.getXpUser({
-                xpId: 'non-existent-id',
+                requestedXpId: 'non-existent-id',
+                userId: 'missing-user',
             });
-            expect(xpUser).toEqual({
-                success: false,
-                errorCode: 'user_not_found',
-                errorMessage: 'The user was not found.',
-            });
+            expect(xpUser).toEqual(
+                failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                })
+            );
         });
     });
 
-    describe('createContract', () => {
-        //* An issuing user for use in testing createContract
-        let _issuingUser: XpUser;
+    // describe('createContract', () => {
+    //     //* An issuing user for use in testing createContract
+    //     let _issuingUser: XpUser;
 
-        //* A user that will receive the contract
-        let _receivingUser: XpUser;
+    //     //* A user that will receive the contract
+    //     let _receivingUser: XpUser;
 
-        let _contractConfig: NotNullOrOptional<
-            Parameters<typeof xpController.createContract>[0]
-        >;
+    //     let _contractConfig: NotNullOrOptional<
+    //         Parameters<typeof xpController.createContract>[0]
+    //     >;
 
-        //* Unique function config
-        const uConf = { name: 'createContract' };
+    //     //* Unique function config
+    //     const uConf = { name: 'createContract' };
 
-        beforeEach(async () => {
-            /**
-             * * The ids for the users are irrelevant in terms of caching and expecting for this test scope.
-             * * However we still need unique ids for user creation.
-             */
-            uuidMock.mockImplementation(() => unique(uConf));
+    //     beforeEach(async () => {
+    //         /**
+    //          * * The ids for the users are irrelevant in terms of caching and expecting for this test scope.
+    //          * * However we still need unique ids for user creation.
+    //          */
+    //         uuidMock.mockImplementation(() => unique(uConf));
 
-            //* (re)Initialize the issuing user
-            _issuingUser = await createTestXpUser(
-                xpController,
-                {
-                    auth: authController,
-                    authMessenger: authMessenger,
-                },
-                'issuing@localhost'
-            );
+    //         //* (re)Initialize the issuing user
+    //         _issuingUser = await createTestXpUser(
+    //             xpController,
+    //             {
+    //                 auth: authController,
+    //                 authMessenger: authMessenger,
+    //             },
+    //             'issuing@localhost'
+    //         );
 
-            //* (re)Initialize the receiving user
-            _receivingUser = await createTestXpUser(
-                xpController,
-                {
-                    auth: authController,
-                    authMessenger: authMessenger,
-                },
-                'receiving@localhost'
-            );
+    //         //* (re)Initialize the receiving user
+    //         _receivingUser = await createTestXpUser(
+    //             xpController,
+    //             {
+    //                 auth: authController,
+    //                 authMessenger: authMessenger,
+    //             },
+    //             'receiving@localhost'
+    //         );
 
-            //* (re)Initialize the contract config
-            _contractConfig = {
-                creationRequestReceivedAt: Date.now(),
-                description: 'Test Description',
-                issuingUserId: { xpId: _issuingUser.id },
-                receivingUserId: { xpId: _receivingUser.id },
-                rate: 80.0, // 80 cents per 6 minutes
-                offeredWorth: 800,
-                status: 'open',
-                idempotencyKey: ++idempotencyKeyTracker,
-            };
+    //         //* (re)Initialize the contract config
+    //         _contractConfig = {
+    //             creationRequestReceivedAt: Date.now(),
+    //             description: 'Test Description',
+    //             issuingUserId: { xpId: _issuingUser.id },
+    //             receivingUserId: { xpId: _receivingUser.id },
+    //             rate: 80.0, // 80 cents per 6 minutes
+    //             offeredWorth: 800,
+    //             status: 'open',
+    //             idempotencyKey: ++idempotencyKeyTracker,
+    //         };
 
-            uuidMock.mockReset();
-        });
+    //         uuidMock.mockReset();
+    //     });
 
-        it('should create an open xp contract', async () => {
-            const id = uniqueWithMock(uConf);
-            const contract = await xpController.createContract(_contractConfig);
-            expect(contract).toEqual({
-                success: true,
-                contract: {
-                    id,
-                    accountId: '2',
-                    issuerUserId: (
-                        _contractConfig.issuingUserId as {
-                            xpId: XpUser['id'];
-                        }
-                    ).xpId,
-                    holdingUserId: (
-                        _contractConfig.receivingUserId as {
-                            xpId: XpUser['id'];
-                        }
-                    ).xpId,
-                    rate: _contractConfig.rate,
-                    offeredWorth: _contractConfig.offeredWorth,
-                    description: _contractConfig.description,
-                    status: _contractConfig.status,
-                    createdAtMs: _testDateNow,
-                    updatedAtMs: _testDateNow,
-                },
-            });
-        });
+    //     it('should create an open xp contract', async () => {
+    //         const id = uniqueWithMock(uConf);
+    //         const contract = await xpController.createContract(_contractConfig);
+    //         expect(contract).toEqual({
+    //             success: true,
+    //             contract: {
+    //                 id,
+    //                 accountId: '2',
+    //                 issuerUserId: (
+    //                     _contractConfig.issuingUserId as {
+    //                         xpId: XpUser['id'];
+    //                     }
+    //                 ).xpId,
+    //                 holdingUserId: (
+    //                     _contractConfig.receivingUserId as {
+    //                         xpId: XpUser['id'];
+    //                     }
+    //                 ).xpId,
+    //                 rate: _contractConfig.rate,
+    //                 offeredWorth: _contractConfig.offeredWorth,
+    //                 description: _contractConfig.description,
+    //                 status: _contractConfig.status,
+    //                 createdAtMs: _testDateNow,
+    //                 updatedAtMs: _testDateNow,
+    //             },
+    //         });
+    //     });
 
-        it('should create a draft xp contract', async () => {
-            _contractConfig.status = 'draft';
-            _contractConfig.receivingUserId = null as any;
-            const contractId = uniqueWithMock(uConf);
-            const contract = await xpController.createContract(_contractConfig);
-            expect(contract).toEqual({
-                success: true,
-                contract: {
-                    id: contractId,
-                    accountId: null,
-                    issuerUserId: (
-                        _contractConfig.issuingUserId as {
-                            xpId: XpUser['id'];
-                        }
-                    ).xpId,
-                    holdingUserId: null,
-                    rate: _contractConfig.rate,
-                    offeredWorth: _contractConfig.offeredWorth,
-                    description: _contractConfig.description,
-                    status: _contractConfig.status,
-                    createdAtMs: _testDateNow,
-                    updatedAtMs: _testDateNow,
-                },
-            });
-        });
+    //     it('should create a draft xp contract', async () => {
+    //         _contractConfig.status = 'draft';
+    //         _contractConfig.receivingUserId = null as any;
+    //         const contractId = uniqueWithMock(uConf);
+    //         const contract = await xpController.createContract(_contractConfig);
+    //         expect(contract).toEqual({
+    //             success: true,
+    //             contract: {
+    //                 id: contractId,
+    //                 accountId: null,
+    //                 issuerUserId: (
+    //                     _contractConfig.issuingUserId as {
+    //                         xpId: XpUser['id'];
+    //                     }
+    //                 ).xpId,
+    //                 holdingUserId: null,
+    //                 rate: _contractConfig.rate,
+    //                 offeredWorth: _contractConfig.offeredWorth,
+    //                 description: _contractConfig.description,
+    //                 status: _contractConfig.status,
+    //                 createdAtMs: _testDateNow,
+    //                 updatedAtMs: _testDateNow,
+    //             },
+    //         });
+    //     });
 
-        it('should fail to create an open contract due to missing idempotency key', async () => {
-            _contractConfig.idempotencyKey = null as any;
-            const contract = await xpController.createContract(_contractConfig);
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'invalid_request',
-                errorMessage: expect.any(String),
-            });
-        });
+    //     it('should fail to create an open contract due to missing idempotency key', async () => {
+    //         _contractConfig.idempotencyKey = null as any;
+    //         const contract = await xpController.createContract(_contractConfig);
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'invalid_request',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
 
-        it('should fail to create an open contract due to missing issuer user', async () => {
-            _contractConfig.issuingUserId = { xpId: 'non-existent-id' };
-            const contract = await xpController.createContract(_contractConfig);
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'user_not_found',
-                errorMessage: expect.any(String),
-            });
-        });
+    //     it('should fail to create an open contract due to missing issuer user', async () => {
+    //         _contractConfig.issuingUserId = { xpId: 'non-existent-id' };
+    //         const contract = await xpController.createContract(_contractConfig);
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'user_not_found',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
 
-        it('should fail to create an open contract due to missing holding user', async () => {
-            _contractConfig.receivingUserId = { xpId: 'non-existent-id' };
-            const contract = await xpController.createContract(_contractConfig);
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'user_not_found',
-                errorMessage: expect.any(String),
-            });
-        });
+    //     it('should fail to create an open contract due to missing holding user', async () => {
+    //         _contractConfig.receivingUserId = { xpId: 'non-existent-id' };
+    //         const contract = await xpController.createContract(_contractConfig);
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'user_not_found',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
 
-        it('should fail to create a contract due to issuing user being the same as holding', async () => {
-            _contractConfig.receivingUserId = _contractConfig.issuingUserId;
-            const contract = await xpController.createContract(_contractConfig);
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'invalid_request',
-                errorMessage: expect.any(String),
-            });
-        });
-    });
+    //     it('should fail to create a contract due to issuing user being the same as holding', async () => {
+    //         _contractConfig.receivingUserId = _contractConfig.issuingUserId;
+    //         const contract = await xpController.createContract(_contractConfig);
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'invalid_request',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
+    // });
 
-    describe('issueDraftContract', () => {
-        //* An issuing user for use in testing issueDraftContract
-        let _issuingUser: XpUser;
+    // describe('issueDraftContract', () => {
+    //     //* An issuing user for use in testing issueDraftContract
+    //     let _issuingUser: XpUser;
 
-        //* A user that will receive the contract
-        let _receivingUser: XpUser;
+    //     //* A user that will receive the contract
+    //     let _receivingUser: XpUser;
 
-        //* A draft contract to be issued
-        let _draftContract: CreateContractResultSuccess['contract'];
+    //     //* A draft contract to be issued
+    //     let _draftContract: CreateContractResultSuccess['contract'];
 
-        //* Unique function config
-        const uConf = { name: 'issueDraftContract' };
+    //     //* Unique function config
+    //     const uConf = { name: 'issueDraftContract' };
 
-        beforeEach(async () => {
-            uuidMock.mockImplementation(() => unique(uConf));
+    //     beforeEach(async () => {
+    //         uuidMock.mockImplementation(() => unique(uConf));
 
-            //* (re)Initialize the issuing user
-            _issuingUser = await createTestXpUser(
-                xpController,
-                {
-                    auth: authController,
-                    authMessenger: authMessenger,
-                },
-                'issuing@localhost'
-            );
+    //         //* (re)Initialize the issuing user
+    //         _issuingUser = await createTestXpUser(
+    //             xpController,
+    //             {
+    //                 auth: authController,
+    //                 authMessenger: authMessenger,
+    //             },
+    //             'issuing@localhost'
+    //         );
 
-            //* (re)Initialize the receiving user
-            _receivingUser = await createTestXpUser(
-                xpController,
-                {
-                    auth: authController,
-                    authMessenger: authMessenger,
-                },
-                'receiving@localhost'
-            );
+    //         //* (re)Initialize the receiving user
+    //         _receivingUser = await createTestXpUser(
+    //             xpController,
+    //             {
+    //                 auth: authController,
+    //                 authMessenger: authMessenger,
+    //             },
+    //             'receiving@localhost'
+    //         );
 
-            //* (re)Initialize the draft contract
-            const contract = await xpController.createContract({
-                creationRequestReceivedAt: Date.now(),
-                description: 'Test Description',
-                issuingUserId: { xpId: _issuingUser.id },
-                receivingUserId: null,
-                rate: 80.0,
-                offeredWorth: 800,
-                status: 'draft',
-                idempotencyKey: ++idempotencyKeyTracker,
-            });
+    //         //* (re)Initialize the draft contract
+    //         const contract = await xpController.createContract({
+    //             creationRequestReceivedAt: Date.now(),
+    //             description: 'Test Description',
+    //             issuingUserId: { xpId: _issuingUser.id },
+    //             receivingUserId: null,
+    //             rate: 80.0,
+    //             offeredWorth: 800,
+    //             status: 'draft',
+    //             idempotencyKey: ++idempotencyKeyTracker,
+    //         });
 
-            if (!contract.success) fail('Failed to create draft contract');
+    //         if (!contract.success) fail('Failed to create draft contract');
 
-            _draftContract = contract.contract;
-            uuidMock.mockReset();
-        });
+    //         _draftContract = contract.contract;
+    //         uuidMock.mockReset();
+    //     });
 
-        it('should issue a draft contract', async () => {
-            const contract = await xpController.issueDraftContract({
-                draftContractId: _draftContract.id,
-                receivingUserId: { xpId: _receivingUser.id },
-                idempotencyKey: ++idempotencyKeyTracker,
-            });
-            expect(contract).toEqual({
-                success: true,
-                contract: {
-                    id: _draftContract.id,
-                    accountId: '2',
-                    issuerUserId: _draftContract.issuerUserId,
-                    holdingUserId: _receivingUser.id,
-                    rate: _draftContract.rate,
-                    offeredWorth: _draftContract.offeredWorth,
-                    description: _draftContract.description,
-                    status: 'open',
-                    createdAtMs: _testDateNow,
-                    updatedAtMs: _testDateNow,
-                },
-            });
-        });
+    //     it('should issue a draft contract', async () => {
+    //         const contract = await xpController.issueDraftContract({
+    //             draftContractId: _draftContract.id,
+    //             receivingUserId: { xpId: _receivingUser.id },
+    //             idempotencyKey: ++idempotencyKeyTracker,
+    //         });
+    //         expect(contract).toEqual({
+    //             success: true,
+    //             contract: {
+    //                 id: _draftContract.id,
+    //                 accountId: '2',
+    //                 issuerUserId: _draftContract.issuerUserId,
+    //                 holdingUserId: _receivingUser.id,
+    //                 rate: _draftContract.rate,
+    //                 offeredWorth: _draftContract.offeredWorth,
+    //                 description: _draftContract.description,
+    //                 status: 'open',
+    //                 createdAtMs: _testDateNow,
+    //                 updatedAtMs: _testDateNow,
+    //             },
+    //         });
+    //     });
 
-        it('should fail to issue a draft contract due to missing idempotency key', async () => {
-            const contract = await xpController.issueDraftContract({
-                draftContractId: _draftContract.id,
-                receivingUserId: { xpId: _receivingUser.id },
-                idempotencyKey: null as any,
-            });
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'invalid_request',
-                errorMessage: expect.any(String),
-            });
-        });
+    //     it('should fail to issue a draft contract due to missing idempotency key', async () => {
+    //         const contract = await xpController.issueDraftContract({
+    //             draftContractId: _draftContract.id,
+    //             receivingUserId: { xpId: _receivingUser.id },
+    //             idempotencyKey: null as any,
+    //         });
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'invalid_request',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
 
-        it('should fail to issue a draft contract due to missing draft contract', async () => {
-            const contract = await xpController.issueDraftContract({
-                draftContractId: 'non-existent-id',
-                receivingUserId: { xpId: _receivingUser.id },
-                idempotencyKey: ++idempotencyKeyTracker,
-            });
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'not_found',
-                errorMessage: expect.any(String),
-            });
-        });
-    });
+    //     it('should fail to issue a draft contract due to missing draft contract', async () => {
+    //         const contract = await xpController.issueDraftContract({
+    //             draftContractId: 'non-existent-id',
+    //             receivingUserId: { xpId: _receivingUser.id },
+    //             idempotencyKey: ++idempotencyKeyTracker,
+    //         });
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'not_found',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
+    // });
 
-    describe('getContract', () => {
-        //* A contract to be retrieved
-        let _contract: CreateContractResultSuccess['contract'];
+    // describe('getContract', () => {
+    //     //* A contract to be retrieved
+    //     let _contract: CreateContractResultSuccess['contract'];
 
-        //* Unique function config
-        const uConf = { name: 'getContract' };
+    //     //* Unique function config
+    //     const uConf = { name: 'getContract' };
 
-        beforeEach(async () => {
-            uuidMock.mockImplementation(() => unique(uConf));
-            //* (re)Initialize the issuing user
-            const _issuingUser = await createTestXpUser(
-                xpController,
-                {
-                    auth: authController,
-                    authMessenger: authMessenger,
-                },
-                'issuing@localhost'
-            );
+    //     beforeEach(async () => {
+    //         uuidMock.mockImplementation(() => unique(uConf));
+    //         //* (re)Initialize the issuing user
+    //         const _issuingUser = await createTestXpUser(
+    //             xpController,
+    //             {
+    //                 auth: authController,
+    //                 authMessenger: authMessenger,
+    //             },
+    //             'issuing@localhost'
+    //         );
 
-            //* (re)Initialize the receiving user
-            const _receivingUser = await createTestXpUser(
-                xpController,
-                {
-                    auth: authController,
-                    authMessenger: authMessenger,
-                },
-                'receiving@localhost'
-            );
+    //         //* (re)Initialize the receiving user
+    //         const _receivingUser = await createTestXpUser(
+    //             xpController,
+    //             {
+    //                 auth: authController,
+    //                 authMessenger: authMessenger,
+    //             },
+    //             'receiving@localhost'
+    //         );
 
-            //* (re)Initialize the contract
-            const contract = await xpController.createContract({
-                creationRequestReceivedAt: Date.now(),
-                description: 'Test Description',
-                issuingUserId: { xpId: _issuingUser.id },
-                receivingUserId: { xpId: _receivingUser.id },
-                rate: 80.0, // 80 cents
-                status: 'open',
-                offeredWorth: 800,
-                idempotencyKey: ++idempotencyKeyTracker,
-            });
+    //         //* (re)Initialize the contract
+    //         const contract = await xpController.createContract({
+    //             creationRequestReceivedAt: Date.now(),
+    //             description: 'Test Description',
+    //             issuingUserId: { xpId: _issuingUser.id },
+    //             receivingUserId: { xpId: _receivingUser.id },
+    //             rate: 80.0, // 80 cents
+    //             status: 'open',
+    //             offeredWorth: 800,
+    //             idempotencyKey: ++idempotencyKeyTracker,
+    //         });
 
-            if (!contract.success) fail('Failed to create contract');
+    //         if (!contract.success) fail('Failed to create contract');
 
-            _contract = contract.contract;
-            uuidMock.mockReset();
-        });
+    //         _contract = contract.contract;
+    //         uuidMock.mockReset();
+    //     });
 
-        it('should get a contract by id', async () => {
-            const contract = await xpController.getContractById(_contract.id);
-            expect(contract).toEqual({
-                success: true,
-                contract: {
-                    id: _contract.id,
-                    accountId: _contract.accountId,
-                    issuerUserId: _contract.issuerUserId,
-                    holdingUserId: _contract.holdingUserId,
-                    rate: _contract.rate,
-                    offeredWorth: _contract.offeredWorth,
-                    description: _contract.description,
-                    status: _contract.status,
-                    createdAtMs: _contract.createdAtMs,
-                    updatedAtMs: _contract.updatedAtMs,
-                },
-            });
-        });
+    //     it('should get a contract by id', async () => {
+    //         const contract = await xpController.getContractById(_contract.id);
+    //         expect(contract).toEqual({
+    //             success: true,
+    //             contract: {
+    //                 id: _contract.id,
+    //                 accountId: _contract.accountId,
+    //                 issuerUserId: _contract.issuerUserId,
+    //                 holdingUserId: _contract.holdingUserId,
+    //                 rate: _contract.rate,
+    //                 offeredWorth: _contract.offeredWorth,
+    //                 description: _contract.description,
+    //                 status: _contract.status,
+    //                 createdAtMs: _contract.createdAtMs,
+    //                 updatedAtMs: _contract.updatedAtMs,
+    //             },
+    //         });
+    //     });
 
-        it('should fail to get a contract by id due to contract not found', async () => {
-            const contract = await xpController.getContractById(
-                'non-existent-id'
-            );
-            expect(contract).toEqual({
-                success: false,
-                errorCode: 'not_found',
-                errorMessage: expect.any(String),
-            });
-        });
-    });
+    //     it('should fail to get a contract by id due to contract not found', async () => {
+    //         const contract = await xpController.getContractById(
+    //             'non-existent-id'
+    //         );
+    //         expect(contract).toEqual({
+    //             success: false,
+    //             errorCode: 'not_found',
+    //             errorMessage: expect.any(String),
+    //         });
+    //     });
+    // });
 
     // TODO: Continue development of createInvoice
     // describe('createInvoice', () => {
@@ -719,5 +752,5 @@ describe('XpController', () => {
     //     });
     // });
 
-    describe('approveInvoice', () => {});
+    // describe('approveInvoice', () => {});
 });

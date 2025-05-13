@@ -46,6 +46,19 @@ export class MemoryFinancialInterface implements FinancialInterface {
     private _transfers: Transfer[] = [];
     private _currentId = 0n;
 
+    get accounts() {
+        return this._accounts;
+    }
+
+    get transfers() {
+        return this._transfers;
+    }
+
+    now() {
+        // now() returns the current time in nanoseconds since the epoch.
+        return BigInt(Date.now()) * 1000n;
+    }
+
     // private _validateAccount(account: Account): CreateAccountError {
     //     if (this._accounts.has(account.id)) {
     //         return CreateAccountError.exists;

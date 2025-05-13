@@ -143,7 +143,8 @@ export function createTestControllers(
         authController: auth,
         authStore: store,
         xpStore: store,
-        financialController,
+        financialInterface,
+        // financialController,
     });
 
     return {
@@ -226,11 +227,7 @@ export async function createTestXpUser(
     ...createTestUserParams: Parameters<typeof createTestUser>
 ) {
     const authUser = await createTestUser(...createTestUserParams);
-    const xpUser = await xpController.getXpUser({ userId: authUser.userId });
-    if (!xpUser.success) {
-        throw new Error('Unable to create xp user!');
-    }
-    return xpUser.user;
+    return await xpController.getXpUser({ userId: authUser.userId });
 }
 
 export async function createTestRecordKey(
