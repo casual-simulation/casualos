@@ -271,6 +271,27 @@ describe('XpController', () => {
             );
         });
 
+        it('should prefer using the xp ID first', async () => {
+            expect(
+                await xpController.getXpUser({
+                    requestedXpId: id,
+                    requestedUserId: 'otherUserId',
+                    userId: user.userId,
+                })
+            ).toEqual(
+                success({
+                    user: {
+                        id: id,
+                        userId: user.userId,
+                        accountId: '0',
+                        requestedRate: null,
+                        createdAtMs: 1,
+                        updatedAtMs: 1,
+                    },
+                })
+            );
+        });
+
         //* EOL test case now as parameters apply XOR typing making this syntactically invalid
         // it('should fail to get an xp user due to use of multiple identifiers', async () => {
         //     const xpUser = await xpController.getXpUser({
@@ -284,6 +305,19 @@ describe('XpController', () => {
         //     });
         // });
 
+        it('should return not_authorized if trying to get another users info', async () => {
+            const xpUser = await xpController.getXpUser({
+                userId: 'otherUserId',
+                requestedXpId: id,
+            });
+            expect(xpUser).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
         it('should fail to get an xp user by auth id due to user not found', async () => {
             const xpUser = await xpController.getXpUser({
                 userId: 'non-existent-id',
