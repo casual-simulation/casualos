@@ -567,15 +567,21 @@ export class RecordsServer {
                     })
                 )
                 .handler(async ({ userId }, context) => {
-                    const authorization = context.sessionKey;
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
 
-                    if (!authorization) {
-                        return NOT_LOGGED_IN_RESULT;
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
                     }
 
                     const result = await this._auth.getUserInfo({
-                        userId,
-                        sessionKey: authorization,
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        requestedUserId: userId,
                     });
 
                     if (result.success === false) {
@@ -8387,6 +8393,15 @@ export class RecordsServer {
             return returnResult(NOT_LOGGED_IN_RESULT);
         }
 
+        const validation = await this._validateSessionKey(sessionKey);
+
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
         const userId = tryDecodeUriComponent(request.pathParams.userId);
 
         if (!userId) {
@@ -8394,8 +8409,9 @@ export class RecordsServer {
         }
 
         const result = await this._auth.getUserInfo({
-            sessionKey,
-            userId,
+            userId: validation.userId,
+            userRole: validation.role,
+            requestedUserId: userId,
         });
 
         if (!result.success) {

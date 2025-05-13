@@ -2501,49 +2501,28 @@ export class AuthController {
      */
     @traced(TRACE_NAME)
     async getUserInfo(request: GetUserInfoRequest): Promise<GetUserInfoResult> {
-        if (typeof request.userId !== 'string' || request.userId === '') {
-            return {
-                success: false,
-                errorCode: 'unacceptable_user_id',
-                errorMessage:
-                    'The given userId is invalid. It must be a string.',
-            };
-        } else if (
-            typeof request.sessionKey !== 'string' ||
-            request.sessionKey === ''
-        ) {
-            return {
-                success: false,
-                errorCode: 'unacceptable_session_key',
-                errorMessage:
-                    'The given session key is invalid. It must be a string.',
-            };
-        }
-
         try {
-            const keyResult = await this.validateSessionKey(request.sessionKey);
-            if (keyResult.success === false) {
-                return keyResult;
-            } else if (
-                !isSuperUserRole(keyResult.role) &&
-                keyResult.userId !== request.userId
+            const requestedUserId = request.requestedUserId ?? request.userId;
+            if (
+                !isSuperUserRole(request.userRole) &&
+                request.userId !== requestedUserId
             ) {
-                console.log(
-                    '[AuthController] [getUserInfo] Request User ID doesnt match session key User ID!'
-                );
                 return {
                     success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 };
             }
 
-            const result = await this._store.findUser(request.userId);
+            const result = await this._store.findUser(requestedUserId);
 
             if (!result) {
-                throw new Error(
-                    'Unable to find user even though a valid session key was presented!'
-                );
+                return {
+                    success: false,
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                };
             }
 
             const { hasActiveSubscription, subscriptionTier: tier } =
@@ -3996,20 +3975,23 @@ export interface ReplaceSessionFailure {
  */
 export interface GetUserInfoRequest {
     /**
-     * The session key that should be used to authenticate the request.
-     */
-    sessionKey: string;
-
-    /**
-     * The ID of the user whose info should be retrieved.
+     * The ID of the currently logged in user.
      */
     userId: string;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The ID of the user that should be retrieved.
+     * If omitted, then the logged in user info will be retrieved.
+     */
+    requestedUserId?: string;
 }
 
-export type GetUserInfoResult = GetUserInfoSuccess | GetUserInfoFailure;
-
-export interface GetUserInfoSuccess {
-    success: true;
+export interface UserInfo {
     /**
      * The ID of the user that was retrieved.
      */
@@ -4066,12 +4048,15 @@ export interface GetUserInfoSuccess {
     role: UserRole;
 }
 
+export type GetUserInfoResult = GetUserInfoSuccess | GetUserInfoFailure;
+
+export interface GetUserInfoSuccess extends UserInfo {
+    success: true;
+}
+
 export interface GetUserInfoFailure {
     success: false;
-    errorCode:
-        | 'unacceptable_user_id'
-        | ValidateSessionKeyFailure['errorCode']
-        | ServerError;
+    errorCode: 'user_not_found' | NotAuthorizedError | ServerError;
     errorMessage: string;
 }
 
