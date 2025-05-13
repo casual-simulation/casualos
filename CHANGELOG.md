@@ -60,6 +60,7 @@
 -   Fixed an issue where updating a new bot could cause the new bot to not be properly synchronized throughout the system.
 -   Fixed an issue where it was impossible to upload files to records that have spaces in their names.
 -   Fixed an issue where bots in the `tempShared` space might not re-appear on other devices after reconnecting.
+-   Fixed an issue where it was impossible to report an inst.
 
 ## V3.4.5
 
