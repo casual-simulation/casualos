@@ -103,7 +103,7 @@ export class CustomMapProvider extends OpenStreetMapsProvider {
         x: number,
         y: number
     ): Promise<HTMLImageElement> {
-        let url;
+        let url: string;
 
         if (this._isDirectUrl) {
             url = this._urlTemplate;
