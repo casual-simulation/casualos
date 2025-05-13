@@ -24,6 +24,9 @@ patchedDependencies:
   fake-indexeddb@5.0.1:
     hash: d597b2b144531a822d7a504855823767cbd16a0644fa2a214fa0dce0d573ec34
     path: patches/fake-indexeddb@5.0.1.patch
+  jest-runner:
+    hash: a919f065dabfb40b85cdb7063b9e5ceec3cab6ea40577ad4edd2f1999ba5aa47
+    path: patches/jest-runner.patch
 
 importers:
 
@@ -17504,7 +17507,7 @@ snapshots:
       jest-regex-util: 29.6.3
       jest-resolve: 29.7.0
       jest-resolve-dependencies: 29.7.0
-      jest-runner: 29.7.0
+      jest-runner: 29.7.0(patch_hash=a919f065dabfb40b85cdb7063b9e5ceec3cab6ea40577ad4edd2f1999ba5aa47)
       jest-runtime: 29.7.0
       jest-snapshot: 29.7.0
       jest-util: 29.7.0
@@ -25327,7 +25330,7 @@ snapshots:
       jest-get-type: 29.6.3
       jest-regex-util: 29.6.3
       jest-resolve: 29.7.0
-      jest-runner: 29.7.0
+      jest-runner: 29.7.0(patch_hash=a919f065dabfb40b85cdb7063b9e5ceec3cab6ea40577ad4edd2f1999ba5aa47)
       jest-util: 29.7.0
       jest-validate: 29.7.0
       micromatch: 4.0.5
@@ -25500,7 +25503,7 @@ snapshots:
       resolve.exports: 2.0.3
       slash: 3.0.0
 
-  jest-runner@29.7.0:
+  jest-runner@29.7.0(patch_hash=a919f065dabfb40b85cdb7063b9e5ceec3cab6ea40577ad4edd2f1999ba5aa47):
     dependencies:
       '@jest/console': 29.7.0
       '@jest/environment': 29.7.0
