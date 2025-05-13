@@ -33,8 +33,17 @@ import {
     getMessageForAccountError,
     LEDGERS,
 } from './financial/FinancialInterface';
-import type { Result, SimpleError } from '@casual-simulation/aux-common';
-import { failure, isFailure, success } from '@casual-simulation/aux-common';
+import type {
+    Result,
+    SimpleError,
+    UserRole,
+} from '@casual-simulation/aux-common';
+import {
+    failure,
+    isFailure,
+    isSuperUserRole,
+    success,
+} from '@casual-simulation/aux-common';
 
 interface XpConfig {
     xpStore: XpStore;
@@ -424,7 +433,8 @@ export class XpController {
         if (!user) {
             if (
                 request.requestedUserId &&
-                request.requestedUserId !== request.userId
+                request.requestedUserId !== request.userId &&
+                !isSuperUserRole(request.userRole)
             ) {
                 return failure({
                     errorCode: 'not_authorized',
@@ -439,7 +449,10 @@ export class XpController {
             } else {
                 user = result.value.user;
             }
-        } else if (user.userId !== request.userId) {
+        } else if (
+            user.userId !== request.userId &&
+            !isSuperUserRole(request.userRole)
+        ) {
             return failure({
                 errorCode: 'not_authorized',
                 errorMessage:
@@ -809,6 +822,11 @@ export interface GetXpUserRequest {
      * The ID of the currently logged in user.
      */
     userId: string;
+
+    /**
+     * The role of the user making the request.
+     */
+    userRole?: UserRole;
 
     /**
      * The ID of the xp user to get.

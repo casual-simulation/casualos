@@ -318,6 +318,27 @@ describe('XpController', () => {
                 })
             );
         });
+
+        it('should allow superUsers to get any user xp info', async () => {
+            const xpUser = await xpController.getXpUser({
+                userId: 'otherUserId',
+                userRole: 'superUser',
+                requestedXpId: id,
+            });
+            expect(xpUser).toEqual(
+                success({
+                    user: {
+                        id: id,
+                        userId: user.userId,
+                        accountId: '0',
+                        requestedRate: null,
+                        createdAtMs: 1,
+                        updatedAtMs: 1,
+                    },
+                })
+            );
+        });
+
         it('should fail to get an xp user by auth id due to user not found', async () => {
             const xpUser = await xpController.getXpUser({
                 userId: 'non-existent-id',
