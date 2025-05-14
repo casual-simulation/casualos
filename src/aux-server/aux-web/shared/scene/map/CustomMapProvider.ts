@@ -29,7 +29,14 @@ import {
 /**
  * A map provider that allows custom URL templates for tiles
  */
-export class CustomMapProvider {
+export class CustomMapProvider implements MapProvider {
+    // MapProvider interface properties
+    name: string = 'CustomMapProvider';
+    minZoom: number = 1;
+    maxZoom: number = 20;
+    bounds: number[] = [90, -90, 180, -180];
+    center: number[] = [0, 0]; // Default center
+
     private _urlTemplate: string =
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     private _isDirectUrl: boolean = false;
@@ -124,5 +131,13 @@ export class CustomMapProvider {
             image.crossOrigin = 'anonymous';
             image.src = url;
         });
+    }
+
+    /**
+     * Implementation of MapProvider's getMetaData method
+     * Since this is a custom provider, this is a no-op
+     */
+    async getMetaData(): Promise<void> {
+        return Promise.resolve();
     }
 }
