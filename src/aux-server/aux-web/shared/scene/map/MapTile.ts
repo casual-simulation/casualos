@@ -84,7 +84,7 @@ export class MapTile extends Object3D {
 
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
-    private static _SEA_LEVEL_TEXTURE: Texture =
+    private static _SEA_LEVEL_TEXTURE =
         TextureUtils.createFillTexture('#000000');
 
     private get _material(): THREE.MeshBasicMaterial {
