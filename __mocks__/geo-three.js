@@ -17,7 +17,7 @@
  */
 
 const TextureUtils = { createFillTexture: () => {} };
-const MapHeightNodeShader = {};
+const MapHeightNodeShader = { createMapHeightNodeShader: () => {} };
 
 const BingMapsProvider = { createBingMapsProvider: () => {} };
 const OpenStreetMapsProvider = { createOpenStreetMapsProvider: () => {} };
