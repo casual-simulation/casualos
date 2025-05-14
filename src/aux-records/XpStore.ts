@@ -146,10 +146,10 @@ export interface XpContract extends ModelBase {
     accountId: string | null;
     /** A description of the contract, may contain useful query meta */
     description: string | null;
-    /** The id of the user holding the contract */
-    holdingUserId: XpUser['id'] | null;
-    /** The id of the user issuing the contract */
-    issuerUserId: XpUser['id'];
+    /** The xpId of the user holding the contract */
+    holdingXpId: string | null;
+    /** The xpId of the user issuing the contract */
+    issuerXpId: string;
     /** The rate at which the entirety of the contract is worth */
     rate: CurrencySFU;
     /** An amount of money associated with a contract offer (would be the amount in the contract account if accepted) */

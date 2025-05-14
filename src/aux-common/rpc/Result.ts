@@ -48,10 +48,14 @@ export type MatchErrorCodes<T, E extends ErrorType, U> = {
     [K in E['errorCode']]: (error: Extract<E, { errorCode: K }>) => U;
 };
 
-export type GenericSuccess<T> = {
-    success: true;
-    value: T;
-};
+export type GenericSuccess<T> = T extends object
+    ? {
+          success: true;
+      } & T
+    : {
+          success: true;
+          value: T;
+      };
 
 export type GenericFailure<E extends ErrorType> = {
     success: false;
@@ -79,7 +83,14 @@ export function genericResult<T, E extends ErrorType>(
     result: Result<T, E>
 ): GenericResult<T, E> {
     if (isSuccess(result)) {
-        return { success: true, value: result.value };
+        if (typeof result.value === 'object') {
+            return {
+                success: true,
+                ...(result.value ?? {}),
+            } as GenericSuccess<T>;
+        } else {
+            return { success: true, value: result.value } as GenericSuccess<T>;
+        }
     } else {
         return {
             success: false,

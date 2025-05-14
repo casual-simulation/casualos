@@ -454,16 +454,22 @@ export class MemoryStore
         return i;
     }
 
-    async getXpUserByUserId(id: AuthUser['id']): Promise<XpUserWithUserInfo> {
-        const xpUser = this._xpUsers.get(id);
-        if (!xpUser) {
+    async getXpUserByUserId(id: string): Promise<XpUserWithUserInfo> {
+        const authUser = this._users.find((u) => u.id === id);
+
+        if (!authUser) {
             return null;
         }
 
-        const authUser = this._users.find((u) => u.id === xpUser.userId);
+        let xpUser = null;
+        for (let user of this._xpUsers.values()) {
+            if (user.userId === id) {
+                xpUser = user;
+                break;
+            }
+        }
 
-        if (!authUser) {
-            console.warn('No auth user found for xp user', xpUser);
+        if (!xpUser) {
             return null;
         }
 

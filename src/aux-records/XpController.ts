@@ -39,6 +39,7 @@ import {
     getFlagsForAccountCode,
     getMessageForAccountError,
     LEDGERS,
+    processAccountErrors,
 } from './financial/FinancialInterface';
 import type {
     Result,
@@ -49,6 +50,7 @@ import {
     failure,
     isFailure,
     isSuperUserRole,
+    mapResult,
     success,
 } from '@casual-simulation/aux-common';
 
@@ -154,31 +156,16 @@ export class XpController {
             reserved: 0,
         });
 
-        if (results.some((r) => r.result !== CreateAccountError.ok)) {
-            const errors = results.filter(
-                (r) => r.result !== CreateAccountError.ok
-            );
-            console.error(
-                `[XpController] [_createAccount] Failed to create account ${code}`,
-                errors
-                    .map(
-                        (e, i) =>
-                            `${i}: ${getMessageForAccountError(e.result)} (${
-                                e.result
-                            })`
-                    )
-                    .join('\n')
-            );
-
-            return failure({
-                errorCode: 'server_error',
-                errorMessage: 'A server error occurred.',
-            });
-        }
-
-        return success({
-            id,
-        });
+        return mapResult(
+            processAccountErrors(
+                results,
+                (err) =>
+                    `[XpController] [_createAccount] Failed to create account ${code}`
+            ),
+            () => ({
+                id,
+            })
+        );
     }
 
     /**

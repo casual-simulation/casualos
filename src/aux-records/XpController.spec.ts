@@ -27,7 +27,14 @@ import type { MemoryStore } from './MemoryStore';
 // import type { CreateContractResultSuccess } from '../aux-records/XpController';
 import { XpController } from '../aux-records/XpController';
 import { v4 as uuid } from 'uuid';
-import { AccountCodes } from './financial/FinancialInterface';
+import {
+    ACCOUNT_IDS,
+    AccountCodes,
+    getFlagsForTransferCode,
+    LEDGERS,
+    processTransferErrors,
+    TransferCodes,
+} from './financial/FinancialInterface';
 import { AccountFlags } from './financial/Types';
 import { failure, success, unwrap } from '@casual-simulation/aux-common';
 
@@ -238,7 +245,53 @@ describe('XpController', () => {
         });
 
         it('should get an xp user by auth id', async () => {
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
+                await xpController.getXpUser({
+                    userId: user.userId,
+                })
+            );
+
             const result = await xpController.getXpUser({
+                userId: user.userId,
+            });
+            expect(result).toEqual(
+                success({
+                    user: {
+                        userId: userId,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
+                    },
+                })
+            );
+        });
+
+        it('should get an xp user by requested user id', async () => {
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
+                await xpController.getXpUser({
+                    userId: user.userId,
+                })
+            );
+
+            const result = await xpController.getXpUser({
+                requestedUserId: user.userId,
                 userId: user.userId,
             });
             expect(result).toEqual(
@@ -338,6 +391,69 @@ describe('XpController', () => {
                         userId: user.userId,
                         accountId: '0',
                         accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
+                    },
+                })
+            );
+        });
+
+        it('should calculate the current balance', async () => {
+            unwrap(await xpController.init());
+
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
+                await xpController.getXpUser({
+                    userId: user.userId,
+                })
+            );
+
+            unwrap(
+                processTransferErrors(
+                    await services.financialInterface.createTransfers([
+                        {
+                            id: services.financialInterface.generateId(),
+                            amount: 100n,
+                            code: TransferCodes.external_credits_user,
+                            credit_account_id: 0n,
+                            debit_account_id: ACCOUNT_IDS.stripe_assets,
+                            flags: getFlagsForTransferCode(
+                                TransferCodes.external_credits_user
+                            ),
+                            ledger: LEDGERS.usd,
+                            timestamp: 0n,
+                            user_data_128: 0n,
+                            user_data_64: 0n,
+                            user_data_32: 0,
+                            pending_id: 0n,
+                            timeout: 0,
+                        },
+                    ])
+                )
+            );
+
+            const result = await xpController.getXpUser({
+                userId: user.userId,
+            });
+            expect(result).toEqual(
+                success({
+                    user: {
+                        userId: userId,
+                        accountId: '0',
+                        accountBalance: 100,
                         accountCurrency: 'usd',
                         requestedRate: null,
                         displayName: null,

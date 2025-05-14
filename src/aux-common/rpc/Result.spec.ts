@@ -122,12 +122,23 @@ describe('Result', () => {
         expect(matchedResult).toBe('Test2: This operation is not supported.');
     });
 
-    it('should be able to get a generic result from a success', () => {
+    it('should be able to get a generic result from a successful string', () => {
         const result = success('Success!');
         const gResult = genericResult(result);
         expect(gResult).toEqual({
             success: true,
             value: 'Success!',
+        });
+    });
+
+    it('should be able to get a generic result from a successful object', () => {
+        const result = success({
+            abc: 'def',
+        });
+        const gResult = genericResult(result);
+        expect(gResult).toEqual({
+            success: true,
+            abc: 'def',
         });
     });
 

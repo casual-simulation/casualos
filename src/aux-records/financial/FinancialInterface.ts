@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { SimpleError, Result } from '@casual-simulation/aux-common';
+import { failure, success } from '@casual-simulation/aux-common';
 import type {
     Account,
     AccountBalance,
@@ -24,6 +26,7 @@ import type {
     QueryFilter,
     Transfer,
 } from './Types';
+import { CreateTransferError, TransferFlags } from './Types';
 import { AccountFlags, CreateAccountError } from './Types';
 
 /**
@@ -215,4 +218,125 @@ export function getMessageForAccountError(error: CreateAccountError) {
         default:
             return 'An unknown error occurred.';
     }
+}
+
+export function getMessageForTransferError(error: CreateTransferError) {
+    switch (error) {
+        case CreateTransferError.code_must_not_be_zero:
+            return 'The transfer code must not be zero.';
+        case CreateTransferError.accounts_must_be_different:
+            return 'The transfer accounts must be different.';
+        case CreateTransferError.amount_must_not_be_zero:
+            return 'The transfer amount must not be zero.';
+        case CreateTransferError.accounts_must_have_the_same_ledger:
+            return 'The transfer accounts must have the same ledger.';
+        case CreateTransferError.closing_transfer_must_be_pending:
+            return 'The closing transfer must be pending.';
+        case CreateTransferError.credit_account_already_closed:
+            return 'The credit account is already closed.';
+        case CreateTransferError.debit_account_already_closed:
+            return 'The debit account is already closed.';
+        case CreateTransferError.credit_account_not_found:
+            return 'The credit account was not found.';
+        case CreateTransferError.debit_account_not_found:
+            return 'The debit account was not found.';
+        case CreateTransferError.exceeds_credits:
+            return 'The transfer would cause the debits on the account to exceed its credits.';
+        case CreateTransferError.exceeds_debits:
+            return 'The transfer would cause the credits on the account to exceed its debits.';
+        case CreateTransferError.exists:
+            return 'The transfer already exists.';
+        case CreateTransferError.exceeds_pending_transfer_amount:
+            return 'The transfer would cause the pending transfer amount to exceed its limit.';
+        case CreateTransferError.exists_with_different_amount:
+            return 'The transfer already exists with a different amount.';
+        case CreateTransferError.exists_with_different_code:
+            return 'The transfer already exists with a different code.';
+        case CreateTransferError.exists_with_different_flags:
+            return 'The transfer already exists with different flags.';
+        case CreateTransferError.exists_with_different_ledger:
+            return 'The transfer already exists with a different ledger.';
+        case CreateTransferError.exists_with_different_user_data_128:
+        case CreateTransferError.exists_with_different_user_data_64:
+        case CreateTransferError.exists_with_different_user_data_32:
+            return 'The transfer already exists with different user data.';
+        case CreateTransferError.flags_are_mutually_exclusive:
+            return 'The transfer flags are mutually exclusive.';
+        case CreateTransferError.timestamp_must_be_zero:
+            return 'The transfer timestamp must be zero.';
+        case CreateTransferError.id_already_failed:
+            return 'A transfer with the same ID has already failed.';
+        case CreateTransferError.overflows_credits:
+            return 'The transfer would cause the credits on the account to overflow a 128-bit unsigned int.';
+        case CreateTransferError.overflows_debits:
+            return 'The transfer would cause the debits on the account to overflow a 128-bit unsigned int.';
+        case CreateTransferError.overflows_credits_pending:
+            return 'The transfer would cause the credits pending on the account to overflow a 128-bit unsigned int.';
+        case CreateTransferError.overflows_debits_pending:
+            return 'The transfer would cause the debits pending on the account to overflow a 128-bit unsigned int.';
+        case CreateTransferError.overflows_credits_posted:
+            return 'The transfer would cause the credits posted on the account to overflow a 128-bit unsigned int.';
+        case CreateTransferError.overflows_debits_posted:
+            return 'The transfer would cause the debits posted on the account to overflow a 128-bit unsigned int.';
+        case CreateTransferError.overflows_timeout:
+            return 'The transfer would cause the timeout on the account to overflow a 64-bit unsigned int.';
+        default:
+            return 'An unknown error occurred.';
+    }
+}
+
+export function getFlagsForTransferCode(code: TransferCodes): TransferFlags {
+    return TransferFlags.none;
+}
+
+export function processErrors<
+    T extends CreateAccountsError | CreateTransfersError
+>(
+    results: T[],
+    ignoreCodes: T['result'][],
+    getMessage: (code: T['result']) => string
+): Result<void, SimpleError> {
+    let hasError = false;
+    for (let result of results) {
+        if (
+            result.result !== CreateAccountError.ok &&
+            ignoreCodes.indexOf(result.result) < 0
+        ) {
+            hasError = true;
+            console.error(getMessage(result.result));
+        }
+    }
+
+    if (hasError) {
+        return failure({
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        });
+    }
+
+    return success();
+}
+
+export function processAccountErrors(
+    results: CreateAccountsError[],
+    getMessage: (code: CreateAccountError) => string = () => ''
+): Result<void, SimpleError> {
+    return processErrors(
+        results,
+        [CreateAccountError.exists],
+        (err) =>
+            `${getMessage(err)}: ${getMessageForAccountError(err)} (${err})`
+    );
+}
+
+export function processTransferErrors(
+    results: CreateTransfersError[],
+    getMessage: (code: CreateTransferError) => string = () => ''
+): Result<void, SimpleError> {
+    return processErrors(
+        results,
+        [CreateTransferError.exists],
+        (err) =>
+            `${getMessage(err)}: ${getMessageForTransferError(err)} (${err})`
+    );
 }
