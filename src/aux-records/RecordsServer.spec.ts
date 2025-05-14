@@ -182,6 +182,9 @@ import { v5 as uuidv5 } from 'uuid';
 import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 import type { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
 import { version } from './packages/version/PackageVersionRecordsStore';
+import type { FinancialInterface } from './financial';
+import { MemoryFinancialInterface } from './financial';
+import { XpController } from './XpController';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -416,6 +419,9 @@ describe('RecordsServer', () => {
 
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
+
+    let finanacialInterface: FinancialInterface;
+    let xpController: XpController;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -794,6 +800,14 @@ describe('RecordsServer', () => {
             policies: policyController,
         });
 
+        finanacialInterface = new MemoryFinancialInterface();
+        xpController = new XpController({
+            authStore: store,
+            xpStore: store,
+            authController,
+            financialInterface: finanacialInterface,
+        });
+
         server = new RecordsServer({
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -816,6 +830,7 @@ describe('RecordsServer', () => {
             notificationsController: notificationController,
             packagesController: packageController,
             packageVersionController: packageVersionController,
+            xpController: xpController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -4711,6 +4726,127 @@ describe('RecordsServer', () => {
                 }),
             () => authenticatedHeaders
         );
+    });
+
+    describe('GET /api/v2/xp/user', () => {
+        it('should return not_supported if the server doesnt have an XpController', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/xp/user', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'xpAPI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the user info', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/xp/user', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    user: {
+                        userId: userId,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        displayName: null,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        hasActiveSubscription: false,
+                        subscriptionTier: null,
+                        role: 'none',
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the info for the given user', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+
+            const otherUserId = 'otherUserId';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/xp/user?userId=${otherUserId}`, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    user: {
+                        userId: otherUserId,
+                        email: 'other@example.com',
+                        phoneNumber: null,
+                        displayName: null,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        hasActiveSubscription: false,
+                        subscriptionTier: null,
+                        role: 'none',
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', `/api/v2/xp/user`);
+        testRateLimit('GET', `/api/v2/xp/user`);
     });
 
     describe('POST /api/v2/meet/token', () => {

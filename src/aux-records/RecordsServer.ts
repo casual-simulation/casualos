@@ -229,6 +229,12 @@ export const MODERATION_NOT_SUPPORTED_RESULT = {
     errorMessage: 'Moderation features are not supported by this server.',
 };
 
+export const XP_API_NOT_SUPPORTED_RESULT = {
+    success: false as const,
+    errorCode: 'not_supported' as const,
+    errorMessage: 'xpAPI features are not supported by this server.',
+};
+
 /**
  * Defines a basic interface for an HTTP route.
  */
@@ -2611,15 +2617,19 @@ export class RecordsServer {
                     return result;
                 }),
 
-            getXpUserMeta: procedure()
+            getXpUserInfo: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/xp/user')
                 .inputs(
                     z.object({
-                        userId: z.string().min(1),
+                        userId: z.string().min(1).optional().nullable(),
                     })
                 )
                 .handler(async ({ userId }, context) => {
+                    if (!this._xpController) {
+                        return XP_API_NOT_SUPPORTED_RESULT;
+                    }
+
                     const authUser = await this._validateSessionKey(
                         context.sessionKey
                     );
