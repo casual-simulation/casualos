@@ -30,12 +30,10 @@ import { v4 as uuid } from 'uuid';
 import {
     ACCOUNT_IDS,
     AccountCodes,
-    getFlagsForTransferCode,
     LEDGERS,
-    processTransferErrors,
     TransferCodes,
 } from './financial/FinancialInterface';
-import { AccountFlags } from './financial/Types';
+import { AccountFlags, TransferFlags } from './financial/Types';
 import { failure, success, unwrap } from '@casual-simulation/aux-common';
 
 console.log = jest.fn();
@@ -454,27 +452,17 @@ describe('XpController', () => {
             );
 
             unwrap(
-                processTransferErrors(
-                    await services.financialInterface.createTransfers([
+                await xpController.internalTransfer({
+                    transfers: [
                         {
-                            id: services.financialInterface.generateId(),
                             amount: 100n,
                             code: TransferCodes.external_credits_user,
-                            credit_account_id: 0n,
-                            debit_account_id: ACCOUNT_IDS.stripe_assets,
-                            flags: getFlagsForTransferCode(
-                                TransferCodes.external_credits_user
-                            ),
-                            ledger: LEDGERS.usd,
-                            timestamp: 0n,
-                            user_data_128: 0n,
-                            user_data_64: 0n,
-                            user_data_32: 0,
-                            pending_id: 0n,
-                            timeout: 0,
+                            creditAccountId: 0n,
+                            debitAccountId: ACCOUNT_IDS.stripe_assets,
+                            currency: 'usd',
                         },
-                    ])
-                )
+                    ],
+                })
             );
 
             const result = await xpController.getXpUser({
@@ -636,6 +624,275 @@ describe('XpController', () => {
             );
         });
     });
+
+    describe('internalTransfer()', () => {
+        let account1Id: bigint;
+        let account2Id: bigint;
+
+        beforeEach(async () => {
+            unwrap(await xpController.init());
+
+            ({ id: account1Id } = unwrap(
+                await xpController.createAccount(AccountCodes.liabilities_user)
+            ));
+            ({ id: account2Id } = unwrap(
+                await xpController.createAccount(AccountCodes.liabilities_user)
+            ));
+        });
+
+        it('should be able to transfer money from the assets_cash account to a user account', async () => {
+            const result = await xpController.internalTransfer({
+                transfers: [
+                    {
+                        debitAccountId: ACCOUNT_IDS.stripe_assets,
+                        creditAccountId: account1Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.external_credits_user,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: 2n,
+                    transferIds: [3n],
+                })
+            );
+            expect(services.financialInterface.transfers).toEqual([
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.external_credits_user,
+                    credit_account_id: account1Id,
+                    debit_account_id: ACCOUNT_IDS.stripe_assets,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+                    pending_id: 0n,
+                    timeout: 0,
+                    timestamp: 0n,
+                    user_data_128: 2n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                },
+            ]);
+        });
+
+        it('should be able to transfer money from one user account to another', async () => {
+            unwrap(
+                await xpController.internalTransfer({
+                    transfers: [
+                        {
+                            debitAccountId: ACCOUNT_IDS.stripe_assets,
+                            creditAccountId: account1Id,
+                            currency: 'usd',
+                            amount: 1000n,
+                            code: TransferCodes.external_credits_user,
+                        },
+                    ],
+                })
+            );
+
+            const result = await xpController.internalTransfer({
+                transfers: [
+                    {
+                        debitAccountId: account1Id,
+                        creditAccountId: account2Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.external_credits_user,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: 4n,
+                    transferIds: [5n],
+                    // accountBalances: [
+                    //     {
+                    //         accountId: account1Id,
+                    //         balance: 900n,
+                    //     },
+                    //     {
+                    //         accountId: account2Id,
+                    //         balance: 100n,
+                    //     },
+                    // ],
+                })
+            );
+            expect(services.financialInterface.transfers.slice(1)).toEqual([
+                {
+                    id: 5n,
+                    amount: 100n,
+                    code: TransferCodes.external_credits_user,
+                    credit_account_id: account2Id,
+                    debit_account_id: account1Id,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+                    pending_id: 0n,
+                    timeout: 0,
+                    timestamp: 0n,
+                    user_data_128: 4n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                },
+            ]);
+        });
+
+        it('should use the given transfer Id', async () => {
+            const result = await xpController.internalTransfer({
+                transfers: [
+                    {
+                        transferId: 100n,
+                        debitAccountId: ACCOUNT_IDS.stripe_assets,
+                        creditAccountId: account1Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.external_credits_user,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: 2n,
+                    transferIds: [100n],
+                    // accountBalances: [
+                    //     {
+                    //         accountId: ACCOUNT_IDS.stripe_assets,
+                    //         balance: -100n,
+                    //     },
+                    //     {
+                    //         accountId: account1Id,
+                    //         balance: 100n,
+                    //     },
+                    // ],
+                })
+            );
+            expect(services.financialInterface.transfers).toEqual([
+                {
+                    id: 100n,
+                    amount: 100n,
+                    credit_account_id: account1Id,
+                    debit_account_id: ACCOUNT_IDS.stripe_assets,
+                    code: TransferCodes.external_credits_user,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+                    pending_id: 0n,
+                    timeout: 0,
+                    timestamp: 0n,
+                    user_data_128: 2n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                },
+            ]);
+        });
+
+        it('should reject the transfer if it would cause a user account to go negative', async () => {
+            const result = await xpController.internalTransfer({
+                transfers: [
+                    {
+                        transferId: 100n,
+                        debitAccountId: account1Id,
+                        creditAccountId: account2Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.external_credits_user,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'debits_exceed_credits',
+                    errorMessage:
+                        'The transfer would cause the account debits to exceed its credits.',
+                    accountId: account1Id,
+                })
+            );
+            expect(services.financialInterface.transfers).toEqual([]);
+        });
+
+        it('should be able to perform transfers in a transaction', async () => {
+            const result = await xpController.internalTransfer({
+                transfers: [
+                    {
+                        transferId: 100n,
+                        debitAccountId: ACCOUNT_IDS.stripe_assets,
+                        creditAccountId: account1Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.external_credits_user,
+                    },
+                    {
+                        transferId: 101n,
+                        debitAccountId: account1Id,
+                        creditAccountId: account2Id,
+                        currency: 'usd',
+                        amount: 100n,
+                        code: TransferCodes.external_credits_user,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: 2n,
+                    transferIds: [100n, 101n],
+                    // accountBalances: [
+                    //     {
+                    //         accountId: ACCOUNT_IDS.stripe_assets,
+                    //         balance: -100n,
+                    //     },
+                    //     {
+                    //         accountId: account1Id,
+                    //         balance: 0n,
+                    //     },
+                    //     {
+                    //         accountId: account2Id,
+                    //         balance: 100n,
+                    //     },
+                    // ],
+                })
+            );
+
+            expect(services.financialInterface.transfers).toEqual([
+                {
+                    id: 100n,
+                    amount: 100n,
+                    credit_account_id: account1Id,
+                    debit_account_id: ACCOUNT_IDS.stripe_assets,
+                    code: TransferCodes.external_credits_user,
+                    flags: TransferFlags.linked,
+                    ledger: LEDGERS.usd,
+                    pending_id: 0n,
+                    timeout: 0,
+                    timestamp: 0n,
+                    user_data_128: 2n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                },
+                {
+                    id: 101n,
+                    amount: 100n,
+                    credit_account_id: account2Id,
+                    debit_account_id: account1Id,
+                    code: TransferCodes.external_credits_user,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+                    pending_id: 0n,
+                    timeout: 0,
+                    timestamp: 0n,
+                    user_data_128: 2n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                },
+            ]);
+        });
+    });
+
+    describe('externalTransfer()', () => {});
 
     // describe('createContract', () => {
     //     //* An issuing user for use in testing createContract

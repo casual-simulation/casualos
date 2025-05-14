@@ -15,7 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { SimpleError, Result } from '@casual-simulation/aux-common';
+import type {
+    Result,
+    ServerError,
+    MultiError,
+} from '@casual-simulation/aux-common';
 import { failure, success } from '@casual-simulation/aux-common';
 import type {
     Account,
@@ -30,7 +34,7 @@ import { CreateTransferError, TransferFlags } from './Types';
 import { AccountFlags, CreateAccountError } from './Types';
 
 /**
- * The Ledgers that the system uses.
+ * The map of currencies to ledger IDs that the system uses.
  */
 export const LEDGERS = {
     /**
@@ -39,10 +43,20 @@ export const LEDGERS = {
     usd: 1,
 };
 
+export const CurrencyCodes = {
+    /**
+     * The currency code for USD.
+     */
+    usd: 'usd',
+};
+
 /**
  * The map of ledger IDs to their currency codes.
  */
-export const CURRENCIES = new Map<number, string>([[LEDGERS.usd, 'usd']]);
+export const CURRENCIES = new Map<
+    (typeof LEDGERS)[keyof typeof LEDGERS],
+    (typeof CurrencyCodes)[keyof typeof CurrencyCodes]
+>([[LEDGERS.usd, 'usd']]);
 
 /**
  * Account IDs for built-in accounts.
@@ -220,6 +234,41 @@ export function getMessageForAccountError(error: CreateAccountError) {
     }
 }
 
+export function getCodeForAccountError(
+    error: CreateAccountError
+): AccountError['errorCode'] {
+    switch (error) {
+        case CreateAccountError.code_must_not_be_zero:
+            return 'code_must_not_be_zero';
+        case CreateAccountError.credits_pending_must_be_zero:
+            return 'credits_pending_must_be_zero';
+        case CreateAccountError.debits_pending_must_be_zero:
+            return 'debits_pending_must_be_zero';
+        case CreateAccountError.credits_posted_must_be_zero:
+            return 'credits_posted_must_be_zero';
+        case CreateAccountError.debits_posted_must_be_zero:
+            return 'debits_posted_must_be_zero';
+        case CreateAccountError.exists:
+            return 'exists';
+        case CreateAccountError.exists_with_different_code:
+            return 'exists_with_different_code';
+        case CreateAccountError.exists_with_different_flags:
+            return 'exists_with_different_flags';
+        case CreateAccountError.exists_with_different_ledger:
+            return 'exists_with_different_ledger';
+        case CreateAccountError.exists_with_different_user_data_128:
+        case CreateAccountError.exists_with_different_user_data_64:
+        case CreateAccountError.exists_with_different_user_data_32:
+            return 'exists_with_different_user_data';
+        case CreateAccountError.flags_are_mutually_exclusive:
+            return 'flags_are_mutually_exclusive';
+        case CreateAccountError.timestamp_must_be_zero:
+            return 'timestamp_must_be_zero';
+        default:
+            return 'server_error';
+    }
+}
+
 export function getMessageForTransferError(error: CreateTransferError) {
     switch (error) {
         case CreateTransferError.code_must_not_be_zero:
@@ -285,58 +334,175 @@ export function getMessageForTransferError(error: CreateTransferError) {
     }
 }
 
+export function getCodeForTransferError(
+    error: CreateTransferError
+): TransferError['errorCode'] {
+    switch (error) {
+        case CreateTransferError.code_must_not_be_zero:
+            return 'code_must_not_be_zero';
+        case CreateTransferError.accounts_must_be_different:
+            return 'accounts_must_be_different';
+        case CreateTransferError.amount_must_not_be_zero:
+            return 'amount_must_not_be_zero';
+        case CreateTransferError.accounts_must_have_the_same_ledger:
+            return 'accounts_must_have_the_same_ledger';
+        case CreateTransferError.closing_transfer_must_be_pending:
+            return 'closing_transfer_must_be_pending';
+        case CreateTransferError.credit_account_already_closed:
+            return 'credit_account_already_closed';
+        case CreateTransferError.debit_account_already_closed:
+            return 'debit_account_already_closed';
+        case CreateTransferError.credit_account_not_found:
+            return 'credit_account_not_found';
+        case CreateTransferError.debit_account_not_found:
+            return 'debit_account_not_found';
+        case CreateTransferError.exceeds_credits:
+            return 'exceeds_credits';
+        case CreateTransferError.exceeds_debits:
+            return 'exceeds_debits';
+        case CreateTransferError.exists:
+        case CreateTransferError.exceeds_pending_transfer_amount:
+        case CreateTransferError.exists_with_different_amount:
+        case CreateTransferError.exists_with_different_code:
+        case CreateTransferError.exists_with_different_flags:
+        case CreateTransferError.exists_with_different_ledger:
+        case CreateTransferError.exists_with_different_user_data_128:
+        case CreateTransferError.exists_with_different_user_data_64:
+        case CreateTransferError.exists_with_different_user_data_32:
+            return 'exists';
+        case CreateTransferError.flags_are_mutually_exclusive:
+            return 'flags_are_mutually_exclusive';
+        case CreateTransferError.timestamp_must_be_zero:
+            return 'timestamp_must_be_zero';
+        case CreateTransferError.id_already_failed:
+            return 'id_already_failed';
+        case CreateTransferError.overflows_credits:
+            return 'overflows_credits';
+        case CreateTransferError.overflows_debits:
+            return 'overflows_debits';
+        case CreateTransferError.overflows_credits_pending:
+            return 'overflows_credits_pending';
+        case CreateTransferError.overflows_debits_pending:
+            return 'overflows_debits_pending';
+        case CreateTransferError.overflows_credits_posted:
+            return 'overflows_credits_posted';
+        case CreateTransferError.overflows_debits_posted:
+            return 'overflows_debits_posted';
+        case CreateTransferError.overflows_timeout:
+            return 'overflows_timeout';
+        default:
+            return 'server_error';
+    }
+}
+
 export function getFlagsForTransferCode(code: TransferCodes): TransferFlags {
     return TransferFlags.none;
 }
 
-export function processErrors<
-    T extends CreateAccountsError | CreateTransfersError
->(
-    results: T[],
-    ignoreCodes: T['result'][],
-    getMessage: (code: T['result']) => string
-): Result<void, SimpleError> {
-    let hasError = false;
+export type AccountError = {
+    errorCode:
+        | ServerError
+        | 'code_must_not_be_zero'
+        | 'credits_pending_must_be_zero'
+        | 'debits_pending_must_be_zero'
+        | 'credits_posted_must_be_zero'
+        | 'debits_posted_must_be_zero'
+        | 'exists'
+        | 'exists_with_different_code'
+        | 'exists_with_different_flags'
+        | 'exists_with_different_ledger'
+        | 'exists_with_different_user_data'
+        | 'flags_are_mutually_exclusive'
+        | 'timestamp_must_be_zero';
+    errorMessage: string;
+    error: CreateAccountError;
+};
+
+export interface TransferError {
+    errorCode:
+        | ServerError
+        | 'code_must_not_be_zero'
+        | 'accounts_must_be_different'
+        | 'amount_must_not_be_zero'
+        | 'accounts_must_have_the_same_ledger'
+        | 'closing_transfer_must_be_pending'
+        | 'credit_account_already_closed'
+        | 'debit_account_already_closed'
+        | 'credit_account_not_found'
+        | 'debit_account_not_found'
+        | 'exceeds_credits'
+        | 'exceeds_debits'
+        | 'exceeds_pending_transfer_amount'
+        | 'exists'
+        | 'flags_are_mutually_exclusive'
+        | 'timestamp_must_be_zero'
+        | 'id_already_failed'
+        | 'overflows_credits'
+        | 'overflows_debits'
+        | 'overflows_credits_pending'
+        | 'overflows_debits_pending'
+        | 'overflows_credits_posted'
+        | 'overflows_debits_posted'
+        | 'overflows_timeout';
+
+    errorMessage: string;
+    error: CreateTransferError;
+    transfer: Transfer;
+}
+
+export function processAccountErrors(
+    results: CreateAccountsError[]
+): Result<void, MultiError<AccountError>> {
+    let errors: AccountError[] = [];
     for (let result of results) {
-        if (
-            result.result !== CreateAccountError.ok &&
-            ignoreCodes.indexOf(result.result) < 0
-        ) {
-            hasError = true;
-            console.error(getMessage(result.result));
+        if (result.result !== CreateAccountError.ok) {
+            errors.push({
+                errorCode: getCodeForAccountError(result.result),
+                errorMessage: getMessageForAccountError(result.result),
+                error: result.result,
+            });
         }
     }
 
-    if (hasError) {
+    if (errors.length > 0) {
         return failure({
-            errorCode: 'server_error',
-            errorMessage: 'A server error occurred.',
+            errorCode: 'multi_error',
+            errorMessage: 'Multiple errors occurred.',
+            errors,
         });
     }
 
     return success();
 }
 
-export function processAccountErrors(
-    results: CreateAccountsError[],
-    getMessage: (code: CreateAccountError) => string = () => ''
-): Result<void, SimpleError> {
-    return processErrors(
-        results,
-        [CreateAccountError.exists],
-        (err) =>
-            `${getMessage(err)}: ${getMessageForAccountError(err)} (${err})`
-    );
-}
-
 export function processTransferErrors(
     results: CreateTransfersError[],
-    getMessage: (code: CreateTransferError) => string = () => ''
-): Result<void, SimpleError> {
-    return processErrors(
-        results,
-        [CreateTransferError.exists],
-        (err) =>
-            `${getMessage(err)}: ${getMessageForTransferError(err)} (${err})`
-    );
+    transfers: Transfer[]
+): Result<void, MultiError<TransferError>> {
+    let errors: TransferError[] = [];
+    for (let result of results) {
+        if (result.result !== CreateTransferError.ok) {
+            const transfer = transfers[result.index];
+            errors.push({
+                errorCode: getCodeForTransferError(result.result),
+                errorMessage: `[transferId: ${transfer.id}, debitAccountId: ${
+                    transfer.debit_account_id
+                }, creditAccountId: ${transfer.credit_account_id}, code: ${
+                    transfer.code
+                }] ${getMessageForTransferError(result.result)}`,
+                error: result.result,
+                transfer: transfer,
+            });
+        }
+    }
+
+    if (errors.length > 0) {
+        return failure({
+            errorCode: 'multi_error',
+            errorMessage: 'Multiple errors occurred.',
+            errors,
+        });
+    }
+
+    return success();
 }

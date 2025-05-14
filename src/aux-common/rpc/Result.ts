@@ -73,11 +73,30 @@ export type SimpleError = {
     issues?: Zod.ZodIssue[];
 };
 
-export type MultiError<E> = {
+export interface MultiError<E> {
     errorCode: 'multi_error';
     errorMessage: string;
     errors: E[];
-};
+}
+
+export function logErrors(multiError: MultiError<ErrorType>, prefix?: string) {
+    logError(multiError, prefix);
+    for (let error of multiError.errors) {
+        logError(error, '  ' + prefix);
+    }
+}
+
+export function logError(error: ErrorType, prefix?: string) {
+    console.error(
+        `${prefix ?? ''} Error: ${error.errorMessage} (${error.errorCode})`
+    );
+    if (error.reason) {
+        console.error(`  ${prefix ?? ''} Reason:`, error.reason);
+    }
+    if (error.issues) {
+        console.error(`  ${prefix ?? ''} Issues:`, error.issues);
+    }
+}
 
 export function genericResult<T, E extends ErrorType>(
     result: Result<T, E>

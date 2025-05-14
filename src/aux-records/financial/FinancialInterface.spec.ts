@@ -15,8 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AccountCodes, getFlagsForAccountCode } from './FinancialInterface';
-import { AccountFlags } from './Types';
+import {
+    AccountCodes,
+    getFlagsForAccountCode,
+    getFlagsForTransferCode,
+    TransferCodes,
+} from './FinancialInterface';
+import { AccountFlags, TransferFlags } from './Types';
 
 describe('getFlagsForAccountCode()', () => {
     it('should require that assets_cash cannot carry a credit balance', () => {
@@ -39,5 +44,22 @@ describe('getFlagsForAccountCode()', () => {
             AccountCodes.revenue_platform_fees
         );
         expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
+    });
+});
+
+describe('getFlagsForTransferCode()', () => {
+    const noneCases = [
+        ['external_credits_user', TransferCodes.external_credits_user] as const,
+        ['external_debits_user', TransferCodes.external_debits_user] as const,
+        ['reverse_transfer', TransferCodes.reverse_transfer] as const,
+        ['system_cash_rebalance', TransferCodes.system_cash_rebalance] as const,
+        ['system_credits_user', TransferCodes.system_credits_user] as const,
+        ['system_debits_user', TransferCodes.system_debits_user] as const,
+        ['user_credits_contract', TransferCodes.user_credits_contract] as const,
+        ['user_debits_contract', TransferCodes.user_debits_contract] as const,
+    ];
+
+    it.each(noneCases)('should map %s to none', (desc, code) => {
+        expect(getFlagsForTransferCode(code)).toEqual(TransferFlags.none);
     });
 });

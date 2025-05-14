@@ -29,20 +29,26 @@ import { v4 as uuid } from 'uuid';
 import type { FailedResult, StatefulResult } from './TypeUtils';
 
 import { traced } from './tracing/TracingDecorators';
-import type { Account } from './financial/Types';
-import { CreateAccountError } from './financial/Types';
-import type { FinancialInterface } from './financial/FinancialInterface';
+import type { Account, Transfer } from './financial/Types';
+import { CreateAccountError, TransferFlags } from './financial/Types';
+import type {
+    FinancialInterface,
+    TransferCodes,
+} from './financial/FinancialInterface';
 import {
     ACCOUNT_IDS,
     AccountCodes,
     CURRENCIES,
     getFlagsForAccountCode,
+    getFlagsForTransferCode,
     getMessageForAccountError,
     LEDGERS,
     processAccountErrors,
+    processTransferErrors,
 } from './financial/FinancialInterface';
 import type {
     Result,
+    ServerError,
     SimpleError,
     UserRole,
 } from '@casual-simulation/aux-common';
@@ -50,7 +56,7 @@ import {
     failure,
     isFailure,
     isSuperUserRole,
-    mapResult,
+    logErrors,
     success,
 } from '@casual-simulation/aux-common';
 
@@ -136,9 +142,7 @@ export class XpController {
         }
     }
 
-    private async _createAccount(
-        code: AccountCodes
-    ): Promise<CreateXpAccountResult> {
+    async createAccount(code: AccountCodes): Promise<CreateXpAccountResult> {
         const id = this._financialInterface.generateId();
         const results = await this._financialInterface.createAccount({
             id: id,
@@ -156,16 +160,19 @@ export class XpController {
             reserved: 0,
         });
 
-        return mapResult(
-            processAccountErrors(
-                results,
-                (err) =>
-                    `[XpController] [_createAccount] Failed to create account ${code}`
-            ),
-            () => ({
-                id,
-            })
-        );
+        const accountErrors = processAccountErrors(results);
+
+        if (isFailure(accountErrors)) {
+            logErrors(accountErrors.error, '[XpController] [createAccount]');
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'Failed to create account.',
+            });
+        }
+
+        return success({
+            id,
+        });
     }
 
     /**
@@ -173,7 +180,7 @@ export class XpController {
      * * Standardizes the account code for user accounts
      */
     private async _generateUserAccount(): Promise<CreateXpAccountResult> {
-        return await this._createAccount(AccountCodes.liabilities_user);
+        return await this.createAccount(AccountCodes.liabilities_user);
     }
 
     /**
@@ -181,7 +188,7 @@ export class XpController {
      * * Standardizes the account code for contracts
      */
     private async _createContractAccount(): Promise<CreateXpAccountResult> {
-        return await this._createAccount(AccountCodes.liabilities_escrow);
+        return await this.createAccount(AccountCodes.liabilities_escrow);
     }
 
     /**
@@ -220,6 +227,132 @@ export class XpController {
             },
         });
     }
+
+    /**
+     * Transfers funds between two internal accounts.
+     * Suitable for moving money between user accounts and contracts.
+     * Not suitable for interfacing with external systems such as Stripe.
+     *
+     * Not for public use.
+     * @param request The request for the transfer.
+     */
+    @traced(TRACE_NAME)
+    async internalTransfer(
+        request: InternalTransferRequest
+    ): Promise<TransferResult> {
+        let transfers: Transfer[] = [];
+        const transactionId =
+            typeof request.transactionId === 'bigint'
+                ? request.transactionId
+                : this._financialInterface.generateId();
+
+        for (let i = 0; i < request.transfers.length; i++) {
+            const transfer = request.transfers[i];
+            const transferId =
+                typeof transfer.transferId === 'bigint'
+                    ? transfer.transferId
+                    : this._financialInterface.generateId();
+
+            const currency = transfer.currency.toLowerCase();
+            const ledger = (LEDGERS as Record<string, number>)[currency];
+
+            if (typeof ledger !== 'number') {
+                return failure({
+                    errorCode: 'unsupported_currency',
+                    errorMessage: `The currency '${currency}' is not supported.`,
+                });
+            }
+
+            let flags = getFlagsForTransferCode(transfer.code);
+
+            if (i < request.transfers.length - 1) {
+                flags |= TransferFlags.linked;
+            }
+
+            transfers.push({
+                id: transferId,
+                amount: transfer.amount,
+                code: transfer.code,
+                credit_account_id: transfer.creditAccountId,
+                debit_account_id: transfer.debitAccountId,
+                flags: flags,
+                ledger: ledger,
+                pending_id: 0n,
+                timeout: 0,
+                timestamp: 0n,
+                user_data_128: transactionId,
+                user_data_64: 0n,
+                user_data_32: 0,
+            });
+        }
+
+        const results = await this._financialInterface.createTransfers(
+            transfers
+        );
+
+        const transferResult = processTransferErrors(results, transfers);
+
+        if (isFailure(transferResult)) {
+            logErrors(
+                transferResult.error,
+                `[XpController] [transfer transactionId: ${transactionId}]`
+            );
+
+            const exceedsDebits = transferResult.error.errors.find(
+                (e) => e.errorCode === 'exceeds_debits'
+            );
+            if (exceedsDebits) {
+                return failure({
+                    errorCode: 'credits_exceed_debits',
+                    errorMessage:
+                        'The transfer would cause the account credits to exceed its debits.',
+                    accountId: exceedsDebits.transfer.credit_account_id,
+                });
+            }
+            const exceedsCredits = transferResult.error.errors.find(
+                (e) => e.errorCode === 'exceeds_credits'
+            );
+            if (exceedsCredits) {
+                return failure({
+                    errorCode: 'debits_exceed_credits',
+                    errorMessage:
+                        'The transfer would cause the account debits to exceed its credits.',
+                    accountId: exceedsCredits.transfer.debit_account_id,
+                });
+            }
+
+            const exists = transferResult.error.errors.find(
+                (e) => e.errorCode === 'exists'
+            );
+            if (exists) {
+                return failure({
+                    errorCode: 'transfer_already_exists',
+                    errorMessage: `The transfer (${exists.transfer.id}) already exists.`,
+                });
+            }
+
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'An error occurred while transferring the funds.',
+            });
+        }
+
+        return success({
+            transactionId,
+            transferIds: transfers.map((t) => t.id),
+        });
+    }
+
+    /**
+     * Begins the process of transferring funds to/from an external system.
+     * Suitable for interfacing with external systems such as Stripe.
+     *
+     * @param request The request for the transfer.
+     */
+    // @traced(TRACE_NAME)
+    // async begineExternalTransfer(request: ExternalTransferRequest): Promise<TransferResult> {
+
+    // }
 
     // private async _validateUsers(config: {
     //     xpIds: XpUser['id'][];
@@ -869,6 +1002,133 @@ export type CreateXpUserResult = Result<
     },
     SimpleError
 >;
+
+export type TransferError = {
+    errorCode:
+        | ServerError
+        | 'debits_exceed_credits'
+        | 'credits_exceed_debits'
+        | 'unsupported_currency'
+        | 'transfer_already_exists';
+    errorMessage: string;
+
+    /**
+     * The ID of the account that had the issue.
+     */
+    accountId?: bigint;
+};
+
+export type TransferResult = Result<
+    {
+        /**
+         * The IDs of the transfers that were created.
+         */
+        transferIds: bigint[];
+
+        /**
+         * The ID of the transaction that was created.
+         */
+        transactionId: bigint;
+    },
+    TransferError
+>;
+
+export interface TransferResultAccountBalance {
+    accountId: bigint;
+    balance: bigint;
+}
+
+export interface InternalTransfer {
+    /**
+     * The ID of the transfer that should be created.
+     * If null, then a new transfer will be created.
+     */
+    transferId?: bigint | null;
+
+    /**
+     * The ID of the account that is being debited.
+     */
+    debitAccountId: bigint;
+
+    /**
+     * The ID of the account that is being credited.
+     */
+    creditAccountId: bigint;
+
+    /**
+     * The amount of the transfer.
+     */
+    amount: bigint;
+
+    /**
+     * The currency of the transfer.
+     */
+    currency: string;
+
+    /**
+     * The code of the transfer.
+     */
+    code: TransferCodes;
+}
+
+export interface InternalTransferRequest {
+    /**
+     * The transfers that should be performed in a transcation.
+     */
+    transfers: InternalTransfer[];
+
+    /**
+     * The ID of the transaction that should be created.
+     */
+    transactionId?: bigint | null;
+}
+
+export interface ExternalTransferRequest {
+    /**
+     * The ID of the transfer that should be created.
+     * If null, then a new transfer will be created.
+     */
+    transferId?: bigint | null;
+
+    /**
+     * The ID of the pending transfer that the action should operate on.
+     */
+    pendingTransferId?: bigint | null;
+
+    /**
+     * The action that should be taken for the transfer.
+     *
+     * - "reserve" will attempt to create a pending transfer and reserve the funds.
+     * - "post" will attempt to post the pending transfer and move the funds.
+     * - "void" will attempt to void the pending transfer and release the funds.
+     */
+    action: 'reserve' | 'post' | 'void';
+
+    /**
+     * The ID of the account that is being debited.
+     */
+    debitAccountId: bigint;
+
+    /**
+     * The ID of the account that is being credited.
+     */
+    creditAccountId: bigint;
+
+    /**
+     * The amount of the transfer.
+     */
+    amount: bigint;
+
+    /**
+     * The currency of the transfer.
+     */
+    currency: string;
+
+    /**
+     * The code of the transfer.
+     */
+    code: TransferCodes;
+}
 
 export interface XpApiUser extends UserInfo {
     /**
