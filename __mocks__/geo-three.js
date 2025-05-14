@@ -17,7 +17,24 @@
  */
 
 const TextureUtils = { createFillTexture: () => {} };
+const MapHeightNodeShader = {};
+
+const BingMapsProvider = {};
+const OpenStreetMapsProvider = {};
+const GoogleMapsProvider = {};
+const MapBoxProvider = {};
+const MapTilerProvider = {};
+const OpenMapTilesProvider = {};
+const HereMapsProvider = {};
 
 module.exports = {
     TextureUtils,
+    MapHeightNodeShader,
+    BingMapsProvider,
+    OpenStreetMapsProvider,
+    GoogleMapsProvider,
+    MapBoxProvider,
+    MapTilerProvider,
+    OpenMapTilesProvider,
+    HereMapsProvider,
 };
