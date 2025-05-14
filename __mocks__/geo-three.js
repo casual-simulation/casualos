@@ -19,13 +19,13 @@
 const TextureUtils = { createFillTexture: () => {} };
 const MapHeightNodeShader = {};
 
-const BingMapsProvider = {};
-const OpenStreetMapsProvider = {};
-const GoogleMapsProvider = {};
-const MapBoxProvider = {};
-const MapTilerProvider = {};
-const OpenMapTilesProvider = {};
-const HereMapsProvider = {};
+const BingMapsProvider = { createBingMapsProvider: () => {} };
+const OpenStreetMapsProvider = { createOpenStreetMapsProvider: () => {} };
+const GoogleMapsProvider = { createGoogleMapsProvider: () => {} };
+const MapBoxProvider = { createMapBoxProvider: () => {} };
+const MapTilerProvider = { createMapTilerProvider: () => {} };
+const OpenMapTilesProvider = { createOpenMapTilesProvider: () => {} };
+const HereMapsProvider = { createHereMapsProvider: () => {} };
 
 module.exports = {
     TextureUtils,
