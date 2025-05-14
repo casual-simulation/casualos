@@ -26,7 +26,6 @@ import type { AuthController } from './AuthController';
 import type { MemoryStore } from './MemoryStore';
 // import type { CreateContractResultSuccess } from '../aux-records/XpController';
 import { XpController } from '../aux-records/XpController';
-import type { XpUser } from './XpStore';
 import { v4 as uuid } from 'uuid';
 import { AccountCodes } from './financial/FinancialInterface';
 import { AccountFlags } from './financial/Types';
@@ -149,12 +148,23 @@ describe('XpController', () => {
 
             expect(xpUser).toEqual({
                 user: {
-                    id: 'xpUserId',
                     userId: 'userId',
                     accountId: '0',
+                    accountBalance: 0,
+                    accountCurrency: 'usd',
                     requestedRate: null,
-                    createdAtMs: 1,
-                    updatedAtMs: 1,
+                    displayName: null,
+                    email: 'xp.test2@localhost',
+                    phoneNumber: null,
+                    privacyFeatures: {
+                        allowAI: true,
+                        allowPublicData: true,
+                        allowPublicInsts: true,
+                        publishData: true,
+                    },
+                    role: 'none',
+                    subscriptionTier: 'beta',
+                    hasActiveSubscription: true,
                 },
             });
         });
@@ -168,14 +178,11 @@ describe('XpController', () => {
         //* An auth user for use in testing getXpUser
         let user: TestUser;
 
-        const id = 'xpUserId';
+        // const xpId = 'xpUserId';
         const userId = 'userId';
 
         beforeEach(async () => {
-            uuidMock
-                .mockReturnValueOnce(userId)
-                .mockReturnValueOnce(userId)
-                .mockReturnValueOnce(id);
+            uuidMock.mockReturnValueOnce(userId);
 
             user = await createTestUser(
                 {
@@ -184,19 +191,6 @@ describe('XpController', () => {
                 },
                 'xp.test@localhost'
             );
-
-            const xpUser: XpUser = {
-                id,
-                userId: user.userId,
-                accountId: String(services.financialInterface.generateId()),
-                requestedRate: null,
-                createdAtMs: 1,
-                updatedAtMs: 1,
-            };
-
-            await memoryStore.saveXpUser(xpUser.id, xpUser);
-
-            // _xpUser = xpUser;
 
             uuidMock.mockReset();
         });
@@ -214,79 +208,150 @@ describe('XpController', () => {
                 `xp.test.newAuthUser0@localhost`
             );
 
-            expect(
-                await xpController.getXpUser({
-                    userId: newAuthUser.userId,
-                })
-            ).toEqual(
+            const result = await xpController.getXpUser({
+                userId: newAuthUser.userId,
+            });
+
+            expect(result).toEqual(
                 success({
                     user: {
-                        id: 'newXpUserId',
-                        userId: 'newUserId',
-                        accountId: '1',
+                        userId: newAuthUser.userId,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
                         requestedRate: null,
-                        createdAtMs: 1,
-                        updatedAtMs: 1,
+                        displayName: null,
+                        email: 'xp.test.newAuthUser0@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
                     },
                 })
             );
         });
 
         it('should get an xp user by auth id', async () => {
-            expect(
-                await xpController.getXpUser({
-                    userId: user.userId,
-                })
-            ).toEqual(
+            const result = await xpController.getXpUser({
+                userId: user.userId,
+            });
+            expect(result).toEqual(
                 success({
                     user: {
-                        id: id,
                         userId: userId,
                         accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
                         requestedRate: null,
-                        createdAtMs: 1,
-                        updatedAtMs: 1,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
                     },
                 })
             );
         });
 
+        it('should return user_not_found if requesting a specific xpId that doesnt exist', async () => {
+            const result = await xpController.getXpUser({
+                requestedXpId: 'missing',
+                userId: user.userId,
+            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user with the given xpId was not found.',
+                })
+            );
+        });
+
         it('should get an xp user by xp id', async () => {
-            expect(
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
                 await xpController.getXpUser({
-                    requestedXpId: id,
                     userId: user.userId,
                 })
-            ).toEqual(
+            );
+
+            const result = await xpController.getXpUser({
+                requestedXpId: 'xpId',
+                userId: user.userId,
+            });
+            expect(result).toEqual(
                 success({
                     user: {
-                        id: id,
                         userId: user.userId,
                         accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
                         requestedRate: null,
-                        createdAtMs: 1,
-                        updatedAtMs: 1,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
                     },
                 })
             );
         });
 
         it('should prefer using the xp ID first', async () => {
-            expect(
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
                 await xpController.getXpUser({
-                    requestedXpId: id,
-                    requestedUserId: 'otherUserId',
                     userId: user.userId,
                 })
-            ).toEqual(
+            );
+
+            const result = await xpController.getXpUser({
+                requestedXpId: 'xpId',
+                requestedUserId: 'missing-user-id',
+                userId: user.userId,
+            });
+
+            expect(result).toEqual(
                 success({
                     user: {
-                        id: id,
                         userId: user.userId,
                         accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
                         requestedRate: null,
-                        createdAtMs: 1,
-                        updatedAtMs: 1,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
                     },
                 })
             );
@@ -306,9 +371,17 @@ describe('XpController', () => {
         // });
 
         it('should return not_authorized if trying to get another users info', async () => {
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
+                await xpController.getXpUser({
+                    userId: user.userId,
+                })
+            );
+
             const xpUser = await xpController.getXpUser({
                 userId: 'otherUserId',
-                requestedXpId: id,
+                requestedXpId: 'xpId',
             });
             expect(xpUser).toEqual(
                 failure({
@@ -319,21 +392,73 @@ describe('XpController', () => {
             );
         });
 
-        it('should allow superUsers to get any user xp info', async () => {
+        it('should allow superUsers to get any user xp info for xpUsers that need to be created', async () => {
             const xpUser = await xpController.getXpUser({
                 userId: 'otherUserId',
                 userRole: 'superUser',
-                requestedXpId: id,
+                requestedUserId: user.userId,
             });
+
             expect(xpUser).toEqual(
                 success({
                     user: {
-                        id: id,
                         userId: user.userId,
                         accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
                         requestedRate: null,
-                        createdAtMs: 1,
-                        updatedAtMs: 1,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
+                    },
+                })
+            );
+        });
+
+        it('should allow superUsers to get any user xp info', async () => {
+            // create the xpUser for the user
+            uuidMock.mockReturnValueOnce('xpId');
+            unwrap(
+                await xpController.getXpUser({
+                    userId: user.userId,
+                })
+            );
+
+            const xpUser = await xpController.getXpUser({
+                userId: 'otherUserId',
+                userRole: 'superUser',
+                requestedXpId: 'xpId',
+            });
+
+            expect(xpUser).toEqual(
+                success({
+                    user: {
+                        userId: user.userId,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        displayName: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                        role: 'none',
+                        subscriptionTier: 'beta',
+                        hasActiveSubscription: true,
                     },
                 })
             );
@@ -353,7 +478,6 @@ describe('XpController', () => {
 
         it('should fail to get an xp user by xp id due to user not found', async () => {
             const xpUser = await xpController.getXpUser({
-                requestedXpId: 'non-existent-id',
                 userId: 'missing-user',
             });
             expect(xpUser).toEqual(

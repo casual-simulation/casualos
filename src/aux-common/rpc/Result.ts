@@ -179,15 +179,11 @@ export function logResult<T, E extends ErrorType>(
 
 export class R<T, E extends ErrorType> implements SuccessOrError<T, E> {
     readonly success: boolean;
-    readonly _data: T | E;
+    private readonly _data: T | E;
 
     protected constructor(success: boolean, _data: T | E) {
         this.success = success;
-        Object.defineProperty(this, '_data', {
-            value: _data,
-            writable: false,
-            enumerable: false,
-        });
+        this._data = _data;
     }
 
     static success<T>(value: T): Success<T> {

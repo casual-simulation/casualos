@@ -35,6 +35,7 @@ import type { FinancialInterface } from './financial/FinancialInterface';
 import {
     ACCOUNT_IDS,
     AccountCodes,
+    CURRENCIES,
     getFlagsForAccountCode,
     getMessageForAccountError,
     LEDGERS,
@@ -217,18 +218,19 @@ export class XpController {
             return account;
         }
         const user: XpUser = {
-            id: uuid(),
+            xpId: uuid(),
             userId: authUserId,
             accountId: account.value.id.toString(),
             requestedRate: null,
-            createdAtMs: Date.now(),
-            updatedAtMs: Date.now(),
         };
 
-        await this._xpStore.saveXpUser(user.id, user);
+        await this._xpStore.saveXpUser(user);
 
         return success({
-            user: user,
+            user: {
+                ...authUser,
+                ...user,
+            },
         });
     }
 
@@ -428,6 +430,12 @@ export class XpController {
         let user: XpUserWithUserInfo;
         if (request.requestedXpId) {
             user = await this._xpStore.getXpUserByXpId(request.requestedXpId);
+            if (!user) {
+                return failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user with the given xpId was not found.',
+                });
+            }
         } else if (request.requestedUserId) {
             user = await this._xpStore.getXpUserByUserId(
                 request.requestedUserId
@@ -449,7 +457,9 @@ export class XpController {
                 });
             }
 
-            const result = await this._createXpUser(request.userId);
+            const result = await this._createXpUser(
+                request.requestedUserId ?? request.userId
+            );
             if (isFailure(result)) {
                 return result;
             } else {
@@ -470,11 +480,27 @@ export class XpController {
             user
         );
 
+        const [account] = await this._financialInterface.lookupAccounts([
+            BigInt(user.accountId),
+        ]);
+
+        if (!account) {
+            console.error(
+                `[XpController] Failed to get account for user ${user.id} (${user.accountId})`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        const balance = account.credits_posted - account.debits_posted;
+
         return success({
             user: {
                 ...info,
-                accountBalance: 0,
-                accountCurrency: 'USD',
+                accountBalance: Number(balance),
+                accountCurrency: CURRENCIES.get(account.ledger),
                 accountId: user.accountId,
                 requestedRate: user.requestedRate,
             },
@@ -852,7 +878,7 @@ export interface GetXpUserRequest {
 
 export type CreateXpUserResult = Result<
     {
-        user: XpUser;
+        user: XpUserWithUserInfo;
     },
     SimpleError
 >;

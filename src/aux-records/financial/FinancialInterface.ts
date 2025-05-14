@@ -37,6 +37,11 @@ export const LEDGERS = {
 };
 
 /**
+ * The map of ledger IDs to their currency codes.
+ */
+export const CURRENCIES = new Map<number, string>([[LEDGERS.usd, 'usd']]);
+
+/**
  * Account IDs for built-in accounts.
  */
 export const ACCOUNT_IDS = {
