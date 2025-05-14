@@ -945,6 +945,14 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if(resourceKind === 'purchasableItem') {
+        // purchasableItem.read and purchasableItem.list
+        if (action === 'read' || action === 'list' || action === 'purchase') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     // All other actions are not allowed.
@@ -999,34 +1007,6 @@ export function getPublicWritePermission(
             action === 'delete' ||
             action === 'create'
         ) {
-            return {
-                resourceKind,
-                action,
-            };
-        }
-    } else if (resourceKind === 'webhook') {
-        if (action === 'run') {
-            return {
-                resourceKind,
-                action,
-            };
-        }
-    } else if (resourceKind === 'notification') {
-        if (action === 'read' || action === 'list' || action === 'subscribe') {
-            return {
-                resourceKind,
-                action,
-            };
-        }
-    } else if (resourceKind === 'package') {
-        if (action === 'read' || action === 'list') {
-            return {
-                resourceKind,
-                action,
-            };
-        }
-    } else if (resourceKind === 'package.version') {
-        if (action === 'read' || action === 'list' || action === 'run') {
             return {
                 resourceKind,
                 action,

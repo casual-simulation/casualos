@@ -90,6 +90,8 @@ model User {
 
     xpUser XpUser?
     isXpAdmin Boolean?
+    checkoutSessions AuthCheckoutSession[]
+    purchasedItems PurchasedItem[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -284,6 +286,10 @@ model Studio {
     subscriptionPeriodStart DateTime?
     subscriptionPeriodEnd DateTime?
 
+    stripeAccountId String? @unique
+    stripeAccountRequirementsStatus String?
+    stripeAccountStatus String?
+
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
@@ -346,6 +352,8 @@ model Record {
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
+    purchasableItems PurchasableItemRecord[]
+    purchasedItems PurchasedItem[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -1071,6 +1079,100 @@ model PackageRecordVersionReview {
     updatedAt DateTime @updatedAt
 }
 
+model PurchasableItemRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PurchasableItemRecord_recordName_fkey1")
+
+    address String @db.String(512)
+    name String @db.String(128)
+    description String @db.String(1024)
+    imageUrls String[]
+
+    currency String @db.String(15)
+    cost Int
+    taxCode String? @db.String(64)
+
+    roleName String @db.String(128)
+    roleGrantTimeMs Int?
+
+    // redirectUrl String @db.String(2048)
+    markers String[]
+
+    purchasedItems PurchasedItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model AuthCheckoutSession {
+    id String @id @db.Uuid
+
+    paid Boolean
+    fulfilledAt DateTime?
+    items Json
+
+    // returnUrl String @db.String(2048)
+    // successUrl String @db.String(2048)
+    
+    stripeStatus String
+    stripePaymentStatus String
+    stripeCheckoutSessionId String @unique
+
+    invoiceId String? @unique @db.Uuid
+    invoice Invoice?
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "PurchasableItemCheckoutSession_userId_fkey1")
+
+    purchasedItems PurchasedItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PurchasedItem {
+    id String @id @db.Uuid
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "PurchasedItem_recordName_fkey1")
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PurchasedItem_userId_fkey1")
+
+    purchasableItemAddress String @db.String(512)
+    purchasableItem PurchasableItemRecord @relation(fields: [recordName, purchasableItemAddress], references: [recordName, address], onDelete: Restrict, map: "PurchasedItem_purchasableItemAddress_fkey1")
+
+    checkoutSessionId String? @db.Uuid
+    checkoutSession AuthCheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: SetNull, map: "PurchasedItem_checkoutSessionId_fkey1")
+
+    roleName String @db.String(128)
+    roleGrantTimeMs Int?
+
+    // The time that the item was activated
+    activatedTime DateTime?
+    
+    // The activation key that was used to activate the item
+    activationKeyId String?
+    activationKey ActivationKey? @relation(fields: [activationKeyId], references: [id], onDelete: SetNull, map: "PurchasedItem_activationKeyId_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ActivationKey {
+    id String @id
+
+    // The hash that can be used to associate the item with a user account
+    secretHash String
+
+    purchasedItems PurchasedItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 model Configuration {
     key String @id
     data Json
@@ -1122,11 +1224,14 @@ model Invoice {
     id String @id @db.Uuid
     stripeInvoiceId String @unique
 
-    subscriptionId String @db.Uuid
-    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "Invoice_subscriptionId_fkey1")
+    subscriptionId String? @db.Uuid
+    subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, map: "Invoice_subscriptionId_fkey1")
 
-    periodId String @unique @db.Uuid
-    period SubscriptionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade, map: "Invoice_periodId_fkey1")
+    periodId String? @unique @db.Uuid
+    period SubscriptionPeriod? @relation(fields: [periodId], references: [id], onDelete: Cascade, map: "Invoice_periodId_fkey1")
+
+    checkoutSessionId String? @unique @db.Uuid
+    checkoutSession AuthCheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: Cascade, map: "Invoice_checkoutSessionId_fkey1")
 
     description String?
     status String

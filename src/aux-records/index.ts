@@ -94,3 +94,5 @@ export * from './XpController';
 export * from './XpStore';
 export type * from './TypeUtils';
 export * from './financial/FinancialInterface';
+export * from './CrudRecordsStore';
+export * from './CrudRecordsController';

@@ -3432,6 +3432,7 @@ describe('PolicyController', () => {
             ['list'],
             ['count'],
             ['listSubscriptions'],
+            ['purchase', 'resourceId'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -3448,6 +3449,7 @@ describe('PolicyController', () => {
             ['notification'],
             ['package'],
             ['package.version'],
+            ['purchasableItem'],
         ];
 
         // Admins can perform all actions on all resources
@@ -4803,6 +4805,27 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            [
+                'purchasableItem',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
+                ],
+            ]
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -4902,7 +4925,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['list', null],
                 ],
-            ],
+            ]
             ['loom', [['create', 'resourceId']]],
             [
                 'marker',
@@ -5272,6 +5295,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -5285,6 +5309,7 @@ describe('PolicyController', () => {
                     ['revokePermission', 'resourceId'],
                     ['updateData', 'resourceId'],
                     ['sendAction', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -5298,6 +5323,7 @@ describe('PolicyController', () => {
                     ['revokePermission', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -5318,6 +5344,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
             ],
             [
@@ -5338,8 +5365,8 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
                 ],
-            ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
             [
@@ -5365,6 +5392,28 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            ],
+            [
+                'purchasableItem',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['list', 'resourceId'],
+                    ['updateData', 'resourceId'],
+                    ['sendAction', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['purchase', 'resourceId'],
+                ],
+            ]
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -5455,6 +5504,11 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
+            ['purchasableItem', [
+                ['read', 'resourceId'],
+                ['list', null],
+                ['purchase', 'resourceId'],
+            ]],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -5589,6 +5643,11 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
+            ['purchasableItem', [
+                ['read', 'resourceId'],
+                ['list', null],
+                ['purchase', 'resourceId'],
+            ]],
         ];
 
         const publicWriteSubjectTypeCases: [

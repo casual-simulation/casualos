@@ -149,8 +149,9 @@ import { Rekognition } from '@aws-sdk/client-rekognition';
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
+import { PurchasableItemRecordsController } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsController';
+import { PurchasableItemRecordsStore } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsStore';
+import { PrismaPurchasableItemRecordsStore } from '../prisma/casualware/PrismaPurchasableItemsStore';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
@@ -196,7 +197,6 @@ import {
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
-    ...casualWareApiPlugins.map((p: any) => p.default),
 ];
 
 export interface BuildReturn {
@@ -313,7 +313,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _moderationStore: ModerationStore = null;
     private _moderationController: ModerationController;
     private _loomController: LoomController;
-
+    
+    private _purchasableItemsStore: PurchasableItemRecordsStore | null = null;
+    private _purchasableItemsController: PurchasableItemRecordsController | null = null;
+    
     private _notificationMessenger: MultiNotificationMessenger;
 
     private _redis: RedisClientType | null = null;
@@ -708,9 +711,17 @@ export class ServerBuilder implements SubscriptionLike {
         this._xpStore = new PrismaXpStore(prismaClient);
 
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
+        this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(prismaClient, metrics);
         return {
             prismaClient,
             filesLookup,
+            s3.filesStorageClass,
+            s3Client,
+            s3.host,
+            undefined,
+            s3.publicFilesUrl
         };
     }
 
@@ -1204,7 +1215,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
-                apiVersion: '2022-11-15',
+                apiVersion: '2024-04-10',
             }),
             options.stripe.publishableKey,
             options.stripe.testClock
@@ -1811,13 +1822,24 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
         });
 
+        if (this._purchasableItemsStore) {
+            this._purchasableItemsController = new PurchasableItemRecordsController({
+                store: this._purchasableItemsStore,
+                config: this._configStore,
+                policies: this._policyController,
+            });
+        }
+
         if (this._stripe && this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
                 this._authStore,
                 this._recordsStore,
-                this._configStore
+                this._configStore,
+                this._purchasableItemsStore,
+                this._policyController,
+                this._policyStore,
             );
         }
 
@@ -1927,6 +1949,7 @@ export class ServerBuilder implements SubscriptionLike {
             moderationController: this._moderationController,
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
+            purchasableItems: this._purchasableItemsController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
             packagesController: this._packagesController,

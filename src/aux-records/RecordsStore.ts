@@ -225,6 +225,12 @@ export interface RecordsStore {
      * @param config The config that should be updated for the studio.
      */
     updateStudioHumeConfig(studioId: string, config: HumeConfig): Promise<void>;
+
+    /**
+     * Gets the studio with the given stripe account ID. Returns null if no studio has that stripe account ID.
+     * @param accountId The ID of the stripe account.
+     */
+    getStudioByStripeAccountId(accountId: string): Promise<Studio | null>;
 }
 
 export interface CountRecordsFilter {
@@ -294,6 +300,26 @@ export interface ListedRecord {
 }
 
 /**
+ * The status of the stripe account that is associated with a studio.
+ * 
+ * If null, then the studio does not have a stripe account.
+ * If 'active', then the stripe account has been approved and is active.
+ * If 'pending', then the stripe account is waiting approval.
+ * If 'rejected', then the stripe account was rejected.
+ * If 'disabled', then the stripe account was disabled but not because it was rejected.
+ */
+export type StudioStripeAccountStatus = 'active' | 'pending' | 'rejected' | 'disabled' | null;
+
+/**
+ * The status of the stripe account requirements for a studio.
+ * 
+ * If null, then the studio does not have a stripe account.
+ * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+ * If 'complete', then the studio has a stripe account that is fully set up.
+ */
+export type StudioStripeRequirementsStatus = 'incomplete' | 'complete' | null;
+
+/**
  * Defines an interface for studio objects.
  */
 export interface Studio {
@@ -316,6 +342,31 @@ export interface Studio {
      * The ID of the stripe customer for this studio.
      */
     stripeCustomerId?: string;
+
+    /**
+     * The ID of the stripe account for this studio.
+     */
+    stripeAccountId?: string | null;
+
+    /**
+     * The status of the stripe account requirements for this studio.
+     * 
+     * If null, then the studio does not have a stripe account.
+     * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+     * If 'complete', then the studio has a stripe account that is fully set up.
+     */
+    stripeAccountRequirementsStatus?: StudioStripeRequirementsStatus;
+
+    /**
+     * The status of the stripe account that is associated with this studio.
+     * 
+     * If null, then the studio does not have a stripe account.
+     * If 'active', then the stripe account has been approved and is active.
+     * If 'pending', then the stripe account is waiting approval.
+     * If 'rejected', then the stripe account was rejected.
+     * If 'disabled', then the stripe account was disabled but not because it was rejected.
+     */
+    stripeAccountStatus?: StudioStripeAccountStatus;
 
     /**
      * The current subscription status for this studio.

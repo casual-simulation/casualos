@@ -31,11 +31,15 @@ import type {
     AuthUserAuthenticator,
     AuthUserAuthenticatorWithUser,
     AuthWebAuthnLoginRequest,
+    AuthCheckoutSession,
     ListSessionsDataResult,
     SaveNewUserResult,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
+    PurchasedItem,
+    ActivationKey,
 } from './AuthStore';
 import type {
     ListStudioAssignmentFilters,
@@ -202,6 +206,7 @@ export class MemoryStore
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
     private _invoices: AuthInvoice[] = [];
+    private _checkoutSessions: AuthCheckoutSession[] = [];
 
     private _records: Record[] = [];
     private _recordKeys: RecordKey[] = [];
@@ -248,6 +253,9 @@ export class MemoryStore
         return this._aiRealtimeMetrics;
     }
 
+
+    private _purchasedItems: PurchasedItem[] = [];
+    private _activationKeys: ActivationKey[] = [];
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
@@ -379,6 +387,18 @@ export class MemoryStore
 
     get grantedPackageEntitlements() {
         return this._grantedPackageEntitlements;
+    }
+
+    get checkoutSessions() {
+        return this._checkoutSessions;
+    }
+
+    get purchasedItems() {
+        return this._purchasedItems;
+    }
+
+    get activationKeys() {
+        return this._activationKeys;
     }
 
     constructor(config: MemoryConfiguration) {
@@ -812,6 +832,10 @@ export class MemoryStore
 
     async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
         return this._studios.find((s) => s.stripeCustomerId === customerId);
+    }
+
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return this._studios.find(s => s.stripeAccountId === accountId);
     }
 
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
@@ -1842,6 +1866,10 @@ export class MemoryStore
         return this._invoices.find((i) => i.id === id);
     }
 
+    async getInvoiceByStripeId(id: string): Promise<AuthInvoice> {
+        return this._invoices.find((i) => i.stripeInvoiceId === id);
+    }
+
     async updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
     ): Promise<void> {
@@ -1979,6 +2007,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -2029,6 +2058,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -2040,6 +2070,82 @@ export class MemoryStore
                 periodStartMs: request.currentPeriodStartMs,
             });
         }
+    }
+
+    async updateCheckoutSessionInfo(request: UpdateCheckoutSessionRequest): Promise<void> {
+        let sessionIndex = this._checkoutSessions.findIndex((s) => s.id === request.id);
+
+        let invoiceId: string = null;
+        if (request.invoice) {
+            let invoice = this._invoices.find(i => i.stripeInvoiceId === request.invoice.stripeInvoiceId);
+
+            if (!invoice) {
+                invoice = {
+                    id: uuid(),
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                    subscriptionId: null,
+                    periodId: null,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            } else {
+                invoice = {
+                    ...invoice,
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            }
+        }
+
+        if (sessionIndex < 0) {
+            const session: AuthCheckoutSession = {
+                id: request.id,
+                paid: request.paid,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
+                userId: request.userId,
+                invoiceId,
+                items: request.items,
+            };
+            this._checkoutSessions.push(session);
+        } else {
+            let session = this._checkoutSessions[sessionIndex];
+            session = {
+                ...session,
+                paid: request.paid,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
+                userId: request.userId,
+                items: request.items,
+            };
+
+            if (request.invoice) {
+                session.invoiceId = invoiceId;
+            }
+
+            this._checkoutSessions[sessionIndex] = session;
+        }
+    }
+
+    async markCheckoutSessionFulfilled(sessionId: string, fulfilledAtMs: number): Promise<void> {
+        const session = this._checkoutSessions.find(s => s.id === sessionId);
+        if (session) {
+            this._checkoutSessions[this._checkoutSessions.indexOf(session)] = {
+                ...session,
+                fulfilledAtMs,
+            };
+        }
+    }
+
+    async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
+        return this._checkoutSessions.find(s => s.id === id);
     }
 
     private _findUserIndex(id: string): number {
@@ -3048,6 +3154,10 @@ export class MemoryStore
         this._aiSkyboxMetrics.push(metrics);
     }
 
+    async getSubscriptionInfoForRecord(recordName: string) {
+        return await this._getSubscriptionInfo(recordName);
+    }
+
     private async _getSubscriptionInfo(
         recordName: string
     ): Promise<SubscriptionMetrics> {
@@ -3107,6 +3217,10 @@ export class MemoryStore
         }
 
         return metrics;
+    }
+
+    async listRecordsForSubscriptionByRecordName(recordName: string) {
+        return await this._listRecordsForSubscription(recordName);
     }
 
     private async _listRecordsForSubscription(recordName: string) {
@@ -3627,6 +3741,33 @@ export class MemoryStore
             }
         }
         return record;
+    }
+
+    async savePurchasedItem(item: PurchasedItem): Promise<void> {
+        const index = this._purchasedItems.findIndex(i => i.id === item.id);
+        if (index >= 0) {
+            this._purchasedItems[index] = {
+                ...item
+            };
+        } else {
+            this._purchasedItems.push({
+                ...item
+            });
+        }
+    }
+
+    async createActivationKey(key: ActivationKey): Promise<void> {
+        this._activationKeys.push({
+            ...key
+        });
+    }
+
+    async getActivationKeyById(id: string): Promise<ActivationKey> {
+        return this._activationKeys.find(k => k.id === id);
+    }
+
+    async listPurchasedItemsByActivationKeyId(keyId: string): Promise<PurchasedItem[]> {
+        return this._purchasedItems.filter(i => i.activationKeyId === keyId);
     }
 }
 

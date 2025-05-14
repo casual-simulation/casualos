@@ -2692,6 +2692,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2735,6 +2740,77 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the configured store features', async () => {
+            
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    maxPurchasableItems: 100,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10
+                                        }
+                                    }
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>);
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    storeFeatures: {
+                        allowed: true,
+                        maxPurchasableItems: 100,
+                        currencyLimits: {
+                            usd: {
+                                maxCost: 10000,
+                                minCost: 10
+                            }
+                        }
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2795,6 +2871,51 @@ describe('RecordsController', () => {
                 appId: 'appId',
                 privateKey: 'privateKey',
             });
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: 'pending',
+                    stripeRequirementsStatus: 'incomplete',
+                },
+            });
+        });
+        
+        it('should include the studio stripe account status', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                comId: 'comId1',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'acct_123',
+                stripeAccountRequirementsStatus: 'incomplete',
+                stripeAccountStatus: 'pending',
+            });
 
             const result = await manager.getStudio('studioId', 'userId');
 
@@ -2823,6 +2944,11 @@ describe('RecordsController', () => {
                     loomConfig: {
                         appId: 'appId',
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: 'pending',
+                    stripeRequirementsStatus: 'incomplete',
                 },
             });
         });

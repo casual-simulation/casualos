@@ -17,7 +17,10 @@
  */
 import type { RegexRule } from '@casual-simulation/aux-records';
 import type {
+    ActivationKey,
     AddressType,
+    AuthCheckoutSession,
+    AuthCheckoutSessionItem,
     AuthInvoice,
     AuthLoginRequest,
     AuthOpenIDLoginRequest,
@@ -29,8 +32,12 @@ import type {
     AuthUserAuthenticator,
     AuthUserAuthenticatorWithUser,
     AuthWebAuthnLoginRequest,
+    CheckoutSessionPaymentStatus,
+    CheckoutSessionStatus,
     ListSessionsDataResult,
+    PurchasedItem,
     SaveNewUserResult,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
@@ -57,6 +64,310 @@ export class PrismaAuthStore implements AuthStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    async getInvoiceByStripeId(id: string): Promise<AuthInvoice> {
+        return await this._client.invoice.findUnique({
+            where: {
+                stripeInvoiceId: id,
+            }
+        });
+    }
+
+    async updateCheckoutSessionInfo(request: UpdateCheckoutSessionRequest): Promise<void> {
+        let createData: Prisma.AuthCheckoutSessionUpsertArgs['create'] = {
+            id: request.id,
+            paid: request.paid,
+            stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+            stripePaymentStatus: request.paymentStatus,
+            stripeStatus: request.status,
+            fulfilledAt: convertToDate(request.fulfilledAtMs),
+            userId: request.userId,
+            items: request.items as any[],
+        };
+        let updateData: Prisma.AuthCheckoutSessionUpsertArgs['update'] = {
+            paid: request.paid,
+            stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+            stripePaymentStatus: request.paymentStatus,
+            stripeStatus: request.status,
+            fulfilledAt: convertToDate(request.fulfilledAtMs),
+            userId: request.userId,
+            items: request.items as any[],
+        };
+        if (request.invoice) {
+            const invoiceId = uuid();
+            const invoice = {
+                currency: request.invoice.currency,
+                paid: request.invoice.paid,
+                status: request.invoice.status,
+                stripeInvoiceId: request.invoice.stripeInvoiceId,
+                stripeHostedInvoiceUrl: request.invoice.stripeHostedInvoiceUrl,
+                stripeInvoicePdfUrl: request.invoice.stripeInvoicePdfUrl,
+                tax: request.invoice.tax,
+                subtotal: request.invoice.subtotal,
+                total: request.invoice.total,
+                description: request.invoice.description,
+                periodId: null as string,
+                subscriptionId: null as string,
+            };
+            createData.invoice = {
+                connectOrCreate: {
+                    where: {
+                        stripeInvoiceId: request.invoice.stripeInvoiceId,
+                    },
+                    create: {
+                        ...invoice,
+                        id: invoiceId,
+                    }
+                }
+            };
+
+            updateData.invoice = {
+                upsert: {
+                    where: {
+                        stripeInvoiceId: request.invoice.stripeInvoiceId,
+                    },
+                    create: {
+                        ...invoice,
+                        id: invoiceId,
+                    },
+                    update: invoice,
+                }
+            };
+        }
+
+        await this._client.authCheckoutSession.upsert({
+            where: {
+                id: request.id,
+            },
+            create: createData,
+            update: updateData,
+        });
+    }
+    
+    async markCheckoutSessionFulfilled(sessionId: string, fulfilledAtMs: number): Promise<void> {
+        await this._client.authCheckoutSession.update({
+            where: {
+                id: sessionId
+            },
+            data: {
+                fulfilledAt: convertToDate(fulfilledAtMs)
+            }
+        });
+    }
+
+    async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
+        const session = await this._client.authCheckoutSession.findUnique({
+            where: {
+                id: id,
+            }
+        });
+
+        if (!session) {
+            return null;
+        }
+
+        return {
+            id: session.id,
+            invoiceId: session.invoiceId,
+            paid: session.paid,
+            stripeCheckoutSessionId: session.stripeCheckoutSessionId,
+            stripePaymentStatus: session.stripePaymentStatus as CheckoutSessionPaymentStatus,
+            stripeStatus: session.stripeStatus as CheckoutSessionStatus,
+            fulfilledAtMs: convertToMillis(session.fulfilledAt),
+            userId: session.userId,
+            items: session.items as unknown as AuthCheckoutSessionItem[]
+        };
+    }
+    
+    async savePurchasedItem(item: PurchasedItem): Promise<void> {
+        await this._client.purchasedItem.upsert({
+            where: {
+                id: item.id
+            },
+            create: {
+                id: item.id,
+                userId: item.userId,
+                roleName: item.roleName,
+                roleGrantTimeMs: item.roleGrantTimeMs,
+                activatedTime: convertToDate(item.activatedTimeMs),
+                activationKeyId: item.activationKeyId,
+                recordName: item.recordName,
+                purchasableItemAddress: item.purchasableItemAddress,
+                checkoutSessionId: item.checkoutSessionId,
+            },
+            update: {
+                userId: item.userId,
+                roleName: item.roleName,
+                roleGrantTimeMs: item.roleGrantTimeMs,
+                activatedTime: convertToDate(item.activatedTimeMs),
+                activationKeyId: item.activationKeyId,
+                recordName: item.recordName,
+                purchasableItemAddress: item.purchasableItemAddress,
+                checkoutSessionId: item.checkoutSessionId,
+            },
+        });
+    }
+
+    async createActivationKey(key: ActivationKey): Promise<void> {
+        await this._client.activationKey.create({
+            data: {
+                id: key.id,
+                secretHash: key.secretHash,
+            }
+        });
+    }
+
+    async getInvoiceByStripeId(id: string): Promise<AuthInvoice> {
+        return await this._client.invoice.findUnique({
+            where: {
+                stripeInvoiceId: id,
+            }
+        });
+    }
+
+    async updateCheckoutSessionInfo(request: UpdateCheckoutSessionRequest): Promise<void> {
+        let createData: Prisma.AuthCheckoutSessionUpsertArgs['create'] = {
+            id: request.id,
+            paid: request.paid,
+            stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+            stripePaymentStatus: request.paymentStatus,
+            stripeStatus: request.status,
+            fulfilledAt: convertToDate(request.fulfilledAtMs),
+            userId: request.userId,
+            items: request.items as any[],
+        };
+        let updateData: Prisma.AuthCheckoutSessionUpsertArgs['update'] = {
+            paid: request.paid,
+            stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+            stripePaymentStatus: request.paymentStatus,
+            stripeStatus: request.status,
+            fulfilledAt: convertToDate(request.fulfilledAtMs),
+            userId: request.userId,
+            items: request.items as any[],
+        };
+        if (request.invoice) {
+            const invoiceId = uuid();
+            const invoice = {
+                currency: request.invoice.currency,
+                paid: request.invoice.paid,
+                status: request.invoice.status,
+                stripeInvoiceId: request.invoice.stripeInvoiceId,
+                stripeHostedInvoiceUrl: request.invoice.stripeHostedInvoiceUrl,
+                stripeInvoicePdfUrl: request.invoice.stripeInvoicePdfUrl,
+                tax: request.invoice.tax,
+                subtotal: request.invoice.subtotal,
+                total: request.invoice.total,
+                description: request.invoice.description,
+                periodId: null as string,
+                subscriptionId: null as string,
+            };
+            createData.invoice = {
+                connectOrCreate: {
+                    where: {
+                        stripeInvoiceId: request.invoice.stripeInvoiceId,
+                    },
+                    create: {
+                        ...invoice,
+                        id: invoiceId,
+                    }
+                }
+            };
+
+            updateData.invoice = {
+                upsert: {
+                    where: {
+                        stripeInvoiceId: request.invoice.stripeInvoiceId,
+                    },
+                    create: {
+                        ...invoice,
+                        id: invoiceId,
+                    },
+                    update: invoice,
+                }
+            };
+        }
+
+        await this._client.authCheckoutSession.upsert({
+            where: {
+                id: request.id,
+            },
+            create: createData,
+            update: updateData,
+        });
+    }
+    
+    async markCheckoutSessionFulfilled(sessionId: string, fulfilledAtMs: number): Promise<void> {
+        await this._client.authCheckoutSession.update({
+            where: {
+                id: sessionId
+            },
+            data: {
+                fulfilledAt: convertToDate(fulfilledAtMs)
+            }
+        });
+    }
+
+    async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
+        const session = await this._client.authCheckoutSession.findUnique({
+            where: {
+                id: id,
+            }
+        });
+
+        if (!session) {
+            return null;
+        }
+
+        return {
+            id: session.id,
+            invoiceId: session.invoiceId,
+            paid: session.paid,
+            stripeCheckoutSessionId: session.stripeCheckoutSessionId,
+            stripePaymentStatus: session.stripePaymentStatus as CheckoutSessionPaymentStatus,
+            stripeStatus: session.stripeStatus as CheckoutSessionStatus,
+            fulfilledAtMs: convertToMillis(session.fulfilledAt),
+            userId: session.userId,
+            items: session.items as unknown as AuthCheckoutSessionItem[]
+        };
+    }
+    
+    async savePurchasedItem(item: PurchasedItem): Promise<void> {
+        await this._client.purchasedItem.upsert({
+            where: {
+                id: item.id
+            },
+            create: {
+                id: item.id,
+                userId: item.userId,
+                roleName: item.roleName,
+                roleGrantTimeMs: item.roleGrantTimeMs,
+                activatedTime: convertToDate(item.activatedTimeMs),
+                activationKeyId: item.activationKeyId,
+                recordName: item.recordName,
+                purchasableItemAddress: item.purchasableItemAddress,
+                checkoutSessionId: item.checkoutSessionId,
+            },
+            update: {
+                userId: item.userId,
+                roleName: item.roleName,
+                roleGrantTimeMs: item.roleGrantTimeMs,
+                activatedTime: convertToDate(item.activatedTimeMs),
+                activationKeyId: item.activationKeyId,
+                recordName: item.recordName,
+                purchasableItemAddress: item.purchasableItemAddress,
+                checkoutSessionId: item.checkoutSessionId,
+            },
+        });
+    }
+
+    async createActivationKey(key: ActivationKey): Promise<void> {
+        await this._client.activationKey.create({
+            data: {
+                id: key.id,
+                secretHash: key.secretHash,
+            }
+        });
     }
 
     @traced(TRACE_NAME)

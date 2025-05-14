@@ -25,7 +25,13 @@ import type {
     AuthUser,
     UpdateSubscriptionPeriodRequest,
 } from './AuthStore';
-import type {
+import {
+    STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA,
+    STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA,
+    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
+    StripeAccount,
+    StripeCheckoutResponse,
+    StripeCreateAccountLinkRequest,
     StripeEvent,
     StripeInterface,
     StripeInvoice,
@@ -37,11 +43,11 @@ import type {
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription } from './Utils';
-import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type { SubscriptionConfiguration, getPurchasableItemsFeatures, getSubscriptionFeatures } from './SubscriptionConfiguration';
 import type {
     ListedStudioAssignment,
     RecordsStore,
-    Studio,
+    Studio, StudioStripeAccountStatus, StudioStripeRequirementsStatus,
 } from './RecordsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
@@ -50,6 +56,24 @@ import type { UserRole } from '@casual-simulation/aux-common';
 import { isSuperUserRole } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'SubscriptionController';
+import { ADMIN_ROLE_NAME, DenialReason, fromBase64String, toBase64String } from '@casual-simulation/aux-common';
+import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
+import { v4 as uuid } from 'uuid';
+import { AuthorizeSubjectFailure, ConstructAuthorizationContextFailure, PolicyController } from './PolicyController';
+import { PolicyStore } from './PolicyStore';
+import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
+import { randomBytes } from 'tweetnacl';
+import { fromByteArray } from 'base64-js';
+
+/**
+ * The number of bytes that the access key secret should be.
+ */
+export const ACCESS_KEY_SECRET_BYTE_LENGTH = 16; // 128-bit
+
+/**
+ * The number of bytes that the access key ID should be.
+ */
+export const ACCESS_KEY_ID_BYTE_LENGTH = 16; // 128-bit
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -60,19 +84,28 @@ export class SubscriptionController {
     private _authStore: AuthStore;
     private _recordsStore: RecordsStore;
     private _config: ConfigurationStore;
+    private _purchasableItems: PurchasableItemRecordsStore;
+    private _policies: PolicyController;
+    private _policyStore: PolicyStore;
 
     constructor(
         stripe: StripeInterface,
         auth: AuthController,
         authStore: AuthStore,
         recordsStore: RecordsStore,
-        config: ConfigurationStore
+        config: ConfigurationStore,
+        purchasableItems: PurchasableItemRecordsStore,
+        policies: PolicyController,
+        policyStore: PolicyStore
     ) {
         this._stripe = stripe;
         this._auth = auth;
         this._authStore = authStore;
         this._recordsStore = recordsStore;
         this._config = config;
+        this._purchasableItems = purchasableItems;
+        this._policies = policies;
+        this._policyStore = policyStore;
     }
 
     private async _getConfig() {
@@ -824,6 +857,226 @@ export class SubscriptionController {
         }
     }
 
+    async createManageStoreAccountLink(request: CreateManageAccountLinkRequest): Promise<CreateManageAccountLinkResult> {
+        if (!this._stripe) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            };
+        }
+
+        try {
+            let studio = await this._recordsStore.getStudioById(request.studioId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._recordsStore.listStudioAssignments(
+                studio.id,
+                {
+                    userId: request.userId,
+                    role: ADMIN_ROLE_NAME
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.'
+                };
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getPurchasableItemsFeatures(config, 
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs
+            );
+            
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.'
+                };
+            }
+
+            let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
+            if (!studio.stripeAccountId) {
+                console.log('[SubscriptionController] [createManageStoreAccountLink] Studio does not have a stripe account. Creating one.');
+                type = 'account_onboarding';
+                const account = await this._stripe.createAccount({
+                    controller: {
+                        fees: {
+                            payer: 'account'
+                        },
+                        losses: {
+                            payments: 'stripe'
+                        },
+                        requirement_collection: 'stripe',
+                        stripe_dashboard: {
+                            type: 'full'
+                        }
+                    },
+                    metadata: {
+                        studioId: studio.id
+                    }
+                });
+
+                console.log('[SubscriptionController] [createManageStoreAccountLink] Created account:', account.id);
+
+                studio = {
+                    ...studio,
+                    stripeAccountId: account.id,
+                    stripeAccountStatus: getAccountStatus(account),
+                    stripeAccountRequirementsStatus: getAccountRequirementsStatus(account)
+                };
+                await this._recordsStore.updateStudio(studio);
+            }
+
+            if (studio.stripeAccountRequirementsStatus === 'incomplete') {
+                type = 'account_onboarding';
+            }
+
+            const session = await this._stripe.createAccountLink({
+                account: studio.stripeAccountId,
+                refresh_url: config.returnUrl,
+                return_url: config.returnUrl,
+                type
+            });
+
+            return {
+                success: true,
+                url: session.url
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while creating a manage store account link:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
+    async createManageStoreAccountLink(request: CreateManageAccountLinkRequest): Promise<CreateManageAccountLinkResult> {
+        if (!this._stripe) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            };
+        }
+
+        try {
+            let studio = await this._recordsStore.getStudioById(request.studioId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                };
+            }
+
+            const assignments = await this._recordsStore.listStudioAssignments(
+                studio.id,
+                {
+                    userId: request.userId,
+                    role: ADMIN_ROLE_NAME
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.'
+                };
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getPurchasableItemsFeatures(config, 
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs
+            );
+            
+            if (!features.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to perform this action.'
+                };
+            }
+
+            let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
+            if (!studio.stripeAccountId) {
+                console.log('[SubscriptionController] [createManageStoreAccountLink] Studio does not have a stripe account. Creating one.');
+                type = 'account_onboarding';
+                const account = await this._stripe.createAccount({
+                    controller: {
+                        fees: {
+                            payer: 'account'
+                        },
+                        losses: {
+                            payments: 'stripe'
+                        },
+                        requirement_collection: 'stripe',
+                        stripe_dashboard: {
+                            type: 'full'
+                        }
+                    },
+                    metadata: {
+                        studioId: studio.id
+                    }
+                });
+
+                console.log('[SubscriptionController] [createManageStoreAccountLink] Created account:', account.id);
+
+                studio = {
+                    ...studio,
+                    stripeAccountId: account.id,
+                    stripeAccountStatus: getAccountStatus(account),
+                    stripeAccountRequirementsStatus: getAccountRequirementsStatus(account)
+                };
+                await this._recordsStore.updateStudio(studio);
+            }
+
+            if (studio.stripeAccountRequirementsStatus === 'incomplete') {
+                type = 'account_onboarding';
+            }
+
+            const session = await this._stripe.createAccountLink({
+                account: studio.stripeAccountId,
+                refresh_url: config.returnUrl,
+                return_url: config.returnUrl,
+                type
+            });
+
+            return {
+                success: true,
+                url: session.url
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while creating a manage store account link:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
     @traced(TRACE_NAME)
     private async _createCheckoutSession(
         request: CreateManageSubscriptionRequest,
@@ -911,6 +1164,509 @@ export class SubscriptionController {
             success: true,
             url: session.url,
         };
+    }
+
+    async createPurchaseItemLink(request: CreatePurchaseItemLinkRequest): Promise<CreatePurchaseItemLinkResult> {
+        try {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.item.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const item = await this._purchasableItems.getItemByAddress(request.item.recordName, request.item.address);
+
+            if (!item) {
+                return {
+                    success: false,
+                    errorCode: 'item_not_found',
+                    errorMessage: 'The item could not be found.'
+                };
+            }
+
+            if (item.currency !== request.item.currency || item.cost !== request.item.expectedCost) {
+                return {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage: 'The expected price does not match the actual price of the item.'
+                };
+            }
+
+            const recordName = context.context.recordName;
+            const authorization = await this._policies.authorizeUserAndInstances(context.context, {
+                userId: request.userId,
+                resourceKind: 'purchasableItem',
+                resourceId: item.address,
+                markers: item.markers,
+                action: 'purchase',
+                instances: request.instances,
+            });
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+            
+            const metrics = await this._purchasableItems.getSubscriptionMetricsByRecordName(recordName);
+            const config = await this._getConfig();
+            const features = getPurchasableItemsFeatures(config, metrics.subscriptionStatus, metrics.subscriptionId, metrics.currentPeriodStartMs, metrics.currentPeriodEndMs);
+
+            if (!features.allowed) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`);
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage: 'The store you are trying to purchase from is disabled.'
+                };
+            }
+
+            if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store has no stripe account.`);
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage: 'The store you are trying to purchase from is disabled.'
+                };
+            }
+
+            if (metrics.stripeAccountStatus !== 'active') {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store stripe account is not active.`);
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage: 'The store you are trying to purchase from is disabled.'
+                };
+            }
+
+            const limits = features.currencyLimits[item.currency];
+
+            if (!limits) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.item.currency}] Currency not supported.`)
+                return {
+                    success: false,
+                    errorCode: 'currency_not_supported',
+                    errorMessage: 'The currency is not supported.'
+                };
+            }
+
+            if (item.cost !== 0 && (item.cost < limits.minCost || item.cost > limits.maxCost)) {
+                console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.item.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} cost: ${item.cost}] Cost not valid.`)
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: 'The item you are trying to purchase has a price that is not allowed.'
+                };
+            }
+
+            let applicationFee = 0;
+            if (item.cost !== 0 && limits.fee) {
+                if (limits.fee.type === 'percent') {
+                    // calculate percent when fee is between 1 - 100
+                    applicationFee = Math.ceil(item.cost * (limits.fee.percent / 100));
+                } else {
+                    if (limits.fee.amount > item.cost) {
+                        console.warn(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.item.currency} fee: ${limits.fee.amount} cost: ${item.cost}] Fee greater than cost.`);
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: 'The application fee is greater than the cost of the item.'
+                        };
+                    }
+                    applicationFee = limits.fee.amount;
+                }
+            }
+
+            let customerEmail: string = null;
+            if (request.userId) {
+                const user = await this._authStore.findUser(request.userId);
+
+                if (!user) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The user could not be found.'
+                    };
+                }
+
+                const roles = await this._policyStore.listRolesForUser(recordName, user.id);
+                const hasRole = roles.some(r => r.role === item.roleName && (!r.expireTimeMs || r.expireTimeMs > Date.now()));
+
+                if (hasRole) {
+                    return {
+                        success: false,
+                        errorCode: 'item_already_purchased',
+                        errorMessage: 'You already have the role that the item would grant.'
+                    };
+                }
+
+                customerEmail = user.email ?? null;
+            }
+
+            const sessionId = uuid();
+
+            console.log(`[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.item.currency} cost: ${item.cost} applicationFee: ${applicationFee}] Creating checkout session.`);
+            const session = await this._stripe.createCheckoutSession({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: item.currency,
+                            unit_amount: item.cost,
+                            product_data: {
+                                name: item.name,
+                                description: item.description,
+                                images: item.imageUrls,
+                                metadata: {
+                                    recordName: recordName,
+                                    address: item.address,
+                                },
+                                tax_code: item.taxCode ?? undefined,
+                            },
+                        },
+                        quantity: 1,
+                    }
+                ],
+                success_url: fulfillmentRoute(config.returnUrl, sessionId),
+                cancel_url: request.returnUrl,
+                client_reference_id: sessionId,
+                customer_email: customerEmail,
+                metadata: {
+                    userId: request.userId,
+                    checkoutSessionId: sessionId,
+                },
+                payment_intent_data: {
+                    application_fee_amount: applicationFee,
+                },
+                connect: {
+                    stripeAccount: metrics.stripeAccountId,
+                }
+            });
+
+            await this._authStore.updateCheckoutSessionInfo({
+                id: sessionId,
+                stripeCheckoutSessionId: session.id,
+                invoice: session.invoice ? {
+                    currency: session.invoice.currency,
+                    paid: session.invoice.paid,
+                    description: session.invoice.description,
+                    status: session.invoice.status,
+                    stripeInvoiceId: session.invoice.id,
+                    stripeHostedInvoiceUrl: session.invoice.hosted_invoice_url,
+                    stripeInvoicePdfUrl: session.invoice.invoice_pdf,
+                    tax: session.invoice.tax,
+                    total: session.invoice.total,
+                    subtotal: session.invoice.subtotal,
+                } : null,
+                userId: request.userId,
+                status: session.status,
+                paymentStatus: session.payment_status,
+                paid: session.payment_status === 'paid' || session.payment_status === 'no_payment_required',
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: item.address,
+                        role: item.roleName,
+                        roleGrantTimeMs: item.roleGrantTimeMs,
+                    }
+                ]
+            });
+
+            return {
+                success: true,
+                url: session.url,
+                sessionId: sessionId,
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while creating a purchase item link:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
+    async fulfillCheckoutSession(request: FulfillCheckoutSessionRequest): Promise<FulfillCheckoutSessionResult> {
+        try {
+            const session = await this._authStore.getCheckoutSessionById(request.sessionId);
+
+            if (!session) {
+                return {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The checkout session does not exist.',
+                };
+            }
+
+            if (!!session.userId && session.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to accept fulfillment of this checkout session.',
+                };
+            }
+
+            if (session.stripeStatus === 'expired') {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has expired.',
+                };
+            } else if (session.stripeStatus === 'open') {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has not been completed.'
+                };
+            } else if (session.stripePaymentStatus === 'unpaid') {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has not been paid for.'
+                };
+            } else if (session.fulfilledAtMs > 0) {
+                return {
+                    success: true,
+                };
+            }
+            console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Fulfilling checkout session.`);
+
+            if (request.activation === 'now') {
+                if (!request.userId) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'Guests cannot accept immediate fulfillment of a checkout session.'
+                    };
+                }
+
+                console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Activating checkout session.`);
+
+                // grant user access to the items
+                for (let item of session.items) {
+                    if (item.type === 'role') {
+                        const result = await this._policyStore.assignSubjectRole(item.recordName, session.userId, 'user', {
+                            role: item.role,
+                            expireTimeMs: item.roleGrantTimeMs ? Date.now() + item.roleGrantTimeMs : null,
+                        });
+
+                        if (result.success === false) {
+                            console.error(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unable to grant role to user:`, result);
+                            return {
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage: 'A server error occurred.'
+                            };
+                        }
+
+                        await this._authStore.savePurchasedItem({
+                            id: uuid(),
+                            activatedTimeMs: Date.now(),
+                            recordName: item.recordName,
+                            purchasableItemAddress: item.purchasableItemAddress,
+                            roleName: item.role,
+                            roleGrantTimeMs: item.roleGrantTimeMs,
+                            userId: session.userId,
+                            activationKeyId: null,
+                            checkoutSessionId: session.id,
+                        });
+                    } else {
+                        console.warn(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`);
+                    }
+                }
+
+                await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
+
+                return {
+                    success: true
+                };
+            } else {
+                console.log(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Deferring activation for checkout session.`);
+
+                const secret = fromByteArray(
+                    randomBytes(ACCESS_KEY_SECRET_BYTE_LENGTH)
+                );
+                const keyId = fromByteArray(
+                    randomBytes(ACCESS_KEY_SECRET_BYTE_LENGTH)
+                );
+                const hash = hashHighEntropyPasswordWithSalt(
+                    secret,
+                    keyId
+                );
+
+                await this._authStore.createActivationKey({
+                    id: keyId,
+                    secretHash: hash
+                });
+
+                const key = formatV1ActivationKey(keyId, secret);
+
+                // grant user access to the items
+                for (let item of session.items) {
+                    if (item.type === 'role') {
+                        await this._authStore.savePurchasedItem({
+                            id: uuid(),
+                            activatedTimeMs: null,
+                            recordName: item.recordName,
+                            purchasableItemAddress: item.purchasableItemAddress,
+                            roleName: item.role,
+                            roleGrantTimeMs: item.roleGrantTimeMs,
+                            userId: null,
+                            activationKeyId: keyId,
+                            checkoutSessionId: session.id,
+                        });
+                    } else {
+                        console.warn(`[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`);
+                    }
+                }
+
+                await this._authStore.markCheckoutSessionFulfilled(session.id, Date.now());
+                const config = await this._getConfig();
+
+                return {
+                    success: true,
+                    activationKey: key,
+                    activationUrl: activationRoute(config.returnUrl, key)
+                };
+            }
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while fulfilling a checkout session:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
+    }
+
+    async claimActivationKey(request: ClaimActivationKeyRequest): Promise<ClaimActivationKeyResult> {
+        try {
+
+            if (!request.userId && request.target === 'self') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'You need to be logged in to use target = self.'
+                };
+            }
+
+            const key = parseActivationKey(request.activationKey);
+
+            if (!key) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            const [keyId, secret] = key;
+
+            const activationKey = await this._authStore.getActivationKeyById(keyId);
+
+            if (!activationKey) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            const hash = hashHighEntropyPasswordWithSalt(secret, keyId);
+
+            if (activationKey.secretHash !== hash) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            let userId: string;
+            let sessionKey: string;
+            let connectionKey: string;
+            let expireTimeMs: number;
+            if (request.target === 'self') {
+                userId = request.userId;
+            } else if (request.target === 'guest') {
+                console.log('[SubscriptionController] [claimActivationKey] Creating user for guest activation key.');
+
+                const accountResult = await this._auth.createAccount({
+                    userRole: 'superUser',
+                    ipAddress: request.ipAddress,
+                });
+
+                if (accountResult.success === false) {
+                    console.error(`[SubscriptionController] [claimActivationKey keyId: ${keyId}] Unable to create user for guest activation key:`, accountResult);
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.'
+                    };
+                }
+
+                userId = accountResult.userId;
+                sessionKey = accountResult.sessionKey;
+                connectionKey = accountResult.connectionKey;
+                expireTimeMs = accountResult.expireTimeMs;
+            }
+            
+            console.log(`[SubscriptionController] [claimActivationKey keyId: ${keyId} userId: ${request.userId}] Claiming activation key.`);
+            if (!userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The activation key is invalid.'
+                };
+            }
+
+            const items = await this._authStore.listPurchasedItemsByActivationKeyId(keyId);
+
+            for (let item of items) {
+                if (item.activatedTimeMs || item.userId) {
+                    continue;
+                }
+
+                const result = await this._policyStore.assignSubjectRole(item.recordName, userId, 'user', {
+                    role: item.roleName,
+                    expireTimeMs: item.roleGrantTimeMs ? Date.now() + item.roleGrantTimeMs : null,
+                });
+
+                if (result.success === false) {
+                    console.error(`[SubscriptionController] [claimActivationKey keyId: ${keyId} userId: ${userId}] Unable to grant role to user:`, result);
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.'
+                    };
+                }
+
+                await this._authStore.savePurchasedItem({
+                    ...item,
+                    activatedTimeMs: Date.now(),
+                    userId,
+                });
+            }
+
+            return {
+                success: true,
+                userId,
+                sessionKey,
+                connectionKey,
+                expireTimeMs,
+            };
+        } catch(err) {
+            console.error('[SubscriptionController] An error occurred while claiming an activation key:', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.'
+            };
+        }
     }
 
     /**
@@ -1088,66 +1844,47 @@ export class SubscriptionController {
 
                 const invoice = parseResult.data.data.object;
                 const stripeSubscriptionId = invoice.subscription;
-                const subscription = await this._stripe.getSubscriptionById(
-                    stripeSubscriptionId
-                );
-                const status = subscription.status;
-                const customerId = invoice.customer;
-                const lineItems = invoice.lines.data;
-                const periodStartMs = subscription.current_period_start * 1000;
-                const periodEndMs = subscription.current_period_end * 1000;
-                const { sub, item } = findMatchingSubscription(lineItems);
 
-                const authInvoice: UpdateSubscriptionPeriodRequest['invoice'] =
-                    {
-                        currency: invoice.currency,
-                        description: invoice.description,
-                        paid: invoice.paid,
-                        status: invoice.status,
-                        tax: invoice.tax,
-                        total: invoice.total,
-                        subtotal: invoice.subtotal,
-                        stripeInvoiceId: invoice.id,
-                        stripeHostedInvoiceUrl: invoice.hosted_invoice_url,
-                        stripeInvoicePdfUrl: invoice.invoice_pdf,
-                    };
+                if (stripeSubscriptionId) {
+                    const subscription = await this._stripe.getSubscriptionById(
+                        stripeSubscriptionId
+                    );
+                    const status = subscription.status;
+                    const customerId = invoice.customer;
+                    const lineItems = invoice.lines.data;
+                    const periodStartMs = subscription.current_period_start * 1000;
+                    const periodEndMs = subscription.current_period_end * 1000;
+                    const { sub, item } = findMatchingSubscription(lineItems);
 
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
-                );
+                    const authInvoice: UpdateSubscriptionPeriodRequest['invoice'] =
+                        {
+                            currency: invoice.currency,
+                            description: invoice.description,
+                            paid: invoice.paid,
+                            status: invoice.status,
+                            tax: invoice.tax,
+                            total: invoice.total,
+                            subtotal: invoice.subtotal,
+                            stripeInvoiceId: invoice.id,
+                            stripeHostedInvoiceUrl: invoice.hosted_invoice_url,
+                            stripeInvoicePdfUrl: invoice.invoice_pdf,
+                        };
 
-                const user = await this._authStore.findUserByStripeCustomerId(
-                    customerId
-                );
-
-                if (user) {
                     console.log(
-                        `[SubscriptionController] [handleStripeWebhook] Found user (${user.id}) with customer ID (${customerId}).`
+                        `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
                     );
 
-                    await this._authStore.updateSubscriptionPeriod({
-                        userId: user.id,
-                        subscriptionStatus: status,
-                        subscriptionId: sub.id,
-                        stripeSubscriptionId,
-                        stripeCustomerId: customerId,
-                        currentPeriodEndMs: periodEndMs,
-                        currentPeriodStartMs: periodStartMs,
-                        invoice: authInvoice,
-                    });
-                } else {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No user found for customer ID (${customerId}).`
+                    const user = await this._authStore.findUserByStripeCustomerId(
+                        customerId
                     );
 
-                    const studio =
-                        await this._recordsStore.getStudioByStripeCustomerId(
-                            customerId
+                    if (user) {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] Found user (${user.id}) with customer ID (${customerId}).`
                         );
 
-                    if (studio) {
                         await this._authStore.updateSubscriptionPeriod({
-                            studioId: studio.id,
+                            userId: user.id,
                             subscriptionStatus: status,
                             subscriptionId: sub.id,
                             stripeSubscriptionId,
@@ -1158,33 +1895,189 @@ export class SubscriptionController {
                         });
                     } else {
                         console.log(
-                            `[SubscriptionController] [handleStripeWebhook] No studio found for customer ID (${customerId}).`
+                            `[SubscriptionController] [handleStripeWebhook] No user found for customer ID (${customerId}).`
                         );
-                    }
-                }
 
-                function findMatchingSubscription(
-                    lineItems: StripeInvoice['lines']['data']
-                ) {
-                    let item: any;
-                    let sub: SubscriptionConfiguration['subscriptions'][0];
-                    items_loop: for (let i of lineItems) {
-                        for (let s of config.subscriptions) {
-                            if (
-                                s.eligibleProducts &&
-                                s.eligibleProducts.some(
-                                    (p) => p === i.price.product
-                                )
-                            ) {
-                                sub = s;
-                                item = i;
-                                break items_loop;
-                            }
+                        const studio =
+                            await this._recordsStore.getStudioByStripeCustomerId(
+                                customerId
+                            );
+
+                        if (studio) {
+                            await this._authStore.updateSubscriptionPeriod({
+                                studioId: studio.id,
+                                subscriptionStatus: status,
+                                subscriptionId: sub.id,
+                                stripeSubscriptionId,
+                                stripeCustomerId: customerId,
+                                currentPeriodEndMs: periodEndMs,
+                                currentPeriodStartMs: periodStartMs,
+                                invoice: authInvoice,
+                            });
+                        } else {
+                            console.log(
+                                `[SubscriptionController] [handleStripeWebhook] No studio found for customer ID (${customerId}).`
+                            );
                         }
                     }
 
-                    return { item, sub };
+                    function findMatchingSubscription(
+                        lineItems: StripeInvoice['lines']['data']
+                    ) {
+                        let item: any;
+                        let sub: SubscriptionConfiguration['subscriptions'][0];
+                        items_loop: for (let i of lineItems) {
+                            for (let s of config.subscriptions) {
+                                if (
+                                    s.eligibleProducts &&
+                                    s.eligibleProducts.some(
+                                        (p) => p === i.price.product
+                                    )
+                                ) {
+                                    sub = s;
+                                    item = i;
+                                    break items_loop;
+                                }
+                            }
+                        }
+
+                        return { item, sub };
+                    }
+                } else {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No subscription ID found in invoice.`
+                    );
+
+                    const authInvoice = await this._authStore.getInvoiceByStripeId(invoice.id);
+                    if (!authInvoice) {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] No invoice found for stripe ID (${invoice.id}).`
+                        );
+                        return {
+                            success: true,
+                        };
+                    }
+
+                    await this._authStore.saveInvoice({
+                        ...authInvoice,
+                        currency: invoice.currency,
+                        description: invoice.description,
+                        paid: invoice.paid,
+                        status: invoice.status,
+                        tax: invoice.tax,
+                        total: invoice.total,
+                        subtotal: invoice.subtotal,
+                    });
                 }
+            } else if (event.type === 'account.updated') {
+                const parseResult =
+                    STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA.safeParse(event);
+
+                if (parseResult.success === false) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Unable to parse stripe event!`,
+                        parseResult.error
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The request was not able to be parsed.'
+                    };
+                }
+
+                const e = parseResult.data;
+                const accountId = e.data.object.id;
+                const account = await this._stripe.getAccountById(accountId);
+                let studio = await this._recordsStore.getStudioByStripeAccountId(accountId);
+
+                if (!studio) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No studio found for account ID (${accountId}).`
+                    );
+                    return {
+                        success: true
+                    };
+                }
+
+                const newStatus = getAccountStatus(account);
+                const newRequirementsStatus = getAccountRequirementsStatus(account);
+
+                if (studio.stripeAccountStatus !== newStatus || studio.stripeAccountRequirementsStatus !== newRequirementsStatus) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] Updating studio (${studio.id}) account status to ${newStatus} and requirements status to ${newRequirementsStatus}.`
+                    );
+                    studio = {
+                        ...studio,
+                        stripeAccountStatus: newStatus,
+                        stripeAccountRequirementsStatus: newRequirementsStatus
+                    };
+
+                    await this._recordsStore.updateStudio(studio);
+                }
+
+                return {
+                    success: true
+                };
+            } else if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.expired') {
+                const parseResult = STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA.safeParse(event);
+
+                if (parseResult.success === false) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Unable to parse stripe event!`,
+                        parseResult.error
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The request was not able to be parsed.'
+                    };
+                }
+
+                const e = parseResult.data;
+                const sessionId = e.data.object.client_reference_id;
+
+                if (!sessionId) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No client_reference_id found in the event.`
+                    );
+                    return {
+                        success: true,
+                    };
+                }
+
+                const session = await this._authStore.getCheckoutSessionById(sessionId);
+
+                if (!session) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] Could not find session with ID (${sessionId}).`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The session could not be found.'
+                    };
+                }
+
+                if (session.stripeCheckoutSessionId !== e.data.object.id) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] Stripe checkout session ID (${e.data.object.id}) does not match stored ID (${session.stripeCheckoutSessionId}).`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The session ID does not match the expected session ID.'
+                    };
+                }
+
+                console.log(`[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${e.data.object.id} status: ${e.data.object.status} paymentStatus: ${e.data.object.payment_status}] Checkout session updated for session ID.`);
+                const paid = e.data.object.payment_status === 'no_payment_required' || e.data.object.payment_status === 'paid';
+                await this._authStore.updateCheckoutSessionInfo({
+                    ...session,
+                    paid,
+                    paymentStatus: e.data.object.payment_status,
+                    status: e.data.object.status,
+                    invoice: null,
+                });
             }
 
             return {
@@ -1207,6 +2100,50 @@ export class SubscriptionController {
     }
 }
 
+/**
+ * Gets the account status for the given stripe account.
+ * @param account The account that the status should be retrieved for.
+ */
+export function getAccountStatus(account: StripeAccount): StudioStripeAccountStatus {
+    const disabledReason = account?.requirements?.disabled_reason;
+    if (disabledReason === 'under_review' || disabledReason === 'requirements.pending_verification') {
+        return 'pending';
+    } else if (
+        disabledReason === 'rejected.fraud' ||
+        disabledReason === 'rejected.incomplete_verification' ||
+        disabledReason === 'rejected.listed' ||
+        disabledReason === 'rejected.other' ||
+        disabledReason === 'rejected.terms_of_service'
+    ) {
+        return 'rejected';
+    } else if (disabledReason) {
+        return 'disabled';
+    } else if (account.charges_enabled) {
+        return 'active';
+    }
+
+    return 'pending';
+}
+
+/**
+ * Gets the requirements status for the given stripe account.
+ * @param account The account.
+ */
+export function getAccountRequirementsStatus(account: StripeAccount): StudioStripeRequirementsStatus {
+    const requirements = account?.requirements;
+    if (!requirements) {
+        return 'incomplete';
+    }
+
+    if (requirements.currently_due?.length > 0 ||
+        requirements.past_due?.length > 0) {
+        return 'incomplete';
+    }
+
+    return 'complete';
+}
+
+
 function returnRoute(basePath: string, user: AuthUser, studio: Studio) {
     if (user) {
         return basePath;
@@ -1222,6 +2159,62 @@ function studiosRoute(basePath: string, studioId: string, studioName: string) {
         )}`,
         basePath
     ).href;
+}
+
+function fulfillmentRoute(basePath: string, sessionId: string) {
+    return new URL(`/store/fulfillment/${sessionId}`, basePath).href;
+}
+
+function activationRoute(basePath: string, key: string) {
+    const url = new URL(`/store/activate`, basePath);
+    url.searchParams.set('key', key);
+    return url.href;
+}
+
+/**
+ * Formats a V1 access key.
+ * @param itemId The ID of the purchased item.
+ * @param secret The secret that should be used to access the purchased item.
+ */
+export function formatV1ActivationKey(itemId: string, secret: string): string {
+    return `vAK1.${toBase64String(itemId)}.${toBase64String(secret)}`;
+}
+
+/**
+ * Parses the given access key.
+ * Returns null if the access key is invalid.
+ * @param key The key to parse.
+ */
+export function parseActivationKey(key: string): [keyId: string, secret: string] {
+    if (!key) {
+        return null;
+    }
+
+    if (!key.startsWith('vAK1.')) {
+        return null;
+    }
+
+    const withoutVersion = key.slice('vAK1.'.length);
+    let periodAfterId = withoutVersion.indexOf('.');
+    if (periodAfterId < 0) {
+        return null;
+    }
+
+    const idBase64 = withoutVersion.slice(0, periodAfterId);
+    const secretBase64 = withoutVersion.slice(periodAfterId + 1);
+
+    if (idBase64.length <= 0 || secretBase64.length <= 0) {
+        return null;
+    }
+
+    try {
+        const name = fromBase64String(idBase64);
+        const secret = fromBase64String(secretBase64);
+
+        return [name, secret];
+    } catch (err) {
+        return null;
+    }
 }
 
 /**
@@ -1598,5 +2591,213 @@ export interface UpdateSubscriptionFailure {
         | 'user_not_found'
         | 'studio_not_found'
         | 'invalid_request';
+    errorMessage: string;
+}
+
+export interface CreateManageAccountLinkRequest {
+    /**
+     * The ID of the studio that the link should be created for.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+}
+
+export type CreateManageAccountLinkResult = CreateManageAccountLinkSuccess | CreateManageAccountLinkFailure;
+
+export interface CreateManageAccountLinkSuccess {
+    success: true;
+    /**
+     * The URl that the user can visit to manage their account.
+     */
+    url: string;
+}
+
+export interface CreateManageAccountLinkFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | NotLoggedInError | NotAuthorizedError | 'studio_not_found';
+    errorMessage: string;
+}
+
+export interface CreatePurchaseItemLinkRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instances that the request is being made from.
+     */
+    instances: string[];
+
+    /**
+     * The item that is being purchased.
+     */
+    item: {
+        /**
+         * The name of the record that the item is stored in.
+         */
+        recordName: string;
+
+        /**
+         * The address of the item.
+         */
+        address: string;
+
+        /**
+         * The expected cost of the item.
+         */
+        expectedCost: number;
+
+        /**
+         * The currency that the cost is in.
+         */
+        currency: string;
+    };
+
+    /**
+     * The URL that the user should be redirected to if the purchase is canceled.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be redirected to if the purchase is unsuccessful.
+     */
+    successUrl: string;
+}
+
+export type CreatePurchaseItemLinkResult = CreatePurchaseItemLinkSuccess | CreatePurchaseItemLinkFailure;
+
+export interface CreatePurchaseItemLinkSuccess {
+    success: true;
+
+    /**
+     * The URL that the user should be redirected to.
+     */
+    url: string;
+
+    /**
+     * The ID of the checkout session.
+     */
+    sessionId: string;
+}
+
+export interface CreatePurchaseItemLinkFailure {
+    success: false;
+    errorCode: ServerError 
+        | 'invalid_request'
+        | 'not_supported'
+        | 'item_not_found'
+        | 'price_does_not_match'
+        | 'store_disabled'
+        | 'currency_not_supported'
+        | 'subscription_limit_reached'
+        | 'item_already_purchased'
+        | ConstructAuthorizationContextFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+    errorMessage: string;
+    reason?: DenialReason;
+}
+
+export interface FulfillCheckoutSessionRequest {
+    /**
+     * The ID of the session that should be fulfilled.
+     */
+    sessionId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * How the session should be fulfilled.
+     * - `now` indicates that the items should be granted to the user and activated imediately.
+     *    Only valid if the user is logged in.
+     * - `later` indicates that an access key should be granted for the user to activate later.
+     */
+    activation: 'now' | 'later';
+}
+
+export type FulfillCheckoutSessionResult = FulfillCheckoutSessionSuccess | FulfillCheckoutSessionFailure;
+
+export interface FulfillCheckoutSessionSuccess {
+    success: true;
+
+    /**
+     * The activation key that the user can use to activate the items later.
+     */
+    activationKey?: string;
+
+    /**
+     * The URL that the user can visit to activate the items.
+     */
+    activationUrl?: string;
+}
+
+export interface FulfillCheckoutSessionFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized' | 'not_found';
+    errorMessage: string;
+}
+
+export interface ClaimActivationKeyRequest {
+    /**
+     * The key that should be claimed.
+     */
+    activationKey: string;
+
+    /**
+     * The target of the activation key.
+     * 
+     * - `guest` indicates that the key should be claimed for a guest user.
+     * - `self` indicates that the key should be claimed for the user that is currently logged in.
+     */
+    target: 'guest' | 'self';
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The IP Address that the request is coming from.
+     */
+    ipAddress: string;
+}
+
+export type ClaimActivationKeyResult = ClaimActivationKeySuccess | ClaimActivationKeyFailure;
+
+export interface ClaimActivationKeySuccess {
+    success: true;
+
+    /**
+     * The ID of the user that the key was claimed for.
+     */
+    userId: string;
+
+    /**
+     * The session key that was granted to the new user.
+     */
+    sessionKey?: string;
+
+    /**
+     * The connection key that was granted to the new user.
+     */
+    connectionKey?: string;
+
+    /**
+     * The time that the session key will expire.
+     */
+    expireTimeMs?: number;
+}
+
+export interface ClaimActivationKeyFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request' | 'not_supported' | 'not_authorized' | 'not_found' | 'not_logged_in';
     errorMessage: string;
 }

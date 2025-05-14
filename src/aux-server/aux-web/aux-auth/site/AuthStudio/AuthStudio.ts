@@ -25,9 +25,12 @@ import type {
     AIHumeFeaturesConfiguration,
     AllowedStudioCreators,
     ListedStudioMember,
+    PurchasableItemFeaturesConfiguration,
     StudioAssignmentRole,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
+    StudioStripeAccountStatus,
+    StudioStripeRequirementsStatus,
     UpdateStudioRequest,
 } from '@casual-simulation/aux-records';
 import { getFormErrors } from '@casual-simulation/aux-common';
@@ -85,6 +88,11 @@ export default class AuthStudio extends Vue {
     humeFeatures: AIHumeFeaturesConfiguration = {
         allowed: false,
     };
+    storeFeatures: PurchasableItemFeaturesConfiguration = {
+        allowed: false
+    };
+    stripeAccountStatus: StudioStripeAccountStatus = null;
+    stripeRequirementsStatus: StudioStripeRequirementsStatus = null;
 
     originalAllowedStudioCreators: AllowedStudioCreators = 'anyone';
     allowedStudioCreators: AllowedStudioCreators = 'anyone';
@@ -120,6 +128,7 @@ export default class AuthStudio extends Vue {
 
     isLoadingInfo: boolean = false;
     isSavingStudio: boolean = false;
+    isManagingStore: boolean = false;
 
     showUpdatePlayerConfig: boolean = false;
     showUpdateComIdConfig: boolean = false;
@@ -127,6 +136,7 @@ export default class AuthStudio extends Vue {
     showRequestComId: boolean = false;
     showUpdateLoomConfig: boolean = false;
     showUpdateHumeConfig: boolean = false;
+    showUpdateStoreConfig: boolean = false;
 
     errors: FormError[] = [];
 
@@ -247,6 +257,10 @@ export default class AuthStudio extends Vue {
 
     get allowHume() {
         return this.humeFeatures?.allowed;
+    }
+
+    get allowStore() {
+        return this.storeFeatures?.allowed;
     }
 
     get hasStudioChange() {
@@ -444,6 +458,7 @@ export default class AuthStudio extends Vue {
         this.showUpdateStudioInfo = false;
         this.showUpdateLoomConfig = false;
         this.showUpdateHumeConfig = false;
+        this.showUpdateStoreConfig = false;
     }
 
     private async _loadPageInfo() {
@@ -467,6 +482,11 @@ export default class AuthStudio extends Vue {
                 this.comIdFeatures = result.studio.comIdFeatures;
                 this.loomFeatures = result.studio.loomFeatures;
                 this.humeFeatures = result.studio.humeFeatures;
+                this.storeFeatures = result.studio.storeFeatures ?? {
+                    allowed: false
+                };
+                this.stripeAccountStatus = result.studio.stripeAccountStatus;
+                this.stripeRequirementsStatus = result.studio.stripeRequirementsStatus;
                 this.originalAllowedStudioCreators =
                     this.allowedStudioCreators =
                         result.studio.comIdConfig?.allowedStudioCreators ??
@@ -633,6 +653,25 @@ export default class AuthStudio extends Vue {
 
     updateHumeConfig() {
         this.showUpdateHumeConfig = true;
+    }
+
+    updateStoreConfig() {
+        this.showUpdateStoreConfig = true;
+    }
+
+    async manageStore() {
+        this.isManagingStore = true;
+        try {
+            const result = await authManager.client.getManageStudioStoreLink({
+                studioId: this.studioId,
+            });
+            
+            if (result.success === true) {
+                location.href = result.url;
+            }
+        } finally {
+            this.isManagingStore = false;
+        }
     }
 
     // TODO: Support uploading logos

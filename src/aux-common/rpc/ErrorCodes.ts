@@ -93,7 +93,11 @@ export type KnownErrorCodes =
     | 'invalid_webhook_target'
     | 'took_too_long'
     | 'parent_not_found'
-    | 'insufficient_funds';
+    | 'insufficient_funds'
+    | 'item_already_purchased'
+    | 'item_not_found'
+    | 'store_disabled'
+    | 'currency_not_supported';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -103,92 +107,107 @@ export function getStatusCode(
     response: { success: false; errorCode: KnownErrorCodes } | { success: true }
 ) {
     if (response.success === false) {
-        /**
-         * JIT compiler will optimize this to be more efficient than accessing a declared object outside of the function.
-         * Also allows typescript to check for "exhaustiveness" without unnecessary variables.
-         */
-        return (
-            {
-                session_already_revoked: 200,
-                data_too_large: 400,
-                unacceptable_address: 400,
-                unacceptable_user_id: 400,
-                unacceptable_code: 400,
-                unacceptable_session_key: 400,
-                unacceptable_session_id: 400,
-                unacceptable_request_id: 400,
-                unacceptable_address_type: 400,
-                unacceptable_expire_time: 400,
-                unacceptable_request: 400,
-                unacceptable_connection_token: 400,
-                unacceptable_connection_id: 400,
-                user_already_exists: 400,
-                unacceptable_update: 400,
-                no_session_key: 400,
-                unacceptable_studio_id: 400,
-                email_already_exists: 400,
-                parent_email_already_exists: 400,
-                child_email_already_exists: 400,
-                comId_already_taken: 400,
-                parent_email_required: 400,
-                permission_already_exists: 400,
-                invalid_display_name: 400,
-                invalid_policy: 400,
-                invalid_token: 400,
-                invalid_room_name: 400,
-                invalid_username: 400,
-                invalid_update_policy: 400,
-                invalid_delete_policy: 400,
-                invalid_file_data: 400,
-                invalid_model: 400,
-                unacceptable_url: 400,
-                file_already_exists: 400,
-                not_completed: 400,
-                session_is_not_revokable: 400,
-                roles_too_large: 400,
-                policy_too_large: 400,
-                not_logged_in: 401,
-                session_expired: 401,
-                invalid_code: 403,
-                invalid_key: 403,
-                invalid_record_key: 403,
-                invalid_request: 403,
-                invalid_origin: 403,
-                unauthorized_to_create_record_key: 403,
-                user_is_banned: 403,
-                not_authorized: 403,
-                not_subscribed: 403,
-                invalid_subscription_tier: 403,
-                record_already_exists: 403,
-                subscription_limit_reached: 403,
-                data_not_found: 404,
-                record_not_found: 404,
-                file_not_found: 404,
-                session_not_found: 404,
-                operation_not_found: 404,
-                studio_not_found: 404,
-                user_not_found: 404,
-                inst_not_found: 404,
-                policy_not_found: 404,
-                comId_not_found: 404,
-                permission_not_found: 404,
-                message_not_found: 404,
-                not_found: 404,
-                insufficient_funds: 409,
-                price_does_not_match: 412,
-                rate_limit_exceeded: 429,
-                unacceptable_ip_address: 500,
-                server_error: 500,
-                action_not_supported: 500,
-                invalid_connection_state: 500,
-                hume_api_error: 500,
-                not_supported: 501,
-                address_type_not_supported: 501,
-                invalid_webhook_target: 501,
-                took_too_long: 504,
-                parent_not_found: 400,
-            }[response.errorCode] ?? 400
-        );
+        if (response.errorCode === 'not_logged_in') {
+            return 401;
+        } else if (response.errorCode === 'not_supported') {
+            return 501;
+        } else if (response.errorCode === 'data_not_found') {
+            return 404;
+        } else if (response.errorCode === 'data_too_large') {
+            return 400;
+        } else if (response.errorCode === 'record_not_found') {
+            return 404;
+        } else if (response.errorCode === 'file_not_found') {
+            return 404;
+        } else if (response.errorCode === 'session_not_found') {
+            return 404;
+        } else if (response.errorCode === 'operation_not_found') {
+            return 404;
+        } else if (response.errorCode === 'studio_not_found') {
+            return 404;
+        } else if (response.errorCode === 'user_not_found') {
+            return 404;
+        } else if (response.errorCode === 'session_already_revoked') {
+            return 200;
+        } else if (response.errorCode === 'invalid_code') {
+            return 403;
+        } else if (response.errorCode === 'invalid_key') {
+            return 403;
+        } else if (response.errorCode === 'invalid_record_key') {
+            return 403;
+        } else if (response.errorCode === 'invalid_request') {
+            return 403;
+        } else if (response.errorCode === 'invalid_origin') {
+            return 403;
+        } else if (response.errorCode === 'session_expired') {
+            return 401;
+        } else if (response.errorCode === 'unacceptable_address') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_user_id') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_code') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_session_key') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_session_id') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_request_id') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_ip_address') {
+            return 500;
+        } else if (response.errorCode === 'unacceptable_address_type') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_expire_time') {
+            return 400;
+        } else if (response.errorCode === 'unacceptable_request') {
+            return 400;
+        } else if (response.errorCode === 'address_type_not_supported') {
+            return 501;
+        } else if (response.errorCode === 'server_error') {
+            return 500;
+        } else if (response.errorCode === 'unauthorized_to_create_record_key') {
+            return 403;
+        } else if (response.errorCode === 'price_does_not_match') {
+            return 412;
+        } else if (response.errorCode === 'user_is_banned') {
+            return 403;
+        } else if (response.errorCode === 'rate_limit_exceeded') {
+            return 429;
+        } else if (response.errorCode === 'not_authorized') {
+            return 403;
+        } else if (response.errorCode === 'not_subscribed') {
+            return 403;
+        } else if (response.errorCode === 'invalid_subscription_tier') {
+            return 403;
+        } else if (response.errorCode === 'record_already_exists') {
+            return 403;
+        } else if (response.errorCode === 'subscription_limit_reached') {
+            return 403;
+        } else if (response.errorCode === 'inst_not_found') {
+            return 404;
+        } else if (response.errorCode === 'action_not_supported') {
+            return 500;
+        } else if (response.errorCode === 'policy_not_found') {
+            return 404;
+        } else if (response.errorCode === 'comId_not_found') {
+            return 404;
+        } else if (response.errorCode === 'comId_already_taken') {
+            return 409;
+        } else if (response.errorCode === 'permission_not_found') {
+            return 404;
+        } else if (response.errorCode === 'message_not_found') {
+            return 404;
+        } else if (response.errorCode === 'not_found') {
+            return 404;
+        } else if (response.errorCode === 'item_not_found') {
+            return 404;
+        } else if (response.errorCode === 'invalid_connection_state') {
+            return 500;
+        } else if (response.errorCode === 'user_already_exists') {
+            return 400;
+        } else {
+            return 400;
+        }
     }
 
     return 200;

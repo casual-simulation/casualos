@@ -601,6 +601,26 @@ export class PrismaMetricsStore implements MetricsStore {
         }
     }
 
+    /**
+     * Gets the period for a subscription with the given status, start time, and end time.
+     * @param status The status of the subscription.
+     * @param startMs The start time of the subscription in unix time in miliseconds.
+     * @param endMs The end time of the subscription in unix time in miliseconds.
+     */
+    getSubscriptionPeriod(status: string, startMs: number, endMs: number) {
+        return this._getSubscriptionPeriod(status, startMs, endMs);
+    }
+
+    /**
+     * Gets the period for a subscription with the given status, start time, and end time.
+     * @param status The status of the subscription.
+     * @param startMs The start time of the subscription in unix time in miliseconds.
+     * @param endMs The end time of the subscription in unix time in miliseconds.
+     */
+    getSubscriptionPeriod(status: string, startMs: number, endMs: number) {
+        return this._getSubscriptionPeriod(status, startMs, endMs);
+    }
+
     @traced(TRACE_NAME)
     private async _getSubscriptionPeriod(
         status: string,
@@ -639,6 +659,14 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    findSubscriptionInfoByRecordName(recordName: string) {
+        return this._findSubscriptionInfoByRecordName(recordName);
+    }
+
+    findSubscriptionInfoByRecordName(recordName: string) {
+        return this._findSubscriptionInfoByRecordName(recordName);
+    }
+
     @traced(TRACE_NAME)
     private async _findSubscriptionInfoByRecordName(recordName: string) {
         return await this._client.record.findUnique({
@@ -662,6 +690,8 @@ export class PrismaMetricsStore implements MetricsStore {
                         subscriptionStatus: true,
                         subscriptionPeriodStart: true,
                         subscriptionPeriodEnd: true,
+                        stripeAccountId: true,
+                        stripeAccountStatus: true,
                     },
                 },
             },

@@ -352,6 +352,14 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    StoreItem,
+    recordStoreItem as calcRecordStoreItem,
+    getStoreItem as calcGetStoreItem,
+    eraseStoreItem as calcEraseStoreItem,
+    listStoreItems as calcListStoreItems,
+    listStoreItemsByMarker as calcListStoreItemsByMarker,
+    PurchasableItemReference,
+    purchaseStoreItem as calcPurchaseStoreItem,
 } from './RecordsEvents';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import type {
@@ -455,6 +463,18 @@ import type {
     PackageRecord,
     ListInstalledPackagesResult,
 } from '@casual-simulation/aux-records';
+import type {
+    AIChatInterfaceStreamResponse,
+    AIChatMessage,
+    CrudEraseItemResult,
+    CrudGetItemResult,
+    CrudListItemsResult,
+    CrudRecordItemResult,
+    GrantResourcePermissionResult,
+    ListStudiosResult,
+    ReportInstResult,
+    RevokePermissionResult,
+} from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
@@ -505,6 +525,7 @@ import type {
     PackageRecordVersionKeySpecifier,
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
+import { PurchasableItem } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsStore';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3428,6 +3449,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listUserStudios,
 
                 getRecordsEndpoint,
+
+                recordStoreItem,
+                getStoreItem,
+                eraseStoreItem,
+                listStoreItems,
+                listStoreItemsByMarker,
+                purchaseStoreItem,
 
                 convertGeolocationToWhat3Words,
 
@@ -11325,6 +11353,154 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getRecordsEndpoint(): Promise<string> {
         const task = context.createTask();
         const event = calcGetRecordsEndpoint(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates or updates a store item in a record.
+     * 
+     * Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
+     * 
+     * @param recordName the name of the record that the store item should be created or updated in.
+     * @param address the address of the item in the record.
+     * @param item the item that should be stored in the record.
+     * @param options the options that should be used to store the item.
+     * 
+     * @example Record an item that can be purchased by anyone
+     * await os.recordStoreItem('myRecord', 'myItem', {
+     *    name: 'My Item',
+     *    description: 'Description of my item!'
+     *    imageUrls: [],
+     *    currency: 'usd',
+     *    cost: 100, // $1.00
+     *    roleName: 'roleToBeGranted',
+     *    roleGrantTimeMs: null,
+     *    markers: ['publicRead']
+     * });
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.recordStoreItem
+     */
+    function recordStoreItem(recordName: string, address: string, item: StoreItem, options: RecordActionOptions = {}): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = calcRecordStoreItem(recordName, address, item, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the item with the given address from the specified record.
+     * 
+     * Returns a promise that resolves with the item that was stored in the record.
+     * 
+     * @param recordName the name of the record that the store item should be retrieved from.
+     * @param address the address of the item in the record.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example Get an item by address
+     * const item = await os.getStoreItem('myRecord', 'myItem');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.getStoreItem
+     */
+    function getStoreItem(recordName: string, address: string, options: RecordActionOptions = {}): Promise<CrudGetItemResult<PurchasableItem>> {
+        const task = context.createTask();
+        const event = calcGetStoreItem(recordName, address, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Deletes the item with the given address from the specified record.
+     * 
+     * Returns a promise that resolves with the status of the operation.
+     * 
+     * @param recordName the name of the record that the store item should be deleted from.
+     * @param address the address of the item that should be deleted.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example Delete an item by address
+     * const result = await os.eraseStoreItem('myRecord', 'myItem');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.eraseStoreItem
+     */
+    function eraseStoreItem(recordName: string, address: string, options: RecordActionOptions = {}): Promise<CrudEraseItemResult> {
+        const task = context.createTask();
+        const event = calcEraseStoreItem(recordName, address, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a partial list of store items from the given record.
+     * You must have permission to access all items in the record to list them.
+     * 
+     * Returns a promise that contains the items in the list.
+     * 
+     * @param recordName the name of the record that the store item should be deleted from.
+     * @param startingAddress the address that the items should be listed after.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example List all items in the record
+     * const result = await os.listStoreItems('myRecord');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.listStoreItems
+     */
+    function listStoreItems(recordName: string, startingAddress: string = null, options: RecordActionOptions = {}): Promise<CrudListItemsResult<PurchasableItem>> {
+        const task = context.createTask();
+        const event = calcListStoreItems(recordName, startingAddress, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a partial list of store items that have the given marker from the given record.
+     * You must have permission to access the given marker in the record to list them.
+     * 
+     * Returns a promise that contains the items in the list.
+     * 
+     * @param recordName the name of the record that the store item should be deleted from.
+     * @param marker the marker that the items should have.
+     * @param startingAddress the address that the items should be listed after.
+     * @param options the options that should be used to get the item.
+     * 
+     * @example List all items in the record with the 'publicRead' marker
+     * const result = await os.listStoreItemsByMarker('myRecord', 'publicRead');
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.listStoreItemsByMarker
+     */
+    function listStoreItemsByMarker(recordName: string, marker: string, startingAddress: string = null, options: RecordActionOptions = {}): Promise<CrudListItemsResult<PurchasableItem>> {
+        const task = context.createTask();
+        const event = calcListStoreItemsByMarker(recordName, marker, startingAddress, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to purchase the given store item from the specified record.
+     * 
+     * Returns a promise that resolves when the 
+     * 
+     * @param recordName the name of the record that the store item should be purchased from.
+     * @param item the item that should be purchased from the store.
+     * @param options the options that should be used to purchase the item.
+     * 
+     * @example Purchase an item from the store
+     * const item = await os.getStoreItem('myRecord', 'myItem');
+     * const result = await os.purchaseStoreItem('myRecord', item);
+     * 
+     * console.log(result);
+     * 
+     * @dochash actions/os/records
+     * @docgroup 01-store
+     * @docname os.purchaseStoreItem
+     */
+    function purchaseStoreItem(recordName: string, item: PurchasableItemReference, options: RecordActionOptions = {}): Promise<void> {
+        const task = context.createTask();
+        const event = calcPurchaseStoreItem(recordName, item, options, task.taskId);
         return addAsyncAction(task, event);
     }
 

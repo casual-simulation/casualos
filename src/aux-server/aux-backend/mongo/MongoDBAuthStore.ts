@@ -328,6 +328,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
         });
     }
 
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return await this._studios.findOne({
+            stripeAccountId: accountId,
+        });
+    }
+
     async listStudiosForUserAndComId(
         userId: string,
         comId: string
@@ -1181,6 +1187,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     stripeCustomerId: studio.stripeCustomerId,
                     subscriptionId: studio.subscriptionId,
                     subscriptionStatus: studio.subscriptionStatus,
+                    subscriptionInfoId: studio.subscriptionInfoId,
+                    subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+                    subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+                    playerConfig: studio.playerConfig,
+                    stripeAccountId: studio.stripeAccountId,
+                    stripeAccountStatus: studio.stripeAccountStatus,
+                    stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+                    comId: studio.comId,
+                    comIdConfig: studio.comIdConfig,
+                    logoUrl: studio.logoUrl,
+                    ownerStudioComId: studio.ownerStudioComId,
                 },
             },
             { upsert: true }
@@ -1202,6 +1219,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             stripeCustomerId: studio.stripeCustomerId,
             subscriptionId: studio.subscriptionId,
             subscriptionStatus: studio.subscriptionStatus,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+            playerConfig: studio.playerConfig,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+            comId: studio.comId,
+            comIdConfig: studio.comIdConfig,
+            ownerStudioComId: studio.ownerStudioComId,
+            logoUrl: studio.logoUrl,
         };
     }
 
@@ -1220,6 +1248,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             stripeCustomerId: studio.stripeCustomerId,
             subscriptionId: studio.subscriptionId,
             subscriptionStatus: studio.subscriptionStatus,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+            playerConfig: studio.playerConfig,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+            comId: studio.comId,
+            comIdConfig: studio.comIdConfig,
+            ownerStudioComId: studio.ownerStudioComId,
+            logoUrl: studio.logoUrl,
         };
     }
 

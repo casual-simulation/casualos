@@ -46,6 +46,7 @@ export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
 export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
+export const PURCHASABLE_ITEM_RESOURCE_KIND = 'purchasableItem';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -67,7 +68,8 @@ export type ResourceKinds =
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume'
-    | 'ai.openai.realtime';
+    | 'ai.openai.realtime'
+    | 'purchasableItem';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -89,6 +91,7 @@ export const SEND_ACTION = 'send';
 export const SUBSCRIBE_ACTION = 'subscribe';
 export const UNSUBSCRIBE_ACTION = 'unsubscribe';
 export const LIST_SUBSCRIPTIONS_ACTION = 'listSubscriptions';
+export const PURCHASE_ACTION = 'purchase';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -116,7 +119,8 @@ export type ActionKinds =
     | 'send'
     | 'subscribe'
     | 'unsubscribe'
-    | 'listSubscriptions';
+    | 'listSubscriptions'
+    | 'purchase';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -270,6 +274,14 @@ export type PackageVersionActionKinds =
     | 'run';
 
 /**
+ * The possible types of actions that can be performed on purchasableItem resources.
+ * 
+ * @dochash types/permissions
+ * @docname PurchasableItemActionKinds
+ */
+export type PurchasableItemActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list' | 'purchase';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -285,6 +297,7 @@ export type AvailablePermissions =
     | MarkerPermission
     | RolePermission
     | InstPermission
+    | PurchasableItemPermission
     | LoomPermission
     | SloydPermission
     | HumePermission
@@ -1057,6 +1070,34 @@ type ZodPackageVersionPermissionAssertion = HasType<
     PackageVersionPermission
 >;
 
+/**
+ * Defines an interface that describes common options for all purchasableItem permissions.
+ * 
+ * @dochash types/permissions
+ * @docname PurchasableItemPermission
+ */
+export interface PurchasableItemPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'purchasableItem';
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId: string | null;
+
+    action: PurchasableItemActionKinds | null;
+}
+export const PURCHASABLE_ITEM_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
+    action: PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodPurchasableItemPermission = z.infer<typeof PURCHASABLE_ITEM_PERMISSION_VALIDATION>;
+type ZodPurchasableItemPermissionAssertion = HasType<ZodPurchasableItemPermission, PurchasableItemPermission>;
+
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -1074,6 +1115,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         NOTIFICATION_PERMISSION_VALIDATION,
         PACKAGE_PERMISSION_VALIDATION,
         PACKAGE_VERSION_PERMISSION_VALIDATION,
+        PURCHASABLE_ITEM_PERMISSION_VALIDATION
     ]
 );
 
