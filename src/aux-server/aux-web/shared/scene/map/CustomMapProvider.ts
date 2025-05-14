@@ -29,13 +29,12 @@ import {
 /**
  * A map provider that allows custom URL templates for tiles
  */
-export class CustomMapProvider extends OpenStreetMapsProvider {
+export class CustomMapProvider {
     private _urlTemplate: string =
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     private _isDirectUrl: boolean = false;
 
     constructor(urlTemplate?: string) {
-        super();
         if (urlTemplate) {
             this.setUrlTemplate(urlTemplate);
         }
