@@ -177,6 +177,38 @@ describe('XpController', () => {
         });
     });
 
+    describe('createXpUser()', () => {
+        it('should create an xp user', async () => {
+            const userId = 'userId';
+            await services.store.saveUser({
+                id: userId,
+                email: 'xp.test@localhost',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            uuidMock.mockReturnValueOnce('xpId');
+            const result = await xpController.createXpUser(userId);
+
+            expect(result).toEqual(
+                success({
+                    user: {
+                        xpId: 'xpId',
+                        id: 'userId',
+                        userId: 'userId',
+                        accountId: '0',
+                        requestedRate: null,
+                        email: 'xp.test@localhost',
+                        phoneNumber: null,
+                        allSessionRevokeTimeMs: null,
+                        currentLoginRequestId: null,
+                    },
+                })
+            );
+        });
+    });
+
     /**
      * Successful getXpUser invocations across the board should be indicative of—
      * successful XP user initialization as well as retrieval

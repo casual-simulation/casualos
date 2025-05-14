@@ -186,13 +186,13 @@ export class XpController {
 
     /**
      * Create an XP user for the given auth user
-     * @param authUserId The ID of the auth user to create an XP user for
+     *
+     * Not for external use.
+     * @param userId The ID of the auth user to create an XP user for
      */
     @traced(TRACE_NAME)
-    private async _createXpUser(
-        authUserId: string
-    ): Promise<CreateXpUserResult> {
-        const authUser = await this._authStore.findUser(authUserId);
+    async createXpUser(userId: string): Promise<CreateXpUserResult> {
+        const authUser = await this._authStore.findUser(userId);
         if (!authUser) {
             return failure({
                 errorCode: 'user_not_found',
@@ -206,7 +206,7 @@ export class XpController {
         }
         const user: XpUser = {
             xpId: uuid(),
-            userId: authUserId,
+            userId: userId,
             accountId: account.value.id.toString(),
             requestedRate: null,
         };
@@ -444,7 +444,7 @@ export class XpController {
                 });
             }
 
-            const result = await this._createXpUser(
+            const result = await this.createXpUser(
                 request.requestedUserId ?? request.userId
             );
             if (isFailure(result)) {
