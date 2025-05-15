@@ -1370,7 +1370,7 @@ export class ServerBuilder implements SubscriptionLike {
             records: this._recordsStore,
         };
 
-        if (hasChatInterface && options.ai.chat) {
+        if (options.ai.chat) {
             const allowedChatModels: AllowedAIChatModel[] = [];
             this._customChatInterfaces = {};
 
@@ -1381,6 +1381,11 @@ export class ServerBuilder implements SubscriptionLike {
                         model: model,
                     });
                 } else if (model.provider === 'custom-openai-completions') {
+                    console.log(
+                        `[ServerBuilder] Using Custom OpenAI Chat Interface: ${
+                            model.name
+                        } (${model.models.join(', ')})`
+                    );
                     this._customChatInterfaces[model.name] =
                         new OpenAIChatInterface({
                             apiKey: model.apiKey,
@@ -1402,22 +1407,26 @@ export class ServerBuilder implements SubscriptionLike {
                 }
             }
 
-            this._aiConfiguration.chat = {
-                interfaces: cleanupObject({
-                    ...this._customChatInterfaces,
-                    openai: this._openAIChatInterface,
-                    google: this._googleAIChatInterface,
-                    anthropic: this._anthropicAIChatInterface,
-                }),
-                options: {
-                    defaultModel: options.ai.chat.defaultModel,
-                    defaultModelProvider: options.ai.chat.provider,
-                    allowedChatModels: allowedChatModels,
-                    allowedChatSubscriptionTiers:
-                        options.ai.chat.allowedSubscriptionTiers,
-                    tokenModifierRatio: options.ai.chat.tokenModifierRatio,
-                },
-            };
+            const interfaces = cleanupObject({
+                ...this._customChatInterfaces,
+                openai: this._openAIChatInterface,
+                google: this._googleAIChatInterface,
+                anthropic: this._anthropicAIChatInterface,
+            });
+
+            if (Object.keys(interfaces).length > 0) {
+                this._aiConfiguration.chat = {
+                    interfaces,
+                    options: {
+                        defaultModel: options.ai.chat.defaultModel,
+                        defaultModelProvider: options.ai.chat.provider,
+                        allowedChatModels: allowedChatModels,
+                        allowedChatSubscriptionTiers:
+                            options.ai.chat.allowedSubscriptionTiers,
+                        tokenModifierRatio: options.ai.chat.tokenModifierRatio,
+                    },
+                };
+            }
         }
         if (this._generateSkyboxInterface && options.ai.generateSkybox) {
             this._aiConfiguration.generateSkybox = {
