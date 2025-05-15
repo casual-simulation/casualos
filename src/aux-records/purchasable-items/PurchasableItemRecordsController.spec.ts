@@ -1,15 +1,37 @@
-
-import { TestController } from '../CrudRecordsController.spec';
-import { MemoryCrudRecordsStore } from '../MemoryCrudRecordsStore';
-import { PurchasableItem } from './PurchasableItemRecordsStore';
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { MemoryPurchasableItemRecordsStore } from './MemoryPurchasableItemRecordsStore';
 import { PurchasableItemRecordsController } from './PurchasableItemRecordsController';
-import { createTestControllers, createTestRecordKey, createTestSubConfiguration, createTestUser } from '../TestUtils';
+import {
+    createTestControllers,
+    createTestRecordKey,
+    createTestSubConfiguration,
+    createTestUser,
+} from '../TestUtils';
 import { PUBLIC_READ_MARKER, merge } from '@casual-simulation/aux-common';
-import { MemoryStore } from '../MemoryStore';
-import { PolicyController } from '../PolicyController';
-import { RecordsController } from '../RecordsController';
-import { FeaturesConfiguration, SubscriptionConfiguration, allowAllFeatures } from '../SubscriptionConfiguration';
+import type { MemoryStore } from '../MemoryStore';
+import type { PolicyController } from '../PolicyController';
+import type { RecordsController } from '../RecordsController';
+import type {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+} from '../SubscriptionConfiguration';
+import { allowAllFeatures } from '../SubscriptionConfiguration';
 
 console.log = jest.fn();
 
@@ -68,35 +90,32 @@ describe('PurchasableItemRecordsController', () => {
             phoneNumber: null,
         });
 
-        store.subscriptionConfiguration = merge(
-            createTestSubConfiguration(),
-            {
-                subscriptions: [
-                    {
-                        id: 'sub1',
-                        eligibleProducts: [],
-                        product: '',
-                        featureList: [],
-                        tier: 'tier1',
-                    },
-                ],
-                tiers: {
-                    tier1: {
-                        features: merge(allowAllFeatures(), {
-                            store: {
-                                allowed: true,
-                                currencyLimits: {
-                                    usd: {
-                                        maxCost: 1000,
-                                        minCost: 1,
-                                    }
-                                }
-                            }
-                        } as Partial<FeaturesConfiguration>),
-                    },
+        store.subscriptionConfiguration = merge(createTestSubConfiguration(), {
+            subscriptions: [
+                {
+                    id: 'sub1',
+                    eligibleProducts: [],
+                    product: '',
+                    featureList: [],
+                    tier: 'tier1',
                 },
-            } as Partial<SubscriptionConfiguration>
-        );
+            ],
+            tiers: {
+                tier1: {
+                    features: merge(allowAllFeatures(), {
+                        store: {
+                            allowed: true,
+                            currencyLimits: {
+                                usd: {
+                                    maxCost: 1000,
+                                    minCost: 1,
+                                },
+                            },
+                        },
+                    } as Partial<FeaturesConfiguration>),
+                },
+            },
+        } as Partial<SubscriptionConfiguration>);
 
         await store.saveUser({
             id: userId,
@@ -131,10 +150,12 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 recordName: 'testRecord',
-                address: 'address'
+                address: 'address',
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toEqual({
                 address: 'address',
                 name: 'name',
                 markers: [PUBLIC_READ_MARKER],
@@ -164,8 +185,8 @@ describe('PurchasableItemRecordsController', () => {
                         tier1: {
                             features: merge(allowAllFeatures(), {
                                 store: {
-                                    allowed: false
-                                }
+                                    allowed: false,
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -192,10 +213,13 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'Purchasable item features are not allowed for this subscription. Make sure you have an active subscription that provides purchasable item features.',
+                errorMessage:
+                    'Purchasable item features are not allowed for this subscription. Make sure you have an active subscription that provides purchasable item features.',
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toBe(null);
         });
 
         it('should return subscription_limit_reached if the user has reached the maximum number of purchasable items', async () => {
@@ -221,9 +245,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -250,10 +274,13 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'subscription_limit_reached',
-                errorMessage: 'The maximum number of purchasable items has been reached for your subscription.',
+                errorMessage:
+                    'The maximum number of purchasable items has been reached for your subscription.',
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toBe(null);
         });
 
         it('should return unacceptable_request if the currency is not allowed', async () => {
@@ -278,9 +305,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -307,19 +334,23 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'The currency is not allowed for this subscription. Please choose a different currency.',
+                errorMessage:
+                    'The currency is not allowed for this subscription. Please choose a different currency.',
                 issues: [
                     {
                         code: 'invalid_enum_value',
-                        message: 'Invalid enum value. Expected \'usd\', received \'WRONG\'',
-                        options: ['usd',],
+                        message:
+                            "Invalid enum value. Expected 'usd', received 'WRONG'",
+                        options: ['usd'],
                         path: ['currency'],
-                        received: 'WRONG'
-                    }
-                ]
+                        received: 'WRONG',
+                    },
+                ],
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toBe(null);
         });
 
         it('should return unacceptable_request if the cost is too much', async () => {
@@ -344,9 +375,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -373,7 +404,8 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
+                errorMessage:
+                    'The cost is not allowed for this subscription. Please choose a different cost.',
                 issues: [
                     {
                         code: 'too_big',
@@ -382,12 +414,14 @@ describe('PurchasableItemRecordsController', () => {
                         message: 'Number must be less than or equal to 1000',
                         maximum: 1000,
                         path: ['cost'],
-                        type: "number"
-                    }
-                ]
+                        type: 'number',
+                    },
+                ],
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toBe(null);
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toBe(null);
         });
 
         it('should return unacceptable_request if the currency is not allowed when updating an item', async () => {
@@ -424,9 +458,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -453,19 +487,23 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'The currency is not allowed for this subscription. Please choose a different currency.',
+                errorMessage:
+                    'The currency is not allowed for this subscription. Please choose a different currency.',
                 issues: [
                     {
                         code: 'invalid_enum_value',
-                        message: 'Invalid enum value. Expected \'usd\', received \'WRONG\'',
-                        options: ['usd',],
+                        message:
+                            "Invalid enum value. Expected 'usd', received 'WRONG'",
+                        options: ['usd'],
                         path: ['currency'],
-                        received: 'WRONG'
-                    }
-                ]
+                        received: 'WRONG',
+                    },
+                ],
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toEqual({
                 address: 'address',
                 name: 'name',
                 markers: [PUBLIC_READ_MARKER],
@@ -512,9 +550,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -541,7 +579,8 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'unacceptable_request',
-                errorMessage: 'The cost is not allowed for this subscription. Please choose a different cost.',
+                errorMessage:
+                    'The cost is not allowed for this subscription. Please choose a different cost.',
                 issues: [
                     {
                         code: 'too_big',
@@ -550,12 +589,14 @@ describe('PurchasableItemRecordsController', () => {
                         message: 'Number must be less than or equal to 1000',
                         maximum: 1000,
                         path: ['cost'],
-                        type: "number"
-                    }
-                ]
+                        type: 'number',
+                    },
+                ],
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toEqual({
                 address: 'address',
                 name: 'name',
                 markers: [PUBLIC_READ_MARKER],
@@ -602,9 +643,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 10,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -631,10 +672,12 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 recordName: 'testRecord',
-                address: 'address'
+                address: 'address',
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toEqual({
                 address: 'address',
                 name: 'name',
                 markers: [PUBLIC_READ_MARKER],
@@ -669,9 +712,9 @@ describe('PurchasableItemRecordsController', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 10,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -698,10 +741,12 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 recordName: 'testRecord',
-                address: 'address'
+                address: 'address',
             });
 
-            await expect(itemsStore.getItemByAddress('testRecord', 'address')).resolves.toEqual({
+            await expect(
+                itemsStore.getItemByAddress('testRecord', 'address')
+            ).resolves.toEqual({
                 address: 'address',
                 name: 'name',
                 markers: [PUBLIC_READ_MARKER],
@@ -730,7 +775,7 @@ describe('PurchasableItemRecordsController', () => {
             });
 
             const result = await manager.getItem({
-                recordName: 'testRecord', 
+                recordName: 'testRecord',
                 address: 'address',
                 userId: userId,
                 instances: [],
@@ -748,7 +793,7 @@ describe('PurchasableItemRecordsController', () => {
                     currency: 'usd',
                     cost: 100,
                     imageUrls: ['imageUrl'],
-                }
+                },
             });
         });
     });
@@ -770,7 +815,7 @@ describe('PurchasableItemRecordsController', () => {
 
         it('should delete the given item', async () => {
             const result = await manager.eraseItem({
-                recordName: 'testRecord', 
+                recordName: 'testRecord',
                 address: 'address',
                 userId: userId,
                 instances: [],
@@ -798,8 +843,8 @@ describe('PurchasableItemRecordsController', () => {
                         tier1: {
                             features: merge(allowAllFeatures(), {
                                 store: {
-                                    allowed: false
-                                }
+                                    allowed: false,
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -807,7 +852,7 @@ describe('PurchasableItemRecordsController', () => {
             );
 
             const result = await manager.eraseItem({
-                recordName: 'testRecord', 
+                recordName: 'testRecord',
                 address: 'address',
                 userId: userId,
                 instances: [],
@@ -816,9 +861,9 @@ describe('PurchasableItemRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'Purchasable item features are not allowed for this subscription. Make sure you have an active subscription that provides purchasable item features.',
+                errorMessage:
+                    'Purchasable item features are not allowed for this subscription. Make sure you have an active subscription that provides purchasable item features.',
             });
         });
     });
-
 });

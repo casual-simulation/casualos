@@ -554,7 +554,11 @@ export const subscriptionFeaturesSchema = z.object({
 
     store: z
         .object({
-            allowed: z.boolean().describe('Whether purchasable items features are granted to the studio.'),
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether purchasable items features are granted to the studio.'
+                ),
 
             maxItems: z
                 .number()
@@ -565,52 +569,72 @@ export const subscriptionFeaturesSchema = z.object({
                 .int()
                 .optional(),
 
-            currencyLimits: z.object({})
-                .catchall(z.object({
-                    maxCost: z.number()
-                        .describe('The maximum cost that items can have in this currency.')
-                        .positive()
-                        .int(),
-                    minCost: z.number()
-                        .describe('The minimum cost that items can have in this currency. Note that this doesn\'t prevent free items, it only sets the minimum cost for a non-free item.')
-                        .positive()
-                        .int(),
-                    fee: z.discriminatedUnion('type', [
-                        z.object({
-                            type: z.literal('percent'),
-                            percent: z.number()
-                                .describe('The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100')
-                                .int()
-                                .min(0)
-                                .max(100),
-                        }),
-                        z.object({
-                            type: z.literal('fixed'),
-                            amount: z.number()
-                                .describe('The fixed amount in cents that should be charged as a fee. Must be a positive integer.')
-                                .int()
-                                .positive(),
-                        })
-                    ])
-                    .describe('The fee that should be charged for purchases in this currency. If omitted, then there is no fee.')
-                    .optional()
-                    .nullable()
-                }))
-                .describe('The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed')
+            currencyLimits: z
+                .object({})
+                .catchall(
+                    z.object({
+                        maxCost: z
+                            .number()
+                            .describe(
+                                'The maximum cost that items can have in this currency.'
+                            )
+                            .positive()
+                            .int(),
+                        minCost: z
+                            .number()
+                            .describe(
+                                "The minimum cost that items can have in this currency. Note that this doesn't prevent free items, it only sets the minimum cost for a non-free item."
+                            )
+                            .positive()
+                            .int(),
+                        fee: z
+                            .discriminatedUnion('type', [
+                                z.object({
+                                    type: z.literal('percent'),
+                                    percent: z
+                                        .number()
+                                        .describe(
+                                            'The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100'
+                                        )
+                                        .int()
+                                        .min(0)
+                                        .max(100),
+                                }),
+                                z.object({
+                                    type: z.literal('fixed'),
+                                    amount: z
+                                        .number()
+                                        .describe(
+                                            'The fixed amount in cents that should be charged as a fee. Must be a positive integer.'
+                                        )
+                                        .int()
+                                        .positive(),
+                                }),
+                            ])
+                            .describe(
+                                'The fee that should be charged for purchases in this currency. If omitted, then there is no fee.'
+                            )
+                            .optional()
+                            .nullable(),
+                    })
+                )
+                .describe(
+                    'The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed'
+                )
                 .optional()
                 .default({
                     usd: {
                         maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
                         minCost: 50, // $0.50 US Dollars (USD)
                     },
-                })
+                }),
         })
         .describe(
             'The configuration for purchasable items features for studios. Defaults to not allowed.'
         )
         .optional()
         .default({
-            allowed: false
+            allowed: false,
         }),
 });
 
@@ -1038,6 +1062,31 @@ export interface FeaturesConfiguration {
      * The configuration for comId features.
      */
     comId?: StudioComIdFeaturesConfiguration;
+
+    /**
+     * The configuration for loom features.
+     */
+    loom?: StudioLoomFeaturesConfiguration;
+
+    /**
+     * The configuration for webhook features.
+     */
+    webhooks?: WebhooksFeaturesConfiguration;
+
+    /**
+     * The configuration for notification features.
+     */
+    notifications?: NotificationFeaturesConfiguration;
+
+    /**
+     * The configuration for package features.
+     */
+    packages?: PackageFeaturesConfiguration;
+
+    /**
+     * The configuration for purchasable items features.
+     */
+    store?: PurchasableItemFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1276,6 +1325,26 @@ export interface StudioComIdFeaturesConfiguration {
     maxStudios?: number;
 }
 
+export type StudioLoomFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['loom'];
+
+export type WebhooksFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['webhooks'];
+
+export type NotificationFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['notifications'];
+
+export type PackageFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['packages'];
+
+export type PurchasableItemFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['store'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -1483,6 +1552,157 @@ export function getComIdFeatures(
         features.comId ?? {
             allowed: false,
             // allowCustomComId: false,
+        }
+    );
+}
+
+/**
+ * Gets the purchasableItems features that are available for the given subscription.
+ * Gets the comId features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getPurchasableItemsFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): PurchasableItemFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return (
+        features.store ?? {
+            allowed: false,
+        }
+    );
+}
+
+/**
+ * Gets the loom features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getLoomFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): StudioLoomFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        'studio',
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.loom ?? { allowed: false };
+}
+
+/**
+ * Gets the Hume AI features that are allowed for the given subscription.
+ * If hume ai features are not configured, then they are not allowed.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getHumeAiFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): AIHumeFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.ai.hume ?? { allowed: false };
+}
+
+/**
+ * Gets the Sloyd AI features that are allowed for the given subscription.
+ * If sloyd ai features are not configured, then they are not allowed.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getSloydAiFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): AISloydFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.ai.sloyd ?? { allowed: false };
+}
+
+/**
+ * Gets the OpenAI-specific features that are allowed for the given subscription.
+ * If OpenAI features are not configured, then they are not allowed.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getOpenAiFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): AIOpenAIFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return (
+        features.ai.openai ?? {
+            realtime: {
+                allowed: false,
+            },
         }
     );
 }

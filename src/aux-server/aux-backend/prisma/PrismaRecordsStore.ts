@@ -32,14 +32,14 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
+    StudioStripeAccountStatus,
+    StudioStripeRequirementsStatus,
 } from '@casual-simulation/aux-records';
 import {
     COM_ID_PLAYER_CONFIG,
     COM_ID_CONFIG_SCHEMA,
     LOOM_CONFIG,
     HUME_CONFIG,
-    StudioStripeAccountStatus,
-    StudioStripeRequirementsStatus,
 } from '@casual-simulation/aux-records';
 import type { PrismaClient, Prisma, Studio as PrismaStudio } from './generated';
 import { convertToDate, convertToMillis } from './Utils';
@@ -253,7 +253,8 @@ export class PrismaRecordsStore implements RecordsStore {
                 playerConfig: studio.playerConfig,
                 stripeAccountId: studio.stripeAccountId,
                 stripeAccountStatus: studio.stripeAccountStatus,
-                stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+                stripeAccountRequirementsStatus:
+                    studio.stripeAccountRequirementsStatus,
             },
         });
     }
@@ -387,7 +388,8 @@ export class PrismaRecordsStore implements RecordsStore {
                 ownerStudioComId: studio.ownerStudioComId,
                 stripeAccountId: studio.stripeAccountId,
                 stripeAccountStatus: studio.stripeAccountStatus,
-                stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+                stripeAccountRequirementsStatus:
+                    studio.stripeAccountRequirementsStatus,
             },
         });
     }
@@ -683,8 +685,10 @@ export class PrismaRecordsStore implements RecordsStore {
                 COM_ID_PLAYER_CONFIG
             ),
             stripeAccountId: studio.stripeAccountId,
-            stripeAccountStatus: studio.stripeAccountStatus as StudioStripeAccountStatus,
-            stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus as StudioStripeRequirementsStatus,
+            stripeAccountStatus:
+                studio.stripeAccountStatus as StudioStripeAccountStatus,
+            stripeAccountRequirementsStatus:
+                studio.stripeAccountRequirementsStatus as StudioStripeRequirementsStatus,
         };
     }
 }

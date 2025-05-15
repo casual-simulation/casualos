@@ -155,8 +155,8 @@ import type {
 import { getPackageVersionSpecifier } from './packages/version/PackageVersionRecordsStore';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import type { XpController } from './XpController';
-import { PurchasableItemRecordsController } from './casualware/PurchasableItemRecordsController';
-import { PurchasableItem } from './casualware/PurchasableItemRecordsStore';
+import type { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
+import type { PurchasableItem } from './purchasable-items/PurchasableItemRecordsStore';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -423,6 +423,12 @@ export interface RecordsServerOptions {
      * If null, then XP is not supported.
      */
     xpController?: XpController | null; // TODO: Determine whether or not this should be optional
+
+    /**
+     * The controller that should be used for handling purchasable items.
+     * If null, then purchasable items are not supported.
+     */
+    purchasableItemsController?: PurchasableItemRecordsController | null;
 }
 
 /**
@@ -517,6 +523,7 @@ export class RecordsServer {
         packagesController,
         packageVersionController,
         xpController,
+        purchasableItemsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -4322,15 +4329,17 @@ export class RecordsServer {
             getManageStudioStoreLink: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/studios/store/manage')
-                .inputs(z.object({
-                    studioId: z
-                        .string({
-                            invalid_type_error:
-                                'studioId must be a string.',
-                            required_error: 'studioId is required.',
-                        })
-                        .min(1),
-                }))
+                .inputs(
+                    z.object({
+                        studioId: z
+                            .string({
+                                invalid_type_error:
+                                    'studioId must be a string.',
+                                required_error: 'studioId is required.',
+                            })
+                            .min(1),
+                    })
+                )
                 .handler(async ({ studioId }, context) => {
                     if (!this._purchasableItems) {
                         return STORE_NOT_SUPPORTED_RESULT;
@@ -4351,10 +4360,11 @@ export class RecordsServer {
                         return sessionKeyValidation;
                     }
 
-                    const result = await this._subscriptions.createManageStoreAccountLink({
-                        studioId,
-                        userId: sessionKeyValidation.userId,
-                    });
+                    const result =
+                        await this._subscriptions.createManageStoreAccountLink({
+                            studioId,
+                            userId: sessionKeyValidation.userId,
+                        });
 
                     return result;
                 }),
@@ -4798,109 +4808,144 @@ export class RecordsServer {
                             typeof GIT_HASH === 'string' ? GIT_HASH : undefined,
                     };
                 }),
-        
+
             getPurchasableItem: procedure()
                 .origins(true)
                 .http('GET', '/api/v2/records/purchasableItems')
-                .inputs(z.object({
-                    recordName: RECORD_NAME_VALIDATION,
-                    address: ADDRESS_VALIDATION,
-                    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                }))
-                .handler(async ({ recordName, address, instances }, context) => {
-                    if (!this._purchasableItems) {
-                        return STORE_NOT_SUPPORTED_RESULT;
-                    }
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._purchasableItems) {
+                            return STORE_NOT_SUPPORTED_RESULT;
+                        }
 
-                    const validation = await this._validateSessionKey(context.sessionKey);
-                    if (validation.success === false && validation.errorCode !== 'no_session_key') {
-                        return validation;
-                    }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
 
-                    const result = await this._purchasableItems.getItem({
-                        recordName: recordName,
-                        address: address,
-                        userId: validation.userId,
-                        instances: instances ?? [],
-                    });
-                    return result;
-                }),
+                        const result = await this._purchasableItems.getItem({
+                            recordName: recordName,
+                            address: address,
+                            userId: validation.userId,
+                            instances: instances ?? [],
+                        });
+                        return result;
+                    }
+                ),
 
             listPurchasableItems: procedure()
                 .origins(true)
                 .http('GET', '/api/v2/records/purchasableItems/list')
-                .inputs(z.object({
-                    recordName: RECORD_NAME_VALIDATION,
-                    address: ADDRESS_VALIDATION.nullable().optional(),
-                    marker: MARKER_VALIDATION.optional(),
-                    sort: z.enum(['ascending', 'descending']).optional(),
-                    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                }))
-                .handler(async ({ recordName, address, instances, marker, sort }, context) => {
-                    if (!this._purchasableItems) {
-                        return STORE_NOT_SUPPORTED_RESULT;
-                    }
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION.nullable().optional(),
+                        marker: MARKER_VALIDATION.optional(),
+                        sort: z.enum(['ascending', 'descending']).optional(),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, instances, marker, sort },
+                        context
+                    ) => {
+                        if (!this._purchasableItems) {
+                            return STORE_NOT_SUPPORTED_RESULT;
+                        }
 
-                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
-                    if (
-                        sessionKeyValidation.success === false &&
-                        sessionKeyValidation.errorCode !== 'no_session_key'
-                    ) {
-                        return sessionKeyValidation;
-                    }
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
 
-                    if (!marker) {
-                        const result = await this._purchasableItems.listItems({
-                            recordName,
-                            startingAddress: address || null,
-                            userId: sessionKeyValidation.userId,
-                            instances,
-                        });
-                        return result;
-                    } else {
-                        const result = await this._purchasableItems.listItemsByMarker({
-                            recordName: recordName,
-                            marker: marker,
-                            startingAddress: address || null,
-                            sort: sort,
-                            userId: sessionKeyValidation.userId,
-                            instances,
-                        });
+                        if (!marker) {
+                            const result =
+                                await this._purchasableItems.listItems({
+                                    recordName,
+                                    startingAddress: address || null,
+                                    userId: sessionKeyValidation.userId,
+                                    instances,
+                                });
+                            return result;
+                        } else {
+                            const result =
+                                await this._purchasableItems.listItemsByMarker({
+                                    recordName: recordName,
+                                    marker: marker,
+                                    startingAddress: address || null,
+                                    sort: sort,
+                                    userId: sessionKeyValidation.userId,
+                                    instances,
+                                });
 
-                        return result;
+                            return result;
+                        }
                     }
-                }),
-        
+                ),
+
             recordPurchasableItem: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/records/purchasableItems')
-                .inputs(z.object({
-                    recordName: RECORD_NAME_VALIDATION,
-                    item: z.object({
-                        address: ADDRESS_VALIDATION,
-                        name: z.string().min(1).max(128),
-                        description: z.string().min(1).max(1024),
-                        imageUrls: z.array(
-                            z.string().min(1).max(512)
-                        ).max(8),
-                        currency: z.string().min(1).max(15).toLowerCase(),
-                        cost: z.number().gte(0).int(),
-                        taxCode: z.string().min(1).max(64).nullable().optional(),
-                        roleName: z.string().min(1),
-                        roleGrantTimeMs: z.number().positive().int().nullable().optional(),
-                        redirectUrl: z.string().url().nullable().optional(),
-                        markers: MARKERS_VALIDATION,
-                    }),
-                    instances: INSTANCES_ARRAY_VALIDATION.optional()
-                }))
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        item: z.object({
+                            address: ADDRESS_VALIDATION,
+                            name: z.string().min(1).max(128),
+                            description: z.string().min(1).max(1024),
+                            imageUrls: z
+                                .array(z.string().min(1).max(512))
+                                .max(8),
+                            currency: z.string().min(1).max(15).toLowerCase(),
+                            cost: z.number().gte(0).int(),
+                            taxCode: z
+                                .string()
+                                .min(1)
+                                .max(64)
+                                .nullable()
+                                .optional(),
+                            roleName: z.string().min(1),
+                            roleGrantTimeMs: z
+                                .number()
+                                .positive()
+                                .int()
+                                .nullable()
+                                .optional(),
+                            redirectUrl: z.string().url().nullable().optional(),
+                            markers: MARKERS_VALIDATION,
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
                 .handler(async ({ recordName, item, instances }, context) => {
                     if (!this._purchasableItems) {
                         return STORE_NOT_SUPPORTED_RESULT;
                     }
 
-                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
                     if (sessionKeyValidation.success === false) {
-                        if (sessionKeyValidation.errorCode === 'no_session_key') {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
                             return NOT_LOGGED_IN_RESULT;
                         }
                         return sessionKeyValidation;
@@ -4910,7 +4955,7 @@ export class RecordsServer {
                         recordKeyOrRecordName: recordName,
                         item: item as PurchasableItem,
                         userId: sessionKeyValidation.userId,
-                        instances: instances
+                        instances: instances,
                     });
 
                     return result;
@@ -4919,87 +4964,115 @@ export class RecordsServer {
             erasePurchasableItem: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/records/purchasableItems/erase')
-                .inputs(z.object({
-                    recordName: RECORD_NAME_VALIDATION,
-                    address: ADDRESS_VALIDATION,
-                    instances: INSTANCES_ARRAY_VALIDATION.optional()
-                }))
-                .handler(async ({ recordName, address, instances }, context) => {
-                    if (!this._purchasableItems) {
-                        return STORE_NOT_SUPPORTED_RESULT;
-                    }
-
-                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
-                    if (sessionKeyValidation.success === false) {
-                        if (sessionKeyValidation.errorCode === 'no_session_key') {
-                            return NOT_LOGGED_IN_RESULT;
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._purchasableItems) {
+                            return STORE_NOT_SUPPORTED_RESULT;
                         }
-                        return sessionKeyValidation;
-                    }
 
-                    const result = await this._purchasableItems.eraseItem({
-                        recordName: recordName,
-                        address: address,
-                        userId: sessionKeyValidation.userId,
-                        instances: instances
-                    });
-                    return result;
-                }),
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (sessionKeyValidation.success === false) {
+                            if (
+                                sessionKeyValidation.errorCode ===
+                                'no_session_key'
+                            ) {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return sessionKeyValidation;
+                        }
+
+                        const result = await this._purchasableItems.eraseItem({
+                            recordName: recordName,
+                            address: address,
+                            userId: sessionKeyValidation.userId,
+                            instances: instances,
+                        });
+                        return result;
+                    }
+                ),
 
             purchaseItem: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/records/purchasableItems/purchase')
-                .inputs(z.object({
-                    recordName: RECORD_NAME_VALIDATION,
-                    item: z.object({
-                        address: ADDRESS_VALIDATION,
-                        expectedCost: z.number().gte(0).int(),
-                        currency: z.string().min(1).max(15).toLowerCase(),
-                    }),
-                    instances: INSTANCES_ARRAY_VALIDATION.optional(),
-                    returnUrl: z.string().url(),
-                    successUrl: z.string().url(),
-                }))
-                .handler(async ({ recordName, item, instances, returnUrl, successUrl }, context) => {
-                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
-                    if (sessionKeyValidation.success === false && sessionKeyValidation.errorCode !== 'no_session_key') {
-                        return sessionKeyValidation;
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        item: z.object({
+                            address: ADDRESS_VALIDATION,
+                            expectedCost: z.number().gte(0).int(),
+                            currency: z.string().min(1).max(15).toLowerCase(),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        returnUrl: z.string().url(),
+                        successUrl: z.string().url(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, item, instances, returnUrl, successUrl },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.createPurchaseItemLink({
+                                userId: sessionKeyValidation.userId,
+                                item: {
+                                    recordName: recordName,
+                                    address: item.address,
+                                    currency: item.currency,
+                                    expectedCost: item.expectedCost,
+                                },
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return result;
                     }
-
-                    const result = await this._subscriptions.createPurchaseItemLink({
-                        userId: sessionKeyValidation.userId,
-                        item: {
-                            recordName: recordName,
-                            address: item.address,
-                            currency: item.currency,
-                            expectedCost: item.expectedCost,
-                        },
-                        returnUrl,
-                        successUrl,
-                        instances,
-                    });
-
-                    return result;
-                }),
+                ),
 
             fulfillCheckoutSession: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/records/checkoutSession/fulfill')
-                .inputs(z.object({
-                    sessionId: z.string().nonempty(),
-                    activation: z.enum(['now', 'later']),
-                }))
+                .inputs(
+                    z.object({
+                        sessionId: z.string().nonempty(),
+                        activation: z.enum(['now', 'later']),
+                    })
+                )
                 .handler(async ({ sessionId, activation }, context) => {
-                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
-                    if (sessionKeyValidation.success === false && sessionKeyValidation.errorCode !== 'no_session_key') {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        sessionKeyValidation.success === false &&
+                        sessionKeyValidation.errorCode !== 'no_session_key'
+                    ) {
                         return sessionKeyValidation;
                     }
 
-                    const result = await this._subscriptions.fulfillCheckoutSession({
-                        userId: sessionKeyValidation.userId,
-                        sessionId,
-                        activation
-                    });
+                    const result =
+                        await this._subscriptions.fulfillCheckoutSession({
+                            userId: sessionKeyValidation.userId,
+                            sessionId,
+                            activation,
+                        });
 
                     return result;
                 }),
@@ -5007,22 +5080,31 @@ export class RecordsServer {
             claimActivationKey: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/records/activationKey/claim')
-                .inputs(z.object({
-                    activationKey: z.string().min(1),
-                    target: z.enum(['self', 'guest']),
-                }))
+                .inputs(
+                    z.object({
+                        activationKey: z.string().min(1),
+                        target: z.enum(['self', 'guest']),
+                    })
+                )
                 .handler(async ({ activationKey, target }, context) => {
-                    const sessionKeyValidation = await this._validateSessionKey(context.sessionKey);
-                    if (sessionKeyValidation.success === false && sessionKeyValidation.errorCode !== 'no_session_key') {
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (
+                        sessionKeyValidation.success === false &&
+                        sessionKeyValidation.errorCode !== 'no_session_key'
+                    ) {
                         return sessionKeyValidation;
                     }
 
-                    const result = await this._subscriptions.claimActivationKey({
-                        userId: sessionKeyValidation.userId,
-                        activationKey,
-                        target,
-                        ipAddress: context.ipAddress
-                    });
+                    const result = await this._subscriptions.claimActivationKey(
+                        {
+                            userId: sessionKeyValidation.userId,
+                            activationKey,
+                            target,
+                            ipAddress: context.ipAddress,
+                        }
+                    );
 
                     return result;
                 }),

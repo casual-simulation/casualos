@@ -56,8 +56,16 @@ import { DataRecordsController } from './DataRecordsController';
 import type { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { getHash } from '@casual-simulation/crypto';
-import { FulfillCheckoutSessionSuccess, SubscriptionController } from './SubscriptionController';
-import type { StripeAccount, StripeAccountLink, StripeCheckoutResponse, StripeCreateCustomerResponse, StripeInterface, StripeProduct } from './StripeInterface';
+import type { FulfillCheckoutSessionSuccess } from './SubscriptionController';
+import { SubscriptionController } from './SubscriptionController';
+import type {
+    StripeAccount,
+    StripeAccountLink,
+    StripeCheckoutResponse,
+    StripeCreateCustomerResponse,
+    StripeInterface,
+    StripeProduct,
+} from './StripeInterface';
 
 import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
 import { MemoryPackageRecordsStore } from './packages/MemoryPackageRecordsStore';
@@ -185,9 +193,9 @@ import { version } from './packages/version/PackageVersionRecordsStore';
 import type { FinancialInterface } from './financial';
 import { MemoryFinancialInterface } from './financial';
 import { XpController } from './XpController';
-import { PurchasableItemRecordsController } from './casualware/PurchasableItemRecordsController';
-import { PurchasableItemRecordsStore } from './casualware/PurchasableItemRecordsStore';
-import { MemoryPurchasableItemRecordsStore } from './casualware/MemoryPurchasableItemRecordsStore';
+import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
+import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
+import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -381,10 +389,10 @@ describe('RecordsServer', () => {
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
-        createAccountLink: jest.Mock<Promise<StripeAccountLink>>,
-        createAccount: jest.Mock<Promise<StripeAccount>>,
-        getAccountById: jest.Mock<Promise<StripeAccount>>,
-        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>,
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
+        createAccount: jest.Mock<Promise<StripeAccount>>;
+        getAccountById: jest.Mock<Promise<StripeAccount>>;
+        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>;
     };
 
     let aiController: AIController;
@@ -853,7 +861,7 @@ describe('RecordsServer', () => {
             packagesController: packageController,
             packageVersionController: packageVersionController,
             xpController: xpController,
-            purchasableItemsController
+            purchasableItemsController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -18198,7 +18206,7 @@ describe('RecordsServer', () => {
                         cost: 100,
                         imageUrls: ['image1'],
                         markers: [PUBLIC_READ_MARKER],
-                    }
+                    },
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -18936,9 +18944,9 @@ describe('RecordsServer', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -18973,8 +18981,8 @@ describe('RecordsServer', () => {
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
                             markers: [PUBLIC_READ_MARKER],
-                            redirectUrl: 'http://example.com'
-                        }
+                            redirectUrl: 'http://example.com',
+                        },
                     }),
                     apiHeaders
                 )
@@ -18990,7 +18998,10 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const item = await purchasableItemsStore.getItemByAddress(recordName, 'testAddress');
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
             expect(item).toEqual({
                 address: 'testAddress',
                 name: 'name',
@@ -19001,7 +19012,7 @@ describe('RecordsServer', () => {
                 roleName: 'role',
                 roleGrantTimeMs: 1000,
                 markers: [PUBLIC_READ_MARKER],
-                redirectUrl: 'http://example.com'
+                redirectUrl: 'http://example.com',
             });
         });
 
@@ -19021,8 +19032,8 @@ describe('RecordsServer', () => {
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
                             markers: [PUBLIC_READ_MARKER],
-                            redirectUrl: 'http://example.com'
-                        }
+                            redirectUrl: 'http://example.com',
+                        },
                     }),
                     apiHeaders
                 )
@@ -19038,7 +19049,10 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const item = await purchasableItemsStore.getItemByAddress(recordName, 'testAddress');
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
             expect(item).toEqual({
                 address: 'testAddress',
                 name: 'name',
@@ -19049,7 +19063,7 @@ describe('RecordsServer', () => {
                 roleName: 'role',
                 roleGrantTimeMs: 1000,
                 markers: [PUBLIC_READ_MARKER],
-                redirectUrl: 'http://example.com'
+                redirectUrl: 'http://example.com',
             });
         });
 
@@ -19073,8 +19087,8 @@ describe('RecordsServer', () => {
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
                             markers: [PUBLIC_READ_MARKER],
-                            redirectUrl: 'http://example.com'
-                        }
+                            redirectUrl: 'http://example.com',
+                        },
                     }),
                     apiHeaders
                 )
@@ -19100,7 +19114,10 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const item = await purchasableItemsStore.getItemByAddress(recordName, 'testAddress');
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
             expect(item).toBe(null);
         });
 
@@ -19124,7 +19141,7 @@ describe('RecordsServer', () => {
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
                             markers: [PUBLIC_READ_MARKER],
-                            redirectUrl: 'http://example.com'
+                            redirectUrl: 'http://example.com',
                         },
                         instances: ['inst'],
                     }),
@@ -19152,7 +19169,10 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const item = await purchasableItemsStore.getItemByAddress(recordName, 'testAddress');
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
             expect(item).toBe(null);
         });
 
@@ -19172,8 +19192,8 @@ describe('RecordsServer', () => {
                             roleName: 'role',
                             roleGrantTimeMs: 1000,
                             markers: [PUBLIC_READ_MARKER],
-                            redirectUrl: 'http://example.com'
-                        }
+                            redirectUrl: 'http://example.com',
+                        },
                     }),
                     apiHeaders
                 )
@@ -19206,7 +19226,7 @@ describe('RecordsServer', () => {
                     `/api/v2/records/purchasableItems`,
                     JSON.stringify({
                         recordName,
-                        item: undefined
+                        item: undefined,
                     }),
                     apiHeaders
                 )
@@ -19217,7 +19237,8 @@ describe('RecordsServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'The request was invalid. One or more fields were invalid.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
                     issues: [
                         {
                             code: 'invalid_type',
@@ -19225,8 +19246,8 @@ describe('RecordsServer', () => {
                             message: 'Required',
                             path: ['item'],
                             received: 'undefined',
-                        }
-                    ]
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -19245,31 +19266,30 @@ describe('RecordsServer', () => {
                     roleName: 'role',
                     roleGrantTimeMs: 1000,
                     markers: [PUBLIC_READ_MARKER],
-                    redirectUrl: 'http://example.com'
-                }
+                    redirectUrl: 'http://example.com',
+                },
             })
         );
-        testAuthorization(
-            () =>
-                httpPost(
-                    '/api/v2/records/purchasableItems',
-                    JSON.stringify({
-                        recordName,
-                        item: {
-                            address: 'testAddress',
-                            name: 'name',
-                            description: 'description',
-                            imageUrls: ['image1', 'image2'],
-                            currency: 'usd',
-                            cost: 100,
-                            roleName: 'role',
-                            roleGrantTimeMs: 1000,
-                            markers: [PUBLIC_READ_MARKER],
-                            redirectUrl: 'http://example.com'
-                        }
-                    }),
-                    apiHeaders
-                ),
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/records/purchasableItems',
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'testAddress',
+                        name: 'name',
+                        description: 'description',
+                        imageUrls: ['image1', 'image2'],
+                        currency: 'usd',
+                        cost: 100,
+                        roleName: 'role',
+                        roleGrantTimeMs: 1000,
+                        markers: [PUBLIC_READ_MARKER],
+                        redirectUrl: 'http://example.com',
+                    },
+                }),
+                apiHeaders
+            )
         );
         testBodyIsJson((body) =>
             httpPost(`/api/v2/records/purchasableItems`, body, apiHeaders)
@@ -19289,8 +19309,8 @@ describe('RecordsServer', () => {
                         roleName: 'role',
                         roleGrantTimeMs: 1000,
                         markers: [PUBLIC_READ_MARKER],
-                        redirectUrl: 'http://example.com'
-                    }
+                        redirectUrl: 'http://example.com',
+                    },
                 }),
                 defaultHeaders
             )
@@ -19320,9 +19340,9 @@ describe('RecordsServer', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -19364,10 +19384,14 @@ describe('RecordsServer', () => {
 
         it('should delete the given item', async () => {
             const result = await server.handleHttpRequest(
-                httpPost('/api/v2/records/purchasableItems/erase', JSON.stringify({
-                    recordName,
-                    address: 'address3'
-                }), apiHeaders)
+                httpPost(
+                    '/api/v2/records/purchasableItems/erase',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address3',
+                    }),
+                    apiHeaders
+                )
             );
 
             expectResponseBodyToEqual(result, {
@@ -19375,10 +19399,13 @@ describe('RecordsServer', () => {
                 body: {
                     success: true,
                 },
-                headers: apiCorsHeaders
+                headers: apiCorsHeaders,
             });
 
-            const item = await purchasableItemsStore.getItemByAddress(recordName, 'address3');
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'address3'
+            );
             expect(item).toBe(null);
         });
 
@@ -19388,10 +19415,14 @@ describe('RecordsServer', () => {
             };
 
             const result = await server.handleHttpRequest(
-                httpPost('/api/v2/records/purchasableItems/erase', JSON.stringify({
-                    recordName,
-                    address: 'address3'
-                }), apiHeaders)
+                httpPost(
+                    '/api/v2/records/purchasableItems/erase',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address3',
+                    }),
+                    apiHeaders
+                )
             );
 
             expectResponseBodyToEqual(result, {
@@ -19399,7 +19430,8 @@ describe('RecordsServer', () => {
                 body: {
                     success: false,
                     errorCode: 'not_authorized',
-                    errorMessage: 'You are not authorized to perform this action.',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                     reason: {
                         type: 'missing_permission',
                         recordName,
@@ -19408,19 +19440,23 @@ describe('RecordsServer', () => {
                         action: 'delete',
                         subjectType: 'user',
                         subjectId: userId,
-                    }
+                    },
                 },
-                headers: apiCorsHeaders
+                headers: apiCorsHeaders,
             });
         });
 
         it('should reject the request if the inst is not authorized', async () => {
             const result = await server.handleHttpRequest(
-                httpPost('/api/v2/records/purchasableItems/erase', JSON.stringify({
-                    recordName,
-                    address: 'address3',
-                    instances: ['inst1']
-                }), apiHeaders)
+                httpPost(
+                    '/api/v2/records/purchasableItems/erase',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address3',
+                        instances: ['inst1'],
+                    }),
+                    apiHeaders
+                )
             );
 
             expectResponseBodyToEqual(result, {
@@ -19428,7 +19464,8 @@ describe('RecordsServer', () => {
                 body: {
                     success: false,
                     errorCode: 'not_authorized',
-                    errorMessage: 'You are not authorized to perform this action.',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                     reason: {
                         type: 'missing_permission',
                         recordName,
@@ -19437,16 +19474,22 @@ describe('RecordsServer', () => {
                         action: 'delete',
                         subjectType: 'inst',
                         subjectId: '/inst1',
-                    }
+                    },
                 },
-                headers: apiCorsHeaders
+                headers: apiCorsHeaders,
             });
         });
 
-        testUrl('POST', '/api/v2/records/purchasableItems/erase', () => JSON.stringify({
-            recordName,
-            address: 'address3'
-        }), () => apiHeaders);
+        testUrl(
+            'POST',
+            '/api/v2/records/purchasableItems/erase',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address3',
+                }),
+            () => apiHeaders
+        );
     });
 
     describe('POST /api/v2/records/purchasableItems/purchase', () => {
@@ -19474,9 +19517,9 @@ describe('RecordsServer', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -19493,7 +19536,7 @@ describe('RecordsServer', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customerId'
+                stripeCustomerId: 'customerId',
             });
 
             await store.createStudioForUser(
@@ -19631,7 +19674,11 @@ describe('RecordsServer', () => {
             })
         );
         testBodyIsJson((body) =>
-            httpPost(`/api/v2/records/purchasableItems/purchase`, body, authenticatedHeaders)
+            httpPost(
+                `/api/v2/records/purchasableItems/purchase`,
+                body,
+                authenticatedHeaders
+            )
         );
         testRateLimit(() =>
             httpPost(
@@ -19676,9 +19723,9 @@ describe('RecordsServer', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -19695,7 +19742,7 @@ describe('RecordsServer', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customerId'
+                stripeCustomerId: 'customerId',
             });
 
             await store.createStudioForUser(
@@ -19760,7 +19807,7 @@ describe('RecordsServer', () => {
                         purchasableItemAddress: 'address1',
                         role: 'myRole',
                         roleGrantTimeMs: null,
-                    }
+                    },
                 ],
                 stripeCheckoutSessionId: 'session_id',
                 userId: userId,
@@ -19772,7 +19819,7 @@ describe('RecordsServer', () => {
                     `/api/v2/records/checkoutSession/fulfill`,
                     JSON.stringify({
                         sessionId: 'sessionId',
-                        activation: 'now'
+                        activation: 'now',
                     }),
                     authenticatedHeaders
                 )
@@ -19801,7 +19848,7 @@ describe('RecordsServer', () => {
                         purchasableItemAddress: 'address1',
                         role: 'myRole',
                         roleGrantTimeMs: null,
-                    }
+                    },
                 ],
                 stripeCheckoutSessionId: 'session_id',
                 userId: userId,
@@ -19813,7 +19860,7 @@ describe('RecordsServer', () => {
                     `/api/v2/records/checkoutSession/fulfill`,
                     JSON.stringify({
                         sessionId: 'sessionId',
-                        activation: 'later'
+                        activation: 'later',
                     }),
                     authenticatedHeaders
                 )
@@ -19844,7 +19891,7 @@ describe('RecordsServer', () => {
                         purchasableItemAddress: 'address1',
                         role: 'myRole',
                         roleGrantTimeMs: null,
-                    }
+                    },
                 ],
                 stripeCheckoutSessionId: 'session_id',
                 userId: null,
@@ -19858,7 +19905,7 @@ describe('RecordsServer', () => {
                     `/api/v2/records/checkoutSession/fulfill`,
                     JSON.stringify({
                         sessionId: 'sessionId',
-                        activation: 'later'
+                        activation: 'later',
                     }),
                     authenticatedHeaders
                 )
@@ -19878,18 +19925,22 @@ describe('RecordsServer', () => {
         testOrigin('POST', `/api/v2/records/checkoutSession/fulfill`, () =>
             JSON.stringify({
                 sessionId: 'sessionId',
-                activation: 'now'
+                activation: 'now',
             })
         );
         testBodyIsJson((body) =>
-            httpPost(`/api/v2/records/checkoutSession/fulfill`, body, authenticatedHeaders)
+            httpPost(
+                `/api/v2/records/checkoutSession/fulfill`,
+                body,
+                authenticatedHeaders
+            )
         );
         testRateLimit(() =>
             httpPost(
                 `/api/v2/records/checkoutSession/fulfill`,
                 JSON.stringify({
                     sessionId: 'sessionId',
-                    activation: 'now'
+                    activation: 'now',
                 }),
                 defaultHeaders
             )
@@ -19922,9 +19973,9 @@ describe('RecordsServer', () => {
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -19941,7 +19992,7 @@ describe('RecordsServer', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customerId'
+                stripeCustomerId: 'customerId',
             });
 
             await store.createStudioForUser(
@@ -20017,16 +20068,17 @@ describe('RecordsServer', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
-            const checkoutResult = await subscriptionController.fulfillCheckoutSession({
-                userId: userId,
-                sessionId: 'session1',
-                activation: 'later',
-            }) as FulfillCheckoutSessionSuccess;
+            const checkoutResult =
+                (await subscriptionController.fulfillCheckoutSession({
+                    userId: userId,
+                    sessionId: 'session1',
+                    activation: 'later',
+                })) as FulfillCheckoutSessionSuccess;
 
             expect(checkoutResult).toEqual({
                 success: true,
@@ -20040,13 +20092,14 @@ describe('RecordsServer', () => {
         it('should claim the activation key', async () => {
             const result = await server.handleHttpRequest(
                 httpPost(
-                    '/api/v2/records/activationKey/claim', 
+                    '/api/v2/records/activationKey/claim',
                     JSON.stringify({
                         activationKey: activationKey,
                         target: 'self',
                     }),
                     authenticatedHeaders
-                ));
+                )
+            );
 
             expectResponseBodyToEqual(result, {
                 statusCode: 200,
@@ -20054,16 +20107,18 @@ describe('RecordsServer', () => {
                     success: true,
                     userId: userId,
                 },
-                headers: accountCorsHeaders
+                headers: accountCorsHeaders,
             });
 
-            const roles = (await store.listRolesForUser('studioId', userId)).filter(r => r.role === 'myRole');
+            const roles = (
+                await store.listRolesForUser('studioId', userId)
+            ).filter((r) => r.role === 'myRole');
 
             expect(roles).toEqual([
                 {
                     role: 'myRole',
-                    expireTimeMs: null
-                }
+                    expireTimeMs: null,
+                },
             ]);
             expect(store.purchasedItems).toEqual([
                 {
@@ -20076,7 +20131,7 @@ describe('RecordsServer', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: expect.any(Number),
                     activationKeyId: expect.any(String),
-                }
+                },
             ]);
         });
 
@@ -20085,13 +20140,14 @@ describe('RecordsServer', () => {
 
             const result = await server.handleHttpRequest(
                 httpPost(
-                    '/api/v2/records/activationKey/claim', 
+                    '/api/v2/records/activationKey/claim',
                     JSON.stringify({
                         activationKey: activationKey,
                         target: 'guest',
                     }),
                     authenticatedHeaders
-                ));
+                )
+            );
 
             const body = await expectResponseBodyToEqual(result, {
                 statusCode: 200,
@@ -20102,16 +20158,18 @@ describe('RecordsServer', () => {
                     connectionKey: expect.any(String),
                     expireTimeMs: null,
                 },
-                headers: accountCorsHeaders
+                headers: accountCorsHeaders,
             });
 
-            const roles = (await store.listRolesForUser('studioId', body.userId)).filter(r => r.role === 'myRole');
+            const roles = (
+                await store.listRolesForUser('studioId', body.userId)
+            ).filter((r) => r.role === 'myRole');
 
             expect(roles).toEqual([
                 {
                     role: 'myRole',
-                    expireTimeMs: null
-                }
+                    expireTimeMs: null,
+                },
             ]);
             expect(store.purchasedItems).toEqual([
                 {
@@ -20124,7 +20182,7 @@ describe('RecordsServer', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: expect.any(Number),
                     activationKeyId: expect.any(String),
-                }
+                },
             ]);
         });
 
@@ -20135,7 +20193,11 @@ describe('RecordsServer', () => {
             })
         );
         testBodyIsJson((body) =>
-            httpPost(`/api/v2/records/activationKey/claim`, body, authenticatedHeaders)
+            httpPost(
+                `/api/v2/records/activationKey/claim`,
+                body,
+                authenticatedHeaders
+            )
         );
         testRateLimit(() =>
             httpPost(
@@ -22826,9 +22888,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                                         usd: {
                                             maxCost: 1000,
                                             minCost: 1,
-                                        }
-                                    }
-                                }
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -22849,7 +22911,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 subscriptionPeriodEndMs: Date.now() + 1000 * 60 * 60 * 24 * 365,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
-                stripeAccountRequirementsStatus: 'complete'
+                stripeAccountRequirementsStatus: 'complete',
             });
 
             await store.addStudioAssignment({
@@ -22870,9 +22932,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             const result = await server.handleHttpRequest(
-                httpPost('/api/v2/studios/store/manage', JSON.stringify({
-                    studioId: 'studioId',
-                }), authenticatedHeaders)
+                httpPost(
+                    '/api/v2/studios/store/manage',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
             );
 
             expectResponseBodyToEqual(result, {
@@ -22881,7 +22947,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     success: true,
                     url: 'https://example.com/account-link',
                 },
-                headers: accountCorsHeaders
+                headers: accountCorsHeaders,
             });
 
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
@@ -22894,11 +22960,15 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
         it('should return not_logged_in when the user is not logged in', async () => {
             const result = await server.handleHttpRequest(
-                httpPost('/api/v2/studios/store/manage', JSON.stringify({
-                    studioId: 'studioId'
-                }), {
-                    origin: accountOrigin
-                })
+                httpPost(
+                    '/api/v2/studios/store/manage',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                    }),
+                    {
+                        origin: accountOrigin,
+                    }
+                )
             );
 
             expectResponseBodyToEqual(result, {
@@ -22906,15 +22976,22 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 body: {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user is not logged in. A session key must be provided for this operation.',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
                 },
-                headers: accountCorsHeaders
+                headers: accountCorsHeaders,
             });
         });
 
-        testUrl('POST', '/api/v2/studios/store/manage', () => JSON.stringify({
-            studioId: 'studioId'
-        }), () => authenticatedHeaders);
+        testUrl(
+            'POST',
+            '/api/v2/studios/store/manage',
+            () =>
+                JSON.stringify({
+                    studioId: 'studioId',
+                }),
+            () => authenticatedHeaders
+        );
     });
 
     describe('GET /api/v2/player/config', () => {

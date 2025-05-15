@@ -253,7 +253,6 @@ export class MemoryStore
         return this._aiRealtimeMetrics;
     }
 
-
     private _purchasedItems: PurchasedItem[] = [];
     private _activationKeys: ActivationKey[] = [];
     // TODO: Support global permissions
@@ -835,7 +834,7 @@ export class MemoryStore
     }
 
     async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
-        return this._studios.find(s => s.stripeAccountId === accountId);
+        return this._studios.find((s) => s.stripeAccountId === accountId);
     }
 
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
@@ -2072,12 +2071,18 @@ export class MemoryStore
         }
     }
 
-    async updateCheckoutSessionInfo(request: UpdateCheckoutSessionRequest): Promise<void> {
-        let sessionIndex = this._checkoutSessions.findIndex((s) => s.id === request.id);
+    async updateCheckoutSessionInfo(
+        request: UpdateCheckoutSessionRequest
+    ): Promise<void> {
+        let sessionIndex = this._checkoutSessions.findIndex(
+            (s) => s.id === request.id
+        );
 
         let invoiceId: string = null;
         if (request.invoice) {
-            let invoice = this._invoices.find(i => i.stripeInvoiceId === request.invoice.stripeInvoiceId);
+            let invoice = this._invoices.find(
+                (i) => i.stripeInvoiceId === request.invoice.stripeInvoiceId
+            );
 
             if (!invoice) {
                 invoice = {
@@ -2134,8 +2139,11 @@ export class MemoryStore
         }
     }
 
-    async markCheckoutSessionFulfilled(sessionId: string, fulfilledAtMs: number): Promise<void> {
-        const session = this._checkoutSessions.find(s => s.id === sessionId);
+    async markCheckoutSessionFulfilled(
+        sessionId: string,
+        fulfilledAtMs: number
+    ): Promise<void> {
+        const session = this._checkoutSessions.find((s) => s.id === sessionId);
         if (session) {
             this._checkoutSessions[this._checkoutSessions.indexOf(session)] = {
                 ...session,
@@ -2145,7 +2153,7 @@ export class MemoryStore
     }
 
     async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
-        return this._checkoutSessions.find(s => s.id === id);
+        return this._checkoutSessions.find((s) => s.id === id);
     }
 
     private _findUserIndex(id: string): number {
@@ -2988,10 +2996,6 @@ export class MemoryStore
         return await this._getSubscriptionInfo(recordName);
     }
 
-    async listRecordsForSubscriptionByRecordName(recordName: string) {
-        return await this._listRecordsForSubscription(recordName);
-    }
-
     async getSubscriptionAiSloydMetrics(
         filter: SubscriptionFilter
     ): Promise<AISloydSubscriptionMetrics> {
@@ -3152,10 +3156,6 @@ export class MemoryStore
 
     async recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void> {
         this._aiSkyboxMetrics.push(metrics);
-    }
-
-    async getSubscriptionInfoForRecord(recordName: string) {
-        return await this._getSubscriptionInfo(recordName);
     }
 
     private async _getSubscriptionInfo(
@@ -3744,30 +3744,32 @@ export class MemoryStore
     }
 
     async savePurchasedItem(item: PurchasedItem): Promise<void> {
-        const index = this._purchasedItems.findIndex(i => i.id === item.id);
+        const index = this._purchasedItems.findIndex((i) => i.id === item.id);
         if (index >= 0) {
             this._purchasedItems[index] = {
-                ...item
+                ...item,
             };
         } else {
             this._purchasedItems.push({
-                ...item
+                ...item,
             });
         }
     }
 
     async createActivationKey(key: ActivationKey): Promise<void> {
         this._activationKeys.push({
-            ...key
+            ...key,
         });
     }
 
     async getActivationKeyById(id: string): Promise<ActivationKey> {
-        return this._activationKeys.find(k => k.id === id);
+        return this._activationKeys.find((k) => k.id === id);
     }
 
-    async listPurchasedItemsByActivationKeyId(keyId: string): Promise<PurchasedItem[]> {
-        return this._purchasedItems.filter(i => i.activationKeyId === keyId);
+    async listPurchasedItemsByActivationKeyId(
+        keyId: string
+    ): Promise<PurchasedItem[]> {
+        return this._purchasedItems.filter((i) => i.activationKeyId === keyId);
     }
 }
 

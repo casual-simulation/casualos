@@ -1235,12 +1235,16 @@ export class RecordsController {
                 comIdFeatures = getComIdFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
                 loomFeatures = getLoomFeatures(
                     config,
                     studio.subscriptionStatus,
-                    studio.subscriptionId
+                    studio.subscriptionId,
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
 
                 if (loomFeatures.allowed) {
@@ -1253,7 +1257,9 @@ export class RecordsController {
                     config,
                     studio.subscriptionStatus,
                     studio.subscriptionId,
-                    'studio'
+                    'studio',
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
 
                 if (humeFeatures.allowed) {
@@ -1265,6 +1271,9 @@ export class RecordsController {
                     config,
                     studio.subscriptionStatus,
                     studio.subscriptionId,
+                    'studio',
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
                 );
             }
 
@@ -1291,7 +1300,8 @@ export class RecordsController {
                     comIdFeatures: comIdFeatures,
                     storeFeatures: storeFeatures,
                     stripeAccountStatus: studio.stripeAccountStatus ?? null,
-                    stripeRequirementsStatus: studio.stripeAccountRequirementsStatus ?? null,
+                    stripeRequirementsStatus:
+                        studio.stripeAccountRequirementsStatus ?? null,
                     loomFeatures,
                     humeFeatures,
                 },

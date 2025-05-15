@@ -15,25 +15,52 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { ClaimActivationKeySuccess, FulfillCheckoutSessionSuccess, SubscriptionController, formatV1ActivationKey, getAccountStatus, parseActivationKey } from './SubscriptionController';
-import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
-import type { AuthUser } from './AuthStore';
-import { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import type {
+    ClaimActivationKeySuccess,
+    FulfillCheckoutSessionSuccess,
+} from './SubscriptionController';
 import {
-    FeaturesConfiguration,
+    SubscriptionController,
+    formatV1ActivationKey,
+    getAccountStatus,
+    parseActivationKey,
+} from './SubscriptionController';
+import type { AuthController } from './AuthController';
+import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
+import type { AuthUser } from './AuthStore';
+import type { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import {
     formatV1SessionKey,
+    generateV1ConnectionToken,
     parseSessionKey,
 } from '@casual-simulation/aux-common';
-import type { StripeInterface, StripeProduct } from './StripeInterface';
+import type {
+    StripeAccount,
+    StripeAccountLink,
+    StripeCheckoutResponse,
+    StripeCreateCustomerResponse,
+    StripeInterface,
+    StripeProduct,
+} from './StripeInterface';
+import type {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import type { Studio, StudioStripeAccountStatus } from './RecordsStore';
-import { MemoryStore } from './MemoryStore';
-import { createTestControllers, createTestSubConfiguration, createTestUser } from './TestUtils';
+import type { MemoryStore } from './MemoryStore';
+import {
+    createTestControllers,
+    createTestSubConfiguration,
+    createTestUser,
+} from './TestUtils';
 import { merge } from 'lodash';
-import { MemoryPurchasableItemRecordsStore } from './casualware/MemoryPurchasableItemRecordsStore';
-import { PRIVATE_MARKER, PUBLIC_READ_MARKER, toBase64String } from '@casual-simulation/aux-common';
-import { PolicyController } from './PolicyController';
-import { RecordsController } from './RecordsController';
+import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
+import {
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+    toBase64String,
+} from '@casual-simulation/aux-common';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -56,10 +83,10 @@ describe('SubscriptionController', () => {
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
-        createAccountLink: jest.Mock<Promise<StripeAccountLink>>,
-        createAccount: jest.Mock<Promise<StripeAccount>>,
-        getAccountById: jest.Mock<Promise<StripeAccount>>,
-        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>,
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
+        createAccount: jest.Mock<Promise<StripeAccount>>;
+        getAccountById: jest.Mock<Promise<StripeAccount>>;
+        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>;
     };
 
     let stripe: StripeInterface;
@@ -167,9 +194,9 @@ describe('SubscriptionController', () => {
             store,
             store,
             store,
-            purchasableItemsStore,
             services.policies,
             store,
+            purchasableItemsStore
         );
 
         const request = await auth.requestLogin({
@@ -3198,8 +3225,8 @@ describe('SubscriptionController', () => {
                     stripeMock.createCheckoutSession.mockResolvedValueOnce({
                         url: 'checkout_url',
                         id: 'session_id',
-                    status: 'open',
-                    payment_status: 'unpaid',
+                        status: 'open',
+                        payment_status: 'unpaid',
                     });
                 });
 
@@ -4346,10 +4373,10 @@ describe('SubscriptionController', () => {
                                     currencyLimits: {
                                         usd: {
                                             maxCost: 10000,
-                                            minCost: 10
-                                        }
-                                    }
-                                }
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -4372,7 +4399,7 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
-                stripeAccountRequirementsStatus: 'complete'
+                stripeAccountRequirementsStatus: 'complete',
             });
 
             await store.addStudioAssignment({
@@ -4390,7 +4417,7 @@ describe('SubscriptionController', () => {
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'studioId',
-                userId: userId
+                userId: userId,
             });
 
             expect(result).toEqual({
@@ -4425,12 +4452,12 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
-                stripeAccountRequirementsStatus: 'incomplete'
+                stripeAccountRequirementsStatus: 'incomplete',
             });
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'studioId',
-                userId: userId
+                userId: userId,
             });
 
             expect(result).toEqual({
@@ -4450,15 +4477,13 @@ describe('SubscriptionController', () => {
             stripeMock.createAccount.mockResolvedValueOnce({
                 id: 'accountId',
                 requirements: {
-                    currently_due: [
-                        'requirement1'
-                    ],
+                    currently_due: ['requirement1'],
                     current_deadline: null,
                     disabled_reason: null,
                     errors: [],
                     eventually_due: [],
                     past_due: [],
-                    pending_verification: []
+                    pending_verification: [],
                 },
                 charges_enabled: false,
             });
@@ -4481,12 +4506,12 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: null,
                 stripeAccountStatus: null,
-                stripeAccountRequirementsStatus: null
+                stripeAccountRequirementsStatus: null,
             });
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'studioId',
-                userId: userId
+                userId: userId,
             });
 
             expect(result).toEqual({
@@ -4508,25 +4533,25 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'pending',
-                stripeAccountRequirementsStatus: 'incomplete'
+                stripeAccountRequirementsStatus: 'incomplete',
             });
 
             expect(stripeMock.createAccount).toHaveBeenCalledWith({
                 controller: {
                     fees: {
-                        payer: 'account'
+                        payer: 'account',
                     },
                     losses: {
-                        payments: 'stripe'
+                        payments: 'stripe',
                     },
                     requirement_collection: 'stripe',
                     stripe_dashboard: {
-                        type: 'full'
-                    }
+                        type: 'full',
+                    },
                 },
                 metadata: {
-                    studioId: 'studioId'
-                }
+                    studioId: 'studioId',
+                },
             });
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
@@ -4554,7 +4579,7 @@ describe('SubscriptionController', () => {
                             features: merge(allowAllFeatures(), {
                                 store: {
                                     allowed: false,
-                                }
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -4567,13 +4592,13 @@ describe('SubscriptionController', () => {
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'studioId',
-                userId: userId
+                userId: userId,
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to perform this action.'
+                errorMessage: 'You are not authorized to perform this action.',
             });
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
@@ -4586,13 +4611,13 @@ describe('SubscriptionController', () => {
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'studioId',
-                userId: 'wrongUserId'
+                userId: 'wrongUserId',
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to perform this action.'
+                errorMessage: 'You are not authorized to perform this action.',
             });
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
@@ -4608,7 +4633,7 @@ describe('SubscriptionController', () => {
                 email: 'test2@example.com',
                 phoneNumber: null,
                 allSessionRevokeTimeMs: null,
-                currentLoginRequestId: null
+                currentLoginRequestId: null,
             });
 
             await store.addStudioAssignment({
@@ -4620,13 +4645,13 @@ describe('SubscriptionController', () => {
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'studioId',
-                userId: 'wrongUserId'
+                userId: 'wrongUserId',
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to perform this action.'
+                errorMessage: 'You are not authorized to perform this action.',
             });
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
@@ -4639,13 +4664,13 @@ describe('SubscriptionController', () => {
 
             const result = await controller.createManageStoreAccountLink({
                 studioId: 'missingStudio',
-                userId: userId
+                userId: userId,
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'studio_not_found',
-                errorMessage: 'The given studio was not found.'
+                errorMessage: 'The given studio was not found.',
             });
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
@@ -4677,11 +4702,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'fixed',
-                                                amount: 10
-                                            }
-                                        }
+                                                amount: 10,
+                                            },
+                                        },
                                     },
-                                }
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -4704,7 +4729,7 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
-                stripeAccountRequirementsStatus: 'complete'
+                stripeAccountRequirementsStatus: 'complete',
             });
 
             await store.addRecord({
@@ -4778,7 +4803,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -4791,7 +4818,7 @@ describe('SubscriptionController', () => {
                 },
                 connect: {
                     stripeAccount: 'accountId',
-                }
+                },
             });
 
             expect(store.checkoutSessions).toEqual([
@@ -4810,10 +4837,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
 
             await expect(store.findUser(userId)).resolves.toEqual({
@@ -4868,7 +4895,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
                 cancel_url: 'return-url',
                 customer_email: null,
                 metadata: {
@@ -4881,7 +4910,7 @@ describe('SubscriptionController', () => {
                 },
                 connect: {
                     stripeAccount: 'accountId',
-                }
+                },
             });
 
             expect(store.checkoutSessions).toEqual([
@@ -4900,10 +4929,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
@@ -4931,11 +4960,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'fixed',
-                                                amount: 10
-                                            }
-                                        }
-                                    }
-                                }
+                                                amount: 10,
+                                            },
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -4948,11 +4977,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -4994,7 +5023,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -5007,7 +5038,7 @@ describe('SubscriptionController', () => {
                 },
                 connect: {
                     stripeAccount: 'accountId',
-                }
+                },
             });
 
             expect(store.checkoutSessions).toEqual([
@@ -5026,10 +5057,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
@@ -5057,11 +5088,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'percent',
-                                                percent: 15
-                                            }
-                                        }
-                                    }
-                                }
+                                                percent: 15,
+                                            },
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5074,11 +5105,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5120,7 +5151,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -5133,7 +5166,7 @@ describe('SubscriptionController', () => {
                 },
                 connect: {
                     stripeAccount: 'accountId',
-                }
+                },
             });
 
             expect(store.checkoutSessions).toEqual([
@@ -5152,10 +5185,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
@@ -5183,11 +5216,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'percent',
-                                                percent: 15
-                                            }
-                                        }
-                                    }
-                                }
+                                                percent: 15,
+                                            },
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5200,7 +5233,7 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             await purchasableItemsStore.putItem('studioId', {
                 address: 'item1',
                 cost: 49,
@@ -5245,7 +5278,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url:  expect.stringMatching(/^https:\/\/return-url\/store\/fulfillment\//),
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -5259,7 +5294,7 @@ describe('SubscriptionController', () => {
                 },
                 connect: {
                     stripeAccount: 'accountId',
-                }
+                },
             });
 
             expect(store.checkoutSessions).toEqual([
@@ -5278,10 +5313,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
@@ -5292,11 +5327,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5315,7 +5350,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'price_does_not_match',
-                errorMessage: 'The expected price does not match the actual price of the item.'
+                errorMessage:
+                    'The expected price does not match the actual price of the item.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5329,11 +5365,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5352,7 +5388,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'price_does_not_match',
-                errorMessage: 'The expected price does not match the actual price of the item.'
+                errorMessage:
+                    'The expected price does not match the actual price of the item.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5377,7 +5414,7 @@ describe('SubscriptionController', () => {
                             features: merge(allowAllFeatures(), {
                                 store: {
                                     allowed: false,
-                                }
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5390,11 +5427,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5413,7 +5450,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'store_disabled',
-                errorMessage: 'The store you are trying to purchase from is disabled.'
+                errorMessage:
+                    'The store you are trying to purchase from is disabled.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5427,11 +5465,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const studio = await store.getStudioById('studioId');
@@ -5458,7 +5496,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'store_disabled',
-                errorMessage: 'The store you are trying to purchase from is disabled.'
+                errorMessage:
+                    'The store you are trying to purchase from is disabled.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5472,11 +5511,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const studio = await store.getStudioById('studioId');
@@ -5503,7 +5542,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'store_disabled',
-                errorMessage: 'The store you are trying to purchase from is disabled.'
+                errorMessage:
+                    'The store you are trying to purchase from is disabled.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5531,10 +5571,10 @@ describe('SubscriptionController', () => {
                                     currencyLimits: {
                                         usd: {
                                             maxCost: 10000,
-                                            minCost: 10
-                                        }
-                                    }
-                                }
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5543,7 +5583,7 @@ describe('SubscriptionController', () => {
 
             await purchasableItemsStore.putItem('studioId', {
                 address: 'item1',
-                currency: 'eur'
+                currency: 'eur',
             });
 
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
@@ -5552,11 +5592,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5575,7 +5615,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'currency_not_supported',
-                errorMessage: 'The currency is not supported.'
+                errorMessage: 'The currency is not supported.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5603,10 +5643,10 @@ describe('SubscriptionController', () => {
                                     currencyLimits: {
                                         usd: {
                                             maxCost: 10000,
-                                            minCost: 10
-                                        }
-                                    }
-                                }
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5624,11 +5664,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5647,7 +5687,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'subscription_limit_reached',
-                errorMessage: 'The item you are trying to purchase has a price that is not allowed.'
+                errorMessage:
+                    'The item you are trying to purchase has a price that is not allowed.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5678,11 +5719,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'fixed',
-                                                amount: 100
-                                            }
-                                        }
+                                                amount: 100,
+                                            },
+                                        },
                                     },
-                                }
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5700,11 +5741,11 @@ describe('SubscriptionController', () => {
                 payment_status: 'unpaid',
                 status: 'open',
             });
-            
+
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                stripeCustomerId: 'customer_id'
+                stripeCustomerId: 'customer_id',
             });
 
             const result = await controller.createPurchaseItemLink({
@@ -5723,7 +5764,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: 'The application fee is greater than the cost of the item.'
+                errorMessage:
+                    'The application fee is greater than the cost of the item.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5780,7 +5822,7 @@ describe('SubscriptionController', () => {
                     action: 'purchase',
                     subjectType: 'user',
                     subjectId: userId,
-                }
+                },
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5844,7 +5886,7 @@ describe('SubscriptionController', () => {
                     action: 'purchase',
                     subjectType: 'inst',
                     subjectId: '/myInst',
-                }
+                },
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5855,7 +5897,7 @@ describe('SubscriptionController', () => {
         it('should return item_already_purchased if the user already has the role', async () => {
             await store.assignSubjectRole('studioId', userId, 'user', {
                 role: 'myRole',
-                expireTimeMs: null
+                expireTimeMs: null,
             });
 
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
@@ -5885,7 +5927,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'item_already_purchased',
-                errorMessage: 'You already have the role that the item would grant.',
+                errorMessage:
+                    'You already have the role that the item would grant.',
             });
 
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
@@ -5919,11 +5962,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'fixed',
-                                                amount: 10
-                                            }
-                                        }
+                                                amount: 10,
+                                            },
+                                        },
                                     },
-                                }
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -5946,7 +5989,7 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
-                stripeAccountRequirementsStatus: 'complete'
+                stripeAccountRequirementsStatus: 'complete',
             });
 
             await store.addRecord({
@@ -5996,9 +6039,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
         });
 
@@ -6006,13 +6049,13 @@ describe('SubscriptionController', () => {
             const result = await controller.fulfillCheckoutSession({
                 userId: userId,
                 sessionId: 'missing',
-                activation: 'now'
+                activation: 'now',
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_found',
-                errorMessage: 'The checkout session does not exist.'
+                errorMessage: 'The checkout session does not exist.',
             });
         });
 
@@ -6026,7 +6069,8 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to accept fulfillment of this checkout session.'
+                errorMessage:
+                    'You are not authorized to accept fulfillment of this checkout session.',
             });
         });
 
@@ -6046,9 +6090,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             const result = await controller.fulfillCheckoutSession({
@@ -6060,7 +6104,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'invalid_request',
-                errorMessage: 'The checkout session has expired.'
+                errorMessage: 'The checkout session has expired.',
             });
         });
 
@@ -6080,9 +6124,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             const result = await controller.fulfillCheckoutSession({
@@ -6094,7 +6138,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'invalid_request',
-                errorMessage: 'The checkout session has not been completed.'
+                errorMessage: 'The checkout session has not been completed.',
             });
         });
 
@@ -6114,9 +6158,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             const result = await controller.fulfillCheckoutSession({
@@ -6128,7 +6172,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'invalid_request',
-                errorMessage: 'The checkout session has not been paid for.'
+                errorMessage: 'The checkout session has not been paid for.',
             });
         });
 
@@ -6148,9 +6192,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             const result = await controller.fulfillCheckoutSession({
@@ -6185,9 +6229,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             nowMock.mockReturnValue(200);
@@ -6195,7 +6239,7 @@ describe('SubscriptionController', () => {
             const result = await controller.fulfillCheckoutSession({
                 userId: userId,
                 sessionId: 'session1',
-                activation: 'now'
+                activation: 'now',
             });
 
             expect(result).toEqual({
@@ -6207,8 +6251,8 @@ describe('SubscriptionController', () => {
             expect(roles).toEqual([
                 {
                     role: 'myRole',
-                    expireTimeMs: null
-                }
+                    expireTimeMs: null,
+                },
             ]);
 
             expect(store.purchasedItems).toEqual([
@@ -6222,7 +6266,7 @@ describe('SubscriptionController', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: 200,
                     activationKeyId: null,
-                }
+                },
             ]);
             expect(store.checkoutSessions).toEqual([
                 {
@@ -6240,10 +6284,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
@@ -6263,9 +6307,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             nowMock.mockReturnValue(200);
@@ -6273,13 +6317,14 @@ describe('SubscriptionController', () => {
             const result = await controller.fulfillCheckoutSession({
                 userId: null,
                 sessionId: 'session1',
-                activation: 'now'
+                activation: 'now',
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'invalid_request',
-                errorMessage: 'Guests cannot accept immediate fulfillment of a checkout session.'
+                errorMessage:
+                    'Guests cannot accept immediate fulfillment of a checkout session.',
             });
 
             const roles = await store.listRolesForUser('studioId', userId);
@@ -6303,10 +6348,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
@@ -6326,9 +6371,9 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             nowMock.mockReturnValue(200);
@@ -6336,13 +6381,15 @@ describe('SubscriptionController', () => {
             const result = await controller.fulfillCheckoutSession({
                 userId: userId,
                 sessionId: 'session1',
-                activation: 'later'
+                activation: 'later',
             });
 
             expect(result).toEqual({
                 success: true,
                 activationKey: expect.any(String),
-                activationUrl: expect.stringMatching(/^https:\/\/return-url\/store\/activate\?key=/)
+                activationUrl: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/activate\?key=/
+                ),
             });
 
             const roles = await store.listRolesForUser('studioId', userId);
@@ -6360,7 +6407,7 @@ describe('SubscriptionController', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: null,
                     activationKeyId: expect.any(String),
-                }
+                },
             ]);
             expect(store.checkoutSessions).toEqual([
                 {
@@ -6378,10 +6425,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
     });
@@ -6413,11 +6460,11 @@ describe('SubscriptionController', () => {
                                             minCost: 10,
                                             fee: {
                                                 type: 'fixed',
-                                                amount: 10
-                                            }
-                                        }
+                                                amount: 10,
+                                            },
+                                        },
                                     },
-                                }
+                                },
                             } as Partial<FeaturesConfiguration>),
                         },
                     },
@@ -6440,7 +6487,7 @@ describe('SubscriptionController', () => {
                 subscriptionPeriodEndMs: 1000,
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
-                stripeAccountRequirementsStatus: 'complete'
+                stripeAccountRequirementsStatus: 'complete',
             });
 
             await store.addRecord({
@@ -6490,18 +6537,18 @@ describe('SubscriptionController', () => {
                         recordName: 'studioId',
                         purchasableItemAddress: 'item1',
                         role: 'myRole',
-                        roleGrantTimeMs: null
-                    }
-                ]
+                        roleGrantTimeMs: null,
+                    },
+                ],
             });
 
             nowMock.mockReturnValue(200);
 
-            const result = await controller.fulfillCheckoutSession({
+            const result = (await controller.fulfillCheckoutSession({
                 userId: userId,
                 sessionId: 'session1',
                 activation: 'later',
-            }) as FulfillCheckoutSessionSuccess;
+            })) as FulfillCheckoutSessionSuccess;
 
             expect(result).toEqual({
                 success: true,
@@ -6519,7 +6566,7 @@ describe('SubscriptionController', () => {
                 userId,
                 activationKey,
                 target: 'self',
-                ipAddress: '127.0.0.1'
+                ipAddress: '127.0.0.1',
             });
 
             expect(result).toEqual({
@@ -6532,8 +6579,8 @@ describe('SubscriptionController', () => {
             expect(roles).toEqual([
                 {
                     role: 'myRole',
-                    expireTimeMs: null
-                }
+                    expireTimeMs: null,
+                },
             ]);
             expect(store.purchasedItems).toEqual([
                 {
@@ -6546,7 +6593,7 @@ describe('SubscriptionController', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: 300,
                     activationKeyId: expect.any(String),
-                }
+                },
             ]);
             expect(store.checkoutSessions).toEqual([
                 {
@@ -6564,20 +6611,20 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
 
         it('should create a new user account when the target is a guest', async () => {
-            const result = await controller.claimActivationKey({
+            const result = (await controller.claimActivationKey({
                 userId,
                 activationKey,
                 target: 'guest',
-                ipAddress: '127.0.0.1'
-            }) as ClaimActivationKeySuccess;
+                ipAddress: '127.0.0.1',
+            })) as ClaimActivationKeySuccess;
 
             expect(result).toEqual({
                 success: true,
@@ -6587,13 +6634,16 @@ describe('SubscriptionController', () => {
                 expireTimeMs: null,
             });
 
-            const roles = await store.listRolesForUser('studioId', result.userId);
+            const roles = await store.listRolesForUser(
+                'studioId',
+                result.userId
+            );
 
             expect(roles).toEqual([
                 {
                     role: 'myRole',
-                    expireTimeMs: null
-                }
+                    expireTimeMs: null,
+                },
             ]);
             expect(store.purchasedItems).toEqual([
                 {
@@ -6606,7 +6656,7 @@ describe('SubscriptionController', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: 300,
                     activationKeyId: expect.any(String),
-                }
+                },
             ]);
             expect(store.checkoutSessions).toEqual([
                 {
@@ -6624,10 +6674,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
 
             const validation = await auth.validateSessionKey(result.sessionKey);
@@ -6637,7 +6687,12 @@ describe('SubscriptionController', () => {
                 sessionId: expect.any(String),
             });
 
-            const token = generateV1ConnectionToken(result.connectionKey, 'connectionId', 'recordName', 'inst');
+            const token = generateV1ConnectionToken(
+                result.connectionKey,
+                'connectionId',
+                'recordName',
+                'inst'
+            );
 
             const validation2 = await auth.validateConnectionToken(token);
             expect(validation2).toMatchObject({
@@ -6646,7 +6701,7 @@ describe('SubscriptionController', () => {
                 sessionId: expect.any(String),
                 connectionId: 'connectionId',
                 recordName: 'recordName',
-                inst: 'inst'
+                inst: 'inst',
             });
         });
 
@@ -6655,13 +6710,13 @@ describe('SubscriptionController', () => {
                 userId,
                 activationKey: 'invalid',
                 target: 'self',
-                ipAddress: '127.0.0.1'
+                ipAddress: '127.0.0.1',
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'invalid_request',
-                errorMessage: 'The activation key is invalid.'
+                errorMessage: 'The activation key is invalid.',
             });
         });
 
@@ -6670,13 +6725,13 @@ describe('SubscriptionController', () => {
                 userId: null,
                 activationKey: activationKey,
                 target: 'self',
-                ipAddress: '127.0.0.1'
+                ipAddress: '127.0.0.1',
             });
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_logged_in',
-                errorMessage: 'You need to be logged in to use target = self.'
+                errorMessage: 'You need to be logged in to use target = self.',
             });
         });
 
@@ -6691,7 +6746,7 @@ describe('SubscriptionController', () => {
                 userId,
                 activationKey,
                 target: 'self',
-                ipAddress: '127.0.0.1'
+                ipAddress: '127.0.0.1',
             });
 
             expect(result).toEqual({
@@ -6713,7 +6768,7 @@ describe('SubscriptionController', () => {
                     roleGrantTimeMs: null,
                     activatedTimeMs: 100,
                     activationKeyId: expect.any(String),
-                }
+                },
             ]);
             expect(store.checkoutSessions).toEqual([
                 {
@@ -6731,10 +6786,10 @@ describe('SubscriptionController', () => {
                             recordName: 'studioId',
                             purchasableItemAddress: 'item1',
                             role: 'myRole',
-                            roleGrantTimeMs: null
-                        }
-                    ]
-                }
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
             ]);
         });
     });
@@ -7409,10 +7464,10 @@ describe('SubscriptionController', () => {
                                         currencyLimits: {
                                             usd: {
                                                 maxCost: 10000,
-                                                minCost: 10
-                                            }
-                                        }
-                                    }
+                                                minCost: 10,
+                                            },
+                                        },
+                                    },
                                 } as Partial<FeaturesConfiguration>),
                             },
                         },
@@ -7455,9 +7510,9 @@ describe('SubscriptionController', () => {
                         created: 123,
                         data: {
                             object: {
-                                "id": "account_id",
-                                "object": "account",
-                            }
+                                id: 'account_id',
+                                object: 'account',
+                            },
                         },
                         livemode: true,
                         pending_webhooks: 1,
@@ -7474,8 +7529,8 @@ describe('SubscriptionController', () => {
                             errors: [],
                             eventually_due: [],
                             past_due: [],
-                            pending_verification: []
-                        }
+                            pending_verification: [],
+                        },
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -7489,7 +7544,9 @@ describe('SubscriptionController', () => {
 
                     const studio = await store.getStudioById(studioId);
                     expect(studio?.stripeAccountStatus).toBe('active');
-                    expect(studio?.stripeAccountRequirementsStatus).toBe('complete');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(
+                        'complete'
+                    );
                 });
 
                 it('should do nothing if no studio matches the account', async () => {
@@ -7502,9 +7559,9 @@ describe('SubscriptionController', () => {
                         created: 123,
                         data: {
                             object: {
-                                "id": "missing",
-                                "object": "account",
-                            }
+                                id: 'missing',
+                                object: 'account',
+                            },
                         },
                         livemode: true,
                         pending_webhooks: 1,
@@ -7521,8 +7578,8 @@ describe('SubscriptionController', () => {
                             errors: [],
                             eventually_due: [],
                             past_due: [],
-                            pending_verification: []
-                        }
+                            pending_verification: [],
+                        },
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -7549,9 +7606,9 @@ describe('SubscriptionController', () => {
                         created: 123,
                         data: {
                             object: {
-                                "id": "account_id",
-                                "object": "account",
-                            }
+                                id: 'account_id',
+                                object: 'account',
+                            },
                         },
                         livemode: true,
                         pending_webhooks: 1,
@@ -7568,8 +7625,8 @@ describe('SubscriptionController', () => {
                             errors: [],
                             eventually_due: [],
                             past_due: [],
-                            pending_verification: []
-                        }
+                            pending_verification: [],
+                        },
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -7583,7 +7640,9 @@ describe('SubscriptionController', () => {
 
                     const studio = await store.getStudioById(studioId);
                     expect(studio?.stripeAccountStatus).toBe('active');
-                    expect(studio?.stripeAccountRequirementsStatus).toBe('complete');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(
+                        'complete'
+                    );
                 });
             });
 
@@ -7625,9 +7684,9 @@ describe('SubscriptionController', () => {
                                 recordName: 'studioId',
                                 purchasableItemAddress: 'item1',
                                 role: 'myRole',
-                                roleGrantTimeMs: null
-                            }
-                        ]
+                                roleGrantTimeMs: null,
+                            },
+                        ],
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -7655,10 +7714,10 @@ describe('SubscriptionController', () => {
                                     recordName: 'studioId',
                                     purchasableItemAddress: 'item1',
                                     role: 'myRole',
-                                    roleGrantTimeMs: null
-                                }
-                            ]
-                        }
+                                    roleGrantTimeMs: null,
+                                },
+                            ],
+                        },
                     ]);
                 });
             });
@@ -7701,9 +7760,9 @@ describe('SubscriptionController', () => {
                                 recordName: 'studioId',
                                 purchasableItemAddress: 'item1',
                                 role: 'myRole',
-                                roleGrantTimeMs: null
-                            }
-                        ]
+                                roleGrantTimeMs: null,
+                            },
+                        ],
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -7731,10 +7790,10 @@ describe('SubscriptionController', () => {
                                     recordName: 'studioId',
                                     purchasableItemAddress: 'item1',
                                     role: 'myRole',
-                                    roleGrantTimeMs: null
-                                }
-                            ]
-                        }
+                                    roleGrantTimeMs: null,
+                                },
+                            ],
+                        },
                     ]);
                 });
             });
@@ -7806,9 +7865,9 @@ describe('SubscriptionController', () => {
                                 recordName: 'studioId',
                                 purchasableItemAddress: 'item1',
                                 role: 'myRole',
-                                roleGrantTimeMs: null
-                            }
-                        ]
+                                roleGrantTimeMs: null,
+                            },
+                        ],
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -7820,7 +7879,9 @@ describe('SubscriptionController', () => {
                         success: true,
                     });
 
-                    expect(await store.getInvoiceByStripeId('invoiceId')).toEqual({
+                    expect(
+                        await store.getInvoiceByStripeId('invoiceId')
+                    ).toEqual({
                         id: expect.any(String),
                         stripeInvoiceId: 'invoiceId',
                         currency: 'usd',
@@ -7858,52 +7919,61 @@ describe('getAccountStatus()', () => {
         ['other', 'disabled'],
     ];
 
-    it.each(disabledReasonCases)('should return %s for %s', (reason, expected) => {
-        expect(getAccountStatus({
-            id: 'account_id',
-            charges_enabled: false,
-            requirements: {
-                currently_due: [],
-                current_deadline: null,
-                disabled_reason: reason,
-                errors: [],
-                eventually_due: [],
-                past_due: [],
-                pending_verification: []
-            }
-        })).toBe(expected);
-    });
+    it.each(disabledReasonCases)(
+        'should return %s for %s',
+        (reason, expected) => {
+            expect(
+                getAccountStatus({
+                    id: 'account_id',
+                    charges_enabled: false,
+                    requirements: {
+                        currently_due: [],
+                        current_deadline: null,
+                        disabled_reason: reason,
+                        errors: [],
+                        eventually_due: [],
+                        past_due: [],
+                        pending_verification: [],
+                    },
+                })
+            ).toBe(expected);
+        }
+    );
 
     it('should return pending if there is no disabled reason but charges are also not enabled', () => {
-        expect(getAccountStatus({
-            id: 'account_id',
-            charges_enabled: false,
-            requirements: {
-                currently_due: [],
-                current_deadline: null,
-                disabled_reason: null,
-                errors: [],
-                eventually_due: [],
-                past_due: [],
-                pending_verification: []
-            },
-        })).toBe('pending');
+        expect(
+            getAccountStatus({
+                id: 'account_id',
+                charges_enabled: false,
+                requirements: {
+                    currently_due: [],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+            })
+        ).toBe('pending');
     });
 
     it('should return active if charges are enabled', () => {
-        expect(getAccountStatus({
-            id: 'account_id',
-            charges_enabled: true,
-            requirements: {
-                currently_due: [],
-                current_deadline: null,
-                disabled_reason: null,
-                errors: [],
-                eventually_due: [],
-                past_due: [],
-                pending_verification: []
-            }
-        })).toBe('active');
+        expect(
+            getAccountStatus({
+                id: 'account_id',
+                charges_enabled: true,
+                requirements: {
+                    currently_due: [],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+            })
+        ).toBe('active');
     });
 });
 
@@ -7923,10 +7993,7 @@ describe('parseActivationKey()', () => {
     it('should be able to parse the given access key', () => {
         const result = formatV1ActivationKey('id', 'password');
         const parsed = parseActivationKey(result);
-        expect(parsed).toEqual([
-            'id',
-            'password'
-        ]);
+        expect(parsed).toEqual(['id', 'password']);
     });
 
     it('should return null if given null', () => {
