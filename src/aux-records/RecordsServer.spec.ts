@@ -36,6 +36,7 @@ import {
     generateV1ConnectionToken,
     getStateFromUpdates,
     isRecordKey,
+    merge,
     parseSessionKey,
     SUBSCRIPTION_ID_NAMESPACE,
 } from '@casual-simulation/aux-common';
@@ -196,6 +197,11 @@ import { XpController } from './XpController';
 import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
+import type {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
+import { allowAllFeatures } from './SubscriptionConfiguration';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -723,9 +729,9 @@ describe('RecordsServer', () => {
             store,
             store,
             store,
-            purchasableItemsStore,
             policyController,
-            store
+            store,
+            purchasableItemsStore
         );
 
         chatInterface = {
@@ -22867,34 +22873,18 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
     describe('POST /api/v2/studios/store/manage', () => {
         beforeEach(async () => {
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                store: {
-                                    allowed: true,
-                                    currencyLimits: {
-                                        usd: {
-                                            maxCost: 1000,
-                                            minCost: 1,
-                                        },
-                                    },
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 1,
+                                maxCost: 1000,
+                            })
+                    )
             );
 
             await store.addStudio({

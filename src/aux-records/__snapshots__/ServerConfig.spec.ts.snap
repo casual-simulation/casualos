@@ -223,6 +223,15 @@ Object {
           "records": Object {
             "allowed": false,
           },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -285,6 +294,15 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -530,6 +548,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -612,6 +639,15 @@ Object {
               "allowed": true,
               "maxRecords": 30000,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -693,6 +729,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 300,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -778,6 +823,15 @@ Object {
               "allowed": true,
               "maxRecords": 1500,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -859,6 +913,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 150,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -944,6 +1007,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1024,6 +1096,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -1101,6 +1182,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1000000000,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -1184,6 +1274,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1263,6 +1362,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 3000,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -1519,6 +1627,15 @@ Object {
           "records": Object {
             "allowed": false,
           },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -1597,6 +1714,15 @@ Object {
           "records": Object {
             "allowed": true,
             "maxRecords": 30,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1871,6 +1997,15 @@ Object {
           "records": Object {
             "allowed": false,
           },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -1933,6 +2068,15 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "store": Object {
+            "allowed": false,
+            "currencyLimits": Object {
+              "usd": Object {
+                "maxCost": 100000,
+                "minCost": 50,
+              },
+            },
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -2178,6 +2322,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2260,6 +2413,15 @@ Object {
               "allowed": true,
               "maxRecords": 30000,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2341,6 +2503,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 300,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -2426,6 +2597,15 @@ Object {
               "allowed": true,
               "maxRecords": 1500,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2507,6 +2687,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 150,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -2592,6 +2781,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2672,6 +2870,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2749,6 +2956,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1000000000,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -2832,6 +3048,15 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2911,6 +3136,15 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 3000,
+            },
+            "store": Object {
+              "allowed": false,
+              "currencyLimits": Object {
+                "usd": Object {
+                  "maxCost": 100000,
+                  "minCost": 50,
+                },
+              },
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,

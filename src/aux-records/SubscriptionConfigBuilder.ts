@@ -33,6 +33,7 @@ import type {
     NotificationFeaturesConfiguration,
     PackageFeaturesConfiguration,
     PublicInstsConfiguration,
+    PurchasableItemFeaturesConfiguration,
     RecordFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
@@ -290,6 +291,29 @@ export class FeaturesBuilder {
 
     withPackagesMaxBytesTotal(maxBytes: number): this {
         this._features.packages.maxPackageBytesTotal = maxBytes;
+        return this;
+    }
+
+    withStore(features?: PurchasableItemFeaturesConfiguration): this {
+        this._features.store = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withStoreMaxItems(maxItems: number): this {
+        this._features.store.maxItems = maxItems;
+        return this;
+    }
+
+    withStoreCurrencyLimit(
+        currency: string,
+        limit: PurchasableItemFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.store.currencyLimits) {
+            this._features.store.currencyLimits = {};
+        }
+        this._features.store.currencyLimits[currency] = limit;
         return this;
     }
 

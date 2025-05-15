@@ -275,11 +275,17 @@ export type PackageVersionActionKinds =
 
 /**
  * The possible types of actions that can be performed on purchasableItem resources.
- * 
+ *
  * @dochash types/permissions
  * @docname PurchasableItemActionKinds
  */
-export type PurchasableItemActionKinds = 'read' | 'create' | 'update' | 'delete' | 'list' | 'purchase';
+export type PurchasableItemActionKinds =
+    | 'read'
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'purchase';
 
 /**
  * The possible types of permissions that can be added to policies.
@@ -405,6 +411,15 @@ export const PACKAGE_VERSION_ACTION_KINDS_VALIDATION = z.enum([
     RUN_ACTION,
 ]);
 
+export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    PURCHASE_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -420,6 +435,7 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     NOTIFICATION_RESOURCE_KIND,
     PACKAGE_RESOURCE_KIND,
     PACKAGE_VERSION_RESOURCE_KIND,
+    PURCHASABLE_ITEM_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -449,6 +465,8 @@ export const ACTION_KINDS_VALIDATION = z.enum([
     SUBSCRIBE_ACTION,
     UNSUBSCRIBE_ACTION,
     LIST_SUBSCRIPTIONS_ACTION,
+
+    PURCHASE_ACTION,
 ]);
 
 /**
@@ -1072,7 +1090,7 @@ type ZodPackageVersionPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes common options for all purchasableItem permissions.
- * 
+ *
  * @dochash types/permissions
  * @docname PurchasableItemPermission
  */
@@ -1090,13 +1108,18 @@ export interface PurchasableItemPermission extends Permission {
 
     action: PurchasableItemActionKinds | null;
 }
-export const PURCHASABLE_ITEM_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
-    resourceKind: z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
-    action: PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION.nullable(),
-});
-type ZodPurchasableItemPermission = z.infer<typeof PURCHASABLE_ITEM_PERMISSION_VALIDATION>;
-type ZodPurchasableItemPermissionAssertion = HasType<ZodPurchasableItemPermission, PurchasableItemPermission>;
-
+export const PURCHASABLE_ITEM_PERMISSION_VALIDATION =
+    PERMISSION_VALIDATION.extend({
+        resourceKind: z.literal(PURCHASABLE_ITEM_RESOURCE_KIND),
+        action: PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION.nullable(),
+    });
+type ZodPurchasableItemPermission = z.infer<
+    typeof PURCHASABLE_ITEM_PERMISSION_VALIDATION
+>;
+type ZodPurchasableItemPermissionAssertion = HasType<
+    ZodPurchasableItemPermission,
+    PurchasableItemPermission
+>;
 
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
@@ -1115,7 +1138,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         NOTIFICATION_PERMISSION_VALIDATION,
         PACKAGE_PERMISSION_VALIDATION,
         PACKAGE_VERSION_PERMISSION_VALIDATION,
-        PURCHASABLE_ITEM_PERMISSION_VALIDATION
+        PURCHASABLE_ITEM_PERMISSION_VALIDATION,
     ]
 );
 

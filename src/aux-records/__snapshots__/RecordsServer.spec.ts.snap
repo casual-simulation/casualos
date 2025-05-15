@@ -2510,129 +2510,10 @@ Object {
             "optional": true,
             "type": "string",
           },
-          "xpId": Object {
-            "nullable": true,
-            "optional": true,
-            "type": "string",
-          },
         },
         "type": "object",
       },
-      "name": "getXpUserMeta",
-      "origins": "api",
-    },
-    Object {
-      "http": Object {
-        "method": "POST",
-        "path": "/api/v2/xp/contract",
-      },
-      "inputs": Object {
-        "schema": Object {
-          "contract": Object {
-            "schema": Object {
-              "accountCurrency": Object {
-                "optional": true,
-                "type": "string",
-              },
-              "contractedUserId": Object {
-                "nullable": true,
-                "optional": true,
-                "schema": Object {
-                  "userId": Object {
-                    "nullable": true,
-                    "optional": true,
-                    "type": "string",
-                  },
-                  "xpId": Object {
-                    "nullable": true,
-                    "optional": true,
-                    "type": "string",
-                  },
-                },
-                "type": "object",
-              },
-              "description": Object {
-                "optional": true,
-                "type": "string",
-              },
-              "gigRate": Object {
-                "type": "number",
-              },
-              "gigs": Object {
-                "type": "number",
-              },
-              "status": Object {
-                "options": Array [
-                  Object {
-                    "type": "literal",
-                    "value": "open",
-                  },
-                  Object {
-                    "type": "literal",
-                    "value": "draft",
-                  },
-                ],
-                "type": "union",
-              },
-            },
-            "type": "object",
-          },
-        },
-        "type": "object",
-      },
-      "name": "createXpContract",
-      "origins": "api",
-    },
-    Object {
-      "http": Object {
-        "method": "PUT",
-        "path": "/api/v2/xp/contract",
-      },
-      "inputs": Object {
-        "schema": Object {
-          "contractId": Object {
-            "type": "string",
-          },
-          "newDescription": Object {
-            "optional": true,
-            "type": "string",
-          },
-          "newStatus": Object {
-            "options": Array [
-              Object {
-                "type": "literal",
-                "value": "open",
-              },
-              Object {
-                "type": "literal",
-                "value": "draft",
-              },
-              Object {
-                "type": "literal",
-                "value": "closed",
-              },
-            ],
-            "type": "union",
-          },
-          "receivingUserId": Object {
-            "schema": Object {
-              "userId": Object {
-                "nullable": true,
-                "optional": true,
-                "type": "string",
-              },
-              "xpId": Object {
-                "nullable": true,
-                "optional": true,
-                "type": "string",
-              },
-            },
-            "type": "object",
-          },
-        },
-        "type": "object",
-      },
-      "name": "updateXpContract",
+      "name": "getXpUserInfo",
       "origins": "api",
     },
     Object {
@@ -3335,6 +3216,51 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "purchasableItem",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -3408,6 +3334,7 @@ Object {
               "notification",
               "package",
               "package.version",
+              "purchasableItem",
             ],
           },
         },
@@ -7730,129 +7657,10 @@ Object {
             "optional": true,
             "type": "string",
           },
-          "xpId": Object {
-            "nullable": true,
-            "optional": true,
-            "type": "string",
-          },
         },
         "type": "object",
       },
-      "name": "getXpUserMeta",
-      "origins": "api",
-    },
-    Object {
-      "http": Object {
-        "method": "POST",
-        "path": "/api/v2/xp/contract",
-      },
-      "inputs": Object {
-        "schema": Object {
-          "contract": Object {
-            "schema": Object {
-              "accountCurrency": Object {
-                "optional": true,
-                "type": "string",
-              },
-              "contractedUserId": Object {
-                "nullable": true,
-                "optional": true,
-                "schema": Object {
-                  "userId": Object {
-                    "nullable": true,
-                    "optional": true,
-                    "type": "string",
-                  },
-                  "xpId": Object {
-                    "nullable": true,
-                    "optional": true,
-                    "type": "string",
-                  },
-                },
-                "type": "object",
-              },
-              "description": Object {
-                "optional": true,
-                "type": "string",
-              },
-              "gigRate": Object {
-                "type": "number",
-              },
-              "gigs": Object {
-                "type": "number",
-              },
-              "status": Object {
-                "options": Array [
-                  Object {
-                    "type": "literal",
-                    "value": "open",
-                  },
-                  Object {
-                    "type": "literal",
-                    "value": "draft",
-                  },
-                ],
-                "type": "union",
-              },
-            },
-            "type": "object",
-          },
-        },
-        "type": "object",
-      },
-      "name": "createXpContract",
-      "origins": "api",
-    },
-    Object {
-      "http": Object {
-        "method": "PUT",
-        "path": "/api/v2/xp/contract",
-      },
-      "inputs": Object {
-        "schema": Object {
-          "contractId": Object {
-            "type": "string",
-          },
-          "newDescription": Object {
-            "optional": true,
-            "type": "string",
-          },
-          "newStatus": Object {
-            "options": Array [
-              Object {
-                "type": "literal",
-                "value": "open",
-              },
-              Object {
-                "type": "literal",
-                "value": "draft",
-              },
-              Object {
-                "type": "literal",
-                "value": "closed",
-              },
-            ],
-            "type": "union",
-          },
-          "receivingUserId": Object {
-            "schema": Object {
-              "userId": Object {
-                "nullable": true,
-                "optional": true,
-                "type": "string",
-              },
-              "xpId": Object {
-                "nullable": true,
-                "optional": true,
-                "type": "string",
-              },
-            },
-            "type": "object",
-          },
-        },
-        "type": "object",
-      },
-      "name": "updateXpContract",
+      "name": "getXpUserInfo",
       "origins": "api",
     },
     Object {
@@ -8555,6 +8363,51 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "purchasableItem",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -8628,6 +8481,7 @@ Object {
               "notification",
               "package",
               "package.version",
+              "purchasableItem",
             ],
           },
         },

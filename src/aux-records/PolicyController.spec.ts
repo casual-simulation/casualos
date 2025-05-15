@@ -3432,7 +3432,7 @@ describe('PolicyController', () => {
             ['list'],
             ['count'],
             ['listSubscriptions'],
-            ['purchase', 'resourceId'],
+            ['purchase'],
         ];
 
         const adminOrGrantedResourceKindCases: [ResourceKinds][] = [
@@ -4825,7 +4825,7 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                     ['purchase', 'resourceId'],
                 ],
-            ]
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -4925,7 +4925,7 @@ describe('PolicyController', () => {
                     ['sendAction', 'resourceId'],
                     ['list', null],
                 ],
-            ]
+            ],
             ['loom', [['create', 'resourceId']]],
             [
                 'marker',
@@ -5367,6 +5367,7 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                     ['purchase', 'resourceId'],
                 ],
+            ],
             ['ai.sloyd', [['create', 'resourceId']]],
             ['ai.hume', [['create', 'resourceId']]],
             [
@@ -5392,7 +5393,6 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
-            ],
             [
                 'purchasableItem',
                 [
@@ -5413,7 +5413,7 @@ describe('PolicyController', () => {
                     ['increment', 'resourceId'],
                     ['purchase', 'resourceId'],
                 ],
-            ]
+            ],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -5504,11 +5504,14 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
-            ['purchasableItem', [
-                ['read', 'resourceId'],
-                ['list', null],
-                ['purchase', 'resourceId'],
-            ]],
+            [
+                'purchasableItem',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['purchase', 'resourceId'],
+                ],
+            ],
         ];
 
         const publicReadSubjectTypeCases: [
@@ -5522,7 +5525,7 @@ describe('PolicyController', () => {
         ];
 
         describe.each(publicReadResourceKindCases)(
-            '%s',
+            'publicRead %s',
             (resourceKind, actions) => {
                 describe.each(actions)('%s', (action, resourceId) => {
                     describe.each(publicReadSubjectTypeCases)(
@@ -5643,11 +5646,14 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
-            ['purchasableItem', [
-                ['read', 'resourceId'],
-                ['list', null],
-                ['purchase', 'resourceId'],
-            ]],
+            [
+                'purchasableItem',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['purchase', 'resourceId'],
+                ],
+            ],
         ];
 
         const publicWriteSubjectTypeCases: [
@@ -5661,7 +5667,7 @@ describe('PolicyController', () => {
         ];
 
         describe.each(publicWriteResourceKindCases)(
-            '%s',
+            'publicWrite %s',
             (resourceKind, actions) => {
                 describe.each(actions)('%s', (action, resourceId) => {
                     describe.each(publicWriteSubjectTypeCases)(

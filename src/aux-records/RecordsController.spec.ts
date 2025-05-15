@@ -2750,36 +2750,20 @@ describe('RecordsController', () => {
         });
 
         it('should include the configured store features', async () => {
-            
-            store.subscriptionConfiguration = merge(
-                createTestSubConfiguration(),
-                {
-                    subscriptions: [
-                        {
-                            id: 'sub1',
-                            eligibleProducts: [],
-                            product: '',
-                            featureList: [],
-                            tier: 'tier1',
-                        },
-                    ],
-                    tiers: {
-                        tier1: {
-                            features: merge(allowAllFeatures(), {
-                                store: {
-                                    allowed: true,
-                                    maxPurchasableItems: 100,
-                                    currencyLimits: {
-                                        usd: {
-                                            maxCost: 10000,
-                                            minCost: 10
-                                        }
-                                    }
-                                },
-                            } as Partial<FeaturesConfiguration>),
-                        },
-                    },
-                } as Partial<SubscriptionConfiguration>);
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreMaxItems(100)
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 10,
+                                maxCost: 10000,
+                            })
+                    )
+            );
 
             const result = await manager.getStudio('studioId', 'userId');
 
@@ -2799,15 +2783,21 @@ describe('RecordsController', () => {
                     comIdFeatures: {
                         allowed: false,
                     },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
                     storeFeatures: {
                         allowed: true,
-                        maxPurchasableItems: 100,
+                        maxItems: 100,
                         currencyLimits: {
                             usd: {
                                 maxCost: 10000,
-                                minCost: 10
-                            }
-                        }
+                                minCost: 10,
+                            },
+                        },
                     },
                     stripeAccountStatus: null,
                     stripeRequirementsStatus: null,
@@ -2852,6 +2842,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2889,15 +2884,24 @@ describe('RecordsController', () => {
                     comIdFeatures: {
                         allowed: false,
                     },
+                    loomFeatures: {
+                        allowed: true,
+                    },
+                    loomConfig: {
+                        appId: 'appId',
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
                     storeFeatures: {
                         allowed: false,
                     },
-                    stripeAccountStatus: 'pending',
-                    stripeRequirementsStatus: 'incomplete',
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
-        
+
         it('should include the studio stripe account status', async () => {
             await store.updateStudio({
                 id: 'studioId',
@@ -2936,13 +2940,10 @@ describe('RecordsController', () => {
                         allowed: false,
                     },
                     loomFeatures: {
-                        allowed: true,
+                        allowed: false,
                     },
                     humeFeatures: {
                         allowed: true,
-                    },
-                    loomConfig: {
-                        appId: 'appId',
                     },
                     storeFeatures: {
                         allowed: false,
@@ -2988,6 +2989,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -3035,6 +3041,11 @@ describe('RecordsController', () => {
                     humeConfig: {
                         apiKey: 'apiKey',
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });

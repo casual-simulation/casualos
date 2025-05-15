@@ -48,9 +48,9 @@ export function createTestSubConfiguration(
     return buildSubscriptionConfig((config) =>
         build(
             config
-                .withCancelUrl('http://cancel-url')
-                .withReturnUrl('http://return-url')
-                .withSuccessUrl('http://success-url')
+                .withCancelUrl('https://cancel-url/')
+                .withReturnUrl('https://return-url/')
+                .withSuccessUrl('https://success-url/')
                 .withWebhookSecret('webhook-secret')
         )
     );
