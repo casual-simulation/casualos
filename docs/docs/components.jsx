@@ -172,6 +172,7 @@ export const tagMap = {
     formBuildStep: 'tags/visualization',
     formLDrawPartsAddress: 'tags/visualization',
     formMapLOD: 'tags/visualization',
+    formMapProvider: 'tags/visualization',
     formMapHeightProvider: 'tags/visualization',
     formMapHeightProviderAPIKey: 'tags/visualization',
     formMapHeightOffset: 'tags/visualization',
