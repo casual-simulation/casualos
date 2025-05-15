@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { SubscriptionFilter } from '../MetricsStore';
-import type { StudioStripeAccountStatus } from '../RecordsStore';
+import type { StripeAccountStatus } from '../StripeInterface';
 import type {
     CrudRecord,
     CrudRecordsStore,
@@ -108,5 +108,5 @@ export interface PurchasableItemMetrics extends CrudSubscriptionMetrics {
      * The status of the stripe account that the record is associated with.
      * Null if the stripe account is not associated with the record.
      */
-    stripeAccountStatus: StudioStripeAccountStatus | null;
+    stripeAccountStatus: StripeAccountStatus | null;
 }

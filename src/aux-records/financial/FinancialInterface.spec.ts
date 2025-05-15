@@ -39,9 +39,16 @@ describe('getFlagsForAccountCode()', () => {
         expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
     });
 
-    it('should require that revenue_platform_fees cannot carry a debit balance', () => {
+    it('should require that revenue_store_platform_fees cannot carry a debit balance', () => {
         const flags = getFlagsForAccountCode(
-            AccountCodes.revenue_platform_fees
+            AccountCodes.revenue_store_platform_fees
+        );
+        expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
+    });
+
+    it('should require that revenue_xp_platform_fees cannot carry a debit balance', () => {
+        const flags = getFlagsForAccountCode(
+            AccountCodes.revenue_xp_platform_fees
         );
         expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
     });
@@ -49,14 +56,17 @@ describe('getFlagsForAccountCode()', () => {
 
 describe('getFlagsForTransferCode()', () => {
     const noneCases = [
-        ['external_credits_user', TransferCodes.external_credits_user] as const,
-        ['external_debits_user', TransferCodes.external_debits_user] as const,
-        ['reverse_transfer', TransferCodes.reverse_transfer] as const,
         ['system_cash_rebalance', TransferCodes.system_cash_rebalance] as const,
-        ['system_credits_user', TransferCodes.system_credits_user] as const,
-        ['system_debits_user', TransferCodes.system_debits_user] as const,
-        ['user_credits_contract', TransferCodes.user_credits_contract] as const,
-        ['user_debits_contract', TransferCodes.user_debits_contract] as const,
+        ['reverse_transfer', TransferCodes.reverse_transfer] as const,
+        ['admin_credit', TransferCodes.admin_credit] as const,
+        ['admin_debit', TransferCodes.admin_debit] as const,
+        ['purchase_credits', TransferCodes.purchase_credits] as const,
+        ['user_payout', TransferCodes.user_payout] as const,
+        ['contract_payment', TransferCodes.contract_payment] as const,
+        ['invoice_payment', TransferCodes.invoice_payment] as const,
+        ['xp_platform_fee', TransferCodes.xp_platform_fee] as const,
+        ['item_payment', TransferCodes.item_payment] as const,
+        ['store_platform_fee', TransferCodes.store_platform_fee] as const,
     ];
 
     it.each(noneCases)('should map %s to none', (desc, code) => {

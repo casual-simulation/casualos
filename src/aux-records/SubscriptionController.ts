@@ -49,9 +49,11 @@ import type {
     ListedStudioAssignment,
     RecordsStore,
     Studio,
-    StudioStripeAccountStatus,
-    StudioStripeRequirementsStatus,
 } from './RecordsStore';
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -2170,9 +2172,7 @@ export class SubscriptionController {
  * Gets the account status for the given stripe account.
  * @param account The account that the status should be retrieved for.
  */
-export function getAccountStatus(
-    account: StripeAccount
-): StudioStripeAccountStatus {
+export function getAccountStatus(account: StripeAccount): StripeAccountStatus {
     const disabledReason = account?.requirements?.disabled_reason;
     if (
         disabledReason === 'under_review' ||
@@ -2202,7 +2202,7 @@ export function getAccountStatus(
  */
 export function getAccountRequirementsStatus(
     account: StripeAccount
-): StudioStripeRequirementsStatus {
+): StripeRequirementsStatus {
     const requirements = account?.requirements;
     if (!requirements) {
         return 'incomplete';

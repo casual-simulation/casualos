@@ -21,7 +21,6 @@ import { z } from 'zod';
  * Defines an interface that represents the high-level Stripe-like functions that the SubscriptionController uses.
  */
 export interface StripeInterface {
-
     /**
      * Gets the stripe interface that can be used for testing.
      * Null if testing is not supported.
@@ -104,9 +103,11 @@ export interface StripeInterface {
 
     /**
      * Creates a new account link for the given account ID.
-     * @param accountId 
+     * @param accountId
      */
-    createAccountLink(request: StripeCreateAccountLinkRequest): Promise<StripeAccountLink>;
+    createAccountLink(
+        request: StripeCreateAccountLinkRequest
+    ): Promise<StripeAccountLink>;
 
     /**
      * Creates a new stripe account.
@@ -210,7 +211,7 @@ export interface StripeCheckoutRequest {
                  * The tax code for the product.
                  */
                 tax_code?: string | null;
-            }
+            };
         };
 
         /**
@@ -262,7 +263,7 @@ export interface StripeCheckoutRequest {
          * The fee that should be charged for the application.
          */
         application_fee_amount?: number;
-    }
+    };
 
     /**
      * Stripe connect information.
@@ -272,7 +273,7 @@ export interface StripeCheckoutRequest {
          * The ID of the stripe account that the checkout session should be connected to.
          */
         stripeAccount: string;
-    }
+    };
 }
 
 export interface StripeCheckoutResponse {
@@ -645,7 +646,7 @@ export interface StripeCreateAccountRequest {
         fees: {
             /**
              * Who pays Stripe fees?
-             * 
+             *
              * - `account`: The account pays the fees.
              * - `application`: Our application pays the fees.
              */
@@ -658,16 +659,16 @@ export interface StripeCreateAccountRequest {
         losses?: {
             /**
              * A value indicating who is liable when this account can’t pay back negative balances resulting from payments. Defaults to `stripe`.
-             * 
+             *
              * - `application`: The Connect application is liable when this account can’t pay back negative balances resulting from payments.
              * - `stripe`: Stripe is liable when this account can’t pay back negative balances resulting from payments.
              */
             payments?: 'application' | 'stripe';
-        }
+        };
 
         /**
          * A value indicating responsibility for collecting updated information when requirements on the account are due or change. Defaults to `stripe`.
-         * 
+         *
          * - `application`: The Connect application is responsible for collecting updated information when requirements on the account are due or change.
          * - `none`: No one is responsible for collecting updated information when requirements on the account are due or change.
          */
@@ -681,7 +682,7 @@ export interface StripeCreateAccountRequest {
              * Whether this account should have access to the full Stripe Dashboard (`full`), to the Express Dashboard (`express`), or to no Stripe-hosted dashboard (`none`). Defaults to `full`.
              */
             type?: 'express' | 'full' | 'none';
-        }
+        };
     };
 
     /**
@@ -750,22 +751,24 @@ export interface StripeAccountRequirements {
     /**
      * Fields that are currently_due and need to be collected again because validation or verification failed.
      */
-    errors: {
-        /**
-         * The code of the error.
-         */
-        code: string;
+    errors:
+        | {
+              /**
+               * The code of the error.
+               */
+              code: string;
 
-        /**
-         * The informative message about the error.
-         */
-        reason: string;
+              /**
+               * The informative message about the error.
+               */
+              reason: string;
 
-        /**
-         * The field that the error is related to.
-         */
-        requirement: string;
-    }[] | null;
+              /**
+               * The field that the error is related to.
+               */
+              requirement: string;
+          }[]
+        | null;
 }
 
 export interface StripeAccountLink {
@@ -824,7 +827,7 @@ export const STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA = z.object({
         object: z.object({
             id: z.string(),
             object: z.literal('account'),
-        })
+        }),
     }),
 });
 
@@ -834,16 +837,33 @@ export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
             id: z.string(),
             client_reference_id: z.string().nullable(),
             object: z.literal('checkout.session'),
-            status: z.enum([
-                'complete',
-                'expired',
-                'open'
-            ]),
-            payment_status: z.enum([
-                'no_payment_required',
-                'paid',
-                'unpaid',
-            ]),
-        })
+            status: z.enum(['complete', 'expired', 'open']),
+            payment_status: z.enum(['no_payment_required', 'paid', 'unpaid']),
+        }),
     }),
 });
+
+/**
+ * The status of the stripe account that is associated with a studio.
+ *
+ * If null, then the studio does not have a stripe account.
+ * If 'active', then the stripe account has been approved and is active.
+ * If 'pending', then the stripe account is waiting approval.
+ * If 'rejected', then the stripe account was rejected.
+ * If 'disabled', then the stripe account was disabled but not because it was rejected.
+ */
+export type StripeAccountStatus =
+    | 'active'
+    | 'pending'
+    | 'rejected'
+    | 'disabled'
+    | null;
+
+/**
+ * The status of the stripe account requirements for a studio.
+ *
+ * If null, then the studio does not have a stripe account.
+ * If 'incomplete', then the studio has a stripe account but it is not fully set up.
+ * If 'complete', then the studio has a stripe account that is fully set up.
+ */
+export type StripeRequirementsStatus = 'incomplete' | 'complete' | null;

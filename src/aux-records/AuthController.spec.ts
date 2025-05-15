@@ -8560,6 +8560,46 @@ describe('AuthController', () => {
                 });
             });
 
+            it('should include the financial info for the account', async () => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    accountId: 'accountId',
+                    stripeAccountId: 'stripeAccountId',
+                    requestedRate: 123,
+                    stripeAccountStatus: 'pending',
+                    stripeAccountRequirementsStatus: 'incomplete',
+                });
+                const result = await controller.getUserInfo({
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    name: 'Test',
+                    avatarUrl: 'avatar url',
+                    avatarPortraitUrl: 'avatar portrait url',
+                    hasActiveSubscription: false,
+                    subscriptionTier: null,
+                    displayName: null,
+                    privacyFeatures: {
+                        publishData: true,
+                        allowPublicData: true,
+                        allowAI: true,
+                        allowPublicInsts: true,
+                    },
+                    role: 'none',
+                    accountId: 'accountId',
+                    stripeAccountId: 'stripeAccountId',
+                    requestedRate: 123,
+                    stripeAccountStatus: 'pending',
+                    stripeAccountRequirementsStatus: 'incomplete',
+                });
+            });
+
             it('should allow super users to get other users info', async () => {
                 const result = await controller.getUserInfo({
                     userId: superUserId,

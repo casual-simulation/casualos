@@ -24,10 +24,11 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
-    StudioStripeAccountStatus,
-    StudioStripeRequirementsStatus,
 } from './RecordsStore';
-
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 import {
     hashHighEntropyPasswordWithSalt,
     hashLowEntropyPasswordWithSalt,
@@ -2502,12 +2503,12 @@ export interface StudioData {
     /**
      * The status of the studio's stripe requirements.
      */
-    stripeRequirementsStatus: StudioStripeRequirementsStatus;
+    stripeRequirementsStatus: StripeRequirementsStatus;
 
     /**
      * The status of the studio's stripe account.
      */
-    stripeAccountStatus: StudioStripeAccountStatus;
+    stripeAccountStatus: StripeAccountStatus;
 }
 
 export interface GetStudioFailure {

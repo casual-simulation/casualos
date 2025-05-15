@@ -48,6 +48,13 @@ model User {
 
     role String?
 
+    // TODO: Support giving regular users a financial
+    // account so that we can record their credits in our system
+    accountId String? @unique
+    stripeAccountId String? @unique
+    stripeAccountRequirementsStatus String?
+    stripeAccountStatus String?
+
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
     sessions AuthSession[]
@@ -88,10 +95,11 @@ model User {
     grantedPackageEntitlements GrantedPackageEntitlement[]
     loadedPackages LoadedPackage[]
 
-    xpUser XpUser?
-    isXpAdmin Boolean?
     checkoutSessions AuthCheckoutSession[]
     purchasedItems PurchasedItem[]
+
+    issuedContracts XpContract[] @relation("IssuerUser")
+    heldContracts XpContract[] @relation("HoldingUser")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -1444,27 +1452,6 @@ model StudioComIdRequest {
     updatedAt DateTime @updatedAt
 }
 
-// Represents information about a user that has been onboarded to the xpExchange
-model XpUser {
-    id String @id @db.Uuid
-
-    userId String @unique
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "XpUser_userId_fkey1")
-
-    // The id of the account that the user is associated with
-    accountId String @unique
-
-    // The rate at which the user is requested to be paid per gig.
-    // Should have the same currency as the account.
-    requestedRate Int?
-
-    issuedContracts XpContract[] @relation("IssuerUser")
-    heldContracts XpContract[] @relation("HoldingUser")
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
 // A contract is a promise of work at a certain rate
 model XpContract {
     id String @id @db.Uuid
@@ -1472,12 +1459,12 @@ model XpContract {
     // The user that is issuing the contract
     // That is, the user who is paying for the work
     issuerUserId String
-    issuer XpUser @relation(fields: [issuerUserId], references: [userId], onDelete: Restrict, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
+    issuer User @relation(fields: [issuerUserId], references: [id], onDelete: Restrict, map: "XpContract_issuerId_fkey1", name: "IssuerUser")
 
     // The user that is holding the contract (if the contract is not a draft)
     // That is, the user who is doing the work and getting paid
     holdingUserId String?
-    holdingUser XpUser? @relation(fields: [holdingUserId], references: [userId], onDelete: Restrict, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
+    holdingUser User? @relation(fields: [holdingUserId], references: [id], onDelete: Restrict, map: "XpContract_holdingUserId_fkey1", name: "HoldingUser")
 
     // The rate at which gigs are paid in the contract
     // The rate is in the smallest unit of the currency (e.g. cents for USD)
@@ -1521,6 +1508,11 @@ model XpInvoice {
     // "paid" - the invoice has been paid
     // "void" - the invoice has been cancelled
     status String
+
+    // Where the invoice payment should end up.
+    // "stripe" - the invoice should be paid out to the contract holder's stripe account
+    // "xpExchange - the invoice should be paid out to the contract holder's xp exchange account
+    payoutDestination String
 
     // The reason why the invoice was voided
     // "rejected" - the invoice was rejected by the receiver

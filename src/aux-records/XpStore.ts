@@ -38,17 +38,17 @@ export type XpStore = {
      */
     getXpInvoice: (invoiceId: XpInvoice['id']) => Promise<DataBaseM<XpInvoice>>;
 
-    /**
-     * Get an xp user by their auth id
-     * @param id The auth user id of the user to get
-     */
-    getXpUserByUserId: (id: string) => Promise<XpUserWithUserInfo>;
+    // /**
+    //  * Get an xp user by their auth id
+    //  * @param id The auth user id of the user to get
+    //  */
+    // getXpUserByUserId: (id: string) => Promise<XpUserWithUserInfo>;
 
-    /**
-     * Get an xp user by their xp id.
-     * @param id The xp user id of the xp user to get.
-     */
-    getXpUserByXpId: (id: string) => Promise<XpUserWithUserInfo>;
+    // /**
+    //  * Get an xp user by their xp id.
+    //  * @param id The xp user id of the xp user to get.
+    //  */
+    // getXpUserByXpId: (id: string) => Promise<XpUserWithUserInfo>;
 
     /**
      * Save an xp contract with an associated account

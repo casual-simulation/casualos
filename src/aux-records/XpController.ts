@@ -25,7 +25,6 @@ import type {
 } from './XpStore';
 import type { AuthController, UserInfo } from './AuthController';
 import type { AuthStore } from './AuthStore';
-import { v4 as uuid } from 'uuid';
 import type { FailedResult, StatefulResult } from './TypeUtils';
 
 import { traced } from './tracing/TracingDecorators';
@@ -38,7 +37,6 @@ import type {
 import {
     ACCOUNT_IDS,
     AccountCodes,
-    CURRENCIES,
     getFlagsForAccountCode,
     getFlagsForTransferCode,
     getMessageForAccountError,
@@ -55,7 +53,6 @@ import type {
 import {
     failure,
     isFailure,
-    isSuperUserRole,
     logErrors,
     success,
 } from '@casual-simulation/aux-common';
@@ -189,43 +186,6 @@ export class XpController {
      */
     private async _createContractAccount(): Promise<CreateXpAccountResult> {
         return await this.createAccount(AccountCodes.liabilities_escrow);
-    }
-
-    /**
-     * Create an XP user for the given auth user
-     *
-     * Not for external use.
-     * @param userId The ID of the auth user to create an XP user for
-     */
-    @traced(TRACE_NAME)
-    async createXpUser(userId: string): Promise<CreateXpUserResult> {
-        const authUser = await this._authStore.findUser(userId);
-        if (!authUser) {
-            return failure({
-                errorCode: 'user_not_found',
-                errorMessage: 'The user was not found.',
-            });
-        }
-
-        const account = await this._generateUserAccount();
-        if (isFailure(account)) {
-            return account;
-        }
-        const user: XpUser = {
-            xpId: uuid(),
-            userId: userId,
-            accountId: account.value.id.toString(),
-            requestedRate: null,
-        };
-
-        await this._xpStore.saveXpUser(user);
-
-        return success({
-            user: {
-                ...authUser,
-                ...user,
-            },
-        });
     }
 
     /**
@@ -542,90 +502,90 @@ export class XpController {
     //     }
     // }
 
-    /**
-     * Get an Xp user's meta data (Xp meta associated with an auth user)
-     * Creates an Xp user for the auth user if one does not exist
-     */
-    async getXpUser(request: GetXpUserRequest): Promise<GetXpUserResult> {
-        let user: XpUserWithUserInfo;
-        if (request.requestedXpId) {
-            user = await this._xpStore.getXpUserByXpId(request.requestedXpId);
-            if (!user) {
-                return failure({
-                    errorCode: 'user_not_found',
-                    errorMessage: 'The user with the given xpId was not found.',
-                });
-            }
-        } else if (request.requestedUserId) {
-            user = await this._xpStore.getXpUserByUserId(
-                request.requestedUserId
-            );
-        } else {
-            user = await this._xpStore.getXpUserByUserId(request.userId);
-        }
+    // /**
+    //  * Get an Xp user's meta data (Xp meta associated with an auth user)
+    //  * Creates an Xp user for the auth user if one does not exist
+    //  */
+    // async getXpUser(request: GetXpUserRequest): Promise<GetXpUserResult> {
+    //     let user: XpUserWithUserInfo;
+    //     if (request.requestedXpId) {
+    //         user = await this._xpStore.getXpUserByXpId(request.requestedXpId);
+    //         if (!user) {
+    //             return failure({
+    //                 errorCode: 'user_not_found',
+    //                 errorMessage: 'The user with the given xpId was not found.',
+    //             });
+    //         }
+    //     } else if (request.requestedUserId) {
+    //         user = await this._xpStore.getXpUserByUserId(
+    //             request.requestedUserId
+    //         );
+    //     } else {
+    //         user = await this._xpStore.getXpUserByUserId(request.userId);
+    //     }
 
-        if (!user) {
-            if (
-                request.requestedUserId &&
-                request.requestedUserId !== request.userId &&
-                !isSuperUserRole(request.userRole)
-            ) {
-                return failure({
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this operation.',
-                });
-            }
+    //     if (!user) {
+    //         if (
+    //             request.requestedUserId &&
+    //             request.requestedUserId !== request.userId &&
+    //             !isSuperUserRole(request.userRole)
+    //         ) {
+    //             return failure({
+    //                 errorCode: 'not_authorized',
+    //                 errorMessage:
+    //                     'You are not authorized to perform this operation.',
+    //             });
+    //         }
 
-            const result = await this.createXpUser(
-                request.requestedUserId ?? request.userId
-            );
-            if (isFailure(result)) {
-                return result;
-            } else {
-                user = result.value.user;
-            }
-        } else if (
-            user.userId !== request.userId &&
-            !isSuperUserRole(request.userRole)
-        ) {
-            return failure({
-                errorCode: 'not_authorized',
-                errorMessage:
-                    'You are not authorized to perform this operation.',
-            });
-        }
+    //         const result = await this.createXpUser(
+    //             request.requestedUserId ?? request.userId
+    //         );
+    //         if (isFailure(result)) {
+    //             return result;
+    //         } else {
+    //             user = result.value.user;
+    //         }
+    //     } else if (
+    //         user.userId !== request.userId &&
+    //         !isSuperUserRole(request.userRole)
+    //     ) {
+    //         return failure({
+    //             errorCode: 'not_authorized',
+    //             errorMessage:
+    //                 'You are not authorized to perform this operation.',
+    //         });
+    //     }
 
-        const { success: _, ...info } = await this._auth.getPrivateInfoForUser(
-            user
-        );
+    //     const { success: _, ...info } = await this._auth.getPrivateInfoForUser(
+    //         user
+    //     );
 
-        const [account] = await this._financialInterface.lookupAccounts([
-            BigInt(user.accountId),
-        ]);
+    //     const [account] = await this._financialInterface.lookupAccounts([
+    //         BigInt(user.accountId),
+    //     ]);
 
-        if (!account) {
-            console.error(
-                `[XpController] Failed to get account for user ${user.id} (${user.accountId})`
-            );
-            return failure({
-                errorCode: 'server_error',
-                errorMessage: 'The server encountered an error.',
-            });
-        }
+    //     if (!account) {
+    //         console.error(
+    //             `[XpController] Failed to get account for user ${user.id} (${user.accountId})`
+    //         );
+    //         return failure({
+    //             errorCode: 'server_error',
+    //             errorMessage: 'The server encountered an error.',
+    //         });
+    //     }
 
-        const balance = account.credits_posted - account.debits_posted;
+    //     const balance = account.credits_posted - account.debits_posted;
 
-        return success({
-            user: {
-                ...info,
-                accountBalance: Number(balance),
-                accountCurrency: CURRENCIES.get(account.ledger),
-                accountId: user.accountId,
-                requestedRate: user.requestedRate,
-            },
-        });
-    }
+    //     return success({
+    //         user: {
+    //             ...info,
+    //             accountBalance: Number(balance),
+    //             accountCurrency: CURRENCIES.get(account.ledger),
+    //             accountId: user.accountId,
+    //             requestedRate: user.requestedRate,
+    //         },
+    //     });
+    // }
 
     // async batchGetXpUsers(
     //     queryOptions:
@@ -982,12 +942,6 @@ export interface GetXpUserRequest {
      * The role of the user making the request.
      */
     userRole?: UserRole;
-
-    /**
-     * The ID of the xp user to get.
-     * If omitted, then the requested user will be used.
-     */
-    requestedXpId?: string;
 
     /**
      * The ID of the auth user to get.

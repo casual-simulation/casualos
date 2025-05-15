@@ -88,6 +88,10 @@ import {
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 
 const TRACE_NAME = 'AuthController';
 
@@ -2568,6 +2572,12 @@ export class AuthController {
             subscriptionTier: tier ?? null,
             privacyFeatures: privacyFeatures,
             role: user.role ?? 'none',
+            accountId: user.accountId,
+            requestedRate: user.requestedRate,
+            stripeAccountId: user.stripeAccountId,
+            stripeAccountRequirementsStatus:
+                user.stripeAccountRequirementsStatus,
+            stripeAccountStatus: user.stripeAccountStatus,
         };
     }
 
@@ -4077,6 +4087,31 @@ export interface UserInfo {
      * The role that the user has in the system.
      */
     role: UserRole;
+
+    /**
+     * The ID of the associated financial account.
+     */
+    accountId: string | null;
+
+    /**
+     * The rate at which the user is requesting payment (null if not yet specified)
+     */
+    requestedRate: number | null;
+
+    /**
+     * The user's connected stripe account ID.
+     */
+    stripeAccountId: string | null;
+
+    /**
+     * The user's connected stripe account requirements status.
+     */
+    stripeAccountRequirementsStatus: StripeRequirementsStatus | null;
+
+    /**
+     * The user's connected stripe account status.
+     */
+    stripeAccountStatus: StripeAccountStatus | null;
 }
 
 export type GetUserInfoResult = GetUserInfoSuccess | GetUserInfoFailure;

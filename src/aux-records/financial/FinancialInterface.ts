@@ -66,6 +66,16 @@ export const ACCOUNT_IDS = {
      * The ID of the stripe cash asset account.
      */
     stripe_assets: 1001n,
+
+    /**
+     * The ID of the platform fees revenue account.
+     */
+    revenue_xp_platform_fees: 4101n,
+
+    /**
+     * The ID of the store platform fees revenue account.
+     */
+    revenue_store_platform_fees: 4102n,
 };
 
 /**
@@ -79,7 +89,7 @@ export const ACCOUNT_IDS = {
  * * [3000] equity
  * * [4000] revenue
  * * * [4100] revenue from fees
- * * * * [4101] revenue from platform fees
+ * * * * [4101] revenue from xp platform fees
  * * [5000] expenses
  */
 export enum AccountCodes {
@@ -101,18 +111,20 @@ export enum AccountCodes {
     /**
      * Revenue accounts from platform fees.
      */
-    revenue_platform_fees = 4101, // flags.debits_must_not_exceed_credits
+    revenue_xp_platform_fees = 4101, // flags.debits_must_not_exceed_credits
+
+    /**
+     * Revenue accounts from platform fees.
+     */
+    revenue_store_platform_fees = 4102, // flags.debits_must_not_exceed_credits
 }
 
 /**
  * Standards for transfer codes from the systems perspective.
  * * [0000] <1000's class> Administrative transfers and reversals.
- * * [1000] <1000's class> Crediting the user (1000 is from the system if ever needed)
- * * [1100] <10's subclass> Crediting the user from external entities (e.g. deposit to system via stripe / balance reload)
- * * [1200] <200's subclass> Contract crediting
- * * [2000] <2000's class> Debiting the user (2000 is from the system if ever needed)
- * * [2100] <100's subclass> Debiting the user from external entities (e.g. withdrawal from system via stripe / payout)
- * * [2200] <200's subclass> Contract debiting
+ * * [1000] <1000's class> General transfers
+ * * [2000] <1000's class> XP exchange activities
+ * * [3000] <1000's class> Store activities
  *
  * ? The spacing levels future-proof the system for more codes.
  * ? Additional codes in this MLNC could be flags for nominally similar (to existing) multi-phase transactions.
@@ -130,34 +142,81 @@ export enum TransferCodes {
     reverse_transfer = 2,
 
     /**
-     * A credit to a user from the system.
+     * A administrative credit to an account from the system.
      */
-    system_credits_user = 1000,
+    admin_credit = 3,
 
     /**
-     * A credit to the user from external entities (e.g. deposit to system via stripe / balance reload)
+     * A administrative debit to an account from the system.
      */
-    external_credits_user = 1101,
+    admin_debit = 4,
 
     /**
-     * A credit to a contract from a user
+     * A credit to a user's account based on the purchase of credits.
+     * This generally functions as a top-up of the user's account and corresponds to a debit from an assets account.
      */
-    user_credits_contract = 1200,
+    purchase_credits = 1000,
 
     /**
-     * A debit to the user from the system.
+     * A debit from a user's account to redeem credits to an external payment source.
+     * This generally functions as a payout to the user and corresponds to a credit to an assets account.
      */
-    system_debits_user = 2000,
+    user_payout = 1001,
 
     /**
-     * A debit to a user from external entities (e.g. withdrawal from system via stripe / payout)
+     * A credit to a contract account from a user and a corresponding debit from the corresponding payment source.
+     * This is used to fund a contract.
      */
-    external_debits_user = 2100,
+    contract_payment = 2000,
 
     /**
-     * A debit to a contract from a user
+     * A credit to a users account and a corresponding debit from the contract account.
+     * This is used to pay out a contract.
      */
-    user_debits_contract = 2200,
+    invoice_payment = 2001,
+
+    /**
+     * A credit to the equity account and a debit from the corresponding payment source.
+     * In the XP Exchange, sponsors always pay platform fees.
+     */
+    xp_platform_fee = 2002,
+
+    /**
+     * A credit to the seller's account and a corresponding debit from the payment source.
+     * This is used when a user purchases an item from a store.
+     */
+    item_payment = 3000,
+
+    /**
+     * A credit to the equity account and a debit from the corresponding payment source.
+     * This is used when a user purchases an item from the store and the platform takes a fee.
+     */
+    store_platform_fee = 3003,
+
+    // /**
+    //  * A credit to the user from external entities (e.g. deposit to system via stripe / balance reload)
+    //  */
+    // external_credits_user = 1101,
+
+    // /**
+    //  * A credit to a contract from a user
+    //  */
+    // user_credits_contract = 1200,
+
+    // /**
+    //  * A debit to the user from the system.
+    //  */
+    // system_debits_user = 2000,
+
+    // /**
+    //  * A debit to a user from external entities (e.g. withdrawal from system via stripe / payout)
+    //  */
+    // external_debits_user = 2100,
+
+    // /**
+    //  * A debit to a contract from a user
+    //  */
+    // user_debits_contract = 2200,
 }
 
 /**
@@ -191,10 +250,9 @@ export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
         case AccountCodes.assets_cash:
             return AccountFlags.credits_must_not_exceed_debits;
         case AccountCodes.liabilities_user:
-            return AccountFlags.debits_must_not_exceed_credits;
         case AccountCodes.liabilities_escrow:
-            return AccountFlags.debits_must_not_exceed_credits;
-        case AccountCodes.revenue_platform_fees:
+        case AccountCodes.revenue_xp_platform_fees:
+        case AccountCodes.revenue_store_platform_fees:
             return AccountFlags.debits_must_not_exceed_credits;
         default:
             throw new Error(`Unknown account code: ${code}`);

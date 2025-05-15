@@ -22,7 +22,7 @@ import type {
 } from './PurchasableItemRecordsStore';
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import type { SubscriptionFilter } from '../MetricsStore';
-import type { StudioStripeAccountStatus } from '../RecordsStore';
+import type { StripeAccountStatus } from '../StripeInterface';
 
 export class MemoryPurchasableItemRecordsStore
     extends MemoryCrudRecordsStore<PurchasableItem, PurchasableItemMetrics>
@@ -34,7 +34,7 @@ export class MemoryPurchasableItemRecordsStore
         const info = await super.getSubscriptionMetrics(filter);
 
         let stripeAccountId: string | undefined;
-        let stripeAccountStatus: StudioStripeAccountStatus | undefined;
+        let stripeAccountStatus: StripeAccountStatus | undefined;
 
         if (info.studioId) {
             const studio = await this.store.getStudioById(info.studioId);
