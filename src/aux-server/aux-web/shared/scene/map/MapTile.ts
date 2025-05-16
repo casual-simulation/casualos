@@ -16,25 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Material } from '@casual-simulation/three';
-import {
-    Color,
-    DoubleSide,
-    MeshPhongMaterial,
-    Vector3,
-} from '@casual-simulation/three';
+import { Vector3 } from '@casual-simulation/three';
 import type { MapProvider } from 'geo-three';
-import { MapHeightNodeShader, TextureUtils } from 'geo-three';
+import { TextureUtils } from 'geo-three';
 import {
     FrontSide,
     LinearFilter,
     Mesh,
     MeshBasicMaterial,
-    NearestFilter,
     Object3D,
     PlaneGeometry,
     RGBAFormat,
-    ShaderMaterial,
-    Side,
     Texture,
 } from '@casual-simulation/three';
 

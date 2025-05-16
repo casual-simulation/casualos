@@ -1,15 +1,9 @@
 import {
-    Box3,
     type Camera,
-    Frustum,
-    Matrix4,
     type Object3D,
-    type OrthographicCamera,
-    Vector3,
     type WebGLRenderer
 } from 'three';
 import type { MapView, MapPlaneNode, LODControl } from 'geo-three';
-import { LODFrustum } from 'geo-three';
 
 /**
  * LOD control with manual keyboard input for testing.
