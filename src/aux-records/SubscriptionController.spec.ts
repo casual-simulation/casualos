@@ -35,6 +35,7 @@ import {
     generateV1ConnectionToken,
     parseSessionKey,
     success,
+    unwrap,
 } from '@casual-simulation/aux-common';
 import type {
     StripeAccount,
@@ -7829,55 +7830,6 @@ describe('SubscriptionController', () => {
                     expect(studio?.stripeAccountStatus).toBe(null);
                     expect(studio?.stripeAccountRequirementsStatus).toBe(null);
                 });
-
-                it('should be able to ', async () => {
-                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                        id: 'event_id',
-                        type: 'account.updated',
-                        object: 'event',
-                        account: 'account_id',
-                        api_version: 'api_version',
-                        created: 123,
-                        data: {
-                            object: {
-                                id: 'account_id',
-                                object: 'account',
-                            },
-                        },
-                        livemode: true,
-                        pending_webhooks: 1,
-                        request: {},
-                    });
-
-                    stripeMock.getAccountById.mockResolvedValueOnce({
-                        id: 'account_id',
-                        charges_enabled: true,
-                        requirements: {
-                            currently_due: [],
-                            current_deadline: null,
-                            disabled_reason: null,
-                            errors: [],
-                            eventually_due: [],
-                            past_due: [],
-                            pending_verification: [],
-                        },
-                    });
-
-                    const result = await controller.handleStripeWebhook({
-                        requestBody: 'request_body',
-                        signature: 'request_signature',
-                    });
-
-                    expect(result).toEqual({
-                        success: true,
-                    });
-
-                    const studio = await store.getStudioById(studioId);
-                    expect(studio?.stripeAccountStatus).toBe('active');
-                    expect(studio?.stripeAccountRequirementsStatus).toBe(
-                        'complete'
-                    );
-                });
             });
 
             describe('checkout.session.completed', () => {
@@ -8133,6 +8085,385 @@ describe('SubscriptionController', () => {
                     });
                 });
             });
+        });
+
+        describe.only('xp', () => {
+            let user: AuthUser;
+
+            beforeEach(async () => {
+                store.subscriptionConfiguration = createTestSubConfiguration();
+
+                const userAccount = unwrap(
+                    await financialController.createAccount(
+                        AccountCodes.liabilities_user
+                    )
+                );
+                user = await store.findUser(userId);
+
+                user = {
+                    ...user,
+                    accountId: userAccount.id,
+                    stripeAccountId: 'account_id',
+                    stripeAccountRequirementsStatus: null,
+                    stripeAccountStatus: null,
+                };
+
+                await store.saveUser(user);
+
+                nowMock.mockReturnValue(200);
+            });
+
+            describe('account.updated', () => {
+                it('should update account statuses', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'account_id',
+                                object: 'account',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: [],
+                        },
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.findUser(userId);
+                    expect(studio?.stripeAccountStatus).toBe('active');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(
+                        'complete'
+                    );
+                });
+
+                it('should do nothing if no user matches the account', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'missing',
+                                object: 'account',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: [],
+                        },
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.findUser(userId);
+                    expect(studio?.stripeAccountStatus).toBe(null);
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(null);
+                });
+            });
+
+            // describe('checkout.session.completed', () => {
+            //     it('should update checkout session status', async () => {
+            //         stripeMock.constructWebhookEvent.mockReturnValueOnce({
+            //             id: 'event_id',
+            //             type: 'checkout.session.completed',
+            //             object: 'event',
+            //             account: 'account_id',
+            //             api_version: 'api_version',
+            //             created: 123,
+            //             data: {
+            //                 object: {
+            //                     id: 'checkout_id',
+            //                     object: 'checkout.session',
+            //                     client_reference_id: 'uuid',
+            //                     payment_status: 'paid',
+            //                     status: 'complete',
+            //                 },
+            //             },
+            //             livemode: true,
+            //             pending_webhooks: 1,
+            //             request: {},
+            //         });
+
+            //         await store.updateCheckoutSessionInfo({
+            //             id: 'uuid',
+            //             userId: userId,
+            //             stripeCheckoutSessionId: 'checkout_id',
+            //             paid: false,
+            //             status: 'open',
+            //             paymentStatus: 'unpaid',
+            //             invoice: null,
+            //             fulfilledAtMs: null,
+            //             items: [
+            //                 {
+            //                     type: 'role',
+            //                     recordName: 'studioId',
+            //                     purchasableItemAddress: 'item1',
+            //                     role: 'myRole',
+            //                     roleGrantTimeMs: null,
+            //                 },
+            //             ],
+            //         });
+
+            //         const result = await controller.handleStripeWebhook({
+            //             requestBody: 'request_body',
+            //             signature: 'request_signature',
+            //         });
+
+            //         expect(result).toEqual({
+            //             success: true,
+            //         });
+
+            //         expect(store.checkoutSessions).toEqual([
+            //             {
+            //                 id: 'uuid',
+            //                 userId,
+            //                 stripeCheckoutSessionId: 'checkout_id',
+            //                 paid: true,
+            //                 stripeStatus: 'complete',
+            //                 stripePaymentStatus: 'paid',
+            //                 invoiceId: null,
+            //                 fulfilledAtMs: null,
+            //                 items: [
+            //                     {
+            //                         type: 'role',
+            //                         recordName: 'studioId',
+            //                         purchasableItemAddress: 'item1',
+            //                         role: 'myRole',
+            //                         roleGrantTimeMs: null,
+            //                     },
+            //                 ],
+            //             },
+            //         ]);
+            //     });
+            // });
+
+            // describe('checkout.session.expired', () => {
+            //     it('should update checkout session status', async () => {
+            //         stripeMock.constructWebhookEvent.mockReturnValueOnce({
+            //             id: 'event_id',
+            //             type: 'checkout.session.expired',
+            //             object: 'event',
+            //             account: 'account_id',
+            //             api_version: 'api_version',
+            //             created: 123,
+            //             data: {
+            //                 object: {
+            //                     id: 'checkout_id',
+            //                     object: 'checkout.session',
+            //                     client_reference_id: 'uuid',
+            //                     payment_status: 'unpaid',
+            //                     status: 'expired',
+            //                 },
+            //             },
+            //             livemode: true,
+            //             pending_webhooks: 1,
+            //             request: {},
+            //         });
+
+            //         await store.updateCheckoutSessionInfo({
+            //             id: 'uuid',
+            //             userId: userId,
+            //             stripeCheckoutSessionId: 'checkout_id',
+            //             paid: false,
+            //             status: 'open',
+            //             paymentStatus: 'unpaid',
+            //             invoice: null,
+            //             fulfilledAtMs: null,
+            //             items: [
+            //                 {
+            //                     type: 'role',
+            //                     recordName: 'studioId',
+            //                     purchasableItemAddress: 'item1',
+            //                     role: 'myRole',
+            //                     roleGrantTimeMs: null,
+            //                 },
+            //             ],
+            //         });
+
+            //         const result = await controller.handleStripeWebhook({
+            //             requestBody: 'request_body',
+            //             signature: 'request_signature',
+            //         });
+
+            //         expect(result).toEqual({
+            //             success: true,
+            //         });
+
+            //         expect(store.checkoutSessions).toEqual([
+            //             {
+            //                 id: 'uuid',
+            //                 userId,
+            //                 stripeCheckoutSessionId: 'checkout_id',
+            //                 paid: false,
+            //                 stripeStatus: 'expired',
+            //                 stripePaymentStatus: 'unpaid',
+            //                 invoiceId: null,
+            //                 fulfilledAtMs: null,
+            //                 items: [
+            //                     {
+            //                         type: 'role',
+            //                         recordName: 'studioId',
+            //                         purchasableItemAddress: 'item1',
+            //                         role: 'myRole',
+            //                         roleGrantTimeMs: null,
+            //                     },
+            //                 ],
+            //             },
+            //         ]);
+            //     });
+            // });
+
+            // describe('invoice.paid', () => {
+            //     it('should update the invoice attached to a checkout session', async () => {
+            //         stripeMock.constructWebhookEvent.mockReturnValueOnce({
+            //             id: 'event_id',
+            //             type: 'invoice.paid',
+            //             object: 'event',
+            //             account: 'account_id',
+            //             api_version: 'api_version',
+            //             created: 123,
+            //             data: {
+            //                 object: {
+            //                     id: 'invoiceId',
+            //                     customer: 'customer_id',
+            //                     currency: 'usd',
+            //                     total: 100,
+            //                     subtotal: 100,
+            //                     tax: 0,
+            //                     description: 'description',
+            //                     status: 'paid',
+            //                     paid: true,
+            //                     hosted_invoice_url: 'invoiceUrl',
+            //                     invoice_pdf: 'pdfUrl',
+            //                     lines: {
+            //                         object: 'list',
+            //                         data: [
+            //                             {
+            //                                 id: 'line_item_1_id',
+            //                                 price: {
+            //                                     id: 'price_1',
+            //                                     product: 'product_1_id',
+            //                                 },
+            //                             },
+            //                         ],
+            //                     },
+            //                 },
+            //             },
+            //             livemode: true,
+            //             pending_webhooks: 1,
+            //             request: {},
+            //         });
+
+            //         await store.updateCheckoutSessionInfo({
+            //             id: 'uuid',
+            //             userId: userId,
+            //             stripeCheckoutSessionId: 'checkout_id',
+            //             paid: false,
+            //             status: 'open',
+            //             paymentStatus: 'unpaid',
+            //             invoice: {
+            //                 stripeInvoiceId: 'invoiceId',
+            //                 currency: 'usd',
+            //                 description: 'description',
+            //                 status: 'open',
+            //                 paid: false,
+            //                 tax: 0,
+            //                 subtotal: 100,
+            //                 total: 100,
+            //                 stripeHostedInvoiceUrl: 'invoiceUrl',
+            //                 stripeInvoicePdfUrl: 'pdfUrl',
+            //             },
+            //             fulfilledAtMs: null,
+            //             items: [
+            //                 {
+            //                     type: 'role',
+            //                     recordName: 'studioId',
+            //                     purchasableItemAddress: 'item1',
+            //                     role: 'myRole',
+            //                     roleGrantTimeMs: null,
+            //                 },
+            //             ],
+            //         });
+
+            //         const result = await controller.handleStripeWebhook({
+            //             requestBody: 'request_body',
+            //             signature: 'request_signature',
+            //         });
+
+            //         expect(result).toEqual({
+            //             success: true,
+            //         });
+
+            //         expect(
+            //             await store.getInvoiceByStripeId('invoiceId')
+            //         ).toEqual({
+            //             id: expect.any(String),
+            //             stripeInvoiceId: 'invoiceId',
+            //             currency: 'usd',
+            //             description: 'description',
+            //             status: 'paid',
+            //             paid: true,
+            //             tax: 0,
+            //             subtotal: 100,
+            //             total: 100,
+            //             stripeHostedInvoiceUrl: 'invoiceUrl',
+            //             stripeInvoicePdfUrl: 'pdfUrl',
+            //             subscriptionId: null,
+            //             checkoutSessionId: 'uuid',
+            //             periodId: null,
+            //         });
+            //     });
+            // });
         });
     });
 });

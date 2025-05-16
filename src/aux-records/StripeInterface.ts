@@ -831,6 +831,10 @@ export const STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA = z.object({
     }),
 });
 
+export type StripeEventAccountUpdated = z.infer<
+    typeof STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA
+>;
+
 export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
     data: z.object({
         object: z.object({
@@ -842,6 +846,10 @@ export const STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA = z.object({
         }),
     }),
 });
+
+export type StripeEventCheckoutSession = z.infer<
+    typeof STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA
+>;
 
 /**
  * The status of the stripe account that is associated with a studio.

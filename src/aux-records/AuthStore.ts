@@ -66,6 +66,12 @@ export interface AuthStore {
     findUserByStripeCustomerId(customerId: string): Promise<AuthUser | null>;
 
     /**
+     * Finds the user that is associated with the given Stripe Account ID.
+     * @param accountId The ID of the account.
+     */
+    findUserByStripeAccountId(accountId: string): Promise<AuthUser | null>;
+
+    /**
      * Finds the user that is associated with the given Privo Service ID.
      * @param serviceId
      */

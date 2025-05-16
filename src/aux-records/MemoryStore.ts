@@ -1508,6 +1508,13 @@ export class MemoryStore
         return user;
     }
 
+    async findUserByStripeAccountId(
+        accountId: string
+    ): Promise<AuthUser | null> {
+        const user = this._users.find((u) => u.stripeAccountId === accountId);
+        return user || null;
+    }
+
     async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
         const user = this._users.find((u) => u.privoServiceId === serviceId);
         return user;

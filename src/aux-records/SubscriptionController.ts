@@ -29,6 +29,8 @@ import type {
     StripeAccount,
     StripeCreateAccountLinkRequest,
     StripeEvent,
+    StripeEventAccountUpdated,
+    StripeEventCheckoutSession,
     StripeInterface,
     StripeInvoice,
 } from './StripeInterface';
@@ -1899,95 +1901,11 @@ export class SubscriptionController {
                 event.type === 'customer.subscription.updated'
             ) {
                 const subscription = event.data.object;
-
-                const items = subscription.items.data as Array<any>;
-
-                let item: any;
-                let sub: SubscriptionConfiguration['subscriptions'][0];
-                items_loop: for (let i of items) {
-                    for (let s of config.subscriptions) {
-                        if (
-                            s.eligibleProducts &&
-                            s.eligibleProducts.some(
-                                (p) => p === i.price.product
-                            )
-                        ) {
-                            sub = s;
-                            item = i;
-                            break items_loop;
-                        }
-                    }
-                }
-
-                if (!item || !sub) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No item in the subscription matches an eligible product in the config.`
-                    );
-                    return {
-                        success: true,
-                    };
-                }
-
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] Subscription (${sub.id}) found!`
+                return await this._handleStripeSubscriptionEvent(
+                    config,
+                    event,
+                    subscription
                 );
-
-                const status = subscription.status;
-                const active = isActiveSubscription(status);
-                const tier = sub.tier ?? 'beta';
-                const customerId = subscription.customer;
-                const stripeSubscriptionId = subscription.id;
-                const periodStartMs = subscription.current_period_start * 1000;
-                const periodEndMs = subscription.current_period_end * 1000;
-
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Tier: ${tier}. Is Active: ${active}.`
-                );
-                let user = await this._authStore.findUserByStripeCustomerId(
-                    customerId
-                );
-                let studio: Studio;
-
-                if (user) {
-                    await this._authStore.updateSubscriptionInfo({
-                        userId: user.id,
-                        subscriptionStatus: status,
-                        subscriptionId: sub.id,
-                        stripeSubscriptionId,
-                        stripeCustomerId: customerId,
-                        currentPeriodEndMs: periodEndMs,
-                        currentPeriodStartMs: periodStartMs,
-                    });
-                } else {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
-                    );
-
-                    studio =
-                        await this._recordsStore.getStudioByStripeCustomerId(
-                            customerId
-                        );
-
-                    if (studio) {
-                        await this._authStore.updateSubscriptionInfo({
-                            studioId: studio.id,
-                            subscriptionStatus: status,
-                            subscriptionId: sub.id,
-                            stripeSubscriptionId,
-                            stripeCustomerId: customerId,
-                            currentPeriodEndMs: periodEndMs,
-                            currentPeriodStartMs: periodStartMs,
-                        });
-                    } else {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
-                        );
-                    }
-                }
-
-                return {
-                    success: true,
-                };
             } else if (event.type === 'invoice.paid') {
                 const parseResult =
                     STRIPE_EVENT_INVOICE_PAID_SCHEMA.safeParse(event);
@@ -2002,136 +1920,11 @@ export class SubscriptionController {
                     };
                 }
 
-                const invoice = parseResult.data.data.object;
-                const stripeSubscriptionId = invoice.subscription;
-
-                if (stripeSubscriptionId) {
-                    const subscription = await this._stripe.getSubscriptionById(
-                        stripeSubscriptionId
-                    );
-                    const status = subscription.status;
-                    const customerId = invoice.customer;
-                    const lineItems = invoice.lines.data;
-                    const periodStartMs =
-                        subscription.current_period_start * 1000;
-                    const periodEndMs = subscription.current_period_end * 1000;
-                    const { sub, item } = findMatchingSubscription(lineItems);
-
-                    const authInvoice: UpdateSubscriptionPeriodRequest['invoice'] =
-                        {
-                            currency: invoice.currency,
-                            description: invoice.description,
-                            paid: invoice.paid,
-                            status: invoice.status,
-                            tax: invoice.tax,
-                            total: invoice.total,
-                            subtotal: invoice.subtotal,
-                            stripeInvoiceId: invoice.id,
-                            stripeHostedInvoiceUrl: invoice.hosted_invoice_url,
-                            stripeInvoicePdfUrl: invoice.invoice_pdf,
-                        };
-
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
-                    );
-
-                    const user =
-                        await this._authStore.findUserByStripeCustomerId(
-                            customerId
-                        );
-
-                    if (user) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] Found user (${user.id}) with customer ID (${customerId}).`
-                        );
-
-                        await this._authStore.updateSubscriptionPeriod({
-                            userId: user.id,
-                            subscriptionStatus: status,
-                            subscriptionId: sub.id,
-                            stripeSubscriptionId,
-                            stripeCustomerId: customerId,
-                            currentPeriodEndMs: periodEndMs,
-                            currentPeriodStartMs: periodStartMs,
-                            invoice: authInvoice,
-                        });
-                    } else {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] No user found for customer ID (${customerId}).`
-                        );
-
-                        const studio =
-                            await this._recordsStore.getStudioByStripeCustomerId(
-                                customerId
-                            );
-
-                        if (studio) {
-                            await this._authStore.updateSubscriptionPeriod({
-                                studioId: studio.id,
-                                subscriptionStatus: status,
-                                subscriptionId: sub.id,
-                                stripeSubscriptionId,
-                                stripeCustomerId: customerId,
-                                currentPeriodEndMs: periodEndMs,
-                                currentPeriodStartMs: periodStartMs,
-                                invoice: authInvoice,
-                            });
-                        } else {
-                            console.log(
-                                `[SubscriptionController] [handleStripeWebhook] No studio found for customer ID (${customerId}).`
-                            );
-                        }
-                    }
-
-                    function findMatchingSubscription(
-                        lineItems: StripeInvoice['lines']['data']
-                    ) {
-                        let item: any;
-                        let sub: SubscriptionConfiguration['subscriptions'][0];
-                        items_loop: for (let i of lineItems) {
-                            for (let s of config.subscriptions) {
-                                if (
-                                    s.eligibleProducts &&
-                                    s.eligibleProducts.some(
-                                        (p) => p === i.price.product
-                                    )
-                                ) {
-                                    sub = s;
-                                    item = i;
-                                    break items_loop;
-                                }
-                            }
-                        }
-
-                        return { item, sub };
-                    }
-                } else {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No subscription ID found in invoice.`
-                    );
-
-                    const authInvoice =
-                        await this._authStore.getInvoiceByStripeId(invoice.id);
-                    if (!authInvoice) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] No invoice found for stripe ID (${invoice.id}).`
-                        );
-                        return {
-                            success: true,
-                        };
-                    }
-
-                    await this._authStore.saveInvoice({
-                        ...authInvoice,
-                        currency: invoice.currency,
-                        description: invoice.description,
-                        paid: invoice.paid,
-                        status: invoice.status,
-                        tax: invoice.tax,
-                        total: invoice.total,
-                        subtotal: invoice.subtotal,
-                    });
-                }
+                return await this._handleStripeInvoicePaidEvent(
+                    config,
+                    event,
+                    parseResult.data.data.object
+                );
             } else if (event.type === 'account.updated') {
                 const parseResult =
                     STRIPE_EVENT_ACCOUNT_UPDATED_SCHEMA.safeParse(event);
@@ -2148,47 +1941,10 @@ export class SubscriptionController {
                     };
                 }
 
-                const e = parseResult.data;
-                const accountId = e.data.object.id;
-                const account = await this._stripe.getAccountById(accountId);
-                let studio =
-                    await this._recordsStore.getStudioByStripeAccountId(
-                        accountId
-                    );
-
-                if (!studio) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No studio found for account ID (${accountId}).`
-                    );
-                    return {
-                        success: true,
-                    };
-                }
-
-                const newStatus = getAccountStatus(account);
-                const newRequirementsStatus =
-                    getAccountRequirementsStatus(account);
-
-                if (
-                    studio.stripeAccountStatus !== newStatus ||
-                    studio.stripeAccountRequirementsStatus !==
-                        newRequirementsStatus
-                ) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] Updating studio (${studio.id}) account status to ${newStatus} and requirements status to ${newRequirementsStatus}.`
-                    );
-                    studio = {
-                        ...studio,
-                        stripeAccountStatus: newStatus,
-                        stripeAccountRequirementsStatus: newRequirementsStatus,
-                    };
-
-                    await this._recordsStore.updateStudio(studio);
-                }
-
-                return {
-                    success: true,
-                };
+                return await this._handleStripeAccountUpdatedEvent(
+                    config,
+                    parseResult.data
+                );
             } else if (
                 event.type === 'checkout.session.completed' ||
                 event.type === 'checkout.session.expired'
@@ -2208,58 +1964,10 @@ export class SubscriptionController {
                     };
                 }
 
-                const e = parseResult.data;
-                const sessionId = e.data.object.client_reference_id;
-
-                if (!sessionId) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No client_reference_id found in the event.`
-                    );
-                    return {
-                        success: true,
-                    };
-                }
-
-                const session = await this._authStore.getCheckoutSessionById(
-                    sessionId
+                return await this._handleStripeCheckoutSessionEvent(
+                    config,
+                    parseResult.data
                 );
-
-                if (!session) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] Could not find session with ID (${sessionId}).`
-                    );
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage: 'The session could not be found.',
-                    };
-                }
-
-                if (session.stripeCheckoutSessionId !== e.data.object.id) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] Stripe checkout session ID (${e.data.object.id}) does not match stored ID (${session.stripeCheckoutSessionId}).`
-                    );
-                    return {
-                        success: false,
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The session ID does not match the expected session ID.',
-                    };
-                }
-
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${e.data.object.id} status: ${e.data.object.status} paymentStatus: ${e.data.object.payment_status}] Checkout session updated for session ID.`
-                );
-                const paid =
-                    e.data.object.payment_status === 'no_payment_required' ||
-                    e.data.object.payment_status === 'paid';
-                await this._authStore.updateCheckoutSessionInfo({
-                    ...session,
-                    paid,
-                    paymentStatus: e.data.object.payment_status,
-                    status: e.data.object.status,
-                    invoice: null,
-                });
             }
 
             return {
@@ -2279,6 +1987,398 @@ export class SubscriptionController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    private async _handleStripeCheckoutSessionEvent(
+        config: SubscriptionConfiguration,
+        event: StripeEventCheckoutSession
+    ): Promise<HandleStripeWebhookResponse> {
+        const sessionId = event.data.object.client_reference_id;
+
+        if (!sessionId) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No client_reference_id found in the event.`
+            );
+            return {
+                success: true,
+            };
+        }
+
+        const session = await this._authStore.getCheckoutSessionById(sessionId);
+
+        if (!session) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] Could not find session with ID (${sessionId}).`
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The session could not be found.',
+            };
+        }
+
+        if (session.stripeCheckoutSessionId !== event.data.object.id) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] Stripe checkout session ID (${event.data.object.id}) does not match stored ID (${session.stripeCheckoutSessionId}).`
+            );
+            return {
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage:
+                    'The session ID does not match the expected session ID.',
+            };
+        }
+
+        console.log(
+            `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${event.data.object.id} status: ${event.data.object.status} paymentStatus: ${event.data.object.payment_status}] Checkout session updated for session ID.`
+        );
+        const paid =
+            event.data.object.payment_status === 'no_payment_required' ||
+            event.data.object.payment_status === 'paid';
+        await this._authStore.updateCheckoutSessionInfo({
+            ...session,
+            paid,
+            paymentStatus: event.data.object.payment_status,
+            status: event.data.object.status,
+            invoice: null,
+        });
+    }
+
+    @traced(TRACE_NAME)
+    private async _handleStripeAccountUpdatedEvent(
+        config: SubscriptionConfiguration,
+        event: StripeEventAccountUpdated
+    ): Promise<HandleStripeWebhookResponse> {
+        const accountId = event.data.object.id;
+        const account = await this._stripe.getAccountById(accountId);
+        let studio = await this._recordsStore.getStudioByStripeAccountId(
+            accountId
+        );
+
+        if (studio) {
+            return await this._handleStudioStripeAccountUpdatedEvent(
+                account,
+                studio
+            );
+        }
+
+        const user = await this._authStore.findUserByStripeAccountId(accountId);
+
+        if (user) {
+            return await this._handleUserStripeAccountUpdatedEvent(
+                account,
+                user
+            );
+        }
+
+        console.warn(
+            `[SubscriptionController] [handleStripeWebhook] No user or studio found for account ID (${accountId}).`
+        );
+
+        return {
+            success: true,
+        };
+    }
+
+    private async _handleStudioStripeAccountUpdatedEvent(
+        account: StripeAccount,
+        studio: Studio
+    ): Promise<HandleStripeWebhookResponse> {
+        if (!studio) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No studio found for account ID (${account.id}).`
+            );
+            return {
+                success: true,
+            };
+        }
+
+        const newStatus = getAccountStatus(account);
+        const newRequirementsStatus = getAccountRequirementsStatus(account);
+
+        if (
+            studio.stripeAccountStatus !== newStatus ||
+            studio.stripeAccountRequirementsStatus !== newRequirementsStatus
+        ) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] Updating studio (${studio.id}) account status to ${newStatus} and requirements status to ${newRequirementsStatus}.`
+            );
+            studio = {
+                ...studio,
+                stripeAccountStatus: newStatus,
+                stripeAccountRequirementsStatus: newRequirementsStatus,
+            };
+
+            await this._recordsStore.updateStudio(studio);
+        }
+
+        return {
+            success: true,
+        };
+    }
+
+    private async _handleUserStripeAccountUpdatedEvent(
+        account: StripeAccount,
+        user: AuthUser
+    ): Promise<HandleStripeWebhookResponse> {
+        if (!user) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No user found for account ID (${account.id}).`
+            );
+            return {
+                success: true,
+            };
+        }
+
+        const newStatus = getAccountStatus(account);
+        const newRequirementsStatus = getAccountRequirementsStatus(account);
+
+        if (
+            user.stripeAccountStatus !== newStatus ||
+            user.stripeAccountRequirementsStatus !== newRequirementsStatus
+        ) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] Updating user (${user.id}) account status to ${newStatus} and requirements status to ${newRequirementsStatus}.`
+            );
+            user = {
+                ...user,
+                stripeAccountStatus: newStatus,
+                stripeAccountRequirementsStatus: newRequirementsStatus,
+            };
+
+            await this._authStore.saveUser(user);
+        }
+
+        return {
+            success: true,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    private async _handleStripeInvoicePaidEvent(
+        config: SubscriptionConfiguration,
+        event: StripeEvent,
+        invoice: StripeInvoice
+    ): Promise<HandleStripeWebhookResponse> {
+        const stripeSubscriptionId = invoice.subscription;
+
+        if (stripeSubscriptionId) {
+            const subscription = await this._stripe.getSubscriptionById(
+                stripeSubscriptionId
+            );
+            const status = subscription.status;
+            const customerId = invoice.customer;
+            const lineItems = invoice.lines.data;
+            const periodStartMs = subscription.current_period_start * 1000;
+            const periodEndMs = subscription.current_period_end * 1000;
+            const { sub, item } = findMatchingSubscription(lineItems);
+
+            const authInvoice: UpdateSubscriptionPeriodRequest['invoice'] = {
+                currency: invoice.currency,
+                description: invoice.description,
+                paid: invoice.paid,
+                status: invoice.status,
+                tax: invoice.tax,
+                total: invoice.total,
+                subtotal: invoice.subtotal,
+                stripeInvoiceId: invoice.id,
+                stripeHostedInvoiceUrl: invoice.hosted_invoice_url,
+                stripeInvoicePdfUrl: invoice.invoice_pdf,
+            };
+
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
+            );
+
+            const user = await this._authStore.findUserByStripeCustomerId(
+                customerId
+            );
+
+            if (user) {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] Found user (${user.id}) with customer ID (${customerId}).`
+                );
+
+                await this._authStore.updateSubscriptionPeriod({
+                    userId: user.id,
+                    subscriptionStatus: status,
+                    subscriptionId: sub.id,
+                    stripeSubscriptionId,
+                    stripeCustomerId: customerId,
+                    currentPeriodEndMs: periodEndMs,
+                    currentPeriodStartMs: periodStartMs,
+                    invoice: authInvoice,
+                });
+            } else {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No user found for customer ID (${customerId}).`
+                );
+
+                const studio =
+                    await this._recordsStore.getStudioByStripeCustomerId(
+                        customerId
+                    );
+
+                if (studio) {
+                    await this._authStore.updateSubscriptionPeriod({
+                        studioId: studio.id,
+                        subscriptionStatus: status,
+                        subscriptionId: sub.id,
+                        stripeSubscriptionId,
+                        stripeCustomerId: customerId,
+                        currentPeriodEndMs: periodEndMs,
+                        currentPeriodStartMs: periodStartMs,
+                        invoice: authInvoice,
+                    });
+                } else {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No studio found for customer ID (${customerId}).`
+                    );
+                }
+            }
+
+            function findMatchingSubscription(
+                lineItems: StripeInvoice['lines']['data']
+            ) {
+                let item: any;
+                let sub: SubscriptionConfiguration['subscriptions'][0];
+                items_loop: for (let i of lineItems) {
+                    for (let s of config.subscriptions) {
+                        if (
+                            s.eligibleProducts &&
+                            s.eligibleProducts.some(
+                                (p) => p === i.price.product
+                            )
+                        ) {
+                            sub = s;
+                            item = i;
+                            break items_loop;
+                        }
+                    }
+                }
+
+                return { item, sub };
+            }
+        } else {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No subscription ID found in invoice.`
+            );
+
+            const authInvoice = await this._authStore.getInvoiceByStripeId(
+                invoice.id
+            );
+            if (!authInvoice) {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No invoice found for stripe ID (${invoice.id}).`
+                );
+                return {
+                    success: true,
+                };
+            }
+
+            await this._authStore.saveInvoice({
+                ...authInvoice,
+                currency: invoice.currency,
+                description: invoice.description,
+                paid: invoice.paid,
+                status: invoice.status,
+                tax: invoice.tax,
+                total: invoice.total,
+                subtotal: invoice.subtotal,
+            });
+        }
+    }
+
+    @traced(TRACE_NAME)
+    private async _handleStripeSubscriptionEvent(
+        config: SubscriptionConfiguration,
+        event: StripeEvent,
+        subscription: Record<string, any>
+    ): Promise<HandleStripeWebhookResponse> {
+        const items = subscription.items.data as Array<any>;
+
+        let item: any;
+        let sub: SubscriptionConfiguration['subscriptions'][0];
+        items_loop: for (let i of items) {
+            for (let s of config.subscriptions) {
+                if (
+                    s.eligibleProducts &&
+                    s.eligibleProducts.some((p) => p === i.price.product)
+                ) {
+                    sub = s;
+                    item = i;
+                    break items_loop;
+                }
+            }
+        }
+
+        if (!item || !sub) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No item in the subscription matches an eligible product in the config.`
+            );
+            return {
+                success: true,
+            };
+        }
+
+        console.log(
+            `[SubscriptionController] [handleStripeWebhook] Subscription (${sub.id}) found!`
+        );
+
+        const status = subscription.status;
+        const active = isActiveSubscription(status);
+        const tier = sub.tier ?? 'beta';
+        const customerId = subscription.customer;
+        const stripeSubscriptionId = subscription.id;
+        const periodStartMs = subscription.current_period_start * 1000;
+        const periodEndMs = subscription.current_period_end * 1000;
+
+        console.log(
+            `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Tier: ${tier}. Is Active: ${active}.`
+        );
+        let user = await this._authStore.findUserByStripeCustomerId(customerId);
+        let studio: Studio;
+
+        if (user) {
+            await this._authStore.updateSubscriptionInfo({
+                userId: user.id,
+                subscriptionStatus: status,
+                subscriptionId: sub.id,
+                stripeSubscriptionId,
+                stripeCustomerId: customerId,
+                currentPeriodEndMs: periodEndMs,
+                currentPeriodStartMs: periodStartMs,
+            });
+        } else {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
+            );
+
+            studio = await this._recordsStore.getStudioByStripeCustomerId(
+                customerId
+            );
+
+            if (studio) {
+                await this._authStore.updateSubscriptionInfo({
+                    studioId: studio.id,
+                    subscriptionStatus: status,
+                    subscriptionId: sub.id,
+                    stripeSubscriptionId,
+                    stripeCustomerId: customerId,
+                    currentPeriodEndMs: periodEndMs,
+                    currentPeriodStartMs: periodStartMs,
+                });
+            } else {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
+                );
+            }
+        }
+
+        return {
+            success: true,
+        };
     }
 }
 
