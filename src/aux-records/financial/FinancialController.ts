@@ -68,7 +68,7 @@ export class FinancialController {
                 user_data_64: 0n,
                 user_data_32: 0,
                 timestamp: 0n,
-                ledger: LEDGERS.usd,
+                ledger: LEDGERS.credits,
                 reserved: 0,
             },
         ]);
@@ -116,7 +116,7 @@ export class FinancialController {
             user_data_64: 0n,
             user_data_32: 0,
             timestamp: 0n,
-            ledger: LEDGERS.usd,
+            ledger: LEDGERS.credits,
             reserved: 0,
         });
 
@@ -156,7 +156,10 @@ export class FinancialController {
         ]);
 
         if (!account) {
-            return success(null);
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The account with ID '${accountId}' does not exist.`,
+            });
         }
 
         return success(account);

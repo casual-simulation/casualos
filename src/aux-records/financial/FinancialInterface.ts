@@ -38,16 +38,16 @@ import { AccountFlags, CreateAccountError } from './Types';
  */
 export const LEDGERS = {
     /**
-     * The ID of the ledger for transactions denominated in USD.
+     * The ID of the ledger for transactions denominated in credits (internal-use currency for xpExchange - has a 1:1 mapping with USD).
      */
-    usd: 1,
+    credits: 1,
 };
 
 export const CurrencyCodes = {
     /**
      * The currency code for USD.
      */
-    usd: 'usd',
+    credits: 'credits',
 };
 
 /**
@@ -56,7 +56,15 @@ export const CurrencyCodes = {
 export const CURRENCIES = new Map<
     (typeof LEDGERS)[keyof typeof LEDGERS],
     (typeof CurrencyCodes)[keyof typeof CurrencyCodes]
->([[LEDGERS.usd, 'usd']]);
+>([[LEDGERS.credits, 'credits']]);
+
+/**
+ * Gets the currency code for the given account.
+ * @param account The account to get the currency code for.
+ */
+export function getAccountCurrency(account: Account): string {
+    return CURRENCIES.get(account.ledger);
+}
 
 /**
  * Account IDs for built-in accounts.
