@@ -38,6 +38,7 @@ import {
     formatV1ConnectionKey,
     formatV1SessionKey,
     generateV1ConnectionToken,
+    unwrap,
 } from '@casual-simulation/aux-common';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
@@ -71,6 +72,13 @@ import type {
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import type { UserLoginMetadata } from './AuthStore';
+import {
+    ACCOUNT_IDS,
+    AccountCodes,
+    FinancialController,
+    MemoryFinancialInterface,
+    TransferCodes,
+} from './financial';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -145,6 +153,8 @@ describe('AuthController', () => {
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
     let privoClient: PrivoClientInterface;
+    let financialInterface: MemoryFinancialInterface;
+    let financialController: FinancialController;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
     let nowMock: jest.Mock<number>;
     let relyingParty: RelyingParty;
@@ -203,12 +213,16 @@ describe('AuthController', () => {
             origin: 'https://example.com',
         };
 
+        financialInterface = new MemoryFinancialInterface();
+        financialController = new FinancialController(financialInterface);
+
         controller = new AuthController(
             store,
             messenger,
             store,
             undefined,
             privoClient,
+            financialController,
             [relyingParty]
         );
 
@@ -7859,6 +7873,7 @@ describe('AuthController', () => {
         const userId = 'myid';
 
         beforeEach(async () => {
+            unwrap(await financialController.init());
             await store.saveUser({
                 id: userId,
                 email: 'email',
@@ -7964,6 +7979,68 @@ describe('AuthController', () => {
                     allowPublicInsts: true,
                 },
                 role: 'none',
+            });
+        });
+
+        it('should include the financial info for the account', async () => {
+            const account = unwrap(
+                await financialController.createAccount(
+                    AccountCodes.liabilities_user
+                )
+            );
+
+            unwrap(
+                await financialController.internalTransfer({
+                    transfers: [
+                        {
+                            amount: 1000,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.stripe_assets,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                accountId: account.id,
+                stripeAccountId: 'stripeAccountId',
+                requestedRate: 123,
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+            const result = await controller.getUserInfo({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: false,
+                subscriptionTier: null,
+                displayName: null,
+                privacyFeatures: {
+                    publishData: true,
+                    allowPublicData: true,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                role: 'none',
+                accountId: '1',
+                accountBalance: 1000,
+                accountCurrency: 'credits',
+                stripeAccountId: 'stripeAccountId',
+                requestedRate: 123,
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'incomplete',
             });
         });
 
@@ -8557,46 +8634,6 @@ describe('AuthController', () => {
                         allowPublicInsts: true,
                     },
                     role: 'superUser',
-                });
-            });
-
-            it('should include the financial info for the account', async () => {
-                const user = await store.findUser(userId);
-                await store.saveUser({
-                    ...user,
-                    accountId: 'accountId',
-                    stripeAccountId: 'stripeAccountId',
-                    requestedRate: 123,
-                    stripeAccountStatus: 'pending',
-                    stripeAccountRequirementsStatus: 'incomplete',
-                });
-                const result = await controller.getUserInfo({
-                    userId,
-                });
-
-                expect(result).toEqual({
-                    success: true,
-                    userId: userId,
-                    email: 'email',
-                    phoneNumber: 'phonenumber',
-                    name: 'Test',
-                    avatarUrl: 'avatar url',
-                    avatarPortraitUrl: 'avatar portrait url',
-                    hasActiveSubscription: false,
-                    subscriptionTier: null,
-                    displayName: null,
-                    privacyFeatures: {
-                        publishData: true,
-                        allowPublicData: true,
-                        allowAI: true,
-                        allowPublicInsts: true,
-                    },
-                    role: 'none',
-                    accountId: 'accountId',
-                    stripeAccountId: 'stripeAccountId',
-                    requestedRate: 123,
-                    stripeAccountStatus: 'pending',
-                    stripeAccountRequirementsStatus: 'incomplete',
                 });
             });
 
