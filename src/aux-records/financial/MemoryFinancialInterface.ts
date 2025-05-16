@@ -44,7 +44,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
     private _accounts: Map<Account['id'], Account> = new Map();
     private _balances: Map<Account['id'], AccountBalance[]> = new Map();
     private _transfers: Transfer[] = [];
-    private _currentId = 0n;
+    private _currentId = 1n;
 
     get accounts() {
         return this._accounts;

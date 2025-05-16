@@ -938,14 +938,14 @@ export enum Operation {
 export declare type Context = object;
 export declare type AccountID = bigint;
 export declare type TransferID = bigint;
-export declare type Event =
+export declare type FinancialInterfaceEvent =
     | Account
     | Transfer
     | AccountID
     | TransferID
     | AccountFilter
     | QueryFilter;
-export declare type Result =
+export declare type FinancialInterfaceResult =
     | CreateAccountsError
     | CreateTransfersError
     | Account
@@ -953,7 +953,7 @@ export declare type Result =
     | AccountBalance;
 export declare type ResultCallback = (
     error: Error | null,
-    results: Result[] | null
+    results: FinancialInterfaceResult[] | null
 ) => void;
 export declare const amount_max: bigint;
 export interface ClientInitArgs {
