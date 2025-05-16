@@ -15,24 +15,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { Result, SimpleError } from '@casual-simulation/aux-common';
+import type {
+    Result,
+    ServerError,
+    SimpleError,
+} from '@casual-simulation/aux-common';
 import {
     failure,
     isFailure,
     logErrors,
     success,
 } from '@casual-simulation/aux-common';
+import type { TransferCodes } from './FinancialInterface';
 import {
     ACCOUNT_IDS,
     AccountCodes,
     getFlagsForAccountCode,
+    getFlagsForTransferCode,
     getMessageForAccountError,
     LEDGERS,
     processAccountErrors,
+    processTransferErrors,
     type FinancialInterface,
 } from './FinancialInterface';
-import type { Account, CreateTransferError } from './Types';
-import { CreateAccountError } from './Types';
+import type { Account, CreateTransferError, Transfer } from './Types';
+import { CreateAccountError, TransferFlags } from './Types';
+import { traced } from '../tracing/TracingDecorators';
+
+const TRACE_NAME = 'FinancialController';
 
 export class FinancialController {
     private _financialInterface: FinancialInterface;
@@ -42,6 +52,7 @@ export class FinancialController {
         this._financialInterface = financialInterface;
     }
 
+    @traced(TRACE_NAME)
     async init(): Promise<Result<void, SimpleError>> {
         // Ensure that the financial interface has the correct accounts
         const results = await this._financialInterface.createAccounts([
@@ -88,6 +99,7 @@ export class FinancialController {
      * For internal use only.
      * @param code The code for the new account.
      */
+    @traced(TRACE_NAME)
     async createAccount(
         code: AccountCodes
     ): Promise<CreateFinancialAccountResult> {
@@ -122,10 +134,17 @@ export class FinancialController {
         }
 
         return success({
-            id,
+            id: id.toString(),
         });
     }
 
+    /**
+     * Gets the account with the given ID.
+     * Resolves with null if the account does not exist.
+     * @param accountId The ID of the account to get.
+     * @returns
+     */
+    @traced(TRACE_NAME)
     async getAccount(
         accountId: bigint | string
     ): Promise<GetFinancialAccountResult> {
@@ -137,14 +156,133 @@ export class FinancialController {
         ]);
 
         if (!account) {
+            return success(null);
+        }
+
+        return success(account);
+    }
+
+    /**
+     * Transfers funds between two internal accounts.
+     * Suitable for moving money between user accounts and contracts.
+     * Not suitable for interfacing with external systems such as Stripe.
+     *
+     * Not for public use.
+     * @param request The request for the transfer.
+     */
+    @traced(TRACE_NAME)
+    async internalTransfer(
+        request: InternalTransferRequest
+    ): Promise<TransferResult> {
+        let transfers: Transfer[] = [];
+        const transactionId =
+            typeof request.transactionId === 'string'
+                ? BigInt(request.transactionId)
+                : typeof request.transactionId === 'bigint'
+                ? request.transactionId
+                : this._financialInterface.generateId();
+
+        for (let i = 0; i < request.transfers.length; i++) {
+            const transfer = request.transfers[i];
+            const transferId =
+                typeof transfer.transferId === 'string'
+                    ? BigInt(transfer.transferId)
+                    : typeof transfer.transferId === 'bigint'
+                    ? transfer.transferId
+                    : this._financialInterface.generateId();
+
+            const currency = transfer.currency.toLowerCase();
+            const ledger = (LEDGERS as Record<string, number>)[currency];
+
+            if (typeof ledger !== 'number') {
+                return failure({
+                    errorCode: 'unsupported_currency',
+                    errorMessage: `The currency '${currency}' is not supported.`,
+                });
+            }
+
+            let flags = getFlagsForTransferCode(transfer.code);
+
+            if (i < request.transfers.length - 1) {
+                flags |= TransferFlags.linked;
+            }
+
+            transfers.push({
+                id: transferId,
+                amount:
+                    typeof transfer.amount === 'number'
+                        ? BigInt(transfer.amount)
+                        : transfer.amount,
+                code: transfer.code,
+                credit_account_id: BigInt(transfer.creditAccountId),
+                debit_account_id: BigInt(transfer.debitAccountId),
+                flags: flags,
+                ledger: ledger,
+                pending_id: 0n,
+                timeout: 0,
+                timestamp: 0n,
+                user_data_128: transactionId,
+                user_data_64: 0n,
+                user_data_32: 0,
+            });
+        }
+
+        const results = await this._financialInterface.createTransfers(
+            transfers
+        );
+
+        const transferResult = processTransferErrors(results, transfers);
+
+        if (isFailure(transferResult)) {
+            logErrors(
+                transferResult.error,
+                `[XpController] [transfer transactionId: ${transactionId}]`
+            );
+
+            const exceedsDebits = transferResult.error.errors.find(
+                (e) => e.errorCode === 'exceeds_debits'
+            );
+            if (exceedsDebits) {
+                return failure({
+                    errorCode: 'credits_exceed_debits',
+                    errorMessage:
+                        'The transfer would cause the account credits to exceed its debits.',
+                    accountId:
+                        exceedsDebits.transfer.credit_account_id.toString(),
+                });
+            }
+            const exceedsCredits = transferResult.error.errors.find(
+                (e) => e.errorCode === 'exceeds_credits'
+            );
+            if (exceedsCredits) {
+                return failure({
+                    errorCode: 'debits_exceed_credits',
+                    errorMessage:
+                        'The transfer would cause the account debits to exceed its credits.',
+                    accountId:
+                        exceedsCredits.transfer.debit_account_id.toString(),
+                });
+            }
+
+            const exists = transferResult.error.errors.find(
+                (e) => e.errorCode === 'exists'
+            );
+            if (exists) {
+                return failure({
+                    errorCode: 'transfer_already_exists',
+                    errorMessage: `The transfer (${exists.transfer.id}) already exists.`,
+                });
+            }
+
             return failure({
-                errorCode: 'not_found',
-                errorMessage: `Account with id ${accountId} not found.`,
+                errorCode: 'server_error',
+                errorMessage: 'An error occurred while transferring the funds.',
             });
         }
 
         return success({
-            account,
+            transactionId: transactionId.toString(),
+            transferIds: transfers.map((t) => t.id.toString()),
         });
     }
 
@@ -331,12 +469,37 @@ export class FinancialController {
     // }
 }
 
+export function getAccountBalance(account: Account): number {
+    switch (account.code) {
+        case AccountCodes.assets_cash:
+            return getAssetAccountBalance(account);
+        case AccountCodes.liabilities_user:
+        case AccountCodes.liabilities_escrow:
+        case AccountCodes.revenue_store_platform_fees:
+        case AccountCodes.revenue_xp_platform_fees:
+            return getLiabilityAccountBalance(account);
+        // Add other cases for different account codes as needed
+        default:
+            throw new Error(`Unsupported account code: ${account.code}`);
+    }
+}
+
 /**
- * Gets the balance of the given user account.
+ * Gets the balance of the given liability account.
+ * For liability accounts, the balance is calculated as: credits_posted - debits_posted.
  * @param account The account to get the balance of.
  */
-export function getUserAccountBalance(account: Account): number {
+export function getLiabilityAccountBalance(account: Account): number {
     return Number(account.credits_posted - account.debits_posted);
+}
+
+/**
+ * Gets the balance of the given asset account.
+ * For asset accounts, the balance is calculated as: debits_posted - credits_posted.
+ * @param account The account to get the balance of.
+ */
+export function getAssetAccountBalance(account: Account): number {
+    return Number(account.debits_posted - account.credits_posted);
 }
 
 interface GenAccountConfig {
@@ -376,14 +539,84 @@ export type CreateFinancialAccountResult = Result<
         /**
          * The ID of the account that was created.
          */
-        id: bigint;
+        id: string;
     },
     SimpleError
 >;
 
-export type GetFinancialAccountResult = Result<
+export type GetFinancialAccountResult = Result<Account | null, SimpleError>;
+
+export type TransferError = {
+    errorCode:
+        | ServerError
+        | 'debits_exceed_credits'
+        | 'credits_exceed_debits'
+        | 'unsupported_currency'
+        | 'transfer_already_exists';
+    errorMessage: string;
+
+    /**
+     * The ID of the account that had the issue.
+     */
+    accountId?: string;
+};
+
+export interface InternalTransfer {
+    /**
+     * The ID of the transfer that should be created.
+     * If null, then a new transfer will be created.
+     */
+    transferId?: bigint | string | null;
+
+    /**
+     * The ID of the account that is being debited.
+     */
+    debitAccountId: bigint | string;
+
+    /**
+     * The ID of the account that is being credited.
+     */
+    creditAccountId: bigint | string;
+
+    /**
+     * The amount of the transfer.
+     */
+    amount: bigint | number;
+
+    /**
+     * The currency of the transfer.
+     */
+    currency: string;
+
+    /**
+     * The code of the transfer.
+     */
+    code: TransferCodes;
+}
+
+export interface InternalTransferRequest {
+    /**
+     * The transfers that should be performed in a transcation.
+     */
+    transfers: InternalTransfer[];
+
+    /**
+     * The ID of the transaction that should be created.
+     */
+    transactionId?: bigint | string | null;
+}
+
+export type TransferResult = Result<
     {
-        account: Account;
+        /**
+         * The IDs of the transfers that were created.
+         */
+        transferIds: string[];
+
+        /**
+         * The ID of the transaction that was created.
+         */
+        transactionId: string;
     },
-    SimpleError
+    TransferError
 >;

@@ -394,7 +394,7 @@ export function getMessageForTransferError(error: CreateTransferError) {
 
 export function getCodeForTransferError(
     error: CreateTransferError
-): TransferError['errorCode'] {
+): InterfaceTransferError['errorCode'] {
     switch (error) {
         case CreateTransferError.code_must_not_be_zero:
             return 'code_must_not_be_zero';
@@ -476,7 +476,7 @@ export type AccountError = {
     error: CreateAccountError;
 };
 
-export interface TransferError {
+export interface InterfaceTransferError {
     errorCode:
         | ServerError
         | 'code_must_not_be_zero'
@@ -536,8 +536,8 @@ export function processAccountErrors(
 export function processTransferErrors(
     results: CreateTransfersError[],
     transfers: Transfer[]
-): Result<void, MultiError<TransferError>> {
-    let errors: TransferError[] = [];
+): Result<void, MultiError<InterfaceTransferError>> {
+    let errors: InterfaceTransferError[] = [];
     for (let result of results) {
         if (result.result !== CreateTransferError.ok) {
             const transfer = transfers[result.index];

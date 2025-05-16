@@ -15,16 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { FinancialController } from './FinancialController';
-import { FinancialInterface } from './FinancialInterface';
-import { MemoryFinancialInterface } from './MemoryFinancialInterface';
-import { TigerBeetleFinancialInterface } from './TigerBeetleFinancialInterface';
-import * as FinancialTypes from './Types';
-
-export {
-    FinancialController,
-    FinancialInterface,
-    MemoryFinancialInterface,
-    TigerBeetleFinancialInterface,
-    FinancialTypes,
-};
+export * from './FinancialController';
+export * from './FinancialInterface';
+export * from './MemoryFinancialInterface';
+export * from './TigerBeetleFinancialInterface';
+export * from './Types';
