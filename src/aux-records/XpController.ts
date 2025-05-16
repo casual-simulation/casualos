@@ -113,7 +113,7 @@ export class XpController {
                 user_data_64: 0n,
                 user_data_32: 0,
                 timestamp: 0n,
-                ledger: LEDGERS.usd,
+                ledger: LEDGERS.credits,
                 reserved: 0,
             },
         ]);
@@ -153,7 +153,7 @@ export class XpController {
             user_data_64: 0n,
             user_data_32: 0,
             timestamp: 0n,
-            ledger: LEDGERS.usd,
+            ledger: LEDGERS.credits,
             reserved: 0,
         });
 
@@ -185,7 +185,7 @@ export class XpController {
      * * Standardizes the account code for contracts
      */
     private async _createContractAccount(): Promise<CreateXpAccountResult> {
-        return await this.createAccount(AccountCodes.liabilities_escrow);
+        return await this.createAccount(AccountCodes.liabilities_contract);
     }
 
     /**

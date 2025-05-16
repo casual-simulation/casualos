@@ -477,7 +477,7 @@ export function getAccountBalance(account: Account): number {
         case AccountCodes.assets_cash:
             return getAssetAccountBalance(account);
         case AccountCodes.liabilities_user:
-        case AccountCodes.liabilities_escrow:
+        case AccountCodes.liabilities_contract:
         case AccountCodes.revenue_store_platform_fees:
         case AccountCodes.revenue_xp_platform_fees:
             return getLiabilityAccountBalance(account);

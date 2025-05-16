@@ -107,14 +107,14 @@ export enum AccountCodes {
     assets_cash = 1001, // flags.credits_must_not_exceed_debits
 
     /**
-     * Liability accounts to users.
+     * liabilities held by users.
      */
     liabilities_user = 2101, // flags.debits_must_not_exceed_credits
 
     /**
-     * Liability accounts to users held in escrow.
+     * liabilities held by contracts.
      */
-    liabilities_escrow = 2102, // flags.debits_must_not_exceed_credits
+    liabilities_contract = 2102, // flags.debits_must_not_exceed_credits
 
     /**
      * Revenue accounts from platform fees.
@@ -258,7 +258,7 @@ export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
         case AccountCodes.assets_cash:
             return AccountFlags.credits_must_not_exceed_debits;
         case AccountCodes.liabilities_user:
-        case AccountCodes.liabilities_escrow:
+        case AccountCodes.liabilities_contract:
         case AccountCodes.revenue_xp_platform_fees:
         case AccountCodes.revenue_store_platform_fees:
             return AccountFlags.debits_must_not_exceed_credits;
