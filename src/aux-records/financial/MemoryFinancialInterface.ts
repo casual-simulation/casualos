@@ -266,54 +266,84 @@ export class MemoryFinancialInterface implements FinancialInterface {
         for (let i = 0; i < batch.length; i++) {
             const transfer = batch[i];
             let valid = true;
+
+            if (transfer.credit_account_id === transfer.debit_account_id) {
+                errs.push({
+                    index: i,
+                    result: CreateTransferError.accounts_must_be_different,
+                });
+                valid = false;
+            }
+
             const creditAccount = this._accounts.get(
                 transfer.credit_account_id
             );
+            if (!creditAccount) {
+                errs.push({
+                    index: i,
+                    result: CreateTransferError.credit_account_not_found,
+                });
+                valid = false;
+            }
+
             const debitAccount = this._accounts.get(transfer.debit_account_id);
+            if (!debitAccount) {
+                errs.push({
+                    index: i,
+                    result: CreateTransferError.debit_account_not_found,
+                });
+                valid = false;
+            }
 
-            if (transfer.flags & TransferFlags.pending) {
-                throw new Error('Not implemented yet!');
-            } else if (transfer.flags & TransferFlags.post_pending_transfer) {
-                throw new Error('Not implemented yet!');
-            } else if (transfer.flags & TransferFlags.void_pending_transfer) {
-                throw new Error('Not implemented yet!');
-            } else {
-                const creditsPosted =
-                    creditAccount.credits_posted + transfer.amount;
-                const debitsPosted =
-                    debitAccount.debits_posted + transfer.amount;
-
-                if (
-                    creditAccount.flags &
-                    AccountFlags.credits_must_not_exceed_debits
+            if (creditAccount && debitAccount) {
+                if (transfer.flags & TransferFlags.pending) {
+                    throw new Error('Not implemented yet!');
+                } else if (
+                    transfer.flags & TransferFlags.post_pending_transfer
                 ) {
-                    if (creditsPosted > debitAccount.debits_posted) {
-                        valid = false;
-                        errs.push({
-                            index: i,
-                            result: CreateTransferError.exceeds_debits,
-                        });
-                    }
-                }
-                if (
-                    debitAccount.flags &
-                    AccountFlags.debits_must_not_exceed_credits
+                    throw new Error('Not implemented yet!');
+                } else if (
+                    transfer.flags & TransferFlags.void_pending_transfer
                 ) {
-                    if (debitsPosted > debitAccount.credits_posted) {
-                        valid = false;
-                        errs.push({
-                            index: i,
-                            result: CreateTransferError.exceeds_credits,
-                        });
+                    throw new Error('Not implemented yet!');
+                } else {
+                    const creditsPosted =
+                        creditAccount.credits_posted + transfer.amount;
+                    const debitsPosted =
+                        debitAccount.debits_posted + transfer.amount;
+
+                    if (
+                        creditAccount.flags &
+                        AccountFlags.credits_must_not_exceed_debits
+                    ) {
+                        if (creditsPosted > debitAccount.debits_posted) {
+                            valid = false;
+                            errs.push({
+                                index: i,
+                                result: CreateTransferError.exceeds_debits,
+                            });
+                        }
                     }
-                }
+                    if (
+                        debitAccount.flags &
+                        AccountFlags.debits_must_not_exceed_credits
+                    ) {
+                        if (debitsPosted > debitAccount.credits_posted) {
+                            valid = false;
+                            errs.push({
+                                index: i,
+                                result: CreateTransferError.exceeds_credits,
+                            });
+                        }
+                    }
 
-                if (valid) {
-                    creditAccount.credits_posted += transfer.amount;
-                    debitAccount.debits_posted += transfer.amount;
+                    if (valid) {
+                        creditAccount.credits_posted += transfer.amount;
+                        debitAccount.debits_posted += transfer.amount;
 
-                    this._recordBalance(creditAccount, transfer.timestamp);
-                    this._recordBalance(debitAccount, transfer.timestamp);
+                        this._recordBalance(creditAccount, transfer.timestamp);
+                        this._recordBalance(debitAccount, transfer.timestamp);
+                    }
                 }
             }
 
