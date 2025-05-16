@@ -928,6 +928,7 @@ export type BotShape =
     | 'skybox'
     | 'sphere'
     | 'sprite'
+    | 'map'
     | 'mesh'
     | 'iframe'
     | 'frustum'
@@ -2751,6 +2752,12 @@ export const KNOWN_TAGS: string[] = [
     'formLightGroundColor',
     'formBuildStep',
     'formLDrawPartsAddress',
+    'formMapLOD',
+    'formMapProvider',
+    'formMapProviderAPIKey',
+    'formMapHeightProvider',
+    'formMapHeightProviderAPIKey',
+    'formMapHeightOffset',
     'meshPositioningMode',
     'orientationMode',
     'anchorPoint',
