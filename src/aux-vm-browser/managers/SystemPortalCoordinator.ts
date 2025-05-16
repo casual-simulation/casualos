@@ -21,14 +21,12 @@ import type {
     SystemPortalPane,
 } from '@casual-simulation/aux-common';
 import {
-    calculateBotValue,
     calculateStringTagValue,
     getBotTag,
     hasValue,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
     SYSTEM_TAG,
-    tagsOnBot,
     getTagMask,
     calculateBooleanTagValue,
     EDITING_BOT,
@@ -38,59 +36,41 @@ import {
     EDITING_TAG_SPACE,
     getTagValueForSpace,
     parseNewTag,
-    hasTagOrMask,
     DNA_TAG_PREFIX,
     isFormula,
     SYSTEM_PORTAL_TAG,
     SYSTEM_PORTAL_TAG_SPACE,
     isBotLink,
     calculateBotIdTagValue,
-    calculateBotIds,
     SYSTEM_PORTAL_SEARCH,
-    parseScriptSafe,
     parseScript,
     parseFormula,
-    parseBotLink,
     formatValue,
     BOT_LINK_TAG_PREFIX,
     getScriptPrefix,
-    KNOWN_TAG_PREFIXES,
     SYSTEM_TAG_NAME,
     calculateFormattedBotValue,
     SYSTEM_PORTAL_DIFF,
     SYSTEM_PORTAL_DIFF_BOT,
     SYSTEM_PORTAL_DIFF_TAG,
     SYSTEM_PORTAL_DIFF_TAG_SPACE,
-    SYSTEM_PORTAL_PANE,
-    SHEET_PORTAL,
-    getSystemPortalPane,
     getOpenSystemPortalPane,
     isModule,
     parseModule,
 } from '@casual-simulation/aux-common';
 import type { SimulationManager } from '@casual-simulation/aux-vm';
-import {
-    BotHelper,
-    BotWatcher,
-    PortalManager,
-    Simulation,
-    UpdatedBotInfo,
-} from '@casual-simulation/aux-vm';
-import { indexOf, isEqual, sortBy, union, unionBy } from 'lodash';
+
+import { isEqual, sortBy, union, unionBy } from 'lodash';
 import type { Observer, SubscriptionLike } from 'rxjs';
 import {
     BehaviorSubject,
     combineLatest,
     merge,
     Observable,
-    Subject,
     Subscription,
-    using,
 } from 'rxjs';
 import {
     bufferTime,
-    combineLatestAll,
-    combineLatestWith,
     distinctUntilChanged,
     filter,
     mergeMap,
@@ -99,8 +79,6 @@ import {
     startWith,
     switchMap,
     takeUntil,
-    tap,
-    withLatestFrom,
 } from 'rxjs/operators';
 import type { BrowserSimulation } from './BrowserSimulation';
 

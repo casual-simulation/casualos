@@ -25,13 +25,10 @@ import type {
     GetPackageVersionByKeyResult,
     PackageRecordVersionKeySpecifier,
 } from './PackageVersionRecordsStore';
-import {
-    PackageVersion,
-    ListedPackageVersion,
-} from './PackageVersionRecordsStore';
+
 import type { SubscriptionFilter } from '../../MetricsStore';
 import type { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
-import { isEqual, orderBy, sortBy } from 'lodash';
+import { isEqual, orderBy } from 'lodash';
 import type { PackageRecord } from '../PackageRecordsStore';
 
 /**

@@ -19,11 +19,7 @@ import type {
     PrecalculatedBot,
     PortalType,
 } from '@casual-simulation/aux-common';
-import {
-    getPortalConfigBotID,
-    Bot,
-    registerBuiltinPortal,
-} from '@casual-simulation/aux-common';
+import { registerBuiltinPortal } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from './BrowserSimulation';
 import type { Observable } from 'rxjs';
 import { NEVER, of } from 'rxjs';
@@ -40,7 +36,6 @@ import type {
     UpdatedBotInfo,
     BotHelper,
 } from '@casual-simulation/aux-vm';
-import { LoginManager } from '@casual-simulation/aux-vm';
 import type { PortalManager } from '@casual-simulation/aux-vm/managers';
 import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 

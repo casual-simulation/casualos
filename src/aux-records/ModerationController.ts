@@ -30,7 +30,6 @@ import type {
 import type { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
 import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
-import { RecordsNotification } from './SystemNotificationMessenger';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

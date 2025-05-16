@@ -16,11 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { ApiGatewayManagementApi } from '@aws-sdk/client-apigatewaymanagementapi';
-import {
-    AwsDownloadRequest,
-    AwsMessageData,
-    AwsMessageTypes,
-} from './AwsMessages';
+
 import {
     downloadObject,
     getMessageUploadUrl,
@@ -32,7 +28,6 @@ import type {
     WebsocketConnectionStore,
     WebsocketMessenger,
 } from '@casual-simulation/aux-records';
-import { signRequest } from '@casual-simulation/aux-records';
 import type {
     UploadHttpHeaders,
     WebsocketDownloadRequestEvent,
@@ -41,9 +36,6 @@ import type {
     WebsocketMessageEvent,
 } from '@casual-simulation/aux-common';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common';
-import axios, { Method } from 'axios';
-import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
-import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

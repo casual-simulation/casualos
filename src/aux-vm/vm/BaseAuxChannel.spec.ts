@@ -45,7 +45,6 @@ import {
     botAdded,
     createMemoryPartition,
     createAuxPartition,
-    createPrecalculatedBot,
     toast,
     action,
     stateUpdatedEvent,
@@ -73,10 +72,7 @@ import type { AsyncResultAction } from '@casual-simulation/aux-common/bots';
 import {
     ON_COLLABORATION_ENABLED,
     TEMPORARY_BOT_PARTITION_ID,
-    edit,
     enableCollaboration,
-    insert,
-    preserve,
 } from '@casual-simulation/aux-common/bots';
 import type { AuxSubChannel } from './AuxChannel';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';

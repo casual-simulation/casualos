@@ -24,7 +24,7 @@ import type {
 import {
     formatV1ConnectionKey,
     formatV1SessionKey,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import { AuthManager } from './AuthManager';
 
 jest.mock('axios');

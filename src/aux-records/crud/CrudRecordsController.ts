@@ -25,12 +25,10 @@ import type {
     PolicyController,
 } from '../PolicyController';
 import {
-    AuthorizeUserAndInstancesResult,
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from '../PolicyController';
 import type { CrudRecord, CrudRecordsStore } from './CrudRecordsStore';
-import { CrudSubscriptionMetrics } from './CrudRecordsStore';
 import type { ConfigurationStore } from '../ConfigurationStore';
 import type {
     ActionKinds,
@@ -40,11 +38,7 @@ import type {
     ResourceKinds,
     ServerError,
 } from '@casual-simulation/aux-common';
-import {
-    ACCOUNT_MARKER,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
-import { ValidatePublicRecordKeyFailure } from '../RecordsController';
+import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
 import type { ZodIssue } from 'zod';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';

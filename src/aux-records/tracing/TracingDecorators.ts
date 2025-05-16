@@ -25,15 +25,7 @@ import type {
     MetricOptions as OTMetricOptions,
     Attributes,
 } from '@opentelemetry/api';
-import {
-    Counter,
-    Histogram,
-    SpanKind,
-    SpanStatusCode,
-    trace,
-    metrics,
-    Meter,
-} from '@opentelemetry/api';
+import { SpanStatusCode, trace, metrics } from '@opentelemetry/api';
 import { SEMATTRS_HTTP_STATUS_CODE } from '@opentelemetry/semantic-conventions';
 
 declare const GIT_TAG: string;

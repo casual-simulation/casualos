@@ -17,15 +17,7 @@
  */
 import { GameObject } from './GameObject';
 import type { Object3D, Matrix4 } from '@casual-simulation/three';
-import {
-    Box3,
-    Sphere,
-    Group,
-    Color,
-    Vector3,
-    Quaternion,
-    Euler,
-} from '@casual-simulation/three';
+import { Box3, Sphere, Group, Vector3 } from '@casual-simulation/three';
 import type {
     Bot,
     BotCalculationContext,
@@ -42,7 +34,6 @@ import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFac
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import type { AuxBotVisualizer } from './AuxBotVisualizer';
 import { buildSRGBColor, safeSetParent } from './SceneUtils';
-import { CoordinateSystem } from './CoordinateSystem';
 
 /**
  * Defines a class that is able to display Aux bots.

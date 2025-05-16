@@ -31,7 +31,6 @@ import type {
     StatusUpdate,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for the static members of an AUX.

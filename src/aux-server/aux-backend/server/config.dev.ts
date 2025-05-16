@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import * as path from 'path';
-import * as fs from 'fs';
 import type { Config } from './config';
 import playerConfig from './player.config';
 import { loadConfig } from '../shared/ConfigUtils';

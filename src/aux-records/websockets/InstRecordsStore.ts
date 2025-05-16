@@ -16,8 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { Entitlement, ServerError } from '@casual-simulation/aux-common';
-import { PackageRecordVersionKey } from '../packages/version';
+import type { ServerError } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for services which are able to store inst update data.

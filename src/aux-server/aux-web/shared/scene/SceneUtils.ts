@@ -41,14 +41,12 @@ import {
     Box3,
     Layers,
     BoxBufferGeometry,
-    BufferAttribute,
     ConeGeometry,
     DoubleSide,
     AmbientLight,
     DirectionalLight,
     MathUtils as ThreeMath,
     Euler,
-    SpriteMaterial,
     PlaneBufferGeometry,
     Color,
     MeshStandardMaterial,
@@ -58,18 +56,15 @@ import {
     PerspectiveCamera,
     MeshToonMaterial,
     CircleBufferGeometry,
-    MeshNormalMaterial,
     Cache,
     PointLight,
     WebGLRenderer,
     PCFSoftShadowMap,
     PlaneGeometry,
     SphereGeometry,
-    CameraHelper,
     Light,
     HemisphereLight,
 } from '@casual-simulation/three';
-import { flatMap } from 'lodash';
 import type {
     BotCalculationContext,
     Bot,
@@ -78,12 +73,11 @@ import type {
 import {
     getBotScale,
     getBotTransformer,
-    CameraType,
     clamp,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import { BackSide, PCFShadowMap } from 'three';
+import { BackSide } from 'three';
 import type { MapProvider } from 'geo-three';
 import {
     OpenStreetMapsProvider,
@@ -94,10 +88,6 @@ import {
     OpenMapTilesProvider,
     HereMapsProvider,
 } from 'geo-three';
-import type { Simulation3D } from './Simulation3D';
-import { LODDebugger } from '../public/geo-three/LODDebugger';
-import { OffsetProvider } from '../public/geo-three/OffsetProvider';
-import { LODConstant } from '../public/geo-three/LODConstant';
 import { MapView } from './map/MapView';
 import { CustomMapProvider } from './map/CustomMapProvider';
 

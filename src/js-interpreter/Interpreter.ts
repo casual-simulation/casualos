@@ -41,8 +41,6 @@ import {
     ObjectValue,
     SameValue,
     Get,
-    ModuleEntry,
-    MakeBasicObject,
     Completion,
     ThrowCompletion,
     Construct,
@@ -50,28 +48,19 @@ import {
     Set,
     EnsureCompletion,
     Call,
-    isECMAScriptFunctionObject,
-    Expression,
-    Statement,
-    Realm,
-    Invoke,
     CreateArrayFromList,
     DefinePropertyOrThrow,
     ToPropertyDescriptor,
     IsCallable,
     DeletePropertyOrThrow,
     HasProperty,
-    CyclicModuleRecord,
-    ManagedSourceTextModuleRecord,
     runJobQueue,
     IsArray,
     wellKnownSymbols,
     EVAL_YIELD,
 } from '@casual-simulation/engine262';
 import type { EvaluationYield } from '@casual-simulation/engine262/types/evaluator';
-import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import { copyPrototypes, proxyPrototypes } from './Marshalling';
-import StackFrame from 'stackframe';
 import {
     getInterpreterObject,
     getRegularObject,

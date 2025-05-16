@@ -25,18 +25,10 @@ import {
     botUpdated,
     stateUpdatedEvent,
     hasValue,
-    BotSpace,
 } from '../../bots';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { waitAsync, allDataTypeCases } from '../../test/TestHelpers';
-import {
-    first,
-    buffer,
-    takeUntil,
-    takeWhile,
-    bufferCount,
-    skip,
-} from 'rxjs/operators';
+import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 import type { TagEdit } from '../../bots';
 import {
     applyEdit,
@@ -45,7 +37,6 @@ import {
     edits,
     insert,
     preserve,
-    TAG_EDIT_NAME,
     isTagEdit,
 } from '../../bots';
 import faker from 'faker';

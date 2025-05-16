@@ -22,8 +22,6 @@ import type {
 import {
     parseSimulationId,
     TEMPORARY_BOT_PARTITION_ID,
-    ADMIN_PARTITION_ID,
-    ADMIN_BRANCH_NAME,
     TEMPORARY_SHARED_PARTITION_ID,
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
     getConnectionId,

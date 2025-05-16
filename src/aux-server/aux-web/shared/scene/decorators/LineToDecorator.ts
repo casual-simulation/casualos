@@ -19,10 +19,8 @@ import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
-    isFormula,
     calculateBotValue,
     hasValue,
-    isBot,
     calculateStringTagValue,
     calculateBotIds,
     calculateNumericalTagValue,

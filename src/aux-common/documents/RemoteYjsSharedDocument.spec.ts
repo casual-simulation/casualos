@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { skip, Subject, Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { Map as YMap, Text as YText } from 'yjs';
 import { waitAsync } from '../test/TestHelpers';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';

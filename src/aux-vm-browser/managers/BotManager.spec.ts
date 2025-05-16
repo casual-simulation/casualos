@@ -18,16 +18,8 @@
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject } from 'rxjs';
-import type { LocalActions } from '@casual-simulation/aux-common';
-import {
-    createPrecalculatedBot,
-    defineGlobalBot,
-    stateUpdatedEvent,
-} from '@casual-simulation/aux-common';
-import {
-    wait,
-    waitAsync,
-} from '@casual-simulation/aux-common/test/TestHelpers';
+import { defineGlobalBot } from '@casual-simulation/aux-common';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();

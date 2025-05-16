@@ -17,7 +17,7 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Watch, Prop } from 'vue-property-decorator';
+import { Watch, Prop } from 'vue-property-decorator';
 import type {
     Bot,
     BotCalculationContext,
@@ -29,7 +29,6 @@ import type {
 import {
     calculateFormattedBotValue,
     calculateBotValue,
-    isFormula,
     getBotLabelAlignment,
     CLICK_ACTION_NAME,
     onClickArg,
@@ -71,11 +70,7 @@ import type { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
-import {
-    formatModalityButtonId,
-    getModalityKey,
-    Input,
-} from '../../shared/scene/Input';
+import { formatModalityButtonId, Input } from '../../shared/scene/Input';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
 import type { BotManager } from '@casual-simulation/aux-vm-browser';

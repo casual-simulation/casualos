@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import type {
     Bot,
     BotCalculationContext,
@@ -27,7 +26,6 @@ import {
     createBot,
     botAdded,
     CREATE_ACTION_NAME,
-    BotDragMode,
 } from '@casual-simulation/aux-common';
 import type { PlayerInteractionManager } from '../PlayerInteractionManager';
 import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';

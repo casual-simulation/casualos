@@ -29,30 +29,22 @@ import type {
     UserPolicy,
     ListDataStoreFailure,
 } from './DataRecordsStore';
-import {
-    ListDataStoreResult,
-    doesSubjectMatchPolicy,
-    isValidUserPolicy,
-} from './DataRecordsStore';
+import { doesSubjectMatchPolicy, isValidUserPolicy } from './DataRecordsStore';
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
-import { RecordsController } from './RecordsController';
 import type {
     AuthorizeSubjectFailure,
     PolicyController,
 } from './PolicyController';
 import {
-    ResourceInfo,
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
 import type { DenialReason } from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
-    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { without } from 'lodash';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';

@@ -15,15 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import _, { omitBy, padStart, sortBy } from 'lodash';
+import { omitBy, padStart, sortBy } from 'lodash';
 import { sha256, hmac } from 'hash.js';
-import {
-    hasValue,
-    KnownErrorCodes,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';
-import { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
 
 /**
  * Signs the given request and adds the related headers to it.
@@ -343,36 +338,6 @@ export function cleanupObject<T extends object>(obj: T): Partial<T> {
         obj,
         (o) => typeof o === 'undefined' || o === null
     ) as Partial<T>;
-}
-
-/**
- * Tries to parse the given JSON string into a JavaScript Value.
- * @param json The JSON to parse.
- */
-export function tryParseJson(json: string): JsonParseResult {
-    try {
-        return {
-            success: true,
-            value: JSON.parse(json),
-        };
-    } catch (err) {
-        return {
-            success: false,
-            error: err,
-        };
-    }
-}
-
-export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
-
-export interface JsonParseSuccess {
-    success: true;
-    value: any;
-}
-
-export interface JsonParseFailure {
-    success: false;
-    error: unknown;
 }
 
 export interface RegexRule {

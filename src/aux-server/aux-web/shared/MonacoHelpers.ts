@@ -37,7 +37,6 @@ import {
     getScriptPrefix as calcGetScriptPrefix,
     KNOWN_TAG_PREFIXES,
     isPortalScript,
-    getBotPosition,
     action,
     CLICK_ACTION_NAME,
     ANY_CLICK_ACTION_NAME,
@@ -54,15 +53,7 @@ import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import TypescriptWorker from './monaco/ts.worker?worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import type { SubscriptionLike } from 'rxjs';
-import {
-    Subscription,
-    Observable,
-    NEVER,
-    merge,
-    defer,
-    fromEventPattern,
-    fromEvent,
-} from 'rxjs';
+import { Subscription, Observable, merge, defer } from 'rxjs';
 import {
     skip,
     mergeMap,
@@ -95,7 +86,6 @@ import type {
 } from '@casual-simulation/aux-common/bots';
 import {
     del,
-    edit,
     edits,
     insert,
     isModule,

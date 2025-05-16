@@ -33,7 +33,6 @@ import {
     listInstUpdates,
 } from '../bots';
 import type { Map as YMap } from 'yjs';
-import { Text as YText } from 'yjs';
 import type { Action } from '../common';
 import { remote } from '../common';
 import { testPartitionImplementation } from './test/PartitionTests';

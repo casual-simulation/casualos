@@ -17,97 +17,42 @@
  */
 import axios from 'axios';
 import type { Subject, Observable } from 'rxjs';
-import { BehaviorSubject, from } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import type { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
-import type {
-    CreatePublicRecordKeyResult,
-    PublicRecordKeyPolicy,
-    ListDataResult,
-    ListedRecord,
-    ListRecordsResult,
-    ListFilesResult,
-    EraseFileResult,
-    EraseDataResult,
-    ListEventsResult,
-    ListRoleAssignmentsResult,
-    ListStudiosResult,
-    ListedStudio,
-    Studio,
-    CreateStudioResult,
-    ListedStudioMember,
-    ListStudioMembersResult,
-    AddStudioMemberRequest,
-    AddStudioMemberResult,
-    RemoveStudioMemberRequest,
-    RemoveStudioMemberResult,
-    CreateRecordRequest,
-    CreateRecordResult,
-    ListInstsResult,
-    EraseInstResult,
-    GetStudioResult,
-    UpdateStudioRequest,
-    UpdateStudioResult,
-    ComIdRequestResult,
-    GetPlayerConfigResult,
-    ListPermissionsResult,
-    GrantMarkerPermissionResult,
-    GrantResourcePermissionResult,
-    AuthListedUserAuthenticator,
-} from '@casual-simulation/aux-records';
-import {
-    isExpired,
-    parseSessionKey,
-} from '@casual-simulation/aux-records/AuthUtils';
+import { isExpired, parseSessionKey } from '@casual-simulation/aux-common';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
-    ListSessionsResult,
-    RevokeSessionResult,
-    RevokeAllSessionsResult,
-    ListedSession,
-    ReplaceSessionResult,
     PrivoSignUpRequestResult,
-    OpenIDLoginRequestResult,
-    ProcessOpenIDAuthorizationCodeRequest,
     ProcessOpenIDAuthorizationCodeResult,
     CompleteOpenIDLoginResult,
     IsValidEmailAddressResult,
-    IsValidDisplayNameResult,
     RequestWebAuthnLoginResult,
     RequestWebAuthnRegistrationResult,
     CompleteWebAuthnLoginResult,
-    RequestWebAuthnRegistration,
     CompleteWebAuthnRegistrationResult,
     CompleteWebAuthnLoginSuccess,
     CompleteLoginSuccess,
-    ListUserAuthenticatorsResult,
     ValidateSessionKeyFailure,
     RevokeSessionSuccess,
 } from '@casual-simulation/aux-records/AuthController';
 import type { AddressType } from '@casual-simulation/aux-records/AuthStore';
 import type {
     GetSubscriptionStatusResult,
-    SubscriptionStatus,
     CreateManageSubscriptionResult,
     GetSubscriptionStatusSuccess,
     CreateManageSubscriptionRequest,
     GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
-import { omitBy } from 'lodash';
 import type { PrivoSignUpInfo } from '@casual-simulation/aux-vm';
-import type {
-    AvailablePermissions,
-    RemoteCausalRepoProtocol,
-    ResourceKinds,
-} from '@casual-simulation/aux-common';
-import {
-    AuthenticationResponseJSON,
-    RegistrationResponseJSON,
-} from '@simplewebauthn/types';
+import type { RemoteCausalRepoProtocol } from '@casual-simulation/aux-common';
+
 import {
     startAuthentication,
     startRegistration,
 } from '@simplewebauthn/browser';
+
+/* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 
 const EMAIL_KEY = 'userEmail';

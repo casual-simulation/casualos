@@ -3174,7 +3174,7 @@ export class MemoryStore
                         updates: [],
                         timestamps: [],
                     },
-                };
+                } as BranchWithUpdates;
             });
         } else if (!update.branches) {
             update.branches = [];

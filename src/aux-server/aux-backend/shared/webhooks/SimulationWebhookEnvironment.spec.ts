@@ -25,7 +25,7 @@ import { SimulationWebhookEnvironment } from './SimulationWebhookEnvironment';
 import { AuxVMNode } from '@casual-simulation/aux-vm-node';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { HandleHttpRequestSuccess } from '@casual-simulation/aux-records';
-import { tryParseJson } from '@casual-simulation/aux-records';
+import { tryParseJson } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 

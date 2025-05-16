@@ -17,7 +17,6 @@
  */
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
-import { webhook } from '@casual-simulation/aux-common';
 
 export const webhookFeaturesSchema = z
     .object({

@@ -21,7 +21,6 @@ import {
     hasValue,
     ON_APP_SETUP_ACTION_NAME,
     registerHtmlApp,
-    SerializableMutationRecord,
     updateHtmlApp,
     unregisterHtmlApp,
     htmlAppMethod,

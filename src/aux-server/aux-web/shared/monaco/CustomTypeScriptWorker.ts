@@ -3,17 +3,12 @@ import type {
     StateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import {
-    BotIndexEvent,
     applyUpdates,
     calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import type { ts } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
-import {
-    initialize,
-    TypeScriptWorker,
-    libFileMap,
-} from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
-import type { worker, languages, Uri } from '@casual-simulation/monaco-editor';
+import { TypeScriptWorker } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
+import type { worker } from '@casual-simulation/monaco-editor';
 import { getIdFromModelUri, getModelUriFromId } from '../MonacoUtils';
 
 const botStates: {

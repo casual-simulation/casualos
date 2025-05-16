@@ -16,23 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { ActionKinds } from '@casual-simulation/aux-common';
-import {
-    KnownErrorCodes,
-    PRIVATE_MARKER,
-    ServerError,
-} from '@casual-simulation/aux-common';
+
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
 } from '../PolicyController';
-import { AuthorizeSubjectFailure } from '../PolicyController';
 import type {
     CrudRecordsConfiguration,
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
 } from '../crud';
-import { CheckSubscriptionMetricsResult, CrudRecordsController } from '../crud';
+import { CrudRecordsController } from '../crud';
 import type {
     PackageRecordsStore,
     PackageRecord,
@@ -42,11 +37,7 @@ import type {
     PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
-import {
-    getNotificationFeatures,
-    getPackageFeatures,
-    NotificationFeaturesConfiguration,
-} from '../SubscriptionConfiguration';
+import { getPackageFeatures } from '../SubscriptionConfiguration';
 import { v7 as uuid } from 'uuid';
 
 const TRACE_NAME = 'PackageRecordsController';

@@ -30,15 +30,14 @@ import type {
     ResourcePermissionAssignment,
     UpdateUserRolesResult,
     UserPrivacyFeatures,
-    UserRole,
 } from '@casual-simulation/aux-records';
-import { RoleAssignment, getExpireTime } from '@casual-simulation/aux-records';
+import { getExpireTime } from '@casual-simulation/aux-records';
 import type {
     PrismaClient,
     GrantedPackageEntitlement as PrismaGrantedPackageEntitlement,
 } from './generated';
 import { Prisma } from './generated';
-import { convertMarkers, convertToDate, convertToMillis } from './Utils';
+import { convertToDate, convertToMillis } from './Utils';
 import type {
     ActionKinds,
     Entitlement,
@@ -48,11 +47,9 @@ import type {
     PrivacyFeatures,
     ResourceKinds,
     SubjectType,
+    UserRole,
 } from '@casual-simulation/aux-common';
-import {
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-} from '@casual-simulation/aux-common';
+
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 

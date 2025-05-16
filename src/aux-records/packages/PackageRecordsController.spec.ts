@@ -29,14 +29,8 @@ import {
 import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
-import {
-    action,
-    PRIVATE_MARKER,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
-import { v7 as uuid } from 'uuid';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import type { PackageRecordsStore } from './PackageRecordsStore';
-import { PackageRecord } from './PackageRecordsStore';
 import { MemoryPackageRecordsStore } from './MemoryPackageRecordsStore';
 
 console.log = jest.fn();

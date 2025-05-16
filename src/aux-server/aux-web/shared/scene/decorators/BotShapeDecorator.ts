@@ -28,7 +28,6 @@ import {
     calculateBooleanTagValue,
     calculateBotIds,
     calculateBotValue,
-    calculateBotVectorTagValue,
     calculateNumericalTagValue,
     calculateStringTagValue,
     getBotMeshPositioningMode,
@@ -54,11 +53,9 @@ import {
     Object3D,
     PointLight,
     SpotLight,
-    MathUtils as ThreeMath,
     Vector3,
     AmbientLight,
     Light,
-    Material,
     ObjectLoader,
     Vector2,
 } from '@casual-simulation/three';
@@ -68,10 +65,9 @@ import type { SubscriptionLike } from 'rxjs';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { AuxBot3D } from '../AuxBot3D';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { getGLTFPool } from '../GLTFHelpers';
 import type { Game } from '../Game';
-import { GameObject } from '../GameObject';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import type { LineSegments } from '../LineSegments';
 import { createCubeStroke } from '../MeshUtils';
@@ -80,7 +76,6 @@ import {
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
     baseAuxMeshMaterial,
-    baseAuxPointLight,
     buildSRGBColor,
     calculateScale,
     createCircle,
@@ -88,7 +83,6 @@ import {
     createSkybox,
     createSphere,
     createSprite,
-    disposeGroup,
     disposeMesh,
     disposeObject3D,
     isTransparent,
@@ -115,7 +109,7 @@ import type { IMeshDecorator } from './IMeshDecorator';
 import type { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
-import { Block, Keyboard, update as updateMeshUI } from 'three-mesh-ui';
+import { Keyboard, update as updateMeshUI } from 'three-mesh-ui';
 import FontJSON from 'three-mesh-ui/examples/assets/Roboto-msdf.json';
 import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
@@ -125,7 +119,6 @@ import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
-import { OffsetProvider } from '../../public/geo-three/OffsetProvider';
 import { MapTilerProvider } from 'geo-three';
 import { CustomMapProvider } from '../map/CustomMapProvider';
 // import { LODConstant } from '../../public/geo-three/LODConstant';

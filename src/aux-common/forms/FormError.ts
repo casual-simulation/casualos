@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { KnownErrorCodes } from '@casual-simulation/aux-common';
+import type { KnownErrorCodes } from '../rpc/ErrorCodes';
 import type { ZodIssue } from 'zod';
 
 export const EMAIL_FIELD = 'email';

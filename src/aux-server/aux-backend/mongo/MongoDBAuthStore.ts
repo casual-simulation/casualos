@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { PrivacyFeatures } from '@casual-simulation/aux-common';
+import type { PrivacyFeatures, UserRole } from '@casual-simulation/aux-common';
 import { hasValue } from '@casual-simulation/aux-common';
 import type {
     RegexRule,
@@ -51,7 +51,6 @@ import type {
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
-    UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import type { Db, Collection, FilterQuery } from 'mongodb';
 import { v4 as uuid } from 'uuid';

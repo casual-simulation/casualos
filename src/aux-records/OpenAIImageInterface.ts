@@ -15,12 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {
-    AIChatInterface,
-    AIChatInterfaceRequest,
-    AIChatInterfaceResponse,
-    AIChatMessage,
-} from './AIChatInterface';
+
 import axios from 'axios';
 import type {
     AIGenerateImageInterfaceRequest,

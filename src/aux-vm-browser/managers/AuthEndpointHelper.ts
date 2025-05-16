@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Remote } from 'comlink';
-import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import { wrap, proxy } from 'comlink';
 import type {
     AuthHelperInterface,
     AuxAuth,
@@ -28,26 +28,25 @@ import type {
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
-import { hasValue } from '@casual-simulation/aux-common';
+import { hasValue, parseRecordKey } from '@casual-simulation/aux-common';
 import type {
     GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
-import { parseRecordKey } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
@@ -274,6 +273,22 @@ export class AuthEndpointHelper implements AuthHelperInterface {
 
     protected async _isAuthenticatedCore() {
         return await this._proxy.isLoggedIn();
+    }
+
+    async relogin(): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 12) {
+            await this._proxy.logout();
+            await this._proxy.login(true);
+        } else {
+            await this._proxy.relogin();
+        }
     }
 
     /**

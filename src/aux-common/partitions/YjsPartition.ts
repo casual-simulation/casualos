@@ -31,18 +31,15 @@ import {
     del,
     insert,
     edit,
-    GetRemoteCountAction,
     asyncResult,
     asyncError,
     getInstStateFromUpdates,
 } from '../bots';
 import type { Observable } from 'rxjs';
-import { Subscription, Subject, BehaviorSubject } from 'rxjs';
 import type {
     AuxPartitionRealtimeStrategy,
     YjsPartition,
 } from './AuxPartition';
-import { CausalRepoPartition, MemoryPartition } from './AuxPartition';
 import type {
     BotAction,
     Bot,
@@ -55,10 +52,7 @@ import type {
     BotTags,
 } from '../bots';
 import {
-    getActiveObjects,
     breakIntoIndividualEvents,
-    stateUpdatedEvent,
-    PartialBotsState,
     botAdded,
     createBot,
     botRemoved,
@@ -71,7 +65,7 @@ import type {
     PartitionRemoteEvents,
     YjsPartitionConfig,
 } from './AuxPartitionConfig';
-import { flatMap, random } from 'lodash';
+import { flatMap } from 'lodash';
 import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
     Text,

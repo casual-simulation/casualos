@@ -40,7 +40,6 @@ import { RealtimeEditMode } from './RuntimeBot';
 import {
     waitAsync,
     allDataTypeCases,
-    customDataTypeCases,
 } from '@casual-simulation/aux-common/test/TestHelpers';
 import { RanOutOfEnergyError } from './AuxResults';
 import { v4 as uuid } from 'uuid';
@@ -327,7 +326,9 @@ describe('AuxGlobalContext', () => {
         });
 
         it('should return null if the runtime bot was unable to be created', () => {
-            const mock = (factory.createRuntimeBot = jest.fn(() => null));
+            const mock = (factory.createRuntimeBot = jest.fn(
+                () => null as any
+            ));
 
             const bot = context.createBot(
                 createBot('test1', {

@@ -27,7 +27,7 @@ import {
     KNOWN_TAG_PREFIXES,
 } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { SubscriptionLike, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
 import MonacoDiffEditor from '../MonacoDiffEditor/MonacoDiffEditor';
@@ -38,11 +38,10 @@ import {
     unloadModel,
     watchSimulation,
     setActiveModel,
-    toSubscription,
     watchEditor,
 } from '../../MonacoHelpers';
 import type * as monaco from '../../MonacoLibs';
-import { filter, mergeMap, tap } from 'rxjs/operators';
+import { mergeMap } from 'rxjs/operators';
 import type { ScriptPrefix } from '@casual-simulation/aux-vm';
 
 setup();

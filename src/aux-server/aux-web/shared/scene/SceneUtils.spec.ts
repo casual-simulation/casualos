@@ -30,14 +30,12 @@ import {
 import type { Camera, Mesh } from '@casual-simulation/three';
 import {
     Box3,
-    PerspectiveCamera,
     OrthographicCamera,
     Sphere,
     Vector2,
     Vector3,
     Group,
 } from '@casual-simulation/three';
-import { isTaggedNumber } from '@casual-simulation/aux-common/bots/BotCalculations';
 
 describe('SceneUtils', () => {
     describe('calculateScale()', () => {

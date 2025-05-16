@@ -17,11 +17,10 @@
  */
 import type { PortalData, PortalUpdate } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { loadScript, userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
-import { concatMap, tap } from 'rxjs/operators';
-import Vue, { ComponentOptions } from 'vue';
+import { tap } from 'rxjs/operators';
+import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import CustomPortal from '../CustomPortal/CustomPortal';
