@@ -57,8 +57,19 @@ import type {
 import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import type { UserRole, DenialReason } from '@casual-simulation/aux-common';
-import { isSuperUserRole } from '@casual-simulation/aux-common';
+import type {
+    UserRole,
+    DenialReason,
+    Result,
+    SimpleError,
+} from '@casual-simulation/aux-common';
+import {
+    failure,
+    isFailure,
+    isSuperUserRole,
+    logError,
+    success,
+} from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'SubscriptionController';
 import {
@@ -77,6 +88,8 @@ import type { PolicyStore } from './PolicyStore';
 import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
+import type { FinancialController } from './financial';
+import { AccountCodes } from './financial';
 
 /**
  * The number of bytes that the access key secret should be.
@@ -100,6 +113,7 @@ export class SubscriptionController {
     private _policies: PolicyController;
     private _policyStore: PolicyStore;
     private _purchasableItems: PurchasableItemRecordsStore;
+    private _financialController: FinancialController;
 
     constructor(
         stripe: StripeInterface,
@@ -109,7 +123,8 @@ export class SubscriptionController {
         config: ConfigurationStore,
         policies: PolicyController,
         policyStore: PolicyStore,
-        purchasableItems: PurchasableItemRecordsStore
+        purchasableItems: PurchasableItemRecordsStore,
+        financialController: FinancialController
     ) {
         this._stripe = stripe;
         this._auth = auth;
@@ -119,6 +134,7 @@ export class SubscriptionController {
         this._policies = policies;
         this._policyStore = policyStore;
         this._purchasableItems = purchasableItems;
+        this._financialController = financialController;
     }
 
     private async _getConfig() {
@@ -870,131 +886,229 @@ export class SubscriptionController {
         }
     }
 
+    /**
+     * Creates a link that the user can be redirected to in order to manage their store account.
+     * @param request The request to create the manage store account link.
+     * @returns
+     */
     async createManageStoreAccountLink(
-        request: CreateManageAccountLinkRequest
-    ): Promise<CreateManageAccountLinkResult> {
+        request: CreateManageStoreAccountLinkRequest
+    ): Promise<ManageAccountLinkResult> {
         if (!this._stripe) {
-            return {
-                success: false,
+            return failure({
                 errorCode: 'not_supported',
                 errorMessage: 'This method is not supported.',
-            };
+            });
         }
 
-        try {
-            let studio = await this._recordsStore.getStudioById(
-                request.studioId
-            );
+        let studio = await this._recordsStore.getStudioById(request.studioId);
 
-            if (!studio) {
-                return {
-                    success: false,
-                    errorCode: 'studio_not_found',
-                    errorMessage: 'The given studio was not found.',
-                };
+        if (!studio) {
+            return failure({
+                errorCode: 'studio_not_found',
+                errorMessage: 'The given studio was not found.',
+            });
+        }
+
+        const assignments = await this._recordsStore.listStudioAssignments(
+            studio.id,
+            {
+                userId: request.userId,
+                role: ADMIN_ROLE_NAME,
             }
+        );
 
-            const assignments = await this._recordsStore.listStudioAssignments(
-                studio.id,
-                {
-                    userId: request.userId,
-                    role: ADMIN_ROLE_NAME,
-                }
+        if (assignments.length <= 0) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+        }
+
+        const config = await this._config.getSubscriptionConfiguration();
+        const features = getPurchasableItemsFeatures(
+            config,
+            studio.subscriptionStatus,
+            studio.subscriptionId,
+            'studio',
+            studio.subscriptionPeriodStartMs,
+            studio.subscriptionPeriodEndMs
+        );
+
+        if (!features.allowed) {
+            return failure({
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+        }
+
+        let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
+        if (!studio.stripeAccountId) {
+            console.log(
+                '[SubscriptionController] [createManageStoreAccountLink] Studio does not have a stripe account. Creating one.'
             );
-
-            if (assignments.length <= 0) {
-                return {
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                };
-            }
-
-            const config = await this._config.getSubscriptionConfiguration();
-            const features = getPurchasableItemsFeatures(
-                config,
-                studio.subscriptionStatus,
-                studio.subscriptionId,
-                'studio',
-                studio.subscriptionPeriodStartMs,
-                studio.subscriptionPeriodEndMs
-            );
-
-            if (!features.allowed) {
-                return {
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                };
-            }
-
-            let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
-            if (!studio.stripeAccountId) {
-                console.log(
-                    '[SubscriptionController] [createManageStoreAccountLink] Studio does not have a stripe account. Creating one.'
-                );
-                type = 'account_onboarding';
-                const account = await this._stripe.createAccount({
-                    controller: {
-                        fees: {
-                            payer: 'account',
-                        },
-                        losses: {
-                            payments: 'stripe',
-                        },
-                        requirement_collection: 'stripe',
-                        stripe_dashboard: {
-                            type: 'full',
-                        },
+            type = 'account_onboarding';
+            const account = await this._stripe.createAccount({
+                controller: {
+                    fees: {
+                        payer: 'account',
                     },
-                    metadata: {
-                        studioId: studio.id,
+                    losses: {
+                        payments: 'stripe',
                     },
-                });
-
-                console.log(
-                    '[SubscriptionController] [createManageStoreAccountLink] Created account:',
-                    account.id
-                );
-
-                studio = {
-                    ...studio,
-                    stripeAccountId: account.id,
-                    stripeAccountStatus: getAccountStatus(account),
-                    stripeAccountRequirementsStatus:
-                        getAccountRequirementsStatus(account),
-                };
-                await this._recordsStore.updateStudio(studio);
-            }
-
-            if (studio.stripeAccountRequirementsStatus === 'incomplete') {
-                type = 'account_onboarding';
-            }
-
-            const session = await this._stripe.createAccountLink({
-                account: studio.stripeAccountId,
-                refresh_url: config.returnUrl,
-                return_url: config.returnUrl,
-                type,
+                    requirement_collection: 'stripe',
+                    stripe_dashboard: {
+                        type: 'full',
+                    },
+                },
+                metadata: {
+                    studioId: studio.id,
+                },
             });
 
-            return {
-                success: true,
-                url: session.url,
-            };
-        } catch (err) {
-            console.error(
-                '[SubscriptionController] An error occurred while creating a manage store account link:',
-                err
+            console.log(
+                '[SubscriptionController] [createManageStoreAccountLink] Created account:',
+                account.id
             );
-            return {
-                success: false,
-                errorCode: 'server_error',
-                errorMessage: 'A server error occurred.',
+
+            studio = {
+                ...studio,
+                stripeAccountId: account.id,
+                stripeAccountStatus: getAccountStatus(account),
+                stripeAccountRequirementsStatus:
+                    getAccountRequirementsStatus(account),
             };
+            await this._recordsStore.updateStudio(studio);
         }
+
+        if (studio.stripeAccountRequirementsStatus === 'incomplete') {
+            type = 'account_onboarding';
+        }
+
+        const session = await this._stripe.createAccountLink({
+            account: studio.stripeAccountId,
+            refresh_url: config.returnUrl,
+            return_url: config.returnUrl,
+            type,
+        });
+
+        return success({
+            url: session.url,
+        });
+    }
+
+    /**
+     * Creates a link that the user can be redirected to in order to manage their stripe XP account.
+     * @param request The request to create the manage xp account link.
+     */
+    async createManageXpAccountLink(
+        request: CreateManageXpAccountLinkRequest
+    ): Promise<ManageAccountLinkResult> {
+        if (!this._stripe || !this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            });
+        }
+
+        let user = await this._authStore.findUser(request.userId);
+
+        if (!user) {
+            console.log(
+                '[SubscriptionController] [createManageXpAccountLink] User not found.'
+            );
+            return failure({
+                errorCode: 'user_not_found',
+                errorMessage: 'The user was not found.',
+            });
+        }
+
+        let updatedUser = false;
+
+        const config = await this._config.getSubscriptionConfiguration();
+        if (!user.accountId) {
+            console.log(
+                `[SubscriptionController] [createManageXpAccountLink] User does not have a financial account. Creating one.`
+            );
+            const account = await this._financialController.createAccount(
+                AccountCodes.liabilities_user
+            );
+
+            if (isFailure(account)) {
+                logError(
+                    account.error,
+                    `[SubscriptionController] [createManageXpAccountLink] Failed to create financial account for user: ${user.id}`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Failed to create financial account.',
+                });
+            }
+
+            user = {
+                ...user,
+                accountId: account.value.id,
+            };
+            updatedUser = true;
+        }
+
+        let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
+        if (!user.stripeAccountId) {
+            console.log(
+                '[SubscriptionController] [createManageXpAccountLink] User does not have a stripe account. Creating one.'
+            );
+            type = 'account_onboarding';
+            const account = await this._stripe.createAccount({
+                controller: {
+                    fees: {
+                        payer: 'application',
+                    },
+                    losses: {
+                        payments: 'application',
+                    },
+                    requirement_collection: 'stripe',
+                    stripe_dashboard: {
+                        type: 'express',
+                    },
+                },
+                metadata: {
+                    userId: user.id,
+                },
+            });
+
+            console.log(
+                '[SubscriptionController] [createManageXpAccountLink] Created account:',
+                account.id
+            );
+
+            user = {
+                ...user,
+                stripeAccountId: account.id,
+                stripeAccountStatus: getAccountStatus(account),
+                stripeAccountRequirementsStatus:
+                    getAccountRequirementsStatus(account),
+            };
+            updatedUser = true;
+        }
+
+        if (updatedUser) {
+            await this._authStore.saveUser(user);
+        }
+
+        if (user.stripeAccountRequirementsStatus === 'incomplete') {
+            type = 'account_onboarding';
+        }
+
+        const session = await this._stripe.createAccountLink({
+            account: user.stripeAccountId,
+            refresh_url: config.returnUrl,
+            return_url: config.returnUrl,
+            type,
+        });
+
+        return success({
+            url: session.url,
+        });
     }
 
     @traced(TRACE_NAME)
@@ -2670,7 +2784,7 @@ export interface UpdateSubscriptionFailure {
     errorMessage: string;
 }
 
-export interface CreateManageAccountLinkRequest {
+export interface CreateManageStoreAccountLinkRequest {
     /**
      * The ID of the studio that the link should be created for.
      */
@@ -2682,29 +2796,46 @@ export interface CreateManageAccountLinkRequest {
     userId: string;
 }
 
-export type CreateManageAccountLinkResult =
-    | CreateManageAccountLinkSuccess
-    | CreateManageAccountLinkFailure;
-
-export interface CreateManageAccountLinkSuccess {
-    success: true;
+export interface CreateManageXpAccountLinkRequest {
     /**
-     * The URl that the user can visit to manage their account.
+     * The ID of the user that is currently logged in.
      */
-    url: string;
+    userId: string;
 }
 
-export interface CreateManageAccountLinkFailure {
-    success: false;
-    errorCode:
-        | ServerError
-        | 'invalid_request'
-        | 'not_supported'
-        | NotLoggedInError
-        | NotAuthorizedError
-        | 'studio_not_found';
-    errorMessage: string;
-}
+export type ManageAccountLinkResult = Result<
+    {
+        /**
+         * The URL that the user can visit to manage their account.
+         */
+        url: string;
+    },
+    SimpleError
+>;
+
+// export type CreateManageStoreAccountLinkResult =
+//     | CreateManageStoreAccountLinkSuccess
+//     | CreateManageStoreAccountLinkFailure;
+
+// export interface CreateManageStoreAccountLinkSuccess {
+//     success: true;
+//     /**
+//      * The URl that the user can visit to manage their account.
+//      */
+//     url: string;
+// }
+
+// export interface CreateManageStoreAccountLinkFailure {
+//     success: false;
+//     errorCode:
+//         | ServerError
+//         | 'invalid_request'
+//         | 'not_supported'
+//         | NotLoggedInError
+//         | NotAuthorizedError
+//         | 'studio_not_found';
+//     errorMessage: string;
+// }
 
 export interface CreatePurchaseItemLinkRequest {
     /**

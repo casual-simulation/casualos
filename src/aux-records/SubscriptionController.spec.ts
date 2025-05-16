@@ -30,13 +30,16 @@ import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type { AuthUser } from './AuthStore';
 import type { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
+    failure,
     formatV1SessionKey,
     generateV1ConnectionToken,
     parseSessionKey,
+    success,
 } from '@casual-simulation/aux-common';
 import type {
     StripeAccount,
     StripeAccountLink,
+    StripeAccountStatus,
     StripeCheckoutResponse,
     StripeCreateCustomerResponse,
     StripeInterface,
@@ -47,7 +50,7 @@ import type {
     SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
 import { allowAllFeatures } from './SubscriptionConfiguration';
-import type { Studio, StudioStripeAccountStatus } from './RecordsStore';
+import type { Studio } from './RecordsStore';
 import type { MemoryStore } from './MemoryStore';
 import {
     createTestControllers,
@@ -61,6 +64,11 @@ import {
     PUBLIC_READ_MARKER,
     toBase64String,
 } from '@casual-simulation/aux-common';
+import type {
+    FinancialController,
+    MemoryFinancialInterface,
+} from './financial';
+import { AccountCodes, AccountFlags } from './financial';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -71,6 +79,8 @@ describe('SubscriptionController', () => {
     let auth: AuthController;
     let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
+    let financialInterface: MemoryFinancialInterface;
+    let financialController: FinancialController;
     let purchasableItemsStore: MemoryPurchasableItemRecordsStore;
 
     let stripeMock: {
@@ -136,6 +146,8 @@ describe('SubscriptionController', () => {
         authMessenger = services.authMessenger;
         purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
         auth = services.auth;
+        financialInterface = services.financialInterface;
+        financialController = services.financialController;
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -196,7 +208,8 @@ describe('SubscriptionController', () => {
             store,
             services.policies,
             store,
-            purchasableItemsStore
+            purchasableItemsStore,
+            services.financialController
         );
 
         const request = await auth.requestLogin({
@@ -4420,10 +4433,11 @@ describe('SubscriptionController', () => {
                 userId: userId,
             });
 
-            expect(result).toEqual({
-                success: true,
-                url: 'account_link',
-            });
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
 
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
@@ -4460,10 +4474,11 @@ describe('SubscriptionController', () => {
                 userId: userId,
             });
 
-            expect(result).toEqual({
-                success: true,
-                url: 'account_link',
-            });
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
 
             expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
                 account: 'accountId',
@@ -4514,10 +4529,11 @@ describe('SubscriptionController', () => {
                 userId: userId,
             });
 
-            expect(result).toEqual({
-                success: true,
-                url: 'account_link',
-            });
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
 
             await expect(store.getStudioById('studioId')).resolves.toEqual({
                 id: 'studioId',
@@ -4595,11 +4611,13 @@ describe('SubscriptionController', () => {
                 userId: userId,
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to perform this action.',
-            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
         });
@@ -4614,11 +4632,13 @@ describe('SubscriptionController', () => {
                 userId: 'wrongUserId',
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to perform this action.',
-            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
         });
@@ -4648,11 +4668,13 @@ describe('SubscriptionController', () => {
                 userId: 'wrongUserId',
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage: 'You are not authorized to perform this action.',
-            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
         });
@@ -4667,11 +4689,223 @@ describe('SubscriptionController', () => {
                 userId: userId,
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'studio_not_found',
-                errorMessage: 'The given studio was not found.',
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('createManageXpAccountLink()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+            nowMock.mockReturnValue(101);
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                accountId: 'financialAccountId',
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
             });
+        });
+
+        it('should create a link to manage the stripe account and return it', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_update',
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.stripeAccountId).toBe('accountId');
+            expect(user.stripeAccountRequirementsStatus).toBe('complete');
+            expect(user.stripeAccountStatus).toBe('active');
+            expect(user.accountId).toBe('financialAccountId');
+        });
+
+        it('should create a link to onboard the user if the requirements are incomplete', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                accountId: 'financialAccountId',
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should create a new stripe account for the studio if it doesnt have one', async () => {
+            stripeMock.createAccount.mockResolvedValueOnce({
+                id: 'accountId',
+                requirements: {
+                    currently_due: ['requirement1'],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+                charges_enabled: false,
+            });
+
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                accountId: 'financialAccountId',
+                stripeAccountId: null,
+                stripeAccountStatus: null,
+                stripeAccountRequirementsStatus: null,
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            await expect(store.findUser(userId)).resolves.toEqual({
+                ...user,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+
+            expect(stripeMock.createAccount).toHaveBeenCalledWith({
+                controller: {
+                    fees: {
+                        payer: 'application',
+                    },
+                    losses: {
+                        payments: 'application',
+                    },
+                    requirement_collection: 'stripe',
+                    stripe_dashboard: {
+                        type: 'express',
+                    },
+                },
+                metadata: {
+                    userId: userId,
+                },
+            });
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should create a new financial account for the studio if it doesnt have one', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                accountId: null,
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            await expect(store.findUser(userId)).resolves.toEqual({
+                ...user,
+                accountId: '1',
+            });
+
+            expect([...financialInterface.accounts.values()]).toEqual([
+                {
+                    id: 1n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: 1,
+                    flags: AccountFlags.debits_must_not_exceed_credits,
+                    code: AccountCodes.liabilities_user,
+                    timestamp: 0n,
+                },
+            ]);
+        });
+
+        it('should return user_not_found if the user does not exist', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: 'missing_user_id',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                })
+            );
 
             expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
         });
@@ -7904,7 +8138,7 @@ describe('SubscriptionController', () => {
 });
 
 describe('getAccountStatus()', () => {
-    const disabledReasonCases: [string, StudioStripeAccountStatus][] = [
+    const disabledReasonCases: [string, StripeAccountStatus][] = [
         ['action_required.requested_capabilities', 'disabled'],
         ['requirements.past_due', 'disabled'],
         ['requirements.pending_verification', 'pending'],
