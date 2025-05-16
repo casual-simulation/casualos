@@ -17,7 +17,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import type { SubSimEmitter } from './SimulationManager';
 import { SimulationManager } from './SimulationManager';
 import type { Initable } from './Initable';

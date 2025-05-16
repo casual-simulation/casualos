@@ -15,8 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { BranchRecordWithInst, CurrentUpdates } from './InstRecordsStore';
-import { BranchRecord } from './InstRecordsStore';
+
+import type {
+    BranchRecordWithInst,
+    CurrentUpdates,
+    LoadedPackage,
+} from './InstRecordsStore';
 import type { LockStore } from '../LockStore';
 
 /**
@@ -243,6 +247,34 @@ export interface TemporaryInstRecordsStore extends LockStore {
      * @param string The generation that should be removed.
      */
     clearDirtyBranches(generation: string): Promise<void>;
+
+    /**
+     * Saves the given loaded package.
+     * @param loadedPackage The package that should be saved.
+     */
+    saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void>;
+
+    /**
+     * Gets the list of loaded packages for the given record and inst.
+     * @param recordName The name of the record.
+     * @param inst The inst.
+     */
+    listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]>;
+
+    /**
+     * Determines whether the package with the given ID is loaded into the given inst.
+     * @param recordName The name of the record that the inst is in.
+     * @param inst The inst.
+     * @param packageId The ID of the package.
+     */
+    isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null>;
 }
 
 export interface BranchUpdates extends CurrentUpdates {

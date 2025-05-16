@@ -23,10 +23,9 @@ import {
 } from './DirectoryService';
 import type { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
-import { DirectoryEntry } from './DirectoryEntry';
 import type { DirectoryUpdate } from './DirectoryUpdate';
 import { compareSync } from 'bcryptjs';
-import { decode, verify } from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import type { EntryUpdatedResult } from './DirectoryResult';
 
 jest.mock('axios');

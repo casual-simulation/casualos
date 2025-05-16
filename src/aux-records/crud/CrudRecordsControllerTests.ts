@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { MemoryStore } from '../MemoryStore';
-import { MemoryCrudRecordsStore } from './MemoryCrudRecordsStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import type {

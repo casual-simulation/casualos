@@ -39,6 +39,10 @@ import type {
     WebhookEnvironment,
     NotificationRecordsStore,
     WebPushInterface,
+    XpStore,
+    FinancialInterface,
+    PurchasableItemRecordsStore,
+    PurchasableItemRecordsController,
 } from '@casual-simulation/aux-records';
 import {
     AuthController,
@@ -47,7 +51,6 @@ import {
     FileRecordsController,
     PolicyController,
     RateLimitController,
-    RecordKey,
     RecordsController,
     RecordsServer,
     SubscriptionController,
@@ -59,8 +62,6 @@ import {
     SplitInstRecordsStore,
     CachingPolicyStore,
     CachingConfigStore,
-    notificationsSchema,
-    SystemNotificationMessenger,
     MultiNotificationMessenger,
     ModerationController,
     GoogleAIChatInterface,
@@ -69,6 +70,8 @@ import {
     WebhookRecordsController,
     cleanupObject,
     NotificationRecordsController,
+    PackageRecordsController,
+    XpController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -81,29 +84,18 @@ import type { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import type { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
-import { subscriptionConfigSchema } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESv2 } from '@aws-sdk/client-sesv2';
 import type { RedisClientType } from 'redis';
-import { RedisClientOptions, createClient as createRedisClient } from 'redis';
+import { createClient as createRedisClient } from 'redis';
 import { TracedRedisRateLimitStore } from '../redis/TracedRedisRateLimitStore';
-import z from 'zod';
 import { StripeIntegration } from './StripeIntegration';
 import Stripe from 'stripe';
 import type { Db } from 'mongodb';
-import {
-    Binary,
-    Collection,
-    Cursor,
-    MongoClient,
-    MongoClientOptions,
-    ObjectId,
-} from 'mongodb';
+import { MongoClient } from 'mongodb';
 import pify from 'pify';
 import type { MongoDBAuthUser, DataRecord, MongoDBStudio } from '../mongo';
 import {
-    MongoDBLoginRequest,
-    MongoDBAuthSession,
     MongoDBAuthStore,
     MongoDBFileRecordsStore,
     MongoDBRateLimiter,
@@ -114,10 +106,6 @@ import {
     MongoDBConfigurationStore,
     MongoDBMetricsStore,
     USERS_COLLECTION_NAME,
-    LOGIN_REQUESTS_COLLECTION_NAME,
-    SESSIONS_COLLECTION_NAME,
-    EMAIL_RULES_COLLECTION_NAME,
-    SMS_RULES_COLLECTION_NAME,
     RECORDS_COLLECTION_NAME,
     STUDIOS_COLLECTION_NAME,
 } from '../mongo';
@@ -133,7 +121,6 @@ import {
     PrismaRecordsStore,
 } from '../prisma';
 import type {
-    AIChatOptions,
     AIChatProviders,
     AIConfiguration,
     AIGenerateImageConfiguration,
@@ -154,20 +141,11 @@ import { RedisMultiCache } from '../redis/RedisMultiCache';
 import { PrivoClient } from '@casual-simulation/aux-records/PrivoClient';
 import { PrismaPrivoStore } from '../prisma/PrismaPrivoStore';
 import type { PrivoConfiguration } from '@casual-simulation/aux-records/PrivoConfiguration';
-import { privoSchema } from '@casual-simulation/aux-records/PrivoConfiguration';
 import { SlackNotificationMessenger } from '../notifications/SlackNotificationMessenger';
 import { TelegramNotificationMessenger } from '../notifications/TelegramNotificationMessenger';
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
-import { moderationSchema } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import casualWareApiPlugins from '../../../../extensions/casualos-casualware/casualware-api/*.server.plugin.ts';
 import { HumeInterface } from '@casual-simulation/aux-records/AIHumeInterface';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
@@ -190,24 +168,34 @@ import { S3ControlClient } from '@aws-sdk/client-s3-control';
 import { SimulationWebhookEnvironment } from './webhooks/SimulationWebhookEnvironment';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
 import { PrismaWebhookRecordsStore } from '../prisma/PrismaWebhookRecordsStore';
-import {
-    AuxVMNode,
-    NodeSimulation,
-    nodeSimulationWithConfig,
-} from '@casual-simulation/aux-vm-node';
+import { AuxVMNode } from '@casual-simulation/aux-vm-node';
 import { MessageChannel, MessagePort } from 'deno-vm';
 import { LambdaWebhookEnvironment } from './webhooks/LambdaWebhookEnvironment';
 import { getConnectionId } from '@casual-simulation/aux-common';
 import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
-import { PrismaNotificationRecordsStore } from 'aux-backend/prisma/PrismaNotificationRecordsStore';
+import { PrismaNotificationRecordsStore } from '../prisma/PrismaNotificationRecordsStore';
+import { PrismaXpStore } from '../prisma/PrismaXpStore';
+import { createClient, id } from 'tigerbeetle-node';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
+import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
+import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
+import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
+import {
+    FinancialController,
+    TigerBeetleFinancialInterface,
+} from '@casual-simulation/aux-records/financial';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
+import { PrismaPurchasableItemRecordsStore } from 'aux-backend/prisma/casualware/PrismaPurchasableItemsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
-    ...casualWareApiPlugins.map((p: any) => p.default),
 ];
 
 export interface BuildReturn {
@@ -224,6 +212,8 @@ export interface BuildReturn {
     websocketRateLimitController: RateLimitController;
     policyController: PolicyController;
     websocketController: WebsocketController;
+    packagesController: PackageRecordsController;
+    packageVersionController: PackageVersionRecordsController;
     dynamodbClient: DocumentClient;
     mongoClient: MongoClient;
     mongoDatabase: Db;
@@ -303,6 +293,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _pushInterface: WebPushInterface;
     private _notificationsController: NotificationRecordsController;
 
+    private _xpStore: XpStore;
+    private _xpController: XpController;
+    private _financialInterface: FinancialInterface;
+    private _financialController: FinancialController;
+
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
@@ -318,12 +313,18 @@ export class ServerBuilder implements SubscriptionLike {
     private _moderationController: ModerationController;
     private _loomController: LoomController;
 
+    private _purchasableItemsStore: PurchasableItemRecordsStore | null = null;
+    private _purchasableItemsController: PurchasableItemRecordsController | null =
+        null;
+
     private _notificationMessenger: MultiNotificationMessenger;
 
     private _redis: RedisClientType | null = null;
     private _redisCaches: RedisClientType | null = null;
     private _redisInstData: RedisClientType | null = null;
     private _redisWebsocketConnections: RedisClientType | null = null;
+    private _redisSubscriber: RedisClientType | null = null;
+    private _redisPublisher: RedisClientType | null = null;
     private _redisRateLimit: RedisClientType | null = null;
     private _s3: S3;
     private _s3Control: S3ControlClient;
@@ -366,6 +367,10 @@ export class ServerBuilder implements SubscriptionLike {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
+    private _packagesStore: PrismaPackageRecordsStore;
+    private _packageVersionsStore: PrismaPackageVersionRecordsStore;
+    private _packagesController: PackageRecordsController;
+    private _packageVersionController: PackageVersionRecordsController;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -695,8 +700,24 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             metricsStore
         );
+        this._packagesStore = new PrismaPackageRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._xpStore = new PrismaXpStore(prismaClient);
 
         const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+        this._moderationStore = new PrismaModerationStore(prismaClient);
+        this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+
         return {
             prismaClient,
             filesLookup,
@@ -887,6 +908,20 @@ export class ServerBuilder implements SubscriptionLike {
 
         const redis = this._ensureRedisInstData(options);
         const prisma = this._ensurePrisma(options);
+
+        if (
+            options.redis.pubSubNamespace &&
+            this._websocketMessenger instanceof WSWebsocketMessenger
+        ) {
+            const [subscriber, publisher] = this._ensureRedisPubSub(options);
+            console.log('[ServerBuilder] Using Redis PubSub.');
+            this._websocketMessenger = new RedisWSWebsocketMessenger(
+                this._websocketMessenger,
+                subscriber,
+                publisher,
+                options.redis.pubSubNamespace
+            );
+        }
 
         this._tempInstRecordsStore = new RedisTempInstRecordsStore(
             options.redis.tempInstRecordsStoreNamespace,
@@ -1179,7 +1214,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
-                apiVersion: '2022-11-15',
+                apiVersion: '2024-04-10',
             }),
             options.stripe.publishableKey,
             options.stripe.testClock
@@ -1258,6 +1293,78 @@ export class ServerBuilder implements SubscriptionLike {
             priority: 20,
             action: async () => {
                 await this._privoClient.init();
+            },
+        });
+
+        return this;
+    }
+
+    /**
+     * Configures the server to use tigerbeetle for financial transactions.
+     * @param options The options to use.
+     */
+    useTigerBeetle(
+        options: Pick<ServerConfig, 'tigerBeetle'> = this._options
+    ): this {
+        if (!options.tigerBeetle || !options.tigerBeetle._enabled) {
+            console.warn(
+                '[ServerBuilder] TigerBeetle is explicitly disabled or lacks necessary config.'
+            );
+            return this;
+        }
+
+        console.log('[ServerBuilder] Using TigerBeetle Financial Interface.');
+
+        /**
+         * !!! TigerBeetle does not provide a way to check the status of server connections:
+         * * Because of this, misconfiguration can lead to an everlasting retry loop, which can be problematic and use resources unnecessarily.
+         * * To mitigate this, a timeout is set to race a method invocation which proves an established connection during server build.
+         * * If the connection is not proven established within the duration the timeout permits, the server will throw an error (and exit).
+         * * Disconnects (or any network errors) after the server is built will not be detected / handled by this mechanism;
+         *   it serves only to deter building the server with invalid connection parameters.
+         */
+        this._actions.push({
+            priority: 0,
+            action: async () => {
+                const client = createClient({
+                    cluster_id: options.tigerBeetle.clusterId,
+                    replica_addresses: options.tigerBeetle.replicaAddresses,
+                });
+                console.log(
+                    '[ServerBuilder] Connecting to tigerbeetle server.'
+                );
+                try {
+                    await Promise.race([
+                        client.lookupAccounts([0n]),
+                        new Promise((_, rej) => {
+                            setTimeout(() => {
+                                rej(
+                                    new Error(
+                                        'Failed to connect to tigerbeetle server in time.'
+                                    )
+                                );
+                            }, 3000);
+                        }),
+                    ]);
+                    console.log(
+                        '[ServerBuilder] Connected to tigerbeetle server.'
+                    );
+                    this._financialInterface =
+                        new TigerBeetleFinancialInterface({
+                            client,
+                            id,
+                        });
+                    this._financialController = new FinancialController(
+                        this._financialInterface
+                    );
+                } catch (e) {
+                    this._financialInterface = null;
+                    this._financialController = null;
+                    client.destroy();
+                    console.error(
+                        '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
+                    );
+                }
             },
         });
 
@@ -1376,6 +1483,7 @@ export class ServerBuilder implements SubscriptionLike {
                             apiKey: model.apiKey,
                             baseUrl: model.baseUrl,
                             name: model.name ?? model.provider,
+                            additionalProperties: model.additionalProperties,
                         });
                     for (let m of model.models) {
                         allowedChatModels.push({
@@ -1512,6 +1620,8 @@ export class ServerBuilder implements SubscriptionLike {
         if (env.type === 'deno') {
             console.log('[ServerBuilder] Using Deno Webhook Environment.');
 
+            configParameters.debug = env.debugLogs;
+
             const anyGlobalThis = globalThis as any;
             anyGlobalThis.MessageChannel = MessageChannel;
             anyGlobalThis.MessagePort = MessagePort;
@@ -1631,6 +1741,20 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
+        if (
+            !this._xpStore ||
+            !this._financialInterface ||
+            !this._financialController
+        ) {
+            console.warn(
+                `[ServerBuilder] Not using XP API. The following required are missing in configuration: ${
+                    !this._financialController ? 'Financial Controller' : ''
+                } ${!this._financialInterface ? 'Financial Interface, ' : ''}${
+                    !this._xpStore ? 'XP Store' : ''
+                }`
+            );
+        }
+
         if (!this._rateLimitController) {
             console.log('[ServerBuilder] Not using rate limiting.');
         }
@@ -1697,13 +1821,25 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
         });
 
+        if (this._purchasableItemsStore) {
+            this._purchasableItemsController =
+                new PurchasableItemRecordsController({
+                    store: this._purchasableItemsStore,
+                    config: this._configStore,
+                    policies: this._policyController,
+                });
+        }
+
         if (this._stripe && this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
                 this._authStore,
                 this._recordsStore,
-                this._configStore
+                this._configStore,
+                this._purchasableItemsStore,
+                this._policyController,
+                this._policyStore
             );
         }
 
@@ -1722,6 +1858,24 @@ export class ServerBuilder implements SubscriptionLike {
             );
         }
 
+        if (this._packagesStore && this._packageVersionsStore) {
+            this._packagesController = new PackageRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._packagesStore,
+            });
+            this._packageVersionController =
+                new PackageVersionRecordsController({
+                    config: this._configStore,
+                    policies: this._policyController,
+                    recordItemStore: this._packagesStore,
+                    store: this._packageVersionsStore,
+                    files: this._filesController,
+                    systemNotifications: this._notificationMessenger,
+                    packages: this._packagesController,
+                });
+        }
+
         if (
             this._websocketConnectionStore &&
             this._websocketMessenger &&
@@ -1737,7 +1891,8 @@ export class ServerBuilder implements SubscriptionLike {
                 this._policyController,
                 this._configStore,
                 this._metricsStore,
-                this._authStore
+                this._authStore,
+                this._packageVersionController
             );
         }
 
@@ -1763,6 +1918,19 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (
+            this._xpStore &&
+            this._financialInterface &&
+            this._financialController
+        ) {
+            this._xpController = new XpController({
+                xpStore: this._xpStore,
+                authController: this._authController,
+                authStore: this._authStore,
+                financialController: this._financialController,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1781,8 +1949,12 @@ export class ServerBuilder implements SubscriptionLike {
             moderationController: this._moderationController,
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
+            purchasableItems: this._purchasableItemsController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
+            packagesController: this._packagesController,
+            packageVersionController: this._packageVersionController,
+            xpController: this._xpController,
         });
 
         const buildReturn: BuildReturn = {
@@ -1799,6 +1971,8 @@ export class ServerBuilder implements SubscriptionLike {
             websocketRateLimitController: this._websocketRateLimitController,
             policyController: this._policyController,
             websocketController: this._websocketController,
+            packagesController: this._packagesController,
+            packageVersionController: this._packageVersionController,
 
             moderationController: this._moderationController,
             moderationJobProvider: this._moderationJobProvider,
@@ -1874,6 +2048,21 @@ export class ServerBuilder implements SubscriptionLike {
         } else {
             return this._ensureRedis(options);
         }
+    }
+
+    private _ensureRedisPubSub(
+        options: Pick<ServerConfig, 'redis'>
+    ): [RedisClientType, RedisClientType] {
+        return [
+            (this._redisSubscriber = this._createRedisClient(
+                this._redisSubscriber,
+                options.redis.servers.pubSub ?? options.redis
+            )),
+            (this._redisPublisher = this._createRedisClient(
+                this._redisPublisher,
+                options.redis.servers.pubSub ?? options.redis
+            )),
+        ] as const;
     }
 
     private _ensureRedisCaches(

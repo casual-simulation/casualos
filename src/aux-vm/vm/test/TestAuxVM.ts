@@ -19,9 +19,7 @@ import type { AuxSubVM, AuxVM } from '../AuxVM';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { AuxChannelErrorType } from '../AuxChannelErrorTypes';
-import { Remote } from 'comlink';
 import type {
-    LocalActions,
     BotAction,
     BotsState,
     StateUpdatedEvent,
@@ -29,19 +27,16 @@ import type {
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
 import {
-    PrecalculatedBotsState,
-    createPrecalculatedContext,
     merge,
     getActiveObjects,
     tagsOnBot,
-    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
-import { CurrentVersion } from '@casual-simulation/aux-common';
 import { union } from 'lodash';
 import type { ChannelActionResult } from '../../vm';
 import type {
     AuxDevice,
+    RuntimeActions,
     RuntimeStateVersion,
 } from '@casual-simulation/aux-runtime';
 import { AuxRuntime, isPromise } from '@casual-simulation/aux-runtime';
@@ -60,7 +55,7 @@ export class TestAuxVM implements AuxVM {
 
     processEvents: boolean;
     state: BotsState;
-    localEvents: Subject<LocalActions[]>;
+    localEvents: Subject<RuntimeActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     versionUpdated: Subject<RuntimeStateVersion>;

@@ -25,18 +25,7 @@ import type {
     ShowConfirmAction,
     ShowConfirmOptions,
 } from '@casual-simulation/aux-common';
-import {
-    ShowInputType,
-    ShowInputSubtype,
-    ShowInputOptions,
-    BotCalculationContext,
-    calculateFormattedBotValue,
-    Bot,
-    ShowInputForTagAction,
-    ShowInputAction,
-    asyncResult,
-    hasValue,
-} from '@casual-simulation/aux-common';
+import { asyncResult, hasValue } from '@casual-simulation/aux-common';
 
 @Component({})
 export default class ShowConfirmModal extends Vue {

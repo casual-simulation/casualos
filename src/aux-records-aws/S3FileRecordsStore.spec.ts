@@ -21,11 +21,7 @@ import {
     s3AclForMarkers,
     isPublicFile,
 } from './S3FileRecordsStore';
-import {
-    awsResult,
-    awsError,
-    ConditionalCheckFailedException,
-} from './AwsTestUtils';
+import { awsResult } from './AwsTestUtils';
 import type {
     EraseFileStoreResult,
     AddFileResult,
@@ -36,9 +32,7 @@ import type {
     UpdateFileResult,
 } from '@casual-simulation/aux-records';
 import {
-    FileRecordsStore,
     signRequest,
-    MarkFileRecordAsUploadedFailure,
     MemoryFileRecordsLookup,
 } from '@casual-simulation/aux-records';
 import '../../jest/jest-matchers';

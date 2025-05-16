@@ -21,7 +21,6 @@ import type {
     APIGatewayProxyEvent,
     APIGatewayProxyStructuredResultV2,
 } from 'aws-lambda';
-import { Context } from 'aws-lambda';
 import { constructServerlessAwsServerBuilder } from '../../../../shared/LoadServer';
 import type { GenericHttpHeaders } from '@casual-simulation/aux-common';
 

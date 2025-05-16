@@ -24,9 +24,8 @@ import type {
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
-    BotsState,
     DEFAULT_BRANCH_NAME,
-    getBotsStateFromStoredAux,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type {
     AuthorizeUserAndInstancesSuccess,
@@ -35,24 +34,19 @@ import type {
     AuthorizeSubjectFailure,
     AuthorizationContext,
 } from '../PolicyController';
-import { AuthorizeSubject } from '../PolicyController';
 import type {
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
     CrudListItemsResult,
     CrudRecordsConfiguration,
 } from '../crud/CrudRecordsController';
-import {
-    CheckSubscriptionMetricsResult,
-    CrudRecordsController,
-} from '../crud/CrudRecordsController';
+import { CrudRecordsController } from '../crud/CrudRecordsController';
 import type {
     WebhookInfoFile,
     WebhookRecord,
     WebhookRecordsStore,
     WebhookRunInfo,
 } from './WebhookRecordsStore';
-import { WebhookSubscriptionMetrics } from './WebhookRecordsStore';
 import type { WebhooksFeaturesConfiguration } from '../SubscriptionConfiguration';
 import { getWebhookFeatures } from '../SubscriptionConfiguration';
 import { traced } from '../tracing/TracingDecorators';
@@ -63,24 +57,17 @@ import type {
     WebhookEnvironment,
     WebhookState,
 } from './WebhookEnvironment';
-import {
-    HandleHttpRequestResult,
-    STORED_AUX_SCHEMA,
-} from './WebhookEnvironment';
+import { STORED_AUX_SCHEMA } from './WebhookEnvironment';
 import type {
     DataRecordsController,
     GetDataFailure,
 } from '../DataRecordsController';
-import {
-    DataRecordsConfiguration,
-    GetDataResult,
-} from '../DataRecordsController';
+
 import type {
     FileRecordsController,
     ReadFileFailure,
     ReadFileResult,
 } from '../FileRecordsController';
-import { tryParseJson } from '../Utils';
 import type { z } from 'zod';
 import { v7 as uuidv7 } from 'uuid';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -136,7 +123,7 @@ export class WebhookRecordsController extends CrudRecordsController<
     private _environment: WebhookEnvironment;
     private _data: DataRecordsController;
     private _files: FileRecordsController;
-    private _websockets: WebsocketController;
+    private _websockets: WebsocketController | null;
     private _auth: AuthController;
 
     get websockets() {
@@ -222,10 +209,19 @@ export class WebhookRecordsController extends CrudRecordsController<
                 return checkMetrics;
             }
 
-            let state: WebhookState = null;
-            const stateRecordName: string = webhook.targetRecordName;
-            let stateInstName: string = undefined;
+            let state: WebhookState;
+            const stateRecordName = webhook.targetRecordName;
+            let stateInstName: string | undefined = undefined;
             if (webhook.targetResourceKind === 'data') {
+                if (!webhook.targetRecordName) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. The targeted record does not contain a valid name.',
+                    };
+                }
+
                 const data = await this._data.getData(
                     webhook.targetRecordName,
                     webhook.targetAddress,
@@ -275,10 +271,19 @@ export class WebhookRecordsController extends CrudRecordsController<
                     state: parseResult.data as StoredAux,
                 };
             } else if (webhook.targetResourceKind === 'file') {
+                if (!webhook.targetRecordName) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_webhook_target',
+                        errorMessage:
+                            'Invalid webhook target. The targeted record does not contain a valid name.',
+                    };
+                }
+
                 const file = await this._files.readFile(
                     webhook.targetRecordName,
                     webhook.targetAddress,
-                    webhook.userId,
+                    webhook.userId ?? null,
                     request.instances
                 );
                 if (file.success === false) {
@@ -314,7 +319,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                 }
 
                 const inst = await this._websockets.getBranchData(
-                    webhook.userId,
+                    webhook.userId ?? null,
                     webhook.targetRecordName,
                     webhook.targetAddress,
                     DEFAULT_BRANCH_NAME,
@@ -335,9 +340,7 @@ export class WebhookRecordsController extends CrudRecordsController<
                     type: 'aux',
                     state: inst.data,
                 };
-            }
-
-            if (!state) {
+            } else {
                 return {
                     success: false,
                     errorCode: 'invalid_webhook_target',
@@ -346,9 +349,9 @@ export class WebhookRecordsController extends CrudRecordsController<
                 };
             }
 
-            let sessionUserId: string;
-            let sessionKey: string;
-            let connectionKey: string;
+            let sessionUserId: string | undefined = undefined;
+            let sessionKey: string | undefined = undefined;
+            let connectionKey: string | undefined = undefined;
 
             if (webhook.userId) {
                 // Create a session for the user
@@ -398,8 +401,8 @@ export class WebhookRecordsController extends CrudRecordsController<
             const stateHash = getHash(state);
             const runId = uuidv7();
 
-            let infoFileName: string = null;
-            let infoRecordName: string = null;
+            let infoFileName: string | null = null;
+            let infoRecordName: string | null = null;
             if (webhook.userId) {
                 const recordName = webhook.userId;
                 const dataFile: WebhookInfoFile = {
@@ -483,7 +486,9 @@ export class WebhookRecordsController extends CrudRecordsController<
             }
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
@@ -562,7 +567,9 @@ export class WebhookRecordsController extends CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
@@ -616,12 +623,12 @@ export class WebhookRecordsController extends CrudRecordsController<
                 return authorization;
             }
 
-            let infoFileResult: ReadFileResult = null;
+            let infoFileResult: ReadFileResult | null = null;
             if (run.run.infoRecordName && run.run.infoFileName) {
                 infoFileResult = await this._files.readFile(
                     run.run.infoRecordName,
                     run.run.infoFileName,
-                    run.webhook.userId,
+                    run.webhook.userId ?? null,
                     request.instances
                 );
             }
@@ -633,7 +640,9 @@ export class WebhookRecordsController extends CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(
@@ -690,7 +699,7 @@ export class WebhookRecordsController extends CrudRecordsController<
 
         if (action === 'create') {
             // create a user for the webhook
-            if (!item.userId) {
+            if (item && !item.userId) {
                 const result = await this._auth.createAccount({
                     userRole: 'superUser', // The system gets superUser permissions when performing administrative tasks
                     ipAddress: null,
@@ -755,8 +764,9 @@ export interface HandleWebhookRequest {
 
     /**
      * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
      */
-    userId: string;
+    userId: string | null;
 
     /**
      * The request that should be made to the webhook.

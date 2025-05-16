@@ -19,7 +19,7 @@ import type {
     GenericHttpRequest,
     GenericHttpResponse,
 } from '../http/GenericHttpInterface';
-import z, { input } from 'zod';
+import z from 'zod';
 import type { KnownErrorCodes } from './ErrorCodes';
 import type { Span } from '@opentelemetry/api';
 import type { DenialReason } from '../common/DenialReason';

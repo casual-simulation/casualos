@@ -20,7 +20,6 @@ import {
     ImageLoader,
     RGBFormat,
     RGBAFormat,
-    Loader,
     VideoTexture,
 } from '@casual-simulation/three';
 import { addCorsQueryParam } from './SceneUtils';

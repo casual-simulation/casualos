@@ -18,7 +18,6 @@
 import type { Texture, Color } from '@casual-simulation/three';
 import {
     Object3D,
-    Vector2,
     Scene,
     Vector3,
     Matrix4,
@@ -36,7 +35,6 @@ import type {
 import {
     hasValue,
     DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
-    asyncResult,
     getBotShape,
 } from '@casual-simulation/aux-common';
 import type { SubscriptionLike, Observable } from 'rxjs';

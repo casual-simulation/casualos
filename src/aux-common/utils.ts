@@ -222,3 +222,33 @@ export function fromBase64String(base64: string): string {
     const array = toByteArray(base64);
     return decoder.decode(array);
 }
+
+/**
+ * Tries to parse the given JSON string into a JavaScript Value.
+ * @param json The JSON to parse.
+ */
+export function tryParseJson(json: string): JsonParseResult {
+    try {
+        return {
+            success: true,
+            value: JSON.parse(json),
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err,
+        };
+    }
+}
+
+export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
+
+export interface JsonParseSuccess {
+    success: true;
+    value: any;
+}
+
+export interface JsonParseFailure {
+    success: false;
+    error: unknown;
+}

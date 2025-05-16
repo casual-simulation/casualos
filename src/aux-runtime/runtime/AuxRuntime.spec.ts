@@ -99,11 +99,7 @@ import {
     ON_ANY_BOTS_ADDED_ACTION_NAME,
     ON_ANY_BOTS_CHANGED_ACTION_NAME,
     ON_ANY_BOTS_REMOVED_ACTION_NAME,
-    ON_BOT_CHANGED_ACTION_NAME,
-    ShowToastAction,
-    arSupported,
     UNMAPPABLE,
-    updatedBot,
     DATE_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
@@ -115,7 +111,6 @@ import { v4 as uuid } from 'uuid';
 import {
     waitAsync,
     allDataTypeCases,
-    customDataTypeCases,
 } from '@casual-simulation/aux-common/test/TestHelpers';
 import { types } from 'util';
 import {
@@ -157,7 +152,6 @@ import type { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';
 import type { RuntimeActions } from './RuntimeEvents';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
-import { support } from 'benchmark';
 
 registerInterpreterModule(DynamicImports);
 

@@ -17,7 +17,6 @@
  */
 import * as pulumi from '@pulumi/pulumi';
 import * as aws from '@pulumi/aws';
-import * as apigateway from '@pulumi/aws-apigateway';
 
 /**
  * Creates a new inline IAM policy that grants CRUD access to an S3 bucket.

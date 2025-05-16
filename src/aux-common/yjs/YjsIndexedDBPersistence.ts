@@ -233,7 +233,7 @@ export class YjsIndexedDBPersistence {
         this._whenSynced = firstValueFrom(
             this._onSyncChanged.pipe(
                 filter((sync) => sync),
-                map(() => undefined)
+                map(() => undefined as any)
             )
         );
 

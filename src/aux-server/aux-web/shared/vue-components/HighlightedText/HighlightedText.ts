@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import {} from '@casual-simulation/aux-common';
 
 @Component({

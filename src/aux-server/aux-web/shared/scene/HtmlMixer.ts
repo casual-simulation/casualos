@@ -22,10 +22,8 @@ import type {
 } from '@casual-simulation/three';
 import {
     Scene,
-    Camera,
     PerspectiveCamera,
     OrthographicCamera,
-    Color,
     NoBlending,
     DoubleSide,
     MeshBasicMaterial,

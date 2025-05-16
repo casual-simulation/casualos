@@ -22,10 +22,7 @@ import type {
 } from './PolicyController';
 import type { RecordsStore } from './RecordsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
-import {
-    getLoomFeatures,
-    getSubscriptionFeatures,
-} from './SubscriptionConfiguration';
+import { getLoomFeatures } from './SubscriptionConfiguration';
 import type { MetricsStore } from './MetricsStore';
 import * as jose from 'jose';
 import { traced } from './tracing/TracingDecorators';

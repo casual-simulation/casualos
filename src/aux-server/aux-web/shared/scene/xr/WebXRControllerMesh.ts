@@ -20,12 +20,9 @@ import { Constants } from '@webxr-input-profiles/motion-controllers';
 import {
     Mesh,
     Object3D,
-    Quaternion,
     Group,
     MeshBasicMaterial,
     SphereGeometry,
-    Color,
-    Vector3,
     Matrix4,
 } from '@casual-simulation/three';
 import { getGLTFPool } from '../GLTFHelpers';
@@ -40,7 +37,7 @@ import type {
     XRHandJoint,
 } from './WebXRTypes';
 import { xrHandJoints } from './WebXRTypes';
-import { copyPose, decomposePose } from './WebXRHelpers';
+import { copyPose } from './WebXRHelpers';
 import { PointerRay3D } from './PointerRay3D';
 
 const pool = getGLTFPool('webxr');

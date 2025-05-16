@@ -18,7 +18,10 @@
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_BRANCH_NAME,
+    PUBLIC_READ_MARKER,
+} from '@casual-simulation/aux-common';
 import { MemoryStore } from '../MemoryStore';
 
 describe('SplitInstRecordsStore', () => {
@@ -445,6 +448,80 @@ describe('SplitInstRecordsStore', () => {
                 linkedInst: null,
                 branchSizeInBytes: 0,
             });
+        });
+    });
+
+    describe('saveLoadedPackage()', () => {
+        it('should save the package to the temp store', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: null,
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(await store.listLoadedPackages(null, 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: null,
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+            expect(await temp.listLoadedPackages(null, 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: null,
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+            expect(await perm.listLoadedPackages(null, 'test')).toEqual([]);
+        });
+
+        it('should save the package to the permanent store if the record name is not null', async () => {
+            await store.saveLoadedPackage({
+                id: 'package',
+                recordName: 'record',
+                inst: 'test',
+                packageId: 'packageId',
+                packageVersionId: 'packageVersionId',
+                userId: 'user',
+                branch: DEFAULT_BRANCH_NAME,
+            });
+
+            expect(await store.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+            expect(await perm.listLoadedPackages('record', 'test')).toEqual([
+                {
+                    id: 'package',
+                    recordName: 'record',
+                    inst: 'test',
+                    packageId: 'packageId',
+                    packageVersionId: 'packageVersionId',
+                    userId: 'user',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+            expect(await temp.listLoadedPackages('record', 'test')).toEqual([]);
         });
     });
 
