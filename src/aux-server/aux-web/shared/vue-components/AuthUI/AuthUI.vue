@@ -140,7 +140,7 @@
             @md-closed="closeGrantEntitlements()"
         >
             <md-dialog-title>Grant Entitlements?</md-dialog-title>
-            <md-dialog-content>
+            <md-dialog-content v-if="entitlementGrantEvent">
                 <p>
                     Do you want to grant
                     <strong>{{ entitlementGrantEvent.action.request.packageId }}</strong> the
