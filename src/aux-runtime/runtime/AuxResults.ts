@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Bot } from '@casual-simulation/aux-common/bots/Bot';
-import { BotAction } from '@casual-simulation/aux-common/bots/BotEvents';
 import type { RuntimeActions } from './RuntimeEvents';
 
 export class RanOutOfEnergyError extends Error {

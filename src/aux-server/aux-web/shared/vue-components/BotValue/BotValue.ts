@@ -15,22 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject, Provide, Watch } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 import type { Bot } from '@casual-simulation/aux-common';
 import {
     isFormula,
-    merge,
     hasValue,
     isScript,
     getTagValueForSpace,
-    getSpaceForTag,
     DNA_TAG_PREFIX,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { EventBus } from '@casual-simulation/aux-components';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
 export default class BotValue extends Vue {

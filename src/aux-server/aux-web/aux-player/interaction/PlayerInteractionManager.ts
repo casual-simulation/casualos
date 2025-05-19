@@ -21,7 +21,6 @@ import {
     OrthographicCamera,
     Quaternion,
     Euler,
-    Matrix4,
     Vector2,
 } from '@casual-simulation/three';
 import type { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
@@ -35,8 +34,6 @@ import {
     ON_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_ENTER_ACTION_NAME,
     ON_ANY_FOCUS_EXIT_ACTION_NAME,
-    PortalType,
-    calculateGridScale,
     hasValue,
     ON_POINTER_ENTER,
     ON_POINTER_EXIT,
@@ -53,7 +50,6 @@ import {
     ON_POINTER_UP,
     ON_ANY_POINTER_DOWN,
     ON_ANY_POINTER_UP,
-    getBotCursor,
     formatBotVector,
     formatBotRotation,
     getTagPosition,
@@ -75,7 +71,6 @@ import type {
 } from '../../shared/scene/Input';
 import {
     Input,
-    ControllerData,
     MouseButtonId,
     getModalityHand,
     getModalityFinger,
@@ -89,11 +84,9 @@ import { flatMap, isEqual } from 'lodash';
 import { MiniPortalContextGroup3D } from '../scene/MiniPortalContextGroup3D';
 import {
     calculateHitFace,
-    isObjectVisible,
     objectForwardRay,
     cameraUpwardRay,
     safeSetParent,
-    WORLD_UP,
     objectUpwardRay,
     cameraForwardRay,
 } from '../../shared/scene/SceneUtils';
@@ -108,7 +101,6 @@ import type { PlayerGame } from '../scene/PlayerGame';
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import type { Grid3D } from '../../shared/scene/Grid3D';
 import { PlayerPageSimulation3D } from '../scene/PlayerPageSimulation3D';
-import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { MiniSimulation3D } from '../scene/MiniSimulation3D';
 import { Physics } from '../../shared/scene/Physics';
 import type { Simulation3D } from '../../shared/scene/Simulation3D';

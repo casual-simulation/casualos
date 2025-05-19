@@ -39,14 +39,10 @@
 // Modified to utilize Line2
 
 import {
-    Float32BufferAttribute,
-    BufferGeometry,
     Object3D,
     CylinderGeometry,
     MeshBasicMaterial,
-    LineBasicMaterial,
     Mesh,
-    Line,
     Vector3,
     Color,
 } from '@casual-simulation/three';

@@ -36,7 +36,6 @@ import type {
     BotSpace,
 } from '../bots';
 import {
-    tagsOnBot,
     hasValue,
     getActiveObjects,
     breakIntoIndividualEvents,

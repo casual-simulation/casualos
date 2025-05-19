@@ -15,27 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import type {
     UpdateHtmlAppAction,
     SerializableMutationRecord,
 } from '@casual-simulation/aux-common';
 import {
-    Bot,
-    getShortId,
-    formatValue,
-    tagsOnBot,
     hasValue,
-    runScript,
     asyncResult,
     htmlAppEvent,
-    RegisterHtmlAppAction,
     asyncError,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { Subscription, SubscriptionLike } from 'rxjs';
+import { Subscription } from 'rxjs';
 import type { BrowserSimulation } from '../../../../../aux-vm-browser';
 import type { HtmlPortalSetupResult } from '@casual-simulation/aux-vm/portals/HtmlAppBackend';
 import {

@@ -20,7 +20,6 @@ import type { Observable, SubscriptionLike } from 'rxjs';
 import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import type { Simulation } from './Simulation';
-import { ConnectionIndicator } from '@casual-simulation/aux-common';
 
 export type SubSimEmitter = Pick<
     Simulation,

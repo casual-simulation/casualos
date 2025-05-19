@@ -26,14 +26,7 @@ import axios from 'axios';
 import { sortBy } from 'lodash';
 import type { SubscriptionLike, Observable } from 'rxjs';
 import { timer, defer, throwError, EMPTY, NEVER } from 'rxjs';
-import {
-    retryWhen,
-    delayWhen,
-    finalize,
-    tap,
-    repeatWhen,
-    mergeMap,
-} from 'rxjs/operators';
+import { retryWhen, finalize, tap, repeatWhen, mergeMap } from 'rxjs/operators';
 import type { TunnelClient } from '@casual-simulation/tunnel';
 
 /**

@@ -31,8 +31,7 @@ import type {
     SubscriptionLimitReached,
 } from '@casual-simulation/aux-common/Errors';
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
-import { RecordsController } from './RecordsController';
-import { getExtension, getType } from 'mime';
+import { getExtension } from 'mime';
 import type {
     AuthorizeSubjectFailure,
     PolicyController,
@@ -41,13 +40,9 @@ import {
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from './PolicyController';
-import {
-    ACCOUNT_MARKER,
-    PRIVATE_MARKER,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
+import type { UserRole } from '@casual-simulation/aux-common';
+import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
 import { getMarkersOrDefault, getRootMarkersOrDefault } from './Utils';
-import { without } from 'lodash';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';
@@ -84,22 +79,24 @@ export class FileRecordsController {
      * @param recordNameOrKey The name of the record or the record key of the record.
      * @param userId The ID of the user that is logged in. Should be null if the user is not logged in.
      * @param request The request.
+     * @param userRole the role of the user that is requesting the file.
      * @returns
      */
     @traced(TRACE_NAME)
     async recordFile(
         recordKeyOrRecordName: string,
-        userId: string,
+        userId: string | null,
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
-            const markers = getMarkersOrDefault(request.markers);
-            const rootMarkers = getRootMarkersOrDefault(markers);
+            let markers = getMarkersOrDefault(request.markers);
+            let rootMarkers = getRootMarkersOrDefault(markers);
 
             const contextResult =
                 await this._policies.constructAuthorizationContext({
                     recordKeyOrRecordName,
                     userId,
+                    userRole: request.userRole,
                 });
 
             if (contextResult.success === false) {
@@ -177,8 +174,9 @@ export class FileRecordsController {
 
             const policy = contextResult.context.subjectPolicy;
             userId = contextResult.context.userId;
+            const userRole = contextResult.context.userRole;
 
-            if (!userId && policy !== 'subjectless') {
+            if (!userId && userRole === 'none' && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -253,20 +251,6 @@ export class FileRecordsController {
                 }
             }
 
-            const presignResult = await this._store.presignFileUpload({
-                recordName,
-                fileName: fileName,
-                fileSha256Hex: request.fileSha256Hex,
-                fileMimeType: request.fileMimeType,
-                fileByteLength: request.fileByteLength,
-                markers: rootMarkers,
-                headers: request.headers,
-            });
-
-            if (presignResult.success === false) {
-                return presignResult;
-            }
-
             const addFileResult = await this._store.addFileRecord(
                 recordName,
                 fileName,
@@ -296,14 +280,44 @@ export class FileRecordsController {
                     }
 
                     if (!fileResult.uploaded) {
-                        return {
-                            success: true,
-                            fileName,
-                            uploadUrl: presignResult.uploadUrl,
-                            uploadHeaders: presignResult.uploadHeaders,
-                            uploadMethod: presignResult.uploadMethod,
-                            markers,
-                        };
+                        if (
+                            !fileResult.markers.some((m) => markers.includes(m))
+                        ) {
+                            // re-check permissions because none of the markers match up
+                            // with the markers that the file actually has
+                            markers = fileResult.markers;
+                            rootMarkers = getRootMarkersOrDefault(markers);
+
+                            const authorization =
+                                await this._policies.authorizeUserAndInstancesForResources(
+                                    contextResult.context,
+                                    {
+                                        userId: subjectId,
+                                        instances: request.instances,
+                                        resources: [
+                                            {
+                                                resourceKind: 'file',
+                                                resourceId: fileName,
+                                                action: 'create',
+                                                markers: markers,
+                                            },
+                                            ...getMarkerResourcesForCreation(
+                                                markers
+                                            ),
+                                        ],
+                                    }
+                                );
+
+                            if (authorization.success === false) {
+                                return authorization;
+                            }
+                        } else {
+                            // allow the request to be successful
+                            // because at least one of the markers is the same
+                            // we just need to grab the real markers from the file
+                            markers = fileResult.markers;
+                            rootMarkers = getRootMarkersOrDefault(markers);
+                        }
                     } else {
                         return {
                             success: false,
@@ -312,11 +326,26 @@ export class FileRecordsController {
                                 'The file has already been uploaded to ' +
                                 fileResult.url,
                             existingFileUrl: fileResult.url,
+                            existingFileName: fileResult.fileName,
                         };
                     }
+                } else {
+                    return addFileResult;
                 }
+            }
 
-                return addFileResult;
+            const presignResult = await this._store.presignFileUpload({
+                recordName,
+                fileName: fileName,
+                fileSha256Hex: request.fileSha256Hex,
+                fileMimeType: request.fileMimeType,
+                fileByteLength: request.fileByteLength,
+                markers: rootMarkers,
+                headers: request.headers,
+            });
+
+            if (presignResult.success === false) {
+                return presignResult;
             }
 
             return {
@@ -464,19 +493,22 @@ export class FileRecordsController {
      * @param fileName The name of the file.
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
      * @param instances The instances that are loaded.
+     * @param userRole The role of the user that is making the request.
      */
     @traced(TRACE_NAME)
     async readFile(
         recordKeyOrRecordName: string,
         fileName: string,
-        subjectId: string,
-        instances?: string[]
+        subjectId: string | null,
+        instances?: string[],
+        userRole?: UserRole
     ): Promise<ReadFileResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName,
                 userId: subjectId,
                 instances,
+                userRole,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -527,7 +559,11 @@ export class FileRecordsController {
             const policy = context.context.subjectPolicy;
             subjectId = result.user.subjectId;
 
-            if (!subjectId && policy !== 'subjectless') {
+            if (
+                !subjectId &&
+                context.context.userRole === 'none' &&
+                policy !== 'subjectless'
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -861,6 +897,11 @@ export interface RecordFileRequest {
      * The instances that are currently loaded.
      */
     instances?: string[];
+
+    /**
+     * The role of the user that is making the request.
+     */
+    userRole?: UserRole | null;
 }
 
 /**
@@ -930,6 +971,11 @@ export interface RecordFileFailure {
      * The URL that the file is available at if it has already been uploaded.
      */
     existingFileUrl?: string;
+
+    /**
+     * The name of the file that was attempted to be recorded.
+     */
+    existingFileName?: string;
 }
 
 /**

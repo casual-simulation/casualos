@@ -38,7 +38,6 @@ import {
     botUpdated,
     breakIntoIndividualEvents,
     getActiveObjects,
-    tagsOnBot,
     hasValue,
     stateUpdatedEvent,
     merge,
@@ -63,6 +62,22 @@ import {
     ensureTagIsSerializable,
 } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { v4 as uuid } from 'uuid';
+
+/**
+ * Attempts to create a proxy client partition that is loaded from a remote inst.
+ * @param options The options to use.
+ * @param config The config to use.
+ */
+export async function createLocalStoragePartition(
+    config: LocalStoragePartitionConfig
+): Promise<LocalStoragePartitionImpl> {
+    if (config.type === 'local_storage') {
+        const partition = new LocalStoragePartitionImpl(config);
+        await partition.init();
+        return partition;
+    }
+    return undefined;
+}
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {
     protected _onBotsAdded = new Subject<Bot[]>();

@@ -15,20 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import type { ShoutAction } from '@casual-simulation/aux-common';
-import {
-    Bot,
-    hasValue,
-    BotTags,
-    BotAction,
-    ON_FILE_UPLOAD_ACTION_NAME,
-} from '@casual-simulation/aux-common';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import type { ShoutAction, Bot } from '@casual-simulation/aux-common';
+import { ON_FILE_UPLOAD_ACTION_NAME } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import BotTable from '../BotTable/BotTable';
 import type { SubscriptionLike } from 'rxjs';
 import { Subscription } from 'rxjs';
 import { Input } from '../../scene/Input';
@@ -169,7 +160,7 @@ export default class UploadFiles extends Vue {
                 for (let sim of appManager.simulationManager.simulations.values()) {
                     let actions: ShoutAction[] = sim.helper.actions(
                         finalFiles.map((f) => ({
-                            bots: null,
+                            bots: null as Bot[],
                             eventName: ON_FILE_UPLOAD_ACTION_NAME,
                             arg: {
                                 file: f,

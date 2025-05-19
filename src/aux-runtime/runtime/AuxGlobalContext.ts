@@ -21,16 +21,12 @@ import type {
     RuntimeBot,
 } from '@casual-simulation/aux-common/bots';
 import {
-    BotAction,
     isBot,
-    PrecalculatedBot,
     botAdded,
     botRemoved,
     DEFAULT_ENERGY,
     getOriginalObject,
     ORIGINAL_OBJECT,
-    ImportFunc,
-    ExportFunc,
 } from '@casual-simulation/aux-common/bots';
 import type {
     RuntimeBotFactory,
@@ -52,7 +48,7 @@ import {
 } from 'lodash';
 import './PerformanceNowPolyfill';
 import type { SubscriptionLike } from 'rxjs';
-import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
+import { Observable, ReplaySubject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -65,7 +61,6 @@ import type {
 import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import type { RuntimeActions } from './RuntimeEvents';
 import type seedrandom from 'seedrandom';
-import { GenericError } from './CasualOSError';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().

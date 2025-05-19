@@ -20,6 +20,10 @@
                         <md-icon>person</md-icon>
                         <span class="md-list-item-text">Account</span>
                     </md-list-item>
+                    <md-list-item :to="{ name: 'granted-entitlements' }">
+                        <md-icon>box</md-icon>
+                        <span class="md-list-item-text">Granted Entitlements</span>
+                    </md-list-item>
                     <md-list-item
                         md-expand
                         :md-expanded.sync="showRecords"

@@ -32,8 +32,7 @@ import type {
     ForwardTunnelRequest,
     ReverseTunnelRequest,
 } from '../ClientTunnelRequest';
-import WebSocket from 'ws';
-import { createServer, Socket } from 'net';
+import { createServer } from 'net';
 import { wrap } from './WebSocket';
 import {
     listen,

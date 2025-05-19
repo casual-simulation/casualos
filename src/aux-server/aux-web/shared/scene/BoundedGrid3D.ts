@@ -25,9 +25,7 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     LineBasicMaterial,
-    MathUtils as ThreeMath,
     Plane,
-    PlaneHelper,
     Quaternion,
 } from '@casual-simulation/three';
 import { getOptionalValue } from '../SharedUtils';

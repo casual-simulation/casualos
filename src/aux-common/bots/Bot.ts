@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { type } from 'os';
 import type { TagEditOp } from './AuxStateHelpers';
 import type { BotModule, BotModuleResult } from './BotModule';
 import type { Point2D } from './BotEvents';
@@ -929,6 +928,7 @@ export type BotShape =
     | 'skybox'
     | 'sphere'
     | 'sprite'
+    | 'map'
     | 'mesh'
     | 'iframe'
     | 'frustum'
@@ -2752,6 +2752,12 @@ export const KNOWN_TAGS: string[] = [
     'formLightGroundColor',
     'formBuildStep',
     'formLDrawPartsAddress',
+    'formMapLOD',
+    'formMapProvider',
+    'formMapProviderAPIKey',
+    'formMapHeightProvider',
+    'formMapHeightProviderAPIKey',
+    'formMapHeightOffset',
     'meshPositioningMode',
     'orientationMode',
     'anchorPoint',

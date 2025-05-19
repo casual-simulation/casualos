@@ -23,7 +23,6 @@ import {
     Subscription,
     filter,
     firstValueFrom,
-    startWith,
     switchMap,
 } from 'rxjs';
 import type { BrowserSimulation } from './BrowserSimulation';
@@ -31,9 +30,7 @@ import type {
     AuthHelperInterface,
     SimulationManager,
 } from '@casual-simulation/aux-vm/managers';
-import { Simulation } from '@casual-simulation/aux-vm/managers';
 import type { AuthHelper } from './AuthHelper';
-import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
 import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
@@ -46,14 +43,15 @@ import {
     asyncResult,
     hasValue,
     reportInst,
+    generateV1ConnectionToken,
 } from '@casual-simulation/aux-common';
 import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
-import { LoginUIStatus } from '@casual-simulation/aux-vm/auth';
 import type {
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
+import type { GrantEntitlementsAction } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that is able to coordinate authentication across multiple simulations.
@@ -67,6 +65,8 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
     private _onRequestAccess: Subject<RequestAccessEvent> = new Subject();
     private _onNotAuthorized: Subject<NotAuthorizedEvent> = new Subject();
     private _onShowAccountInfo: Subject<ShowAccountInfoEvent> = new Subject();
+    private _onGrantEntitlements: Subject<GrantEntitlementsEvent> =
+        new Subject();
     private _onAuthHelper: BehaviorSubject<AuthHelper> = new BehaviorSubject(
         null
     );
@@ -86,6 +86,10 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
 
     get onRequestAccess(): Observable<RequestAccessEvent> {
         return this._onRequestAccess;
+    }
+
+    get onGrantEntitlements(): Observable<GrantEntitlementsEvent> {
+        return this._onGrantEntitlements;
     }
 
     get authEndpoints(): Map<string, AuthHelperInterface> {
@@ -147,6 +151,11 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                                     asyncResult(event.taskId, null)
                                 );
                             }
+                        } else if (event.type === 'grant_record_entitlements') {
+                            this._onGrantEntitlements.next({
+                                simulationId: sim.id,
+                                action: event,
+                            });
                         }
                     })
                 );
@@ -431,6 +440,30 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
         }
     }
 
+    async grantEntitlements(entitlementGrantEvent: GrantEntitlementsEvent) {
+        const sim = this._simulationManager.simulations.get(
+            entitlementGrantEvent.simulationId
+        );
+        if (sim) {
+            await sim.records.grantEntitlements(entitlementGrantEvent.action);
+        }
+    }
+
+    async denyEntitlements(entitlementGrantEvent: GrantEntitlementsEvent) {
+        const sim = this._simulationManager.simulations.get(
+            entitlementGrantEvent.simulationId
+        );
+        if (sim) {
+            sim.helper.transaction(
+                asyncResult(entitlementGrantEvent.action.taskId, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'The request for access was denied.',
+                })
+            );
+        }
+    }
+
     private async _handleAuthRequest(
         sim: TSim,
         request: PartitionAuthRequest
@@ -500,8 +533,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                 console.log(
                     `[AuthCoordinator] [${sim.id}] Logging out and back in...`
                 );
-                await endpoint.logout();
-                await endpoint.authenticate();
+                await endpoint.relogin();
             }
         } else {
             key = await endpoint.getConnectionKey();
@@ -736,4 +768,9 @@ export interface RequestAccessEvent {
      * The info about the user that is requesting the permission.
      */
     user: PublicUserInfo | null;
+}
+
+export interface GrantEntitlementsEvent {
+    simulationId: string;
+    action: GrantEntitlementsAction;
 }

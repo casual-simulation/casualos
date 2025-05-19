@@ -15,8 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { appManager } from './AppManager';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { v4 as uuid } from 'uuid';
 
 export function generateGuestId(): string {

@@ -64,10 +64,7 @@ import AuthRecordsFiles from './AuthRecordsFiles/AuthRecordsFiles';
 import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
-import {
-    listenForChannel,
-    setupChannel,
-} from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
+import { setupChannel } from '@casual-simulation/aux-vm-browser/html/IFrameHelpers';
 import { skip } from 'rxjs/operators';
 import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
@@ -86,6 +83,8 @@ import AuthRegisterWebAuthn from './AuthRegisterWebAuthn/AuthRegisterWebAuthn';
 import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
+import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
+import AuthGrantedEntitlements from './AuthGrantedEntitlements/AuthGrantedEntitlements';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -181,6 +180,11 @@ const routes: RouteConfig[] = [
         component: AuthHome,
     },
     {
+        path: '/granted-entitlements',
+        name: 'granted-entitlements',
+        component: AuthGrantedEntitlements,
+    },
+    {
         path: '/records/:recordName',
         name: 'records',
         props: (route) => ({
@@ -222,6 +226,11 @@ const routes: RouteConfig[] = [
                 path: 'notifications',
                 name: 'records-notifications',
                 component: AuthRecordsNotifications,
+            },
+            {
+                path: 'packages',
+                name: 'records-packages',
+                component: AuthRecordsPackages,
             },
         ],
     },

@@ -20,7 +20,7 @@ import { appManager } from '../../AppManager';
 import Component from 'vue-class-component';
 import { Loading } from '@casual-simulation/aux-components';
 import type { ProgressMessage } from '@casual-simulation/aux-common';
-import { switchMap, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 
 /**
  * The number of miliseconds that need to pass in order for the option to redirect to a static instance to appear.

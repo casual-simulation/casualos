@@ -25,7 +25,6 @@ import type { AuxBot3D } from './AuxBot3D';
 import type { DimensionGroup3D } from './DimensionGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial, buildSRGBColor } from './SceneUtils';
-import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 export class Arrow3D extends Object3D {
     public static DefaultColor: Color = buildSRGBColor(1, 1, 1);

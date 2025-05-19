@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { hasValue } from '@casual-simulation/aux-common';
 
 /**
  * Calculates the URLs that the model JSON and metadata are at based on the given input options.

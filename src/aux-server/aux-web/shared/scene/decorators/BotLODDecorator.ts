@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type {
     BotCalculationContext,
@@ -23,9 +23,6 @@ import type {
     ShoutAction,
 } from '@casual-simulation/aux-common';
 import {
-    calculateGridScale,
-    getBuilderDimensionGrid,
-    DEFAULT_WORKSPACE_GRID_SCALE,
     botHasLOD,
     DEFAULT_BOT_LOD,
     calculateNumericalTagValue,
@@ -42,10 +39,9 @@ import {
     ON_ANY_MIN_LOD_ENTER_ACTION_NAME,
     ON_ANY_MAX_LOD_ENTER_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import { calculateScale, percentOfScreen } from '../SceneUtils';
+import { percentOfScreen } from '../SceneUtils';
 import type { Camera } from '@casual-simulation/three';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 export class BotLODDecorator extends AuxBot3DDecoratorBase {
     private _currentLOD: BotLOD = DEFAULT_BOT_LOD;

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import * as path from 'path';
-import * as fs from 'fs';
 import type { Config } from './config';
 import playerConfig from './player.config';
 import { loadConfig } from '../shared/ConfigUtils';
@@ -26,7 +25,7 @@ export default function (): Config {
 
     const config: Config = {
         collaboration: {
-            httpPort: 2999,
+            httpPort: parseInt(process.env.NODE_PORT) || 2999,
             tls: null,
             player: playerConfig,
             proxy: {
@@ -37,7 +36,7 @@ export default function (): Config {
             debug: false,
         },
         backend: {
-            httpPort: 2998,
+            httpPort: parseInt(process.env.BACKEND_PORT) || 2998,
             dist: path.resolve(
                 __dirname,
                 '..',

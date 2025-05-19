@@ -33,14 +33,13 @@ import {
     getScriptPrefix,
     trimPortalScript,
     calculateBotValue,
-    isBotLink,
     KNOWN_TAG_PREFIXES,
     isModule,
     parseModuleSafe,
     tweenTo,
 } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { SubscriptionLike, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { appManager } from '../../AppManager';
 import BotTag from '../BotTag/BotTag';
 import MonacoEditor from '../MonacoEditor/MonacoEditor';
@@ -56,7 +55,7 @@ import {
     getModelInfoFromUri,
 } from '../../MonacoHelpers';
 import * as monaco from '../../MonacoLibs';
-import { filter, mergeMap, tap } from 'rxjs/operators';
+import { mergeMap } from 'rxjs/operators';
 import type { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
 import CodeToolsPortal from '../CodeToolsPortal/CodeToolsPortal';

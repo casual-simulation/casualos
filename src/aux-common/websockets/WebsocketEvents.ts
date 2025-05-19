@@ -44,11 +44,10 @@ import { genericHttpRequestSchema } from '../http/GenericHttpInterface';
 import type { PublicUserInfo, ResourceKinds, SubjectType } from '../common';
 import {
     ACTION_KINDS_VALIDATION,
-    INST_ACTION_KINDS_VALIDATION,
-    READ_ACTION,
     RESOURCE_KIND_VALIDATION,
     SUBJECT_TYPE_VALIDATION,
 } from '../common';
+import type { KnownErrorCodes } from '../rpc/ErrorCodes';
 
 /**
  * Defines a websocket event.
@@ -126,6 +125,7 @@ export const websocketUploadResponseEventSchema = z.tuple([
 export type WebsocketErrorCode =
     | ServerError
     | NotSupportedError
+    | KnownErrorCodes
     | 'invalid_record_key'
     | 'unacceptable_connection_token'
     | 'invalid_token'

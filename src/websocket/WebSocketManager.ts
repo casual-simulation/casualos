@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Observable } from 'rxjs';
-import { BehaviorSubject, Subject, pipe } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { debounceTime, filter, tap } from 'rxjs/operators';
 import { ReconnectableSocket } from './ReconnectableSocket';
 

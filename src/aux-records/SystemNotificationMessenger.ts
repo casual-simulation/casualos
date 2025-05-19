@@ -20,7 +20,11 @@ import type { UserInstReport } from './ModerationStore';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 import type { ModerationFileScanLabel } from './ModerationJobProvider';
-import type { ResourceKinds } from '@casual-simulation/aux-common';
+import {
+    formatVersionNumber,
+    type ResourceKinds,
+} from '@casual-simulation/aux-common';
+import type { PackageRecordVersion } from './packages/version';
 
 /**
  * Defines an interface for a class that is able to send records notifications.
@@ -78,7 +82,8 @@ export class MultiNotificationMessenger implements SystemNotificationMessenger {
 export type RecordsNotification =
     | UserInstReportNotification
     | ModerationResourceScanNotification
-    | StudioComIdRequestNotification;
+    | StudioComIdRequestNotification
+    | PackageVersionPublishNotification;
 
 /**
  * Defines a base interface for a notification that is related to a record.
@@ -106,6 +111,11 @@ export interface ResourceNotification extends RecordsNotificationBase {
      * The ID of the resource.
      */
     resourceId: string;
+
+    /**
+     * The markers that are present on the resource.
+     */
+    markers?: string[];
 }
 
 /**
@@ -123,12 +133,27 @@ export interface UserInstReportNotification extends ResourceNotification {
 /**
  * Defines a notification that is for a user inst report.
  */
+export interface PackageVersionPublishNotification
+    extends ResourceNotification {
+    resource: 'package_version_publish';
+
+    /**
+     * The package version that was created.
+     */
+    package: PackageRecordVersion;
+}
+
+/**
+ * Defines a notification that is for a user inst report.
+ */
 export interface ModerationResourceScanNotification
     extends ResourceNotification {
+    resource: 'moderation_scan';
+
     /**
      * The kind of the resource that was scanned.
      */
-    resource: ResourceKinds;
+    resourceKind: ResourceKinds;
 
     /**
      * The name of the record that the resource was scanned in.
@@ -251,11 +276,12 @@ export function formatNotificationAsString(
             return formatUserInstReportNotificationAsString(notification);
         case 'studio_com_id_request':
             return formatStudioComIdRequestNotificationAsString(notification);
-        case 'file':
-        case 'data':
-        case 'event':
-        case 'inst':
-            return formatResourceNotificationAsString(notification);
+        case 'moderation_scan':
+            return formatModerationResourceScanNotificationAsString(
+                notification
+            );
+        case 'package_version_publish':
+            return formatPackageVersionPublishNotification(notification);
         default:
             return JSON.stringify(notification, undefined, 2);
     }
@@ -301,13 +327,13 @@ Reporting User: ${notification.request.userId ?? '(null)'}
 Requesting IP: ${notification.request.requestingIpAddress ?? '(null)'}`;
 }
 
-export function formatResourceNotificationAsString(
+export function formatModerationResourceScanNotificationAsString(
     notification: ModerationResourceScanNotification
 ): string {
     const time = DateTime.fromMillis(notification.timeMs, {
         zone: 'utc',
     }).toISO();
-    return `A ${notification.resource} was ${
+    return `A ${notification.resourceKind} was ${
         notification.action
     } for moderation labels.
 
@@ -329,4 +355,31 @@ Time: ${time}`;
             label.confidence
         })`;
     }
+}
+
+export function formatPackageVersionPublishNotification(
+    notification: PackageVersionPublishNotification
+): string {
+    const time = DateTime.fromMillis(notification.timeMs, {
+        zone: 'utc',
+    }).toISO();
+
+    let version = formatVersionNumber(
+        notification.package.key.major,
+        notification.package.key.minor,
+        notification.package.key.patch,
+        notification.package.key.tag
+    );
+
+    return `A ${notification.resource} was ${notification.action}.
+
+RecordName: ${notification.recordName}
+Address: ${notification.resourceId}
+Version: ${version}
+RequiresReview: ${notification.package.requiresReview}
+Entitlements: [${notification.package.entitlements
+        .map((e) => `${e.feature}:${e.scope}`)
+        .join(', ')}]
+Markers: [${notification.package.markers.join(', ')}]
+Time: ${time}`;
 }

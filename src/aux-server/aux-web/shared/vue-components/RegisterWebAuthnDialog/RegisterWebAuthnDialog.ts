@@ -26,10 +26,10 @@ import type {
 import { Prop, Watch } from 'vue-property-decorator';
 import type {
     CompleteWebAuthnRegistrationResult,
-    FormError,
     RequestWebAuthnRegistrationResult,
 } from '@casual-simulation/aux-records';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
+import { getFormErrors } from '@casual-simulation/aux-common';
 import type { RegistrationResponseJSON } from '@simplewebauthn/types';
 import { startRegistration } from '@simplewebauthn/browser';
 import FieldErrors from '../FieldErrors/FieldErrors';

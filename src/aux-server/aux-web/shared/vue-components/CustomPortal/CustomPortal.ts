@@ -25,7 +25,7 @@ import {
     loadText,
     reload,
 } from '@casual-simulation/aux-vm-browser';
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 

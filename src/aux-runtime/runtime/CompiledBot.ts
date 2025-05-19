@@ -26,11 +26,7 @@ import type {
     CompiledBotModules,
     CompiledBotExports,
 } from '@casual-simulation/aux-common/bots';
-import {
-    hasValue,
-    BotAction,
-    BotModule,
-} from '@casual-simulation/aux-common/bots';
+import { hasValue } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import type {
     Breakpoint,

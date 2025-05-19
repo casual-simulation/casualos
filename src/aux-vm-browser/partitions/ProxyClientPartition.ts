@@ -36,7 +36,6 @@ import type {
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { DeviceAction } from '@casual-simulation/aux-common';
 import type { Observable, Subscription } from 'rxjs';
 import { BehaviorSubject, Subject } from 'rxjs';
 import type { Remote } from 'comlink';

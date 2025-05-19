@@ -21,7 +21,6 @@ import {
     hasValue,
     ON_APP_SETUP_ACTION_NAME,
     registerHtmlApp,
-    SerializableMutationRecord,
     updateHtmlApp,
     unregisterHtmlApp,
     htmlAppMethod,
@@ -764,7 +763,7 @@ export class HtmlAppBackend implements AppBackend {
                                     cssText: value.cssText,
                                 };
                             } else {
-                                result[prop] = { ...value };
+                                result[prop] = { ...(value as object) };
                             }
                         } else if (isNamedNodeMap(value)) {
                             let attributes: { name: string; value: string }[] =

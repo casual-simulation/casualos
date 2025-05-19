@@ -15,25 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 import type { Bot, PrecalculatedBot } from '@casual-simulation/aux-common';
 import {
-    hasValue,
-    BotTags,
     calculateBotValue,
-    calculateStringTagValue,
     IMU_PORTAL,
     registerBuiltinPortal,
     formatBotRotation,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
-import { SubscriptionLike, Subscription, Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    BotManager,
     watchPortalConfigBot,
     userBotChanged,
     getPortalConfigBot,
@@ -41,11 +37,9 @@ import {
 import {
     Euler,
     MathUtils,
-    Matrix4,
     Quaternion,
     Vector3,
 } from '@casual-simulation/three';
-import { Simulation } from '@casual-simulation/aux-vm';
 import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import {
     Rotation,

@@ -17,10 +17,12 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import type { ReportInstAction } from '@casual-simulation/aux-common';
+import type {
+    ReportInstAction,
+    FormError,
+} from '@casual-simulation/aux-common';
 import {
     hasValue,
-    action,
     asyncResult,
     asyncError,
 } from '@casual-simulation/aux-common';
@@ -28,15 +30,14 @@ import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import FieldErrors from '../FieldErrors/FieldErrors';
 import { getPermalink } from '../../../aux-player/UrlUtils';
-import type { FormError, ReportReason } from '@casual-simulation/aux-records';
+import type { ReportReason } from '@casual-simulation/aux-records';
 import {
     REPORT_REASON_FIELD,
     REPORT_REASON_TEXT_FIELD,
     getFormErrors,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
 
 @Component({
     components: {
@@ -175,6 +176,7 @@ export default class ReportInstDialog extends Vue {
                 this.hideDialog();
             }
         } catch (err) {
+            console.error(err);
             if (hasValue(this._openEvent?.taskId) && this._currentSimulation) {
                 this._currentSimulation.helper.transaction(
                     asyncError(
