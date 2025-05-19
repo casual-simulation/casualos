@@ -52,6 +52,22 @@
         -   Some built-in fonts like `noto-sans-kr`.
         -   Some built-in GLTF models (like VR controller models).
         -   Some icons (some CasualOS-custom icons in the sheet portal and system portal).
+-   Added support for the `map` form.
+    -   Set `formAddress` to a [Vector](https://docs.casualos.com/tags#vector-tags) to center the map on a particular longitude and latitude.
+    -   `formMapProvider` can be set to one of the following values:
+        -   `bing`, `bingmaps` to use [Bing Maps](https://www.bing.com/maps).
+        -   `openstreetmap`, `openstreetmaps`, `osm` to use [OpenStreetMap](https://www.openstreetmap.org/).
+        -   `mapbox` to use [MapBox](https://www.mapbox.com/)
+        -   `google`, `googlemaps` to use [Google Maps](https://maps.google.com/)
+        -   `maptiler` to use [MapTiler](https://www.maptiler.com/)
+        -   `openmaptiles`, `openmaptile`, `omt` to use [OpenMapTiles](https://openmaptiles.org/)
+        -   `here`, `heremap`, `heremaps` to use [Here Maps](https://www.here.com/)
+        -   A custom URL of the format: `https://{s}.example.com/{z}/{x}/{y}.png`
+    -   `formMapProviderAPIKey` can be provided to set an API key for map providers.
+    -   `formMapLOD` can be used to set the zoom level (higher values appear more zoomed in).
+    -   `formMapHeightProvider` can be set to `maptiler` to load elevation data from the MapTiler API.
+    -   `formMapHeightProviderAPIKey` can be set to use a specific API key for the `formMapHeightProvider`.
+    -   `formMapHeightOffset` can be set to offset the displayed heights when a `formMapHeightProvider` is provided.
 
 ### :bug: Bug Fixes
 
