@@ -53,10 +53,11 @@ describe('FinancialController', () => {
     });
 
     describe('init()', () => {
-        it('should create a stripe assets account', async () => {
+        it('should create all the default accounts', async () => {
             await controller.init();
 
             expect([...financialInterface.accounts.values()]).toEqual([
+                // Cash account
                 {
                     id: 1001n,
                     debits_pending: 0n,
@@ -67,9 +68,97 @@ describe('FinancialController', () => {
                     user_data_64: 0n,
                     user_data_32: 0,
                     reserved: 0,
-                    ledger: 1,
-                    flags: AccountFlags.credits_must_not_exceed_debits,
+                    ledger: LEDGERS.usd,
+                    flags:
+                        AccountFlags.credits_must_not_exceed_debits &
+                        AccountFlags.history,
                     code: AccountCodes.assets_cash,
+                    timestamp: 0n,
+                },
+                // Stripe assets account
+                {
+                    id: 1002n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.usd,
+                    flags:
+                        AccountFlags.credits_must_not_exceed_debits &
+                        AccountFlags.history,
+                    code: AccountCodes.assets_cash,
+                    timestamp: 0n,
+                },
+                // XP Platform fees account
+                {
+                    id: 4001n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.usd,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits &
+                        AccountFlags.history,
+                    code: AccountCodes.revenue_platform_fees,
+                    timestamp: 0n,
+                },
+                // Store Platform fees account
+                {
+                    id: 4002n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.usd,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits &
+                        AccountFlags.history,
+                    code: AccountCodes.revenue_platform_fees,
+                    timestamp: 0n,
+                },
+                // USD Liquidity account
+                {
+                    id: 6001n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.usd,
+                    flags: AccountFlags.debits_must_not_exceed_credits,
+                    code: AccountCodes.liquidity_pool,
+                    timestamp: 0n,
+                },
+                // Credits Liquidity account
+                {
+                    id: 6001n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags: AccountFlags.credits_must_not_exceed_debits,
+                    code: AccountCodes.liquidity_pool,
                     timestamp: 0n,
                 },
             ]);
@@ -79,7 +168,8 @@ describe('FinancialController', () => {
     describe('createAccount()', () => {
         it('should create a new account with the specified code', async () => {
             const account = await controller.createAccount(
-                AccountCodes.assets_cash
+                AccountCodes.assets_cash,
+                LEDGERS.usd
             );
             expect(account).toEqual(
                 success({
@@ -98,8 +188,10 @@ describe('FinancialController', () => {
                     user_data_64: 0n,
                     user_data_32: 0,
                     reserved: 0,
-                    ledger: 1,
-                    flags: AccountFlags.credits_must_not_exceed_debits,
+                    ledger: LEDGERS.usd,
+                    flags:
+                        AccountFlags.credits_must_not_exceed_debits &
+                        AccountFlags.history,
                     code: AccountCodes.assets_cash,
                     timestamp: 0n,
                 },
@@ -108,7 +200,8 @@ describe('FinancialController', () => {
 
         it('should be able to create a user account', async () => {
             const account = await controller.createAccount(
-                AccountCodes.liabilities_user
+                AccountCodes.liabilities_user,
+                LEDGERS.credits
             );
             expect(account).toEqual(
                 success({
@@ -127,8 +220,10 @@ describe('FinancialController', () => {
                     user_data_64: 0n,
                     user_data_32: 0,
                     reserved: 0,
-                    ledger: 1,
-                    flags: AccountFlags.debits_must_not_exceed_credits,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits &
+                        AccountFlags.history,
                     code: AccountCodes.liabilities_user,
                     timestamp: 0n,
                 },
@@ -139,8 +234,14 @@ describe('FinancialController', () => {
     describe('getAccount()', () => {
         beforeEach(async () => {
             await controller.init();
-            await controller.createAccount(AccountCodes.assets_cash);
-            await controller.createAccount(AccountCodes.liabilities_user);
+            await controller.createAccount(
+                AccountCodes.assets_cash,
+                LEDGERS.usd
+            );
+            await controller.createAccount(
+                AccountCodes.liabilities_user,
+                LEDGERS.usd
+            );
         });
 
         it('should return the account with the specified ID', async () => {
@@ -173,10 +274,16 @@ describe('FinancialController', () => {
             unwrap(await controller.init());
 
             ({ id: account1Id } = unwrap(
-                await controller.createAccount(AccountCodes.liabilities_user)
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.credits
+                )
             ));
             ({ id: account2Id } = unwrap(
-                await controller.createAccount(AccountCodes.liabilities_user)
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.credits
+                )
             ));
         });
 
@@ -184,7 +291,7 @@ describe('FinancialController', () => {
             const result = await controller.internalTransfer({
                 transfers: [
                     {
-                        debitAccountId: ACCOUNT_IDS.stripe_assets,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
                         creditAccountId: account1Id,
                         currency: 'credits',
                         amount: 100n,
@@ -205,7 +312,7 @@ describe('FinancialController', () => {
                     amount: 100n,
                     code: TransferCodes.admin_credit,
                     credit_account_id: BigInt(account1Id),
-                    debit_account_id: ACCOUNT_IDS.stripe_assets,
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
                     flags: TransferFlags.none,
                     ledger: LEDGERS.credits,
                     pending_id: 0n,
@@ -223,7 +330,7 @@ describe('FinancialController', () => {
                 await controller.internalTransfer({
                     transfers: [
                         {
-                            debitAccountId: ACCOUNT_IDS.stripe_assets,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
                             creditAccountId: account1Id,
                             currency: 'credits',
                             amount: 1000n,
@@ -285,7 +392,7 @@ describe('FinancialController', () => {
                 transfers: [
                     {
                         transferId: 100n,
-                        debitAccountId: ACCOUNT_IDS.stripe_assets,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
                         creditAccountId: account1Id,
                         currency: 'credits',
                         amount: 100n,
@@ -300,7 +407,7 @@ describe('FinancialController', () => {
                     transferIds: ['100'],
                     // accountBalances: [
                     //     {
-                    //         accountId: ACCOUNT_IDS.stripe_assets,
+                    //         accountId: ACCOUNT_IDS.assets_stripe,
                     //         balance: -100n,
                     //     },
                     //     {
@@ -315,7 +422,7 @@ describe('FinancialController', () => {
                     id: 100n,
                     amount: 100n,
                     credit_account_id: BigInt(account1Id),
-                    debit_account_id: ACCOUNT_IDS.stripe_assets,
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
                     code: TransferCodes.admin_credit,
                     flags: TransferFlags.none,
                     ledger: LEDGERS.credits,
@@ -359,7 +466,7 @@ describe('FinancialController', () => {
                 transfers: [
                     {
                         transferId: 100n,
-                        debitAccountId: ACCOUNT_IDS.stripe_assets,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
                         creditAccountId: account1Id,
                         currency: 'credits',
                         amount: 100n,
@@ -382,7 +489,7 @@ describe('FinancialController', () => {
                     transferIds: ['100', '101'],
                     // accountBalances: [
                     //     {
-                    //         accountId: ACCOUNT_IDS.stripe_assets,
+                    //         accountId: ACCOUNT_IDS.assets_stripe,
                     //         balance: -100n,
                     //     },
                     //     {
@@ -402,7 +509,7 @@ describe('FinancialController', () => {
                     id: 100n,
                     amount: 100n,
                     credit_account_id: BigInt(account1Id),
-                    debit_account_id: ACCOUNT_IDS.stripe_assets,
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
                     code: TransferCodes.admin_credit,
                     flags: TransferFlags.linked,
                     ledger: LEDGERS.credits,

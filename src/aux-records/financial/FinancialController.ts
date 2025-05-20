@@ -57,9 +57,88 @@ export class FinancialController {
         // Ensure that the financial interface has the correct accounts
         const results = await this._financialInterface.createAccounts([
             {
-                id: ACCOUNT_IDS.stripe_assets,
+                id: ACCOUNT_IDS.assets_cash,
                 code: AccountCodes.assets_cash,
                 flags: getFlagsForAccountCode(AccountCodes.assets_cash),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.assets_stripe,
+                code: AccountCodes.assets_cash,
+                flags: getFlagsForAccountCode(AccountCodes.assets_cash),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                code: AccountCodes.revenue_platform_fees,
+                flags: getFlagsForAccountCode(
+                    AccountCodes.revenue_platform_fees
+                ),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.revenue_store_platform_fees,
+                code: AccountCodes.revenue_platform_fees,
+                flags: getFlagsForAccountCode(
+                    AccountCodes.revenue_platform_fees
+                ),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.liquidity_usd,
+                code: AccountCodes.liquidity_pool,
+                flags: getFlagsForAccountCode(AccountCodes.liquidity_pool),
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.liquidity_credits,
+                code: AccountCodes.liquidity_pool,
+                flags: getFlagsForAccountCode(AccountCodes.liquidity_pool),
                 credits_pending: 0n,
                 credits_posted: 0n,
                 debits_pending: 0n,
@@ -98,10 +177,12 @@ export class FinancialController {
      * Creates a new account with the given code.
      * For internal use only.
      * @param code The code for the new account.
+     * @param ledger The ledger for the new account.
      */
     @traced(TRACE_NAME)
     async createAccount(
-        code: AccountCodes
+        code: AccountCodes,
+        ledger: (typeof LEDGERS)[keyof typeof LEDGERS]
     ): Promise<CreateFinancialAccountResult> {
         const id = this._financialInterface.generateId();
         const results = await this._financialInterface.createAccount({
@@ -116,7 +197,7 @@ export class FinancialController {
             user_data_64: 0n,
             user_data_32: 0,
             timestamp: 0n,
-            ledger: LEDGERS.credits,
+            ledger: ledger,
             reserved: 0,
         });
 
@@ -478,9 +559,10 @@ export function getAccountBalance(account: Account): number {
             return getAssetAccountBalance(account);
         case AccountCodes.liabilities_user:
         case AccountCodes.liabilities_contract:
-        case AccountCodes.revenue_store_platform_fees:
-        case AccountCodes.revenue_xp_platform_fees:
+        case AccountCodes.revenue_platform_fees:
             return getLiabilityAccountBalance(account);
+        case AccountCodes.liquidity_pool:
+            return getLiquidityPoolBalance(account);
         // Add other cases for different account codes as needed
         default:
             throw new Error(`Unsupported account code: ${account.code}`);
@@ -502,6 +584,15 @@ export function getLiabilityAccountBalance(account: Account): number {
  * @param account The account to get the balance of.
  */
 export function getAssetAccountBalance(account: Account): number {
+    return Number(account.debits_posted - account.credits_posted);
+}
+
+/**
+ * Gets the balance of the given liquidity pool account.
+ * For liquidity accounts, the balance is calculated as: debits_posted - credits_posted.
+ * @param account The account to get the balance of.
+ */
+export function getLiquidityPoolBalance(account: Account): number {
     return Number(account.debits_posted - account.credits_posted);
 }
 

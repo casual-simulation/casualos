@@ -38,12 +38,23 @@ import { AccountFlags, CreateAccountError } from './Types';
  */
 export const LEDGERS = {
     /**
-     * The ID of the ledger for transactions denominated in credits (internal-use currency for xpExchange - has a 1:1 mapping with USD).
+     * The ID of the ledger for transactions denominated in USD.
+     * The big difference between this and credits is we allow payouts in USD to external services (e.g. Stripe, PayPal, etc.).
      */
-    credits: 1,
+    usd: 1,
+
+    /**
+     * The ID of the ledger for transactions denominated in credits (internal-use currency for in-store-credit - has a 1:1 mapping with USD).
+     */
+    credits: 2,
 };
 
 export const CurrencyCodes = {
+    /**
+     * The currency code for USD.
+     */
+    usd: 'usd',
+
     /**
      * The currency code for USD.
      */
@@ -56,7 +67,10 @@ export const CurrencyCodes = {
 export const CURRENCIES = new Map<
     (typeof LEDGERS)[keyof typeof LEDGERS],
     (typeof CurrencyCodes)[keyof typeof CurrencyCodes]
->([[LEDGERS.credits, 'credits']]);
+>([
+    [LEDGERS.credits, 'credits'],
+    [LEDGERS.usd, 'usd'],
+]);
 
 /**
  * Gets the currency code for the given account.
@@ -71,9 +85,19 @@ export function getAccountCurrency(account: Account): string {
  */
 export const ACCOUNT_IDS = {
     /**
-     * The ID of the stripe cash asset account.
+     * The ID of the cash assets account.
+     *
+     * Used for tracking cash in the system (e.g. manual payments/transfers).
+     * Compare this to other accounts which track automatic payments (e.g. Stripe).
      */
-    stripe_assets: 1001n,
+    assets_cash: 1001n,
+
+    /**
+     * The ID of the stripe asset account.
+     *
+     * Used for tracking money that was transferred to the system via Stripe.
+     */
+    assets_stripe: 1002n,
 
     /**
      * The ID of the platform fees revenue account.
@@ -84,6 +108,16 @@ export const ACCOUNT_IDS = {
      * The ID of the store platform fees revenue account.
      */
     revenue_store_platform_fees: 4102n,
+
+    /**
+     * The ID of the USD liquidity account.
+     */
+    liquidity_usd: 6001n,
+
+    /**
+     * The ID of the credits liquidity account.
+     */
+    liquidity_credits: 6002n,
 };
 
 /**
@@ -99,6 +133,7 @@ export const ACCOUNT_IDS = {
  * * * [4100] revenue from fees
  * * * * [4101] revenue from xp platform fees
  * * [5000] expenses
+ * * [6000] Liquidity
  */
 export enum AccountCodes {
     /**
@@ -119,12 +154,12 @@ export enum AccountCodes {
     /**
      * Revenue accounts from platform fees.
      */
-    revenue_xp_platform_fees = 4101, // flags.debits_must_not_exceed_credits
+    revenue_platform_fees = 4101, // flags.debits_must_not_exceed_credits
 
     /**
-     * Revenue accounts from platform fees.
+     * Liquidity pool account for currency exchanges.
      */
-    revenue_store_platform_fees = 4102, // flags.debits_must_not_exceed_credits
+    liquidity_pool = 6001,
 }
 
 /**
@@ -256,12 +291,19 @@ export interface FinancialInterface {
 export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
     switch (code) {
         case AccountCodes.assets_cash:
-            return AccountFlags.credits_must_not_exceed_debits;
+            return (
+                AccountFlags.credits_must_not_exceed_debits &
+                AccountFlags.history
+            );
         case AccountCodes.liabilities_user:
         case AccountCodes.liabilities_contract:
-        case AccountCodes.revenue_xp_platform_fees:
-        case AccountCodes.revenue_store_platform_fees:
-            return AccountFlags.debits_must_not_exceed_credits;
+        case AccountCodes.revenue_platform_fees:
+            return (
+                AccountFlags.debits_must_not_exceed_credits &
+                AccountFlags.history
+            );
+        case AccountCodes.liquidity_pool:
+            return AccountFlags.none;
         default:
             throw new Error(`Unknown account code: ${code}`);
     }

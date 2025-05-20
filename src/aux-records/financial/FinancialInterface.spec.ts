@@ -26,31 +26,37 @@ import { AccountFlags, TransferFlags } from './Types';
 describe('getFlagsForAccountCode()', () => {
     it('should require that assets_cash cannot carry a credit balance', () => {
         const flags = getFlagsForAccountCode(AccountCodes.assets_cash);
-        expect(flags).toBe(AccountFlags.credits_must_not_exceed_debits);
+        expect(flags).toBe(
+            AccountFlags.credits_must_not_exceed_debits & AccountFlags.history
+        );
     });
 
     it('should require that liabilities_user cannot carry a debit balance', () => {
         const flags = getFlagsForAccountCode(AccountCodes.liabilities_user);
-        expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
+        expect(flags).toBe(
+            AccountFlags.debits_must_not_exceed_credits & AccountFlags.history
+        );
     });
 
     it('should require that liabilities_escrow cannot carry a debit balance', () => {
-        const flags = getFlagsForAccountCode(AccountCodes.liabilities_escrow);
-        expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
+        const flags = getFlagsForAccountCode(AccountCodes.liabilities_contract);
+        expect(flags).toBe(
+            AccountFlags.debits_must_not_exceed_credits & AccountFlags.history
+        );
     });
 
-    it('should require that revenue_store_platform_fees cannot carry a debit balance', () => {
+    it('should require that revenue_platform_fees cannot carry a debit balance', () => {
         const flags = getFlagsForAccountCode(
-            AccountCodes.revenue_store_platform_fees
+            AccountCodes.revenue_platform_fees
         );
-        expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
+        expect(flags).toBe(
+            AccountFlags.debits_must_not_exceed_credits & AccountFlags.history
+        );
     });
 
-    it('should require that revenue_xp_platform_fees cannot carry a debit balance', () => {
-        const flags = getFlagsForAccountCode(
-            AccountCodes.revenue_xp_platform_fees
-        );
-        expect(flags).toBe(AccountFlags.debits_must_not_exceed_credits);
+    it('should not require flags for liquidity pools', () => {
+        const flags = getFlagsForAccountCode(AccountCodes.liquidity_pool);
+        expect(flags).toBe(AccountFlags.none);
     });
 });
 
