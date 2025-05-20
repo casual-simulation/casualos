@@ -48,12 +48,11 @@ model User {
 
     role String?
 
-    // TODO: Support giving regular users a financial
-    // account so that we can record their credits in our system
-    accountId String? @unique
     stripeAccountId String? @unique
     stripeAccountRequirementsStatus String?
     stripeAccountStatus String?
+
+    accounts FinancialAccount[]
 
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
@@ -305,6 +304,8 @@ model Studio {
     aiSloydMetrics AiSloydMetrics[]
     aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
 
+    accounts FinancialAccount[]
+
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]
 
@@ -365,7 +366,6 @@ model Record {
     purchasedItems PurchasedItem[]
 
     contracts ContractRecord[]
-    contractInvoices ContractInvoice[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -1457,6 +1457,27 @@ model StudioComIdRequest {
     updatedAt DateTime @updatedAt
 }
 
+model FinancialAccount {
+    id String @id @db.String(128)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "FinancialAccount_userId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "FinancialAccount_studioId_fkey1")
+
+    contract ContractRecord?
+
+    ledger Int
+    currency String @db.String(15)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([userId, studioId, ledger])
+}
+
+
 // A contract record is a promise of work at a certain rate
 model ContractRecord {
     id String @db.Uuid @id
@@ -1497,6 +1518,7 @@ model ContractRecord {
 
     // The id of the account which holds the money allocated to the contract
     accountId String @unique
+    account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "ContractRecord_accountId_fkey1")
 
     // The ID of the stripe checkout session that was used to pay for the contract
     stripeCheckoutSessionId String? @db.String(128) @unique
