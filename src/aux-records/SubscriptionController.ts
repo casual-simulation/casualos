@@ -2033,6 +2033,10 @@ export class SubscriptionController {
             status: event.data.object.status,
             invoice: null,
         });
+
+        return {
+            success: true,
+        };
     }
 
     @traced(TRACE_NAME)
@@ -2278,6 +2282,10 @@ export class SubscriptionController {
                 subtotal: invoice.subtotal,
             });
         }
+
+        return {
+            success: true,
+        };
     }
 
     @traced(TRACE_NAME)
