@@ -35,6 +35,8 @@ import { AccountFlags, CreateAccountError } from './Types';
 
 export type Ledgers = (typeof LEDGERS)[keyof typeof LEDGERS];
 
+export const AMOUNT_MAX: bigint = 340282366920938463463374607431768211455n; // 2^128 - 1
+
 /**
  * The map of currencies to ledger IDs that the system uses.
  */

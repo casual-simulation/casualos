@@ -25,6 +25,7 @@ import type {
     AISkyboxFeaturesConfiguration,
     AISloydFeaturesConfiguration,
     APISubscription,
+    ContractFeaturesConfiguration,
     DataFeaturesConfiguration,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
@@ -314,6 +315,29 @@ export class FeaturesBuilder {
             this._features.store.currencyLimits = {};
         }
         this._features.store.currencyLimits[currency] = limit;
+        return this;
+    }
+
+    withContracts(features?: ContractFeaturesConfiguration): this {
+        this._features.contracts = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withContractsMaxItems(maxItems: number): this {
+        this._features.contracts.maxItems = maxItems;
+        return this;
+    }
+
+    withContractsCurrencyLimit(
+        currency: string,
+        limit: ContractFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.contracts.currencyLimits) {
+            this._features.contracts.currencyLimits = {};
+        }
+        this._features.contracts.currencyLimits[currency] = limit;
         return this;
     }
 

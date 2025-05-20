@@ -29,44 +29,50 @@ import type {
 } from '../crud';
 import { CrudRecordsController } from '../crud';
 import type {
-    PackageRecordsStore,
-    PackageRecord,
-    PackageSubscriptionMetrics,
-} from './PackageRecordsStore';
+    ContractRecordsStore,
+    ContractRecord,
+    ContractSubscriptionMetrics,
+} from './ContractRecordsStore';
 import type {
     PackageFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
-import { getPackageFeatures } from '../SubscriptionConfiguration';
+import { getContractFeatures } from '../SubscriptionConfiguration';
 import { v7 as uuid } from 'uuid';
-
-const TRACE_NAME = 'PackageRecordsController';
 
 /**
  * Defines the configuration for a webhook records controller.
  */
-export interface PackageRecordsConfiguration
+export interface ContractRecordsConfiguration
     extends Omit<
-        CrudRecordsConfiguration<PackageRecord, PackageRecordsStore>,
+        CrudRecordsConfiguration<ContractRecord, ContractRecordsStore>,
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {}
 
-export type PackageRecordInput = Omit<PackageRecord, 'id'>;
+export type ContractRecordInput = Omit<ContractRecord, 'id'>;
 
 /**
  * Defines a controller that can be used to interact with NotificationRecords.
  */
-export class PackageRecordsController extends CrudRecordsController<
-    PackageRecordInput,
-    PackageRecordsStore
+export class ContractRecordsController extends CrudRecordsController<
+    ContractRecordInput,
+    ContractRecordsStore
 > {
-    constructor(config: PackageRecordsConfiguration) {
+    constructor(config: ContractRecordsConfiguration) {
         super({
             ...config,
-            name: 'PackageRecordsController',
-            resourceKind: 'package',
+            name: 'ContractRecordsController',
+            resourceKind: 'contract',
         });
     }
+
+    // TODO: decide how to prevent users from deleting/updating contracts
+    // eraseItem(request: CrudEraseItemRequest): Promise<CrudEraseItemResult> {
+    //      return {
+    //         success: false,
+
+    //      }
+    // }
 
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
@@ -74,15 +80,15 @@ export class PackageRecordsController extends CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: PackageRecord
-    ): Promise<PackageRecordsSubscriptionMetricsResult> {
+        item?: ContractRecord
+    ): Promise<ContractRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
             ownerId: context.recordOwnerId,
             studioId: context.recordStudioId,
         });
 
-        const features = getPackageFeatures(
+        const features = getContractFeatures(
             config,
             metrics.subscriptionStatus,
             metrics.subscriptionId,
@@ -95,24 +101,27 @@ export class PackageRecordsController extends CrudRecordsController<
             return {
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'Packages are not allowed for this subscription.',
+                errorMessage:
+                    'Contracts are not allowed for this subscription.',
             };
         }
 
         if (action === 'create') {
-            if (
-                typeof features.maxItems === 'number' &&
-                metrics.totalItems >= features.maxItems
-            ) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'The maximum number of package items has been reached for your subscription.',
-                };
-            }
+            // if (
+            //     typeof features.maxItems === 'number' &&
+            //     metrics.totalItems >= features.maxItems
+            // ) {
+            //     return {
+            //         success: false,
+            //         errorCode: 'subscription_limit_reached',
+            //         errorMessage:
+            //             'The maximum number of package items has been reached for your subscription.',
+            //     };
+            // }
 
             item!.id = uuid();
+            item!.issuedAtMs = Date.now();
+            item!.status = 'pending';
         }
 
         return {
@@ -124,13 +133,13 @@ export class PackageRecordsController extends CrudRecordsController<
     }
 }
 
-export type PackageRecordsSubscriptionMetricsResult =
-    | PackageRecordsSubscriptionMetricsSuccess
+export type ContractRecordsSubscriptionMetricsResult =
+    | ContractRecordsSubscriptionMetricsSuccess
     | CheckSubscriptionMetricsFailure;
 
-export interface PackageRecordsSubscriptionMetricsSuccess
+export interface ContractRecordsSubscriptionMetricsSuccess
     extends CheckSubscriptionMetricsSuccess {
     config: SubscriptionConfiguration | null;
-    metrics: PackageSubscriptionMetrics;
+    metrics: ContractSubscriptionMetrics;
     features: PackageFeaturesConfiguration;
 }

@@ -20,8 +20,8 @@ import {
     setupTestContext,
     testCrudRecordsController,
 } from '../crud/CrudRecordsControllerTests';
-import type { PackageRecordInput } from './PackageRecordsController';
-import { PackageRecordsController } from './PackageRecordsController';
+import type { ContractRecordInput } from './ContractRecordsController';
+import { ContractRecordsController } from './ContractRecordsController';
 import {
     buildSubscriptionConfig,
     subscriptionConfigBuilder,
@@ -30,29 +30,35 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import type { PackageRecordsStore } from './PackageRecordsStore';
-import { MemoryPackageRecordsStore } from './MemoryPackageRecordsStore';
+import type { ContractRecordsStore } from './ContractRecordsStore';
+import { MemoryContractRecordsStore } from './MemoryContractRecordsStore';
 
 console.log = jest.fn();
 console.error = jest.fn();
 
-describe('PackageRecordsController', () => {
+describe('ContractRecordsController', () => {
     testCrudRecordsController<
-        PackageRecordInput,
-        PackageRecordsStore,
-        PackageRecordsController
+        ContractRecordInput,
+        ContractRecordsStore,
+        ContractRecordsController
     >(
         false,
         'package',
-        (services) => new MemoryPackageRecordsStore(services.store),
+        (services) => new MemoryContractRecordsStore(services.store),
         (config, services) =>
-            new PackageRecordsController({
+            new ContractRecordsController({
                 ...config,
             }),
         (item) => ({
             address: item.address,
             markers: item.markers,
             id: item.address,
+            holdingUserId: 'holdingUser',
+            issuingUserId: 'issuingUser',
+            initialValue: 100,
+            issuedAtMs: 100,
+            rate: 1,
+            status: 'pending',
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -65,10 +71,10 @@ describe('PackageRecordsController', () => {
     );
 
     let store: MemoryStore;
-    let itemsStore: MemoryPackageRecordsStore;
+    let itemsStore: MemoryContractRecordsStore;
     let records: RecordsController;
     let policies: PolicyController;
-    let manager: PackageRecordsController;
+    let manager: ContractRecordsController;
     let key: string;
     let subjectlessKey: string;
     let realDateNow: any;
@@ -89,13 +95,13 @@ describe('PackageRecordsController', () => {
         dateNowMock.mockReturnValue(999);
 
         const context = await setupTestContext<
-            PackageRecordInput,
-            PackageRecordsStore,
-            PackageRecordsController
+            ContractRecordInput,
+            ContractRecordsStore,
+            ContractRecordsController
         >(
-            (services) => new MemoryPackageRecordsStore(services.store),
+            (services) => new MemoryContractRecordsStore(services.store),
             (config, services) => {
-                return new PackageRecordsController({
+                return new ContractRecordsController({
                     ...config,
                 });
             }
@@ -103,7 +109,7 @@ describe('PackageRecordsController', () => {
 
         services = context.services;
         store = context.store;
-        itemsStore = context.itemsStore as MemoryPackageRecordsStore;
+        itemsStore = context.itemsStore as MemoryContractRecordsStore;
         records = context.services.records;
         policies = context.services.policies;
         manager = context.manager;
@@ -190,15 +196,15 @@ describe('PackageRecordsController', () => {
 
     describe('recordItem()', () => {
         describe('create', () => {
-            it('should return subscription_limit_reached when the user has reached limit of packages', async () => {
+            it('should return subscription_limit_reached when the user has reached limit of contracts', async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
                         config.addSubscription('sub1', (sub) =>
                             sub
                                 .withTier('tier1')
                                 .withAllDefaultFeatures()
-                                .withPackages()
-                                .withPackagesMaxItems(1)
+                                .withContracts()
+                                .withContractsMaxItems(1)
                         )
                 );
 
@@ -213,6 +219,12 @@ describe('PackageRecordsController', () => {
                     id: 'id',
                     address: 'item1',
                     markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: 'holdingUser',
+                    issuingUserId: 'issuingUser',
+                    initialValue: 100,
+                    issuedAtMs: 100,
+                    rate: 1,
+                    status: 'pending',
                 });
 
                 const result = await manager.recordItem({
@@ -220,6 +232,12 @@ describe('PackageRecordsController', () => {
                     item: {
                         address: 'item2',
                         markers: [PUBLIC_READ_MARKER],
+                        holdingUserId: 'holdingUser',
+                        issuingUserId: 'issuingUser',
+                        initialValue: 100,
+                        rate: 1,
+                        status: 'pending',
+                        issuedAtMs: 100,
                     },
                     userId,
                     instances: [],
@@ -233,14 +251,14 @@ describe('PackageRecordsController', () => {
                 });
             });
 
-            it('should properly create the item with a new ID even if there is no package limit', async () => {
+            it('should properly create the item with a new ID even if there is no contract limit', async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
                         config.addSubscription('sub1', (sub) =>
                             sub
                                 .withTier('tier1')
                                 .withAllDefaultFeatures()
-                                .withPackages()
+                                .withContracts()
                         )
                 );
 
@@ -256,6 +274,12 @@ describe('PackageRecordsController', () => {
                     item: {
                         address: 'item2',
                         markers: [PUBLIC_READ_MARKER],
+                        holdingUserId: 'holdingUser',
+                        issuingUserId: 'issuingUser',
+                        initialValue: 100,
+                        rate: 1,
+                        status: 'pending',
+                        issuedAtMs: 100,
                     },
                     userId,
                     instances: [],

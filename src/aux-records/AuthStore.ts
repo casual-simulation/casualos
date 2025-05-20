@@ -1347,7 +1347,9 @@ export interface AuthCheckoutSession {
     invoiceId: string | null;
 }
 
-export type AuthCheckoutSessionItem = AuthCheckoutSessionRoleItem;
+export type AuthCheckoutSessionItem =
+    | AuthCheckoutSessionRoleItem
+    | AuthCheckoutSessionContractItem;
 
 export interface AuthCheckoutSessionRoleItem {
     /**
@@ -1374,6 +1376,30 @@ export interface AuthCheckoutSessionRoleItem {
      * The number of miliseconds that the role is being purchased for.
      */
     roleGrantTimeMs: number | null;
+}
+
+export interface AuthCheckoutSessionContractItem {
+    type: 'contract';
+
+    /**
+     * The name of the record that the contract is being purchased in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the contract.
+     */
+    contractAddress: string;
+
+    /**
+     * The ID of the contract that is being purchased.
+     */
+    contractId: string;
+
+    /**
+     * The value of the contract being purchased.
+     */
+    value: number;
 }
 
 /**
@@ -1508,4 +1534,9 @@ export interface UpdateCheckoutSessionRequest {
         AuthInvoice,
         'id' | 'subscriptionId' | 'periodId' | 'checkoutSessionId'
     > | null;
+
+    /**
+     * The transfers that should be posted/voided for the checkout session.
+     */
+    pendingTransferIds?: string[] | null;
 }

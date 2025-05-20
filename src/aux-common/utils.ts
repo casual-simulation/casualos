@@ -74,7 +74,9 @@ function decide(...vals: any[]) {
  * @param callback The callback that transforms one value into another.
  */
 export function mapValuesDeep(value: any, callback: (v: any) => any): any {
-    return isObject(value)
+    return Array.isArray(value)
+        ? value.map((v) => mapValuesDeep(v, callback))
+        : isObject(value)
         ? mapValues(value, (v) => mapValuesDeep(v, callback))
         : callback(value);
 }

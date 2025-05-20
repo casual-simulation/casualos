@@ -33,6 +33,7 @@ import { MemoryFinancialInterface } from './MemoryFinancialInterface';
 import type { Account } from './Types';
 import { AccountFlags, TransferFlags } from './Types';
 import { MemoryStore } from '../MemoryStore';
+import { mapBigInts } from '../TestUtils';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -62,16 +63,18 @@ describe('FinancialController', () => {
         it('should create all the default accounts', async () => {
             await controller.init();
 
-            expect([...financialInterface.accounts.values()]).toEqual([
+            expect(
+                mapBigInts([...financialInterface.accounts.values()])
+            ).toEqual([
                 // Cash account
                 {
-                    id: 1001n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1001,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.usd,
@@ -79,17 +82,17 @@ describe('FinancialController', () => {
                         AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
                 // Stripe assets account
                 {
-                    id: 1002n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1002,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.usd,
@@ -97,17 +100,17 @@ describe('FinancialController', () => {
                         AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
                 // XP Platform fees account
                 {
-                    id: 4101n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 4101,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.usd,
@@ -115,17 +118,17 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.revenue_platform_fees,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
                 // Store Platform fees account
                 {
-                    id: 4102n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 4102,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.usd,
@@ -133,39 +136,39 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.revenue_platform_fees,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
                 // USD Liquidity account
                 {
-                    id: 6001n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 6001,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.usd,
                     flags: AccountFlags.debits_must_not_exceed_credits,
                     code: AccountCodes.liquidity_pool,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
                 // Credits Liquidity account
                 {
-                    id: 6002n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 6002,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
                     flags: AccountFlags.credits_must_not_exceed_debits,
                     code: AccountCodes.liquidity_pool,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
             ]);
         });
@@ -183,15 +186,17 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect([...financialInterface.accounts.values()]).toEqual([
+            expect(
+                mapBigInts([...financialInterface.accounts.values()])
+            ).toEqual([
                 {
-                    id: 1n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.usd,
@@ -199,7 +204,7 @@ describe('FinancialController', () => {
                         AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
             ]);
         });
@@ -215,15 +220,17 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect([...financialInterface.accounts.values()]).toEqual([
+            expect(
+                mapBigInts([...financialInterface.accounts.values()])
+            ).toEqual([
                 {
-                    id: 1n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -231,7 +238,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_user,
-                    timestamp: 0n,
+                    timestamp: 0,
                 },
             ]);
         });
@@ -252,15 +259,15 @@ describe('FinancialController', () => {
 
         it('should return the account with the specified ID', async () => {
             const account = await controller.getAccount(1n);
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: 1,
@@ -268,7 +275,7 @@ describe('FinancialController', () => {
                         AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
         });
@@ -280,15 +287,15 @@ describe('FinancialController', () => {
                 userId: 'user1',
                 ledger: LEDGERS.credits,
             });
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -296,7 +303,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_user,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
 
@@ -328,15 +335,15 @@ describe('FinancialController', () => {
                 userId: 'user1',
                 ledger: LEDGERS.credits,
             });
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: BigInt(result.id),
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: Number(result.id),
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -344,7 +351,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_user,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
 
@@ -363,15 +370,15 @@ describe('FinancialController', () => {
                 studioId: 'studio1',
                 ledger: LEDGERS.credits,
             });
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -379,7 +386,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_studio,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
 
@@ -411,15 +418,15 @@ describe('FinancialController', () => {
                 studioId: 'studio1',
                 ledger: LEDGERS.credits,
             });
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: BigInt(result.id),
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: Number(result.id),
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -427,7 +434,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_studio,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
 
@@ -446,15 +453,15 @@ describe('FinancialController', () => {
                 contractId: 'contract1',
                 ledger: LEDGERS.credits,
             });
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1n,
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: 1,
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -462,7 +469,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_contract,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
 
@@ -494,15 +501,15 @@ describe('FinancialController', () => {
                 contractId: 'contract1',
                 ledger: LEDGERS.credits,
             });
-            expect(account).toEqual(
+            expect(mapBigInts(account)).toEqual(
                 success({
-                    id: BigInt(result.id),
-                    debits_pending: 0n,
-                    debits_posted: 0n,
-                    credits_pending: 0n,
-                    credits_posted: 0n,
-                    user_data_128: 0n,
-                    user_data_64: 0n,
+                    id: Number(result.id),
+                    debits_pending: 0,
+                    debits_posted: 0,
+                    credits_pending: 0,
+                    credits_posted: 0,
+                    user_data_128: 0,
+                    user_data_64: 0,
                     user_data_32: 0,
                     reserved: 0,
                     ledger: LEDGERS.credits,
@@ -510,7 +517,7 @@ describe('FinancialController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_contract,
-                    timestamp: 0n,
+                    timestamp: 0,
                 })
             );
 
@@ -555,17 +562,17 @@ describe('FinancialController', () => {
             const accounts = await controller.listAccounts({
                 userId: 'user1',
             });
-            expect(accounts).toEqual(
+            expect(mapBigInts(accounts)).toEqual(
                 success({
                     accounts: [
                         {
-                            id: BigInt(result.id),
-                            debits_pending: 0n,
-                            debits_posted: 0n,
-                            credits_pending: 0n,
-                            credits_posted: 0n,
-                            user_data_128: 0n,
-                            user_data_64: 0n,
+                            id: Number(result.id),
+                            debits_pending: 0,
+                            debits_posted: 0,
+                            credits_pending: 0,
+                            credits_posted: 0,
+                            user_data_128: 0,
+                            user_data_64: 0,
                             user_data_32: 0,
                             reserved: 0,
                             ledger: LEDGERS.credits,
@@ -573,16 +580,16 @@ describe('FinancialController', () => {
                                 AccountFlags.debits_must_not_exceed_credits |
                                 AccountFlags.history,
                             code: AccountCodes.liabilities_user,
-                            timestamp: 0n,
+                            timestamp: 0,
                         },
                         {
-                            id: BigInt(result2.id),
-                            debits_pending: 0n,
-                            debits_posted: 0n,
-                            credits_pending: 0n,
-                            credits_posted: 0n,
-                            user_data_128: 0n,
-                            user_data_64: 0n,
+                            id: Number(result2.id),
+                            debits_pending: 0,
+                            debits_posted: 0,
+                            credits_pending: 0,
+                            credits_posted: 0,
+                            user_data_128: 0,
+                            user_data_64: 0,
                             user_data_32: 0,
                             reserved: 0,
                             ledger: LEDGERS.usd,
@@ -590,7 +597,7 @@ describe('FinancialController', () => {
                                 AccountFlags.debits_must_not_exceed_credits |
                                 AccountFlags.history,
                             code: AccountCodes.liabilities_user,
-                            timestamp: 0n,
+                            timestamp: 0,
                         },
                     ],
                 })
@@ -620,7 +627,7 @@ describe('FinancialController', () => {
         });
 
         it('should be able to transfer money from the assets_cash account to a user account', async () => {
-            const result = await controller.internalTransfer({
+            const result = await controller.internalTransaction({
                 transfers: [
                     {
                         debitAccountId: ACCOUNT_IDS.assets_stripe,
@@ -632,34 +639,36 @@ describe('FinancialController', () => {
                 ],
             });
 
-            expect(result).toEqual(
+            expect(mapBigInts(result)).toEqual(
                 success({
                     transactionId: '3',
                     transferIds: ['4'],
                 })
             );
-            expect(financialInterface.transfers).toEqual([
-                {
-                    id: 4n,
-                    amount: 100n,
-                    code: TransferCodes.admin_credit,
-                    credit_account_id: BigInt(account1Id),
-                    debit_account_id: ACCOUNT_IDS.assets_stripe,
-                    flags: TransferFlags.none,
-                    ledger: LEDGERS.credits,
-                    pending_id: 0n,
-                    timeout: 0,
-                    timestamp: 0n,
-                    user_data_128: 3n,
-                    user_data_64: 0n,
-                    user_data_32: 0,
-                },
-            ]);
+            expect(mapBigInts(financialInterface.transfers)).toEqual(
+                mapBigInts([
+                    {
+                        id: 4,
+                        amount: 100,
+                        code: TransferCodes.admin_credit,
+                        credit_account_id: Number(account1Id),
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        flags: TransferFlags.none,
+                        ledger: LEDGERS.credits,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
+                        user_data_128: 3,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
         });
 
         it('should be able to transfer money from one user account to another', async () => {
             unwrap(
-                await controller.internalTransfer({
+                await controller.internalTransaction({
                     transfers: [
                         {
                             debitAccountId: ACCOUNT_IDS.assets_stripe,
@@ -672,7 +681,7 @@ describe('FinancialController', () => {
                 })
             );
 
-            const result = await controller.internalTransfer({
+            const result = await controller.internalTransaction({
                 transfers: [
                     {
                         debitAccountId: account1Id,
@@ -700,27 +709,27 @@ describe('FinancialController', () => {
                     // ],
                 })
             );
-            expect(financialInterface.transfers.slice(1)).toEqual([
+            expect(mapBigInts(financialInterface.transfers.slice(1))).toEqual([
                 {
-                    id: 6n,
-                    amount: 100n,
+                    id: 6,
+                    amount: 100,
                     code: TransferCodes.admin_credit,
-                    credit_account_id: BigInt(account2Id),
-                    debit_account_id: BigInt(account1Id),
+                    credit_account_id: Number(account2Id),
+                    debit_account_id: Number(account1Id),
                     flags: TransferFlags.none,
                     ledger: LEDGERS.credits,
-                    pending_id: 0n,
+                    pending_id: 0,
                     timeout: 0,
-                    timestamp: 0n,
-                    user_data_128: 5n,
-                    user_data_64: 0n,
+                    timestamp: 0,
+                    user_data_128: 5,
+                    user_data_64: 0,
                     user_data_32: 0,
                 },
             ]);
         });
 
         it('should use the given transfer Id', async () => {
-            const result = await controller.internalTransfer({
+            const result = await controller.internalTransaction({
                 transfers: [
                     {
                         transferId: 100n,
@@ -749,27 +758,29 @@ describe('FinancialController', () => {
                     // ],
                 })
             );
-            expect(financialInterface.transfers).toEqual([
-                {
-                    id: 100n,
-                    amount: 100n,
-                    credit_account_id: BigInt(account1Id),
-                    debit_account_id: ACCOUNT_IDS.assets_stripe,
-                    code: TransferCodes.admin_credit,
-                    flags: TransferFlags.none,
-                    ledger: LEDGERS.credits,
-                    pending_id: 0n,
-                    timeout: 0,
-                    timestamp: 0n,
-                    user_data_128: 3n,
-                    user_data_64: 0n,
-                    user_data_32: 0,
-                },
-            ]);
+            expect(mapBigInts(financialInterface.transfers)).toEqual(
+                mapBigInts([
+                    {
+                        id: 100,
+                        amount: 100,
+                        credit_account_id: Number(account1Id),
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        code: TransferCodes.admin_credit,
+                        flags: TransferFlags.none,
+                        ledger: LEDGERS.credits,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
+                        user_data_128: 3,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
         });
 
         it('should reject the transfer if it would cause a user account to go negative', async () => {
-            const result = await controller.internalTransfer({
+            const result = await controller.internalTransaction({
                 transfers: [
                     {
                         transferId: 100n,
@@ -782,7 +793,7 @@ describe('FinancialController', () => {
                 ],
             });
 
-            expect(result).toEqual(
+            expect(mapBigInts(result)).toEqual(
                 failure({
                     errorCode: 'debits_exceed_credits',
                     errorMessage:
@@ -794,7 +805,7 @@ describe('FinancialController', () => {
         });
 
         it('should be able to perform transfers in a transaction', async () => {
-            const result = await controller.internalTransfer({
+            const result = await controller.internalTransaction({
                 transfers: [
                     {
                         transferId: 100n,
@@ -836,42 +847,219 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(financialInterface.transfers).toEqual([
-                {
-                    id: 100n,
-                    amount: 100n,
-                    credit_account_id: BigInt(account1Id),
-                    debit_account_id: ACCOUNT_IDS.assets_stripe,
-                    code: TransferCodes.admin_credit,
-                    flags: TransferFlags.linked,
-                    ledger: LEDGERS.credits,
-                    pending_id: 0n,
-                    timeout: 0,
-                    timestamp: 0n,
+            expect(mapBigInts(financialInterface.transfers)).toEqual(
+                mapBigInts([
+                    {
+                        id: 100,
+                        amount: 100,
+                        credit_account_id: Number(account1Id),
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        code: TransferCodes.admin_credit,
+                        flags: TransferFlags.linked,
+                        ledger: LEDGERS.credits,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
 
-                    // should put the transaction id in user_data_128
-                    user_data_128: 3n,
-                    user_data_64: 0n,
-                    user_data_32: 0,
-                },
-                {
-                    id: 101n,
-                    amount: 100n,
-                    credit_account_id: BigInt(account2Id),
-                    debit_account_id: BigInt(account1Id),
-                    code: TransferCodes.admin_credit,
-                    flags: TransferFlags.none,
-                    ledger: LEDGERS.credits,
-                    pending_id: 0n,
-                    timeout: 0,
-                    timestamp: 0n,
+                        // should put the transaction id in user_data_128
+                        user_data_128: 3,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                    {
+                        id: 101,
+                        amount: 100,
+                        credit_account_id: Number(account2Id),
+                        debit_account_id: Number(account1Id),
+                        code: TransferCodes.admin_credit,
+                        flags: TransferFlags.none,
+                        ledger: LEDGERS.credits,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
 
-                    // should put the transaction id in user_data_128
-                    user_data_128: 3n,
-                    user_data_64: 0n,
-                    user_data_32: 0,
-                },
-            ]);
+                        // should put the transaction id in user_data_128
+                        user_data_128: 3,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
+        });
+
+        it('should be able to perform pending transfers in a transaction', async () => {
+            const result = await controller.internalTransaction({
+                transfers: [
+                    {
+                        transferId: 100n,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account1Id,
+                        currency: 'credits',
+                        amount: 100n,
+                        code: TransferCodes.admin_credit,
+                        pending: true,
+                    },
+                    {
+                        transferId: 101n,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account2Id,
+                        currency: 'credits',
+                        amount: 100n,
+                        code: TransferCodes.admin_credit,
+                        pending: true,
+                    },
+                ],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: '3',
+                    transferIds: ['100', '101'],
+                })
+            );
+
+            expect(mapBigInts(financialInterface.transfers)).toEqual(
+                mapBigInts([
+                    {
+                        id: 100,
+                        amount: 100,
+                        credit_account_id: Number(account1Id),
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        code: TransferCodes.admin_credit,
+                        flags: TransferFlags.linked | TransferFlags.pending,
+                        ledger: LEDGERS.credits,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 3,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                    {
+                        id: 101,
+                        amount: 100,
+                        credit_account_id: Number(account2Id),
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        code: TransferCodes.admin_credit,
+                        flags: TransferFlags.none | TransferFlags.pending,
+                        ledger: LEDGERS.credits,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 3,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
+        });
+    });
+
+    describe('completePendingTransfers()', () => {
+        let account1Id: string;
+        let account2Id: string;
+
+        const transfer1: string = '100';
+        const transfer2: string = '101';
+
+        beforeEach(async () => {
+            unwrap(await controller.init());
+
+            ({ id: account1Id } = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.credits
+                )
+            ));
+            ({ id: account2Id } = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.credits
+                )
+            ));
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: transfer1,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account1Id,
+                            currency: 'credits',
+                            amount: 100n,
+                            code: TransferCodes.admin_credit,
+                            pending: true,
+                        },
+                        {
+                            transferId: transfer2,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account2Id,
+                            currency: 'credits',
+                            amount: 100n,
+                            code: TransferCodes.admin_credit,
+                            pending: true,
+                        },
+                    ],
+                })
+            );
+        });
+
+        it('should post the given transfers', async () => {
+            const result = await controller.completePendingTransfers({
+                transfers: [transfer1, transfer2],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: '4',
+                    transferIds: ['5', '6'],
+                })
+            );
+
+            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+                mapBigInts([
+                    {
+                        id: 5,
+                        amount: Number.MAX_SAFE_INTEGER,
+                        credit_account_id: 0,
+                        debit_account_id: 0,
+                        code: 0,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.post_pending_transfer,
+                        ledger: 0,
+                        pending_id: 100,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 4,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                    {
+                        id: 6,
+                        amount: Number.MAX_SAFE_INTEGER,
+                        credit_account_id: 0,
+                        debit_account_id: 0,
+                        code: 0,
+                        flags: TransferFlags.post_pending_transfer,
+                        ledger: 0,
+                        pending_id: 101,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 4,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
         });
     });
 });

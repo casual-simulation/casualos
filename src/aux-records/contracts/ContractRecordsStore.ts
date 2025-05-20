@@ -54,7 +54,7 @@ export interface ContractRecord extends CrudRecord {
      * That is, the user who created the contract in the record.
      * (Similar to subjectId in other record types)
      */
-    issuerUserId: string;
+    issuingUserId: string;
 
     /**
      * The ID of the user that is holding the contract.
@@ -95,11 +95,6 @@ export interface ContractRecord extends CrudRecord {
     description?: string | null;
 
     /**
-     * The ID of the account that the contract has to store money in.
-     */
-    accountId: string;
-
-    /**
      * The ID of the checkout session that was created to pay for the contract, if applicable.
      */
     stripeCheckoutSessionId?: string | null;
@@ -112,10 +107,11 @@ export interface ContractRecord extends CrudRecord {
 
 /**
  * The status of a contract.
+ * - "pending" means the contract is awaiting purchase.
  * - "open" means the contract is active and can be invoiced.
  * - "closed" means the contract is no longer active and cannot be invoiced.
  */
-export type ContractStatus = 'open' | 'closed';
+export type ContractStatus = 'pending' | 'open' | 'closed';
 
 /**
  * Represents an invoice against a contract.

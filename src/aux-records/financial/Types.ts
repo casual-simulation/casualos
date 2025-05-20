@@ -955,7 +955,6 @@ export declare type ResultCallback = (
     error: Error | null,
     results: FinancialInterfaceResult[] | null
 ) => void;
-export declare const amount_max: bigint;
 export interface ClientInitArgs {
     cluster_id: bigint;
     replica_addresses: Array<string | number>;

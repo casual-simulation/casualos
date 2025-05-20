@@ -647,6 +647,15 @@ export const subscriptionFeaturesSchema = z.object({
                     'Whether contract features are granted to the user/studio.'
                 ),
 
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of contracts that can be created. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
+
             currencyLimits: currencyLimitsSchema,
         })
         .describe(
@@ -1419,12 +1428,6 @@ export function allowAllFeatures(): FeaturesConfiguration {
         packages: {
             allowed: true,
         },
-        store: {
-            allowed: true,
-        },
-        contracts: {
-            allowed: true,
-        },
     };
 }
 
@@ -1494,7 +1497,7 @@ export function getContractFeatures(
     periodStartMs?: number | null,
     periodEndMs?: number | null,
     nowMs: number = Date.now()
-): PackageFeaturesConfiguration {
+): ContractFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,

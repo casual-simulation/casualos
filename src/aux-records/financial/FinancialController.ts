@@ -28,10 +28,14 @@ import {
     success,
     unwrap,
 } from '@casual-simulation/aux-common';
-import type { TransferCodes } from './FinancialInterface';
+import type {
+    InterfaceTransferError,
+    TransferCodes,
+} from './FinancialInterface';
 import {
     ACCOUNT_IDS,
     AccountCodes,
+    AMOUNT_MAX,
     CURRENCIES,
     getFlagsForAccountCode,
     getFlagsForTransferCode,
@@ -351,7 +355,7 @@ export class FinancialController {
      * @param request The request for the transfer.
      */
     @traced(TRACE_NAME)
-    async internalTransfer(
+    async internalTransaction(
         request: InternalTransferRequest
     ): Promise<TransferResult> {
         let transfers: Transfer[] = [];
@@ -387,6 +391,10 @@ export class FinancialController {
                 flags |= TransferFlags.linked;
             }
 
+            if (transfer.pending) {
+                flags |= TransferFlags.pending;
+            }
+
             transfers.push({
                 id: transferId,
                 amount:
@@ -413,6 +421,70 @@ export class FinancialController {
 
         const transferResult = processTransferErrors(results, transfers);
 
+        return this._processTransferResult(
+            transactionId,
+            transfers,
+            transferResult
+        );
+    }
+
+    @traced(TRACE_NAME)
+    async completePendingTransfers(
+        request: PostTransfersRequest
+    ): Promise<TransferResult> {
+        let transfers: Transfer[] = [];
+        const transactionId =
+            typeof request.transactionId === 'string'
+                ? BigInt(request.transactionId)
+                : typeof request.transactionId === 'bigint'
+                ? request.transactionId
+                : this._financialInterface.generateId();
+
+        for (let i = 0; i < request.transfers.length; i++) {
+            const id = request.transfers[i];
+            const transferId = typeof id === 'string' ? BigInt(id) : id;
+
+            let flags = request.flags ?? TransferFlags.post_pending_transfer;
+
+            if (i < request.transfers.length - 1) {
+                flags |= TransferFlags.linked;
+            }
+
+            transfers.push({
+                id: this._financialInterface.generateId(),
+                amount: AMOUNT_MAX,
+                code: 0,
+                credit_account_id: 0n,
+                debit_account_id: 0n,
+                pending_id: transferId,
+                flags,
+                ledger: 0,
+                timeout: 0,
+                timestamp: 0n,
+                user_data_128: transactionId,
+                user_data_64: 0n,
+                user_data_32: 0,
+            });
+        }
+
+        const results = await this._financialInterface.createTransfers(
+            transfers
+        );
+
+        const transferResult = processTransferErrors(results, transfers);
+
+        return this._processTransferResult(
+            transactionId,
+            transfers,
+            transferResult
+        );
+    }
+
+    private _processTransferResult(
+        transactionId: bigint,
+        transfers: Transfer[],
+        transferResult: Result<void, MultiError<InterfaceTransferError>>
+    ): TransferResult {
         if (isFailure(transferResult)) {
             logErrors(
                 transferResult.error,
@@ -789,6 +861,11 @@ export interface InternalTransfer {
      * The code of the transfer.
      */
     code: TransferCodes;
+
+    /**
+     * Wether the transfer is pending or not.
+     */
+    pending?: boolean;
 }
 
 export interface InternalTransferRequest {
@@ -801,6 +878,24 @@ export interface InternalTransferRequest {
      * The ID of the transaction that should be created.
      */
     transactionId?: bigint | string | null;
+}
+
+export interface PostTransfersRequest {
+    /**
+     * The transfers that should be performed in a transcation.
+     */
+    transfers: (string | bigint)[];
+
+    /**
+     * The ID of the transaction that should be created.
+     */
+    transactionId?: bigint | string | null;
+
+    /**
+     * The flags to set on the transfers.
+     * If not specified, then post_pending_transfer will be set.
+     */
+    flags?: TransferFlags;
 }
 
 export type TransferResult = Result<

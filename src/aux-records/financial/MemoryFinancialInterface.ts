@@ -265,9 +265,33 @@ export class MemoryFinancialInterface implements FinancialInterface {
         const errs: CreateTransfersError[] = [];
         for (let i = 0; i < batch.length; i++) {
             const transfer = batch[i];
+            let pendingTransfer: Transfer | undefined;
             let valid = true;
 
-            if (transfer.credit_account_id === transfer.debit_account_id) {
+            let creditAccountId = transfer.credit_account_id;
+            let debitAccountId = transfer.debit_account_id;
+
+            if (
+                transfer.flags & TransferFlags.post_pending_transfer ||
+                transfer.flags & TransferFlags.void_pending_transfer
+            ) {
+                pendingTransfer = this._transfers.find(
+                    (t) => t.id === transfer.pending_id
+                );
+
+                if (!pendingTransfer) {
+                    valid = false;
+                    errs.push({
+                        index: i,
+                        result: CreateTransferError.pending_transfer_not_found,
+                    });
+                } else {
+                    creditAccountId = pendingTransfer.credit_account_id;
+                    debitAccountId = pendingTransfer.debit_account_id;
+                }
+            }
+
+            if (creditAccountId === debitAccountId) {
                 errs.push({
                     index: i,
                     result: CreateTransferError.accounts_must_be_different,
@@ -275,9 +299,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
                 valid = false;
             }
 
-            const creditAccount = this._accounts.get(
-                transfer.credit_account_id
-            );
+            const creditAccount = this._accounts.get(creditAccountId);
             if (!creditAccount) {
                 errs.push({
                     index: i,
@@ -286,7 +308,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
                 valid = false;
             }
 
-            const debitAccount = this._accounts.get(transfer.debit_account_id);
+            const debitAccount = this._accounts.get(debitAccountId);
             if (!debitAccount) {
                 errs.push({
                     index: i,
@@ -296,54 +318,65 @@ export class MemoryFinancialInterface implements FinancialInterface {
             }
 
             if (creditAccount && debitAccount) {
-                if (transfer.flags & TransferFlags.pending) {
-                    throw new Error('Not implemented yet!');
-                } else if (
-                    transfer.flags & TransferFlags.post_pending_transfer
+                if (
+                    creditAccount.flags &
+                    AccountFlags.credits_must_not_exceed_debits
                 ) {
-                    throw new Error('Not implemented yet!');
-                } else if (
-                    transfer.flags & TransferFlags.void_pending_transfer
+                    if (
+                        creditAccount.credits_pending +
+                            creditAccount.credits_posted +
+                            transfer.amount >
+                        debitAccount.debits_posted
+                    ) {
+                        valid = false;
+                        errs.push({
+                            index: i,
+                            result: CreateTransferError.exceeds_debits,
+                        });
+                    }
+                }
+
+                if (
+                    debitAccount.flags &
+                    AccountFlags.debits_must_not_exceed_credits
                 ) {
-                    throw new Error('Not implemented yet!');
-                } else {
-                    const creditsPosted =
-                        creditAccount.credits_posted + transfer.amount;
-                    const debitsPosted =
-                        debitAccount.debits_posted + transfer.amount;
-
                     if (
-                        creditAccount.flags &
-                        AccountFlags.credits_must_not_exceed_debits
+                        debitAccount.debits_pending +
+                            debitAccount.debits_posted +
+                            transfer.amount >
+                        debitAccount.credits_posted
                     ) {
-                        if (creditsPosted > debitAccount.debits_posted) {
-                            valid = false;
-                            errs.push({
-                                index: i,
-                                result: CreateTransferError.exceeds_debits,
-                            });
-                        }
+                        valid = false;
+                        errs.push({
+                            index: i,
+                            result: CreateTransferError.exceeds_credits,
+                        });
                     }
-                    if (
-                        debitAccount.flags &
-                        AccountFlags.debits_must_not_exceed_credits
-                    ) {
-                        if (debitsPosted > debitAccount.credits_posted) {
-                            valid = false;
-                            errs.push({
-                                index: i,
-                                result: CreateTransferError.exceeds_credits,
-                            });
-                        }
-                    }
+                }
 
-                    if (valid) {
+                if (valid) {
+                    if (transfer.flags & TransferFlags.pending) {
+                        creditAccount.credits_pending += transfer.amount;
+                        debitAccount.debits_pending += transfer.amount;
+                    } else if (
+                        transfer.flags & TransferFlags.post_pending_transfer
+                    ) {
+                        creditAccount.credits_pending -= pendingTransfer.amount;
+                        debitAccount.debits_pending -= pendingTransfer.amount;
+                        creditAccount.credits_posted += pendingTransfer.amount;
+                        debitAccount.debits_posted += pendingTransfer.amount;
+                    } else if (
+                        transfer.flags & TransferFlags.void_pending_transfer
+                    ) {
+                        creditAccount.credits_pending -= pendingTransfer.amount;
+                        debitAccount.debits_pending -= pendingTransfer.amount;
+                    } else {
                         creditAccount.credits_posted += transfer.amount;
                         debitAccount.debits_posted += transfer.amount;
-
-                        this._recordBalance(creditAccount, transfer.timestamp);
-                        this._recordBalance(debitAccount, transfer.timestamp);
                     }
+
+                    this._recordBalance(creditAccount, transfer.timestamp);
+                    this._recordBalance(debitAccount, transfer.timestamp);
                 }
             }
 

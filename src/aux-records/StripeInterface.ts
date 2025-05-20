@@ -263,6 +263,11 @@ export interface StripeCheckoutRequest {
          * The fee that should be charged for the application.
          */
         application_fee_amount?: number;
+
+        /**
+         * The transfer group that should be used for the payment.
+         */
+        transfer_group?: string;
     };
 
     /**

@@ -34,7 +34,7 @@ import {
 } from './packages/version';
 import { FileRecordsController } from './FileRecordsController';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
-import { parseSessionKey } from '@casual-simulation/aux-common';
+import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
 import { XpController } from './XpController';
 import { FinancialController, MemoryFinancialInterface } from './financial';
 
@@ -334,5 +334,18 @@ export function readableFromAsyncIterable<T>(
             }
             controller.close();
         },
+    });
+}
+
+export function mapBigInts(obj: Record<string, any>): Record<string, any> {
+    return mapValuesDeep(obj, (value) => {
+        if (typeof value === 'bigint') {
+            if (value > Number.MAX_SAFE_INTEGER) {
+                return Number.MAX_SAFE_INTEGER;
+            } else {
+                return Number(value);
+            }
+        }
+        return value;
     });
 }

@@ -27,6 +27,7 @@ import type {
 } from './AuthStore';
 import type {
     StripeAccount,
+    StripeCheckoutRequest,
     StripeCreateAccountLinkRequest,
     StripeEvent,
     StripeEventAccountUpdated,
@@ -46,7 +47,10 @@ import type {
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription } from './Utils';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { getPurchasableItemsFeatures } from './SubscriptionConfiguration';
+import {
+    getContractFeatures,
+    getPurchasableItemsFeatures,
+} from './SubscriptionConfiguration';
 import type {
     ListedStudioAssignment,
     RecordsStore,
@@ -90,8 +94,14 @@ import type { PolicyStore } from './PolicyStore';
 import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import type { FinancialController } from './financial';
-import { LEDGERS } from './financial';
+import type { FinancialController, InternalTransfer } from './financial';
+import {
+    ACCOUNT_IDS,
+    CurrencyCodes,
+    LEDGERS,
+    TransferCodes,
+} from './financial';
+import type { ContractRecordsStore } from './contracts/ContractRecordsStore';
 
 /**
  * The number of bytes that the access key secret should be.
@@ -116,6 +126,7 @@ export class SubscriptionController {
     private _policyStore: PolicyStore;
     private _purchasableItems: PurchasableItemRecordsStore;
     private _financialController: FinancialController;
+    private _contractRecords: ContractRecordsStore;
 
     constructor(
         stripe: StripeInterface,
@@ -126,7 +137,8 @@ export class SubscriptionController {
         policies: PolicyController,
         policyStore: PolicyStore,
         purchasableItems: PurchasableItemRecordsStore,
-        financialController: FinancialController
+        financialController: FinancialController,
+        contractRecords: ContractRecordsStore
     ) {
         this._stripe = stripe;
         this._auth = auth;
@@ -137,6 +149,7 @@ export class SubscriptionController {
         this._policyStore = policyStore;
         this._purchasableItems = purchasableItems;
         this._financialController = financialController;
+        this._contractRecords = contractRecords;
     }
 
     private async _getConfig() {
@@ -1481,6 +1494,385 @@ export class SubscriptionController {
         }
     }
 
+    async createPurchaseContractLink(
+        request: CreatePurchaseContractLinkRequest
+    ): Promise<CreatePurchaseItemLinkResult> {
+        try {
+            const context = await this._policies.constructAuthorizationContext({
+                recordKeyOrRecordName: request.contract.recordName,
+                userId: request.userId,
+            });
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const item = await this._contractRecords.getItemByAddress(
+                request.contract.recordName,
+                request.contract.address
+            );
+
+            if (!item) {
+                return {
+                    success: false,
+                    errorCode: 'item_not_found',
+                    errorMessage: 'The item could not be found.',
+                };
+            }
+
+            if (item.status !== 'pending') {
+                return {
+                    success: false,
+                    errorCode: 'item_already_purchased',
+                    errorMessage: 'The contract has already been purchased.',
+                };
+            }
+
+            // TODO: Pull this from the contract.
+            const currency = 'usd';
+            if (
+                currency !== request.contract.currency ||
+                item.initialValue !== request.contract.expectedCost
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price of the contract.',
+                };
+            }
+
+            const contractAccount =
+                await this._financialController.getOrCreateFinancialAccount({
+                    contractId: item.id,
+                    ledger: LEDGERS.usd,
+                });
+
+            if (isFailure(contractAccount)) {
+                logError(
+                    contractAccount.error,
+                    `[SubscriptionController] [createPurchaseContractLink] Failed to get USD financial account for contract: ${item.id}`
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'Failed to get a financial account for the contract.',
+                };
+            }
+
+            const recordName = context.context.recordName;
+            const authorization =
+                await this._policies.authorizeUserAndInstances(
+                    context.context,
+                    {
+                        userId: request.userId,
+                        resourceKind: 'contract',
+                        resourceId: item.address,
+                        markers: item.markers,
+                        action: 'purchase',
+                        instances: request.instances,
+                    }
+                );
+
+            if (authorization.success === false) {
+                return authorization;
+            }
+
+            const metrics = await this._contractRecords.getSubscriptionMetrics({
+                ownerId: context.context.recordOwnerId,
+                studioId: context.context.recordStudioId,
+            });
+            const config = await this._getConfig();
+            const features = getContractFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                metrics.subscriptionType,
+                metrics.currentPeriodStartMs,
+                metrics.currentPeriodEndMs
+            );
+
+            if (!features.allowed) {
+                console.log(
+                    `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`
+                );
+                return {
+                    success: false,
+                    errorCode: 'store_disabled',
+                    errorMessage:
+                        'The account you are trying to purchase the contract for is disabled.',
+                };
+            }
+
+            // TODO: Validate that the holding user has setup stripe and is active.
+
+            // if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
+            //     console.log(
+            //         `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store has no stripe account.`
+            //     );
+            //     return {
+            //         success: false,
+            //         errorCode: 'store_disabled',
+            //         errorMessage:
+            //             'The store you are trying to purchase from is disabled.',
+            //     };
+            // }
+
+            // if (metrics.stripeAccountStatus !== 'active') {
+            //     console.log(
+            //         `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store stripe account is not active.`
+            //     );
+            //     return {
+            //         success: false,
+            //         errorCode: 'store_disabled',
+            //         errorMessage:
+            //             'The store you are trying to purchase from is disabled.',
+            //     };
+            // }
+
+            const limits = features.currencyLimits[currency];
+
+            if (!limits) {
+                console.log(
+                    `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency}] Currency not supported.`
+                );
+                return {
+                    success: false,
+                    errorCode: 'currency_not_supported',
+                    errorMessage: 'The currency is not supported.',
+                };
+            }
+
+            if (
+                item.initialValue !== 0 &&
+                (item.initialValue < limits.minCost ||
+                    item.initialValue > limits.maxCost)
+            ) {
+                console.log(
+                    `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} initialValue: ${item.initialValue}] Cost not valid.`
+                );
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The item you are trying to purchase has a price that is not allowed.',
+                };
+            }
+
+            let applicationFee = 0;
+            if (item.initialValue !== 0 && limits.fee) {
+                if (limits.fee.type === 'percent') {
+                    // calculate percent when fee is between 1 - 100
+                    applicationFee = Math.ceil(
+                        item.initialValue * (limits.fee.percent / 100)
+                    );
+                } else {
+                    // if (limits.fee.amount > item.initialValue) {
+                    //     console.warn(
+                    //         `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} fee: ${limits.fee.amount} initialValue: ${item.initialValue}] Fee greater than cost.`
+                    //     );
+                    //     return {
+                    //         success: false,
+                    //         errorCode: 'server_error',
+                    //         errorMessage:
+                    //             'The application fee is greater than the cost of the item.',
+                    //     };
+                    // }
+                    applicationFee = limits.fee.amount;
+                }
+            }
+
+            let customerEmail: string = null;
+            if (request.userId) {
+                const user = await this._authStore.findUser(request.userId);
+
+                if (!user) {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage: 'The user could not be found.',
+                    };
+                }
+
+                // const roles = await this._policyStore.listRolesForUser(
+                //     recordName,
+                //     user.id
+                // );
+                // const hasRole = roles.some(
+                //     (r) =>
+                //         r.role === item.roleName &&
+                //         (!r.expireTimeMs || r.expireTimeMs > Date.now())
+                // );
+
+                // if (hasRole) {
+                //     return {
+                //         success: false,
+                //         errorCode: 'item_already_purchased',
+                //         errorMessage:
+                //             'You already have the role that the item would grant.',
+                //     };
+                // }
+
+                customerEmail = user.email ?? null;
+            }
+
+            const sessionId = uuid();
+
+            console.log(
+                `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.contract.currency} initialValue: ${item.initialValue} applicationFee: ${applicationFee}] Creating checkout session.`
+            );
+            const transfers: InternalTransfer[] = [
+                {
+                    amount: item.initialValue,
+                    code: TransferCodes.contract_payment,
+                    creditAccountId: contractAccount.value.id,
+                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                    currency: CurrencyCodes.usd,
+                },
+            ];
+            const lineItems: StripeCheckoutRequest['line_items'] = [
+                {
+                    price_data: {
+                        currency: currency,
+                        unit_amount: item.initialValue,
+                        product_data: {
+                            name: 'Contract',
+                            description: item.description,
+                            images: [],
+                            metadata: {
+                                resourceKind: 'contract',
+                                recordName: recordName,
+                                address: item.address,
+                            },
+                            // tax_code: item.taxCode ?? undefined,
+                        },
+                    },
+                    quantity: 1,
+                },
+            ];
+
+            if (applicationFee > 0) {
+                transfers.push({
+                    amount: applicationFee,
+                    code: TransferCodes.xp_platform_fee,
+                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                    creditAccountId: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    currency: CurrencyCodes.usd,
+                });
+                lineItems.push({
+                    price_data: {
+                        currency,
+                        unit_amount: applicationFee,
+                        product_data: {
+                            name: 'Application Fee',
+                            description: item.description,
+                            images: [],
+                            metadata: {
+                                fee: true,
+                                resourceKind: 'contract',
+                                recordName: recordName,
+                                address: item.address,
+                            },
+                        },
+                    },
+                    quantity: 1,
+                });
+            }
+
+            const transferResult =
+                await this._financialController.internalTransaction({
+                    transfers,
+                });
+
+            if (isFailure(transferResult)) {
+                logError(
+                    transferResult.error,
+                    `[SubscriptionController] [createPurchaseContractLink] Failed to create internal transfer for contract: ${item.id}`
+                );
+                // TODO: Map out better error codes
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'Failed to create internal transfer for contract.',
+                };
+            }
+
+            const session = await this._stripe.createCheckoutSession({
+                mode: 'payment',
+                line_items: lineItems,
+                success_url: fulfillmentRoute(config.returnUrl, sessionId),
+                cancel_url: request.returnUrl,
+                client_reference_id: sessionId,
+                customer_email: customerEmail,
+                metadata: {
+                    userId: request.userId,
+                    checkoutSessionId: sessionId,
+                },
+                payment_intent_data: {
+                    // application_fee_amount: applicationFee,
+                    transfer_group: item.id,
+                },
+                // connect: {
+                //     stripeAccount: metrics.,
+                // },
+            });
+
+            await this._authStore.updateCheckoutSessionInfo({
+                id: sessionId,
+                stripeCheckoutSessionId: session.id,
+                invoice: session.invoice
+                    ? {
+                          currency: session.invoice.currency,
+                          paid: session.invoice.paid,
+                          description: session.invoice.description,
+                          status: session.invoice.status,
+                          stripeInvoiceId: session.invoice.id,
+                          stripeHostedInvoiceUrl:
+                              session.invoice.hosted_invoice_url,
+                          stripeInvoicePdfUrl: session.invoice.invoice_pdf,
+                          tax: session.invoice.tax,
+                          total: session.invoice.total,
+                          subtotal: session.invoice.subtotal,
+                      }
+                    : null,
+                userId: request.userId,
+                status: session.status,
+                paymentStatus: session.payment_status,
+                paid:
+                    session.payment_status === 'paid' ||
+                    session.payment_status === 'no_payment_required',
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'contract',
+                        recordName: recordName,
+                        contractAddress: item.address,
+                        contractId: item.id,
+                        value: item.initialValue,
+                    },
+                ],
+            });
+
+            return {
+                success: true,
+                url: session.url,
+                sessionId: sessionId,
+            };
+        } catch (err) {
+            console.error(
+                '[SubscriptionController] An error occurred while creating a purchase item link:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     async fulfillCheckoutSession(
         request: FulfillCheckoutSessionRequest
     ): Promise<FulfillCheckoutSessionResult> {
@@ -2075,6 +2467,7 @@ export class SubscriptionController {
         };
     }
 
+    @traced(TRACE_NAME)
     private async _handleStudioStripeAccountUpdatedEvent(
         account: StripeAccount,
         studio: Studio
@@ -2112,6 +2505,7 @@ export class SubscriptionController {
         };
     }
 
+    @traced(TRACE_NAME)
     private async _handleUserStripeAccountUpdatedEvent(
         account: StripeAccount,
         user: AuthUser
@@ -3017,6 +3411,54 @@ export interface CreatePurchaseItemLinkFailure {
         | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
+}
+
+export interface CreatePurchaseContractLinkRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instances that the request is being made from.
+     */
+    instances: string[];
+
+    /**
+     * The contract that is being purchased.
+     */
+    contract: {
+        /**
+         * The name of the record that the contract is stored in.
+         */
+        recordName: string;
+
+        /**
+         * The address of the contract.
+         */
+        address: string;
+
+        /**
+         * The expected cost of the contract.
+         */
+        expectedCost: number;
+
+        /**
+         * The currency that the cost is in.
+         */
+        currency: string;
+    };
+
+    /**
+     * The URL that the user should be redirected to if the purchase is canceled.
+     */
+    returnUrl: string;
+
+    /**
+     * The URL that the user should be redirected to if the purchase is unsuccessful.
+     */
+    successUrl: string;
 }
 
 export interface FulfillCheckoutSessionRequest {
