@@ -115,6 +115,66 @@ export const webhookFeaturesSchema = z
         allowed: false,
     });
 
+const currencyLimitsSchema = z
+    .object({})
+    .catchall(
+        z.object({
+            maxCost: z
+                .number()
+                .describe(
+                    'The maximum cost that items can have in this currency.'
+                )
+                .positive()
+                .int(),
+            minCost: z
+                .number()
+                .describe(
+                    "The minimum cost that items can have in this currency. Note that this doesn't prevent free items, it only sets the minimum cost for a non-free item."
+                )
+                .positive()
+                .int(),
+            fee: z
+                .discriminatedUnion('type', [
+                    z.object({
+                        type: z.literal('percent'),
+                        percent: z
+                            .number()
+                            .describe(
+                                'The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100'
+                            )
+                            .int()
+                            .min(0)
+                            .max(100),
+                    }),
+                    z.object({
+                        type: z.literal('fixed'),
+                        amount: z
+                            .number()
+                            .describe(
+                                'The fixed amount in cents that should be charged as a fee. Must be a positive integer.'
+                            )
+                            .int()
+                            .positive(),
+                    }),
+                ])
+                .describe(
+                    'The fee that should be charged for purchases in this currency. If omitted, then there is no fee.'
+                )
+                .optional()
+                .nullable(),
+        })
+    )
+    .describe(
+        'The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed'
+    )
+    .optional()
+    .default({
+        usd: {
+            maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+            minCost: 50, // $0.50 US Dollars (USD)
+        },
+    });
+
 export const subscriptionFeaturesSchema = z.object({
     records: z
         .object({
@@ -569,68 +629,28 @@ export const subscriptionFeaturesSchema = z.object({
                 .int()
                 .optional(),
 
-            currencyLimits: z
-                .object({})
-                .catchall(
-                    z.object({
-                        maxCost: z
-                            .number()
-                            .describe(
-                                'The maximum cost that items can have in this currency.'
-                            )
-                            .positive()
-                            .int(),
-                        minCost: z
-                            .number()
-                            .describe(
-                                "The minimum cost that items can have in this currency. Note that this doesn't prevent free items, it only sets the minimum cost for a non-free item."
-                            )
-                            .positive()
-                            .int(),
-                        fee: z
-                            .discriminatedUnion('type', [
-                                z.object({
-                                    type: z.literal('percent'),
-                                    percent: z
-                                        .number()
-                                        .describe(
-                                            'The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100'
-                                        )
-                                        .int()
-                                        .min(0)
-                                        .max(100),
-                                }),
-                                z.object({
-                                    type: z.literal('fixed'),
-                                    amount: z
-                                        .number()
-                                        .describe(
-                                            'The fixed amount in cents that should be charged as a fee. Must be a positive integer.'
-                                        )
-                                        .int()
-                                        .positive(),
-                                }),
-                            ])
-                            .describe(
-                                'The fee that should be charged for purchases in this currency. If omitted, then there is no fee.'
-                            )
-                            .optional()
-                            .nullable(),
-                    })
-                )
-                .describe(
-                    'The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed'
-                )
-                .optional()
-                .default({
-                    usd: {
-                        maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
-                        minCost: 50, // $0.50 US Dollars (USD)
-                    },
-                }),
+            currencyLimits: currencyLimitsSchema,
         })
         .describe(
             'The configuration for purchasable items features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
+
+    contracts: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether contract features are granted to the user/studio.'
+                ),
+
+            currencyLimits: currencyLimitsSchema,
+        })
+        .describe(
+            'The configuration for contract features. Defaults to not allowed'
         )
         .optional()
         .default({
@@ -1087,6 +1107,11 @@ export interface FeaturesConfiguration {
      * The configuration for purchasable items features.
      */
     store?: PurchasableItemFeaturesConfiguration;
+
+    /**
+     * The configuration for contract features.
+     */
+    contracts?: ContractFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1345,6 +1370,10 @@ export type PurchasableItemFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['store'];
 
+export type ContractFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['contracts'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -1388,6 +1417,12 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         packages: {
+            allowed: true,
+        },
+        store: {
+            allowed: true,
+        },
+        contracts: {
             allowed: true,
         },
     };
@@ -1438,7 +1473,38 @@ export function denyAllFeatures(): FeaturesConfiguration {
         packages: {
             allowed: false,
         },
+        contracts: {
+            allowed: false,
+        },
     };
+}
+
+/**
+ * Gets the contract features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getContractFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): PackageFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.contracts ?? { allowed: false };
 }
 
 /**

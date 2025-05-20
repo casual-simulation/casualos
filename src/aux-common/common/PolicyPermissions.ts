@@ -47,6 +47,8 @@ export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
 export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
 export const PURCHASABLE_ITEM_RESOURCE_KIND = 'purchasableItem';
+export const CONTRACT_RESOURCE_KIND = 'contract';
+export const INVOICE_RESOURCE_KIND = 'invoice';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -69,7 +71,9 @@ export type ResourceKinds =
     | 'ai.sloyd'
     | 'ai.hume'
     | 'ai.openai.realtime'
-    | 'purchasableItem';
+    | 'purchasableItem'
+    | 'contract'
+    | 'invoice';
 
 export const READ_ACTION = 'read';
 export const CREATE_ACTION = 'create';
@@ -92,6 +96,7 @@ export const SUBSCRIBE_ACTION = 'subscribe';
 export const UNSUBSCRIBE_ACTION = 'unsubscribe';
 export const LIST_SUBSCRIPTIONS_ACTION = 'listSubscriptions';
 export const PURCHASE_ACTION = 'purchase';
+export const APPROVE_ACTION = 'approve';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -120,7 +125,8 @@ export type ActionKinds =
     | 'subscribe'
     | 'unsubscribe'
     | 'listSubscriptions'
-    | 'purchase';
+    | 'purchase'
+    | 'approve';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -288,6 +294,34 @@ export type PurchasableItemActionKinds =
     | 'purchase';
 
 /**
+ * The possible types of actions that can be performed on contract resources.
+ *
+ * @dochash types/permissions
+ * @docname ContractActionKinds
+ */
+export type ContractActionKinds =
+    | 'read'
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'purchase';
+
+/**
+ * The possible types of actions that can be performed on invoice resources.
+ *
+ * @dochash types/permissions
+ * @docname InvoiceActionKinds
+ */
+export type InvoiceActionKinds =
+    | 'read'
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'approve';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -420,6 +454,24 @@ export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = z.enum([
     PURCHASE_ACTION,
 ]);
 
+export const CONTRACT_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    PURCHASE_ACTION,
+]);
+
+export const INVOICE_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    APPROVE_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -436,6 +488,8 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     PACKAGE_RESOURCE_KIND,
     PACKAGE_VERSION_RESOURCE_KIND,
     PURCHASABLE_ITEM_RESOURCE_KIND,
+    CONTRACT_RESOURCE_KIND,
+    INVOICE_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -467,6 +521,8 @@ export const ACTION_KINDS_VALIDATION = z.enum([
     LIST_SUBSCRIPTIONS_ACTION,
 
     PURCHASE_ACTION,
+
+    APPROVE_ACTION,
 ]);
 
 /**
@@ -1121,6 +1177,66 @@ type ZodPurchasableItemPermissionAssertion = HasType<
     PurchasableItemPermission
 >;
 
+/**
+ * Defines an interface that describes common options for all contract permissions.
+ *
+ * @dochash types/permissions
+ * @docname ContractPermission
+ */
+export interface ContractPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'contract';
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId: string | null;
+
+    action: ContractActionKinds | null;
+}
+export const CONTRACT_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(CONTRACT_RESOURCE_KIND),
+    action: CONTRACT_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodContractPermission = z.infer<typeof CONTRACT_PERMISSION_VALIDATION>;
+type ZodContractPermissionAssertion = HasType<
+    ZodContractPermission,
+    ContractPermission
+>;
+
+/**
+ * Defines an interface that describes common options for all invoice permissions.
+ *
+ * @dochash types/permissions
+ * @docname InvoicePermission
+ */
+export interface InvoicePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'invoice';
+
+    /**
+     * The ID of the resource that is allowed.
+     * If null, then all resources are allowed.
+     */
+    resourceId: string | null;
+
+    action: InvoiceActionKinds | null;
+}
+export const INVOICE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(INVOICE_RESOURCE_KIND),
+    action: INVOICE_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodInvoicePermission = z.infer<typeof INVOICE_PERMISSION_VALIDATION>;
+type ZodInvoicePermissionAssertion = HasType<
+    ZodInvoicePermission,
+    InvoicePermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -1139,6 +1255,8 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         PACKAGE_PERMISSION_VALIDATION,
         PACKAGE_VERSION_PERMISSION_VALIDATION,
         PURCHASABLE_ITEM_PERMISSION_VALIDATION,
+        CONTRACT_PERMISSION_VALIDATION,
+        INVOICE_PERMISSION_VALIDATION,
     ]
 );
 
