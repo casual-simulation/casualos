@@ -69,7 +69,7 @@ import type {
     FinancialController,
     MemoryFinancialInterface,
 } from './financial';
-import { AccountCodes, AccountFlags } from './financial';
+import { AccountCodes, AccountFlags, LEDGERS } from './financial';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -4709,7 +4709,6 @@ describe('SubscriptionController', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                accountId: 'financialAccountId',
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
                 stripeAccountRequirementsStatus: 'complete',
@@ -4742,7 +4741,6 @@ describe('SubscriptionController', () => {
             expect(user.stripeAccountId).toBe('accountId');
             expect(user.stripeAccountRequirementsStatus).toBe('complete');
             expect(user.stripeAccountStatus).toBe('active');
-            expect(user.accountId).toBe('financialAccountId');
         });
 
         it('should create a link to onboard the user if the requirements are incomplete', async () => {
@@ -4753,7 +4751,6 @@ describe('SubscriptionController', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                accountId: 'financialAccountId',
                 stripeAccountId: 'accountId',
                 stripeAccountStatus: 'active',
                 stripeAccountRequirementsStatus: 'incomplete',
@@ -4799,7 +4796,6 @@ describe('SubscriptionController', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                accountId: 'financialAccountId',
                 stripeAccountId: null,
                 stripeAccountStatus: null,
                 stripeAccountRequirementsStatus: null,
@@ -4855,7 +4851,6 @@ describe('SubscriptionController', () => {
             const user = await store.findUser(userId);
             await store.saveUser({
                 ...user,
-                accountId: null,
             });
 
             const result = await controller.createManageXpAccountLink({
@@ -4868,10 +4863,14 @@ describe('SubscriptionController', () => {
                 })
             );
 
-            await expect(store.findUser(userId)).resolves.toEqual({
-                ...user,
-                accountId: '1',
-            });
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: '1',
+                    userId: userId,
+                    ledger: LEDGERS.usd,
+                    currency: 'usd',
+                },
+            ]);
 
             expect([...financialInterface.accounts.values()]).toEqual([
                 {
@@ -4885,7 +4884,9 @@ describe('SubscriptionController', () => {
                     user_data_32: 0,
                     reserved: 0,
                     ledger: 1,
-                    flags: AccountFlags.debits_must_not_exceed_credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
                     code: AccountCodes.liabilities_user,
                     timestamp: 0n,
                 },
@@ -8087,22 +8088,22 @@ describe('SubscriptionController', () => {
             });
         });
 
-        describe.only('xp', () => {
+        describe('xp', () => {
             let user: AuthUser;
 
             beforeEach(async () => {
                 store.subscriptionConfiguration = createTestSubConfiguration();
 
                 const userAccount = unwrap(
-                    await financialController.createAccount(
-                        AccountCodes.liabilities_user
-                    )
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.usd,
+                    })
                 );
                 user = await store.findUser(userId);
 
                 user = {
                     ...user,
-                    accountId: userAccount.id,
                     stripeAccountId: 'account_id',
                     stripeAccountRequirementsStatus: null,
                     stripeAccountStatus: null,

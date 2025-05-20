@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    MultiError,
     Result,
     ServerError,
     SimpleError,
@@ -25,11 +26,13 @@ import {
     isFailure,
     logErrors,
     success,
+    unwrap,
 } from '@casual-simulation/aux-common';
 import type { TransferCodes } from './FinancialInterface';
 import {
     ACCOUNT_IDS,
     AccountCodes,
+    CURRENCIES,
     getFlagsForAccountCode,
     getFlagsForTransferCode,
     getMessageForAccountError,
@@ -39,17 +42,27 @@ import {
     type FinancialInterface,
 } from './FinancialInterface';
 import type { Account, CreateTransferError, Transfer } from './Types';
-import { CreateAccountError, TransferFlags } from './Types';
+import { AccountFlags, CreateAccountError, TransferFlags } from './Types';
 import { traced } from '../tracing/TracingDecorators';
+import type {
+    FinancialAccountFilter,
+    FinancialStore,
+    UniqueFinancialAccountFilter,
+} from './FinancialStore';
 
 const TRACE_NAME = 'FinancialController';
 
 export class FinancialController {
     private _financialInterface: FinancialInterface;
     private _idempotentKeyMaxAgeMS = 3600000; // 1 hour
+    private _financialStore: FinancialStore;
 
-    constructor(financialInterface: FinancialInterface) {
+    constructor(
+        financialInterface: FinancialInterface,
+        financialStore: FinancialStore
+    ) {
         this._financialInterface = financialInterface;
+        this._financialStore = financialStore;
     }
 
     @traced(TRACE_NAME)
@@ -123,7 +136,9 @@ export class FinancialController {
             {
                 id: ACCOUNT_IDS.liquidity_usd,
                 code: AccountCodes.liquidity_pool,
-                flags: getFlagsForAccountCode(AccountCodes.liquidity_pool),
+                flags:
+                    getFlagsForAccountCode(AccountCodes.liquidity_pool) |
+                    AccountFlags.debits_must_not_exceed_credits,
                 credits_pending: 0n,
                 credits_posted: 0n,
                 debits_pending: 0n,
@@ -138,7 +153,9 @@ export class FinancialController {
             {
                 id: ACCOUNT_IDS.liquidity_credits,
                 code: AccountCodes.liquidity_pool,
-                flags: getFlagsForAccountCode(AccountCodes.liquidity_pool),
+                flags:
+                    getFlagsForAccountCode(AccountCodes.liquidity_pool) |
+                    AccountFlags.credits_must_not_exceed_debits,
                 credits_pending: 0n,
                 credits_posted: 0n,
                 debits_pending: 0n,
@@ -244,6 +261,85 @@ export class FinancialController {
         }
 
         return success(account);
+    }
+
+    /**
+     * Gets or creates a financial account for the given filter.
+     * @param filter The filter to use.
+     */
+    @traced(TRACE_NAME)
+    async getOrCreateFinancialAccount(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<GetFinancialAccountResult> {
+        const account = await this._financialStore.getAccountByFilter(filter);
+
+        if (!account) {
+            console.log(
+                `[FinancialController] [getOrCreateFinancialAccount] Creating account for filter [userId: ${filter.userId}, studioId: ${filter.studioId}, contractId: ${filter.contractId}] on ledger ${filter.ledger}`
+            );
+
+            let result: CreateFinancialAccountResult;
+            if (filter.userId) {
+                result = await this.createAccount(
+                    AccountCodes.liabilities_user,
+                    filter.ledger
+                );
+            } else if (filter.studioId) {
+                result = await this.createAccount(
+                    AccountCodes.liabilities_studio,
+                    filter.ledger
+                );
+            } else if (filter.contractId) {
+                result = await this.createAccount(
+                    AccountCodes.liabilities_contract,
+                    filter.ledger
+                );
+            }
+
+            if (isFailure(result)) {
+                return result;
+            }
+
+            await this._financialStore.createAccount({
+                id: result.value.id.toString(),
+                userId: filter.userId,
+                studioId: filter.studioId,
+                contractId: filter.contractId,
+                ledger: filter.ledger,
+                currency: CURRENCIES.get(filter.ledger),
+            });
+
+            return await this.getAccount(result.value.id);
+        }
+
+        return await this.getAccount(account.id);
+    }
+
+    /**
+     * Gets the list of accounts for the given filter.
+     * @param filter The filter to use.
+     */
+    async listAccounts(
+        filter: FinancialAccountFilter
+    ): Promise<GetAccountsResult> {
+        const accounts = await this._financialStore.listAccounts(filter);
+        const results = await Promise.all(
+            accounts.map((account) => this.getAccount(account.id))
+        );
+
+        const errors = results.filter((result) => isFailure(result));
+
+        if (errors.length > 0) {
+            return failure({
+                errorCode: 'multi_error',
+                errorMessage: 'Some accounts could not be retrieved.',
+                errors: errors.map((e) => e.error),
+            });
+        }
+
+        return success({
+            accounts: results.map((r) => unwrap(r)),
+        });
     }
 
     /**
@@ -639,6 +735,13 @@ export type CreateFinancialAccountResult = Result<
 >;
 
 export type GetFinancialAccountResult = Result<Account | null, SimpleError>;
+
+export type GetAccountsResult = Result<
+    {
+        accounts: Account[];
+    },
+    MultiError<SimpleError>
+>;
 
 export type TransferError = {
     errorCode:

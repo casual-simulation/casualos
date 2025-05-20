@@ -110,7 +110,10 @@ export function createTestControllers(
         packagesStore
     );
     const financialInterface = new MemoryFinancialInterface();
-    const financialController = new FinancialController(financialInterface);
+    const financialController = new FinancialController(
+        financialInterface,
+        store
+    );
     const policies = new PolicyController(
         auth,
         records,
@@ -222,13 +225,13 @@ export async function createTestUser(
     };
 }
 
-export async function createTestXpUser(
-    xpController: XpController,
-    ...createTestUserParams: Parameters<typeof createTestUser>
-) {
-    const authUser = await createTestUser(...createTestUserParams);
-    return await xpController.getXpUser({ userId: authUser.userId });
-}
+// export async function createTestXpUser(
+//     xpController: XpController,
+//     ...createTestUserParams: Parameters<typeof createTestUser>
+// ) {
+//     const authUser = await createTestUser(...createTestUserParams);
+//     return await xpController.getXpUser({ userId: authUser.userId });
+// }
 
 export async function createTestRecordKey(
     { records }: Pick<TestServices, 'records'>,

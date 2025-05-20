@@ -91,7 +91,7 @@ import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import type { FinancialController } from './financial';
-import { AccountCodes } from './financial';
+import { LEDGERS } from './financial';
 
 /**
  * The number of bytes that the access key secret should be.
@@ -1028,30 +1028,20 @@ export class SubscriptionController {
         let updatedUser = false;
 
         const config = await this._config.getSubscriptionConfiguration();
-        if (!user.accountId) {
-            console.log(
-                `[SubscriptionController] [createManageXpAccountLink] User does not have a financial account. Creating one.`
+        const account =
+            await this._financialController.getOrCreateFinancialAccount({
+                userId: user.id,
+                ledger: LEDGERS.usd,
+            });
+        if (isFailure(account)) {
+            logError(
+                account.error,
+                `[SubscriptionController] [createManageXpAccountLink] Failed to get USD financial account for user: ${user.id}`
             );
-            const account = await this._financialController.createAccount(
-                AccountCodes.liabilities_user
-            );
-
-            if (isFailure(account)) {
-                logError(
-                    account.error,
-                    `[SubscriptionController] [createManageXpAccountLink] Failed to create financial account for user: ${user.id}`
-                );
-                return failure({
-                    errorCode: 'server_error',
-                    errorMessage: 'Failed to create financial account.',
-                });
-            }
-
-            user = {
-                ...user,
-                accountId: account.value.id,
-            };
-            updatedUser = true;
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'Failed to get financial account.',
+            });
         }
 
         let type: StripeCreateAccountLinkRequest['type'] = 'account_update';

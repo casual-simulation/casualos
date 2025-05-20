@@ -32,11 +32,14 @@ import {
 import { MemoryFinancialInterface } from './MemoryFinancialInterface';
 import type { Account } from './Types';
 import { AccountFlags, TransferFlags } from './Types';
+import { MemoryStore } from '../MemoryStore';
 
+console.log = jest.fn();
 console.error = jest.fn();
 
 describe('FinancialController', () => {
     let financialInterface: MemoryFinancialInterface;
+    let store: MemoryStore;
     let controller: FinancialController;
     let dateNowMock: jest.Mock<number>;
 
@@ -45,7 +48,10 @@ describe('FinancialController', () => {
     beforeEach(() => {
         dateNowMock = Date.now = jest.fn(() => 123);
         financialInterface = new MemoryFinancialInterface();
-        controller = new FinancialController(financialInterface);
+        store = new MemoryStore({
+            subscriptions: null,
+        });
+        controller = new FinancialController(financialInterface, store);
     });
 
     afterEach(() => {
@@ -70,7 +76,7 @@ describe('FinancialController', () => {
                     reserved: 0,
                     ledger: LEDGERS.usd,
                     flags:
-                        AccountFlags.credits_must_not_exceed_debits &
+                        AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
                     timestamp: 0n,
@@ -88,14 +94,14 @@ describe('FinancialController', () => {
                     reserved: 0,
                     ledger: LEDGERS.usd,
                     flags:
-                        AccountFlags.credits_must_not_exceed_debits &
+                        AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
                     timestamp: 0n,
                 },
                 // XP Platform fees account
                 {
-                    id: 4001n,
+                    id: 4101n,
                     debits_pending: 0n,
                     debits_posted: 0n,
                     credits_pending: 0n,
@@ -106,14 +112,14 @@ describe('FinancialController', () => {
                     reserved: 0,
                     ledger: LEDGERS.usd,
                     flags:
-                        AccountFlags.debits_must_not_exceed_credits &
+                        AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.revenue_platform_fees,
                     timestamp: 0n,
                 },
                 // Store Platform fees account
                 {
-                    id: 4002n,
+                    id: 4102n,
                     debits_pending: 0n,
                     debits_posted: 0n,
                     credits_pending: 0n,
@@ -124,7 +130,7 @@ describe('FinancialController', () => {
                     reserved: 0,
                     ledger: LEDGERS.usd,
                     flags:
-                        AccountFlags.debits_must_not_exceed_credits &
+                        AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.revenue_platform_fees,
                     timestamp: 0n,
@@ -147,7 +153,7 @@ describe('FinancialController', () => {
                 },
                 // Credits Liquidity account
                 {
-                    id: 6001n,
+                    id: 6002n,
                     debits_pending: 0n,
                     debits_posted: 0n,
                     credits_pending: 0n,
@@ -190,7 +196,7 @@ describe('FinancialController', () => {
                     reserved: 0,
                     ledger: LEDGERS.usd,
                     flags:
-                        AccountFlags.credits_must_not_exceed_debits &
+                        AccountFlags.credits_must_not_exceed_debits |
                         AccountFlags.history,
                     code: AccountCodes.assets_cash,
                     timestamp: 0n,
@@ -222,7 +228,7 @@ describe('FinancialController', () => {
                     reserved: 0,
                     ledger: LEDGERS.credits,
                     flags:
-                        AccountFlags.debits_must_not_exceed_credits &
+                        AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_user,
                     timestamp: 0n,
@@ -258,9 +264,335 @@ describe('FinancialController', () => {
                     user_data_32: 0,
                     reserved: 0,
                     ledger: 1,
-                    flags: AccountFlags.credits_must_not_exceed_debits,
+                    flags:
+                        AccountFlags.credits_must_not_exceed_debits |
+                        AccountFlags.history,
                     code: AccountCodes.assets_cash,
                     timestamp: 0n,
+                })
+            );
+        });
+    });
+
+    describe('getOrCreateFinancialAccount()', () => {
+        it('should create a financial account for the given user', async () => {
+            const account = await controller.getOrCreateFinancialAccount({
+                userId: 'user1',
+                ledger: LEDGERS.credits,
+            });
+            expect(account).toEqual(
+                success({
+                    id: 1n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_user,
+                    timestamp: 0n,
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: '1',
+                    userId: 'user1',
+                    ledger: LEDGERS.credits,
+                    currency: 'credits',
+                },
+            ]);
+        });
+
+        it('should use the existing financial account for the user', async () => {
+            const result = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.credits
+                )
+            );
+            await store.createAccount({
+                id: result.id,
+                userId: 'user1',
+                ledger: LEDGERS.credits,
+                currency: 'credits',
+            });
+
+            const account = await controller.getOrCreateFinancialAccount({
+                userId: 'user1',
+                ledger: LEDGERS.credits,
+            });
+            expect(account).toEqual(
+                success({
+                    id: BigInt(result.id),
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_user,
+                    timestamp: 0n,
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: result.id,
+                    userId: 'user1',
+                    ledger: LEDGERS.credits,
+                    currency: 'credits',
+                },
+            ]);
+        });
+
+        it('should create a financial account for the given studio', async () => {
+            const account = await controller.getOrCreateFinancialAccount({
+                studioId: 'studio1',
+                ledger: LEDGERS.credits,
+            });
+            expect(account).toEqual(
+                success({
+                    id: 1n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_studio,
+                    timestamp: 0n,
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: '1',
+                    studioId: 'studio1',
+                    ledger: LEDGERS.credits,
+                    currency: 'credits',
+                },
+            ]);
+        });
+
+        it('should use the existing financial account for the studio', async () => {
+            const result = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_studio,
+                    LEDGERS.credits
+                )
+            );
+            await store.createAccount({
+                id: result.id,
+                studioId: 'studio1',
+                ledger: LEDGERS.credits,
+                currency: 'credits',
+            });
+
+            const account = await controller.getOrCreateFinancialAccount({
+                studioId: 'studio1',
+                ledger: LEDGERS.credits,
+            });
+            expect(account).toEqual(
+                success({
+                    id: BigInt(result.id),
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_studio,
+                    timestamp: 0n,
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: result.id,
+                    studioId: 'studio1',
+                    ledger: LEDGERS.credits,
+                    currency: 'credits',
+                },
+            ]);
+        });
+
+        it('should create a financial account for the given contract', async () => {
+            const account = await controller.getOrCreateFinancialAccount({
+                contractId: 'contract1',
+                ledger: LEDGERS.credits,
+            });
+            expect(account).toEqual(
+                success({
+                    id: 1n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_contract,
+                    timestamp: 0n,
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: '1',
+                    contractId: 'contract1',
+                    ledger: LEDGERS.credits,
+                    currency: 'credits',
+                },
+            ]);
+        });
+
+        it('should use the existing financial account for the contract', async () => {
+            const result = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_contract,
+                    LEDGERS.credits
+                )
+            );
+            await store.createAccount({
+                id: result.id,
+                contractId: 'contract1',
+                ledger: LEDGERS.credits,
+                currency: 'credits',
+            });
+
+            const account = await controller.getOrCreateFinancialAccount({
+                contractId: 'contract1',
+                ledger: LEDGERS.credits,
+            });
+            expect(account).toEqual(
+                success({
+                    id: BigInt(result.id),
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: LEDGERS.credits,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_contract,
+                    timestamp: 0n,
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: result.id,
+                    contractId: 'contract1',
+                    ledger: LEDGERS.credits,
+                    currency: 'credits',
+                },
+            ]);
+        });
+    });
+
+    describe('listAccounts()', () => {
+        it('should return the list of accounts for the user', async () => {
+            const result = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.credits
+                )
+            );
+            const result2 = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.usd
+                )
+            );
+            await store.createAccount({
+                id: result.id,
+                userId: 'user1',
+                ledger: LEDGERS.credits,
+                currency: 'credits',
+            });
+            await store.createAccount({
+                id: result2.id,
+                userId: 'user1',
+                ledger: LEDGERS.usd,
+                currency: 'usd',
+            });
+
+            const accounts = await controller.listAccounts({
+                userId: 'user1',
+            });
+            expect(accounts).toEqual(
+                success({
+                    accounts: [
+                        {
+                            id: BigInt(result.id),
+                            debits_pending: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            credits_posted: 0n,
+                            user_data_128: 0n,
+                            user_data_64: 0n,
+                            user_data_32: 0,
+                            reserved: 0,
+                            ledger: LEDGERS.credits,
+                            flags:
+                                AccountFlags.debits_must_not_exceed_credits |
+                                AccountFlags.history,
+                            code: AccountCodes.liabilities_user,
+                            timestamp: 0n,
+                        },
+                        {
+                            id: BigInt(result2.id),
+                            debits_pending: 0n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            credits_posted: 0n,
+                            user_data_128: 0n,
+                            user_data_64: 0n,
+                            user_data_32: 0,
+                            reserved: 0,
+                            ledger: LEDGERS.usd,
+                            flags:
+                                AccountFlags.debits_must_not_exceed_credits |
+                                AccountFlags.history,
+                            code: AccountCodes.liabilities_user,
+                            timestamp: 0n,
+                        },
+                    ],
                 })
             );
         });

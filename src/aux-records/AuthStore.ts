@@ -560,11 +560,6 @@ export interface AuthUser {
     role?: UserRole;
 
     /**
-     * The ID of the associated financial account.
-     */
-    accountId?: string | null;
-
-    /**
      * The rate at which the user is requesting payment (null if not yet specified)
      */
     requestedRate?: number | null;

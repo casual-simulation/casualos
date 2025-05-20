@@ -29,17 +29,15 @@ import type { FailedResult, StatefulResult } from './TypeUtils';
 
 import { traced } from './tracing/TracingDecorators';
 import type { Account, Transfer } from './financial/Types';
-import { CreateAccountError, TransferFlags } from './financial/Types';
+import { TransferFlags } from './financial/Types';
 import type {
     FinancialInterface,
     TransferCodes,
 } from './financial/FinancialInterface';
 import {
-    ACCOUNT_IDS,
     AccountCodes,
     getFlagsForAccountCode,
     getFlagsForTransferCode,
-    getMessageForAccountError,
     LEDGERS,
     processAccountErrors,
     processTransferErrors,
@@ -99,44 +97,45 @@ export class XpController {
     }
 
     async init(): Promise<Result<void, SimpleError>> {
-        // Ensure that the financial interface has the correct accounts
-        const results = await this._financialInterface.createAccounts([
-            {
-                id: ACCOUNT_IDS.stripe_assets,
-                code: AccountCodes.assets_cash,
-                flags: getFlagsForAccountCode(AccountCodes.assets_cash),
-                credits_pending: 0n,
-                credits_posted: 0n,
-                debits_pending: 0n,
-                debits_posted: 0n,
-                user_data_128: 0n,
-                user_data_64: 0n,
-                user_data_32: 0,
-                timestamp: 0n,
-                ledger: LEDGERS.credits,
-                reserved: 0,
-            },
-        ]);
+        return success();
+        // // Ensure that the financial interface has the correct accounts
+        // const results = await this._financialInterface.createAccounts([
+        //     {
+        //         id: ACCOUNT_IDS.stripe_assets,
+        //         code: AccountCodes.assets_cash,
+        //         flags: getFlagsForAccountCode(AccountCodes.assets_cash),
+        //         credits_pending: 0n,
+        //         credits_posted: 0n,
+        //         debits_pending: 0n,
+        //         debits_posted: 0n,
+        //         user_data_128: 0n,
+        //         user_data_64: 0n,
+        //         user_data_32: 0,
+        //         timestamp: 0n,
+        //         ledger: LEDGERS.credits,
+        //         reserved: 0,
+        //     },
+        // ]);
 
-        let failed = false;
-        for (let result of results) {
-            if (result.result !== CreateAccountError.ok) {
-                console.error(
-                    `[XpController] Failed to create default accounts (${result.index},${result.result})`,
-                    getMessageForAccountError(result.result)
-                );
-                failed = true;
-            }
-        }
+        // let failed = false;
+        // for (let result of results) {
+        //     if (result.result !== CreateAccountError.ok) {
+        //         console.error(
+        //             `[XpController] Failed to create default accounts (${result.index},${result.result})`,
+        //             getMessageForAccountError(result.result)
+        //         );
+        //         failed = true;
+        //     }
+        // }
 
-        if (failed) {
-            return failure({
-                errorCode: 'server_error',
-                errorMessage: 'Failed to create default accounts.',
-            });
-        } else {
-            return success();
-        }
+        // if (failed) {
+        //     return failure({
+        //         errorCode: 'server_error',
+        //         errorMessage: 'Failed to create default accounts.',
+        //     });
+        // } else {
+        //     return success();
+        // }
     }
 
     async createAccount(code: AccountCodes): Promise<CreateXpAccountResult> {

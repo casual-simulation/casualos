@@ -59,7 +59,6 @@ import {
     isSuperUserRole,
     parseSessionKey,
     verifyConnectionToken,
-    isSuccess,
 } from '@casual-simulation/aux-common';
 import type {
     PrivoClientInterface,
@@ -94,7 +93,6 @@ import type {
     StripeRequirementsStatus,
 } from './StripeInterface';
 import type { FinancialController } from './financial';
-import { getAccountBalance, getAccountCurrency } from './financial';
 
 const TRACE_NAME = 'AuthController';
 
@@ -2565,23 +2563,23 @@ export class AuthController {
         const { privacyFeatures, displayName, email, name } =
             await this._getUserPrivoInfo(user);
 
-        let accountBalance: number | null = undefined;
-        let accountCurrency: string | null = undefined;
-        if (this._financialController && user.accountId) {
-            const account = await this._financialController.getAccount(
-                user.accountId
-            );
+        // let accountBalance: number | null = undefined;
+        // let accountCurrency: string | null = undefined;
+        // if (this._financialController && user.accountId) {
+        //     const account = await this._financialController.getAccount(
+        //         user.accountId
+        //     );
 
-            if (isSuccess(account)) {
-                accountBalance = getAccountBalance(account.value);
-                accountCurrency = getAccountCurrency(account.value);
-            } else {
-                console.error(
-                    '[AuthController] Error getting account balance for user',
-                    account.error
-                );
-            }
-        }
+        //     if (isSuccess(account)) {
+        //         accountBalance = getAccountBalance(account.value);
+        //         accountCurrency = getAccountCurrency(account.value);
+        //     } else {
+        //         console.error(
+        //             '[AuthController] Error getting account balance for user',
+        //             account.error
+        //         );
+        //     }
+        // }
 
         return {
             success: true,
@@ -2596,9 +2594,9 @@ export class AuthController {
             subscriptionTier: tier ?? null,
             privacyFeatures: privacyFeatures,
             role: user.role ?? 'none',
-            accountId: user.accountId,
-            accountBalance,
-            accountCurrency,
+            // accountId: user.accountId,
+            // accountBalance,
+            // accountCurrency,
             requestedRate: user.requestedRate,
             stripeAccountId: user.stripeAccountId,
             stripeAccountRequirementsStatus:
@@ -4114,22 +4112,22 @@ export interface UserInfo {
      */
     role: UserRole;
 
-    /**
-     * The ID of the associated financial account.
-     */
-    accountId: string | null;
+    // /**
+    //  * The ID of the associated financial account.
+    //  */
+    // accountId: string | null;
 
-    /**
-     * The balance of the user's financial account.
-     * Denominated in the smallest unit of the account's currency (e.g., cents for credits/usd).
-     * Null if the user does not have a financial account.
-     */
-    accountBalance: number | null;
+    // /**
+    //  * The balance of the user's financial account.
+    //  * Denominated in the smallest unit of the account's currency (e.g., cents for credits/usd).
+    //  * Null if the user does not have a financial account.
+    //  */
+    // accountBalance: number | null;
 
-    /**
-     * The currency code that the user's financial account is in.
-     */
-    accountCurrency: string | null;
+    // /**
+    //  * The currency code that the user's financial account is in.
+    //  */
+    // accountCurrency: string | null;
 
     /**
      * The rate at which the user is requesting payment (null if not yet specified)

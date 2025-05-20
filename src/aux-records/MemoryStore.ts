@@ -175,6 +175,12 @@ import type {
     XpUser,
     XpUserWithUserInfo,
 } from './XpStore';
+import type {
+    FinancialAccount,
+    FinancialAccountFilter,
+    FinancialStore,
+    UniqueFinancialAccountFilter,
+} from './financial/FinancialStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -195,7 +201,8 @@ export class MemoryStore
         InstRecordsStore,
         ModerationStore,
         SystemNotificationMessenger,
-        XpStore
+        XpStore,
+        FinancialStore
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -248,6 +255,8 @@ export class MemoryStore
     private _xpUsers: Map<string, XpUser> = new Map();
     private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
     private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
+
+    private _financialAccounts: FinancialAccount[] = [];
 
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
@@ -400,6 +409,10 @@ export class MemoryStore
         return this._activationKeys;
     }
 
+    get financialAccounts() {
+        return this._financialAccounts;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -407,6 +420,58 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async getAccountById(id: string): Promise<FinancialAccount | null> {
+        return this._financialAccounts.find((a) => a.id === id) ?? null;
+    }
+
+    async getAccountByFilter(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<FinancialAccount | null> {
+        if (filter.userId) {
+            return this._financialAccounts.find(
+                (a) => a.userId === filter.userId && a.ledger === filter.ledger
+            );
+        } else if (filter.studioId) {
+            return this._financialAccounts.find(
+                (a) =>
+                    a.studioId === filter.studioId && a.ledger === filter.ledger
+            );
+        } else if (filter.contractId) {
+            return this._financialAccounts.find(
+                (a) =>
+                    a.contractId === filter.contractId &&
+                    a.ledger === filter.ledger
+            );
+        }
+        return null;
+    }
+
+    async listAccounts(
+        filter: FinancialAccountFilter
+    ): Promise<FinancialAccount[]> {
+        return this._financialAccounts.filter((a) => {
+            if (filter.userId && a.userId !== filter.userId) {
+                return false;
+            }
+            if (filter.studioId && a.studioId !== filter.studioId) {
+                return false;
+            }
+            if (filter.contractId && a.contractId !== filter.contractId) {
+                return false;
+            }
+            if (filter.ledger && a.ledger !== filter.ledger) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    async createAccount(account: FinancialAccount): Promise<void> {
+        this._financialAccounts.push({
+            ...account,
+        });
     }
 
     // async batchQueryXpUsers(

@@ -33,6 +33,8 @@ import type {
 import { CreateTransferError, TransferFlags } from './Types';
 import { AccountFlags, CreateAccountError } from './Types';
 
+export type Ledgers = (typeof LEDGERS)[keyof typeof LEDGERS];
+
 /**
  * The map of currencies to ledger IDs that the system uses.
  */
@@ -147,9 +149,14 @@ export enum AccountCodes {
     liabilities_user = 2101, // flags.debits_must_not_exceed_credits
 
     /**
+     * liabilities held by studios.
+     */
+    liabilities_studio = 2102, // flags.debits_must_not_exceed_credits
+
+    /**
      * liabilities held by contracts.
      */
-    liabilities_contract = 2102, // flags.debits_must_not_exceed_credits
+    liabilities_contract = 2103, // flags.debits_must_not_exceed_credits
 
     /**
      * Revenue accounts from platform fees.
@@ -292,14 +299,15 @@ export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
     switch (code) {
         case AccountCodes.assets_cash:
             return (
-                AccountFlags.credits_must_not_exceed_debits &
+                AccountFlags.credits_must_not_exceed_debits |
                 AccountFlags.history
             );
         case AccountCodes.liabilities_user:
+        case AccountCodes.liabilities_studio:
         case AccountCodes.liabilities_contract:
         case AccountCodes.revenue_platform_fees:
             return (
-                AccountFlags.debits_must_not_exceed_credits &
+                AccountFlags.debits_must_not_exceed_credits |
                 AccountFlags.history
             );
         case AccountCodes.liquidity_pool:

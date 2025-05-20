@@ -1461,12 +1461,13 @@ model FinancialAccount {
     id String @id @db.String(128)
 
     userId String?
-    user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "FinancialAccount_userId_fkey1")
+    user User? @relation(fields: [userId], references: [id], onDelete: Restrict, map: "FinancialAccount_userId_fkey1")
 
     studioId String?
-    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade, map: "FinancialAccount_studioId_fkey1")
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Restrict, map: "FinancialAccount_studioId_fkey1")
 
-    contract ContractRecord?
+    contractId String? @db.Uuid @unique
+    contract ContractRecord? @relation(fields: [contractId], references: [id], onUpdate: Restrict, onDelete: Restrict, map: "FinancialAccount_contractId_fkey1")
 
     ledger Int
     currency String @db.String(15)
@@ -1516,9 +1517,7 @@ model ContractRecord {
     // "closed" - the contract is closed and cannot be invoiced
     status String
 
-    // The id of the account which holds the money allocated to the contract
-    accountId String @unique
-    account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade, map: "ContractRecord_accountId_fkey1")
+    account FinancialAccount?
 
     // The ID of the stripe checkout session that was used to pay for the contract
     stripeCheckoutSessionId String? @db.String(128) @unique
