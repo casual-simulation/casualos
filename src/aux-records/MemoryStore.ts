@@ -2188,6 +2188,8 @@ export class MemoryStore
                 userId: request.userId,
                 invoiceId,
                 items: request.items,
+                pendingTransferIds: request.pendingTransferIds,
+                transactionId: request.transactionId,
             };
             this._checkoutSessions.push(session);
         } else {
@@ -2201,6 +2203,8 @@ export class MemoryStore
                 fulfilledAtMs: request.fulfilledAtMs,
                 userId: request.userId,
                 items: request.items,
+                pendingTransferIds: request.pendingTransferIds,
+                transactionId: request.transactionId,
             };
 
             if (request.invoice) {

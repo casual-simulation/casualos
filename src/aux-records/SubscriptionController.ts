@@ -75,6 +75,7 @@ import {
     isSuperUserRole,
     logError,
     success,
+    wrap,
 } from '@casual-simulation/aux-common';
 
 const TRACE_NAME = 'SubscriptionController';
@@ -100,6 +101,7 @@ import {
     CurrencyCodes,
     LEDGERS,
     TransferCodes,
+    TransferFlags,
 } from './financial';
 import type { ContractRecordsStore } from './contracts/ContractRecordsStore';
 
@@ -1494,9 +1496,9 @@ export class SubscriptionController {
         }
     }
 
-    async createPurchaseContractLink(
-        request: CreatePurchaseContractLinkRequest
-    ): Promise<CreatePurchaseItemLinkResult> {
+    async purchaseContract(
+        request: PurchaseContractRequest
+    ): Promise<PurchaseContractResult> {
         try {
             const context = await this._policies.constructAuthorizationContext({
                 recordKeyOrRecordName: request.contract.recordName,
@@ -1504,7 +1506,7 @@ export class SubscriptionController {
             });
 
             if (context.success === false) {
-                return context;
+                return failure(context);
             }
 
             const item = await this._contractRecords.getItemByAddress(
@@ -1513,33 +1515,27 @@ export class SubscriptionController {
             );
 
             if (!item) {
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'item_not_found',
                     errorMessage: 'The item could not be found.',
-                };
+                });
             }
 
             if (item.status !== 'pending') {
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'item_already_purchased',
                     errorMessage: 'The contract has already been purchased.',
-                };
+                });
             }
 
             // TODO: Pull this from the contract.
             const currency = 'usd';
-            if (
-                currency !== request.contract.currency ||
-                item.initialValue !== request.contract.expectedCost
-            ) {
-                return {
-                    success: false,
+            if (currency !== request.contract.currency) {
+                return failure({
                     errorCode: 'price_does_not_match',
                     errorMessage:
                         'The expected price does not match the actual price of the contract.',
-                };
+                });
             }
 
             const contractAccount =
@@ -1553,12 +1549,12 @@ export class SubscriptionController {
                     contractAccount.error,
                     `[SubscriptionController] [createPurchaseContractLink] Failed to get USD financial account for contract: ${item.id}`
                 );
-                return {
+                return failure({
                     success: false,
                     errorCode: 'server_error',
                     errorMessage:
                         'Failed to get a financial account for the contract.',
-                };
+                });
             }
 
             const recordName = context.context.recordName;
@@ -1576,7 +1572,7 @@ export class SubscriptionController {
                 );
 
             if (authorization.success === false) {
-                return authorization;
+                return failure(authorization);
             }
 
             const metrics = await this._contractRecords.getSubscriptionMetrics({
@@ -1597,12 +1593,11 @@ export class SubscriptionController {
                 console.log(
                     `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`
                 );
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'store_disabled',
                     errorMessage:
-                        'The account you are trying to purchase the contract for is disabled.',
-                };
+                        "The account you are trying to purchase the contract for doesn't have access to contracting features.",
+                });
             }
 
             // TODO: Validate that the holding user has setup stripe and is active.
@@ -1637,11 +1632,10 @@ export class SubscriptionController {
                 console.log(
                     `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency}] Currency not supported.`
                 );
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'currency_not_supported',
                     errorMessage: 'The currency is not supported.',
-                };
+                });
             }
 
             if (
@@ -1652,12 +1646,11 @@ export class SubscriptionController {
                 console.log(
                     `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} initialValue: ${item.initialValue}] Cost not valid.`
                 );
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
-                        'The item you are trying to purchase has a price that is not allowed.',
-                };
+                        'The contract you are trying to purchase has a price that is not allowed.',
+                });
             }
 
             let applicationFee = 0;
@@ -1683,16 +1676,26 @@ export class SubscriptionController {
                 }
             }
 
+            const totalCost = item.initialValue + applicationFee;
+
+            if (totalCost !== request.contract.expectedCost) {
+                return failure({
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price of the contract.',
+                });
+            }
+
             let customerEmail: string = null;
             if (request.userId) {
                 const user = await this._authStore.findUser(request.userId);
 
                 if (!user) {
-                    return {
+                    return failure({
                         success: false,
                         errorCode: 'invalid_request',
                         errorMessage: 'The user could not be found.',
-                    };
+                    });
                 }
 
                 // const roles = await this._policyStore.listRolesForUser(
@@ -1729,6 +1732,7 @@ export class SubscriptionController {
                     creditAccountId: contractAccount.value.id,
                     debitAccountId: ACCOUNT_IDS.assets_stripe,
                     currency: CurrencyCodes.usd,
+                    pending: true,
                 },
             ];
             const lineItems: StripeCheckoutRequest['line_items'] = [
@@ -1759,6 +1763,7 @@ export class SubscriptionController {
                     debitAccountId: ACCOUNT_IDS.assets_stripe,
                     creditAccountId: ACCOUNT_IDS.revenue_xp_platform_fees,
                     currency: CurrencyCodes.usd,
+                    pending: true,
                 });
                 lineItems.push({
                     price_data: {
@@ -1791,33 +1796,64 @@ export class SubscriptionController {
                     `[SubscriptionController] [createPurchaseContractLink] Failed to create internal transfer for contract: ${item.id}`
                 );
                 // TODO: Map out better error codes
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'server_error',
                     errorMessage:
                         'Failed to create internal transfer for contract.',
-                };
+                });
             }
 
-            const session = await this._stripe.createCheckoutSession({
-                mode: 'payment',
-                line_items: lineItems,
-                success_url: fulfillmentRoute(config.returnUrl, sessionId),
-                cancel_url: request.returnUrl,
-                client_reference_id: sessionId,
-                customer_email: customerEmail,
-                metadata: {
-                    userId: request.userId,
-                    checkoutSessionId: sessionId,
-                },
-                payment_intent_data: {
-                    // application_fee_amount: applicationFee,
-                    transfer_group: item.id,
-                },
-                // connect: {
-                //     stripeAccount: metrics.,
-                // },
-            });
+            const sessionResult = await wrap(() =>
+                this._stripe.createCheckoutSession({
+                    mode: 'payment',
+                    line_items: lineItems,
+                    success_url: fulfillmentRoute(config.returnUrl, sessionId),
+                    cancel_url: request.returnUrl,
+                    client_reference_id: sessionId,
+                    customer_email: customerEmail,
+                    metadata: {
+                        userId: request.userId,
+                        checkoutSessionId: sessionId,
+                        transactionId: transferResult.value.transactionId,
+                    },
+                    payment_intent_data: {
+                        // application_fee_amount: applicationFee,
+                        transfer_group: item.id,
+                    },
+                    // connect: {
+                    //     stripeAccount: metrics.,
+                    // },
+                })
+            );
+
+            if (isFailure(sessionResult)) {
+                logError(
+                    sessionResult.error,
+                    `[SubscriptionController] [createPurchaseContractLink] Failed to create checkout session for contract: ${item.id}`
+                );
+
+                const result =
+                    await this._financialController.completePendingTransfers({
+                        transfers: transferResult.value.transferIds,
+                        flags: TransferFlags.void_pending_transfer,
+                        transactionId: transferResult.value.transactionId,
+                    });
+
+                if (isFailure(result)) {
+                    logError(
+                        result.error,
+                        `[SubscriptionController] [createPurchaseContractLink] Failed to void pending transfers for contract: ${item.id}`
+                    );
+                }
+
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'Failed to create checkout session for contract.',
+                });
+            }
+
+            const session = sessionResult.value;
 
             await this._authStore.updateCheckoutSessionInfo({
                 id: sessionId,
@@ -1853,23 +1889,23 @@ export class SubscriptionController {
                         value: item.initialValue,
                     },
                 ],
+                transactionId: transferResult.value.transactionId,
+                pendingTransferIds: transferResult.value.transferIds,
             });
 
-            return {
-                success: true,
+            return success({
                 url: session.url,
                 sessionId: sessionId,
-            };
+            });
         } catch (err) {
             console.error(
                 '[SubscriptionController] An error occurred while creating a purchase item link:',
                 err
             );
-            return {
-                success: false,
+            return failure({
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
-            };
+            });
         }
     }
 
@@ -3377,6 +3413,21 @@ export interface CreatePurchaseItemLinkRequest {
     successUrl: string;
 }
 
+export type PurchaseContractResult = Result<
+    {
+        /**
+         * The URL that the user should be directed to to complete the purchase.
+         */
+        url?: string;
+
+        /**
+         * The ID of the checkout session.
+         */
+        sessionId: string;
+    },
+    SimpleError
+>;
+
 export type CreatePurchaseItemLinkResult =
     | CreatePurchaseItemLinkSuccess
     | CreatePurchaseItemLinkFailure;
@@ -3413,7 +3464,7 @@ export interface CreatePurchaseItemLinkFailure {
     reason?: DenialReason;
 }
 
-export interface CreatePurchaseContractLinkRequest {
+export interface PurchaseContractRequest {
     /**
      * The ID of the user that is currently logged in.
      * Null if the user is not logged in.

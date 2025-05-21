@@ -36,6 +36,7 @@ import { FileRecordsController } from './FileRecordsController';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
 import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
 import { XpController } from './XpController';
+import type { Account, FinancialInterface, Transfer } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
@@ -348,4 +349,40 @@ export function mapBigInts(obj: Record<string, any>): Record<string, any> {
         }
         return value;
     });
+}
+
+export async function checkAccounts(
+    financialInterface: FinancialInterface,
+    accounts: Partial<Account>[]
+) {
+    const accountValues = await financialInterface.lookupAccounts(
+        accounts.map((a) => a.id)
+    );
+
+    expect(mapBigInts(accountValues)).toEqual(
+        accounts.map((a) => expect.objectContaining(mapBigInts(a)))
+    );
+
+    // for(let i = 0; i < accounts.length; i++) {
+    //     const expected = accounts[i];
+    //     const actual = accountValues[i];
+
+    //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
+    // }
+}
+
+export function checkTransfers(
+    actual: Transfer[],
+    expected: Partial<Transfer>[]
+) {
+    expect(mapBigInts(actual)).toEqual(
+        expected.map((t) => expect.objectContaining(mapBigInts(t)))
+    );
+
+    // for(let i = 0; i < accounts.length; i++) {
+    //     const expected = accounts[i];
+    //     const actual = accountValues[i];
+
+    //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
+    // }
 }

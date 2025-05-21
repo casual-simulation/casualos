@@ -73,6 +73,12 @@ export type SimpleError = {
     issues?: Zod.ZodIssue[];
 };
 
+export type WrappedError = {
+    errorCode: 'wrapped_error';
+    errorMessage: string;
+    error: unknown;
+};
+
 export interface MultiError<E> {
     errorCode: 'multi_error';
     errorMessage: string;
@@ -205,6 +211,35 @@ export function logResult<T, E extends ErrorType>(
         console.error(message ?? 'Error:', result.error);
     }
     return result;
+}
+
+export function wrap<T>(fn: () => Promise<T>): Promise<Result<T, WrappedError>>;
+export function wrap<T>(fn: () => T): Result<T, WrappedError>;
+export function wrap<T>(
+    fn: () => T | Promise<T>
+): Result<T, WrappedError> | Promise<Result<T, WrappedError>> {
+    try {
+        const result = fn();
+        if (result instanceof Promise) {
+            return result
+                .then((value) => success(value))
+                .catch((error) =>
+                    failure({
+                        errorCode: 'wrapped_error',
+                        errorMessage: error.message,
+                        error,
+                    })
+                );
+        } else {
+            return success(result);
+        }
+    } catch (error) {
+        return failure({
+            errorCode: 'wrapped_error',
+            errorMessage: error.message,
+            error,
+        });
+    }
 }
 
 export class R<T, E extends ErrorType> implements SuccessOrError<T, E> {

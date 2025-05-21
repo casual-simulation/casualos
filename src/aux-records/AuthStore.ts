@@ -1345,6 +1345,16 @@ export interface AuthCheckoutSession {
      * Null if no invoice was created for the checkout session.
      */
     invoiceId: string | null;
+
+    /**
+     * The transaction ID that should be associated with the checkout session.
+     */
+    transactionId?: string | null;
+
+    /**
+     * The transfers that should be posted/voided for the checkout session.
+     */
+    pendingTransferIds?: string[] | null;
 }
 
 export type AuthCheckoutSessionItem =
@@ -1534,6 +1544,11 @@ export interface UpdateCheckoutSessionRequest {
         AuthInvoice,
         'id' | 'subscriptionId' | 'periodId' | 'checkoutSessionId'
     > | null;
+
+    /**
+     * The transaction ID that should be associated with the checkout session.
+     */
+    transactionId?: string | null;
 
     /**
      * The transfers that should be posted/voided for the checkout session.
