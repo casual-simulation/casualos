@@ -34,6 +34,7 @@ describe('getPublicReadPermission()', () => {
         ['inst', ['read']] as const,
         ['notification', ['read', 'list', 'subscribe']] as const,
         ['purchasableItem', ['read', 'list', 'purchase']] as const,
+        ['contract', ['read', 'list']] as const,
     ];
 
     describe.each(allowedResourceKinds)(
@@ -74,10 +75,8 @@ describe('getPublicReadPermission()', () => {
             'role',
             ['create', 'update', 'delete', 'read', 'list', 'grant', 'revoke'],
         ] as const,
-        [
-            'purchasableItem',
-            ['create', 'update', 'delete'],
-        ] as const,
+        ['purchasableItem', ['create', 'update', 'delete']] as const,
+        ['contract', ['create', 'update', 'delete', 'purchase']] as const,
     ];
 
     describe.each(deniedResourceKinds)(
@@ -102,6 +101,7 @@ describe('getPublicWritePermission()', () => {
             ['read', 'create', 'updateData', 'sendAction', 'delete'],
         ] as const,
         ['purchasableItem', ['read', 'list', 'purchase']] as const,
+        ['contract', ['read', 'list', 'purchase']] as const,
     ];
 
     describe.each(allowedResourceKinds)(
@@ -138,10 +138,7 @@ describe('getPublicWritePermission()', () => {
             'role',
             ['create', 'update', 'delete', 'read', 'list', 'grant', 'revoke'],
         ] as const,
-        [
-            'purchasableItem',
-            ['create', 'update', 'delete'],
-        ] as const,
+        ['purchasableItem', ['create', 'update', 'delete']] as const,
     ];
 
     describe.each(deniedResourceKinds)(
