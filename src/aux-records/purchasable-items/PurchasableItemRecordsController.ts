@@ -40,6 +40,7 @@ export interface PurchasableItemRecordsConfig {
 
 export class PurchasableItemRecordsController extends CrudRecordsController<
     PurchasableItem,
+    PurchasableItem,
     PurchasableItemRecordsStore
 > {
     constructor(config: PurchasableItemRecordsConfig) {

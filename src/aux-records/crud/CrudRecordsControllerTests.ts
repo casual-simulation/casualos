@@ -39,7 +39,7 @@ export type TestControllers = ReturnType<typeof createTestControllers>;
 
 export type TestControllerConfiguration<
     TItem extends CrudRecord,
-    TStore extends CrudRecordsStore<TItem>
+    TStore extends CrudRecordsStore<CrudRecord>
 > = Omit<
     CrudRecordsConfiguration<TItem, TStore>,
     'resourceKind' | 'allowRecordKeys' | 'name'
@@ -47,8 +47,9 @@ export type TestControllerConfiguration<
 
 export interface TestContext<
     TItem extends CrudRecord,
-    TStore extends CrudRecordsStore<TItem>,
-    TController extends CrudRecordsController<TItem, TStore>
+    TStoreItem extends CrudRecord,
+    TStore extends CrudRecordsStore<TStoreItem>,
+    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
 > {
     services: TestControllers;
     store: MemoryStore;
@@ -70,15 +71,16 @@ export interface TestContext<
  */
 export async function setupTestContext<
     TItem extends CrudRecord,
-    TStore extends CrudRecordsStore<TItem>,
-    TController extends CrudRecordsController<TItem, TStore>
+    TStoreItem extends CrudRecord,
+    TStore extends CrudRecordsStore<TStoreItem>,
+    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
 >(
     storeFactory: (services: TestControllers) => TStore,
     controllerFactory: (
         config: TestControllerConfiguration<TItem, TStore>,
         services: TestControllers
     ) => TController
-): Promise<TestContext<TItem, TStore, TController>> {
+): Promise<TestContext<TItem, TStoreItem, TStore, TController>> {
     const services = createTestControllers();
     const store = services.store;
     const itemsStore = storeFactory(services);
@@ -144,13 +146,14 @@ export async function setupTestContext<
  * @param resourceKind The resource kind that should be expected.
  * @param storeFactory The factory function that creates the store.
  * @param controllerFactory The factory function that creates the controller.
- * @param createTestItem The factory function that creates a test item.
+ * @param createStoreItem The factory function that creates a test item.
  * @param configureEnvironment An optional function that can be used to configure the environment before the tests are run.
  */
 export function testCrudRecordsController<
     TItem extends CrudRecord,
-    TStore extends CrudRecordsStore<TItem>,
-    TController extends CrudRecordsController<TItem, TStore>
+    TStoreItem extends CrudRecord,
+    TStore extends CrudRecordsStore<TStoreItem>,
+    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
 >(
     allowRecordKeys: boolean,
     resourceKind: ResourceKinds,
@@ -159,12 +162,13 @@ export function testCrudRecordsController<
         config: TestControllerConfiguration<TItem, TStore>,
         services: TestControllers
     ) => TController,
-    createTestItem: (item: CrudRecord) => TItem,
+    createStoreItem: (item: CrudRecord) => TStoreItem,
+    createInputItem: (item: CrudRecord) => TItem,
     configureEnvironment?: (
-        context: TestContext<TItem, TStore, TController>
+        context: TestContext<TItem, TStoreItem, TStore, TController>
     ) => Promise<void>
 ) {
-    let context: TestContext<TItem, TStore, TController>;
+    let context: TestContext<TItem, TStoreItem, TStore, TController>;
     let services: TestControllers;
     let store: MemoryStore;
     let itemsStore: TStore;
@@ -203,7 +207,7 @@ export function testCrudRecordsController<
     describe('recordItem()', () => {
         describe('create', () => {
             it('should store the item in the store', async () => {
-                const item = createTestItem({
+                const item = createInputItem({
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
                 });
@@ -229,7 +233,7 @@ export function testCrudRecordsController<
                 const result = (await manager.recordItem({
                     recordKeyOrRecordName: 'not_a_key',
                     userId,
-                    item: createTestItem({
+                    item: createInputItem({
                         address: 'address',
                         markers: [PUBLIC_READ_MARKER],
                     }),
@@ -252,7 +256,7 @@ export function testCrudRecordsController<
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: key,
                         userId: otherUserId,
-                        item: createTestItem({
+                        item: createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         }),
@@ -277,7 +281,7 @@ export function testCrudRecordsController<
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: subjectlessKey,
                         userId: otherUserId,
-                        item: createTestItem({
+                        item: createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         }),
@@ -302,7 +306,7 @@ export function testCrudRecordsController<
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: key,
                         userId: otherUserId,
-                        item: createTestItem({
+                        item: createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         }),
@@ -333,7 +337,7 @@ export function testCrudRecordsController<
                     const result = (await manager.recordItem({
                         recordKeyOrRecordName: subjectlessKey,
                         userId: otherUserId,
-                        item: createTestItem({
+                        item: createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         }),
@@ -366,7 +370,7 @@ export function testCrudRecordsController<
             beforeEach(async () => {
                 await itemsStore.createItem(
                     recordName,
-                    createTestItem({
+                    createStoreItem({
                         address: 'address',
                         markers: [PUBLIC_READ_MARKER],
                     })
@@ -374,7 +378,7 @@ export function testCrudRecordsController<
             });
 
             it('should update the markers in the store', async () => {
-                const item = createTestItem({
+                const item = createInputItem({
                     address: 'address',
                     markers: [PRIVATE_MARKER],
                 });
@@ -397,7 +401,7 @@ export function testCrudRecordsController<
             });
 
             it('should reject the request if given an invalid key', async () => {
-                const item = createTestItem({
+                const item = createInputItem({
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
                 });
@@ -421,7 +425,7 @@ export function testCrudRecordsController<
 
             if (allowRecordKeys) {
                 it('should support using a record key', async () => {
-                    const item = createTestItem({
+                    const item = createInputItem({
                         address: 'address',
                         markers: [PRIVATE_MARKER],
                     });
@@ -444,7 +448,7 @@ export function testCrudRecordsController<
                 });
 
                 it('should be able to use subjectless keys', async () => {
-                    const item = createTestItem({
+                    const item = createInputItem({
                         address: 'address',
                         markers: [PRIVATE_MARKER],
                     });
@@ -467,7 +471,7 @@ export function testCrudRecordsController<
                 });
             } else {
                 it('should reject the request if record keys are not allowed', async () => {
-                    const item = createTestItem({
+                    const item = createInputItem({
                         address: 'address',
                         markers: [PRIVATE_MARKER],
                     });
@@ -496,7 +500,7 @@ export function testCrudRecordsController<
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
                     ).resolves.toMatchObject(
-                        createTestItem({
+                        createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         })
@@ -504,7 +508,7 @@ export function testCrudRecordsController<
                 });
 
                 it('should reject the request if subjectless keys are not allowed', async () => {
-                    const item = createTestItem({
+                    const item = createInputItem({
                         address: 'address',
                         markers: [PRIVATE_MARKER],
                     });
@@ -533,7 +537,7 @@ export function testCrudRecordsController<
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
                     ).resolves.toMatchObject(
-                        createTestItem({
+                        createStoreItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         })
@@ -547,7 +551,7 @@ export function testCrudRecordsController<
         beforeEach(async () => {
             await itemsStore.createItem(
                 recordName,
-                createTestItem({
+                createStoreItem({
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
                 })
@@ -555,7 +559,7 @@ export function testCrudRecordsController<
 
             await itemsStore.createItem(
                 recordName,
-                createTestItem({
+                createStoreItem({
                     address: 'address2',
                     markers: [PRIVATE_MARKER],
                 })
@@ -563,7 +567,7 @@ export function testCrudRecordsController<
 
             await itemsStore.createItem(
                 recordName,
-                createTestItem({
+                createStoreItem({
                     address: 'address3',
                     markers: [PUBLIC_READ_MARKER],
                 })
@@ -580,7 +584,7 @@ export function testCrudRecordsController<
 
             expect(result).toEqual({
                 success: true,
-                item: createTestItem({
+                item: createStoreItem({
                     address: 'address2',
                     markers: [PRIVATE_MARKER],
                 }),
@@ -628,7 +632,7 @@ export function testCrudRecordsController<
 
                 expect(result).toEqual({
                     success: true,
-                    item: createTestItem({
+                    item: createStoreItem({
                         address: 'address2',
                         markers: [PRIVATE_MARKER],
                     }),
@@ -665,7 +669,7 @@ export function testCrudRecordsController<
         beforeEach(async () => {
             await itemsStore.createItem(
                 recordName,
-                createTestItem({
+                createStoreItem({
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
                 })
@@ -673,7 +677,7 @@ export function testCrudRecordsController<
 
             await itemsStore.createItem(
                 recordName,
-                createTestItem({
+                createStoreItem({
                     address: 'address2',
                     markers: [PRIVATE_MARKER],
                 })
@@ -681,7 +685,7 @@ export function testCrudRecordsController<
 
             await itemsStore.createItem(
                 recordName,
-                createTestItem({
+                createStoreItem({
                     address: 'address3',
                     markers: [PUBLIC_READ_MARKER],
                 })
@@ -788,11 +792,11 @@ export function testCrudRecordsController<
     });
 
     describe('listItems()', () => {
-        let items: TItem[];
+        let items: TStoreItem[];
         beforeEach(async () => {
             items = [];
             for (let i = 0; i < 20; i++) {
-                const item = createTestItem({
+                const item = createStoreItem({
                     address: 'address' + i,
                     markers: [PRIVATE_MARKER],
                 });
@@ -900,11 +904,11 @@ export function testCrudRecordsController<
     });
 
     describe('listItemsByMarker()', () => {
-        let items: TItem[];
+        let items: TStoreItem[];
         beforeEach(async () => {
             items = [];
             for (let i = 0; i < 40; i++) {
-                const item = createTestItem({
+                const item = createStoreItem({
                     address: 'address' + i,
                     markers: [
                         i % 2 === 0 ? PRIVATE_MARKER : PUBLIC_READ_MARKER,

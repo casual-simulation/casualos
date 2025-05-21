@@ -30,7 +30,10 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import type { ContractRecordsStore } from './ContractRecordsStore';
+import type {
+    ContractRecord,
+    ContractRecordsStore,
+} from './ContractRecordsStore';
 import { MemoryContractRecordsStore } from './MemoryContractRecordsStore';
 
 console.log = jest.fn();
@@ -39,6 +42,7 @@ console.error = jest.fn();
 describe('ContractRecordsController', () => {
     testCrudRecordsController<
         ContractRecordInput,
+        ContractRecord,
         ContractRecordsStore,
         ContractRecordsController
     >(
@@ -48,6 +52,8 @@ describe('ContractRecordsController', () => {
         (config, services) =>
             new ContractRecordsController({
                 ...config,
+                authStore: services.authStore,
+                privo: null,
             }),
         (item) => ({
             address: item.address,
@@ -59,6 +65,14 @@ describe('ContractRecordsController', () => {
             issuedAtMs: 100,
             rate: 1,
             status: 'pending',
+        }),
+        (item) => ({
+            address: item.address,
+            markers: item.markers,
+            holdingUser: 'holdingUser',
+            initialValue: 100,
+            issuedAtMs: 100,
+            rate: 1,
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -96,6 +110,7 @@ describe('ContractRecordsController', () => {
 
         const context = await setupTestContext<
             ContractRecordInput,
+            ContractRecord,
             ContractRecordsStore,
             ContractRecordsController
         >(
@@ -103,6 +118,8 @@ describe('ContractRecordsController', () => {
             (config, services) => {
                 return new ContractRecordsController({
                     ...config,
+                    authStore: services.authStore,
+                    privo: null,
                 });
             }
         );
