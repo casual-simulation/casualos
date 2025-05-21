@@ -76,6 +76,7 @@ import {
     ACCOUNT_IDS,
     AccountCodes,
     AccountFlags,
+    CurrencyCodes,
     LEDGERS,
     TransferCodes,
     TransferFlags,
@@ -9781,8 +9782,10 @@ describe('SubscriptionController', () => {
 
         describe('xp', () => {
             let user: AuthUser;
+            const recordName = 'recordName';
 
             beforeEach(async () => {
+                await financialController.init();
                 store.subscriptionConfiguration = createTestSubConfiguration();
 
                 const userAccount = unwrap(
@@ -9801,6 +9804,14 @@ describe('SubscriptionController', () => {
                 };
 
                 await store.saveUser(user);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    secretHashes: [],
+                    secretSalt: '',
+                    studioId: null,
+                });
 
                 nowMock.mockReturnValue(200);
             });
@@ -9903,157 +9914,406 @@ describe('SubscriptionController', () => {
                 });
             });
 
-            // describe('checkout.session.completed', () => {
-            //     it('should update checkout session status', async () => {
-            //         stripeMock.constructWebhookEvent.mockReturnValueOnce({
-            //             id: 'event_id',
-            //             type: 'checkout.session.completed',
-            //             object: 'event',
-            //             account: 'account_id',
-            //             api_version: 'api_version',
-            //             created: 123,
-            //             data: {
-            //                 object: {
-            //                     id: 'checkout_id',
-            //                     object: 'checkout.session',
-            //                     client_reference_id: 'uuid',
-            //                     payment_status: 'paid',
-            //                     status: 'complete',
-            //                 },
-            //             },
-            //             livemode: true,
-            //             pending_webhooks: 1,
-            //             request: {},
-            //         });
+            describe('checkout.session.completed', () => {
+                it('should update checkout session status', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.completed',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'paid',
+                                status: 'complete',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
 
-            //         await store.updateCheckoutSessionInfo({
-            //             id: 'uuid',
-            //             userId: userId,
-            //             stripeCheckoutSessionId: 'checkout_id',
-            //             paid: false,
-            //             status: 'open',
-            //             paymentStatus: 'unpaid',
-            //             invoice: null,
-            //             fulfilledAtMs: null,
-            //             items: [
-            //                 {
-            //                     type: 'role',
-            //                     recordName: 'studioId',
-            //                     purchasableItemAddress: 'item1',
-            //                     role: 'myRole',
-            //                     roleGrantTimeMs: null,
-            //                 },
-            //             ],
-            //         });
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
 
-            //         const result = await controller.handleStripeWebhook({
-            //             requestBody: 'request_body',
-            //             signature: 'request_signature',
-            //         });
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                    });
 
-            //         expect(result).toEqual({
-            //             success: true,
-            //         });
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
 
-            //         expect(store.checkoutSessions).toEqual([
-            //             {
-            //                 id: 'uuid',
-            //                 userId,
-            //                 stripeCheckoutSessionId: 'checkout_id',
-            //                 paid: true,
-            //                 stripeStatus: 'complete',
-            //                 stripePaymentStatus: 'paid',
-            //                 invoiceId: null,
-            //                 fulfilledAtMs: null,
-            //                 items: [
-            //                     {
-            //                         type: 'role',
-            //                         recordName: 'studioId',
-            //                         purchasableItemAddress: 'item1',
-            //                         role: 'myRole',
-            //                         roleGrantTimeMs: null,
-            //                     },
-            //                 ],
-            //             },
-            //         ]);
-            //     });
-            // });
+                    expect(result).toEqual({
+                        success: true,
+                    });
 
-            // describe('checkout.session.expired', () => {
-            //     it('should update checkout session status', async () => {
-            //         stripeMock.constructWebhookEvent.mockReturnValueOnce({
-            //             id: 'event_id',
-            //             type: 'checkout.session.expired',
-            //             object: 'event',
-            //             account: 'account_id',
-            //             api_version: 'api_version',
-            //             created: 123,
-            //             data: {
-            //                 object: {
-            //                     id: 'checkout_id',
-            //                     object: 'checkout.session',
-            //                     client_reference_id: 'uuid',
-            //                     payment_status: 'unpaid',
-            //                     status: 'expired',
-            //                 },
-            //             },
-            //             livemode: true,
-            //             pending_webhooks: 1,
-            //             request: {},
-            //         });
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: true,
+                            stripeStatus: 'complete',
+                            stripePaymentStatus: 'paid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                        },
+                    ]);
+                });
 
-            //         await store.updateCheckoutSessionInfo({
-            //             id: 'uuid',
-            //             userId: userId,
-            //             stripeCheckoutSessionId: 'checkout_id',
-            //             paid: false,
-            //             status: 'open',
-            //             paymentStatus: 'unpaid',
-            //             invoice: null,
-            //             fulfilledAtMs: null,
-            //             items: [
-            //                 {
-            //                     type: 'role',
-            //                     recordName: 'studioId',
-            //                     purchasableItemAddress: 'item1',
-            //                     role: 'myRole',
-            //                     roleGrantTimeMs: null,
-            //                 },
-            //             ],
-            //         });
+                it('should automatically fulfill the checkout session if paid', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.completed',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'paid',
+                                status: 'complete',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
 
-            //         const result = await controller.handleStripeWebhook({
-            //             requestBody: 'request_body',
-            //             signature: 'request_signature',
-            //         });
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
 
-            //         expect(result).toEqual({
-            //             success: true,
-            //         });
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                    });
 
-            //         expect(store.checkoutSessions).toEqual([
-            //             {
-            //                 id: 'uuid',
-            //                 userId,
-            //                 stripeCheckoutSessionId: 'checkout_id',
-            //                 paid: false,
-            //                 stripeStatus: 'expired',
-            //                 stripePaymentStatus: 'unpaid',
-            //                 invoiceId: null,
-            //                 fulfilledAtMs: null,
-            //                 items: [
-            //                     {
-            //                         type: 'role',
-            //                         recordName: 'studioId',
-            //                         purchasableItemAddress: 'item1',
-            //                         role: 'myRole',
-            //                         roleGrantTimeMs: null,
-            //                     },
-            //                 ],
-            //             },
-            //         ]);
-            //     });
-            // });
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: true,
+                            stripeStatus: 'complete',
+                            stripePaymentStatus: 'paid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                        },
+                    ]);
+                });
+            });
+
+            describe('checkout.session.expired', () => {
+                it('should update checkout session status', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.expired',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'unpaid',
+                                status: 'expired',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: false,
+                            stripeStatus: 'expired',
+                            stripePaymentStatus: 'unpaid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                        },
+                    ]);
+                });
+
+                it('should void any pending transfers', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.expired',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'unpaid',
+                                status: 'expired',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: '10',
+                                    amount: 100,
+                                    currency: CurrencyCodes.usd,
+                                    code: TransferCodes.contract_payment,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_xp_platform_fees,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                },
+                                {
+                                    transferId: '11',
+                                    amount: 999,
+                                    currency: CurrencyCodes.usd,
+                                    code: TransferCodes.contract_payment,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_xp_platform_fees,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                },
+                            ],
+                            transactionId: '9',
+                        })
+                    );
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                        pendingTransferIds: ['10', '11'],
+                        transactionId: '9',
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: false,
+                            stripeStatus: 'expired',
+                            stripePaymentStatus: 'unpaid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                            pendingTransferIds: ['10', '11'],
+                            transactionId: '9',
+                        },
+                    ]);
+
+                    checkTransfers(financialInterface.transfers, [
+                        {
+                            id: 10n,
+                            amount: 100n,
+                        },
+                        {
+                            id: 11n,
+                            amount: 999n,
+                        },
+                        {
+                            id: 2n,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.void_pending_transfer,
+                            pending_id: 10n,
+                        },
+                        {
+                            id: 3n,
+                            flags: TransferFlags.void_pending_transfer,
+                            pending_id: 11n,
+                        },
+                    ]);
+                });
+            });
 
             // describe('invoice.paid', () => {
             //     it('should update the invoice attached to a checkout session', async () => {

@@ -2365,7 +2365,9 @@ export class SubscriptionController {
                 );
             } else if (
                 event.type === 'checkout.session.completed' ||
-                event.type === 'checkout.session.expired'
+                event.type === 'checkout.session.expired' ||
+                event.type === 'checkout.session.async_payment_failed' ||
+                event.type === 'checkout.session.async_payment_succeeded'
             ) {
                 const parseResult =
                     STRIPE_EVENT_CHECKOUT_SESSION_SCHEMA.safeParse(event);
@@ -2384,6 +2386,7 @@ export class SubscriptionController {
 
                 return await this._handleStripeCheckoutSessionEvent(
                     config,
+                    event,
                     parseResult.data
                 );
             }
@@ -2410,9 +2413,11 @@ export class SubscriptionController {
     @traced(TRACE_NAME)
     private async _handleStripeCheckoutSessionEvent(
         config: SubscriptionConfiguration,
-        event: StripeEventCheckoutSession
+        event: StripeEvent,
+        sessionEvent: StripeEventCheckoutSession
     ): Promise<HandleStripeWebhookResponse> {
-        const sessionId = event.data.object.client_reference_id;
+        const stripeSession = sessionEvent.data.object;
+        const sessionId = stripeSession.client_reference_id;
 
         if (!sessionId) {
             console.log(
@@ -2436,9 +2441,9 @@ export class SubscriptionController {
             };
         }
 
-        if (session.stripeCheckoutSessionId !== event.data.object.id) {
+        if (session.stripeCheckoutSessionId !== stripeSession.id) {
             console.log(
-                `[SubscriptionController] [handleStripeWebhook] Stripe checkout session ID (${event.data.object.id}) does not match stored ID (${session.stripeCheckoutSessionId}).`
+                `[SubscriptionController] [handleStripeWebhook] Stripe checkout session ID (${stripeSession.id}) does not match stored ID (${session.stripeCheckoutSessionId}).`
             );
             return {
                 success: false,
@@ -2449,18 +2454,49 @@ export class SubscriptionController {
         }
 
         console.log(
-            `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${event.data.object.id} status: ${event.data.object.status} paymentStatus: ${event.data.object.payment_status}] Checkout session updated for session ID.`
+            `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${stripeSession.id} status: ${stripeSession.status} paymentStatus: ${stripeSession.payment_status}] Checkout session updated for session ID.`
         );
         const paid =
-            event.data.object.payment_status === 'no_payment_required' ||
-            event.data.object.payment_status === 'paid';
+            stripeSession.payment_status === 'no_payment_required' ||
+            stripeSession.payment_status === 'paid';
         await this._authStore.updateCheckoutSessionInfo({
             ...session,
             paid,
-            paymentStatus: event.data.object.payment_status,
-            status: event.data.object.status,
+            paymentStatus: stripeSession.payment_status,
+            status: stripeSession.status,
             invoice: null,
         });
+
+        if (event.type === 'checkout.session.expired') {
+            if (session.pendingTransferIds) {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${
+                        stripeSession.id
+                    } transferIds: [${session.pendingTransferIds.join(
+                        ','
+                    )}]] Voiding pending transfers.`
+                );
+                const result =
+                    await this._financialController.completePendingTransfers({
+                        transfers: session.pendingTransferIds,
+                        transactionId: session.transactionId,
+                        flags: TransferFlags.void_pending_transfer,
+                    });
+
+                if (isFailure(result)) {
+                    logError(
+                        result.error,
+                        `[SubscriptionController] [handleStripeWebhook] Failed to void pending transfers for session ID: ${sessionId}`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage:
+                            'Failed to void pending transfers for session ID.',
+                    };
+                }
+            }
+        }
 
         return {
             success: true,
