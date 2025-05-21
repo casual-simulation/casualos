@@ -172,8 +172,12 @@ export class ContractRecordsController extends CrudRecordsController<
             }
 
             return success({
-                ...item,
                 id: uuid(),
+                address: item.address,
+                markers: item.markers,
+                initialValue: item.initialValue,
+                rate: item.rate,
+                description: item.description,
                 issuedAtMs: Date.now(),
                 status: 'pending',
                 issuingUserId: context.userId,
@@ -218,23 +222,41 @@ export class ContractRecordsController extends CrudRecordsController<
             };
         }
 
-        // if (action === 'create') {
-        //     // if (
-        //     //     typeof features.maxItems === 'number' &&
-        //     //     metrics.totalItems >= features.maxItems
-        //     // ) {
-        //     //     return {
-        //     //         success: false,
-        //     //         errorCode: 'subscription_limit_reached',
-        //     //         errorMessage:
-        //     //             'The maximum number of package items has been reached for your subscription.',
-        //     //     };
-        //     // }
+        if (action === 'create') {
+            if (
+                typeof features.maxItems === 'number' &&
+                metrics.totalItems >= features.maxItems
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The maximum number of contract items has been reached for your subscription.',
+                };
+            }
 
-        //     item!.id = uuid();
-        //     item!.issuedAtMs = Date.now();
-        //     item!.status = 'pending';
-        // }
+            const holdingUserMetrics = await this.store.getSubscriptionMetrics({
+                ownerId: item.holdingUserId,
+            });
+
+            const holdingUserFeatures = getContractFeatures(
+                config,
+                holdingUserMetrics.subscriptionStatus,
+                holdingUserMetrics.subscriptionId,
+                holdingUserMetrics.subscriptionType,
+                holdingUserMetrics.currentPeriodStartMs,
+                holdingUserMetrics.currentPeriodEndMs
+            );
+
+            if (!holdingUserFeatures.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_user',
+                    errorMessage:
+                        'The holding user does not have access to contracting features.',
+                };
+            }
+        }
 
         return {
             success: true,

@@ -35,54 +35,69 @@ import type {
     ContractRecordsStore,
 } from './ContractRecordsStore';
 import { MemoryContractRecordsStore } from './MemoryContractRecordsStore';
+import type { AuthUser } from '../AuthStore';
+import type { PrivoClientInterface } from '../PrivoClient';
 
 console.log = jest.fn();
 console.error = jest.fn();
 
 describe('ContractRecordsController', () => {
-    testCrudRecordsController<
-        ContractRecordInput,
-        ContractRecord,
-        ContractRecordsStore,
-        ContractRecordsController
-    >(
-        false,
-        'package',
-        (services) => new MemoryContractRecordsStore(services.store),
-        (config, services) =>
-            new ContractRecordsController({
-                ...config,
-                authStore: services.authStore,
-                privo: null,
+    {
+        let userId: string;
+        testCrudRecordsController<
+            ContractRecordInput,
+            ContractRecord,
+            ContractRecordsStore,
+            ContractRecordsController
+        >(
+            false,
+            'contract',
+            (services) => new MemoryContractRecordsStore(services.store),
+            (config, services) =>
+                new ContractRecordsController({
+                    ...config,
+                    authStore: services.authStore,
+                    privo: null,
+                }),
+            (item) => ({
+                address: item.address,
+                markers: item.markers,
+                id: expect.any(String),
+                holdingUserId: userId,
+                issuingUserId: userId,
+                initialValue: 100,
+                issuedAtMs: 999,
+                rate: 1,
+                status: 'pending',
             }),
-        (item) => ({
-            address: item.address,
-            markers: item.markers,
-            id: item.address,
-            holdingUserId: 'holdingUser',
-            issuingUserId: 'issuingUser',
-            initialValue: 100,
-            issuedAtMs: 100,
-            rate: 1,
-            status: 'pending',
-        }),
-        (item) => ({
-            address: item.address,
-            markers: item.markers,
-            holdingUser: 'holdingUser',
-            initialValue: 100,
-            issuedAtMs: 100,
-            rate: 1,
-        }),
-        async (context) => {
-            const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
-                (features) =>
-                    features.withAllDefaultFeatures().withNotifications()
-            );
+            (item) => ({
+                address: item.address,
+                markers: item.markers,
+                holdingUser: userId,
+                initialValue: 100,
+                rate: 1,
+            }),
+            async (context) => {
+                userId = context.userId;
+                const builder =
+                    subscriptionConfigBuilder().withUserDefaultFeatures(
+                        (features) =>
+                            features.withAllDefaultFeatures().withContracts()
+                    );
 
-            context.store.subscriptionConfiguration = builder.config;
-        }
-    );
+                context.store.subscriptionConfiguration = builder.config;
+
+                const user = await context.store.findUser(userId);
+                await context.store.saveUser({
+                    ...user,
+                    stripeAccountId: 'accountId',
+                    stripeAccountRequirementsStatus: 'complete',
+                    stripeAccountStatus: 'active',
+                });
+            },
+            ['create', 'read', 'list']
+        );
+    }
 
     let store: MemoryStore;
     let itemsStore: MemoryContractRecordsStore;
@@ -101,12 +116,27 @@ describe('ContractRecordsController', () => {
     let otherUserId: string;
     let recordName: string;
 
+    let privoClientMock: jest.Mocked<PrivoClientInterface>;
+
     beforeEach(async () => {
         // require('axios').__reset();
         realDateNow = Date.now;
         dateNowMock = Date.now = jest.fn();
 
         dateNowMock.mockReturnValue(999);
+
+        privoClientMock = {
+            createAdultAccount: jest.fn(),
+            createChildAccount: jest.fn(),
+            getUserInfo: jest.fn(),
+            generateAuthorizationUrl: jest.fn(),
+            processAuthorizationCallback: jest.fn(),
+            checkEmail: jest.fn(),
+            checkDisplayName: jest.fn(),
+            generateLogoutUrl: jest.fn(),
+            resendConsentRequest: jest.fn(),
+            lookupServiceId: jest.fn(),
+        };
 
         const context = await setupTestContext<
             ContractRecordInput,
@@ -119,7 +149,7 @@ describe('ContractRecordsController', () => {
                 return new ContractRecordsController({
                     ...config,
                     authStore: services.authStore,
-                    privo: null,
+                    privo: privoClientMock,
                 });
             }
         );
@@ -212,6 +242,28 @@ describe('ContractRecordsController', () => {
     // }
 
     describe('recordItem()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'accountId',
+                stripeAccountRequirementsStatus: 'complete',
+                stripeAccountStatus: 'active',
+            });
+        });
+
         describe('create', () => {
             it('should return subscription_limit_reached when the user has reached limit of contracts', async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
@@ -224,13 +276,6 @@ describe('ContractRecordsController', () => {
                                 .withContractsMaxItems(1)
                         )
                 );
-
-                const user = await store.findUser(userId);
-                await store.saveUser({
-                    ...user,
-                    subscriptionId: 'sub1',
-                    subscriptionStatus: 'active',
-                });
 
                 await itemsStore.createItem(recordName, {
                     id: 'id',
@@ -249,12 +294,9 @@ describe('ContractRecordsController', () => {
                     item: {
                         address: 'item2',
                         markers: [PUBLIC_READ_MARKER],
-                        holdingUserId: 'holdingUser',
-                        issuingUserId: 'issuingUser',
+                        holdingUser: userId,
                         initialValue: 100,
                         rate: 1,
-                        status: 'pending',
-                        issuedAtMs: 100,
                     },
                     userId,
                     instances: [],
@@ -264,39 +306,60 @@ describe('ContractRecordsController', () => {
                     success: false,
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
-                        'The maximum number of package items has been reached for your subscription.',
+                        'The maximum number of contract items has been reached for your subscription.',
                 });
             });
 
-            it('should properly create the item with a new ID even if there is no contract limit', async () => {
-                store.subscriptionConfiguration = buildSubscriptionConfig(
-                    (config) =>
-                        config.addSubscription('sub1', (sub) =>
-                            sub
-                                .withTier('tier1')
-                                .withAllDefaultFeatures()
-                                .withContracts()
-                        )
-                );
-
-                const user = await store.findUser(userId);
-                await store.saveUser({
-                    ...user,
-                    subscriptionId: 'sub1',
-                    subscriptionStatus: 'active',
-                });
+            it('should require that the holding user have access to contract features', async () => {
+                const user2: AuthUser = {
+                    id: 'user2',
+                    email: 'user2@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'accountId2',
+                    stripeAccountRequirementsStatus: 'complete',
+                    stripeAccountStatus: 'active',
+                };
+                await store.saveUser(user2);
 
                 const result = await manager.recordItem({
                     recordKeyOrRecordName: recordName,
                     item: {
                         address: 'item2',
                         markers: [PUBLIC_READ_MARKER],
-                        holdingUserId: 'holdingUser',
-                        issuingUserId: 'issuingUser',
+                        holdingUser: 'user2',
                         initialValue: 100,
                         rate: 1,
-                        status: 'pending',
-                        issuedAtMs: 100,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_user',
+                    errorMessage:
+                        'The holding user does not have access to contracting features.',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toBeFalsy();
+            });
+
+            it('should properly create the item with a new ID if there is no contract limit', async () => {
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: userId,
+                        initialValue: 100,
+                        rate: 1,
                     },
                     userId,
                     instances: [],
@@ -317,6 +380,286 @@ describe('ContractRecordsController', () => {
                     id: expect.any(String),
                     address: 'item2',
                     markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: userId,
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    status: 'pending',
+                    issuedAtMs: expect.any(Number),
+                });
+            });
+
+            it('should be able to find the holding user by email', async () => {
+                const user2: AuthUser = {
+                    id: 'user2',
+                    email: 'user2@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                };
+                await store.saveUser(user2);
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: 'user2@example.com',
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toEqual({
+                    id: expect.any(String),
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: 'user2',
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    status: 'pending',
+                    issuedAtMs: expect.any(Number),
+                });
+            });
+
+            it('should be able to find the holding user by phone number', async () => {
+                const user2: AuthUser = {
+                    id: 'user2',
+                    email: null,
+                    phoneNumber: '1234567890',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                };
+                await store.saveUser(user2);
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: '1234567890',
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toEqual({
+                    id: expect.any(String),
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: 'user2',
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    status: 'pending',
+                    issuedAtMs: expect.any(Number),
+                });
+            });
+
+            it('should be able to find the holding user by privo display name', async () => {
+                const user2: AuthUser = {
+                    id: 'user2',
+                    email: null,
+                    phoneNumber: '1234567890',
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'privoId',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                };
+                await store.saveUser(user2);
+
+                privoClientMock.lookupServiceId.mockImplementation(
+                    async (req) =>
+                        req.displayName === 'displayName' ? 'privoId' : null
+                );
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: 'displayName',
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toEqual({
+                    id: expect.any(String),
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: 'user2',
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    status: 'pending',
+                    issuedAtMs: expect.any(Number),
+                });
+
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    displayName: 'displayName',
+                });
+            });
+
+            it('should be able to find the holding user by privo email', async () => {
+                const user2: AuthUser = {
+                    id: 'user2',
+                    email: null,
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'privoId',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                };
+                await store.saveUser(user2);
+
+                privoClientMock.lookupServiceId.mockImplementation(
+                    async (req) => (req.email === 'email' ? 'privoId' : null)
+                );
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: 'email',
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toEqual({
+                    id: expect.any(String),
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: 'user2',
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    status: 'pending',
+                    issuedAtMs: expect.any(Number),
+                });
+
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    email: 'email',
+                });
+            });
+
+            it('should be able to find the holding user by privo phone number', async () => {
+                const user2: AuthUser = {
+                    id: 'user2',
+                    email: null,
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    privoServiceId: 'privoId',
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                };
+                await store.saveUser(user2);
+
+                privoClientMock.lookupServiceId.mockImplementation(
+                    async (req) =>
+                        req.phoneNumber === 'phoneNumber' ? 'privoId' : null
+                );
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: 'phoneNumber',
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const item = await itemsStore.getItemByAddress(
+                    recordName,
+                    'item2'
+                );
+
+                expect(item).toEqual({
+                    id: expect.any(String),
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                    holdingUserId: 'user2',
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    status: 'pending',
+                    issuedAtMs: expect.any(Number),
+                });
+
+                expect(privoClientMock.lookupServiceId).toHaveBeenCalledWith({
+                    phoneNumber: 'phoneNumber',
                 });
             });
         });

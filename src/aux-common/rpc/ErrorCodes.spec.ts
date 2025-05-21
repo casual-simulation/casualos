@@ -105,6 +105,7 @@ describe('getStatusCode()', () => {
         ['item_not_found', 404] as const,
         ['store_disabled', 400] as const,
         ['currency_not_supported', 400] as const,
+        ['invalid_user', 400] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

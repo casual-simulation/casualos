@@ -97,7 +97,8 @@ export type KnownErrorCodes =
     | 'item_already_purchased'
     | 'item_not_found'
     | 'store_disabled'
-    | 'currency_not_supported';
+    | 'currency_not_supported'
+    | 'invalid_user';
 
 /**
  * Gets the status code that should be used for the given response.
