@@ -663,5 +663,47 @@ describe('ContractRecordsController', () => {
                 });
             });
         });
+
+        describe('update', () => {
+            it('should return not_supported when trying to update a contract', async () => {
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: userId,
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item2',
+                });
+
+                const result2 = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUser: userId,
+                        initialValue: 100,
+                        rate: 1,
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result2).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Updating contracts is not supported.',
+                });
+            });
+        });
     });
 });
