@@ -452,7 +452,11 @@ export class FinancialController {
 
             transfers.push({
                 id: this._financialInterface.generateId(),
-                amount: AMOUNT_MAX,
+                amount:
+                    (flags & TransferFlags.void_pending_transfer) ===
+                    TransferFlags.void_pending_transfer
+                        ? 0n
+                        : AMOUNT_MAX,
                 code: 0,
                 credit_account_id: 0n,
                 debit_account_id: 0n,
@@ -721,6 +725,16 @@ export class FinancialController {
     // }
 }
 
+/**
+ * Gets the balance of the given account.
+ *
+ * For asset accounts, the balance is calculated as: debits_posted - credits_posted.
+ * For liability accounts, the balance is calculated as: credits_posted - debits_posted.
+ * For revenue accounts, the balance is calculated as: credits_posted - debits_posted.
+ *
+ * @param account The account to get the balance of.
+ * @returns
+ */
 export function getAccountBalance(account: Account): number {
     switch (account.code) {
         case AccountCodes.assets_cash:
@@ -878,6 +892,15 @@ export interface InternalTransferRequest {
      * The ID of the transaction that should be created.
      */
     transactionId?: bigint | string | null;
+
+    // TODO: support idempotency
+    // /**
+    //  * The idempotency key that should be used.
+    //  * If specified, then the transaction ID and transfer IDs will be generated from this key.
+    //  * If not specifed, then one will be generated.
+    //  * Must be a UUID.
+    //  */
+    // idempotencyKey?: string | null;
 }
 
 export interface PostTransfersRequest {

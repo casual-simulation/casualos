@@ -605,7 +605,7 @@ describe('FinancialController', () => {
         });
     });
 
-    describe('internalTransfer()', () => {
+    describe('internalTransaction()', () => {
         let account1Id: string;
         let account2Id: string;
 
@@ -625,6 +625,68 @@ describe('FinancialController', () => {
                 )
             ));
         });
+
+        // it.skip('should be able to be idempotent', async () => {
+        //     const result = await controller.internalTransaction({
+        //         transfers: [
+        //             {
+        //                 debitAccountId: ACCOUNT_IDS.assets_stripe,
+        //                 creditAccountId: account1Id,
+        //                 currency: 'credits',
+        //                 amount: 100n,
+        //                 code: TransferCodes.admin_credit,
+        //             },
+        //         ],
+        //         idempotencyKey: '1b671a64-40d5-491e-99b0-da01ff1f3341',
+        //     });
+
+        //     expect(mapBigInts(result)).toEqual(
+        //         success({
+        //             transactionId: '3',
+        //             transferIds: ['4'],
+        //         })
+        //     );
+
+        //     const result2 = await controller.internalTransaction({
+        //         transfers: [
+        //             {
+        //                 debitAccountId: ACCOUNT_IDS.assets_stripe,
+        //                 creditAccountId: account1Id,
+        //                 currency: 'credits',
+        //                 amount: 100n,
+        //                 code: TransferCodes.admin_credit,
+        //             },
+        //         ],
+        //         idempotencyKey: '1b671a64-40d5-491e-99b0-da01ff1f3341',
+        //     });
+
+        //     expect(mapBigInts(result2)).toEqual(
+        //         success({
+        //             transactionId: '3',
+        //             transferIds: ['4'],
+        //         })
+        //     );
+
+        //     expect(mapBigInts(financialInterface.transfers)).toEqual(
+        //         mapBigInts([
+        //             {
+        //                 id: 4,
+        //                 amount: 100,
+        //                 code: TransferCodes.admin_credit,
+        //                 credit_account_id: Number(account1Id),
+        //                 debit_account_id: ACCOUNT_IDS.assets_stripe,
+        //                 flags: TransferFlags.none,
+        //                 ledger: LEDGERS.credits,
+        //                 pending_id: 0,
+        //                 timeout: 0,
+        //                 timestamp: 0,
+        //                 user_data_128: 3,
+        //                 user_data_64: 0,
+        //                 user_data_32: 0,
+        //             },
+        //         ])
+        //     );
+        // });
 
         it('should be able to transfer money from the assets_cash account to a user account', async () => {
             const result = await controller.internalTransaction({
@@ -1048,6 +1110,61 @@ describe('FinancialController', () => {
                         debit_account_id: 0,
                         code: 0,
                         flags: TransferFlags.post_pending_transfer,
+                        ledger: 0,
+                        pending_id: 101,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 4,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
+        });
+
+        it('should void the given transfers', async () => {
+            const result = await controller.completePendingTransfers({
+                transfers: [transfer1, transfer2],
+                flags: TransferFlags.void_pending_transfer,
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: '4',
+                    transferIds: ['5', '6'],
+                })
+            );
+
+            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+                mapBigInts([
+                    {
+                        id: 5,
+                        amount: 0,
+                        credit_account_id: 0,
+                        debit_account_id: 0,
+                        code: 0,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.void_pending_transfer,
+                        ledger: 0,
+                        pending_id: 100,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 4,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                    {
+                        id: 6,
+                        amount: 0,
+                        credit_account_id: 0,
+                        debit_account_id: 0,
+                        code: 0,
+                        flags: TransferFlags.void_pending_transfer,
                         ledger: 0,
                         pending_id: 101,
                         timeout: 0,
