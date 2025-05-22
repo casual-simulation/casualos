@@ -1332,8 +1332,9 @@ export interface AuthCheckoutSession {
 
     /**
      * The ID of the stripe checkout session that is associated with this session.
+     * If null, then the session is not associated with a stripe checkout session.
      */
-    stripeCheckoutSessionId: string;
+    stripeCheckoutSessionId: string | null;
 
     /**
      * The ID of the user that the checkout session is for.
@@ -1352,9 +1353,19 @@ export interface AuthCheckoutSession {
     transactionId?: string | null;
 
     /**
-     * The transfers that should be posted/voided for the checkout session.
+     * The transfers that have been posted for the checkout session.
      */
-    pendingTransferIds?: string[] | null;
+    transferIds?: string[] | null;
+
+    /**
+     * Wether the transfers are currently pending.
+     */
+    transfersPending?: boolean;
+
+    /**
+     * Whether the checkout session should be automatically fulfilled once payment completes.
+     */
+    shouldBeAutomaticallyFulfilled?: boolean;
 }
 
 export type AuthCheckoutSessionItem =
@@ -1419,6 +1430,10 @@ export type CheckoutSessionStatus = 'open' | 'expired' | 'complete';
 
 /**
  * The payment status of the checkout session.
+ *
+ * - "no_payment_required" - The checkout session does not require payment via Stripe.
+ * - "paid" - The checkout session has been paid for.
+ * - "unpaid" - The checkout session has not been paid for.
  */
 export type CheckoutSessionPaymentStatus =
     | 'no_payment_required'
@@ -1523,8 +1538,9 @@ export interface UpdateCheckoutSessionRequest {
 
     /**
      * The ID of the stripe checkout session that is associated with this session.
+     * If null, then the session is not associated with a stripe checkout session.
      */
-    stripeCheckoutSessionId: string;
+    stripeCheckoutSessionId: string | null;
 
     /**
      * The ID of the user that the checkout session is for.
@@ -1551,7 +1567,18 @@ export interface UpdateCheckoutSessionRequest {
     transactionId?: string | null;
 
     /**
-     * The transfers that should be posted/voided for the checkout session.
+     * The transfers that have been posted for the checkout session.
      */
-    pendingTransferIds?: string[] | null;
+    transferIds?: string[] | null;
+
+    /**
+     * Wether the transfers are currently pending.
+     * Defaults to false.
+     */
+    transfersPending?: boolean;
+
+    /**
+     * Whether the checkout session should be automatically fulfilled once payment completes.
+     */
+    shouldBeAutomaticallyFulfilled?: boolean;
 }

@@ -1124,6 +1124,30 @@ describe('FinancialController', () => {
             );
         });
 
+        it('should return a specific error code if the transfers have already been completed', async () => {
+            const result = await controller.completePendingTransfers({
+                transfers: [transfer1, transfer2],
+            });
+
+            expect(result).toEqual(
+                success({
+                    transactionId: '4',
+                    transferIds: ['5', '6'],
+                })
+            );
+
+            const result2 = await controller.completePendingTransfers({
+                transfers: [transfer1, transfer2],
+            });
+
+            expect(result2).toEqual(
+                failure({
+                    errorCode: 'transfer_already_completed',
+                    errorMessage: `The transfer (${transfer1}) has already been posted/voided.`,
+                })
+            );
+        });
+
         it('should void the given transfers', async () => {
             const result = await controller.completePendingTransfers({
                 transfers: [transfer1, transfer2],

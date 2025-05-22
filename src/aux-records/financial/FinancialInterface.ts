@@ -124,6 +124,19 @@ export const ACCOUNT_IDS = {
     liquidity_credits: 6002n,
 };
 
+export function getLiquidityAccountByLedger(
+    ledger: (typeof LEDGERS)[keyof typeof LEDGERS]
+) {
+    switch (ledger) {
+        case LEDGERS.usd:
+            return ACCOUNT_IDS.liquidity_usd;
+        case LEDGERS.credits:
+            return ACCOUNT_IDS.liquidity_credits;
+        default:
+            throw new Error(`Unknown ledger: ${ledger}`);
+    }
+}
+
 /**
  * Standards for account codes from the systems perspective.
  * * [1000] assets
@@ -202,6 +215,11 @@ export enum TransferCodes {
      * A administrative debit to an account from the system.
      */
     admin_debit = 4,
+
+    /**
+     * A currency exchange transfer.
+     */
+    exchange = 5,
 
     /**
      * A credit to a user's account based on the purchase of credits.
@@ -508,6 +526,10 @@ export function getCodeForTransferError(
             return 'overflows_debits_posted';
         case CreateTransferError.overflows_timeout:
             return 'overflows_timeout';
+        case CreateTransferError.pending_transfer_already_posted:
+            return 'already_posted';
+        case CreateTransferError.pending_transfer_already_voided:
+            return 'already_voided';
         default:
             return 'server_error';
     }
@@ -546,6 +568,8 @@ export interface InterfaceTransferError {
         | 'closing_transfer_must_be_pending'
         | 'credit_account_already_closed'
         | 'debit_account_already_closed'
+        | 'already_posted'
+        | 'already_voided'
         | 'credit_account_not_found'
         | 'debit_account_not_found'
         | 'exceeds_credits'

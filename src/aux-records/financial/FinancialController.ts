@@ -530,6 +530,18 @@ export class FinancialController {
                 });
             }
 
+            const completed = transferResult.error.errors.find(
+                (e) =>
+                    e.errorCode === 'already_posted' ||
+                    e.errorCode === 'already_voided'
+            );
+            if (completed) {
+                return failure({
+                    errorCode: 'transfer_already_completed',
+                    errorMessage: `The transfer (${completed.transfer.pending_id}) has already been posted/voided.`,
+                });
+            }
+
             return failure({
                 errorCode: 'server_error',
                 errorMessage: 'An error occurred while transferring the funds.',
@@ -835,7 +847,8 @@ export type TransferError = {
         | 'debits_exceed_credits'
         | 'credits_exceed_debits'
         | 'unsupported_currency'
-        | 'transfer_already_exists';
+        | 'transfer_already_exists'
+        | 'transfer_already_completed';
     errorMessage: string;
 
     /**

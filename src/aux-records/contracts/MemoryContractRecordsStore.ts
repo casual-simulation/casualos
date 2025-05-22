@@ -30,6 +30,20 @@ export class MemoryContractRecordsStore
     extends MemoryCrudRecordsStore<ContractRecord>
     implements ContractRecordsStore
 {
+    async markPendingContractAsOpen(
+        recordName: string,
+        address: string
+    ): Promise<void> {
+        const record = this.getItemRecord(recordName);
+        const item = record.get(address);
+        if (item && item.status === 'pending') {
+            record.set(address, {
+                ...item,
+                status: 'open',
+            });
+        }
+    }
+
     async getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<ContractSubscriptionMetrics> {

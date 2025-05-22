@@ -23,6 +23,7 @@ import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type {
     AuthStore,
     AuthUser,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionPeriodRequest,
 } from './AuthStore';
 import type {
@@ -98,12 +99,18 @@ import { fromByteArray } from 'base64-js';
 import type { FinancialController, InternalTransfer } from './financial';
 import {
     ACCOUNT_IDS,
+    CURRENCIES,
     CurrencyCodes,
+    getAccountBalance,
+    getLiquidityAccountByLedger,
     LEDGERS,
     TransferCodes,
     TransferFlags,
 } from './financial';
-import type { ContractRecordsStore } from './contracts/ContractRecordsStore';
+import type {
+    ContractRecord,
+    ContractRecordsStore,
+} from './contracts/ContractRecordsStore';
 
 /**
  * The number of bytes that the access key secret should be.
@@ -908,6 +915,7 @@ export class SubscriptionController {
      * @param request The request to create the manage store account link.
      * @returns
      */
+    @traced(TRACE_NAME)
     async createManageStoreAccountLink(
         request: CreateManageStoreAccountLinkRequest
     ): Promise<ManageAccountLinkResult> {
@@ -1018,6 +1026,7 @@ export class SubscriptionController {
      * Creates a link that the user can be redirected to in order to manage their stripe XP account.
      * @param request The request to create the manage xp account link.
      */
+    @traced(TRACE_NAME)
     async createManageXpAccountLink(
         request: CreateManageXpAccountLinkRequest
     ): Promise<ManageAccountLinkResult> {
@@ -1207,6 +1216,7 @@ export class SubscriptionController {
         };
     }
 
+    @traced(TRACE_NAME)
     async createPurchaseItemLink(
         request: CreatePurchaseItemLinkRequest
     ): Promise<CreatePurchaseItemLinkResult> {
@@ -1496,6 +1506,7 @@ export class SubscriptionController {
         }
     }
 
+    @traced(TRACE_NAME)
     async purchaseContract(
         request: PurchaseContractRequest
     ): Promise<PurchaseContractResult> {
@@ -1538,25 +1549,6 @@ export class SubscriptionController {
                 });
             }
 
-            const contractAccount =
-                await this._financialController.getOrCreateFinancialAccount({
-                    contractId: item.id,
-                    ledger: LEDGERS.usd,
-                });
-
-            if (isFailure(contractAccount)) {
-                logError(
-                    contractAccount.error,
-                    `[SubscriptionController] [createPurchaseContractLink] Failed to get USD financial account for contract: ${item.id}`
-                );
-                return failure({
-                    success: false,
-                    errorCode: 'server_error',
-                    errorMessage:
-                        'Failed to get a financial account for the contract.',
-                });
-            }
-
             const recordName = context.context.recordName;
             const authorization =
                 await this._policies.authorizeUserAndInstances(
@@ -1591,7 +1583,7 @@ export class SubscriptionController {
 
             if (!features.allowed) {
                 console.log(
-                    `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`
+                    `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`
                 );
                 return failure({
                     errorCode: 'store_disabled',
@@ -1604,7 +1596,7 @@ export class SubscriptionController {
 
             // if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
             //     console.log(
-            //         `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store has no stripe account.`
+            //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store has no stripe account.`
             //     );
             //     return {
             //         success: false,
@@ -1616,7 +1608,7 @@ export class SubscriptionController {
 
             // if (metrics.stripeAccountStatus !== 'active') {
             //     console.log(
-            //         `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store stripe account is not active.`
+            //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store stripe account is not active.`
             //     );
             //     return {
             //         success: false,
@@ -1630,7 +1622,7 @@ export class SubscriptionController {
 
             if (!limits) {
                 console.log(
-                    `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency}] Currency not supported.`
+                    `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency}] Currency not supported.`
                 );
                 return failure({
                     errorCode: 'currency_not_supported',
@@ -1644,7 +1636,7 @@ export class SubscriptionController {
                     item.initialValue > limits.maxCost)
             ) {
                 console.log(
-                    `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} initialValue: ${item.initialValue}] Cost not valid.`
+                    `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} initialValue: ${item.initialValue}] Cost not valid.`
                 );
                 return failure({
                     errorCode: 'subscription_limit_reached',
@@ -1663,7 +1655,7 @@ export class SubscriptionController {
                 } else {
                     // if (limits.fee.amount > item.initialValue) {
                     //     console.warn(
-                    //         `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} fee: ${limits.fee.amount} initialValue: ${item.initialValue}] Fee greater than cost.`
+                    //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} fee: ${limits.fee.amount} initialValue: ${item.initialValue}] Fee greater than cost.`
                     //     );
                     //     return {
                     //         success: false,
@@ -1720,165 +1712,45 @@ export class SubscriptionController {
                 customerEmail = user.email ?? null;
             }
 
+            const contractAccount =
+                await this._financialController.getOrCreateFinancialAccount({
+                    contractId: item.id,
+                    ledger: LEDGERS.usd,
+                });
+
+            if (isFailure(contractAccount)) {
+                logError(
+                    contractAccount.error,
+                    `[SubscriptionController] [purchaseContract] Failed to get USD financial account for contract: ${item.id}`
+                );
+                return failure({
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'Failed to get a financial account for the contract.',
+                });
+            }
+
             const sessionId = uuid();
 
             console.log(
-                `[SubscriptionController] [createPurchaseContractLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.contract.currency} initialValue: ${item.initialValue} applicationFee: ${applicationFee}] Creating checkout session.`
-            );
-            const transfers: InternalTransfer[] = [
-                {
-                    amount: item.initialValue,
-                    code: TransferCodes.contract_payment,
-                    creditAccountId: contractAccount.value.id,
-                    debitAccountId: ACCOUNT_IDS.assets_stripe,
-                    currency: CurrencyCodes.usd,
-                    pending: true,
-                },
-            ];
-            const lineItems: StripeCheckoutRequest['line_items'] = [
-                {
-                    price_data: {
-                        currency: currency,
-                        unit_amount: item.initialValue,
-                        product_data: {
-                            name: 'Contract',
-                            description: item.description,
-                            images: [],
-                            metadata: {
-                                resourceKind: 'contract',
-                                recordName: recordName,
-                                address: item.address,
-                            },
-                            // tax_code: item.taxCode ?? undefined,
-                        },
-                    },
-                    quantity: 1,
-                },
-            ];
-
-            if (applicationFee > 0) {
-                transfers.push({
-                    amount: applicationFee,
-                    code: TransferCodes.xp_platform_fee,
-                    debitAccountId: ACCOUNT_IDS.assets_stripe,
-                    creditAccountId: ACCOUNT_IDS.revenue_xp_platform_fees,
-                    currency: CurrencyCodes.usd,
-                    pending: true,
-                });
-                lineItems.push({
-                    price_data: {
-                        currency,
-                        unit_amount: applicationFee,
-                        product_data: {
-                            name: 'Application Fee',
-                            description: item.description,
-                            images: [],
-                            metadata: {
-                                fee: true,
-                                resourceKind: 'contract',
-                                recordName: recordName,
-                                address: item.address,
-                            },
-                        },
-                    },
-                    quantity: 1,
-                });
-            }
-
-            const transferResult =
-                await this._financialController.internalTransaction({
-                    transfers,
-                });
-
-            if (isFailure(transferResult)) {
-                logError(
-                    transferResult.error,
-                    `[SubscriptionController] [createPurchaseContractLink] Failed to create internal transfer for contract: ${item.id}`
-                );
-                // TODO: Map out better error codes
-                return failure({
-                    errorCode: 'server_error',
-                    errorMessage:
-                        'Failed to create internal transfer for contract.',
-                });
-            }
-
-            const sessionResult = await wrap(() =>
-                this._stripe.createCheckoutSession({
-                    mode: 'payment',
-                    line_items: lineItems,
-                    success_url: fulfillmentRoute(config.returnUrl, sessionId),
-                    cancel_url: request.returnUrl,
-                    client_reference_id: sessionId,
-                    customer_email: customerEmail,
-                    metadata: {
-                        userId: request.userId,
-                        checkoutSessionId: sessionId,
-                        transactionId: transferResult.value.transactionId,
-                    },
-                    payment_intent_data: {
-                        // application_fee_amount: applicationFee,
-                        transfer_group: item.id,
-                    },
-                    // connect: {
-                    //     stripeAccount: metrics.,
-                    // },
-                })
+                `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.contract.currency} initialValue: ${item.initialValue} applicationFee: ${applicationFee}] Creating checkout session.`
             );
 
-            if (isFailure(sessionResult)) {
-                logError(
-                    sessionResult.error,
-                    `[SubscriptionController] [createPurchaseContractLink] Failed to create checkout session for contract: ${item.id}`
-                );
-
-                const result =
-                    await this._financialController.completePendingTransfers({
-                        transfers: transferResult.value.transferIds,
-                        flags: TransferFlags.void_pending_transfer,
-                        transactionId: transferResult.value.transactionId,
-                    });
-
-                if (isFailure(result)) {
-                    logError(
-                        result.error,
-                        `[SubscriptionController] [createPurchaseContractLink] Failed to void pending transfers for contract: ${item.id}`
-                    );
-                }
-
-                return failure({
-                    errorCode: 'server_error',
-                    errorMessage:
-                        'Failed to create checkout session for contract.',
+            const userUsdAccount =
+                await this._financialController.getOrCreateFinancialAccount({
+                    userId: request.userId,
+                    ledger: LEDGERS.usd,
                 });
-            }
 
-            const session = sessionResult.value;
-
-            await this._authStore.updateCheckoutSessionInfo({
+            const checkoutSession: UpdateCheckoutSessionRequest = {
                 id: sessionId,
-                stripeCheckoutSessionId: session.id,
-                invoice: session.invoice
-                    ? {
-                          currency: session.invoice.currency,
-                          paid: session.invoice.paid,
-                          description: session.invoice.description,
-                          status: session.invoice.status,
-                          stripeInvoiceId: session.invoice.id,
-                          stripeHostedInvoiceUrl:
-                              session.invoice.hosted_invoice_url,
-                          stripeInvoicePdfUrl: session.invoice.invoice_pdf,
-                          tax: session.invoice.tax,
-                          total: session.invoice.total,
-                          subtotal: session.invoice.subtotal,
-                      }
-                    : null,
+                stripeCheckoutSessionId: null,
+                invoice: null,
                 userId: request.userId,
-                status: session.status,
-                paymentStatus: session.payment_status,
-                paid:
-                    session.payment_status === 'paid' ||
-                    session.payment_status === 'no_payment_required',
+                status: 'complete',
+                paymentStatus: 'no_payment_required',
+                paid: false,
                 fulfilledAtMs: null,
                 items: [
                     {
@@ -1889,12 +1761,279 @@ export class SubscriptionController {
                         value: item.initialValue,
                     },
                 ],
-                transactionId: transferResult.value.transactionId,
-                pendingTransferIds: transferResult.value.transferIds,
-            });
+                transactionId: null,
+                transferIds: null,
+            };
+            if (isFailure(userUsdAccount)) {
+                logError(
+                    userUsdAccount.error,
+                    `[SubscriptionController] [purchaseContract] Failed to get USD financial account for user: ${request.userId}`
+                );
+            } else {
+                const balance = getAccountBalance(userUsdAccount.value);
+
+                if (balance >= totalCost) {
+                    // try to create a transfer from the user account
+                    console.log(
+                        `[SubscriptionController] [purchaseContract accountId: ${userUsdAccount.value.id}] Attempting to pay out of user USD account.`
+                    );
+
+                    const builder = new TransactionBuilder();
+                    builder.usePendingTransfers(false);
+                    builder.addContract({
+                        recordName,
+                        item,
+                        contractAccountId: contractAccount.value.id,
+                        debitAccountId: userUsdAccount.value.id,
+                    });
+
+                    if (applicationFee > 0) {
+                        builder.addContractApplicationFee({
+                            recordName,
+                            item,
+                            fee: applicationFee,
+                            debitAccountId: userUsdAccount.value.id,
+                        });
+                    }
+
+                    const transferResult =
+                        await this._financialController.internalTransaction({
+                            transfers: builder.transfers,
+                        });
+
+                    if (isFailure(transferResult)) {
+                        logError(
+                            transferResult.error,
+                            `[SubscriptionController] [purchaseContract] Failed to pay for contract from user's USD account:`
+                        );
+                    } else {
+                        console.log(
+                            `[SubscriptionController] [purchaseContract] Successfully paid for contract from user's USD account.`
+                        );
+                        checkoutSession.paid = true;
+                        checkoutSession.transferIds =
+                            transferResult.value.transferIds;
+                        checkoutSession.transactionId =
+                            transferResult.value.transactionId;
+                    }
+                }
+            }
+
+            if (!checkoutSession.paid) {
+                const userCreditAccount =
+                    await this._financialController.getOrCreateFinancialAccount(
+                        {
+                            userId: request.userId,
+                            ledger: LEDGERS.credits,
+                        }
+                    );
+
+                if (isFailure(userCreditAccount)) {
+                    logError(
+                        userCreditAccount.error,
+                        `[SubscriptionController] [purchaseContract] Failed to get Credit financial account for user: ${request.userId}`
+                    );
+                } else {
+                    const balance = getAccountBalance(userCreditAccount.value);
+
+                    if (balance >= totalCost) {
+                        // try to create a transfer from the user account
+                        console.log(
+                            `[SubscriptionController] [purchaseContract accountId: ${userCreditAccount.value.id}] Attempting to pay out of user credits account.`
+                        );
+
+                        const builder = new TransactionBuilder();
+                        builder.usePendingTransfers(false);
+                        builder.addTransfer({
+                            debitAccountId: userCreditAccount.value.id,
+                            creditAccountId: getLiquidityAccountByLedger(
+                                userCreditAccount.value.ledger
+                            ),
+                            currency: CURRENCIES.get(
+                                userCreditAccount.value.ledger
+                            ),
+                            amount: totalCost,
+                            code: TransferCodes.exchange,
+                        });
+                        builder.addContract({
+                            recordName,
+                            item,
+                            contractAccountId: contractAccount.value.id,
+                            debitAccountId: getLiquidityAccountByLedger(
+                                contractAccount.value.ledger
+                            ),
+                        });
+
+                        if (applicationFee > 0) {
+                            builder.addContractApplicationFee({
+                                recordName,
+                                item,
+                                fee: applicationFee,
+                                debitAccountId: getLiquidityAccountByLedger(
+                                    contractAccount.value.ledger
+                                ),
+                            });
+                        }
+
+                        const transferResult =
+                            await this._financialController.internalTransaction(
+                                {
+                                    transfers: builder.transfers,
+                                }
+                            );
+
+                        if (isFailure(transferResult)) {
+                            logError(
+                                transferResult.error,
+                                `[SubscriptionController] [purchaseContract] Failed to pay for contract from user's credit account:`
+                            );
+                        } else {
+                            console.log(
+                                `[SubscriptionController] [purchaseContract] Successfully paid for contract from user's credit account.`
+                            );
+                            checkoutSession.paid = true;
+                            checkoutSession.transferIds =
+                                transferResult.value.transferIds;
+                            checkoutSession.transactionId =
+                                transferResult.value.transactionId;
+                        }
+                    }
+                }
+            }
+
+            let url: string = undefined;
+            if (!checkoutSession.paid) {
+                console.log(
+                    `[SubscriptionController] [purchaseContract] Attempting to pay out of Stripe.`
+                );
+
+                const builder = new TransactionBuilder();
+                builder.usePendingTransfers(true);
+                builder.addContract({
+                    recordName,
+                    item,
+                    contractAccountId: contractAccount.value.id,
+                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                });
+
+                if (applicationFee > 0) {
+                    builder.addContractApplicationFee({
+                        recordName,
+                        item,
+                        fee: applicationFee,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                    });
+                }
+
+                const transferResult =
+                    await this._financialController.internalTransaction({
+                        transfers: builder.transfers,
+                    });
+
+                if (isFailure(transferResult)) {
+                    logError(
+                        transferResult.error,
+                        `[SubscriptionController] [purchaseContract] Failed to create internal transfer for contract: ${item.id}`
+                    );
+                    // TODO: Map out better error codes
+                    return failure({
+                        errorCode: 'server_error',
+                        errorMessage:
+                            'Failed to create internal transfer for contract.',
+                    });
+                }
+
+                const sessionResult = await wrap(() =>
+                    this._stripe.createCheckoutSession({
+                        mode: 'payment',
+                        line_items: builder.lineItems,
+                        success_url: fulfillmentRoute(
+                            config.returnUrl,
+                            sessionId
+                        ),
+                        cancel_url: request.returnUrl,
+                        client_reference_id: sessionId,
+                        customer_email: customerEmail,
+                        metadata: {
+                            userId: request.userId,
+                            checkoutSessionId: sessionId,
+                            transactionId: transferResult.value.transactionId,
+                        },
+                        payment_intent_data: {
+                            // application_fee_amount: applicationFee,
+                            transfer_group: item.id,
+                        },
+                        // connect: {
+                        //     stripeAccount: metrics.,
+                        // },
+                    })
+                );
+
+                if (isFailure(sessionResult)) {
+                    logError(
+                        sessionResult.error,
+                        `[SubscriptionController] [purchaseContract] Failed to create checkout session for contract: ${item.id}`
+                    );
+
+                    const result =
+                        await this._financialController.completePendingTransfers(
+                            {
+                                transfers: transferResult.value.transferIds,
+                                flags: TransferFlags.void_pending_transfer,
+                                transactionId:
+                                    transferResult.value.transactionId,
+                            }
+                        );
+
+                    if (isFailure(result)) {
+                        logError(
+                            result.error,
+                            `[SubscriptionController] [purchaseContract] Failed to void pending transfers for contract: ${item.id}`
+                        );
+                    }
+
+                    return failure({
+                        errorCode: 'server_error',
+                        errorMessage:
+                            'Failed to create checkout session for contract.',
+                    });
+                }
+
+                const session = sessionResult.value;
+
+                checkoutSession.stripeCheckoutSessionId = session.id;
+                if (session.invoice) {
+                    checkoutSession.invoice = {
+                        currency: session.invoice.currency,
+                        paid: session.invoice.paid,
+                        description: session.invoice.description,
+                        status: session.invoice.status,
+                        stripeInvoiceId: session.invoice.id,
+                        stripeHostedInvoiceUrl:
+                            session.invoice.hosted_invoice_url,
+                        stripeInvoicePdfUrl: session.invoice.invoice_pdf,
+                        tax: session.invoice.tax,
+                        total: session.invoice.total,
+                        subtotal: session.invoice.subtotal,
+                    };
+                }
+
+                checkoutSession.status = session.status;
+                checkoutSession.paymentStatus = session.payment_status;
+                checkoutSession.paid =
+                    session.payment_status === 'paid' ||
+                    session.payment_status === 'no_payment_required';
+                checkoutSession.transactionId =
+                    transferResult.value.transactionId;
+                checkoutSession.transferIds = transferResult.value.transferIds;
+                checkoutSession.transfersPending = true;
+                url = session.url;
+            }
+
+            await this._authStore.updateCheckoutSessionInfo(checkoutSession);
 
             return success({
-                url: session.url,
+                url,
                 sessionId: sessionId,
             });
         } catch (err) {
@@ -1909,6 +2048,7 @@ export class SubscriptionController {
         }
     }
 
+    @traced(TRACE_NAME)
     async fulfillCheckoutSession(
         request: FulfillCheckoutSessionRequest
     ): Promise<FulfillCheckoutSessionResult> {
@@ -1953,6 +2093,12 @@ export class SubscriptionController {
                     errorCode: 'invalid_request',
                     errorMessage: 'The checkout session has not been paid for.',
                 };
+            } else if (!session.paid) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The checkout session has not been paid for.',
+                };
             } else if (session.fulfilledAtMs > 0) {
                 return {
                     success: true,
@@ -1961,6 +2107,31 @@ export class SubscriptionController {
             console.log(
                 `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Fulfilling checkout session.`
             );
+
+            if (session.transferIds && session.transfersPending) {
+                const transferResult =
+                    await this._financialController.completePendingTransfers({
+                        transfers: session.transferIds,
+                        transactionId: session.transactionId,
+                    });
+
+                if (isFailure(transferResult)) {
+                    if (
+                        transferResult.error.errorCode !==
+                        'transfer_already_completed'
+                    ) {
+                        logError(
+                            transferResult.error,
+                            `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Failed to complete pending transfers for checkout session:`
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'server_error',
+                            errorMessage: 'A server error occurred.',
+                        };
+                    }
+                }
+            }
 
             if (request.activation === 'now') {
                 if (!request.userId) {
@@ -2015,10 +2186,16 @@ export class SubscriptionController {
                             activationKeyId: null,
                             checkoutSessionId: session.id,
                         });
-                    } else {
-                        console.warn(
-                            `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`
+                    } else if (item.type === 'contract') {
+                        // open contract
+                        await this._contractRecords.markPendingContractAsOpen(
+                            item.recordName,
+                            item.contractAddress
                         );
+                    } else {
+                        // console.warn(
+                        //     `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Unknown item type: ${item.type}`
+                        // );
                     }
                 }
 
@@ -2031,6 +2208,18 @@ export class SubscriptionController {
                     success: true,
                 };
             } else {
+                if (session.items.some((i) => i.type === 'contract')) {
+                    console.log(
+                        `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Cannot defer fulfillment of checkout session with contracts.`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'You cannot defer fulfillment of a checkout session with contracts.',
+                    };
+                }
+
                 console.log(
                     `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId}] Deferring activation for checkout session.`
                 );
@@ -2096,6 +2285,7 @@ export class SubscriptionController {
         }
     }
 
+    @traced(TRACE_NAME)
     async claimActivationKey(
         request: ClaimActivationKeyRequest
     ): Promise<ClaimActivationKeyResult> {
@@ -2468,17 +2658,17 @@ export class SubscriptionController {
         });
 
         if (event.type === 'checkout.session.expired') {
-            if (session.pendingTransferIds) {
+            if (session.transferIds && session.transfersPending) {
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${
                         stripeSession.id
-                    } transferIds: [${session.pendingTransferIds.join(
+                    } transferIds: [${session.transferIds.join(
                         ','
                     )}]] Voiding pending transfers.`
                 );
                 const result =
                     await this._financialController.completePendingTransfers({
-                        transfers: session.pendingTransferIds,
+                        transfers: session.transferIds,
                         transactionId: session.transactionId,
                         flags: TransferFlags.void_pending_transfer,
                     });
@@ -2494,7 +2684,44 @@ export class SubscriptionController {
                         errorMessage:
                             'Failed to void pending transfers for session ID.',
                     };
+                } else {
+                    await this._authStore.updateCheckoutSessionInfo({
+                        ...session,
+                        paid,
+                        paymentStatus: stripeSession.payment_status,
+                        status: stripeSession.status,
+                        invoice: null,
+                        transfersPending: false,
+                    });
                 }
+            }
+        }
+
+        if (
+            paid &&
+            !session.fulfilledAtMs &&
+            session.shouldBeAutomaticallyFulfilled
+        ) {
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] [sessionId: ${sessionId} stripeCheckoutSessionId: ${stripeSession.id}] Automatically fulfilling checkout session.`
+            );
+            const result = await this.fulfillCheckoutSession({
+                userId: session.userId,
+                activation: 'now',
+                sessionId,
+            });
+
+            if (result.success === false) {
+                console.error(
+                    `[SubscriptionController] [handleStripeWebhook] Failed to fulfill checkout session:`,
+                    result
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'Failed to fulfill checkout session for session ID.',
+                };
             }
         }
 
@@ -3661,3 +3888,198 @@ export interface ClaimActivationKeyFailure {
         | 'not_logged_in';
     errorMessage: string;
 }
+
+class TransactionBuilder {
+    transfers: InternalTransfer[] = [];
+    lineItems: StripeCheckoutRequest['line_items'] = [];
+    private _pending = false;
+
+    usePendingTransfers(pending: boolean = true) {
+        this._pending = pending;
+        return this;
+    }
+
+    addTransfer(tansfer: InternalTransfer): this {
+        this.transfers.push(tansfer);
+        return this;
+    }
+
+    addItem(item: SimpleItem): this {
+        this.transfers.push({
+            transferId: item.transferId,
+            amount: item.amount,
+            currency: item.currency,
+            code: item.code,
+            creditAccountId: item.creditAccountId,
+            debitAccountId: item.debitAccountId,
+            pending: item.pending ?? this._pending,
+        });
+
+        this.lineItems.push({
+            price_data: {
+                currency: item.currency,
+                unit_amount: item.amount,
+                product_data: {
+                    name: item.name,
+                    description: item.description,
+                    images: [],
+                    metadata: item.metadata,
+                },
+            },
+            quantity: 1,
+        });
+
+        return this;
+    }
+
+    // addTransfer(transfer: InternalTransfer): this {
+    //     this.transfers.push(transfer);
+    //     return this;
+    // }
+
+    // addExchange(info: {
+    //     debitAccountId: bigint,
+    //     debitCurrency: string,
+    //     credits: {
+    //         accountId: bigint,
+    //         amount: number,
+    //     }[],
+    //     creditCurrency: string,
+    //     pending?: boolean,
+    // }): this {
+    //     const total = info.credits.reduce((acc, credit) => acc + credit.amount, 0);
+    //     this.transfers.push({
+    //         amount: total,
+    //         code: TransferCodes.exchange,
+    //         debitAccountId: info.debitAccountId,
+    //         currency: info.debitCurrency,
+    //         creditAccountId: getLiquidityAccount(info.debitCurrency),
+    //         pending: info.pending ?? this._pending,
+    //     });
+
+    //     for (let credit of info.credits) {
+    //         this.transfers.push({
+    //             amount: credit.amount,
+    //             code: TransferCodes.exchange,
+    //             debitAccountId: getLiquidityAccount(info.creditCurrency),
+    //             creditAccountId: credit.accountId,
+    //             currency: info.creditCurrency,
+    //             pending: info.pending ?? this._pending,
+    //         });
+    //     }
+
+    //     return this;
+    // }
+
+    addContract(info: {
+        recordName: string;
+        item: ContractRecord;
+        contractAccountId: bigint;
+        debitAccountId: bigint;
+    }): this {
+        return this.addItem({
+            amount: info.item.initialValue,
+            code: TransferCodes.contract_payment,
+            creditAccountId: info.contractAccountId,
+            debitAccountId: info.debitAccountId,
+            currency: CurrencyCodes.usd,
+            pending: this._pending,
+
+            name: 'Contract',
+            description: info.item.description,
+            metadata: {
+                resourceKind: 'contract',
+                recordName: info.recordName,
+                address: info.item.address,
+            },
+        });
+    }
+
+    addContractApplicationFee(info: {
+        recordName: string;
+        item: ContractRecord;
+        fee: number;
+        debitAccountId: bigint;
+    }): this {
+        if (info.fee > 0) {
+            this.addItem({
+                amount: info.fee,
+                code: TransferCodes.xp_platform_fee,
+                debitAccountId: info.debitAccountId,
+                creditAccountId: ACCOUNT_IDS.revenue_xp_platform_fees,
+                currency: CurrencyCodes.usd,
+                pending: this._pending,
+
+                name: 'Application Fee',
+                // description: 'XP Platform Fee',
+                metadata: {
+                    fee: true,
+                    resourceKind: 'contract',
+                    recordName: info.recordName,
+                    address: info.item.address,
+                },
+            });
+        }
+
+        return this;
+    }
+}
+
+interface SimpleItem {
+    transferId?: string;
+
+    amount: number;
+    code: TransferCodes;
+    creditAccountId: bigint;
+    debitAccountId: bigint;
+    pending?: boolean;
+    currency: string;
+    name: string;
+    description?: string;
+    metadata: Record<string, string | boolean | number>;
+}
+
+// function createContractPurchaseTransfers(
+
+// ) {
+//     const builder = new TransactionBuilder();
+
+//     builder.addItem({
+//         amount: item.initialValue,
+//         code: TransferCodes.contract_payment,
+//         creditAccountId: contractAccount.value.id,
+//         debitAccountId: ACCOUNT_IDS.assets_stripe,
+//         currency: CurrencyCodes.usd,
+//         pending: true,
+
+//         name: 'Contract',
+//         description: item.description,
+//         metadata: {
+//             resourceKind: 'contract',
+//             recordName: recordName,
+//             address: item.address,
+//         },
+//     });
+
+//     if (applicationFee > 0) {
+//         builder.addItem({
+//             amount: applicationFee,
+//             code: TransferCodes.xp_platform_fee,
+//             debitAccountId: ACCOUNT_IDS.assets_stripe,
+//             creditAccountId: ACCOUNT_IDS.revenue_xp_platform_fees,
+//             currency: CurrencyCodes.usd,
+//             pending: true,
+
+//             name: 'Application Fee',
+//             description: item.description,
+//             metadata: {
+//                 fee: true,
+//                 resourceKind: 'contract',
+//                 recordName: recordName,
+//                 address: item.address,
+//             },
+//         });
+//     }
+
+//     return builder;
+// }

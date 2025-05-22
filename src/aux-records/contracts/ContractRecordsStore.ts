@@ -34,6 +34,16 @@ export interface ContractRecordsStore extends CrudRecordsStore<ContractRecord> {
     getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<ContractSubscriptionMetrics>;
+
+    /**
+     * Marks the given pending contract as open.
+     * @param recordName The name of the record.
+     * @param address The address of the contract.
+     */
+    markPendingContractAsOpen(
+        recordName: string,
+        address: string
+    ): Promise<void>;
 }
 
 /**

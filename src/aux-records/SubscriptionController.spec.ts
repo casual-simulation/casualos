@@ -86,7 +86,7 @@ import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsSto
 const originalDateNow = Date.now;
 console.log = jest.fn();
 console.warn = jest.fn();
-console.error = jest.fn();
+// console.error = jest.fn();
 
 describe('SubscriptionController', () => {
     let controller: SubscriptionController;
@@ -6189,7 +6189,7 @@ describe('SubscriptionController', () => {
         });
     });
 
-    describe('purchaseContract()', () => {
+    describe.only('purchaseContract()', () => {
         const recordName = 'recordName';
 
         beforeEach(async () => {
@@ -6360,7 +6360,8 @@ describe('SubscriptionController', () => {
                             value: 100,
                         },
                     ],
-                    pendingTransferIds: ['3', '4'],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
                     transactionId: '2',
                 },
             ]);
@@ -6401,6 +6402,150 @@ describe('SubscriptionController', () => {
                     debits_posted: 0n,
                     credits_pending: 0n,
                     debits_pending: 110n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 10n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 100n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should allow using the users USD account for the purchase', async () => {
+            const userAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: userId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            // Give the user 1000 USD
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            creditAccountId: userAccount!.id,
+                            amount: 1000n,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 110,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'no_payment_required',
+                    paid: true,
+                    stripeCheckoutSessionId: null,
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['3', '4'],
+                    transfersPending: false,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // User account
+                    debit_account_id: userAccount!.id,
+                    flags: TransferFlags.linked | TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 10n,
+                    code: TransferCodes.xp_platform_fee,
+                    // revenue account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // User account
+                    debit_account_id: userAccount!.id,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.assets_cash,
+                    credits_posted: 0n,
+                    debits_posted: 1000n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: userAccount!.id,
+                    credits_posted: 890n,
+                    debits_posted: 110n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
                 },
                 {
                     id: ACCOUNT_IDS.revenue_xp_platform_fees,
@@ -6535,7 +6680,8 @@ describe('SubscriptionController', () => {
                             value: 100,
                         },
                     ],
-                    pendingTransferIds: ['3', '4'],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
                     transactionId: '2',
                 },
             ]);
@@ -6806,7 +6952,8 @@ describe('SubscriptionController', () => {
                             value: 100,
                         },
                     ],
-                    pendingTransferIds: ['3'],
+                    transferIds: ['3'],
+                    transfersPending: true,
                     transactionId: '2',
                 },
             ]);
@@ -6980,7 +7127,8 @@ describe('SubscriptionController', () => {
                             value: 100,
                         },
                     ],
-                    pendingTransferIds: ['3', '4'],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
                     transactionId: '2',
                 },
             ]);
@@ -7167,7 +7315,8 @@ describe('SubscriptionController', () => {
                             value: 100,
                         },
                     ],
-                    pendingTransferIds: ['3', '4'],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
                     transactionId: '2',
                 },
             ]);
@@ -7366,7 +7515,8 @@ describe('SubscriptionController', () => {
                             value: 49,
                         },
                     ],
-                    pendingTransferIds: ['3', '4'],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
                     transactionId: '2',
                 },
             ]);
@@ -7865,7 +8015,7 @@ describe('SubscriptionController', () => {
         });
     });
 
-    describe('fulfillCheckoutSession()', () => {
+    describe.only('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
@@ -8109,7 +8259,7 @@ describe('SubscriptionController', () => {
                 id: 'session1',
                 status: 'complete',
                 paymentStatus: 'paid',
-                paid: false,
+                paid: true,
                 stripeCheckoutSessionId: 'checkout1',
                 userId: userId,
                 invoice: null,
@@ -8217,6 +8367,197 @@ describe('SubscriptionController', () => {
                     ],
                 },
             ]);
+        });
+
+        describe.only('contract', () => {
+            beforeEach(async () => {
+                await financialController.init();
+                await contractStore.createItem('studioId', {
+                    id: 'contractId',
+                    address: 'item1',
+                    holdingUserId: userId,
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    issuedAtMs: 100,
+                    markers: [PUBLIC_READ_MARKER],
+                    status: 'pending',
+                });
+            });
+
+            it('should open the contract and complete the pending transfers', async () => {
+                const contractAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId: 'contractId',
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: '10',
+                                amount: 100,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: contractAccount!.id,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                            {
+                                transferId: '11',
+                                amount: 10,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId:
+                                    ACCOUNT_IDS.revenue_xp_platform_fees,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                        ],
+                        transactionId: '9',
+                    })
+                );
+
+                await store.updateCheckoutSessionInfo({
+                    id: 'session1',
+                    status: 'complete',
+                    paymentStatus: 'paid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoice: null,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: 'studioId',
+                            contractAddress: 'item1',
+                            contractId: 'contractId',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['10', '11'],
+                    transfersPending: true,
+                    transactionId: '9',
+                });
+
+                nowMock.mockReturnValue(200);
+
+                const result = await controller.fulfillCheckoutSession({
+                    userId: userId,
+                    sessionId: 'session1',
+                    activation: 'now',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(store.checkoutSessions).toEqual([
+                    {
+                        id: 'session1',
+                        stripeStatus: 'complete',
+                        stripePaymentStatus: 'paid',
+                        paid: false,
+                        stripeCheckoutSessionId: 'checkout1',
+                        userId: userId,
+                        invoiceId: expect.any(String),
+                        fulfilledAtMs: 200,
+                        items: [
+                            {
+                                type: 'contract',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                contractId: 'contractId',
+                                value: 100,
+                            },
+                        ],
+                        transferIds: ['10', '11'],
+                        transfersPending: false,
+                        transactionId: '9',
+                    },
+                ]);
+
+                const contract = await contractStore.getItemByAddress(
+                    'studioId',
+                    'item1'
+                );
+                expect(contract).toEqual({
+                    id: 'contractId',
+                    address: 'item1',
+                    holdingUserId: userId,
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    issuedAtMs: 100,
+                    markers: [PUBLIC_READ_MARKER],
+                    status: 'open',
+                });
+
+                // Check that the pending transfers have been posted
+                checkTransfers(financialInterface.transfers, [
+                    {
+                        id: 10n,
+                        amount: 100n,
+                        code: TransferCodes.contract_payment,
+                        credit_account_id: contractAccount!.id,
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        flags: TransferFlags.linked | TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 9n,
+                    },
+                    {
+                        id: 11n,
+                        amount: 10n,
+                        code: TransferCodes.contract_payment,
+                        credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        flags: TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 9n,
+                    },
+                    {
+                        id: 2n,
+                        pending_id: 10n,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.post_pending_transfer,
+                        user_data_128: 9n,
+                    },
+                    {
+                        id: 3n,
+                        pending_id: 11n,
+                        flags: TransferFlags.post_pending_transfer,
+                        user_data_128: 9n,
+                    },
+                ]);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.assets_stripe,
+                        credits_posted: 0n,
+                        debits_posted: 110n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.id,
+                        credits_posted: 100n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
         });
 
         it('should return invalid_request if trying to personally accept fulfillment as a guest', async () => {
@@ -9780,7 +10121,7 @@ describe('SubscriptionController', () => {
             });
         });
 
-        describe('xp', () => {
+        describe.only('xp', () => {
             let user: AuthUser;
             const recordName = 'recordName';
 
@@ -9987,7 +10328,7 @@ describe('SubscriptionController', () => {
                             stripeStatus: 'complete',
                             stripePaymentStatus: 'paid',
                             invoiceId: null,
-                            fulfilledAtMs: null,
+                            fulfilledAtMs: 200,
                             items: [
                                 {
                                     type: 'contract',
@@ -10035,6 +10376,39 @@ describe('SubscriptionController', () => {
                         status: 'pending',
                     });
 
+                    const contractAccount = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            contractId: 'contractId',
+                            ledger: LEDGERS.usd,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: '10',
+                                    amount: 100,
+                                    code: TransferCodes.contract_payment,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                    creditAccountId: contractAccount!.id,
+                                    currency: CurrencyCodes.usd,
+                                    pending: true,
+                                },
+                                {
+                                    transferId: '11',
+                                    amount: 10,
+                                    code: TransferCodes.xp_platform_fee,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_xp_platform_fees,
+                                    currency: CurrencyCodes.usd,
+                                    pending: true,
+                                },
+                            ],
+                        })
+                    );
+
                     await store.updateCheckoutSessionInfo({
                         id: 'uuid',
                         userId: userId,
@@ -10048,12 +10422,18 @@ describe('SubscriptionController', () => {
                             {
                                 type: 'contract',
                                 contractId: 'contractId',
-                                recordName: 'studioId',
+                                recordName: recordName,
                                 contractAddress: 'item1',
                                 value: 100,
                             },
                         ],
+                        transferIds: ['10', '11'],
+                        transfersPending: true,
+                        transactionId: '9',
+                        shouldBeAutomaticallyFulfilled: true,
                     });
+
+                    nowMock.mockReturnValue(333);
 
                     const result = await controller.handleStripeWebhook({
                         requestBody: 'request_body',
@@ -10073,16 +10453,89 @@ describe('SubscriptionController', () => {
                             stripeStatus: 'complete',
                             stripePaymentStatus: 'paid',
                             invoiceId: null,
-                            fulfilledAtMs: null,
+                            fulfilledAtMs: 333,
                             items: [
                                 {
                                     type: 'contract',
                                     contractId: 'contractId',
-                                    recordName: 'studioId',
+                                    recordName: recordName,
                                     contractAddress: 'item1',
                                     value: 100,
                                 },
                             ],
+                            transferIds: ['10', '11'],
+                            transfersPending: false,
+                            transactionId: '9',
+                            shouldBeAutomaticallyFulfilled: true,
+                        },
+                    ]);
+
+                    const contract = await contractStore.getItemByAddress(
+                        recordName,
+                        'item1'
+                    );
+                    expect(contract).toMatchObject({
+                        status: 'open',
+                    });
+
+                    checkTransfers(financialInterface.transfers, [
+                        {
+                            id: 10n,
+                            amount: 100n,
+                            code: TransferCodes.contract_payment,
+                            credit_account_id: contractAccount!.id,
+                            debit_account_id: ACCOUNT_IDS.assets_stripe,
+                            // Should no longer be pending
+                            flags: TransferFlags.linked | TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                        },
+                        {
+                            id: 11n,
+                            amount: 10n,
+                            code: TransferCodes.xp_platform_fee,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_xp_platform_fees,
+                            debit_account_id: ACCOUNT_IDS.assets_stripe,
+                            flags: TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                        },
+                        {
+                            id: 4n,
+                            pending_id: 10n,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.post_pending_transfer,
+                            user_data_128: 9n,
+                        },
+                        {
+                            id: 5n,
+                            pending_id: 11n,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_128: 9n,
+                        },
+                    ]);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.assets_stripe,
+                            credits_posted: 0n,
+                            debits_posted: 110n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                            credits_posted: 10n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: contractAccount!.id,
+                            credits_posted: 100n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
                         },
                     ]);
                 });
@@ -10253,7 +10706,8 @@ describe('SubscriptionController', () => {
                                 value: 100,
                             },
                         ],
-                        pendingTransferIds: ['10', '11'],
+                        transferIds: ['10', '11'],
+                        transfersPending: true,
                         transactionId: '9',
                     });
 
@@ -10285,7 +10739,8 @@ describe('SubscriptionController', () => {
                                     value: 100,
                                 },
                             ],
-                            pendingTransferIds: ['10', '11'],
+                            transferIds: ['10', '11'],
+                            transfersPending: false,
                             transactionId: '9',
                         },
                     ]);

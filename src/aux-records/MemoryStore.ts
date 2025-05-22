@@ -2188,7 +2188,8 @@ export class MemoryStore
                 userId: request.userId,
                 invoiceId,
                 items: request.items,
-                pendingTransferIds: request.pendingTransferIds,
+                transferIds: request.transferIds,
+                transfersPending: request.transfersPending,
                 transactionId: request.transactionId,
             };
             this._checkoutSessions.push(session);
@@ -2203,7 +2204,8 @@ export class MemoryStore
                 fulfilledAtMs: request.fulfilledAtMs,
                 userId: request.userId,
                 items: request.items,
-                pendingTransferIds: request.pendingTransferIds,
+                transferIds: request.transferIds,
+                transfersPending: request.transfersPending,
                 transactionId: request.transactionId,
             };
 
@@ -2219,11 +2221,15 @@ export class MemoryStore
         sessionId: string,
         fulfilledAtMs: number
     ): Promise<void> {
-        const session = this._checkoutSessions.find((s) => s.id === sessionId);
-        if (session) {
-            this._checkoutSessions[this._checkoutSessions.indexOf(session)] = {
+        const index = this._checkoutSessions.findIndex(
+            (s) => s.id === sessionId
+        );
+        if (index >= 0) {
+            const session = this._checkoutSessions[index];
+            this._checkoutSessions[index] = {
                 ...session,
                 fulfilledAtMs,
+                transfersPending: false,
             };
         }
     }

@@ -286,8 +286,24 @@ export class MemoryFinancialInterface implements FinancialInterface {
                         result: CreateTransferError.pending_transfer_not_found,
                     });
                 } else {
-                    creditAccountId = pendingTransfer.credit_account_id;
-                    debitAccountId = pendingTransfer.debit_account_id;
+                    const closingTransfer = this._transfers.find(
+                        (t) => t.pending_id === transfer.pending_id
+                    );
+
+                    if (closingTransfer) {
+                        valid = false;
+                        errs.push({
+                            index: i,
+                            result:
+                                closingTransfer.flags &
+                                TransferFlags.post_pending_transfer
+                                    ? CreateTransferError.pending_transfer_already_posted
+                                    : CreateTransferError.pending_transfer_already_voided,
+                        });
+                    } else {
+                        creditAccountId = pendingTransfer.credit_account_id;
+                        debitAccountId = pendingTransfer.debit_account_id;
+                    }
                 }
             }
 
