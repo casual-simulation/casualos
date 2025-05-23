@@ -23,7 +23,7 @@ import type {
     Intersection,
     Sphere,
 } from '@casual-simulation/three';
-import { Vector3, Raycaster, Mesh, Plane } from '@casual-simulation/three';
+import { Vector3, Raycaster, Plane } from '@casual-simulation/three';
 import { calculateCubeSphereIntersection } from './SceneUtils';
 
 /**

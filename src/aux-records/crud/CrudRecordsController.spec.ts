@@ -15,35 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { MemoryStore } from '../MemoryStore';
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesForResourcesSuccess,
 } from '../PolicyController';
-import { PolicyController } from '../PolicyController';
-import { RecordsController } from '../RecordsController';
-import {
-    createTestControllers,
-    createTestRecordKey,
-    createTestUser,
-} from '../TestUtils';
+
 import { MemoryCrudRecordsStore } from './MemoryCrudRecordsStore';
 import type { CrudRecord, CrudRecordsStore } from './CrudRecordsStore';
-import { CrudSubscriptionMetrics } from './CrudRecordsStore';
 import type {
     CheckSubscriptionMetricsResult,
     CrudRecordsConfiguration,
 } from './CrudRecordsController';
-import {
-    CheckSubscriptionMetricsSuccess,
-    CrudRecordItemSuccess,
-    CrudRecordsController,
-} from './CrudRecordsController';
+import { CrudRecordsController } from './CrudRecordsController';
 import type { ActionKinds } from '@casual-simulation/aux-common';
-import {
-    PRIVATE_MARKER,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
+
 import { testCrudRecordsController } from './CrudRecordsControllerTests';
 
 console.log = jest.fn();
@@ -51,6 +36,7 @@ console.log = jest.fn();
 describe('CrudRecordsController', () => {
     describe('allows record key access', () => {
         testCrudRecordsController<
+            TestItem,
             TestItem,
             CrudRecordsStore<TestItem>,
             TestController
@@ -64,12 +50,14 @@ describe('CrudRecordsController', () => {
                     resourceKind: 'data',
                     name: 'testItem',
                 }),
+            (item) => item,
             (item) => item
         );
     });
 
     describe('denies record key access', () => {
         testCrudRecordsController<
+            TestItem,
             TestItem,
             CrudRecordsStore<TestItem>,
             TestController
@@ -83,6 +71,7 @@ describe('CrudRecordsController', () => {
                     resourceKind: 'marker',
                     name: 'testItem',
                 }),
+            (item) => item,
             (item) => item
         );
     });

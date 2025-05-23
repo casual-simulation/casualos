@@ -25,12 +25,10 @@ import type {
     PolicyController,
 } from '../PolicyController';
 import {
-    AuthorizeUserAndInstancesResult,
     getMarkerResourcesForCreation,
     getMarkerResourcesForUpdate,
 } from '../PolicyController';
 import type { CrudRecord, CrudRecordsStore } from './CrudRecordsStore';
-import { CrudSubscriptionMetrics } from './CrudRecordsStore';
 import type { ConfigurationStore } from '../ConfigurationStore';
 import type {
     ActionKinds,
@@ -38,20 +36,23 @@ import type {
     NotAuthorizedError,
     NotLoggedInError,
     ResourceKinds,
+    Result,
     ServerError,
+    SimpleError,
 } from '@casual-simulation/aux-common';
 import {
     ACCOUNT_MARKER,
-    PUBLIC_READ_MARKER,
+    genericResult,
+    isFailure,
+    success,
 } from '@casual-simulation/aux-common';
-import { ValidatePublicRecordKeyFailure } from '../RecordsController';
 import type { ZodIssue } from 'zod';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 export interface CrudRecordsConfiguration<
-    T extends CrudRecord,
-    TStore extends CrudRecordsStore<T> = CrudRecordsStore<T>
+    TInput extends CrudRecord,
+    TStore extends CrudRecordsStore<CrudRecord> = CrudRecordsStore<TInput>
 > {
     /**
      * The name for the controller.
@@ -92,9 +93,10 @@ const TRACE_NAME = 'CrudRecordsController';
  * @param TResult The type of the result that the controller returns to clients. Must be a subset of T.
  */
 export abstract class CrudRecordsController<
-    T extends CrudRecord,
-    TStore extends CrudRecordsStore<T> = CrudRecordsStore<T>,
-    TResult extends Partial<T> = T
+    TInput extends CrudRecord,
+    TStoreType extends CrudRecord = TInput,
+    TStore extends CrudRecordsStore<TStoreType> = CrudRecordsStore<TStoreType>,
+    TResult extends Partial<TStoreType> = TStoreType
 > {
     private _store: TStore;
     private _policies: PolicyController;
@@ -128,7 +130,7 @@ export abstract class CrudRecordsController<
         return this._resourceKind;
     }
 
-    constructor(config: CrudRecordsConfiguration<T, TStore>) {
+    constructor(config: CrudRecordsConfiguration<TInput, TStore>) {
         this._name = config.name;
         this._store = config.store;
         this._policies = config.policies;
@@ -142,7 +144,7 @@ export abstract class CrudRecordsController<
      */
     @traced(TRACE_NAME)
     async recordItem(
-        request: CrudRecordItemRequest<T>
+        request: CrudRecordItemRequest<TInput>
     ): Promise<CrudRecordItemResult> {
         try {
             const contextResult =
@@ -162,11 +164,9 @@ export abstract class CrudRecordsController<
             );
 
             let resourceMarkers: string[];
-            let action = existingItem
-                ? ('update' as const)
-                : ('create' as const);
+            let action: 'update' | 'create';
             let authorization: AuthorizeUserAndInstancesForResourcesResult;
-            if (action === 'update') {
+            if (existingItem) {
                 const existingMarkers = existingItem.markers;
                 resourceMarkers = request.item.markers ?? existingMarkers;
                 action = 'update';
@@ -197,6 +197,7 @@ export abstract class CrudRecordsController<
                 }
             } else {
                 resourceMarkers = request.item.markers;
+                action = 'create';
 
                 authorization =
                     await this._policies.authorizeUserAndInstancesForResources(
@@ -231,27 +232,40 @@ export abstract class CrudRecordsController<
                 };
             }
 
-            const item = this._transformInputItem(request.item);
+            const item = await this._transformInputItem(
+                request.item,
+                existingItem,
+                action,
+                contextResult.context,
+                authorization
+            );
+
+            if (isFailure(item)) {
+                return genericResult(item);
+            }
+
             const subscriptionResult = await this._checkSubscriptionMetrics(
                 action,
                 contextResult.context,
                 authorization,
-                item
+                item.value
             );
 
             if (subscriptionResult.success === false) {
                 return subscriptionResult;
             }
 
-            await this._store.putItem(recordName, item);
+            await this._putItem(recordName, item.value);
             return {
                 success: true,
                 recordName,
-                address: item.address,
+                address: item.value.address,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error recording item:`, err);
@@ -261,6 +275,10 @@ export abstract class CrudRecordsController<
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    protected async _putItem(recordName: string, item: TStoreType) {
+        await this._store.putItem(recordName, item);
     }
 
     /**
@@ -323,7 +341,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error getting item:`, err);
@@ -403,7 +423,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error erasing item:`, err);
@@ -455,7 +477,7 @@ export abstract class CrudRecordsController<
 
             const result2 = await this._store.listItems(
                 context.context.recordName,
-                request.startingAddress
+                request.startingAddress ?? null
             );
 
             return {
@@ -468,7 +490,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error listing items:`, err);
@@ -520,7 +544,7 @@ export abstract class CrudRecordsController<
 
             const result2 = await this._store.listItemsByMarker({
                 recordName: context.context.recordName,
-                startingAddress: request.startingAddress,
+                startingAddress: request.startingAddress ?? null,
                 marker: request.marker,
                 sort: request.sort,
             });
@@ -535,7 +559,9 @@ export abstract class CrudRecordsController<
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span?.recordException(err);
+            if (err instanceof Error) {
+                span?.recordException(err);
+            }
             span?.setStatus({ code: SpanStatusCode.ERROR });
 
             console.error(`[${this._name}] Error listing items:`, err);
@@ -560,7 +586,7 @@ export abstract class CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: T
+        item?: TStoreType
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
@@ -571,7 +597,7 @@ export abstract class CrudRecordsController<
      * @returns The converted item.
      */
     protected _convertItemToResult(
-        item: T,
+        item: TStoreType,
         context: AuthorizationContext
     ): TResult {
         return item as unknown as TResult;
@@ -582,8 +608,16 @@ export abstract class CrudRecordsController<
      * Useful for transforming items before they are stored.
      * @param item The item that should be transformed.
      */
-    protected _transformInputItem(item: T): T {
-        return item;
+    protected async _transformInputItem(
+        item: TInput,
+        existingItem: TStoreType | null,
+        action: ActionKinds,
+        context: AuthorizationContext,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<TStoreType, SimpleError>> {
+        return success(item as unknown as TStoreType);
     }
 }
 
@@ -771,7 +805,7 @@ export interface CrudListItemsSuccess<T> {
      * The marker that was listed.
      * If null, then all markers are listed.
      */
-    marker?: string;
+    marker?: string | null;
 }
 
 export interface CrudListItemsFailure {

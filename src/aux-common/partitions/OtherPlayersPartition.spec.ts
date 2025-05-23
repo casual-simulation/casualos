@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { testPartitionImplementation } from './test/PartitionTests';
 import { OtherPlayersPartitionImpl } from './OtherPlayersPartition';
-import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
+import { Subject, Subscription, firstValueFrom } from 'rxjs';
 import type { Bot, UpdatedBot, StateUpdatedEvent } from '../bots';
 import {
     createBot,
@@ -33,9 +32,8 @@ import {
     botUpdated,
 } from '../bots';
 import type { OtherPlayersRepoPartitionConfig } from './AuxPartitionConfig';
-import { waitAsync, wait } from '../test/TestHelpers';
+import { waitAsync } from '../test/TestHelpers';
 import { takeWhile, bufferCount, skip } from 'rxjs/operators';
-import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { YjsPartitionImpl } from './YjsPartition';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';

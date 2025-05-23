@@ -15,10 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { MathUtils } from 'three';
 import { Quaternion } from './Quaternion';
-import { Vector2 } from './Vector2';
-import { Vector3 } from './Vector3';
 
 describe('Quaternion', () => {
     it('should default to (0, 0, 0, 1)', () => {

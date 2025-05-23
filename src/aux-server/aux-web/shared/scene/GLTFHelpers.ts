@@ -18,13 +18,7 @@
 import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { GLTFLoader } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { LegacyGLTFLoader } from 'three-legacy-gltf-loader';
-import {
-    Scene,
-    AnimationClip,
-    Object3D,
-    SkinnedMesh,
-    Cache,
-} from '@casual-simulation/three';
+import { Cache } from '@casual-simulation/three';
 import { DRACOLoader } from '@casual-simulation/three/examples/jsm/loaders/DRACOLoader';
 
 const loader = new GLTFLoader();

@@ -17,7 +17,7 @@
  */
 import type { Subscription } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
-import type { InstUpdate } from '../bots';
+import type { InstUpdate, StoredAux } from '../bots';
 import {
     applyUpdatesToInst,
     asyncResult,
@@ -29,10 +29,10 @@ import {
     getInstStateFromUpdates,
     getRemoteCount,
     getRemotes,
+    installAuxFile,
     listInstUpdates,
 } from '../bots';
 import type { Map as YMap } from 'yjs';
-import { Text as YText } from 'yjs';
 import type { Action } from '../common';
 import { remote } from '../common';
 import { testPartitionImplementation } from './test/PartitionTests';
@@ -42,6 +42,7 @@ import { waitAsync } from '../test/TestHelpers';
 import { applyUpdate, encodeStateAsUpdate } from 'yjs';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { case1 } from './test/UpdateCases';
+import { constructInitializationUpdate } from './PartitionUtils';
 
 describe('YjsPartition', () => {
     testPartitionImplementation(
@@ -159,6 +160,7 @@ describe('YjsPartition', () => {
                     create_initialization_update: true,
                     apply_updates_to_inst: true,
                     get_current_inst_update: true,
+                    install_aux_file: true,
                 },
                 connectionId: 'connectionId',
             });
@@ -541,6 +543,297 @@ describe('YjsPartition', () => {
                         },
                         false
                     ),
+                ]);
+            });
+        });
+
+        describe('install_aux_file', () => {
+            it('should add the version 2 state to the inst', async () => {
+                partition.connect();
+
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'default'),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                expect(partition.state).toEqual({
+                    installed1: createBot('installed1', {
+                        abc: 'def',
+                    }),
+                    installed2: createBot('installed2', {
+                        abc: 'ghi',
+                    }),
+                });
+            });
+
+            it('should add the version 1 state to the inst', async () => {
+                partition.connect();
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        installed1: createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        installed2: createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    },
+                };
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'default'),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                expect(partition.state).toEqual({
+                    installed1: createBot('installed1', {
+                        abc: 'def',
+                    }),
+                    installed2: createBot('installed2', {
+                        abc: 'ghi',
+                    }),
+                });
+            });
+
+            it('should overwrite existing bots when installing a version 1 aux with the default mode', async () => {
+                partition.connect();
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        installed1: createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        installed2: createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    },
+                };
+
+                partition.applyEvents([
+                    botAdded(
+                        createBot('installed1', {
+                            abc: 'xyz',
+                        })
+                    ),
+                    botAdded(
+                        createBot('installed2', {
+                            abc: 'xyz',
+                        })
+                    ),
+                ]);
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'default'),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                expect(partition.state).toEqual({
+                    installed1: createBot('installed1', {
+                        abc: 'def',
+                    }),
+                    installed2: createBot('installed2', {
+                        abc: 'ghi',
+                    }),
+                });
+            });
+
+            it('should do nothing when installing a version 2 state again with the default mode', async () => {
+                partition.connect();
+
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'default'),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                expect(partition.state).toEqual({
+                    installed1: createBot('installed1', {
+                        abc: 'def',
+                    }),
+                    installed2: createBot('installed2', {
+                        abc: 'ghi',
+                    }),
+                });
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'default'),
+                        undefined,
+                        undefined,
+                        'task2'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events.slice(1)).toEqual([
+                    asyncResult('task2', null, false),
+                ]);
+
+                expect(partition.state).toEqual({
+                    installed1: createBot('installed1', {
+                        abc: 'def',
+                    }),
+                    installed2: createBot('installed2', {
+                        abc: 'ghi',
+                    }),
+                });
+            });
+
+            it('should create new bots from the version 2 aux if the mode is copy', async () => {
+                partition.connect();
+
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'copy'),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                expect(Object.values(partition.state)).toEqual([
+                    createBot(expect.any(String), {
+                        abc: 'def',
+                    }),
+                    createBot(expect.any(String), {
+                        abc: 'ghi',
+                    }),
+                ]);
+            });
+
+            it('should create new bots from the version 1 aux if the mode is copy', async () => {
+                partition.connect();
+
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        installed1: createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        installed2: createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    },
+                };
+
+                await waitAsync();
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        installAuxFile(state, 'copy'),
+                        undefined,
+                        undefined,
+                        'task1'
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([asyncResult('task1', null, false)]);
+
+                expect(Object.values(partition.state)).toEqual([
+                    createBot(expect.any(String), {
+                        abc: 'def',
+                    }),
+                    createBot(expect.any(String), {
+                        abc: 'ghi',
+                    }),
                 ]);
             });
         });

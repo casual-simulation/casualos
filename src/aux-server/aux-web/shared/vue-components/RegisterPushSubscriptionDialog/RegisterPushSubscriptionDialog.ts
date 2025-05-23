@@ -24,11 +24,13 @@ import type {
     LoginUIHandleLoginMetadata,
 } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
-import type { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
 import {
     SUBSCRIPTION_ID_NAMESPACE,
     getFormErrors,
-} from '@casual-simulation/aux-records';
+} from '@casual-simulation/aux-common';
+
+/* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
 import { getPushManager } from '../../PushHelpers';
 import { v5 as uuidv5 } from 'uuid';

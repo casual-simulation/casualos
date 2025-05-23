@@ -45,7 +45,7 @@ import type {
     DeviceActionError,
 } from '../common/RemoteActions';
 import { device, remote } from '../common/RemoteActions';
-import { ConnectionInfo, connectionInfo } from '../common/ConnectionInfo';
+import { connectionInfo } from '../common/ConnectionInfo';
 import type { TimeSample } from '@casual-simulation/timesync';
 
 describe('InstRecordsClient', () => {
@@ -311,8 +311,23 @@ describe('InstRecordsClient', () => {
         it('should remember updates that were sent to the branch and resend them after reconnecting if they were not acknowledged', async () => {
             const updatesReceived = new Subject<UpdatesReceivedMessage>();
             connection.events.set('repo/updates_received', updatesReceived);
+
+            const watchBranchResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set(
+                'repo/watch_branch_result',
+                watchBranchResult
+            );
+
             connection.connect();
             client.watchBranchUpdates('abc').subscribe();
+
+            watchBranchResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+            });
 
             client.addUpdates(null, 'abc', DEFAULT_BRANCH_NAME, ['111', '222']);
 
@@ -339,13 +354,32 @@ describe('InstRecordsClient', () => {
             connection.connect();
             await waitAsync();
 
+            // should not send the updates until it gets a watch branch result
             expect(connection.sentMessages.slice(2)).toEqual([
+                {
+                    type: 'repo/unwatch_branch',
+                    recordName: null,
+                    inst: 'abc',
+                    branch: DEFAULT_BRANCH_NAME,
+                },
                 {
                     type: 'repo/watch_branch',
                     recordName: null,
                     inst: 'abc',
                     branch: DEFAULT_BRANCH_NAME,
                 },
+            ]);
+
+            watchBranchResult.next({
+                type: 'repo/watch_branch_result',
+                recordName: null,
+                inst: 'abc',
+                branch: DEFAULT_BRANCH_NAME,
+                success: true,
+            });
+
+            await waitAsync();
+            expect(connection.sentMessages.slice(4)).toEqual([
                 {
                     type: 'repo/add_updates',
                     recordName: null,
@@ -475,6 +509,12 @@ describe('InstRecordsClient', () => {
         it('should resend all updates after connecting if the branch is temporary', async () => {
             const updatesReceived = new Subject<UpdatesReceivedMessage>();
             connection.events.set('repo/updates_received', updatesReceived);
+            const watchBranchResult = new Subject<WatchBranchResultMessage>();
+            connection.events.set(
+                'repo/watch_branch_result',
+                watchBranchResult
+            );
+
             connection.connect();
             client
                 .watchBranchUpdates({
@@ -486,7 +526,16 @@ describe('InstRecordsClient', () => {
                 })
                 .subscribe();
 
+            watchBranchResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: 'myRecord',
+                inst: 'abc',
+                branch: 'different',
+            });
+
             client.addUpdates('myRecord', 'abc', 'different', ['111', '222']);
+            client.addUpdates('myRecord', 'abc', 'different', ['333', '444']);
 
             updatesReceived.next({
                 type: 'repo/updates_received',
@@ -494,6 +543,14 @@ describe('InstRecordsClient', () => {
                 inst: 'abc',
                 branch: 'different',
                 updateId: 1,
+            });
+
+            updatesReceived.next({
+                type: 'repo/updates_received',
+                recordName: 'myRecord',
+                inst: 'abc',
+                branch: 'different',
+                updateId: 2,
             });
 
             connection.disconnect();
@@ -515,12 +572,27 @@ describe('InstRecordsClient', () => {
                     updates: ['111', '222'],
                     updateId: 1,
                 },
+                {
+                    type: 'repo/add_updates',
+                    recordName: 'myRecord',
+                    inst: 'abc',
+                    branch: 'different',
+                    updates: ['333', '444'],
+                    updateId: 2,
+                },
             ]);
 
             connection.connect();
             await waitAsync();
 
-            expect(connection.sentMessages.slice(2)).toEqual([
+            // should not send the updates until it gets a watch branch result
+            expect(connection.sentMessages.slice(3)).toEqual([
+                {
+                    type: 'repo/unwatch_branch',
+                    recordName: 'myRecord',
+                    inst: 'abc',
+                    branch: 'different',
+                },
                 {
                     type: 'repo/watch_branch',
                     recordName: 'myRecord',
@@ -528,6 +600,19 @@ describe('InstRecordsClient', () => {
                     branch: 'different',
                     temporary: true,
                 },
+            ]);
+
+            watchBranchResult.next({
+                type: 'repo/watch_branch_result',
+                success: true,
+                recordName: 'myRecord',
+                inst: 'abc',
+                branch: 'different',
+            });
+
+            await waitAsync();
+
+            expect(connection.sentMessages.slice(5)).toEqual([
                 {
                     type: 'repo/add_updates',
                     recordName: 'myRecord',
@@ -535,6 +620,14 @@ describe('InstRecordsClient', () => {
                     branch: 'different',
                     updates: ['111', '222'],
                     updateId: 1,
+                },
+                {
+                    type: 'repo/add_updates',
+                    recordName: 'myRecord',
+                    inst: 'abc',
+                    branch: 'different',
+                    updates: ['333', '444'],
+                    updateId: 2,
                 },
             ]);
         });

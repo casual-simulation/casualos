@@ -24,12 +24,12 @@ import type {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
     StoredUpdates,
 } from '@casual-simulation/aux-records';
-import { InstRecord } from '@casual-simulation/aux-records';
 import type { PrismaClient } from './generated';
 import { Prisma } from './generated';
 import { v4 as uuid } from 'uuid';
@@ -45,6 +45,84 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
 
     constructor(prisma: PrismaClient) {
         this._prisma = prisma;
+    }
+
+    @traced(TRACE_NAME)
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        await this._prisma.loadedPackage.upsert({
+            where: {
+                id: loadedPackage.id,
+            },
+            create: {
+                id: loadedPackage.id,
+                instRecordName: loadedPackage.recordName,
+                instName: loadedPackage.inst,
+                branch: loadedPackage.branch,
+                packageId: loadedPackage.packageId,
+                packageVersionId: loadedPackage.packageVersionId,
+                userId: loadedPackage.userId,
+            },
+            update: {
+                instRecordName: loadedPackage.recordName,
+                instName: loadedPackage.inst,
+                branch: loadedPackage.branch,
+                packageId: loadedPackage.packageId,
+                packageVersionId: loadedPackage.packageVersionId,
+                userId: loadedPackage.userId,
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        const loadedPackages = await this._prisma.loadedPackage.findMany({
+            where: {
+                instRecordName: recordName,
+                instName: inst,
+            },
+        });
+
+        return loadedPackages.map((p) => ({
+            id: p.id,
+            recordName: p.instRecordName,
+            inst: p.instName,
+            branch: p.branch,
+            packageId: p.packageId,
+            packageVersionId: p.packageVersionId,
+            userId: p.userId,
+        }));
+    }
+
+    @traced(TRACE_NAME)
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null> {
+        const loaded = await this._prisma.loadedPackage.findFirst({
+            where: {
+                instRecordName: recordName,
+                instName: inst,
+                packageId: packageId,
+            },
+        });
+
+        if (!loaded) {
+            return null;
+        }
+
+        return {
+            id: loaded.id,
+            recordName: loaded.instRecordName,
+            inst: loaded.instName,
+            branch: loaded.branch,
+            packageId: loaded.packageId,
+            packageVersionId: loaded.packageVersionId,
+            userId: loaded.userId,
+        };
     }
 
     @traced(TRACE_NAME)

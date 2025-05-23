@@ -15,33 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { LocalActions } from '@casual-simulation/aux-common';
 import {
     asyncResult,
-    BotIndex,
-    BotsState,
     createPrecalculatedBot,
-    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
     stateUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, Subscription } from 'rxjs';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { BotHelper } from './BotHelper';
-import { BotWatcher } from './BotWatcher';
 import type { PortalBotData, ScriptPrefix } from './PortalManager';
-import {
-    DEFAULT_SCRIPT_PREFIXES,
-    PortalData,
-    PortalManager,
-    PortalUpdate,
-} from './PortalManager';
+import { DEFAULT_SCRIPT_PREFIXES, PortalManager } from './PortalManager';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 describe('PortalManager', () => {
     let manager: PortalManager;
     let vm: TestAuxVM;
     let sub: Subscription;
-    let localEvents: Subject<LocalActions[]>;
+    let localEvents: Subject<RuntimeActions[]>;
 
     beforeEach(() => {
         sub = new Subscription();

@@ -38,9 +38,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import type { S3 } from '@aws-sdk/client-s3';
-import { S3ClientConfig } from '@aws-sdk/client-s3';
 import type { AwsCredentialIdentityProvider } from '@aws-sdk/types';
-import { AwsCredentialIdentity } from '@aws-sdk/types';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
@@ -281,7 +279,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
                     ...requiredHeaders,
                 },
                 queryString: {},
-                path: fileUrl.pathname,
+                path: decodeURI(fileUrl.pathname),
             },
             secretAccessKey,
             accessKeyId,
@@ -338,7 +336,7 @@ export class S3FileRecordsStore implements FileRecordsStore {
                 queryString: {
                     'response-cache-control': 'max-age=31536000',
                 },
-                path: fileUrl.pathname,
+                path: decodeURI(fileUrl.pathname),
             },
             secretAccessKey,
             accessKeyId,
@@ -572,8 +570,8 @@ export function s3AclForMarkers(markers: readonly string[]): string {
  * Determines whether the given markers indicate that the file is public.
  * @param markers The markers that are applied to the file.
  */
-export function isPublicFile(markers: readonly string[]): boolean {
-    return markers.some((m) => m === PUBLIC_READ_MARKER);
+export function isPublicFile(markers: readonly string[] | null): boolean {
+    return !markers || markers.some((m) => m === PUBLIC_READ_MARKER);
 }
 
 /**

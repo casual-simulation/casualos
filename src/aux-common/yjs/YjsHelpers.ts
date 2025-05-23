@@ -21,7 +21,6 @@ import {
     createAbsolutePositionFromRelativePosition,
     createID,
     findRootTypeKey,
-    Item,
     RelativePosition,
 } from 'yjs';
 

@@ -19,7 +19,7 @@ import type { IncomingMessage } from 'http';
 import type { Observer } from 'rxjs';
 import { Observable, fromEventPattern } from 'rxjs';
 import type { Socket, Server, NetConnectOpts } from 'net';
-import { createServer, connect as netConnect } from 'net';
+import { connect as netConnect } from 'net';
 import WebSocket from 'ws';
 import { takeUntil, last } from 'rxjs/operators';
 

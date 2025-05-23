@@ -30,7 +30,6 @@ import type {
 import type { ZodIssue } from 'zod';
 import { v4 as uuid } from 'uuid';
 import type { SystemNotificationMessenger } from './SystemNotificationMessenger';
-import { RecordsNotification } from './SystemNotificationMessenger';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
@@ -296,7 +295,8 @@ export class ModerationController {
 
                     if (label.actions.includes('notify') && this._messenger) {
                         await this._messenger.sendRecordNotification({
-                            resource: 'file',
+                            resource: 'moderation_scan',
+                            resourceKind: 'file',
                             action: 'scanned',
                             recordName: request.recordName,
                             resourceId: request.fileName,

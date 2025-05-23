@@ -21,7 +21,6 @@ import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { appManager } from '../../AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
-import { wrapHtmlWithSandboxContentSecurityPolicy } from '../../../shared/SharedUtils';
 import type {
     ShowInputType,
     ShowInputSubtype,

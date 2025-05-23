@@ -63,7 +63,9 @@ export interface PrivoClientInterface {
 
     /**
      * Attempts to lookup the service ID for the given request.
-     * Can be used to lookup the service ID by user name, display name, email, phone, or user ID.
+     * Can be used to lookup the service ID by one of: user name, display name, email, phone, or user ID.
+     * Only once of these fields should be provided at a time.
+     * If multiple are provided, then the first one provided from the list above will be used for the search.
      * @param request The request.
      */
     lookupServiceId(request: LookupServiceIdRequest): Promise<string | null>;

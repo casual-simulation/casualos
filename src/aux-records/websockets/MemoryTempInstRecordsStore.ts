@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { StoredUpdates } from './InstRecordsStore';
-import { CurrentUpdates } from './InstRecordsStore';
+
+import type { LoadedPackage, StoredUpdates } from './InstRecordsStore';
 import type {
     BranchName,
     BranchUpdates,
@@ -33,6 +33,7 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     private _sizes: Map<string, number> = new Map();
     private _counts: Map<string, number> = new Map();
     private _generations: Map<string, BranchName[]> = new Map();
+    private _loadedPackages: LoadedPackage[] = [];
     private _currentGeneration: string = '0';
     private _locks: Map<string, number> = new Map();
 
@@ -294,5 +295,35 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
         branch: string
     ): Promise<void> {
         this._sizes.delete(this.getBranchKey(recordName, inst, branch));
+    }
+
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        const index = this._loadedPackages.findIndex(
+            (p) => p.id === loadedPackage.id
+        );
+
+        if (index >= 0) {
+            this._loadedPackages[index] = loadedPackage;
+        } else {
+            this._loadedPackages.push(loadedPackage);
+        }
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        return this._loadedPackages.filter(
+            (p) => p.recordName === recordName && p.inst === inst
+        );
+    }
+
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null> {
+        const loaded = await this.listLoadedPackages(recordName, inst);
+        return loaded.find((l) => l.packageId === packageId) ?? null;
     }
 }

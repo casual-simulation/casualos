@@ -25,12 +25,12 @@ import type {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
     StoredUpdates,
 } from './InstRecordsStore';
-import { InstRecord, SaveBranchFailure } from './InstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 
 /**
@@ -54,6 +54,45 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     ) {
         this._temp = temporary;
         this._permanent = permanent;
+    }
+
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        if (loadedPackage.recordName) {
+            await this._permanent.saveLoadedPackage(loadedPackage);
+        } else {
+            await this._temp.saveLoadedPackage(loadedPackage);
+        }
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        if (recordName) {
+            return await this._permanent.listLoadedPackages(recordName, inst);
+        } else {
+            return await this._temp.listLoadedPackages(recordName, inst);
+        }
+    }
+
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null> {
+        if (recordName) {
+            return await this._permanent.isPackageLoaded(
+                recordName,
+                inst,
+                packageId
+            );
+        } else {
+            return await this._temp.isPackageLoaded(
+                recordName,
+                inst,
+                packageId
+            );
+        }
     }
 
     async getInstByName(

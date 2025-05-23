@@ -18,7 +18,10 @@
 import prompts from 'prompts';
 import { Command } from 'commander';
 import type { RecordsClient } from '@casual-simulation/aux-records/RecordsClient';
+
+/* eslint-disable casualos/no-non-type-imports */
 import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
+
 import { askForInputs, onState } from './schema';
 import repl from 'node:repl';
 
@@ -31,7 +34,7 @@ import {
     isExpired,
     parseSessionKey,
     willExpire,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import type {
     AddressType,
     CompleteLoginSuccess,

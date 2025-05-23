@@ -25,7 +25,7 @@ import type {
 } from '@casual-simulation/aux-vm';
 import { Prop, Watch } from 'vue-property-decorator';
 import FieldErrors from '../FieldErrors/FieldErrors';
-import { CODE_FIELD } from '@casual-simulation/aux-records';
+import { CODE_FIELD } from '@casual-simulation/aux-common';
 
 @Component({
     components: {

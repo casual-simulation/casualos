@@ -19,7 +19,7 @@ import type { Config } from './config';
 import type { Handler } from 'express';
 import express from 'express';
 import * as bodyParser from 'body-parser';
-import { Server as HttpServer, IncomingMessage } from 'http';
+import { Server as HttpServer } from 'http';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {

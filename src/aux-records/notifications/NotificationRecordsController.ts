@@ -19,19 +19,21 @@ import type {
     ActionKinds,
     KnownErrorCodes,
 } from '@casual-simulation/aux-common';
-import { PRIVATE_MARKER, ServerError } from '@casual-simulation/aux-common';
+import {
+    PRIVATE_MARKER,
+    SUBSCRIPTION_ID_NAMESPACE,
+} from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
 } from '../PolicyController';
-import { AuthorizeSubjectFailure } from '../PolicyController';
 import type {
     CrudRecordsConfiguration,
     CheckSubscriptionMetricsFailure,
     CheckSubscriptionMetricsSuccess,
 } from '../crud';
-import { CheckSubscriptionMetricsResult, CrudRecordsController } from '../crud';
+import { CrudRecordsController } from '../crud';
 import type {
     NotificationAction,
     NotificationActionUI,
@@ -56,7 +58,6 @@ import type {
     SendPushNotificationResult,
     WebPushInterface,
 } from './WebPushInterface';
-import { SUBSCRIPTION_ID_NAMESPACE } from './WebPushInterface';
 
 const TRACE_NAME = 'NotificationRecordsController';
 
@@ -78,6 +79,7 @@ export interface NotificationRecordsConfiguration
  * Defines a controller that can be used to interact with NotificationRecords.
  */
 export class NotificationRecordsController extends CrudRecordsController<
+    NotificationRecord,
     NotificationRecord,
     NotificationRecordsStore
 > {

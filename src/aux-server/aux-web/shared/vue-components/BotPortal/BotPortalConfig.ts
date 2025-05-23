@@ -25,8 +25,6 @@ import {
     DEFAULT_MEET_PORTAL_ANCHOR_POINT,
     calculateMeetPortalAnchorPointOffset,
     getBotPortalAnchorPoint,
-    calculateStringTagValue,
-    BOT_PORTAL,
 } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';

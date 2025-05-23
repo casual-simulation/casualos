@@ -17,11 +17,7 @@
  */
 import path from 'path';
 import fs from 'fs';
-import {
-    paths,
-    cleanDirectory,
-    getExternals,
-} from '../../../script/build-helpers.mjs';
+import { paths, cleanDirectory } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 
 const src = path.resolve(paths.root, 'src');

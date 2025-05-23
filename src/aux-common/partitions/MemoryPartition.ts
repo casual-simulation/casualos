@@ -36,7 +36,6 @@ import type {
     BotSpace,
 } from '../bots';
 import {
-    tagsOnBot,
     hasValue,
     getActiveObjects,
     breakIntoIndividualEvents,
@@ -317,7 +316,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             bot: newBot,
                             tags: changedTags,
                         });
-                    } else {
+                    } else if (!added.has(event.id)) {
                         delete updatedState[event.id];
                     }
                 }

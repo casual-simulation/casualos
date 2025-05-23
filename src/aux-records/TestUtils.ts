@@ -19,14 +19,25 @@ import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
-import type { PublicRecordKeyPolicy } from './RecordsStore';
 import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
-import { parseSessionKey } from './AuthUtils';
 import type { PrivoConfiguration } from './PrivoConfiguration';
 import type { SubscriptionConfigBuilder } from './SubscriptionConfigBuilder';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
+import {
+    MemoryPackageRecordsStore,
+    PackageRecordsController,
+} from './packages';
+import {
+    MemoryPackageVersionRecordsStore,
+    PackageVersionRecordsController,
+} from './packages/version';
+import { FileRecordsController } from './FileRecordsController';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
+import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
+import { XpController } from './XpController';
+import type { Account, FinancialInterface, Transfer } from './financial';
+import { FinancialController, MemoryFinancialInterface } from './financial';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -38,9 +49,9 @@ export function createTestSubConfiguration(
     return buildSubscriptionConfig((config) =>
         build(
             config
-                .withCancelUrl('http://cancel-url')
-                .withReturnUrl('http://return-url')
-                .withSuccessUrl('http://success-url')
+                .withCancelUrl('https://cancel-url/')
+                .withReturnUrl('https://return-url/')
+                .withSuccessUrl('https://success-url/')
                 .withWebhookSecret('webhook-secret')
         )
     );
@@ -79,7 +90,7 @@ export function createTestControllers(
     config?: SubscriptionConfiguration | null
 ) {
     const subConfig: SubscriptionConfiguration | null =
-        typeof config === 'undefined' ? createTestSubConfiguration() : null;
+        typeof config === 'undefined' ? createTestSubConfiguration() : config;
 
     const store = new MemoryStore({
         subscriptions: subConfig,
@@ -94,7 +105,51 @@ export function createTestControllers(
         messenger: store,
         privo: null,
     });
-    const policies = new PolicyController(auth, records, store);
+    const packagesStore = new MemoryPackageRecordsStore(store);
+    const packageVersionStore = new MemoryPackageVersionRecordsStore(
+        store,
+        packagesStore
+    );
+    const financialInterface = new MemoryFinancialInterface();
+    const financialController = new FinancialController(
+        financialInterface,
+        store
+    );
+    const policies = new PolicyController(
+        auth,
+        records,
+        store,
+        store,
+        packageVersionStore
+    );
+    const files = new FileRecordsController({
+        config: store,
+        metrics: store,
+        store: store,
+        policies,
+    });
+
+    const packages = new PackageRecordsController({
+        config: store,
+        policies,
+        store: packagesStore,
+    });
+    const packageVersions = new PackageVersionRecordsController({
+        config: store,
+        policies,
+        packages,
+        files,
+        systemNotifications: store,
+        recordItemStore: packagesStore,
+        store: packageVersionStore,
+    });
+    const xpController = new XpController({
+        authController: auth,
+        authStore: store,
+        xpStore: store,
+        financialInterface,
+        // financialController,
+    });
 
     return {
         store,
@@ -106,13 +161,29 @@ export function createTestControllers(
         policyStore: store,
         policies,
         configStore: store,
+        files,
+        packagesStore,
+        packages,
+        packageVersionStore,
+        packageVersions,
+        xpController,
+        financialController,
+        financialInterface,
     };
+}
+
+export interface TestUser {
+    emailAddress: string;
+    userId: string;
+    sessionKey: string;
+    connectionKey: string;
+    sessionId: string;
 }
 
 export async function createTestUser(
     { auth, authMessenger }: Pick<TestServices, 'auth' | 'authMessenger'>,
     emailAddress: string = 'test@example.com'
-) {
+): Promise<TestUser> {
     const loginRequest = await auth.requestLogin({
         address: emailAddress,
         addressType: 'email',
@@ -154,6 +225,14 @@ export async function createTestUser(
         sessionId,
     };
 }
+
+// export async function createTestXpUser(
+//     xpController: XpController,
+//     ...createTestUserParams: Parameters<typeof createTestUser>
+// ) {
+//     const authUser = await createTestUser(...createTestUserParams);
+//     return await xpController.getXpUser({ userId: authUser.userId });
+// }
 
 export async function createTestRecordKey(
     { records }: Pick<TestServices, 'records'>,
@@ -257,4 +336,53 @@ export function readableFromAsyncIterable<T>(
             controller.close();
         },
     });
+}
+
+export function mapBigInts(obj: Record<string, any>): Record<string, any> {
+    return mapValuesDeep(obj, (value) => {
+        if (typeof value === 'bigint') {
+            if (value > Number.MAX_SAFE_INTEGER) {
+                return Number.MAX_SAFE_INTEGER;
+            } else {
+                return Number(value);
+            }
+        }
+        return value;
+    });
+}
+
+export async function checkAccounts(
+    financialInterface: FinancialInterface,
+    accounts: Partial<Account>[]
+) {
+    const accountValues = await financialInterface.lookupAccounts(
+        accounts.map((a) => a.id)
+    );
+
+    expect(mapBigInts(accountValues)).toEqual(
+        accounts.map((a) => expect.objectContaining(mapBigInts(a)))
+    );
+
+    // for(let i = 0; i < accounts.length; i++) {
+    //     const expected = accounts[i];
+    //     const actual = accountValues[i];
+
+    //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
+    // }
+}
+
+export function checkTransfers(
+    actual: Transfer[],
+    expected: Partial<Transfer>[]
+) {
+    expect(mapBigInts(actual)).toEqual(
+        expected.map((t) => expect.objectContaining(mapBigInts(t)))
+    );
+
+    // for(let i = 0; i < accounts.length; i++) {
+    //     const expected = accounts[i];
+    //     const actual = accountValues[i];
+
+    //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
+    // }
 }

@@ -18,7 +18,7 @@
 import { botUpdated, createBot } from '@casual-simulation/aux-common';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { waitForSync } from '@casual-simulation/aux-vm';
-import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
+import { SimulationManager } from '@casual-simulation/aux-vm';
 import type { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { nodeSimulationWithConfig } from '@casual-simulation/aux-vm-node';
 import { MenuPortal } from './MenuPortal';

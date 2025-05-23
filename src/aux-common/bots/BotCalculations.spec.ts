@@ -86,7 +86,7 @@ import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 import type { BotCalculationContext } from './BotCalculationContext';
 import { createPrecalculatedContext } from './BotCalculationContextFactory';
-import { DateTime, FixedOffsetZone, Zone } from 'luxon';
+import { DateTime, FixedOffsetZone } from 'luxon';
 import { Vector2, Vector3, Rotation, Quaternion } from '../math';
 
 const uuidMock: jest.Mock = <any>uuid;

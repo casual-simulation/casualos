@@ -25,28 +25,13 @@ import {
     MathUtils as ThreeMath,
     OrthographicCamera,
     Plane,
-    Color,
-    Euler,
-    Matrix3,
 } from '@casual-simulation/three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
 import { clamp, lerp } from '@casual-simulation/aux-common';
 import type { Viewport } from '../scene/Viewport';
 import type { Game } from '../scene/Game';
-import {
-    cameraForwardRay,
-    cameraUpwardRay,
-    objectForwardRay,
-    objectWorldDirectionRay,
-    objectWorldForwardRay,
-    WORLD_UP,
-} from '../scene/SceneUtils';
+import { cameraForwardRay, WORLD_UP } from '../scene/SceneUtils';
 import { Physics } from '../scene/Physics';
-import {
-    Rotation,
-    Vector3 as CVector3,
-    Quaternion as CQuaternion,
-} from '@casual-simulation/aux-common/math';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around

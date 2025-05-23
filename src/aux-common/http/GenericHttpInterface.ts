@@ -57,8 +57,9 @@ export interface GenericHttpRequest {
 
     /**
      * The IP address that the request is from.
+     * Null if the IP address is not available.
      */
-    ipAddress: string;
+    ipAddress: string | null;
 }
 
 /**
