@@ -263,8 +263,11 @@ export class MemoryFinancialInterface implements FinancialInterface {
 
     async createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
         const errs: CreateTransfersError[] = [];
+        let linkedTransfers: Transfer[] = [];
         for (let i = 0; i < batch.length; i++) {
-            const transfer = batch[i];
+            const transfer = {
+                ...batch[i],
+            };
             let pendingTransfer: Transfer | undefined;
             let valid = true;
 
@@ -307,7 +310,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
                 }
             }
 
-            if (creditAccountId === debitAccountId) {
+            if (!pendingTransfer && creditAccountId === debitAccountId) {
                 errs.push({
                     index: i,
                     result: CreateTransferError.accounts_must_be_different,
@@ -316,7 +319,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
             }
 
             const creditAccount = this._accounts.get(creditAccountId);
-            if (!creditAccount) {
+            if (!pendingTransfer && !creditAccount) {
                 errs.push({
                     index: i,
                     result: CreateTransferError.credit_account_not_found,
@@ -325,7 +328,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
             }
 
             const debitAccount = this._accounts.get(debitAccountId);
-            if (!debitAccount) {
+            if (!pendingTransfer && !debitAccount) {
                 errs.push({
                     index: i,
                     result: CreateTransferError.debit_account_not_found,
@@ -335,6 +338,52 @@ export class MemoryFinancialInterface implements FinancialInterface {
 
             if (creditAccount && debitAccount) {
                 if (
+                    transfer.ledger &&
+                    (creditAccount.ledger !== transfer.ledger ||
+                        debitAccount.ledger !== transfer.ledger)
+                ) {
+                    errs.push({
+                        index: i,
+                        result: CreateTransferError.transfer_must_have_the_same_ledger_as_accounts,
+                    });
+                    valid = false;
+                    return errs;
+                } else if (creditAccount.ledger !== debitAccount.ledger) {
+                    errs.push({
+                        index: i,
+                        result: CreateTransferError.accounts_must_have_the_same_ledger,
+                    });
+                    valid = false;
+                    return errs;
+                }
+
+                if (transfer.flags & TransferFlags.balancing_credit) {
+                    const balancingAmount =
+                        creditAccount.debits_posted -
+                        (creditAccount.credits_posted +
+                            creditAccount.credits_pending);
+                    if (
+                        balancingAmount >= 0 &&
+                        balancingAmount < transfer.amount
+                    ) {
+                        transfer.amount = balancingAmount;
+                    }
+                }
+
+                if (transfer.flags & TransferFlags.balancing_debit) {
+                    const balancingAmount =
+                        debitAccount.credits_posted -
+                        (debitAccount.debits_posted +
+                            debitAccount.debits_pending);
+                    if (
+                        balancingAmount >= 0 &&
+                        balancingAmount < transfer.amount
+                    ) {
+                        transfer.amount = balancingAmount;
+                    }
+                }
+
+                if (
                     creditAccount.flags &
                     AccountFlags.credits_must_not_exceed_debits
                 ) {
@@ -342,7 +391,7 @@ export class MemoryFinancialInterface implements FinancialInterface {
                         creditAccount.credits_pending +
                             creditAccount.credits_posted +
                             transfer.amount >
-                        debitAccount.debits_posted
+                        creditAccount.debits_posted
                     ) {
                         valid = false;
                         errs.push({
@@ -397,7 +446,17 @@ export class MemoryFinancialInterface implements FinancialInterface {
             }
 
             if (valid) {
-                this._transfers.push(transfer);
+                if (transfer.flags & TransferFlags.linked) {
+                    linkedTransfers.push(transfer);
+                } else {
+                    if (linkedTransfers.length > 0) {
+                        this._transfers.push(...linkedTransfers);
+                        linkedTransfers = [];
+                    }
+                    this._transfers.push(transfer);
+                }
+            } else {
+                linkedTransfers = [];
             }
         }
         return errs;

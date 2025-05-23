@@ -92,15 +92,23 @@ export function logErrors(multiError: MultiError<ErrorType>, prefix?: string) {
     }
 }
 
-export function logError(error: ErrorType, prefix?: string) {
-    console.error(
-        `${prefix ?? ''} Error: ${error.errorMessage} (${error.errorCode})`
-    );
+export function logError(
+    error: ErrorType,
+    prefix?: string,
+    log: (message: string, ...args: any[]) => void = console.error
+) {
+    log(`${prefix ?? ''} Error: ${error.errorMessage} (${error.errorCode})`);
     if (error.reason) {
-        console.error(`  ${prefix ?? ''} Reason:`, error.reason);
+        log(`  ${prefix ?? ''} Reason:`, error.reason);
     }
     if (error.issues) {
-        console.error(`  ${prefix ?? ''} Issues:`, error.issues);
+        log(`  ${prefix ?? ''} Issues:`, error.issues);
+    }
+    if (error.errors && Array.isArray(error.errors)) {
+        for (let i = 0; i < error.errors.length; i++) {
+            const err = error.errors[i];
+            logError(err, `  ${prefix ?? ''} ${i + 1}:`, log);
+        }
     }
 }
 

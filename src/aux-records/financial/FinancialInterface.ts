@@ -89,6 +89,60 @@ export function getAccountCurrency(account: Account): string {
  */
 export const ACCOUNT_IDS = {
     /**
+     * The ID of the USD SETUP control account.
+     *
+     * Used for implementing some transaction patterns like (multiple debits, single credit, balancing debits).
+     *
+     * See https://docs.tigerbeetle.com/coding/recipes/multi-debit-credit-transfers/
+     */
+    USD_SETUP: 9999n,
+
+    /**
+     * The ID of the USD debit LIMIT control account.
+     *
+     * Helper account for setting custom limits on the number of debits that can be proceessed in a transaction.
+     *
+     * See https://docs.tigerbeetle.com/coding/recipes/multi-debit-credit-transfers/
+     */
+    USD_LIMIT_DEBITS: 9998n,
+
+    /**
+     * The ID of the USD credit LIMIT control account.
+     *
+     * Helper account for setting custom limits on the number of credits that can be proceessed in a transaction.
+     *
+     * See https://docs.tigerbeetle.com/coding/recipes/multi-debit-credit-transfers/
+     */
+    USD_LIMIT_CREDITS: 9997n,
+
+    /**
+     * The ID of the Credits SETUP control account.
+     *
+     * Used for implementing some transaction patterns like (multiple debits, single credit, balancing debits).
+     *
+     * See https://docs.tigerbeetle.com/coding/recipes/multi-debit-credit-transfers/
+     */
+    CREDITS_SETUP: 9996n,
+
+    /**
+     * The ID of the Credits debit LIMIT control account.
+     *
+     * Helper account for setting custom limits on the number of debits that can be proceessed in a transaction.
+     *
+     * See https://docs.tigerbeetle.com/coding/recipes/multi-debit-credit-transfers/
+     */
+    CREDITS_LIMIT_DEBITS: 9995n,
+
+    /**
+     * The ID of the Credits credit LIMIT control account.
+     *
+     * Helper account for setting custom limits on the number of credits that can be proceessed in a transaction.
+     *
+     * See https://docs.tigerbeetle.com/coding/recipes/multi-debit-credit-transfers/
+     */
+    CREDITS_LIMIT_CREDITS: 9994n,
+
+    /**
      * The ID of the cash assets account.
      *
      * Used for tracking cash in the system (e.g. manual payments/transfers).
@@ -153,6 +207,11 @@ export function getLiquidityAccountByLedger(
  * * [6000] Liquidity
  */
 export enum AccountCodes {
+    /**
+     * Accounts for helping control transactions and transfers.
+     */
+    control = 1,
+
     /**
      * Cash accounts for the system
      */
@@ -220,6 +279,11 @@ export enum TransferCodes {
      * A currency exchange transfer.
      */
     exchange = 5,
+
+    /**
+     * A transfer to help control transactions and transfers.
+     */
+    control = 6,
 
     /**
      * A credit to a user's account based on the purchase of credits.
@@ -465,6 +529,8 @@ export function getMessageForTransferError(error: CreateTransferError) {
             return 'The transfer would cause the debits posted on the account to overflow a 128-bit unsigned int.';
         case CreateTransferError.overflows_timeout:
             return 'The transfer would cause the timeout on the account to overflow a 64-bit unsigned int.';
+        case CreateTransferError.transfer_must_have_the_same_ledger_as_accounts:
+            return 'The transfer must have the same ledger as the accounts.';
         default:
             return 'An unknown error occurred.';
     }

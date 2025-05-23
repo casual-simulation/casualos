@@ -1804,7 +1804,8 @@ export class SubscriptionController {
                     if (isFailure(transferResult)) {
                         logError(
                             transferResult.error,
-                            `[SubscriptionController] [purchaseContract] Failed to pay for contract from user's USD account:`
+                            `[SubscriptionController] [purchaseContract] Failed to pay for contract from user's USD account:`,
+                            console.warn
                         );
                     } else {
                         console.log(
@@ -1885,7 +1886,8 @@ export class SubscriptionController {
                         if (isFailure(transferResult)) {
                             logError(
                                 transferResult.error,
-                                `[SubscriptionController] [purchaseContract] Failed to pay for contract from user's credit account:`
+                                `[SubscriptionController] [purchaseContract] Failed to pay for contract from user's credit account:`,
+                                console.warn
                             );
                         } else {
                             console.log(

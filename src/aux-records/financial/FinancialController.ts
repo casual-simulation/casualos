@@ -171,6 +171,97 @@ export class FinancialController {
                 ledger: LEDGERS.credits,
                 reserved: 0,
             },
+
+            {
+                id: ACCOUNT_IDS.USD_SETUP,
+                code: AccountCodes.control,
+                flags: AccountFlags.none,
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.USD_LIMIT_CREDITS,
+                code: AccountCodes.control,
+                flags: AccountFlags.credits_must_not_exceed_debits,
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.USD_LIMIT_DEBITS,
+                code: AccountCodes.control,
+                flags: AccountFlags.debits_must_not_exceed_credits,
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.usd,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.CREDITS_SETUP,
+                code: AccountCodes.control,
+                flags: AccountFlags.none,
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.CREDITS_LIMIT_CREDITS,
+                code: AccountCodes.control,
+                flags: AccountFlags.credits_must_not_exceed_debits,
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
+            {
+                id: ACCOUNT_IDS.CREDITS_LIMIT_DEBITS,
+                code: AccountCodes.control,
+                flags: AccountFlags.debits_must_not_exceed_credits,
+                credits_pending: 0n,
+                credits_posted: 0n,
+                debits_pending: 0n,
+                debits_posted: 0n,
+                user_data_128: 0n,
+                user_data_64: 0n,
+                user_data_32: 0,
+                timestamp: 0n,
+                ledger: LEDGERS.credits,
+                reserved: 0,
+            },
         ]);
 
         let failed = false;
@@ -382,6 +473,7 @@ export class FinancialController {
                 return failure({
                     errorCode: 'unsupported_currency',
                     errorMessage: `The currency '${currency}' is not supported.`,
+                    errors: [],
                 });
             }
 
@@ -393,6 +485,14 @@ export class FinancialController {
 
             if (transfer.pending) {
                 flags |= TransferFlags.pending;
+            }
+
+            if (transfer.balancingCredit) {
+                flags |= TransferFlags.balancing_credit;
+            }
+
+            if (transfer.balancingDebit) {
+                flags |= TransferFlags.balancing_debit;
             }
 
             transfers.push({
@@ -490,9 +590,13 @@ export class FinancialController {
         transferResult: Result<void, MultiError<InterfaceTransferError>>
     ): TransferResult {
         if (isFailure(transferResult)) {
-            logErrors(
-                transferResult.error,
-                `[XpController] [transfer transactionId: ${transactionId}]`
+            // logErrors(
+            //     transferResult.error,
+            //     `[XpController] [transfer transactionId: ${transactionId}]`
+            // );
+
+            const errors = transferResult.error.errors.map(
+                ({ transfer, ...e }) => e
             );
 
             const exceedsDebits = transferResult.error.errors.find(
@@ -505,6 +609,7 @@ export class FinancialController {
                         'The transfer would cause the account credits to exceed its debits.',
                     accountId:
                         exceedsDebits.transfer.credit_account_id.toString(),
+                    errors: errors,
                 });
             }
             const exceedsCredits = transferResult.error.errors.find(
@@ -517,6 +622,7 @@ export class FinancialController {
                         'The transfer would cause the account debits to exceed its credits.',
                     accountId:
                         exceedsCredits.transfer.debit_account_id.toString(),
+                    errors: errors,
                 });
             }
 
@@ -527,6 +633,7 @@ export class FinancialController {
                 return failure({
                     errorCode: 'transfer_already_exists',
                     errorMessage: `The transfer (${exists.transfer.id}) already exists.`,
+                    errors: errors,
                 });
             }
 
@@ -539,12 +646,14 @@ export class FinancialController {
                 return failure({
                     errorCode: 'transfer_already_completed',
                     errorMessage: `The transfer (${completed.transfer.pending_id}) has already been posted/voided.`,
+                    errors: errors,
                 });
             }
 
             return failure({
                 errorCode: 'server_error',
                 errorMessage: 'An error occurred while transferring the funds.',
+                errors: errors,
             });
         }
 
@@ -855,6 +964,11 @@ export type TransferError = {
      * The ID of the account that had the issue.
      */
     accountId?: string;
+
+    /**
+     * The errors that occurred during the transfer.
+     */
+    errors: Omit<InterfaceTransferError, 'transfer'>[];
 };
 
 export interface InternalTransfer {
@@ -891,8 +1005,27 @@ export interface InternalTransfer {
 
     /**
      * Wether the transfer is pending or not.
+     * Defaults to false.
      */
     pending?: boolean;
+
+    /**
+     * Whether the transfer is a balancing credit or not.
+     *
+     * Balancing credits are used to transfer at most amount — automatically transferring less than amount as necessary such that `credit_account.credits_pending + credit_account.credits_posted ≤ credit_account.debits_posted`.
+     *
+     * Defaults to false.
+     */
+    balancingCredit?: boolean;
+
+    /**
+     * Whether the transfer is a balancing debit or not.
+     *
+     * Transfer at most amount — automatically transferring less than amount as necessary such that `debit_account.debits_pending + debit_account.debits_posted ≤ debit_account.credits_posted`.
+     *
+     * Defaults to false.
+     */
+    balancingDebit?: boolean;
 }
 
 export interface InternalTransferRequest {
