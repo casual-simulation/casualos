@@ -830,6 +830,7 @@ describe('s3AclForMarkers()', () => {
 describe('isPublicFile()', () => {
     const cases = [
         ['public', [PUBLIC_READ_MARKER], true] as const,
+        ['public', null, true] as const,
         ['private', ['secret'], false] as const,
     ];
 
