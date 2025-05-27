@@ -48,7 +48,7 @@ export const LEDGERS = {
     usd: 1,
 
     /**
-     * The ID of the ledger for transactions denominated in credits (internal-use currency for in-store-credit - has a 1:1 mapping with USD).
+     * The ID of the ledger for transactions denominated in credits (internal-use currency for in-store-credit - has a 1,000,000:1 mapping with USD).
      */
     credits: 2,
 };
@@ -68,13 +68,49 @@ export const CurrencyCodes = {
 /**
  * The map of ledger IDs to their currency codes.
  */
-export const CURRENCIES = new Map<
-    (typeof LEDGERS)[keyof typeof LEDGERS],
-    (typeof CurrencyCodes)[keyof typeof CurrencyCodes]
->([
+export const CURRENCIES = new Map<LedgersType, CurrencyCodesType>([
     [LEDGERS.credits, 'credits'],
     [LEDGERS.usd, 'usd'],
 ]);
+
+export type LedgersType = (typeof LEDGERS)[keyof typeof LEDGERS];
+export type CurrencyCodesType = keyof typeof CurrencyCodes;
+
+/**
+ * The conversion rate from USD to credits.
+ * 1 USD = 1,000,000 credits.
+ */
+export const USD_TO_CREDITS = 1000000n; // 1 USD = 1,000,000 credits
+
+/**
+ * The exchange rates between ledgers.
+ */
+export const LEDGER_EXCHANGE_RATES = new Map<
+    LedgersType,
+    Map<LedgersType, bigint>
+>([
+    [
+        LEDGERS.usd,
+        new Map([
+            [LEDGERS.credits, USD_TO_CREDITS], // 1 Credits = 1,000,000 USD
+        ]),
+    ],
+]);
+// export const CURRENCY_EXCHANGE_RATES = new Map<CurrencyCodesType, Map<CurrencyCodesType, bigint>>();
+
+// for(const [fromLedger, rates] of LEDGER_EXCHANGE_RATES.entries()) {
+//     const fromCurrency = CURRENCIES.get(fromLedger);
+//     if (fromCurrency) {
+//         const toRates = new Map<CurrencyCodesType, bigint>();
+//         for (const [toLedger, rate] of rates.entries()) {
+//             const toCurrency = CURRENCIES.get(toLedger);
+//             if (toCurrency) {
+//                 toRates.set(toCurrency, rate);
+//             }
+//         }
+//         CURRENCY_EXCHANGE_RATES.set(fromCurrency, toRates);
+//     }
+// }
 
 /**
  * Gets the currency code for the given account.
@@ -82,6 +118,74 @@ export const CURRENCIES = new Map<
  */
 export function getAccountCurrency(account: Account): string {
     return CURRENCIES.get(account.ledger);
+}
+
+/**
+ * Defines the structure of a converted currency value.
+ */
+export interface ConvertedCurrency {
+    /**
+     * The value in the target currency.
+     */
+    value: bigint;
+
+    /**
+     * The remainder of the conversion.
+     * This is the amount that could not be converted due to the conversion rate.
+     */
+    remainder: bigint;
+}
+
+/**
+ * Converts a value between two ledgers.
+ * @param from The ledger to convert from.
+ * @param to The ledger to convert to.
+ * @param value The value to convert.
+ */
+export function convertBetweenLedgers(
+    from: LedgersType,
+    to: LedgersType,
+    value: bigint
+): ConvertedCurrency | null {
+    let rate = getExchangeRate(from, to);
+    if (rate) {
+        return {
+            value: value * rate,
+            remainder: 0n,
+        };
+    } else {
+        rate = getExchangeRate(to, from);
+        return {
+            value: value / rate,
+            remainder: value % rate,
+        };
+    }
+}
+
+/**
+ * Gets the exchange rate between two ledgers.
+ * Returns null if the exchange rate is not defined.
+ * @param fromLedger The ledger to convert from.
+ * @param toLedger The ledger to convert to.
+ */
+export function getExchangeRate(
+    fromLedger: LedgersType,
+    toLedger: LedgersType
+): bigint | null {
+    if (fromLedger === toLedger) {
+        return 1n;
+    }
+    const rates = LEDGER_EXCHANGE_RATES.get(fromLedger);
+    if (!rates) {
+        return null;
+    }
+
+    const rate = rates.get(toLedger);
+    if (!rate) {
+        return null;
+    }
+
+    return rate;
 }
 
 /**

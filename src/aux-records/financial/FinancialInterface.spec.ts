@@ -17,8 +17,11 @@
  */
 import {
     AccountCodes,
+    convertBetweenLedgers,
+    getExchangeRate,
     getFlagsForAccountCode,
     getFlagsForTransferCode,
+    LEDGERS,
     TransferCodes,
 } from './FinancialInterface';
 import { AccountFlags, TransferFlags } from './Types';
@@ -78,4 +81,38 @@ describe('getFlagsForTransferCode()', () => {
     it.each(noneCases)('should map %s to none', (desc, code) => {
         expect(getFlagsForTransferCode(code)).toEqual(TransferFlags.none);
     });
+});
+
+describe('getExchangeRate()', () => {
+    const cases = [
+        ['usd', 'usd', 1] as const,
+        ['usd', 'credits', 1000000] as const,
+    ];
+
+    it.each(cases)('should convert %s to %s with rate %d', (from, to, rate) => {
+        expect(Number(getExchangeRate(LEDGERS[from], LEDGERS[to]))).toBe(rate);
+    });
+});
+
+describe('convertBetweenLedgers()', () => {
+    const cases = [
+        ['usd', 'usd', 100, 100, 0] as const,
+        ['usd', 'credits', 100, 100000000, 0] as const,
+        ['credits', 'usd', 100000000, 100, 0] as const,
+        ['credits', 'usd', 10, 0, 10] as const,
+        ['credits', 'credits', 100000000, 100000000, 0] as const,
+    ];
+
+    it.each(cases)(
+        'should convert %s to %s with %d:%d(%d)',
+        (from, to, amount, expected, remainder) => {
+            const result = convertBetweenLedgers(
+                LEDGERS[from],
+                LEDGERS[to],
+                BigInt(amount)
+            );
+            expect(Number(result?.value)).toBe(expected);
+            expect(Number(result?.remainder)).toBe(remainder);
+        }
+    );
 });
