@@ -32,7 +32,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import type { PrismaClient } from './generated';
 import { Prisma } from './generated';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
 const TRACE_NAME = 'PrismaInstRecordsStore';
