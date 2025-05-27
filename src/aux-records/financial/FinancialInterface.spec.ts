@@ -27,21 +27,21 @@ describe('getFlagsForAccountCode()', () => {
     it('should require that assets_cash cannot carry a credit balance', () => {
         const flags = getFlagsForAccountCode(AccountCodes.assets_cash);
         expect(flags).toBe(
-            AccountFlags.credits_must_not_exceed_debits & AccountFlags.history
+            AccountFlags.credits_must_not_exceed_debits | AccountFlags.history
         );
     });
 
     it('should require that liabilities_user cannot carry a debit balance', () => {
         const flags = getFlagsForAccountCode(AccountCodes.liabilities_user);
         expect(flags).toBe(
-            AccountFlags.debits_must_not_exceed_credits & AccountFlags.history
+            AccountFlags.debits_must_not_exceed_credits | AccountFlags.history
         );
     });
 
     it('should require that liabilities_escrow cannot carry a debit balance', () => {
         const flags = getFlagsForAccountCode(AccountCodes.liabilities_contract);
         expect(flags).toBe(
-            AccountFlags.debits_must_not_exceed_credits & AccountFlags.history
+            AccountFlags.debits_must_not_exceed_credits | AccountFlags.history
         );
     });
 
@@ -50,7 +50,7 @@ describe('getFlagsForAccountCode()', () => {
             AccountCodes.revenue_platform_fees
         );
         expect(flags).toBe(
-            AccountFlags.debits_must_not_exceed_credits & AccountFlags.history
+            AccountFlags.debits_must_not_exceed_credits | AccountFlags.history
         );
     });
 
