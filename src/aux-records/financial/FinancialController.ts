@@ -878,7 +878,11 @@ export function getAccountBalance(account: Account): number {
  * @param account The account to get the balance of.
  */
 export function getLiabilityAccountBalance(account: Account): number {
-    return Number(account.credits_posted - account.debits_posted);
+    return Number(
+        account.credits_posted -
+            account.debits_posted -
+            (account.credits_pending - account.debits_pending)
+    );
 }
 
 /**
@@ -887,7 +891,11 @@ export function getLiabilityAccountBalance(account: Account): number {
  * @param account The account to get the balance of.
  */
 export function getAssetAccountBalance(account: Account): number {
-    return Number(account.debits_posted - account.credits_posted);
+    return Number(
+        account.debits_posted -
+            account.credits_posted -
+            (account.debits_pending - account.credits_pending)
+    );
 }
 
 /**
@@ -896,7 +904,11 @@ export function getAssetAccountBalance(account: Account): number {
  * @param account The account to get the balance of.
  */
 export function getLiquidityPoolBalance(account: Account): number {
-    return Number(account.debits_posted - account.credits_posted);
+    return Number(
+        account.debits_posted -
+            account.credits_posted -
+            (account.debits_pending - account.credits_pending)
+    );
 }
 
 interface GenAccountConfig {

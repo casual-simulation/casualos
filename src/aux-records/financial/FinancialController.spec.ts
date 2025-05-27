@@ -1483,7 +1483,7 @@ describe('getAccountBalance()', () => {
 
         const balance = getAccountBalance(account);
 
-        expect(balance).toBe(105); // 155 - 50 = 105
+        expect(balance).toBe(5); // (155 - 50) - (200 - 100) = 5
     });
 
     it('should return the assets balance for assets_cash accounts', async () => {
@@ -1505,7 +1505,7 @@ describe('getAccountBalance()', () => {
 
         const balance = getAccountBalance(account);
 
-        expect(balance).toBe(105); // 155 - 50 = 105
+        expect(balance).toBe(5); // (155 - 50) - (200 - 100) = 5
     });
 });
 
@@ -1529,7 +1529,7 @@ describe('getLiabilityAccountBalance()', () => {
 
         const balance = getLiabilityAccountBalance(account);
 
-        expect(balance).toBe(105); // 155 - 50 = 105
+        expect(balance).toBe(5); // (155 - 50) - (200 - 100) = 5
     });
 });
 
@@ -1553,6 +1553,6 @@ describe('getAssetAccountBalance()', () => {
 
         const balance = getAssetAccountBalance(account);
 
-        expect(balance).toBe(105); // 155 - 50 = 105
+        expect(balance).toBe(5); // (155 - 50) - (200n - 100n) = 5
     });
 });
