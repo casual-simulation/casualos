@@ -359,6 +359,25 @@ export class FinancialController {
     }
 
     /**
+     * Attempts to get the financial account for the given filter.
+     * @param filter The filter to use.
+     */
+    async getFinancialAccount(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<GetFinancialAccountResult> {
+        const account = await this._financialStore.getAccountByFilter(filter);
+
+        if (!account) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The financial account does not exist.`,
+            });
+        }
+
+        return await this.getAccount(account.id);
+    }
+
+    /**
      * Gets or creates a financial account for the given filter.
      * @param filter The filter to use.
      */

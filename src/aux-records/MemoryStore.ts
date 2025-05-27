@@ -2191,6 +2191,8 @@ export class MemoryStore
                 transferIds: request.transferIds,
                 transfersPending: request.transfersPending,
                 transactionId: request.transactionId,
+                shouldBeAutomaticallyFulfilled:
+                    request.shouldBeAutomaticallyFulfilled,
             };
             this._checkoutSessions.push(session);
         } else {
@@ -2207,6 +2209,8 @@ export class MemoryStore
                 transferIds: request.transferIds,
                 transfersPending: request.transfersPending,
                 transactionId: request.transactionId,
+                shouldBeAutomaticallyFulfilled:
+                    request.shouldBeAutomaticallyFulfilled,
             };
 
             if (request.invoice) {

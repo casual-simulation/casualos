@@ -99,6 +99,7 @@ import { fromByteArray } from 'base64-js';
 import type { FinancialController, InternalTransfer } from './financial';
 import {
     ACCOUNT_IDS,
+    convertBetweenLedgers,
     CURRENCIES,
     CurrencyCodes,
     getAccountBalance,
@@ -1738,7 +1739,7 @@ export class SubscriptionController {
             );
 
             const userUsdAccount =
-                await this._financialController.getOrCreateFinancialAccount({
+                await this._financialController.getFinancialAccount({
                     userId: request.userId,
                     ledger: LEDGERS.usd,
                 });
@@ -1767,7 +1768,8 @@ export class SubscriptionController {
             if (isFailure(userUsdAccount)) {
                 logError(
                     userUsdAccount.error,
-                    `[SubscriptionController] [purchaseContract] Failed to get USD financial account for user: ${request.userId}`
+                    `[SubscriptionController] [purchaseContract] Failed to get USD financial account for user: ${request.userId}`,
+                    console.warn
                 );
             } else {
                 const balance = getAccountBalance(userUsdAccount.value);
@@ -1822,17 +1824,16 @@ export class SubscriptionController {
 
             if (!checkoutSession.paid) {
                 const userCreditAccount =
-                    await this._financialController.getOrCreateFinancialAccount(
-                        {
-                            userId: request.userId,
-                            ledger: LEDGERS.credits,
-                        }
-                    );
+                    await this._financialController.getFinancialAccount({
+                        userId: request.userId,
+                        ledger: LEDGERS.credits,
+                    });
 
                 if (isFailure(userCreditAccount)) {
                     logError(
                         userCreditAccount.error,
-                        `[SubscriptionController] [purchaseContract] Failed to get Credit financial account for user: ${request.userId}`
+                        `[SubscriptionController] [purchaseContract] Failed to get Credit financial account for user: ${request.userId}`,
+                        console.warn
                     );
                 } else {
                     const balance = getAccountBalance(userCreditAccount.value);
@@ -1842,6 +1843,23 @@ export class SubscriptionController {
                         console.log(
                             `[SubscriptionController] [purchaseContract accountId: ${userCreditAccount.value.id}] Attempting to pay out of user credits account.`
                         );
+
+                        const totalCreditCost = convertBetweenLedgers(
+                            LEDGERS.usd,
+                            LEDGERS.credits,
+                            BigInt(totalCost)
+                        );
+
+                        if (totalCreditCost === null) {
+                            console.error(
+                                `[SubscriptionController] [purchaseContract] Failed to convert cost from USD to Credits.`
+                            );
+                            return failure({
+                                errorCode: 'server_error',
+                                errorMessage:
+                                    'Failed to convert cost from USD to Credits.',
+                            });
+                        }
 
                         const builder = new TransactionBuilder();
                         builder.usePendingTransfers(false);
@@ -1853,7 +1871,7 @@ export class SubscriptionController {
                             currency: CURRENCIES.get(
                                 userCreditAccount.value.ledger
                             ),
-                            amount: totalCost,
+                            amount: totalCreditCost.value,
                             code: TransferCodes.exchange,
                         });
                         builder.addContract({
