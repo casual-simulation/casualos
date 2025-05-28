@@ -706,4 +706,21 @@ describe('ContractRecordsController', () => {
             });
         });
     });
+
+    describe('eraseItem()', () => {
+        it('should return not_supported when trying to erase a contract', async () => {
+            const result = await manager.eraseItem({
+                recordName: recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Deleting contracts is not supported.',
+            });
+        });
+    });
 });

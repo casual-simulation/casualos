@@ -222,6 +222,14 @@ export class ContractRecordsController extends CrudRecordsController<
             };
         }
 
+        if (action === 'delete') {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Deleting contracts is not supported.',
+            };
+        }
+
         if (action === 'create') {
             if (
                 typeof features.maxItems === 'number' &&
