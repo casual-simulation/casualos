@@ -97,6 +97,7 @@ export const UNSUBSCRIBE_ACTION = 'unsubscribe';
 export const LIST_SUBSCRIPTIONS_ACTION = 'listSubscriptions';
 export const PURCHASE_ACTION = 'purchase';
 export const APPROVE_ACTION = 'approve';
+export const CANCEL_ACTION = 'cancel';
 
 /**
  * The possible types of actions that can be performed on resources.
@@ -126,7 +127,8 @@ export type ActionKinds =
     | 'unsubscribe'
     | 'listSubscriptions'
     | 'purchase'
-    | 'approve';
+    | 'approve'
+    | 'cancel';
 
 /**
  * The possible types of actions that can be performed on data resources.
@@ -305,7 +307,8 @@ export type ContractActionKinds =
     | 'update'
     | 'delete'
     | 'list'
-    | 'purchase';
+    | 'purchase'
+    | 'cancel';
 
 /**
  * The possible types of actions that can be performed on invoice resources.
@@ -319,7 +322,8 @@ export type InvoiceActionKinds =
     | 'update'
     | 'delete'
     | 'list'
-    | 'approve';
+    | 'approve'
+    | 'cancel';
 
 /**
  * The possible types of permissions that can be added to policies.
@@ -461,6 +465,7 @@ export const CONTRACT_ACTION_KINDS_VALIDATION = z.enum([
     DELETE_ACTION,
     LIST_ACTION,
     PURCHASE_ACTION,
+    CANCEL_ACTION,
 ]);
 
 export const INVOICE_ACTION_KINDS_VALIDATION = z.enum([
@@ -470,6 +475,7 @@ export const INVOICE_ACTION_KINDS_VALIDATION = z.enum([
     DELETE_ACTION,
     LIST_ACTION,
     APPROVE_ACTION,
+    CANCEL_ACTION,
 ]);
 
 export const RESOURCE_KIND_VALIDATION = z.enum([
@@ -523,6 +529,7 @@ export const ACTION_KINDS_VALIDATION = z.enum([
     PURCHASE_ACTION,
 
     APPROVE_ACTION,
+    CANCEL_ACTION,
 ]);
 
 /**

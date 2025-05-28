@@ -3426,6 +3426,8 @@ describe('PolicyController', () => {
             ['subscribe', 'resourceId'],
             ['listSubscriptions', 'resourceId'],
             ['purchase', 'resourceId'],
+            ['cancel', 'resourceId'],
+            ['approve', 'resourceId'],
         ];
 
         const moderatorActionCases: [ActionKinds][] = [
@@ -4847,6 +4849,8 @@ describe('PolicyController', () => {
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
                     ['purchase', 'resourceId'],
+                    ['cancel', 'resourceId'],
+                    ['approve', 'resourceId'],
                 ],
             ],
         ];
@@ -5456,6 +5460,8 @@ describe('PolicyController', () => {
                     ['count', 'resourceId'],
                     ['increment', 'resourceId'],
                     ['purchase', 'resourceId'],
+                    ['cancel', 'resourceId'],
+                    ['approve', 'resourceId'],
                 ],
             ],
         ];
