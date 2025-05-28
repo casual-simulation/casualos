@@ -285,6 +285,10 @@ export class FinancialController {
         }
     }
 
+    generateId() {
+        return this._financialInterface.generateId();
+    }
+
     /**
      * Creates a new account with the given code.
      * For internal use only.
@@ -333,7 +337,6 @@ export class FinancialController {
 
     /**
      * Gets the account with the given ID.
-     * Resolves with null if the account does not exist.
      * @param accountId The ID of the account to get.
      * @returns
      */
@@ -358,10 +361,33 @@ export class FinancialController {
         return success(account);
     }
 
+    @traced(TRACE_NAME)
+    async getTransfer(
+        transferId: bigint | string
+    ): Promise<Result<Transfer, SimpleError>> {
+        if (typeof transferId === 'string') {
+            transferId = BigInt(transferId);
+        }
+
+        const transfers = await this._financialInterface.lookupTransfers([
+            transferId,
+        ]);
+
+        if (transfers.length === 0) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The transfer with ID '${transferId}' does not exist.`,
+            });
+        }
+
+        return success(transfers[0]);
+    }
+
     /**
      * Attempts to get the financial account for the given filter.
      * @param filter The filter to use.
      */
+    @traced(TRACE_NAME)
     async getFinancialAccount(
         filter: UniqueFinancialAccountFilter
     ): Promise<GetFinancialAccountResult> {
@@ -433,6 +459,7 @@ export class FinancialController {
      * Gets the list of accounts for the given filter.
      * @param filter The filter to use.
      */
+    @traced(TRACE_NAME)
     async listAccounts(
         filter: FinancialAccountFilter
     ): Promise<GetAccountsResult> {
@@ -512,6 +539,14 @@ export class FinancialController {
 
             if (transfer.balancingDebit) {
                 flags |= TransferFlags.balancing_debit;
+            }
+
+            if (transfer.closingCredit) {
+                flags |= TransferFlags.closing_credit | TransferFlags.pending;
+            }
+
+            if (transfer.closingDebit) {
+                flags |= TransferFlags.closing_debit | TransferFlags.pending;
             }
 
             transfers.push({
@@ -601,6 +636,33 @@ export class FinancialController {
             transfers,
             transferResult
         );
+    }
+
+    @traced(TRACE_NAME)
+    async listTransfers(
+        accountId: bigint | string
+    ): Promise<Result<Transfer[], SimpleError>> {
+        if (typeof accountId === 'string') {
+            accountId = BigInt(accountId);
+        }
+
+        const transfers = await this._financialInterface.getAccountTransfers({
+            account_id: accountId,
+        });
+
+        return success(transfers);
+    }
+
+    @traced(TRACE_NAME)
+    async queryTransfers(
+        query: TransfersQuery
+    ): Promise<Result<Transfer[], SimpleError>> {
+        const transfers = await this._financialInterface.queryTransfers({
+            user_data_128: BigInt(query.transactionId ?? 0n),
+            code: query.code ?? 0,
+        });
+
+        return success(transfers);
     }
 
     private _processTransferResult(
@@ -972,7 +1034,7 @@ export type CreateFinancialAccountResult = Result<
     SimpleError
 >;
 
-export type GetFinancialAccountResult = Result<Account | null, SimpleError>;
+export type GetFinancialAccountResult = Result<Account, SimpleError>;
 
 export type GetAccountsResult = Result<
     {
@@ -1057,6 +1119,18 @@ export interface InternalTransfer {
      * Defaults to false.
      */
     balancingDebit?: boolean;
+
+    /**
+     * Wether to mark the debit account as closed after this transfer is processed.
+     * If set, then the transfer will automatically be marked as pending.
+     */
+    closingDebit?: boolean;
+
+    /**
+     * Wether to mark the credit account as closed after this transfer is processed.
+     * If set, then the transfer will automatically be marked as pending.
+     */
+    closingCredit?: boolean;
 }
 
 export interface InternalTransferRequest {
@@ -1112,3 +1186,15 @@ export type TransferResult = Result<
     },
     TransferError
 >;
+
+export interface TransfersQuery {
+    /**
+     * The ID of the transaction to query transfers for.
+     */
+    transactionId?: bigint | string;
+
+    /**
+     * The code to fitler transfers by.
+     */
+    code?: TransferCodes;
+}

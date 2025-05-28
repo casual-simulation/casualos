@@ -26,6 +26,7 @@ import {
 import {
     ACCOUNT_IDS,
     AccountCodes,
+    AMOUNT_MAX,
     LEDGERS,
     TransferCodes,
 } from './FinancialInterface';
@@ -1276,6 +1277,114 @@ describe('FinancialController', () => {
             //         },
             //     ])
             // );
+        });
+
+        it('should be able to perform closing debits in a transaction', async () => {
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: 100n,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account1Id,
+                            currency: 'usd',
+                            amount: 1000n,
+                            code: TransferCodes.admin_credit,
+                        },
+                        {
+                            transferId: 101n,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account2Id,
+                            currency: 'usd',
+                            amount: 1000n,
+                            code: TransferCodes.admin_credit,
+                        },
+                    ],
+                })
+            );
+
+            const result = await controller.internalTransaction({
+                transfers: [
+                    {
+                        transferId: 102n,
+                        debitAccountId: account1Id,
+                        creditAccountId: ACCOUNT_IDS.assets_stripe,
+                        currency: 'usd',
+
+                        // debit account1 more than is allowed
+                        // to test that it is balanced to the account's current balance
+                        amount: AMOUNT_MAX,
+                        code: TransferCodes.admin_debit,
+                        balancingDebit: true,
+                    },
+                    {
+                        transferId: 103n,
+                        debitAccountId: account1Id,
+                        creditAccountId: ACCOUNT_IDS.assets_stripe,
+                        currency: 'usd',
+                        amount: 0,
+                        code: TransferCodes.account_closing,
+                        closingDebit: true,
+                    },
+                ],
+            });
+
+            expect(mapBigInts(result)).toEqual(
+                success({
+                    transactionId: '4',
+                    transferIds: ['102', '103'],
+                })
+            );
+
+            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+                mapBigInts([
+                    {
+                        id: 102,
+                        amount: 1000,
+                        credit_account_id: ACCOUNT_IDS.assets_stripe,
+                        debit_account_id: Number(account1Id),
+                        code: TransferCodes.admin_debit,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.balancing_debit,
+                        ledger: LEDGERS.usd,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 4,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                    {
+                        id: 103,
+                        amount: 0,
+                        credit_account_id: ACCOUNT_IDS.assets_stripe,
+                        debit_account_id: Number(account1Id),
+                        code: TransferCodes.account_closing,
+                        flags:
+                            TransferFlags.none |
+                            TransferFlags.closing_debit |
+                            TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        pending_id: 0,
+                        timeout: 0,
+                        timestamp: 0,
+
+                        // should put the transaction id in user_data_128
+                        user_data_128: 4,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                    },
+                ])
+            );
+
+            const account = unwrap(await controller.getAccount(account1Id));
+
+            expect(
+                (account.flags & AccountFlags.closed) === AccountFlags.closed
+            ).toBe(true);
         });
     });
 
