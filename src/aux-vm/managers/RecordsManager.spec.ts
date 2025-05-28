@@ -282,7 +282,7 @@ describe('RecordsManager', () => {
                 version: '1.0.0',
                 versionHash: '1234567890abcdef',
                 recordsOrigin: 'http://localhost:3002',
-                authOrigin: 'http://localhost:3002',
+                authOrigin: 'http://localhost:3302',
             },
             helper,
             getEndpointInfo,
@@ -9176,13 +9176,13 @@ describe('RecordsManager', () => {
         });
 
         describe('get_records_endpoint', () => {
-            it('should return the recordsOrigin', async () => {
+            it('should return the authOrigin', async () => {
                 records.handleEvents([getRecordsEndpoint(1)]);
 
                 await waitAsync();
 
                 expect(vm.events).toEqual([
-                    asyncResult(1, 'http://localhost:3002'),
+                    asyncResult(1, 'http://localhost:3302'),
                 ]);
             });
         });
