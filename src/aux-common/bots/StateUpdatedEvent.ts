@@ -22,10 +22,8 @@ import type {
     PartialBot,
     UpdatedBot,
 } from './Bot';
-import { merge } from '../utils';
 import { apply } from '../bots/AuxStateHelpers';
 import { hasValue } from './BotCalculations';
-import { cloneDeep } from 'lodash';
 import type { CurrentVersion } from '../common';
 
 /**

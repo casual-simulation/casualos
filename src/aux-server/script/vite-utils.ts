@@ -20,7 +20,7 @@ import path from 'path';
 import lodash from 'lodash';
 // import { merge } from 'lodash';
 // import { Plugin } from 'vite';
-import { defaultPolicies, root, src } from './vite-helpers';
+import { defaultPolicies } from './vite-helpers';
 
 const { merge } = lodash;
 

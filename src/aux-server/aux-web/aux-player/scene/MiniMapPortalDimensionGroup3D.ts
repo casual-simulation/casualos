@@ -17,7 +17,6 @@
  */
 import { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import type { Bot, AuxDomain } from '@casual-simulation/aux-common';
-import { BotCalculationContext } from '@casual-simulation/aux-common';
 import type { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/AuxBot3DDecoratorFactory';
 import type { MapSimulation3D } from './MapSimulation3D';
 

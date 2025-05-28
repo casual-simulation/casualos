@@ -32,7 +32,7 @@ import {
     SystemPortalCoordinator,
 } from './SystemPortalCoordinator';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
-import { SimulationManager, SimulationOrigin } from '@casual-simulation/aux-vm';
+import { SimulationManager } from '@casual-simulation/aux-vm';
 import type {
     SystemPortalPane,
     ConnectionInfo,
@@ -41,13 +41,8 @@ import {
     createBot,
     createPrecalculatedBot,
     botAdded,
-    PrecalculatedBot,
-    BotIndex,
     botUpdated,
-    botRemoved,
     registerPrefix,
-    BotsState,
-    BotAction,
     SYSTEM_PORTAL,
     SYSTEM_PORTAL_BOT,
     TEMPORARY_BOT_PARTITION_ID,
@@ -67,12 +62,9 @@ import {
     SYSTEM_PORTAL_PANE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
-import { firstValueFrom, Subject, Subscription } from 'rxjs';
-import {
-    wait,
-    waitAsync,
-} from '@casual-simulation/aux-common/test/TestHelpers';
-import { first, skip } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import { skip } from 'rxjs/operators';
 import { BotManager } from './BotManager';
 
 console.log = jest.fn();

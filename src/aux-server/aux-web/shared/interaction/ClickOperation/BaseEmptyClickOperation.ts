@@ -21,11 +21,9 @@ import type {
     InputModality,
     MouseOrTouchInputMethod,
 } from '../../../shared/scene/Input';
-import { Input } from '../../../shared/scene/Input';
 import type { Vector2, Object3D } from '@casual-simulation/three';
 import type { IOperation } from '../../../shared/interaction/IOperation';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
-import { DEFAULT_SCENE_BACKGROUND_COLOR } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import type { BaseInteractionManager } from '../BaseInteractionManager';
 import type { Game } from '../../../shared/scene/Game';

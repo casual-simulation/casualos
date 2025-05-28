@@ -461,7 +461,7 @@ const createSpy = (fn: jest.Mock) => {
         });
 
         test(`passes when undefined is returned`, () => {
-            const fn = jest.fn(() => undefined);
+            const fn = jest.fn(() => undefined as any);
             fn();
             jestExpect(fn)[returned]();
             expect(() =>
@@ -637,7 +637,7 @@ const createSpy = (fn: jest.Mock) => {
         });
 
         test('calls that return undefined are counted as returns', () => {
-            const fn = jest.fn(() => undefined);
+            const fn = jest.fn(() => undefined as any);
             fn();
             fn();
 
@@ -833,7 +833,7 @@ const createSpy = (fn: jest.Mock) => {
         });
 
         test(`works with undefined`, () => {
-            const fn = jest.fn(() => undefined);
+            const fn = jest.fn(() => undefined as any);
             fn();
 
             caller(jestExpect(fn)[returnedWith], undefined);

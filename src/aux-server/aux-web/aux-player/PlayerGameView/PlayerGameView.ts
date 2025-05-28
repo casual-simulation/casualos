@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import Component from 'vue-class-component';
-import { Inject, Prop } from 'vue-property-decorator';
+import { Inject } from 'vue-property-decorator';
 
 import type PlayerApp from '../PlayerApp/PlayerApp';
 import type { IGameView } from '../../shared/vue-components/IGameView';
@@ -37,11 +37,6 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import type EsriSceneView from 'esri/views/SceneView';
-import type EsriExternalRenderers from 'esri/views/3d/externalRenderers';
-import type EsriSpatialReference from 'esri/geometry/SpatialReference';
-import type EsriMap from 'esri/Map';
-import type EsriWebMercatorUtils from 'esri/geometry/support/webMercatorUtils';
-import { loadModules as loadEsriModules } from 'esri-loader';
 import {
     Config,
     ExternalRenderers,
@@ -51,9 +46,8 @@ import {
     SpatialReference,
     WebMercatorUtils,
     Basemap,
-    Projection,
 } from '../MapUtils';
-import { Matrix4, Vector3 } from '@casual-simulation/three';
+import { Matrix4 } from '@casual-simulation/three';
 
 @Component({
     components: {

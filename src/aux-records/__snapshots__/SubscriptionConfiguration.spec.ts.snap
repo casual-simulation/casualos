@@ -39,6 +39,9 @@ Object {
   "notifications": Object {
     "allowed": true,
   },
+  "packages": Object {
+    "allowed": true,
+  },
   "records": Object {
     "allowed": true,
   },

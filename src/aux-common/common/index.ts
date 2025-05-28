@@ -30,3 +30,4 @@ export * from './DenialReason';
 export * from './PrivacyFeatures';
 export * from './WebConfig';
 export * from './PublicUserInfo';
+export * from './Version';

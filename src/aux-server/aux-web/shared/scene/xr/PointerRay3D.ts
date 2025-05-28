@@ -19,20 +19,11 @@ import type { Ray } from '@casual-simulation/three';
 import {
     Object3D,
     Color,
-    LineBasicMaterial,
-    BufferGeometry,
-    Line,
-    BufferAttribute,
-    Float32BufferAttribute,
     Mesh,
     MeshBasicMaterial,
     SphereBufferGeometry,
 } from '@casual-simulation/three';
-import {
-    baseAuxMeshMaterial,
-    disposeMesh,
-    disposeObject3D,
-} from '../SceneUtils';
+import { disposeObject3D } from '../SceneUtils';
 import { Physics } from '../Physics';
 import { LineHelper } from '../helpers/LineHelper';
 

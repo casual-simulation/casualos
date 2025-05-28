@@ -17,7 +17,7 @@
  */
 import { disposeObject3D } from '../SceneUtils';
 import { ObjectPool } from './ObjectPool';
-import { PlaneHelper, Vector3, Plane } from '@casual-simulation/three';
+import { PlaneHelper, Plane } from '@casual-simulation/three';
 
 export class PlaneHelperPool extends ObjectPool<PlaneHelper> {
     constructor(name?: string, poolEmptyWarn?: boolean) {

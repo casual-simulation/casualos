@@ -25,7 +25,6 @@ import {
     signRequest,
     createSigningKey,
     cleanupObject,
-    tryParseJson,
     isStringValid,
     isActiveSubscription,
     getRootMarkersOrDefault,
@@ -33,6 +32,7 @@ import {
     byteLengthOfString,
     getRootMarker,
     getPathMarker,
+    getISO4217CurrencyCode,
 } from './Utils';
 
 describe('signRequest()', () => {
@@ -150,6 +150,29 @@ describe('createCanonicalRequest()', () => {
 
         expect(result).toEqual(
             'POST\n/this-is-a-test.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20211221T000000Z\n\nabc;content-length;content-type;x-amz-date\npayload-hash'
+        );
+    });
+
+    it('should URL encode the path', () => {
+        const result = createCanonicalRequest({
+            method: 'POST',
+            path: '/this is*a:test.png',
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': '123',
+                'X-Amz-Date': '20211221T000000Z',
+                ABC: ' def ',
+            },
+            queryString: {
+                'Hello World': 'jkl',
+                zyx: '123',
+                abc: 'def',
+            },
+            payloadSha256Hex: 'payload-hash',
+        });
+
+        expect(result).toEqual(
+            'POST\n/this%20is%2Aa%3Atest.png\nHello%20World=jkl&abc=def&zyx=123\nabc:def\ncontent-length:123\ncontent-type:image/png\nx-amz-date:20211221T000000Z\n\nabc;content-length;content-type;x-amz-date\npayload-hash'
         );
     });
 
@@ -441,6 +464,17 @@ describe('encodeHexUtf8()', () => {
     );
 });
 
+describe('getISO4217CurrencyCode()', () => {
+    it('should get an ISO4217 currency code and meta', () => {
+        // Expected currency code meta
+        const expected: ['USD', 840, 2] = ['USD', 840, 2];
+        // Test with Alphabetical currency code
+        expect(getISO4217CurrencyCode(expected[0])).toEqual(expected);
+        // Test with Numeric currency code
+        expect(getISO4217CurrencyCode(expected[1])).toEqual(expected);
+    });
+});
+
 describe('parseInstancesList()', () => {
     it('should return undefined if given an empty string', () => {
         expect(parseInstancesList('')).toEqual(undefined);
@@ -474,24 +508,6 @@ describe('cleanupObject()', () => {
             test: 0,
             value: false,
             empty: '',
-        });
-    });
-});
-
-describe('tryParseJson()', () => {
-    it('should be able to parse the given JSON into a value', () => {
-        expect(tryParseJson('{ "hello": 123 }')).toEqual({
-            success: true,
-            value: {
-                hello: 123,
-            },
-        });
-    });
-
-    it('should return an unsucessful result if the string is not JSON', () => {
-        expect(tryParseJson('{')).toEqual({
-            success: false,
-            error: expect.any(Error),
         });
     });
 });

@@ -28,7 +28,6 @@ import {
 import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
     applyTagEdit,
-    edit,
     isTagEdit,
     mergeEdits,
     remoteEdit,
@@ -43,13 +42,8 @@ import type {
     RuntimeBotLinks,
 } from '@casual-simulation/aux-common/bots';
 import {
-    BotSpace,
-    PrecalculatedBot,
     BOT_SPACE_TAG,
     getBotSpace,
-    createPrecalculatedBot,
-    BotSignatures,
-    getTag,
     getTagMaskSpaces,
     hasValue,
     DEFAULT_TAG_MASK_SPACE,
@@ -62,7 +56,6 @@ import {
     EDIT_TAG_MASK_SYMBOL,
     getOriginalObject,
     GET_TAG_MASKS_SYMBOL,
-    BotAction,
 } from '@casual-simulation/aux-common/bots';
 import { REPLACE_BOT_SYMBOL } from '@casual-simulation/aux-common/bots/Bot';
 import {

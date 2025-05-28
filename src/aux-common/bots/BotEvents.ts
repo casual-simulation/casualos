@@ -25,7 +25,7 @@ import type {
 } from './Bot';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import type { InstUpdate } from './StoredAux';
+import type { InstUpdate, StoredAux } from './StoredAux';
 import type {
     DeviceAction,
     RemoteAction,
@@ -35,12 +35,7 @@ import type {
     DeviceActionError,
     Action,
 } from '../common';
-import {
-    DeviceSelector,
-    remoteError,
-    remoteResult,
-    RemoteActions,
-} from '../common';
+import { remoteError, remoteResult } from '../common';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
@@ -215,7 +210,8 @@ export type RemoteBotActions =
     | GetInstStateFromUpdatesAction
     | CreateInitializationUpdateAction
     | ApplyUpdatesToInstAction
-    | GetCurrentInstUpdateAction;
+    | GetCurrentInstUpdateAction
+    | InstallAuxAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -6043,5 +6039,37 @@ export function getLoomMetadata(
         type: 'get_loom_metadata',
         sharedUrl,
         taskId,
+    };
+}
+
+export type InstallAuxFileMode = 'default' | 'copy';
+
+export interface InstallAuxAction extends Action {
+    type: 'install_aux_file';
+
+    /**
+     * The aux file that should be installed.
+     */
+    aux: StoredAux;
+
+    /**
+     * The mode that should be used to install the aux file.
+     *
+     * - "default" indicates that the aux file will be installed as-is.
+     *    If the file was already installed, then it will either overwrite bots or do nothing depending on the version of the aux.
+     *    Version 1 auxes will overwrite existing bots, while version 2 auxes will do nothing.
+     * - "copy" indicates that all the bots in the aux file should be given new IDs. This is useful if you want to be able to install an AUX multiple times in the same inst.
+     */
+    mode: InstallAuxFileMode;
+}
+
+export function installAuxFile(
+    aux: StoredAux,
+    mode: InstallAuxFileMode
+): InstallAuxAction {
+    return {
+        type: 'install_aux_file',
+        aux,
+        mode,
     };
 }

@@ -15,14 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { map } from 'lodash';
 import type { CurrentVersion, StatusUpdate } from '../../common';
 import type {
     SharedArrayChanges,
     SharedDocument,
     SharedMapChanges,
 } from '../SharedDocument';
-import { SharedMapChange } from '../SharedDocument';
 import { Subscription } from 'rxjs';
 import { waitAsync } from '../../test/TestHelpers';
 

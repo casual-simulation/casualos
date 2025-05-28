@@ -15,19 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import type {
-    CreateRecordRequest,
-    FormError,
-} from '@casual-simulation/aux-records';
-import { ListedStudio } from '@casual-simulation/aux-records';
+import type { CreateRecordRequest } from '@casual-simulation/aux-records';
 import { distinctUntilChanged } from 'rxjs';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
+import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
 const comId = authManager.getComIdFromUrl();

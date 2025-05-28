@@ -27,7 +27,6 @@ import type { SpanOptions } from '@opentelemetry/api';
 import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 import Anthropic from '@anthropic-ai/sdk';
 import type { Message } from '@anthropic-ai/sdk/resources';
-import { ImageBlockParam, TextBlockParam } from '@anthropic-ai/sdk/resources';
 
 const TRACE_NAME = 'AnthropicAIChatInterface';
 const SPAN_OPTIONS: SpanOptions = {

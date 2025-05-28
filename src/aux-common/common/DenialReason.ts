@@ -20,7 +20,6 @@ import type {
     ResourceKinds,
     SubjectType,
 } from './PolicyPermissions';
-import { AvailablePermissions } from './PolicyPermissions';
 import type { PrivacyFeatures } from './PrivacyFeatures';
 
 export type DenialReason =

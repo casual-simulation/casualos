@@ -19,6 +19,7 @@ import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
 import type {
     CompleteLoginSuccess,
@@ -29,7 +30,6 @@ import type {
     GrantResourcePermissionResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import type { Observable, SubscriptionLike } from 'rxjs';
@@ -209,6 +209,12 @@ export interface AuthHelperInterface extends SubscriptionLike {
      * Logs the user out.
      */
     logout(): Promise<void>;
+
+    /**
+     * Ensures that the user is logged in with a valid session.
+     * If the current session is invalid, then the user will be prompted to log in again.
+     */
+    relogin(): Promise<void>;
 
     /**
      * Gets the URLs for the different policies (privacy policy, terms of service, etc.).

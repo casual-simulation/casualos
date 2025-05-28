@@ -19,7 +19,6 @@ import {
     WebGLRenderer,
     OrthographicCamera,
     Scene,
-    WebGLRenderTarget,
     Box3,
     Vector3,
     MathUtils as ThreeMath,

@@ -340,6 +340,11 @@ const redisSchema = z.object({
                     'The Redis server that should be used for rate limits. If omitted, then the default server will be used.'
                 )
                 .optional(),
+            pubSub: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for pubsub. If omitted, then the default server will be used.'
+                )
+                .optional(),
         })
         .describe(
             'The Redis servers that should be used for specific categories of data. If omitted, then the default server will be used.'
@@ -449,6 +454,15 @@ Because repo/add_updates is a very common permission, we periodically cache perm
         )
         .optional()
         .default(null),
+
+    pubSubNamespace: z
+        .string()
+        .describe(
+            'The namespace that should be used for pubsub subscriptions. Defaults to "pubsub". If set to null, then pubsub is disabled.'
+        )
+        .nullable()
+        .optional()
+        .default('pubsub'),
 });
 
 const rateLimitSchema = z.object({
@@ -639,6 +653,13 @@ const aiSchema = z.object({
                                 .describe(
                                     'The list of models that should be mapped to this provider'
                                 ),
+                            additionalProperties: z
+                                .object({})
+                                .passthrough()
+                                .describe(
+                                    'The additional properties that should be included in requests.'
+                                )
+                                .optional(),
                         }),
                     ])
                 )
@@ -882,6 +903,35 @@ const telemetrySchema = z.object({
         .default({}),
 });
 
+const tigerBeetleSchema = z
+    .object({
+        _enabled: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+                'Whether TigerBeetle is enabled, this allows for pre-defining and shipping default configuration.'
+            ),
+        clusterId: z
+            .bigint({ coerce: true })
+            .min(0n, 'The cluster ID must be a non-negative integer.')
+            .describe('The cluster ID.'),
+        replicaAddresses: z
+            .array(
+                z
+                    .string()
+                    .min(1)
+                    .describe(
+                        'An address (or port if local) to a replica of a cluster.'
+                    )
+            )
+            .min(1, 'At least one replica address is required.')
+            .describe("The addresses of the provided cluster's replicas."),
+    })
+    .describe(
+        'The financial interface that should be used. If omitted, then financial features provided by said interface will be disabled.'
+    );
+
 const rekognitionSchema = z.object({
     moderation: z.object({
         files: z.object({
@@ -976,6 +1026,12 @@ const webhooksSchema = z.object({
                 .min(1)
                 .optional()
                 .nullable(),
+            debugLogs: z
+                .boolean()
+                .describe(
+                    'Whether to enable debug logs for the Deno environment. This will log all Deno output to the console.'
+                )
+                .default(false),
         }),
         z.object({
             type: z.literal('node'),
@@ -1121,6 +1177,12 @@ export const serverConfigSchema = z.object({
     telemetry: telemetrySchema
         .describe(
             'Options for configuring telemetry. If omitted, then telemetry will not be enabled.'
+        )
+        .optional(),
+
+    tigerBeetle: tigerBeetleSchema
+        .describe(
+            'Financial Interface configuration options for tigerbeetle. If omitted, then tigerbeetle will be disabled.'
         )
         .optional(),
 

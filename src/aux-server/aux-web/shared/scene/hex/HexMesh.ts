@@ -27,9 +27,6 @@ import {
     Mesh,
     ExtrudeBufferGeometry,
     Shape,
-    Matrix4,
-    Vector3,
-    MeshBasicMaterial,
     Box3,
     Sphere,
 } from '@casual-simulation/three';

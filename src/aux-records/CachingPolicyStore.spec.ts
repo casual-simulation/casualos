@@ -16,14 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { CachingPolicyStore } from './CachingPolicyStore';
-import { Cache } from './Cache';
 import { MemoryStore } from './MemoryStore';
 import { MemoryCache } from './MemoryCache';
-import {
-    ACCOUNT_MARKER,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-} from '@casual-simulation/aux-common';
 
 describe('CachingPolicyStore', () => {
     let inner: MemoryStore;

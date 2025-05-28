@@ -21,19 +21,12 @@ import type {
     Bot,
 } from '@casual-simulation/aux-common';
 import {
-    isDimensionLocked,
-    DEFAULT_PORTAL_ZOOMABLE,
-    DEFAULT_PORTAL_PANNABLE,
     hasValue,
     calculateBotValue,
     CLICK_ACTION_NAME,
     onClickArg,
 } from '@casual-simulation/aux-common';
-import { Color } from '@casual-simulation/three';
-import {
-    BrowserSimulation,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
 import { Subject } from 'rxjs';

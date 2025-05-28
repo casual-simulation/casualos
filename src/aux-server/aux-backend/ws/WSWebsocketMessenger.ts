@@ -31,6 +31,10 @@ import { v4 as uuid } from 'uuid';
 export class WSWebsocketMessenger implements WebsocketMessenger {
     private _connections: Map<string, WebSocket> = new Map();
 
+    get connections() {
+        return this._connections;
+    }
+
     registerConnection(socket: WebSocket): string {
         const id = uuid();
         this._connections.set(id, socket);
