@@ -435,9 +435,27 @@ export class MemoryFinancialInterface implements FinancialInterface {
                     ) {
                         creditAccount.credits_pending -= pendingTransfer.amount;
                         debitAccount.debits_pending -= pendingTransfer.amount;
+
+                        if (
+                            pendingTransfer.flags & TransferFlags.closing_credit
+                        ) {
+                            creditAccount.flags &= ~AccountFlags.closed;
+                        }
+                        if (
+                            pendingTransfer.flags & TransferFlags.closing_debit
+                        ) {
+                            debitAccount.flags &= ~AccountFlags.closed;
+                        }
                     } else {
                         creditAccount.credits_posted += transfer.amount;
                         debitAccount.debits_posted += transfer.amount;
+                    }
+
+                    if (transfer.flags & TransferFlags.closing_credit) {
+                        creditAccount.flags |= AccountFlags.closed;
+                    }
+                    if (transfer.flags & TransferFlags.closing_debit) {
+                        debitAccount.flags |= AccountFlags.closed;
                     }
 
                     this._recordBalance(creditAccount, transfer.timestamp);

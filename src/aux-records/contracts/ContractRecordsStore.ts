@@ -44,6 +44,13 @@ export interface ContractRecordsStore extends CrudRecordsStore<ContractRecord> {
         recordName: string,
         address: string
     ): Promise<void>;
+
+    /**
+     * Marks the given contract as closed.
+     * @param recordName The name of the record.
+     * @param address The address of the contract.
+     */
+    markContractAsClosed(recordName: string, address: string): Promise<void>;
 }
 
 /**

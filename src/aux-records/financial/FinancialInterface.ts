@@ -390,6 +390,11 @@ export enum TransferCodes {
     control = 6,
 
     /**
+     * A transfer that closes an account.
+     */
+    account_closing = 7,
+
+    /**
      * A credit to a user's account based on the purchase of credits.
      * This generally functions as a top-up of the user's account and corresponds to a debit from an assets account.
      */
@@ -418,6 +423,11 @@ export enum TransferCodes {
      * In the XP Exchange, sponsors always pay platform fees.
      */
     xp_platform_fee = 2002,
+
+    /**
+     * A credit to a user account and a corresponding closing debit from the contract account.
+     */
+    contract_refund = 2003,
 
     /**
      * A credit to the seller's account and a corresponding debit from the payment source.

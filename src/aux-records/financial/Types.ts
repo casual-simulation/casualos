@@ -796,47 +796,47 @@ export interface AccountFilter {
     /**
      * See [account_id](https://docs.tigerbeetle.com/reference/account-filter#account_id)
      */
-    account_id: bigint;
+    account_id?: bigint;
 
     /**
      * See [user_data_128](https://docs.tigerbeetle.com/reference/account-filter#user_data_128)
      */
-    user_data_128: bigint;
+    user_data_128?: bigint;
 
     /**
      * See [user_data_64](https://docs.tigerbeetle.com/reference/account-filter#user_data_64)
      */
-    user_data_64: bigint;
+    user_data_64?: bigint;
 
     /**
      * See [user_data_32](https://docs.tigerbeetle.com/reference/account-filter#user_data_32)
      */
-    user_data_32: number;
+    user_data_32?: number;
 
     /**
      * See [code](https://docs.tigerbeetle.com/reference/account-filter#code)
      */
-    code: number;
+    code?: number;
 
     /**
      * See [timestamp_min](https://docs.tigerbeetle.com/reference/account-filter#timestamp_min)
      */
-    timestamp_min: bigint;
+    timestamp_min?: bigint;
 
     /**
      * See [timestamp_max](https://docs.tigerbeetle.com/reference/account-filter#timestamp_max)
      */
-    timestamp_max: bigint;
+    timestamp_max?: bigint;
 
     /**
      * See [limit](https://docs.tigerbeetle.com/reference/account-filter#limit)
      */
-    limit: number;
+    limit?: number;
 
     /**
      * See [flags](https://docs.tigerbeetle.com/reference/account-filter#flags)
      */
-    flags: number;
+    flags?: number;
 }
 
 /**
@@ -846,47 +846,47 @@ export interface QueryFilter {
     /**
      * See [user_data_128](https://docs.tigerbeetle.com/reference/query-filter#user_data_128)
      */
-    user_data_128: bigint;
+    user_data_128?: bigint;
 
     /**
      * See [user_data_64](https://docs.tigerbeetle.com/reference/query-filter#user_data_64)
      */
-    user_data_64: bigint;
+    user_data_64?: bigint;
 
     /**
      * See [user_data_32](https://docs.tigerbeetle.com/reference/query-filter#user_data_32)
      */
-    user_data_32: number;
+    user_data_32?: number;
 
     /**
      * See [ledger](https://docs.tigerbeetle.com/reference/query-filter#ledger)
      */
-    ledger: number;
+    ledger?: number;
 
     /**
      * See [code](https://docs.tigerbeetle.com/reference/query-filter#code)
      */
-    code: number;
+    code?: number;
 
     /**
      * See [timestamp_min](https://docs.tigerbeetle.com/reference/query-filter#timestamp_min)
      */
-    timestamp_min: bigint;
+    timestamp_min?: bigint;
 
     /**
      * See [timestamp_max](https://docs.tigerbeetle.com/reference/query-filter#timestamp_max)
      */
-    timestamp_max: bigint;
+    timestamp_max?: bigint;
 
     /**
      * See [limit](https://docs.tigerbeetle.com/reference/query-filter#limit)
      */
-    limit: number;
+    limit?: number;
 
     /**
      * See [flags](https://docs.tigerbeetle.com/reference/query-filter#flags)
      */
-    flags: number;
+    flags?: number;
 }
 
 /**

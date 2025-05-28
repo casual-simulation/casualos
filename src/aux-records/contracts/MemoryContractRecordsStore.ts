@@ -44,6 +44,21 @@ export class MemoryContractRecordsStore
         }
     }
 
+    async markContractAsClosed(
+        recordName: string,
+        address: string
+    ): Promise<void> {
+        const record = this.getItemRecord(recordName);
+        const item = record.get(address);
+        if (item && item.status !== 'closed') {
+            record.set(address, {
+                ...item,
+                status: 'closed',
+                closedAtMs: Date.now(),
+            });
+        }
+    }
+
     async getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<ContractSubscriptionMetrics> {

@@ -73,6 +73,7 @@ import type {
 import {
     failure,
     isFailure,
+    isSuccess,
     isSuperUserRole,
     logError,
     success,
@@ -88,6 +89,7 @@ import {
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { v4 as uuid } from 'uuid';
 import type {
+    AuthorizationContext,
     AuthorizeSubjectFailure,
     ConstructAuthorizationContextFailure,
     PolicyController,
@@ -96,9 +98,14 @@ import type { PolicyStore } from './PolicyStore';
 import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import type { FinancialController, InternalTransfer } from './financial';
+import type {
+    Account,
+    FinancialController,
+    InternalTransfer,
+} from './financial';
 import {
     ACCOUNT_IDS,
+    AMOUNT_MAX,
     convertBetweenLedgers,
     CURRENCIES,
     CurrencyCodes,
@@ -2058,7 +2065,7 @@ export class SubscriptionController {
             });
         } catch (err) {
             console.error(
-                '[SubscriptionController] An error occurred while creating a purchase item link:',
+                '[SubscriptionController] An error occurred while purchasing a contract:',
                 err
             );
             return failure({
@@ -2066,6 +2073,190 @@ export class SubscriptionController {
                 errorMessage: 'A server error occurred.',
             });
         }
+    }
+
+    @traced(TRACE_NAME)
+    async cancelContract(
+        request: CancelContractRequest
+    ): Promise<CancelContractResult> {
+        const context = await this._policies.constructAuthorizationContext({
+            recordKeyOrRecordName: request.recordName,
+            userId: request.userId,
+        });
+
+        if (context.success === false) {
+            return failure(context);
+        }
+
+        const recordName = context.context.recordName;
+        const item = await this._contractRecords.getItemByAddress(
+            recordName,
+            request.address
+        );
+
+        if (!item) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The contract could not be found.',
+            });
+        }
+
+        const authorization = await this._policies.authorizeUserAndInstances(
+            context.context,
+            {
+                userId: request.userId,
+                instances: request.instances,
+                resourceKind: 'contract',
+                resourceId: item.address,
+                markers: item.markers,
+                action: 'cancel',
+            }
+        );
+
+        if (authorization.success === false) {
+            return failure(authorization);
+        }
+
+        if (item.status === 'closed') {
+            return success({
+                refundedAmount: 0,
+                refundCurrency: CurrencyCodes.usd,
+            });
+        }
+
+        const refundResult = await this._refundContract(
+            request,
+            item,
+            context.context
+        );
+
+        if (isSuccess(refundResult)) {
+            await this._contractRecords.markContractAsClosed(
+                recordName,
+                item.address
+            );
+        }
+
+        return refundResult;
+    }
+
+    private async _refundContract(
+        request: CancelContractRequest,
+        item: ContractRecord,
+        context: AuthorizationContext
+    ): Promise<CancelContractResult> {
+        const contractAccount =
+            await this._financialController.getFinancialAccount({
+                contractId: item.id,
+                ledger: LEDGERS.usd,
+            });
+
+        if (isFailure(contractAccount)) {
+            if (contractAccount.error.errorCode === 'not_found') {
+                return success({
+                    refundedAmount: 0,
+                    refundCurrency: CurrencyCodes.usd,
+                });
+            }
+            logError(
+                contractAccount.error,
+                `[SubscriptionController] [cancelContract] Failed to get USD financial account for contract:`
+            );
+            return contractAccount;
+        }
+
+        let refundAccount: Account;
+        if (request.refundAccountId) {
+            const account = await this._financialController.getAccount(
+                request.refundAccountId
+            );
+
+            if (isFailure(account)) {
+                logError(
+                    account.error,
+                    `[SubscriptionController] [cancelContract] Failed to get refund account:`
+                );
+                return account;
+            }
+            refundAccount = account.value;
+        }
+
+        if (!refundAccount) {
+            const account =
+                await this._financialController.getOrCreateFinancialAccount({
+                    userId: context.recordOwnerId,
+                    studioId: context.recordStudioId,
+                    ledger: contractAccount.value.ledger,
+                });
+
+            if (isFailure(account)) {
+                logError(
+                    account.error,
+                    `[SubscriptionController] [cancelContract] Failed to get or create refund account:`
+                );
+                return account;
+            }
+            refundAccount = account.value;
+        }
+
+        console.log(
+            `[SubscriptionController] [cancelContract contractId: ${item.id} contractAccountId: ${contractAccount.value.id} refundAccountId: ${refundAccount.id}] Attempting to cancel contract.`
+        );
+
+        const refundId = this._financialController.generateId();
+        const cancelId = this._financialController.generateId();
+        const transferResult =
+            await this._financialController.internalTransaction({
+                transfers: [
+                    {
+                        transferId: refundId,
+                        amount: AMOUNT_MAX,
+                        debitAccountId: contractAccount.value.id,
+                        creditAccountId: refundAccount.id,
+                        code: TransferCodes.contract_refund,
+                        currency: CurrencyCodes.usd,
+                        balancingDebit: true,
+                    },
+                    {
+                        transferId: cancelId,
+                        amount: 0,
+                        debitAccountId: contractAccount.value.id,
+                        creditAccountId: refundAccount.id,
+                        code: TransferCodes.account_closing,
+                        currency: CurrencyCodes.usd,
+                        closingDebit: true,
+                    },
+                ],
+            });
+
+        if (isFailure(transferResult)) {
+            logError(
+                transferResult.error,
+                `[SubscriptionController] [cancelContract] Failed to refund contract:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'Failed to refund the contract.',
+            });
+        }
+
+        const transfer = await this._financialController.getTransfer(refundId);
+
+        if (isFailure(transfer)) {
+            logError(
+                transfer.error,
+                `[SubscriptionController] [cancelContract] Failed to get transfer for contract refund:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        return success({
+            refundedAmount: Number(transfer.value.amount),
+            refundCurrency: CURRENCIES.get(transfer.value.ledger),
+        });
     }
 
     @traced(TRACE_NAME)
@@ -3794,6 +3985,50 @@ export interface PurchaseContractRequest {
      */
     successUrl: string;
 }
+
+export interface CancelContractRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instances that the request is being made from.
+     */
+    instances: string[];
+
+    /**
+     * The name of the record that the contract is stored in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the contract that is being canceled.
+     */
+    address: string;
+
+    /**
+     * The ID of the account that the refund should be sent to.
+     * If not provided, then the refund will be sent to the account that owns the contract.
+     */
+    refundAccountId?: string;
+}
+
+export type CancelContractResult = Result<
+    {
+        /**
+         * The amount that was refunded to the user.
+         */
+        refundedAmount: number;
+
+        /**
+         * The currency that the refunded amount is in.
+         */
+        refundCurrency: string;
+    },
+    SimpleError
+>;
 
 export interface FulfillCheckoutSessionRequest {
     /**

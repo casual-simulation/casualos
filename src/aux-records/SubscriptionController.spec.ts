@@ -69,6 +69,7 @@ import {
     toBase64String,
 } from '@casual-simulation/aux-common';
 import type {
+    Account,
     FinancialController,
     MemoryFinancialInterface,
 } from './financial';
@@ -8189,6 +8190,332 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
             expect(stripeMock.createCustomer).not.toHaveBeenCalled();
             expect(store.checkoutSessions).toEqual([]);
+        });
+    });
+
+    describe.only('cancelContract()', () => {
+        const recordName = 'recordName';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'fixed',
+                                    amount: 10,
+                                },
+                            })
+                    )
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveUser({
+                id: 'xpUserId',
+                email: 'xpUser@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should return not_found if the contract does not exist', async () => {
+            const result = await controller.cancelContract({
+                recordName: recordName,
+                address: 'missing',
+                userId: userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The contract could not be found.',
+                })
+            );
+        });
+
+        describe('USD', () => {
+            let contractAccount: Account | null;
+            let userAccount: Account | null;
+            beforeEach(async () => {
+                userAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                contractAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId: 'contract1',
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: '200',
+                                amount: 200,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: userAccount!.id,
+                                currency: CurrencyCodes.usd,
+                            },
+                            {
+                                transferId: '201',
+                                amount: 100,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: userAccount!.id,
+                                creditAccountId: contractAccount!.id,
+                                currency: CurrencyCodes.usd,
+                            },
+                            {
+                                transferId: '202',
+                                amount: 10,
+                                code: TransferCodes.xp_platform_fee,
+                                debitAccountId: userAccount!.id,
+                                creditAccountId:
+                                    ACCOUNT_IDS.revenue_xp_platform_fees,
+                                currency: CurrencyCodes.usd,
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should cancel the contract and refund the payment to the USD account', async () => {
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 100,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const contract = await contractStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(contract).toMatchObject({
+                    status: 'closed',
+                    closedAtMs: 101,
+                });
+
+                checkTransfers(financialInterface.transfers.slice(3), [
+                    {
+                        id: 4n,
+                        amount: 100n,
+                        code: TransferCodes.contract_refund,
+                        credit_account_id: userAccount!.id,
+                        debit_account_id: contractAccount!.id,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.balancing_debit,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 6n,
+                    },
+                    {
+                        id: 5n,
+                        amount: 0n,
+                        code: TransferCodes.account_closing,
+                        credit_account_id: userAccount!.id,
+                        debit_account_id: contractAccount!.id,
+                        flags:
+                            TransferFlags.closing_debit | TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 6n,
+                    },
+                ]);
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.id,
+                        credits_posted: 300n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.id,
+                        credits_posted: 100n,
+                        credits_pending: 0n,
+                        debits_posted: 100n,
+                        debits_pending: 0n,
+                        flags:
+                            AccountFlags.history |
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.closed,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should be able to cancel pending contracts', async () => {
+                await contractStore.updateItem(recordName, {
+                    id: 'differentContractId',
+                    address: 'item1',
+                    status: 'pending',
+                });
+
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 0,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const contract = await contractStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(contract).toMatchObject({
+                    status: 'closed',
+                    closedAtMs: 101,
+                });
+
+                checkTransfers(financialInterface.transfers.slice(3), []);
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.id,
+                        credits_posted: 200n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should do nothing if the contract is already closed', async () => {
+                await contractStore.updateItem(recordName, {
+                    address: 'item1',
+                    status: 'closed',
+                    closedAtMs: 99,
+                });
+
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 0,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const contract = await contractStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(contract).toMatchObject({
+                    status: 'closed',
+                    closedAtMs: 99,
+                });
+
+                checkTransfers(financialInterface.transfers.slice(3), []);
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.id,
+                        credits_posted: 200n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.id,
+                        credits_posted: 100n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                        flags:
+                            AccountFlags.history |
+                            AccountFlags.debits_must_not_exceed_credits,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
         });
     });
 
