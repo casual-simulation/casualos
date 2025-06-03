@@ -446,7 +446,7 @@ export class RecordsManager {
     private _getRecordsEndpoint(event: GetRecordsEndpointAction) {
         if (hasValue(event.taskId)) {
             this._helper.transaction(
-                asyncResult(event.taskId, this._config.recordsOrigin)
+                asyncResult(event.taskId, this._config.authOrigin)
             );
         }
     }
@@ -701,7 +701,10 @@ export class RecordsManager {
             'reportingUserId' | 'reportingIpAddress'
         >
     ): Promise<ReportInstResult> {
-        const info = await this._getEndpointInfo(null, false);
+        const info = await this._resolveInfoForEvent(
+            { options: {} } as any,
+            false
+        );
         if (info.error) {
             return;
         }
@@ -729,6 +732,10 @@ export class RecordsManager {
      */
     async getLoomToken(recordName: string): Promise<string> {
         const info = await this._resolveInfoForEvent({ options: {} } as any);
+
+        if (info.error) {
+            return;
+        }
 
         const result = await this._client.getLoomAccessToken(
             {

@@ -542,10 +542,15 @@ The shape that the bot should be displayed as.
     The bot will appear as an input box in the menu portal.
     You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
     You can change the type of input using the <TagLink tag='formSubtype'/> tag.
+    You can also change wether the input allows multiple lines of text using the <TagLink tag='formInputMultiline'/> tag.
   </PossibleValueCode>
   <PossibleValueCode value='light'>
     The bot will appear as a light.
     You can change the type of light using the <TagLink tag='formSubtype'/> tag.
+  </PossibleValueCode>
+  <PossibleValueCode value='map'>
+    The bot will appear as a map.
+    You can control the coordinates that the map visualizes by using the <TagLink tag='formAddress'/> tag.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -594,6 +599,32 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   </PossibleValueCode>
   <PossibleValueCode value='password'>
     A bot with the <TagLink tag='form'/> set to `input` will function as a password input. (Characters are masked)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formInputMultiline
+
+Wether the input should allow multiple lines of text.
+
+Not supported when <TagLink tag='formSubtype'/> is set to `password`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The input allows multiple lines.
+    On Desktop, new lines can be added by using <kbd>Shift</kbd>+<kbd>Enter</kbd>.
+    On Mobile, new lines can be added by using the "return" key on the keyboard.
+    Pressing <kbd>Enter</kbd> by itself will submit the input. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The input will only allow a single line of text.
+    Pressing <kbd>Enter</kbd> will submit the input.
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The input will allow multiple lines of text.
+    Pressing <kbd>Enter</kbd> will create a new line of text.
+    You can press (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>)+<kbd>Enter</kbd> to submit the input.
   </PossibleValueCode>
 </PossibleValuesTable>
 
@@ -712,6 +743,10 @@ When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> i
 
 When <TagLink tag='form'/> is set to `iframe` and <TagLink tag='formSubtype'/> is set to `src`, the address should be the URL of the webpage that should be displayed.
 
+When <TagLink tag='form'/> is set to `map` use `Vector Tags` `➡️1,2`, `➡️-1,-2`, `➡️1.23,4.56` to control longitude and latitude to set the center of the `map`.
+
+When <TagLink tag='form'/> is set to `map` and <TagLink tag='formMapProvider'/> is set to `custom` the address should be the URL of the map tile that should be displayed. `https://example.com/tiles/{z}/{x}/{y}.png`
+
 When the bot is in the menu portal, this is the URL of the image or video that should be shown on the menu item.
 It can also be `cube` to show an icon of a cube, `egg` to show an egg icon, and `helix` to show an icon of a DNA helix.
 If the given value is not a URL or one of the predefined icons, then the specified [Material Icon](https://material.io/resources/icons/?style=baseline) will be shown.
@@ -776,6 +811,108 @@ For GLTF forms, this should be the URL of the GLTF file that contains the animat
   </PossibleValueCode>
   <PossibleValue value='Any URL'>
     Use the animations from the given GLTF file.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formMapLOD`
+
+The Level of Detail (LOD) that should be displayed in the map.
+Higher values mean that the map will appear closer to the ground and will be more detailed but display less area.
+Lower values mean that the map will appear further away from the ground and will be less detailed but display more area.
+
+Only works for bots that have a <TagLink tag='form'/> of `map`.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Integer >= 0 and <= 20'>
+    The LOD to display the map at.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formMapProvider`
+
+Specifies the tile provider used to render the map in a map form.
+This determines the source of map tiles (visual and data layers) the bot will display.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='bing, bing maps'>
+    (default) Bing Maps. No API key required.
+  </PossibleValueCode>
+  <PossibleValue value='openstreetmap, openstreetmaps, osm'>
+    OpenStreetMap. No API key required.
+  </PossibleValue>
+  <PossibleValue value='mapbox'>
+    Mapbox. Requires an API key.
+  </PossibleValue>
+  <PossibleValue value='google, googlemaps'>
+    Google Maps. Requires an API key
+  </PossibleValue>
+  <PossibleValue value='maptiler'>
+    MapTiler. Requires an API key.
+  </PossibleValue>
+  <PossibleValue value='openmaptiles, openmaptile, omt'>
+    OpenMapTiles. Requires an API key.
+  </PossibleValue>
+  <PossibleValue value='here, heremap, heremaps'>
+    HERE Maps. No API key required by default, but advanced features may require one.
+  </PossibleValue>
+  <PossibleValue value='custom'>
+    Custom tile provider. Configuration and key requirements depend on setup.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formMapProviderAPIKey`
+
+The API key that the current bot uses.
+
+When <TagLink tag='form'/> is set to `map` and the <TagLink tag='formMapProvider'/> requires an API key. The API key should be a string from the provider.
+
+### `formMapHeightProvider`
+
+The provider that should be used to get map elevation data.
+
+Only works for bots that have a <TagLink tag='form'/> of `map`.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The map will not display elevation data. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='maptiler'>
+    The map will use the <a target="_blank" href="https://docs.maptiler.com/guides/map-tilling-hosting/data-hosting/rgb-terrain-by-maptiler/">MapTiler API</a> to get elevation data.
+    Requires a <TagLink tag='formMapTilerAPIKey'/> to be set.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formMapHeightProviderAPIKey`
+
+The API key that should be used to access the <a target="_blank" href="https://docs.maptiler.com/guides/map-tilling-hosting/data-hosting/rgb-terrain-by-maptiler/">MapTiler API</a>.
+
+Only works for bots that have a <TagLink tag='form'/> of `map` and a <TagLink tag='formMapHeightProvider'/> of `maptiler`.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The map will not display elevation data. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any String'>
+    The map will use the API Key to access the MapTiler API.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `formMapHeightOffset`
+
+The height offset that should be used for the map.
+
+When displaying elevation data, the map will be displayed at the elevation of the ground, which may be significantly above the bot's height.
+To correct this, you may need to set a height offset so that the map appears to be displayed where you want it to be.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='0'>
+    The map's height visualization will not be offset. (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number'>
+    The given offset will be added to the map's height visualization.
   </PossibleValue>
 </PossibleValuesTable>
 

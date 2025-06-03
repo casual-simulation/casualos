@@ -67,7 +67,7 @@ Resources:
             Handler: Records.handleRecords
             CodeUri: dist/handlers
             Runtime: nodejs18.x
-            MemorySize: 256
+            MemorySize: 1024
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
             Policies:
@@ -500,7 +500,7 @@ Resources:
             Handler: websockets.connect
             CodeUri: dist/handlers
             Runtime: nodejs18.x
-            MemorySize: 256
+            MemorySize: 1024
             Timeout: 100
             Description: A function handles websocket connections
             Role: !GetAtt
@@ -537,7 +537,7 @@ Resources:
             Handler: websockets.disconnect
             CodeUri: dist/handlers
             Runtime: nodejs18.x
-            MemorySize: 256
+            MemorySize: 1024
             Timeout: 100
             Description: A function that handles websocket disconnections.
             Role: !GetAtt
@@ -574,7 +574,7 @@ Resources:
             Handler: websockets.message
             CodeUri: dist/handlers
             Runtime: nodejs18.x
-            MemorySize: 256
+            MemorySize: 1024
             Timeout: 100
             Description: A function handle websocket messages.
             Role: !GetAtt

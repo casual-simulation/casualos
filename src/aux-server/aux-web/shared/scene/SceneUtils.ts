@@ -78,6 +78,73 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { BackSide } from 'three';
+import type { MapProvider } from 'geo-three';
+import {
+    OpenStreetMapsProvider,
+    BingMapsProvider,
+    MapBoxProvider,
+    GoogleMapsProvider,
+    MapTilerProvider,
+    OpenMapTilesProvider,
+    HereMapsProvider,
+} from 'geo-three';
+import { MapView } from './map/MapView';
+import { CustomMapProvider } from './map/CustomMapProvider';
+
+/**
+ * The available map providers that can be used for map forms.
+ */
+// The default provider to use when none is specified
+export const defaultMapProvider = 'bingMaps';
+
+/**
+ * Creates a map provider instance based on the provider name.
+ * Supports aliases and case-insensitive matching.
+ * @param name The name of the provider
+ * @returns A map provider instance
+ */
+export function getMapProvider(name: string, apiKey?: string): MapProvider {
+    // Check if name is a URL
+    if (name && (name.startsWith('http://') || name.startsWith('https://'))) {
+        return new CustomMapProvider(name);
+    }
+    if (!name) {
+        return new BingMapsProvider();
+    }
+
+    switch (name.toLowerCase()) {
+        case 'bing':
+        case 'bingmaps':
+            return new BingMapsProvider();
+        case 'openstreetmap':
+        case 'openstreetmaps':
+        case 'osm':
+            return new OpenStreetMapsProvider();
+        case 'mapbox':
+            return new MapBoxProvider(apiKey);
+        case 'google':
+        case 'googlemaps':
+            return new GoogleMapsProvider(apiKey);
+        case 'maptiler':
+            return new MapTilerProvider(apiKey, 'tiles', 'satellite', 'jpg');
+        case 'openmaptiles':
+        case 'openmaptile':
+        case 'omt':
+            return new OpenMapTilesProvider(apiKey);
+        case 'here':
+        case 'heremap':
+        case 'heremaps':
+            return new HereMapsProvider();
+        case 'custom':
+            return new CustomMapProvider();
+
+        default:
+            console.warn(
+                `Unknown provider "${name}", falling back to Bing Maps`
+            );
+            return new BingMapsProvider();
+    }
+}
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -310,6 +377,24 @@ export function createPlane(size: number): Mesh {
     plane.castShadow = false;
     plane.receiveShadow = false;
     return plane;
+}
+
+/**
+ * Creates a new map plane mesh with the specified provider.
+ */
+export function createMapPlane(
+    position: Vector3,
+    size: number = 0.5,
+    providerName: string = defaultMapProvider,
+    apiKey: string = null
+): MapView {
+    const provider = getMapProvider(providerName, apiKey);
+
+    const map = new MapView(provider);
+    map.setRotationFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
+    map.scale.set(size, size, size);
+    map.position.copy(position);
+    return map;
 }
 
 /**

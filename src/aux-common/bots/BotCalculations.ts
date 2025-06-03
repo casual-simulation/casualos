@@ -1760,6 +1760,7 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'skybox' ||
         shape === 'sphere' ||
         shape === 'sprite' ||
+        shape === 'map' ||
         shape === 'mesh' ||
         shape === 'iframe' ||
         shape === 'nothing' ||

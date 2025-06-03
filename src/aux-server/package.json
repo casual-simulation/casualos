@@ -128,6 +128,7 @@
         "express": "^4.21.1",
         "filepond": "^3.8.2",
         "filepond-plugin-file-validate-type": "^1.2.1",
+        "geo-three": "0.1.14",
         "hash.js": "1.1.7",
         "helmet-csp": "2.9.3",
         "howler": "2.1.3",

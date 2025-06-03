@@ -52,6 +52,28 @@
         -   Some built-in fonts like `noto-sans-kr`.
         -   Some built-in GLTF models (like VR controller models).
         -   Some icons (some CasualOS-custom icons in the sheet portal and system portal).
+-   Added support for the `map` form.
+    -   Set `formAddress` to a [Vector](https://docs.casualos.com/tags#vector-tags) to center the map on a particular longitude and latitude.
+    -   `formMapProvider` can be set to one of the following values:
+        -   `bing`, `bingmaps` to use [Bing Maps](https://www.bing.com/maps).
+        -   `openstreetmap`, `openstreetmaps`, `osm` to use [OpenStreetMap](https://www.openstreetmap.org/).
+        -   `mapbox` to use [MapBox](https://www.mapbox.com/)
+        -   `google`, `googlemaps` to use [Google Maps](https://maps.google.com/)
+        -   `maptiler` to use [MapTiler](https://www.maptiler.com/)
+        -   `openmaptiles`, `openmaptile`, `omt` to use [OpenMapTiles](https://openmaptiles.org/)
+        -   `here`, `heremap`, `heremaps` to use [Here Maps](https://www.here.com/)
+        -   A custom URL of the format: `https://{s}.example.com/{z}/{x}/{y}.png`
+    -   `formMapProviderAPIKey` can be provided to set an API key for map providers.
+    -   `formMapLOD` can be used to set the zoom level (higher values appear more zoomed in).
+    -   `formMapHeightProvider` can be set to `maptiler` to load elevation data from the MapTiler API.
+    -   `formMapHeightProviderAPIKey` can be set to use a specific API key for the `formMapHeightProvider`.
+    -   `formMapHeightOffset` can be set to offset the displayed heights when a `formMapHeightProvider` is provided.
+-   Updated lambda functions to use 1024 MB instead of 256 MB.
+-   Added a note for `@onBotChanged` to the documentation that it will only be triggered if the bot was not just created.
+-   Added the `formInputMultiline` tag.
+    -   Set to `true` to allow multiple lines in `input` form menu bots.
+    -   Set to `false` to disallow multiple lines.
+    -   Set to `null` to allow multiple lines by using <kbd>Shift</kbd>+<kbd>Enter</kbd>.
 
 ### :bug: Bug Fixes
 
@@ -60,6 +82,7 @@
 -   Fixed an issue where updating a new bot could cause the new bot to not be properly synchronized throughout the system.
 -   Fixed an issue where it was impossible to upload files to records that have spaces in their names.
 -   Fixed an issue where bots in the `tempShared` space might not re-appear on other devices after reconnecting.
+-   Fixed an issue where it was impossible to report an inst.
 
 ## V3.4.5
 
