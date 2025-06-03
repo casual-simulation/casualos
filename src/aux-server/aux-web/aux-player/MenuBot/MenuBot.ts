@@ -425,8 +425,9 @@ export default class MenuBot extends Vue {
             }
         };
 
-        const isMobile =
-            Bowser.parse(navigator.userAgent).platform.type === 'mobile';
+        const parsed = Bowser.parse(navigator.userAgent);
+        const isMobile = parsed.platform.type === 'mobile';
+        const isMac = /mac/gi.test(parsed.os.name);
         if (this.inputMultiline === false) {
             // always prevent newlines
             event.preventDefault();
@@ -445,8 +446,11 @@ export default class MenuBot extends Vue {
             }
         }
 
-        if (!event.shiftKey && event.ctrlKey) {
-            // If ctrl is pressed, submit the input.
+        if (
+            !event.shiftKey &&
+            ((event.ctrlKey && !isMac) || (isMac && event.metaKey))
+        ) {
+            // If ctrl/cmd is pressed, submit the input.
             event.preventDefault();
             conditionalSubmit();
         }
