@@ -23,6 +23,8 @@
                         v-model="text"
                         @input="onTextUpdated()"
                         v-on:keydown.enter="submitInput(false)"
+                        v-on:keydown.stop="handleKeyDown"
+                        v-on:keyup.stop="handleKeyUp"
                         md-autogrow
                     ></md-input>
                     <md-textarea
@@ -34,6 +36,8 @@
                         v-model="text"
                         @input="onTextUpdated()"
                         v-on:keydown.enter="handleInputEnter"
+                        v-on:keydown.stop="handleKeyDown"
+                        v-on:keyup.stop="handleKeyUp"
                         md-autogrow
                     ></md-textarea>
                 </md-field>
