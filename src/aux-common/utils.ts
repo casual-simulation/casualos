@@ -74,7 +74,9 @@ function decide(...vals: any[]) {
  * @param callback The callback that transforms one value into another.
  */
 export function mapValuesDeep(value: any, callback: (v: any) => any): any {
-    return isObject(value)
+    return Array.isArray(value)
+        ? value.map((v) => mapValuesDeep(v, callback))
+        : isObject(value)
         ? mapValues(value, (v) => mapValuesDeep(v, callback))
         : callback(value);
 }
@@ -221,4 +223,34 @@ export function fromBase64String(base64: string): string {
     const decoder = new TextDecoder();
     const array = toByteArray(base64);
     return decoder.decode(array);
+}
+
+/**
+ * Tries to parse the given JSON string into a JavaScript Value.
+ * @param json The JSON to parse.
+ */
+export function tryParseJson(json: string): JsonParseResult {
+    try {
+        return {
+            success: true,
+            value: JSON.parse(json),
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err,
+        };
+    }
+}
+
+export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
+
+export interface JsonParseSuccess {
+    success: true;
+    value: any;
+}
+
+export interface JsonParseFailure {
+    success: false;
+    error: unknown;
 }

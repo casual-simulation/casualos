@@ -21,7 +21,6 @@ import {
     EdgesGeometry,
     LineBasicMaterial,
     LineSegments,
-    MathUtils,
     Object3D,
     Quaternion,
     Ray,
@@ -30,11 +29,7 @@ import {
     Vector2,
     Vector3,
 } from '@casual-simulation/three';
-import { Input } from '../../shared/scene/Input';
-import {
-    calculateGridTilePoints,
-    snapToTileCoord,
-} from '../../shared/scene/BoundedGrid3D';
+import { calculateGridTilePoints } from '../../shared/scene/BoundedGrid3D';
 import { latLonToCartesian, cartesianToLatLon } from './CoordinateSystem';
 import { disposeObject3D } from './SceneUtils';
 

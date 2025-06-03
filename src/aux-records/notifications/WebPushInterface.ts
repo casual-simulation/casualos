@@ -18,8 +18,6 @@
 import type { ServerError } from '@casual-simulation/aux-common';
 import { z } from 'zod';
 
-export const SUBSCRIPTION_ID_NAMESPACE = 'f12953a9-21e2-47d4-b7b7-f699bd9a5550';
-
 /**
  * Defines a basic interface that is able to send notifications using web push.
  */

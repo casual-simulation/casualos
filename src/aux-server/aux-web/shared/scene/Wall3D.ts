@@ -18,14 +18,10 @@
 import type { Color, Vector3, Sphere } from '@casual-simulation/three';
 import {
     Object3D,
-    ArrowHelper,
-    Plane,
     Mesh,
     PlaneGeometry,
     MeshBasicMaterial,
     DoubleSide,
-    Quaternion,
-    Euler,
     BufferGeometry,
     BufferAttribute,
 } from '@casual-simulation/three';
@@ -38,11 +34,7 @@ import {
 import type { AuxBot3D } from './AuxBot3D';
 import type { DimensionGroup3D } from './DimensionGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
-import {
-    disposeMaterial,
-    baseAuxMeshMaterial,
-    buildSRGBColor,
-} from './SceneUtils';
+import { buildSRGBColor } from './SceneUtils';
 
 export class Wall3D extends Object3D {
     public static DefaultColor: Color = buildSRGBColor(1, 1, 1);

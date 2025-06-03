@@ -20,8 +20,6 @@ import type {
     AuxPartitionServices,
 } from '@casual-simulation/aux-common';
 import {
-    ConnectionInfo,
-    ConnectionIndicator,
     createYjsPartition,
     createRemoteClientYjsPartition,
 } from '@casual-simulation/aux-common';
@@ -44,7 +42,6 @@ import {
 } from '@casual-simulation/aux-vm-client';
 import type { SharedDocument } from '@casual-simulation/aux-common/documents/SharedDocument';
 import type { RemoteSharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
-import { SharedDocumentConfig } from '@casual-simulation/aux-common/documents/SharedDocumentConfig';
 import type { SharedDocumentServices } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 import { createSharedDocument } from '@casual-simulation/aux-common/documents/SharedDocumentFactories';
 import { createYjsSharedDocument } from '@casual-simulation/aux-common/documents/YjsSharedDocument';

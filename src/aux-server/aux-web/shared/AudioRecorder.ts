@@ -18,7 +18,6 @@
 import { hasValue } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import { bufferTime, map, share } from 'rxjs/operators';
 
 /**
  * Defines an interface for objects that can record and stream audio.

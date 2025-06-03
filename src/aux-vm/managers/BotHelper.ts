@@ -34,7 +34,6 @@ import {
     calculateFormattedBotValue,
     calculateBotValue,
     calculateDestroyBotEvents,
-    merge,
     botAdded,
     botUpdated,
     isPrecalculated,

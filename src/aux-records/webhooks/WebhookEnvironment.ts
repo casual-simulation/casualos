@@ -124,7 +124,7 @@ export interface HandleHttpRequestRequest {
      * The name of the record that the webhook state came from.
      * Null if the webhook state is not from a record (i.e. it is from a public inst).
      */
-    recordName: string;
+    recordName: string | null;
 
     /**
      * The inst that the webhook state came from.
@@ -147,13 +147,13 @@ export interface HandleHttpRequestRequest {
      * The session key that should be used by the environment for records requests.
      * Not provided if the webhook is not running in a session.
      */
-    sessionKey?: string;
+    sessionKey?: string | null;
 
     /**
      * The connection key that should be used by the environment for records requests.
      * Not provided if the webhook is not running in a session.
      */
-    connectionKey?: string;
+    connectionKey?: string | null;
 
     /**
      * The extra options for the webhook run.

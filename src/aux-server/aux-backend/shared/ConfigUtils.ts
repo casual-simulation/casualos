@@ -16,11 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { ServerConfig } from '@casual-simulation/aux-records';
-import {
-    serverConfigSchema,
-    tryParseJson,
-} from '@casual-simulation/aux-records';
-import { merge } from '@casual-simulation/aux-common';
+import { serverConfigSchema } from '@casual-simulation/aux-records';
+import { merge, tryParseJson } from '@casual-simulation/aux-common';
 
 declare const DEVELOPMENT: boolean;
 declare const SERVER_CONFIG: string;

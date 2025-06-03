@@ -17,11 +17,11 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Provide, Watch } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
-import type { FormError } from '@casual-simulation/aux-records';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
+import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 
 @Component({

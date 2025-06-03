@@ -30,7 +30,6 @@ import {
 } from '@casual-simulation/aux-common';
 import { BotHelper } from './BotHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { skip } from 'rxjs/operators';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import {
     del,

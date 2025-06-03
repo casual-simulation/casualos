@@ -27,6 +27,19 @@ import type {
     UnionSchemaMetadata,
 } from '../aux-common';
 
+/**
+ * A symbol that represents an undefined value.
+ * This is used to indicate that a value is not set or not applicable.
+ */
+const UNDEFINED_SYMBOL = Symbol('undefined');
+
+function resolveValue(value: any): any {
+    if (value === UNDEFINED_SYMBOL) {
+        return undefined;
+    }
+    return value;
+}
+
 export interface PromptState {
     aborted: boolean;
 }
@@ -56,7 +69,11 @@ export async function askForInputs(
                 onState,
             });
 
-            return evalResult(response.value || undefined, repl, String);
+            return evalResult(
+                response.value || (inputs.nullable ? null : undefined),
+                repl,
+                String
+            );
         } else if (inputs.type === 'number') {
             const response = await prompts({
                 type: repl ? 'text' : 'number',
@@ -69,7 +86,11 @@ export async function askForInputs(
             return typeof response.value === 'number'
                 ? response.value
                 : typeof response.value === 'string'
-                ? await evalResult(response.value || undefined, repl, Number)
+                ? await evalResult(
+                      response.value || (inputs.nullable ? null : undefined),
+                      repl,
+                      Number
+                  )
                 : undefined;
         } else if (inputs.type === 'boolean') {
             const response = await prompts({
@@ -85,7 +106,13 @@ export async function askForInputs(
             return typeof response.value === 'boolean'
                 ? response.value
                 : typeof response.value === 'string'
-                ? await evalResult(response.value || undefined, repl, Boolean)
+                ? await evalResult(
+                      response.value || (inputs.nullable ? null : undefined),
+                      repl,
+                      Boolean
+                  )
+                : inputs.nullable
+                ? null
                 : undefined;
         } else if (inputs.type === 'date') {
             const response = await prompts({
@@ -99,7 +126,13 @@ export async function askForInputs(
             return response.value instanceof Date
                 ? response.value
                 : typeof response.value === 'string'
-                ? await evalResult(response.value || undefined, repl, Date)
+                ? await evalResult(
+                      response.value || (inputs.nullable ? null : undefined),
+                      repl,
+                      Date
+                  )
+                : inputs.nullable
+                ? null
                 : undefined;
         } else if (inputs.type === 'literal') {
             return inputs.value;
@@ -208,50 +241,55 @@ async function askForArrayInputs(
     return result;
 }
 
+function getOptionalChoices(
+    inputs: SchemaMetadata,
+    choices: { title: string; value: any; description?: string }[]
+) {
+    if (inputs.nullable && !choices.some((c) => c.value === null)) {
+        choices = [
+            {
+                title: '(null)',
+                description: 'A null value.',
+                value: null,
+            },
+            ...choices,
+        ];
+    }
+    if (inputs.optional && !choices.some((c) => c.value === undefined)) {
+        choices = [
+            {
+                title: '(undefined)',
+                description: 'A undefined value.',
+                value: UNDEFINED_SYMBOL,
+            },
+            ...choices,
+        ];
+    }
+
+    return choices;
+}
+
 async function askForEnumInputs(
     inputs: EnumSchemaMetadata,
     name: string,
     repl: repl.REPLServer
 ): Promise<any> {
-    let choices = inputs.values.map((value) => ({
-        title: value,
-        value: value,
-    }));
-    if (inputs.nullable) {
-        choices = [
-            {
-                title: '(null)',
-                value: '',
-            },
-            ...choices,
-        ];
-    }
-    if (inputs.optional) {
-        choices = [
-            {
-                title: '(undefined)',
-                value: '',
-            },
-            ...choices,
-        ];
-    }
+    let choices = getOptionalChoices(
+        inputs,
+        inputs.values.map((value) => ({
+            title: value,
+            value: value,
+        }))
+    );
     const response = await prompts({
         type: 'select',
-        name: 'value',
+        name: 'choice',
         message: `Select a value for ${name}.`,
         choices: choices,
         onState,
     });
 
-    if (response.value === '') {
-        if (inputs.nullable) {
-            return null;
-        } else {
-            return undefined;
-        }
-    }
-
-    return response.value;
+    return resolveValue(response.choice);
 }
 
 async function askForUnionInputs(
@@ -270,31 +308,41 @@ async function askForUnionInputs(
             type: 'select',
             name: 'kind',
             message: `Select a kind for ${name}.`,
-            choices: inputs.options.map((option) => {
-                if (option.type === 'literal') {
+            choices: getOptionalChoices(
+                inputs,
+                inputs.options.map((option) => {
+                    if (option.type === 'literal') {
+                        return {
+                            title: `(${option.value})`,
+                            description: option.description,
+                            value: option,
+                        };
+                    } else if (option.type === 'null') {
+                        return {
+                            title: `(null)`,
+                            description: option.description,
+                            value: {
+                                type: 'null',
+                            },
+                        };
+                    }
+
                     return {
-                        title: `(${option.value})`,
+                        title: option.type,
                         description: option.description,
                         value: option,
                     };
-                } else if (option.type === 'null') {
-                    return {
-                        title: `(null)`,
-                        description: option.description,
-                        value: null,
-                    };
-                }
-
-                return {
-                    title: option.type,
-                    description: option.description,
-                    value: option,
-                };
-            }),
+                })
+            ),
             onState,
         });
 
-        return await askForInputs(kind.kind, name, repl);
+        const option = resolveValue(kind.kind);
+        if (!option) {
+            return option;
+        }
+
+        return await askForInputs(option, name, repl);
     }
 }
 
@@ -334,44 +382,31 @@ async function askForDiscriminatedUnionInputs(
     name: string,
     repl: repl.REPLServer
 ): Promise<any> {
-    let choices = inputs.options.map((option) => {
-        const prop = option.schema[inputs.discriminator];
-        if (prop.type === 'enum') {
+    let choices = getOptionalChoices(
+        inputs,
+        inputs.options.map((option) => {
+            const prop = option.schema[inputs.discriminator];
+            if (prop.type === 'enum') {
+                return {
+                    title: prop.values.join(', '),
+                    description: option.description,
+                    value: option,
+                };
+            } else if (prop.type !== 'literal') {
+                return {
+                    title: option.type,
+                    description: option.description,
+                    value: option,
+                };
+            }
+
             return {
-                title: prop.values.join(', '),
+                title: prop.value,
                 description: option.description,
                 value: option,
             };
-        } else if (prop.type !== 'literal') {
-            return {
-                title: option.type,
-                description: option.description,
-                value: option,
-            };
-        }
-
-        return {
-            title: prop.value,
-            description: option.description,
-            value: option,
-        };
-    });
-
-    if (inputs.nullable) {
-        choices.unshift({
-            title: '(null)',
-            description: 'A null value.',
-            value: null,
-        });
-    }
-
-    if (inputs.optional) {
-        choices.unshift({
-            title: '(undefined)',
-            description: 'An undefined value.',
-            value: undefined,
-        });
-    }
+        })
+    );
 
     const kind = await prompts({
         type: 'select',
@@ -381,11 +416,13 @@ async function askForDiscriminatedUnionInputs(
         onState,
     });
 
-    if (kind.kind === null || kind.kind === undefined) {
-        return kind.kind;
+    const option = resolveValue(kind.kind);
+
+    if (option === null || option === undefined) {
+        return option;
     }
 
-    return await askForInputs(kind.kind, name, repl);
+    return await askForInputs(option, name, repl);
 }
 
 async function askForAnyInputs(

@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { clientsClaim, cacheNames, skipWaiting } from 'workbox-core';
-import { registerRoute, Route } from 'workbox-routing';
+import { clientsClaim, cacheNames } from 'workbox-core';
+import { registerRoute } from 'workbox-routing';
 import {
     StaleWhileRevalidate,
     CacheFirst,

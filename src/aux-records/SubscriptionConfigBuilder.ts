@@ -25,13 +25,16 @@ import type {
     AISkyboxFeaturesConfiguration,
     AISloydFeaturesConfiguration,
     APISubscription,
+    ContractFeaturesConfiguration,
     DataFeaturesConfiguration,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
     FileFeaturesConfiguration,
     InstsFeaturesConfiguration,
     NotificationFeaturesConfiguration,
+    PackageFeaturesConfiguration,
     PublicInstsConfiguration,
+    PurchasableItemFeaturesConfiguration,
     RecordFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
@@ -262,6 +265,79 @@ export class FeaturesBuilder {
 
     withNotificationsMaxSentPushNotificationsPerPeriod(max: number): this {
         this._features.notifications.maxSentPushNotificationsPerPeriod = max;
+        return this;
+    }
+
+    withPackages(features?: PackageFeaturesConfiguration): this {
+        this._features.packages = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withPackagesMaxItems(maxItems: number): this {
+        this._features.packages.maxItems = maxItems;
+        return this;
+    }
+
+    withPackagesMaxVersions(maxVersions: number): this {
+        this._features.packages.maxPackageVersions = maxVersions;
+        return this;
+    }
+
+    withPackagesMaxVersionSizeInBytes(maxSize: number): this {
+        this._features.packages.maxPackageVersionSizeInBytes = maxSize;
+        return this;
+    }
+
+    withPackagesMaxBytesTotal(maxBytes: number): this {
+        this._features.packages.maxPackageBytesTotal = maxBytes;
+        return this;
+    }
+
+    withStore(features?: PurchasableItemFeaturesConfiguration): this {
+        this._features.store = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withStoreMaxItems(maxItems: number): this {
+        this._features.store.maxItems = maxItems;
+        return this;
+    }
+
+    withStoreCurrencyLimit(
+        currency: string,
+        limit: PurchasableItemFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.store.currencyLimits) {
+            this._features.store.currencyLimits = {};
+        }
+        this._features.store.currencyLimits[currency] = limit;
+        return this;
+    }
+
+    withContracts(features?: ContractFeaturesConfiguration): this {
+        this._features.contracts = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withContractsMaxItems(maxItems: number): this {
+        this._features.contracts.maxItems = maxItems;
+        return this;
+    }
+
+    withContractsCurrencyLimit(
+        currency: string,
+        limit: ContractFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.contracts.currencyLimits) {
+            this._features.contracts.currencyLimits = {};
+        }
+        this._features.contracts.currencyLimits[currency] = limit;
         return this;
     }
 

@@ -36,6 +36,7 @@ import {
     getBotSubShape,
     hasValue,
     isBotPointable,
+    parseBotVector,
 } from '@casual-simulation/aux-common';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { AnimationAction } from '@casual-simulation/three';
@@ -52,12 +53,11 @@ import {
     Object3D,
     PointLight,
     SpotLight,
-    MathUtils as ThreeMath,
     Vector3,
     AmbientLight,
     Light,
-    Material,
     ObjectLoader,
+    Vector2,
 } from '@casual-simulation/three';
 import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
@@ -65,10 +65,9 @@ import type { SubscriptionLike } from 'rxjs';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';
 import { AuxBot3D } from '../AuxBot3D';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { getGLTFPool } from '../GLTFHelpers';
 import type { Game } from '../Game';
-import { GameObject } from '../GameObject';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import type { LineSegments } from '../LineSegments';
 import { createCubeStroke } from '../MeshUtils';
@@ -77,7 +76,6 @@ import {
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
     baseAuxMeshMaterial,
-    baseAuxPointLight,
     buildSRGBColor,
     calculateScale,
     createCircle,
@@ -85,7 +83,6 @@ import {
     createSkybox,
     createSphere,
     createSprite,
-    disposeGroup,
     disposeMesh,
     disposeObject3D,
     isTransparent,
@@ -100,6 +97,10 @@ import {
     setLightPenumbra,
     setLightDecay,
     setLightGroundColor,
+    createMapPlane,
+    createPlane,
+    defaultMapProvider,
+    getMapProvider,
 } from '../SceneUtils';
 import { FrustumHelper } from '../helpers/FrustumHelper';
 import { Axial, HexMesh } from '../hex';
@@ -108,7 +109,7 @@ import type { IMeshDecorator } from './IMeshDecorator';
 import type { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
-import { Block, Keyboard, update as updateMeshUI } from 'three-mesh-ui';
+import { Keyboard, update as updateMeshUI } from 'three-mesh-ui';
 import FontJSON from 'three-mesh-ui/examples/assets/Roboto-msdf.json';
 import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
@@ -117,6 +118,10 @@ import Shift from 'three-mesh-ui/examples/assets/shift.png';
 import type { AnimationMixerHandle } from '../AnimationHelper';
 import type { AuxBotVisualizerFinder } from '../../AuxBotVisualizerFinder';
 import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
+import { MapView } from '../map/MapView';
+import { MapTilerProvider } from 'geo-three';
+import { CustomMapProvider } from '../map/CustomMapProvider';
+// import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -159,6 +164,8 @@ export class BotShapeDecorator
     private _keyboard: Keyboard = null;
     private _animationHandle: AnimationMixerHandle = null;
     private _meshCancellationToken: CancellationToken;
+    private _mapLODLevel: number = 1;
+    // private _lodConstant: LODConstant | null = null;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -168,6 +175,9 @@ export class BotShapeDecorator
     private _game: Game;
     private _shapeSubscription: SubscriptionLike;
     private _finder: AuxBotVisualizerFinder;
+    private _mapView: MapView;
+    private _mapProviderName: string;
+    private _mapProviderApiKey: string;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -292,6 +302,14 @@ export class BotShapeDecorator
         this._updateLightGroundColor(calc);
         this._updateBuildStep(calc);
 
+        // For map forms, update map-specific properties
+        if (this._shape === 'map' && this._mapView) {
+            this._updateMapLOD(calc);
+            this._updateMapTags(calc);
+            this._updateMapProvider(calc);
+            this._updateCustomMapProviderURL(calc);
+        }
+
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
             const scale = calculateScale(calc, this.bot3D.bot, gridScale);
@@ -407,6 +425,86 @@ export class BotShapeDecorator
             } else {
                 this._updateIframeHtml();
             }
+        }
+
+        if (this._mapView) {
+            // Check if the address is a URL
+            if (
+                address &&
+                (address.startsWith('http://') ||
+                    address.startsWith('https://'))
+            ) {
+                // This appears to be a URL - create or update a custom map provider
+                this._updateCustomMapProviderForURL(address);
+            } else {
+                // Treat as coordinates
+                const coords = parseBotVector(address) ?? new Vector2(0, 0);
+                this._mapView.setCenter(
+                    this._mapLODLevel,
+                    coords.x, // lon
+                    coords.y // lat
+                );
+            }
+        }
+    }
+
+    private _updateCustomMapProviderForURL(url: string) {
+        // Parse the URL
+        try {
+            const urlObj = new URL(url);
+            const pathParts = urlObj.pathname
+                .split('/')
+                .filter((p) => p.length > 0);
+
+            // Identify URL pattern
+            if (pathParts.length >= 3) {
+                // Possible patterns: domain/zoom/x/y.png or domain/tiles/zoom/x/y.png
+                let zoom, x, y;
+
+                const tilesDirIndex = pathParts.findIndex((p) => p === 'tiles');
+
+                if (
+                    tilesDirIndex >= 0 &&
+                    pathParts.length >= tilesDirIndex + 4
+                ) {
+                    zoom = parseInt(pathParts[tilesDirIndex + 1]);
+                    x = parseInt(pathParts[tilesDirIndex + 2]);
+                    y = parseInt(pathParts[tilesDirIndex + 3].split('.')[0]);
+                } else {
+                    zoom = parseInt(pathParts[pathParts.length - 3]);
+                    x = parseInt(pathParts[pathParts.length - 2]);
+                    y = parseInt(pathParts[pathParts.length - 1].split('.')[0]);
+                }
+
+                if (!isNaN(zoom) && !isNaN(x) && !isNaN(y)) {
+                    // Create URL template
+                    let template = CustomMapProvider.createTemplateFromUrl(
+                        url,
+                        zoom,
+                        x,
+                        y
+                    );
+
+                    // Set or update a custom provider
+                    const customProvider = new CustomMapProvider(template);
+                    this._mapView.setProvider(customProvider);
+
+                    // Convert tile coordinates to longitude/latitude
+                    const [lon, lat] = MapView.tileToLonLat(zoom, x, y);
+
+                    // Center the map on these coordinates
+                    this._mapView.setZoom(zoom);
+                    this._mapView.setCenter(zoom, lon, lat);
+                    return;
+                }
+            }
+
+            // If the URL pattern couldn't be parsed, use it directly as a single tile
+            const customProvider = new CustomMapProvider(url);
+            customProvider.setUrlTemplate(url);
+            this._mapView.setProvider(customProvider);
+        } catch (error) {
+            console.error('Failed to parse map tile URL:', error);
         }
     }
 
@@ -620,6 +718,12 @@ export class BotShapeDecorator
             this._meshCancellationToken.isCanceled = true;
         }
 
+        if (this._mapView) {
+            this._mapView.dispose();
+            this.container.remove(this._mapView);
+            this._mapView = null;
+        }
+
         this._animationMixer = null;
         this.mesh = null;
         this.collider = null;
@@ -710,6 +814,77 @@ export class BotShapeDecorator
             'formLightGroundColor'
         );
         this._setLightGroundColor(groundColor);
+    }
+
+    private _updateMapLOD(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        const lodLevel = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapLOD',
+            1
+        );
+
+        const lodLimit = Math.max(1, Math.min(20, Math.floor(lodLevel)));
+
+        if (this._mapLODLevel !== lodLimit) {
+            if (lodLevel !== lodLimit) {
+                console.warn(
+                    `Map LOD level ${lodLevel} was clamped to ${lodLimit} (valid range: 1-20)`
+                );
+            }
+            this._mapLODLevel = lodLimit;
+            this._setMapLOD(this._mapLODLevel);
+        }
+    }
+
+    private _updateMapTags(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        const heightProvider = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapHeightProvider',
+            null
+        );
+
+        if (heightProvider === 'maptiler') {
+            const mapTilerApiKey = calculateStringTagValue(
+                calc,
+                this.bot3D.bot,
+                'formMapHeightProviderAPIKey',
+                null
+            );
+            if (
+                !(this._mapView.heightProvider instanceof MapTilerProvider) ||
+                this._mapView.heightProvider.apiKey !== mapTilerApiKey
+            ) {
+                this._mapView.setHeightProvider(
+                    new MapTilerProvider(
+                        mapTilerApiKey,
+                        'tiles',
+                        'terrain-rgb-v2',
+                        'webp'
+                    )
+                );
+            }
+        } else {
+            this._mapView.setHeightProvider(null);
+        }
+
+        const heightOffset = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapHeightOffset',
+            0
+        );
+
+        this._mapView.setHeightOffset(heightOffset);
     }
 
     private _updateOpacity(calc: BotCalculationContext) {
@@ -900,6 +1075,14 @@ export class BotShapeDecorator
         }
     }
 
+    private _setMapLOD(level: number): void {
+        if (!this._mapView) {
+            return;
+        }
+
+        this._mapView.setZoom(level);
+    }
+
     private _updateRenderOrder(calc: BotCalculationContext) {
         const renderOrder = calculateNumericalTagValue(
             calc,
@@ -979,6 +1162,8 @@ export class BotShapeDecorator
             this._createSphere();
         } else if (this._shape === 'sprite') {
             this._createSprite();
+        } else if (this._shape === 'map') {
+            this._createMapPlane();
         } else if (this._shape === 'mesh') {
             if (this._subShape === 'gltf' && this._address) {
                 this._createGltf();
@@ -1413,41 +1598,6 @@ export class BotShapeDecorator
         }
     }
 
-    // private async _parseJsonObject(
-    //     text: string,
-    //     cancellationToken: CancellationToken
-    // ) {
-    //     try {
-    //         if (!ldrawLoader) {
-    //             ldrawLoader = new LDrawLoader();
-    //         }
-    //         (ldrawLoader as any).setPartsLibraryPath(this._ldrawPartsAddress);
-    //         const ldraw = await new Promise<Group>((resolve, reject) => {
-    //             try {
-    //                 (ldrawLoader.parse as any)(text, (group: Group) =>
-    //                     resolve(group)
-    //                 );
-    //             } catch (err) {
-    //                 reject(err);
-    //             }
-    //         });
-    //         if (!this.container || cancellationToken.isCanceled) {
-    //             // The decorator was disposed of by the Bot.
-    //             return false;
-    //         }
-    //         this._setLDraw(ldraw);
-    //         return true;
-    //     } catch (err) {
-    //         console.error(
-    //             '[BotShapeDecorator] Unable to parse LDraw:',
-    //             text,
-    //             err
-    //         );
-
-    //         return false;
-    //     }
-    // }
-
     private _setJsonObject(obj: Object3D) {
         const group = new Group();
         group.add(obj);
@@ -1551,6 +1701,99 @@ export class BotShapeDecorator
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
         this._canHaveStroke = false;
+    }
+
+    private _updateMapProvider(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        // Get the map provider name from the tag
+        const providerName = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapProvider',
+            defaultMapProvider
+        );
+
+        const apiKey = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'formMapProviderAPIKey',
+            null
+        );
+
+        // Check if provider has changed
+        if (
+            this._mapProviderName !== providerName ||
+            this._mapProviderApiKey !== apiKey
+        ) {
+            const provider = getMapProvider(providerName, apiKey);
+            this._mapView.setProvider(provider);
+
+            this._mapProviderApiKey = apiKey;
+            this._mapProviderName = providerName;
+
+            console.log(`Changed map provider to ${providerName}`);
+        }
+    }
+
+    private _createMapPlane() {
+        // Get the provider name from the tag
+        const providerName = calculateStringTagValue(
+            null,
+            this.bot3D.bot,
+            'formMapProvider',
+            defaultMapProvider
+        );
+
+        const apiKey = calculateStringTagValue(
+            null,
+            this.bot3D.bot,
+            'formMapProviderAPIKey',
+            null
+        );
+
+        this._mapView = createMapPlane(
+            new Vector3(0, 0, 0),
+            1,
+            providerName,
+            apiKey
+        );
+
+        this.mesh = null;
+        const colliderPlane = (this.collider = createPlane(1));
+        setColor(colliderPlane, 'clear');
+
+        this.collider = this._mapView;
+        this._mapProviderName = providerName;
+
+        this.container.add(this._mapView);
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+
+        const coords = parseBotVector(this._address) ?? new Vector2(0, 0);
+
+        this._mapView.setCenter(
+            this._mapLODLevel,
+            coords.x, // lon
+            coords.y // lat
+        );
+    }
+
+    private _updateCustomMapProviderURL(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        // Get custom URL template for tile provider (if any)
+        const customURL = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'mapProviderURL',
+            null
+        );
     }
 
     private _createSphere() {

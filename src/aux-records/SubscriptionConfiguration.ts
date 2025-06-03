@@ -18,6 +18,163 @@
 import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
 
+export const webhookFeaturesSchema = z
+    .object({
+        allowed: z
+            .boolean()
+            .describe(
+                'Whether webhook features are granted for the subscription.'
+            ),
+
+        maxItems: z
+            .number()
+            .describe(
+                'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
+            )
+            .int()
+            .optional(),
+
+        tokenLifetimeMs: z
+            .number()
+            .describe(
+                'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5 * 60 * 1000),
+
+        initTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5000),
+
+        requestTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5000),
+
+        fetchTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(5000),
+
+        addStateTimeoutMs: z
+            .number()
+            .describe(
+                'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
+            )
+            .int()
+            .positive()
+            .optional()
+            .nullable()
+            .default(1000),
+
+        maxRunsPerPeriod: z
+            .number()
+            .describe(
+                'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+
+        maxRunsPerHour: z
+            .number()
+            .describe(
+                'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
+            )
+            .int()
+            .positive()
+            .optional(),
+    })
+    .describe(
+        'The configuration for webhook features. Defaults to not allowed.'
+    )
+    .optional()
+    .default({
+        allowed: false,
+    });
+
+const currencyLimitsSchema = z
+    .object({})
+    .catchall(
+        z.object({
+            maxCost: z
+                .number()
+                .describe(
+                    'The maximum cost that items can have in this currency.'
+                )
+                .positive()
+                .int(),
+            minCost: z
+                .number()
+                .describe(
+                    "The minimum cost that items can have in this currency. Note that this doesn't prevent free items, it only sets the minimum cost for a non-free item."
+                )
+                .positive()
+                .int(),
+            fee: z
+                .discriminatedUnion('type', [
+                    z.object({
+                        type: z.literal('percent'),
+                        percent: z
+                            .number()
+                            .describe(
+                                'The integer percentage of the cost that should be charged as a fee. Must be between 0 and 100'
+                            )
+                            .int()
+                            .min(0)
+                            .max(100),
+                    }),
+                    z.object({
+                        type: z.literal('fixed'),
+                        amount: z
+                            .number()
+                            .describe(
+                                'The fixed amount in cents that should be charged as a fee. Must be a positive integer.'
+                            )
+                            .int()
+                            .positive(),
+                    }),
+                ])
+                .describe(
+                    'The fee that should be charged for purchases in this currency. If omitted, then there is no fee.'
+                )
+                .optional()
+                .nullable(),
+        })
+    )
+    .describe(
+        'The limits for each currency that can be used for purchasable items. If a currency is not specified, then it is not allowed'
+    )
+    .optional()
+    .default({
+        usd: {
+            maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+            minCost: 50, // $0.50 US Dollars (USD)
+        },
+    });
+
 export const subscriptionFeaturesSchema = z.object({
     records: z
         .object({
@@ -351,102 +508,7 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: false,
         }),
 
-    webhooks: z
-        .object({
-            allowed: z
-                .boolean()
-                .describe(
-                    'Whether webhook features are granted for the subscription.'
-                ),
-
-            maxItems: z
-                .number()
-                .describe(
-                    'The maximum number of webhook items that are allowed for the subscription. If not specified, then there is no limit.'
-                )
-                .int()
-                .optional(),
-
-            tokenLifetimeMs: z
-                .number()
-                .describe(
-                    'The lifetime of session tokens that are issued to the webhook in miliseconds. Defaults to 5 minutes.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5 * 60 * 1000),
-
-            initTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the webhook has to initialize. Defaults to 5000ms.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5000),
-
-            requestTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the webhook has to respond to a request after being initialized. Defaults to 5000ms'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5000),
-
-            fetchTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the system will take to fetch the AUX state for the webhook. Defaults to 5000ms.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(5000),
-
-            addStateTimeoutMs: z
-                .number()
-                .describe(
-                    'The maximum number of miliseconds that the system will take to add the AUX state to the webhook simulation. Defaults to 1000ms.'
-                )
-                .int()
-                .positive()
-                .optional()
-                .nullable()
-                .default(1000),
-
-            maxRunsPerPeriod: z
-                .number()
-                .describe(
-                    'The maximum number of webhook runs allowed per subscription period. If not specified, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-
-            maxRunsPerHour: z
-                .number()
-                .describe(
-                    'The maximum number of webhook runs allowed per hour for the subscription. If not specified, then there is no limit.'
-                )
-                .int()
-                .positive()
-                .optional(),
-        })
-        .describe(
-            'The configuration for webhook features. Defaults to not allowed.'
-        )
-        .optional()
-        .default({
-            allowed: false,
-        }),
+    webhooks: webhookFeaturesSchema,
 
     notifications: z
         .object({
@@ -500,42 +562,104 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: false,
         }),
 
-    documents: z
+    packages: z
         .object({
             allowed: z
                 .boolean()
-                .describe(
-                    'Whether document features are allowed for the subscription.'
-                ),
+                .describe('Whether packages are allowed for the subscription.'),
 
             maxItems: z
                 .number()
                 .describe(
-                    'The maximum number of document items that are allowed for the subscription. If not specified, then there is no limit.'
+                    'The maximum number of packages that are allowed for the subscription. If not specified, then there is no limit.'
                 )
                 .int()
                 .positive()
                 .optional(),
 
-            maxBytesPerItem: z
+            maxPackageVersions: z
                 .number()
                 .describe(
-                    'The maximum number of bytes that can be stored in a document. If omitted, then there is no limit.'
+                    'The maximum number of package versions that are allowed for the subscription. If not specified, then there is no limit.'
                 )
                 .int()
                 .positive()
                 .optional(),
-            maxActiveConnectionsPerItem: z
+
+            maxPackageVersionSizeInBytes: z
                 .number()
                 .describe(
-                    'The maximum number of active websocket connections that a document can have. If omitted, then there is no limit.'
+                    'The maximum number of bytes that a single package version can be. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxPackageBytesTotal: z
+                .number()
+                .describe(
+                    'The maximum number of bytes that all package versions in the subscription can be. If not specified, then there is no limit.'
                 )
                 .int()
                 .positive()
                 .optional(),
         })
         .describe(
-            'The configuration for document features. Defaults to not allowed.'
+            'The configuration for package features. Defaults to allowed.'
+        )
+        .optional()
+        .default({
+            allowed: true,
+        }),
+
+    store: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether purchasable items features are granted to the studio.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of purchasable items that can be created. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
+
+            currencyLimits: currencyLimitsSchema,
+        })
+        .describe(
+            'The configuration for purchasable items features for studios. Defaults to not allowed.'
+        )
+        .optional()
+        .default({
+            allowed: false,
+        }),
+
+    contracts: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether contract features are granted to the user/studio.'
+                ),
+
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of contracts that can be created. If omitted, then there is no limit.'
+                )
+                .positive()
+                .int()
+                .optional(),
+
+            currencyLimits: currencyLimitsSchema,
+        })
+        .describe(
+            'The configuration for contract features. Defaults to not allowed'
         )
         .optional()
         .default({
@@ -984,9 +1108,19 @@ export interface FeaturesConfiguration {
     notifications?: NotificationFeaturesConfiguration;
 
     /**
-     * The configuration for document features.
+     * The configuration for package features.
      */
-    documents?: DocumentFeaturesConfiguration;
+    packages?: PackageFeaturesConfiguration;
+
+    /**
+     * The configuration for purchasable items features.
+     */
+    store?: PurchasableItemFeaturesConfiguration;
+
+    /**
+     * The configuration for contract features.
+     */
+    contracts?: ContractFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1237,9 +1371,17 @@ export type NotificationFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['notifications'];
 
-export type DocumentFeaturesConfiguration = z.infer<
+export type PackageFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
->['documents'];
+>['packages'];
+
+export type PurchasableItemFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['store'];
+
+export type ContractFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['contracts'];
 
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
@@ -1281,6 +1423,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         notifications: {
+            allowed: true,
+        },
+        packages: {
             allowed: true,
         },
     };
@@ -1328,10 +1473,69 @@ export function denyAllFeatures(): FeaturesConfiguration {
         notifications: {
             allowed: false,
         },
-        documents: {
+        packages: {
+            allowed: false,
+        },
+        contracts: {
             allowed: false,
         },
     };
+}
+
+/**
+ * Gets the contract features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getContractFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): ContractFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.contracts ?? { allowed: false };
+}
+
+/**
+ * Gets the package features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getPackageFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): PackageFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.packages ?? { allowed: true };
 }
 
 /**
@@ -1342,7 +1546,7 @@ export function denyAllFeatures(): FeaturesConfiguration {
  * @param type The type of the user.
  */
 export function getNotificationFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1370,7 +1574,7 @@ export function getNotificationFeatures(
  * @param type The type of the user.
  */
 export function getWebhookFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1387,7 +1591,7 @@ export function getWebhookFeatures(
         periodEndMs,
         nowMs
     );
-    return features.webhooks ?? { allowed: false };
+    return features.webhooks ?? webhookFeaturesSchema.parse({ allowed: false });
 }
 
 /**
@@ -1397,7 +1601,7 @@ export function getWebhookFeatures(
  * @param subscriptionId The ID of the subscription.
  */
 export function getComIdFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     periodStartMs?: number,
@@ -1422,13 +1626,45 @@ export function getComIdFeatures(
 }
 
 /**
+ * Gets the purchasableItems features that are available for the given subscription.
+ * Gets the comId features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ */
+export function getPurchasableItemsFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number,
+    periodEndMs?: number,
+    nowMs: number = Date.now()
+): PurchasableItemFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return (
+        features.store ?? {
+            allowed: false,
+        }
+    );
+}
+
+/**
  * Gets the loom features that are available for the given subscription.
  * @param config The configuration. If null, then all default features are allowed.
  * @param subscriptionStatus The status of the subscription.
  * @param subscriptionId The ID of the subscription.
  */
 export function getLoomFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     periodStartMs?: number,
@@ -1456,7 +1692,7 @@ export function getLoomFeatures(
  * @param type The type of the user.
  */
 export function getHumeAiFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1485,7 +1721,7 @@ export function getHumeAiFeatures(
  * @param type The type of the user.
  */
 export function getSloydAiFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1514,7 +1750,7 @@ export function getSloydAiFeatures(
  * @param type The type of the user.
  */
 export function getOpenAiFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
@@ -1552,12 +1788,12 @@ export function getOpenAiFeatures(
  * @param nowMs The current time in milliseconds.
  */
 export function getSubscriptionFeatures(
-    config: SubscriptionConfiguration,
+    config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio',
-    periodStartMs?: number,
-    periodEndMs?: number,
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
     nowMs: number = Date.now()
 ): FeaturesConfiguration {
     if (!config) {

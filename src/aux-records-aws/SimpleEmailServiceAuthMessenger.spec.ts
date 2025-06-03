@@ -19,7 +19,7 @@ import {
     SimpleEmailServiceAuthMessenger,
     renderString,
 } from './SimpleEmailServiceAuthMessenger';
-import { awsResult, awsError } from './AwsTestUtils';
+import { awsResult } from './AwsTestUtils';
 
 describe('SimpleEmailServiceAuthMessenger', () => {
     let messenger: SimpleEmailServiceAuthMessenger;

@@ -24,7 +24,6 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     hasValue,
-    action,
     asyncResult,
     asyncError,
     ON_PHOTO_CAMERA_CLOSED_ACTION_NAME,
@@ -35,9 +34,7 @@ import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import CameraStream from '../CameraStream/CameraStream';
-import { max } from 'lodash';
 
 @Component({
     components: {

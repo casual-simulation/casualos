@@ -17,6 +17,9 @@
  */
 import type {
     ActionKinds,
+    Entitlement,
+    EntitlementFeature,
+    GrantedEntitlementScope,
     PermissionOptions,
     PrivacyFeatures,
     ResourceKinds,
@@ -29,6 +32,7 @@ import type {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
+    GrantedPackageEntitlement,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -58,6 +62,65 @@ export class CachingPolicyStore implements PolicyStore {
         this._store = store;
         this._cache = cache;
         this._cacheSeconds = cacheSeconds;
+    }
+
+    listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string,
+        recordName: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._store.listGrantedEntitlementsByFeatureAndUserId(
+            packageIds,
+            feature,
+            userId,
+            recordName,
+            nowMs
+        );
+    }
+
+    saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        return this._store.saveGrantedPackageEntitlement(grantedEntitlement);
+    }
+    findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: EntitlementFeature,
+        scope: GrantedEntitlementScope,
+        recordName: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return this._store.findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+            userId,
+            packageId,
+            feature,
+            scope,
+            recordName
+        );
+    }
+    findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return this._store.findGrantedPackageEntitlementById(id);
+    }
+    listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._store.listGrantedEntitlementsForUser(userId, nowMs);
+    }
+    listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._store.listGrantedEntitlementsForUserAndPackage(
+            userId,
+            packageId,
+            nowMs
+        );
     }
 
     // TODO: Add caching for these methods when needed.

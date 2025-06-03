@@ -25,12 +25,9 @@ import {
 } from './Transpiler';
 import type { BotModule } from '@casual-simulation/aux-common/bots';
 import {
-    isFormula,
     isScript,
     parseScript,
     hasValue,
-    ImportFunc,
-    ExportFunc,
     isModule,
     parseModule,
 } from '@casual-simulation/aux-common/bots';
@@ -50,7 +47,6 @@ import {
     INTERPRETER_OBJECT,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import type {
-    ECMAScriptNode,
     FunctionBody,
     FunctionDeclaration,
     AsyncFunctionDeclaration,

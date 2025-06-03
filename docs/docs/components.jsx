@@ -171,6 +171,13 @@ export const tagMap = {
     formDepthWrite: 'tags/visualization',
     formBuildStep: 'tags/visualization',
     formLDrawPartsAddress: 'tags/visualization',
+    formMapLOD: 'tags/visualization',
+    formMapProvider: 'tags/visualization',
+    formMapTilerAPIKey: 'tags/visualization',
+    formMapHeightProvider: 'tags/visualization',
+    formMapHeightProviderAPIKey: 'tags/visualization',
+    formMapHeightOffset: 'tags/visualization',
+    formInputMultiline: 'tags/visualization',
     gltfVersion: 'tags/visualization',
     progressBar: 'tags/visualization',
     progressBarColor: 'tags/visualization',
@@ -438,6 +445,7 @@ export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
 export const VideoBadge = ({url}) => (<Badge type='info'><a href={url} target='_blank'>Video</a></Badge>);
 
 export const ConfigBotBadge = ({url}) => (<Badge type='primary'>Config Bot</Badge>);
+export const UrlSyncBadge = ({url}) => (<Badge>Synced to URL</Badge>);
 
 export const HistoryBotBadge = ({url}) => (<Badge type='primary'>History Bot</Badge>);
 

@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import type { MemoryStore } from '../MemoryStore';
 import type { PolicyController } from '../PolicyController';
 import type { RecordsController } from '../RecordsController';
@@ -29,7 +28,7 @@ import {
     DEFAULT_BRANCH_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
-    webhook,
+    generateV1ConnectionToken,
 } from '@casual-simulation/aux-common';
 import type { TestControllers } from '../crud/CrudRecordsControllerTests';
 import {
@@ -61,13 +60,12 @@ import {
     SplitInstRecordsStore,
     WebsocketController,
 } from '../websockets';
-import { createTestUser } from '../TestUtils';
-import { generateV1ConnectionToken } from '../AuthUtils';
 
 console.log = jest.fn();
 
 describe('WebhookRecordsController', () => {
     testCrudRecordsController<
+        WebhookRecord,
         WebhookRecord,
         WebhookRecordsStore,
         WebhookRecordsController
@@ -109,6 +107,13 @@ describe('WebhookRecordsController', () => {
                     handleHttpRequest: jest.fn(),
                 },
             }),
+        (item) => ({
+            address: item.address,
+            markers: item.markers,
+            targetResourceKind: 'data',
+            targetRecordName: 'recordName',
+            targetAddress: 'data1',
+        }),
         (item) => ({
             address: item.address,
             markers: item.markers,
@@ -160,6 +165,7 @@ describe('WebhookRecordsController', () => {
         };
 
         const context = await setupTestContext<
+            WebhookRecord,
             WebhookRecord,
             WebhookRecordsStore,
             WebhookRecordsController
@@ -325,12 +331,12 @@ describe('WebhookRecordsController', () => {
                     'item1'
                 );
 
-                expect(item.userId).toBeTruthy();
+                expect(item?.userId).toBeTruthy();
 
-                const user = await store.findUser(item.userId);
+                const user = await store.findUser(item!.userId!);
 
                 expect(user).toEqual({
-                    id: item.userId,
+                    id: item?.userId,
                     email: null,
                     phoneNumber: null,
                     allSessionRevokeTimeMs: null,
@@ -614,7 +620,7 @@ describe('WebhookRecordsController', () => {
 
             const file = await store.getFileRecord(
                 webhookUserId,
-                runs.items[0].infoFileName
+                runs.items[0].infoFileName!
             );
             expect(file).toEqual({
                 success: true,

@@ -20,7 +20,6 @@ import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
 import { Subscription } from 'rxjs';
 import type { CameraType } from '@casual-simulation/aux-common';
-import { sortBy } from 'lodash';
 
 @Component({
     components: {},

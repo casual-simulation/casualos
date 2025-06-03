@@ -21,10 +21,7 @@ import type {
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
-    LocalActions,
-    ConnectionIndicator,
-} from '@casual-simulation/aux-common';
+
 import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
 import type { Initable } from '../managers/Initable';

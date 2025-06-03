@@ -30,19 +30,10 @@ import type {
     AddEventCountStoreFailure,
     GetEventCountStoreFailure,
 } from './EventRecordsStore';
-import {
-    AddEventCountStoreResult,
-    GetEventCountStoreResult,
-} from './EventRecordsStore';
+
 import type { ValidatePublicRecordKeyFailure } from './RecordsController';
-import { RecordsController } from './RecordsController';
 import { cleanupObject, getRootMarkersOrDefault } from './Utils';
-import { without } from 'lodash';
-import {
-    ACCOUNT_MARKER,
-    PRIVATE_MARKER,
-    PUBLIC_READ_MARKER,
-} from '@casual-simulation/aux-common';
+import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
 import type { MetricsStore } from './MetricsStore';
 import type { ConfigurationStore } from './ConfigurationStore';
 import { getSubscriptionFeatures } from './SubscriptionConfiguration';

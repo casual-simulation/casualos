@@ -17,19 +17,23 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Watch } from 'vue-property-decorator';
+import { Prop } from 'vue-property-decorator';
 import type { Bot } from '@casual-simulation/aux-common';
 import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
 import MonacoLoaderError from '../MonacoLoaderError/MonacoLoaderError';
 import type MonacoTagEditor from '../MonacoTagEditor/MonacoTagEditor';
 import type monaco from '@casual-simulation/monaco-editor';
+import EmptyComponent from '../EmptyComponent/EmptyComponent';
 
 const MonacoAsync = () => ({
-    component: import('../MonacoTagEditor/MonacoTagEditor').catch((err) => {
-        console.error('Unable to load Monaco editor:', err);
-        throw err;
-    }),
+    component:
+        import.meta.env.MODE === 'static'
+            ? Promise.resolve(EmptyComponent)
+            : import('../MonacoTagEditor/MonacoTagEditor').catch((err) => {
+                  console.error('Unable to load Monaco editor:', err);
+                  throw err;
+              }),
     loading: MonacoLoader,
     error: MonacoLoaderError,
 

@@ -23,14 +23,12 @@ import {
     DoubleSide,
     Vector3,
     Vector2,
-    Box2,
     Shape,
     MeshBasicMaterial,
     ShapeBufferGeometry,
 } from '@casual-simulation/three';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { setLayerMask, buildSRGBColor, setColor } from './SceneUtils';
-import { Text3D } from './Text3D';
+import { setLayerMask, buildSRGBColor } from './SceneUtils';
 
 export class WordBubble3D extends Object3D {
     private _shapeGeometry: ShapeBufferGeometry;

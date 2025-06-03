@@ -25,7 +25,6 @@ import type {
     CrudSubscriptionMetrics,
 } from '../crud';
 import type { SubscriptionFilter } from '../MetricsStore';
-import { PushSubscriptionType } from './WebPushInterface';
 
 /**
  * Defines a store that contains notification records.
@@ -487,8 +486,9 @@ export interface SaveSubscriptionFailure {
 export interface UserPushSubscription extends NotificationPushSubscription {
     /**
      * The ID of the user that the push subscription is for.
+     * If null, then notifications should only be sent to the specified push subscription.
      */
-    userId: string;
+    userId: string | null;
 
     /**
      * The ID of the subscription.

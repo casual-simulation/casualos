@@ -17,7 +17,6 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Provide, Watch } from 'vue-property-decorator';
 import termsOfServiceHtml from 'virtual:policies/terms-of-service.md';
 // const termsOfServiceHtml = '';
 
