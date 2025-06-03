@@ -26,6 +26,9 @@
     display: inline-block;
     width: 24px;
     height: 24px;
+    min-height: 24px;
+    min-width: 24px;
+    flex: 0 0 24px;
     margin-right: 8px;
 }
 
@@ -65,10 +68,14 @@
 
 .md-list.md-theme-default
     .menu-bot.md-list-item.no-hover
-    .md-list-item-container:not(.md-list-item-default):not(.md-list-item-expand):not([disabled]):hover,
+    .md-list-item-container:not(.md-list-item-default):not(
+        .md-list-item-expand
+    ):not([disabled]):hover,
 .md-list.md-theme-dark
     .menu-bot.md-list-item.no-hover
-    .md-list-item-container:not(.md-list-item-default):not(.md-list-item-expand):not([disabled]):hover {
+    .md-list-item-container:not(.md-list-item-default):not(
+        .md-list-item-expand
+    ):not([disabled]):hover {
     color: var(
         --md-theme-default-text-primary-on-background,
         rgba(0, 0, 0, 0.87)
@@ -88,4 +95,21 @@
 
 .menu-bot .md-field.md-theme-none:after {
     background-color: var(--menu-label-color);
+}
+
+/* .md-field.md-has-textarea */
+
+.menu-bot .md-field label,
+.menu-bot .md-field.md-focused label {
+    top: 5px;
+}
+
+.menu-bot .menu-input.md-field {
+    min-height: initial;
+    margin: 0;
+    padding-top: 0;
+}
+
+.menu-bot .menu-input.md-field .md-button.md-toggle-password {
+    top: 0;
 }

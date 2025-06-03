@@ -1616,6 +1616,8 @@ export class ServerBuilder implements SubscriptionLike {
     }
 
     build(): BuildReturn {
+        console.log(`CasualOS Version:`, GIT_TAG, GIT_HASH);
+
         if (this._actions.length > 0) {
             throw new Error(
                 'Some setup actions require async setup. Use buildAsync() instead.'
