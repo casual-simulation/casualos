@@ -570,8 +570,8 @@ export function s3AclForMarkers(markers: readonly string[]): string {
  * Determines whether the given markers indicate that the file is public.
  * @param markers The markers that are applied to the file.
  */
-export function isPublicFile(markers: readonly string[]): boolean {
-    return markers.some((m) => m === PUBLIC_READ_MARKER);
+export function isPublicFile(markers: readonly string[] | null): boolean {
+    return !markers || markers.some((m) => m === PUBLIC_READ_MARKER);
 }
 
 /**

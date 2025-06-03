@@ -542,6 +542,7 @@ The shape that the bot should be displayed as.
     The bot will appear as an input box in the menu portal.
     You also need to place the bot in the dimension that the menu portal is showing for the input to appear.
     You can change the type of input using the <TagLink tag='formSubtype'/> tag.
+    You can also change wether the input allows multiple lines of text using the <TagLink tag='formInputMultiline'/> tag.
   </PossibleValueCode>
   <PossibleValueCode value='light'>
     The bot will appear as a light.
@@ -598,6 +599,32 @@ The subtype that the form should use. Useful for specifying how a mesh should be
   </PossibleValueCode>
   <PossibleValueCode value='password'>
     A bot with the <TagLink tag='form'/> set to `input` will function as a password input. (Characters are masked)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formInputMultiline
+
+Wether the input should allow multiple lines of text.
+
+Not supported when <TagLink tag='formSubtype'/> is set to `password`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The input allows multiple lines.
+    On Desktop, new lines can be added by using <kbd>Shift</kbd>+<kbd>Enter</kbd>.
+    On Mobile, new lines can be added by using the "return" key on the keyboard.
+    Pressing <kbd>Enter</kbd> by itself will submit the input. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The input will only allow a single line of text.
+    Pressing <kbd>Enter</kbd> will submit the input.
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The input will allow multiple lines of text.
+    Pressing <kbd>Enter</kbd> will create a new line of text.
+    You can press (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>)+<kbd>Enter</kbd> to submit the input.
   </PossibleValueCode>
 </PossibleValuesTable>
 

@@ -2,7 +2,7 @@
 
 ## V3.5.0
 
-#### Date: 5/19/2025
+#### Date: 6/3/2025
 
 ### :boom: Breaking Changes
 
@@ -68,6 +68,12 @@
     -   `formMapHeightProvider` can be set to `maptiler` to load elevation data from the MapTiler API.
     -   `formMapHeightProviderAPIKey` can be set to use a specific API key for the `formMapHeightProvider`.
     -   `formMapHeightOffset` can be set to offset the displayed heights when a `formMapHeightProvider` is provided.
+-   Updated lambda functions to use 1024 MB instead of 256 MB.
+-   Added a note for `@onBotChanged` to the documentation that it will only be triggered if the bot was not just created.
+-   Added the `formInputMultiline` tag.
+    -   Set to `true` to allow multiple lines in `input` form menu bots.
+    -   Set to `false` to disallow multiple lines.
+    -   Set to `null` to allow multiple lines by using <kbd>Shift</kbd>+<kbd>Enter</kbd>.
 
 ### :bug: Bug Fixes
 

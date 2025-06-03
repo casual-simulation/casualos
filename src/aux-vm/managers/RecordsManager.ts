@@ -428,7 +428,7 @@ export class RecordsManager {
     private _getRecordsEndpoint(event: GetRecordsEndpointAction) {
         if (hasValue(event.taskId)) {
             this._helper.transaction(
-                asyncResult(event.taskId, this._config.recordsOrigin)
+                asyncResult(event.taskId, this._config.authOrigin)
             );
         }
     }

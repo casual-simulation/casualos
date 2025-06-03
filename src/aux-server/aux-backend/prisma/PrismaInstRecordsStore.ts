@@ -32,7 +32,7 @@ import type {
 } from '@casual-simulation/aux-records';
 import type { PrismaClient } from './generated';
 import { Prisma } from './generated';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
 const TRACE_NAME = 'PrismaInstRecordsStore';
@@ -524,16 +524,42 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult> {
-        await this._prisma.branchUpdate.create({
-            data: {
-                id: uuid(),
-                recordName: recordName,
-                instName: inst,
-                branchName: branch,
-                updateData: updateToAdd,
-                sizeInBytes,
-            },
-        });
+        const branchUpdateId = uuid();
+        try {
+            // await this._prisma.$executeRaw`
+            //     BEGIN;
+
+            //     UPSERT INTO "InstBranch" ("recordName", "instName", "name", "temporary")
+            //     VALUES (${recordName}, ${inst}, ${branch}, false)
+
+            //     INSERT INTO "BranchUpdate" ("id", "recordName", "instName", "branchName", "updateData", "sizeInBytes")
+            //     VALUES (${branchUpdateId}, ${recordName}, ${inst}, ${branch}, ${updateToAdd}, ${sizeInBytes})
+
+            //     COMMIT;
+            // `;
+            await this._prisma.branchUpdate.create({
+                data: {
+                    id: branchUpdateId,
+                    recordName: recordName,
+                    instName: inst,
+                    branchName: branch,
+                    updateData: updateToAdd,
+                    sizeInBytes,
+                },
+            });
+        } catch (err) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                if (err.code === 'P2003') {
+                    // Foreign key violation
+                    return {
+                        success: false,
+                        errorCode: 'inst_not_found',
+                        branch: branch,
+                    };
+                }
+                throw err;
+            }
+        }
 
         return {
             success: true,
