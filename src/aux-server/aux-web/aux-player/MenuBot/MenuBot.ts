@@ -418,6 +418,25 @@ export default class MenuBot extends Vue {
         }
     }
 
+    handleKeyDown(event: KeyboardEvent) {
+        const simulation = _simulation(this.item);
+        if (simulation) {
+            simulation.helper.shout('onKeyDown', [this.item.bot], {
+                keys: [event.key],
+            });
+        }
+    }
+
+    handleKeyUp(event: KeyboardEvent) {
+        // If the user is typing, we want to update the text.
+        const simulation = _simulation(this.item);
+        if (simulation) {
+            simulation.helper.shout('onKeyUp', [this.item.bot], {
+                keys: [event.key],
+            });
+        }
+    }
+
     handleInputEnter(event: KeyboardEvent) {
         const conditionalSubmit = () => {
             if (hasValue(this.text)) {
