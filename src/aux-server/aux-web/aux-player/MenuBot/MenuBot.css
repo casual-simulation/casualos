@@ -109,3 +109,7 @@
     margin: 0;
     padding-top: 0;
 }
+
+.menu-bot .menu-input.md-field .md-button.md-toggle-password {
+    top: 0;
+}

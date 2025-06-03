@@ -14,7 +14,19 @@
                 </span>
                 <md-field class="menu-input" md-inline md-theme="none">
                     <label v-show="label">{{ label }}</label>
+                    <md-input
+                        v-if="subType === 'password'"
+                        :type="subType"
+                        class="text-input"
+                        :style="{ color: labelColor }"
+                        ref="textInput"
+                        v-model="text"
+                        @input="onTextUpdated()"
+                        v-on:keydown.enter="submitInput(false)"
+                        md-autogrow
+                    ></md-input>
                     <md-textarea
+                        v-else
                         :type="subType"
                         class="text-input"
                         :style="{ color: labelColor }"
