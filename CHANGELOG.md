@@ -8,6 +8,7 @@
 
 -   Updated to Node 20.18 and PNPM 10.10.
     -   Updating PNPM required updating the `pnpm-lock.yaml` file.
+-   Changed `@onKeyDown` and `@onKeyUp` to whisper when a user is typing in a menu bot.
 
 ### :rocket: Features
 
