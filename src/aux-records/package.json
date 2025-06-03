@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records",
-    "version": "3.5.0-alpha.15425950413",
+    "version": "3.5.0-alpha.15427068700",
     "description": "Helpers and managers used by the CasualOS records system.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -38,11 +38,11 @@
     },
     "dependencies": {
         "@anthropic-ai/sdk": "0.24.3",
-        "@casual-simulation/aux-common": "^3.5.0-alpha.15425950413",
-        "@casual-simulation/crypto": "^3.5.0-alpha.15425950413",
-        "@casual-simulation/fast-json-stable-stringify": "^3.5.0-alpha.15425950413",
+        "@casual-simulation/aux-common": "^3.5.0-alpha.15427068700",
+        "@casual-simulation/crypto": "^3.5.0-alpha.15427068700",
+        "@casual-simulation/fast-json-stable-stringify": "^3.5.0-alpha.15427068700",
         "@casual-simulation/rate-limit-redis": "^3.4.0",
-        "@casual-simulation/timesync": "^3.5.0-alpha.15425950413",
+        "@casual-simulation/timesync": "^3.5.0-alpha.15427068700",
         "@google/generative-ai": "0.11.3",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/resources": "^1.25.1",
