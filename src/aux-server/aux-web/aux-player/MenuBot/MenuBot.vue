@@ -14,15 +14,16 @@
                 </span>
                 <md-field class="menu-input" md-inline md-theme="none">
                     <label v-show="label">{{ label }}</label>
-                    <md-input
+                    <md-textarea
                         :type="subType"
                         class="text-input"
                         :style="{ color: labelColor }"
                         ref="textInput"
                         v-model="text"
                         @input="onTextUpdated()"
-                        v-on:keyup.enter="submitInput(false)"
-                    ></md-input>
+                        v-on:keydown.enter="handleInputEnter"
+                        md-autogrow
+                    ></md-textarea>
                 </md-field>
                 <md-button
                     v-show="text || alwaysShowSubmit"
