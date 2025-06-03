@@ -2758,6 +2758,7 @@ export const KNOWN_TAGS: string[] = [
     'formMapHeightProvider',
     'formMapHeightProviderAPIKey',
     'formMapHeightOffset',
+    'formInputMultiline',
     'meshPositioningMode',
     'orientationMode',
     'anchorPoint',
