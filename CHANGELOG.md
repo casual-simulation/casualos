@@ -9,6 +9,9 @@
 -   Updated to Node 20.18 and PNPM 10.10.
     -   Updating PNPM required updating the `pnpm-lock.yaml` file.
 -   Changed `@onKeyDown` and `@onKeyUp` to whisper when a user is typing in a menu bot.
+-   Moved `#app-game-container` ID to the DIV that directly contains the gridPortal canvas.
+    -   This will make it easier to control the sizing of the gridPortal and mapPortal by applying custom styles that affect `#app-game-container`.
+    -   This may break existing custom apps which apply custom styles to `#app-game-container`.
 
 ### :rocket: Features
 
