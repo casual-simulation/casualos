@@ -10,7 +10,8 @@
     top: 16px;
 }
 
-#app-game-container {
+#app-game-container,
+.main-content {
     position: absolute;
     top: 0;
     width: 100%;
