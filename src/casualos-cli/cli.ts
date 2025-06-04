@@ -338,7 +338,7 @@ async function auxConvert() {
             }
         } else if (targetStat.isFile()) {
             if (targetFD.slice(-4) === '.aux') {
-                auxFiles.push(targetFD);
+                auxFiles.push(path.basename(targetFD));
             } else {
                 console.warn(`Invalid file type provided.\nExpected ".aux"`);
                 return;
@@ -356,7 +356,7 @@ async function auxConvert() {
         );
         if (existsSync(outDir) && statSync(outDir).isDirectory()) {
             let converted = 0;
-            const prefix = outDir === targetFD ? '_' : '';
+            const prefix = outDir === getDir(targetFD) ? '_' : '';
             for (let file of auxFiles) {
                 try {
                     await writeFile(
@@ -837,9 +837,12 @@ function sanitizePath(input: string): string {
     return path.resolve(path.normalize(unquoted));
 }
 
+function getDir(base: string): string {
+    return statSync(base).isDirectory() ? base : path.dirname(base);
+}
+
 function replaceWithBasename(base: string, filename: string): string {
-    const dir = statSync(base).isDirectory() ? base : path.dirname(base);
-    return path.join(dir, filename);
+    return path.join(getDir(base), filename);
 }
 
 function convertToString(str: unknown): string {
