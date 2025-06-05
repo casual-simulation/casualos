@@ -264,6 +264,7 @@ import {
     getLoomMetadata,
     loadSharedDocument,
     installAuxFile as calcInstallAuxFile,
+    calculateStringListTagValue,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -7255,9 +7256,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.loadInst
      * @docgroup 10-load-inst
      */
-    function loadServer(id: string): LoadServerAction {
-        const event = loadSimulation(id);
-        return addAction(event);
+    function loadServer(id: string): LoadServerAction | void {
+        if (!context.playerBot) {
+            return addAction(loadSimulation(id));
+        }
+        const list = calculateStringListTagValue(
+            null,
+            context.playerBot,
+            'inst',
+            []
+        );
+        if (list.indexOf(id) < 0) {
+            setTag(context.playerBot, 'inst', [...list, id]);
+        }
     }
 
     /**
@@ -7272,9 +7283,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.unloadInst
      * @docgroup 10-load-inst
      */
-    function unloadServer(id: string): UnloadServerAction {
-        const event = unloadSimulation(id);
-        return addAction(event);
+    function unloadServer(id: string): UnloadServerAction | void {
+        if (!context.playerBot) {
+            return addAction(unloadSimulation(id));
+        }
+        const list = calculateStringListTagValue(
+            null,
+            context.playerBot,
+            'inst',
+            []
+        );
+        const index = list.indexOf(id);
+        if (index >= 0) {
+            list.splice(index, 1);
+            setTag(context.playerBot, 'inst', list.slice());
+        }
     }
 
     /**
