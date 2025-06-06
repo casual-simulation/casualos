@@ -2,13 +2,18 @@
 
 ## V3.5.0
 
-#### Date: 6/3/2025
+#### Date: 6/6/2025
 
 ### :boom: Breaking Changes
 
 -   Updated to Node 20.18 and PNPM 10.10.
     -   Updating PNPM required updating the `pnpm-lock.yaml` file.
 -   Changed `@onKeyDown` and `@onKeyUp` to whisper when a user is typing in a menu bot.
+-   Moved `#app-game-container` ID to the DIV that directly contains the gridPortal canvas.
+    -   This will make it easier to control the sizing of the gridPortal and mapPortal by applying custom styles that affect `#app-game-container`.
+    -   This may break existing custom apps which apply custom styles to `#app-game-container`.
+-   Reset the built-in (default) version of ab-1 to a much older version that respects CasualOS defaults behaviors.
+    -   This only affects environments which do not configure an `AB1_BOOTSTRAP_URL`.
 
 ### :rocket: Features
 

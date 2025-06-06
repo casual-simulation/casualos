@@ -5248,15 +5248,54 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.loadServer()', () => {
-            it('should emit a LoadServerAction', () => {
+            it('should add the inst to the player bot', () => {
+                const player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+
                 const action = library.api.os.loadServer('abc');
+
+                expect(action).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                expect(context.playerBot.tags.inst).toEqual(['channel', 'abc']);
+            });
+
+            it('should emit the LoadServerAction when there is no player bot', () => {
+                const action = library.api.os.loadServer('abc');
+
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
 
         describe('os.unloadServer()', () => {
-            it('should emit a UnloadServerAction', () => {
+            it('should add the inst to the player bot', () => {
+                const player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: ['channel', 'abc'],
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+
+                const action = library.api.os.unloadServer('abc');
+
+                expect(action).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                expect(context.playerBot.tags.inst).toEqual(['channel']);
+            });
+
+            it('should emit a UnloadServerAction when there is no player bot', () => {
                 const action = library.api.os.unloadServer('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
