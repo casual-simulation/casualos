@@ -5319,6 +5319,23 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
             });
+
+            it('should emit a UnloadServerConfigAction when given a config object', () => {
+                const action = library.api.os.unloadServer({
+                    inst: 'abc',
+                });
+
+                expect(action).toEqual(
+                    unloadSimulation({
+                        inst: 'abc',
+                    })
+                );
+                expect(context.actions).toEqual([
+                    unloadSimulation({
+                        inst: 'abc',
+                    }),
+                ]);
+            });
         });
 
         describe('os.importAUX()', () => {

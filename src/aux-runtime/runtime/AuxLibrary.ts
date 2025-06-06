@@ -110,6 +110,7 @@ import type {
     InstallAuxFileMode,
     LoadServerConfigAction,
     InstConfig,
+    UnloadServerConfigAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -7264,6 +7265,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Loads the given inst into the current browser tab. When the inst is loaded, the {@tag @onInstJoined} shout will be triggered.
      *
      * Compared to {@link os.loadInst}, this function allows loading insts that are stored in a different manner from the primary inst. For example, you can use this function to load a static inst even if the primary inst is a public inst.
+     * However, using this function will not add the inst to the URL, so any insts loaded in this manner will not be preserved upon refresh.
      *
      * Note that separate instances cannot interact directly. They must instead interact via super shouts
      *
@@ -7331,20 +7333,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.unloadInst
      * @docgroup 10-load-inst
      */
-    function unloadServer(id: string): UnloadServerAction | void {
-        if (!context.playerBot) {
-            return addAction(unloadSimulation(id));
-        }
-        const list = calculateStringListTagValue(
-            null,
-            context.playerBot,
-            'inst',
-            []
-        );
-        const index = list.indexOf(id);
-        if (index >= 0) {
-            list.splice(index, 1);
-            setTag(context.playerBot, 'inst', list.slice());
+    function unloadServer(id: string): UnloadServerAction | void;
+    /**
+     * Unloads the given inst from the current browser tab. When the inst is unloaded, the {@tag @onInstLeave} shout will be triggered.
+     *
+     * Compared to {@link os.unloadInst}, this function allows unloading insts that are stored in a different manner from the primary inst.
+     * For example, you can use this function to unload a static inst even if the primary inst is a public inst.
+     *
+     * @param id the name of the inst to unload.
+     *
+     * @example Unload the "fun" inst.
+     * os.unloadInst({
+     *    inst: 'fun'
+     * });
+     *
+     * @example Unload the "fun" static inst.
+     * os.unloadInst({
+     *    staticInst: 'fun'
+     * });
+     *
+     * @dochash actions/os/spaces
+     * @docname os.unloadInst-config
+     * @docgroup 10-load-inst
+     */
+    function unloadServer(config: InstConfig): UnloadServerConfigAction | void;
+    function unloadServer(
+        idOrConfig: string | InstConfig
+    ): UnloadServerAction | UnloadServerConfigAction | void {
+        if (typeof idOrConfig === 'string') {
+            if (!context.playerBot) {
+                return addAction(unloadSimulation(idOrConfig));
+            }
+            const list = calculateStringListTagValue(
+                null,
+                context.playerBot,
+                'inst',
+                []
+            );
+            const index = list.indexOf(idOrConfig);
+            if (index >= 0) {
+                list.splice(index, 1);
+                setTag(context.playerBot, 'inst', list.slice());
+            }
+        } else {
+            return addAction(unloadSimulation(idOrConfig));
         }
     }
 

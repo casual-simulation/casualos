@@ -826,25 +826,51 @@ export default class PlayerApp extends Vue {
                     } else {
                         recordName = e.config.owner ?? e.config.record ?? null;
                         inst = e.config.inst;
-                        simId = getSimulationId(recordName, inst, false);
                         isStatic = false;
-                    }
 
-                    let recordInfo = appManager.getRecordName(recordName);
+                        let recordInfo = appManager.getRecordName(recordName);
 
-                    while (
-                        recordInfo.owner === PLAYER_OWNER &&
-                        !recordInfo.recordName
-                    ) {
-                        await appManager.auth.primary.authenticate();
-                        recordInfo = appManager.getRecordName(recordName);
+                        while (
+                            recordInfo.owner === PLAYER_OWNER &&
+                            !recordInfo.recordName
+                        ) {
+                            await appManager.auth.primary.authenticate();
+                            recordInfo = appManager.getRecordName(recordName);
+                        }
+
+                        recordName = recordInfo.recordName;
+                        simId = getSimulationId(recordName, inst, false);
                     }
 
                     appManager.simulationManager.addSimulation(simId, {
-                        recordName: recordInfo.recordName,
+                        recordName,
                         inst,
                         isStatic,
                     });
+                } else if (e.type === 'unload_server_config') {
+                    let simId: string;
+                    let recordName: string = null;
+                    let inst: string = null;
+                    let isStatic: boolean = false;
+                    if (e.config.staticInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.staticInst,
+                            true
+                        );
+                        inst = e.config.staticInst;
+                        isStatic = true;
+                    } else {
+                        recordName = e.config.owner ?? e.config.record ?? null;
+                        inst = e.config.inst;
+                        isStatic = false;
+
+                        const recordInfo = appManager.getRecordName(recordName);
+                        recordName = recordInfo.recordName;
+                        simId = getSimulationId(recordName, inst, false);
+                    }
+
+                    appManager.simulationManager.removeSimulation(simId);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
                 } else if (e.type === 'show_qr_code') {

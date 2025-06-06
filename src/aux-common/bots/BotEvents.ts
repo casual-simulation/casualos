@@ -117,7 +117,8 @@ export type ExtraActions =
     | UnregisterHtmlAppAction
     | AddDropGridTargetsAction
     | CustomAppContainerAvailableAction
-    | LoadServerConfigAction;
+    | LoadServerConfigAction
+    | UnloadServerConfigAction;
 
 /**
  * Defines a set of possible async action types.
@@ -1153,6 +1154,21 @@ export interface UnloadServerAction extends Action {
      * The ID of the simulation to unload.
      */
     id: string;
+}
+
+/**
+ * An event that is used to unload a simulation.
+ *
+ * @dochash types/os/spaces
+ * @docname UnloadInstConfigAction
+ */
+export interface UnloadServerConfigAction extends Action {
+    type: 'unload_server_config';
+
+    /**
+     * The config that should be used to unload the inst.
+     */
+    config: InstConfig;
 }
 
 /**
@@ -4421,7 +4437,21 @@ export function loadSimulation(
  * Creates a new UnloadSimulationAction.
  * @param id The ID of the simulation to unload.
  */
-export function unloadSimulation(id: string): UnloadServerAction {
+export function unloadSimulation(id: string): UnloadServerAction;
+/**
+ * Creates a new UnloadServerConfigAction.
+ * @param config The config of the simulation to unload.
+ */
+export function unloadSimulation(config: InstConfig): UnloadServerConfigAction;
+export function unloadSimulation(
+    id: string | InstConfig
+): UnloadServerAction | UnloadServerConfigAction {
+    if (typeof id === 'object') {
+        return {
+            type: 'unload_server_config',
+            config: id,
+        };
+    }
     return {
         type: 'unload_server',
         id: id,
