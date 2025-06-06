@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/crypto",
-    "version": "3.5.0-alpha.15427068700",
+    "version": "3.5.0-alpha.15494496163",
     "description": "Crypto helpers used by AUX",
     "keywords": [
         "cryptography",
@@ -40,7 +40,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/fast-json-stable-stringify": "^3.5.0-alpha.15427068700",
+        "@casual-simulation/fast-json-stable-stringify": "^3.5.0-alpha.15494496163",
         "@types/scrypt-async": "^1.3.1",
         "base64-js": "^1.5.1",
         "hash.js": "1.1.7",
