@@ -5273,6 +5273,25 @@ describe('AuxLibrary', () => {
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
+
+            describe('config', () => {
+                it('should accept a config object and emit a LoadServerConfigAction', () => {
+                    const action = library.api.os.loadServer({
+                        inst: 'abc',
+                    });
+
+                    expect(action).toEqual(
+                        loadSimulation({
+                            inst: 'abc',
+                        })
+                    );
+                    expect(context.actions).toEqual([
+                        loadSimulation({
+                            inst: 'abc',
+                        }),
+                    ]);
+                });
+            });
         });
 
         describe('os.unloadServer()', () => {
@@ -5299,6 +5318,23 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.unloadServer('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
+            });
+
+            it('should emit a UnloadServerConfigAction when given a config object', () => {
+                const action = library.api.os.unloadServer({
+                    inst: 'abc',
+                });
+
+                expect(action).toEqual(
+                    unloadSimulation({
+                        inst: 'abc',
+                    })
+                );
+                expect(context.actions).toEqual([
+                    unloadSimulation({
+                        inst: 'abc',
+                    }),
+                ]);
             });
         });
 

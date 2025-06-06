@@ -19,7 +19,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
 import { Tagline, EventBus } from '@casual-simulation/aux-components';
-import { appManager } from '../../shared/AppManager';
+import { appManager, PLAYER_OWNER } from '../../shared/AppManager';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import type { SubscriptionLike } from 'rxjs';
@@ -123,6 +123,7 @@ import type { SDKResult as LoomSDKResult } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
+import { getSimulationId } from '../../../shared/SimulationHelpers';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -809,6 +810,67 @@ export default class PlayerApp extends Vue {
                     this.finishAddSimulation(e.id);
                 } else if (e.type === 'unload_server') {
                     this.removeSimulationById(e.id);
+                } else if (e.type === 'load_server_config') {
+                    let simId: string;
+                    let recordName: string = null;
+                    let inst: string = null;
+                    let isStatic: boolean = false;
+                    if (e.config.staticInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.staticInst,
+                            true
+                        );
+                        inst = e.config.staticInst;
+                        isStatic = true;
+                    } else {
+                        recordName = e.config.owner ?? e.config.record ?? null;
+                        inst = e.config.inst;
+                        isStatic = false;
+
+                        let recordInfo = appManager.getRecordName(recordName);
+
+                        while (
+                            recordInfo.owner === PLAYER_OWNER &&
+                            !recordInfo.recordName
+                        ) {
+                            await appManager.auth.primary.authenticate();
+                            recordInfo = appManager.getRecordName(recordName);
+                        }
+
+                        recordName = recordInfo.recordName;
+                        simId = getSimulationId(recordName, inst, false);
+                    }
+
+                    appManager.simulationManager.addSimulation(simId, {
+                        recordName,
+                        inst,
+                        isStatic,
+                    });
+                } else if (e.type === 'unload_server_config') {
+                    let simId: string;
+                    let recordName: string = null;
+                    let inst: string = null;
+                    let isStatic: boolean = false;
+                    if (e.config.staticInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.staticInst,
+                            true
+                        );
+                        inst = e.config.staticInst;
+                        isStatic = true;
+                    } else {
+                        recordName = e.config.owner ?? e.config.record ?? null;
+                        inst = e.config.inst;
+                        isStatic = false;
+
+                        const recordInfo = appManager.getRecordName(recordName);
+                        recordName = recordInfo.recordName;
+                        simId = getSimulationId(recordName, inst, false);
+                    }
+
+                    appManager.simulationManager.removeSimulation(simId);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
                 } else if (e.type === 'show_qr_code') {

@@ -1,5 +1,26 @@
 # CasualOS Changelog
 
+## V3.5.1
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Improved `os.loadInst()` and `os.unloadInst()` to accept a configuration object that can specify more information on the kind of inst to load.
+    -   Loading insts in this manner will not add them to the URL.
+    -   The following properties are supported:
+        -   `staticInst`: Equivalent to the [`staticInst` tag](https://docs.casualos.com/tags/config-bot#staticinst).
+        -   `inst`: Equivalent to the [`inst` tag](https://docs.casualos.com/tags/config-bot#inst)
+        -   `record`: Equivalent to the [`record` tag](https://docs.casualos.com/tags/config-bot#record)
+        -   `owner`: Equivalent to the [`owner` tag](https://docs.casualos.com/tags/config-bot#owner).
+    -   For example:
+    ```typescript
+    os.loadInst({
+        staticInst: 'myInst',
+    });
+    ```
+    will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
+
 ## V3.5.0
 
 #### Date: 6/6/2025

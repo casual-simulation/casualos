@@ -1010,6 +1010,63 @@ declare interface LoadServerAction extends Action {
 }
 
 /**
+ * The configuration for loading an inst.
+ *
+ * @dochash types/os/spaces
+ * @docname InstConfig
+ */
+export interface InstConfig {
+    /**
+     * The owner of the inst.
+     *
+     * Possible values are:
+     * - "public" - The inst is public and temporary.
+     * - "player" - The inst is owned by the current player.
+     * - Any record name - the inst will be loaded from the given record.
+     * - Any user ID - the inst will be loaded from the given user's default record.
+     * - Any studio ID - the inst will be loaded from the given studio's default record.
+     *
+     * Only valid when an inst is also specified.
+     */
+    owner?: string | null;
+
+    /**
+     * The record that the inst should be loaded from.
+     *
+     * Only valid when an inst is also specified.
+     */
+    record?: string | null;
+
+    /**
+     * The inst that should be loaded.
+     *
+     * When specified, you can also use the owner field to specify where the inst should be loaded from.
+     */
+    inst?: string;
+
+    /**
+     * The static inst that should be loaded.
+     *
+     * Only valid when specified on its own.
+     */
+    staticInst?: string;
+}
+
+/**
+ * An event that is used to load an inst.
+ * @dochash types/os/spaces
+ * @docname LoadInstConfigAction
+ */
+export interface LoadServerConfigAction extends Action {
+    type: 'load_server_config';
+
+    /**
+     * The config that should be used to load the inst.
+     */
+    config: InstConfig;
+}
+
+/**
  * An event that is used to unload a simulation.
  */
 declare interface UnloadServerAction extends Action {
@@ -1019,6 +1076,18 @@ declare interface UnloadServerAction extends Action {
      * The ID of the simulation to unload.
      */
     id: string;
+}
+
+/**
+ * An event that is used to unload a simulation.
+ */
+declare interface UnloadServerConfigAction extends Action {
+    type: 'unload_server_config';
+
+    /**
+     * The config that should be used to unload the inst.
+     */
+    config: InstConfig;
 }
 
 /**
@@ -13491,11 +13560,106 @@ interface Os {
      */
     loadInst(id: string): LoadServerAction;
 
+    loadInst()
+
+    /**
+     * Loads the given inst into the current browser tab. When the inst is loaded, the {@tag @onInstJoined} shout will be triggered.
+     *
+     * Note that separate instances cannot interact directly. They must instead interact via super shouts
+     *
+     * @param id the ID of the inst to load.
+     *
+     * @example Load the "fun" inst.
+     * os.loadInst("fun");
+     *
+     * @dochash actions/os/spaces
+     * @docname os.loadInst
+     * @docid os.loadInst
+     * @docgroup 10-load-inst
+     */
+    loadInst(id: string): LoadServerAction | void;
+    /**
+     * Loads the given inst into the current browser tab. When the inst is loaded, the {@tag @onInstJoined} shout will be triggered.
+     *
+     * Compared to {@link os.loadInst}, this function allows loading insts that are stored in a different manner from the primary inst. For example, you can use this function to load a static inst even if the primary inst is a public inst.
+     * However, using this function will not add the inst to the URL, so any insts loaded in this manner will not be preserved upon refresh.
+     *
+     * Note that separate instances cannot interact directly. They must instead interact via super shouts
+     *
+     * @param config the configuration for the loaded inst. Loosely matches the config bot tags.
+     *
+     * @example Load the "fun" inst.
+     * os.loadInst({
+     *   inst: 'fun'
+     * });
+     *
+     * @example Load a static inst.
+     * os.loadInst({
+     *   staticInst: 'fun'
+     * });
+     *
+     * @example Load a player inst.
+     * os.loadInst({
+     *   owner: 'player',
+     *   inst: 'myInst',
+     * });
+     *
+     * @example Load an inst from a record.
+     * os.loadInst({
+     *   record: 'myRecord',
+     *   inst: 'myInst',
+     * });
+     *
+     * @dochash actions/os/spaces
+     * @docname os.loadInst
+     * @docid os.loadInst-config
+     * @docgroup 10-load-inst
+     */
+    loadInst(config: InstConfig): LoadServerConfigAction | void;
+
     /**
      * Unloads the inst with the given ID.
      * @param id The ID of the inst to unload.
      */
     unloadInst(id: string): UnloadServerAction;
+
+    /**
+     * Unloads the given inst from the current browser tab. When the inst is unloaded, the {@tag @onInstLeave} shout will be triggered.
+     *
+     * @param id the name of the inst to unload.
+     *
+     * @example Unload the "fun" inst.
+     * os.unloadInst("fun");
+     *
+     * @dochash actions/os/spaces
+     * @docname os.unloadInst
+     * @docgroup 10-load-inst
+     */
+    unloadServer(id: string): UnloadServerAction | void;
+    
+    /**
+     * Unloads the given inst from the current browser tab. When the inst is unloaded, the {@tag @onInstLeave} shout will be triggered.
+     *
+     * Compared to {@link os.unloadInst}, this function allows unloading insts that are stored in a different manner from the primary inst.
+     * For example, you can use this function to unload a static inst even if the primary inst is a public inst.
+     * 
+     * @param id the name of the inst to unload.
+     *
+     * @example Unload the "fun" inst.
+     * os.unloadInst({
+     *    inst: 'fun'
+     * });
+     * 
+     * @example Unload the "fun" static inst.
+     * os.unloadInst({
+     *    staticInst: 'fun'
+     * });
+     *
+     * @dochash actions/os/spaces
+     * @docname os.unloadInst-config
+     * @docgroup 10-load-inst
+     */
+    unloadServer(config: InstConfig): UnloadServerConfigAction | void;
 
     /**
      * Imports the AUX from the given URL or JSON
