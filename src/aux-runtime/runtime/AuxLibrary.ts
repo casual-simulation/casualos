@@ -108,6 +108,8 @@ import type {
     LoomVideo,
     LoomVideoEmbedMetadata,
     InstallAuxFileMode,
+    LoadServerConfigAction,
+    InstConfig,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -7254,20 +7256,66 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os/spaces
      * @docname os.loadInst
+     * @docid os.loadInst
      * @docgroup 10-load-inst
      */
-    function loadServer(id: string): LoadServerAction | void {
-        if (!context.playerBot) {
-            return addAction(loadSimulation(id));
-        }
-        const list = calculateStringListTagValue(
-            null,
-            context.playerBot,
-            'inst',
-            []
-        );
-        if (list.indexOf(id) < 0) {
-            setTag(context.playerBot, 'inst', [...list, id]);
+    function loadServer(id: string): LoadServerAction | void;
+    /**
+     * Loads the given inst into the current browser tab. When the inst is loaded, the {@tag @onInstJoined} shout will be triggered.
+     *
+     * Compared to {@link os.loadInst}, this function allows loading insts that are stored in a different manner from the primary inst. For example, you can use this function to load a static inst even if the primary inst is a public inst.
+     *
+     * Note that separate instances cannot interact directly. They must instead interact via super shouts
+     *
+     * @param config the configuration for the loaded inst. Loosely matches the config bot tags.
+     *
+     * @example Load the "fun" inst.
+     * os.loadInst({
+     *   inst: 'fun'
+     * });
+     *
+     * @example Load a static inst.
+     * os.loadInst({
+     *   staticInst: 'fun'
+     * });
+     *
+     * @example Load a player inst.
+     * os.loadInst({
+     *   owner: 'player',
+     *   inst: 'myInst',
+     * });
+     *
+     * @example Load an inst from a record.
+     * os.loadInst({
+     *   record: 'myRecord',
+     *   inst: 'myInst',
+     * });
+     *
+     * @dochash actions/os/spaces
+     * @docname os.loadInst
+     * @docid os.loadInst-config
+     * @docgroup 10-load-inst
+     */
+    function loadServer(config: InstConfig): LoadServerConfigAction | void;
+    function loadServer(
+        idOrConfig: string | InstConfig
+    ): LoadServerAction | LoadServerConfigAction | void {
+        if (typeof idOrConfig === 'string') {
+            if (!context.playerBot) {
+                return addAction(loadSimulation(idOrConfig));
+            }
+            const list = calculateStringListTagValue(
+                null,
+                context.playerBot,
+                'inst',
+                []
+            );
+            if (list.indexOf(idOrConfig) < 0) {
+                setTag(context.playerBot, 'inst', [...list, idOrConfig]);
+            }
+        } else {
+            // The are different in static, owner, or record
+            return addAction(loadSimulation(idOrConfig));
         }
     }
 

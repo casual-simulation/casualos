@@ -116,7 +116,8 @@ export type ExtraActions =
     | SetAppOutputAction
     | UnregisterHtmlAppAction
     | AddDropGridTargetsAction
-    | CustomAppContainerAvailableAction;
+    | CustomAppContainerAvailableAction
+    | LoadServerConfigAction;
 
 /**
  * Defines a set of possible async action types.
@@ -1081,6 +1082,63 @@ export interface LoadServerAction extends Action {
      * The ID of the simulation to load.
      */
     id: string;
+}
+
+/**
+ * The configuration for loading an inst.
+ *
+ * @dochash types/os/spaces
+ * @docname InstConfig
+ */
+export interface InstConfig {
+    /**
+     * The owner of the inst.
+     *
+     * Possible values are:
+     * - "public" - The inst is public and temporary.
+     * - "player" - The inst is owned by the current player.
+     * - Any record name - the inst will be loaded from the given record.
+     * - Any user ID - the inst will be loaded from the given user's default record.
+     * - Any studio ID - the inst will be loaded from the given studio's default record.
+     *
+     * Only valid when an inst is also specified.
+     */
+    owner?: string | null;
+
+    /**
+     * The record that the inst should be loaded from.
+     *
+     * Only valid when an inst is also specified.
+     */
+    record?: string | null;
+
+    /**
+     * The inst that should be loaded.
+     *
+     * When specified, you can also use the owner field to specify where the inst should be loaded from.
+     */
+    inst?: string;
+
+    /**
+     * The static inst that should be loaded.
+     *
+     * Only valid when specified on its own.
+     */
+    staticInst?: string;
+}
+
+/**
+ * An event that is used to load an inst.
+ * @dochash types/os/spaces
+ * @docname LoadInstConfigAction
+ */
+export interface LoadServerConfigAction extends Action {
+    type: 'load_server_config';
+
+    /**
+     * The config that should be used to load the inst.
+     */
+    config: InstConfig;
 }
 
 /**
@@ -4336,7 +4394,23 @@ export function hideChat(): ShowChatBarAction {
  * Creates a new LoadSimulationAction.
  * @param id The ID of the simulation to load.
  */
-export function loadSimulation(id: string): LoadServerAction {
+export function loadSimulation(id: string): LoadServerAction;
+/**
+ * Creates a new LoadSimulationAction.
+ * @param config The config of the simulation to load.
+ */
+export function loadSimulation(
+    config: LoadServerConfigAction['config']
+): LoadServerConfigAction;
+export function loadSimulation(
+    id: string | LoadServerConfigAction['config']
+): LoadServerAction | LoadServerConfigAction {
+    if (typeof id === 'object') {
+        return {
+            type: 'load_server_config',
+            config: id,
+        };
+    }
     return {
         type: 'load_server',
         id: id,
