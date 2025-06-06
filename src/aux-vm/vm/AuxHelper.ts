@@ -31,12 +31,9 @@ import type {
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
 import {
-    LocalActions,
     getActiveObjects,
     createBot,
     merge,
-    AUX_BOT_VERSION,
-    getBotConfigDimensions,
     botAdded,
     botUpdated,
     tagsOnBot,
@@ -48,20 +45,16 @@ import {
     getPartitionState,
     createPrecalculatedContext,
     runScript,
-    AsyncActions,
     asyncError,
     botRemoved,
     isBot,
     getBotsStateFromStoredAux,
-    ConnectionIndicator,
-    getConnectionId,
 } from '@casual-simulation/aux-common';
 import type {
     RemoteAction,
     DeviceAction,
     RemoteActions,
 } from '@casual-simulation/aux-common';
-import { RemoteActionResult } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';

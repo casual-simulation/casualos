@@ -34,8 +34,6 @@ import type {
     HumeConfig,
 } from '@casual-simulation/aux-records';
 import {
-    cleanupObject,
-    ComIdPlayerConfig,
     COM_ID_PLAYER_CONFIG,
     COM_ID_CONFIG_SCHEMA,
     LOOM_CONFIG,

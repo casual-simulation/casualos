@@ -21,7 +21,6 @@ import {
     hasValue,
     ON_APP_SETUP_ACTION_NAME,
     registerHtmlApp,
-    SerializableMutationRecord,
     updateHtmlApp,
     unregisterHtmlApp,
     htmlAppMethod,
@@ -334,6 +333,10 @@ export class HtmlAppBackend implements AppBackend {
                             }
                         } finally {
                             supressMutations(false);
+                            // clear the mutation queue so that we don't send useless
+                            // attribute modifications and potentially break something
+                            // (e.g. the user's selection if they happen to be typing very quickly)
+                            this._mutationObserver.takeRecords();
                         }
 
                         try {
@@ -760,7 +763,7 @@ export class HtmlAppBackend implements AppBackend {
                                     cssText: value.cssText,
                                 };
                             } else {
-                                result[prop] = { ...value };
+                                result[prop] = { ...(value as object) };
                             }
                         } else if (isNamedNodeMap(value)) {
                             let attributes: { name: string; value: string }[] =

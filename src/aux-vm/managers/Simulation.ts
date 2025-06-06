@@ -20,11 +20,7 @@ import type {
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
-    SimulationIdParseSuccess,
-    LocalActions,
-    BotsState,
-} from '@casual-simulation/aux-common';
+
 import type { BotWatcher } from './BotWatcher';
 import type { Observable } from 'rxjs';
 import type { DeviceAction } from '@casual-simulation/aux-common';

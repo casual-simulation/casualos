@@ -15,19 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {
-    Object3D,
-    Color,
-    Vector3,
-    Sphere,
-    Mesh,
-} from '@casual-simulation/three';
+import { Object3D, Color, Vector3 } from '@casual-simulation/three';
 
 import { Line2 } from '@casual-simulation/three/examples/jsm/lines/Line2';
 import { LineGeometry } from '@casual-simulation/three/examples/jsm/lines/LineGeometry';
 import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 
-import { disposeMaterial, buildSRGBColor } from './SceneUtils';
+import { disposeMaterial } from './SceneUtils';
 import { Arrow3D } from './Arrow3D';
 
 export class LineSegments extends Object3D {

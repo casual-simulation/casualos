@@ -33,12 +33,12 @@ import type {
 import { hasValue } from '@casual-simulation/aux-common';
 import type { WebConfig } from '@casual-simulation/aux-common/common/WebConfig';
 import compression from 'compression';
-import { ServerBuilder } from '../shared/ServerBuilder';
 import { getStatusCode } from '@casual-simulation/aux-common';
 import { WebSocketServer } from 'ws';
 import { WSWebsocketMessenger } from '../ws/WSWebsocketMessenger';
 import { concatMap, interval } from 'rxjs';
-import { constructServerBuilder } from 'aux-backend/shared/LoadServer';
+import { constructServerBuilder } from '../shared/LoadServer';
+import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
 
 /**
  * Defines a class that represents a fully featured SO4 server.
@@ -407,7 +407,10 @@ export class Server {
             res.sendStatus(404);
         });
 
-        if (websocketMessenger instanceof WSWebsocketMessenger) {
+        if (
+            websocketMessenger instanceof WSWebsocketMessenger ||
+            websocketMessenger instanceof RedisWSWebsocketMessenger
+        ) {
             this._wsServer.on('connection', (socket, req) => {
                 const id = websocketMessenger.registerConnection(socket);
                 const ip = req.socket.remoteAddress;

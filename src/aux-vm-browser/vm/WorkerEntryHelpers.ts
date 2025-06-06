@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { listenForChannel, setupChannel } from '../html/IFrameHelpers';
+import { listenForChannel } from '../html/IFrameHelpers';
 
 export function setupWorker(instance: Worker) {
     // Polyfill for instantiating nested web workers for Safari.

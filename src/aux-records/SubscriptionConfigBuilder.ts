@@ -31,6 +31,7 @@ import type {
     FileFeaturesConfiguration,
     InstsFeaturesConfiguration,
     NotificationFeaturesConfiguration,
+    PackageFeaturesConfiguration,
     PublicInstsConfiguration,
     RecordFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
@@ -262,6 +263,33 @@ export class FeaturesBuilder {
 
     withNotificationsMaxSentPushNotificationsPerPeriod(max: number): this {
         this._features.notifications.maxSentPushNotificationsPerPeriod = max;
+        return this;
+    }
+
+    withPackages(features?: PackageFeaturesConfiguration): this {
+        this._features.packages = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withPackagesMaxItems(maxItems: number): this {
+        this._features.packages.maxItems = maxItems;
+        return this;
+    }
+
+    withPackagesMaxVersions(maxVersions: number): this {
+        this._features.packages.maxPackageVersions = maxVersions;
+        return this;
+    }
+
+    withPackagesMaxVersionSizeInBytes(maxSize: number): this {
+        this._features.packages.maxPackageVersionSizeInBytes = maxSize;
+        return this;
+    }
+
+    withPackagesMaxBytesTotal(maxBytes: number): this {
+        this._features.packages.maxPackageBytesTotal = maxBytes;
         return this;
     }
 

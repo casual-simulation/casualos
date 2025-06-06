@@ -84,10 +84,8 @@ import {
     getBotLabelPadding,
     getCursorCSS,
     calculateGridScale,
-    calculateBotIds,
     calculateBotVectorTagValue,
     calculateBotRotationTagValue,
-    formatBotRotation,
     getTagPosition,
     getTagRotation,
     formatBotVector,
@@ -123,7 +121,7 @@ import {
     resolveRejectedActions,
 } from '../BotActions';
 import type { BotCalculationContext } from '../BotCalculationContext';
-import { Quaternion, Rotation, Vector3 } from '../../math';
+import { Quaternion, Rotation } from '../../math';
 
 export function botCalculationContextTests(
     uuidMock: jest.Mock,

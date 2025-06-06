@@ -16,21 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Observable, SubscriptionLike } from 'rxjs';
-import { Subject, BehaviorSubject, merge, from } from 'rxjs';
-import { mergeMap, tap, withLatestFrom, bufferTime } from 'rxjs/operators';
+import { BehaviorSubject, merge } from 'rxjs';
+import { mergeMap, bufferTime } from 'rxjs/operators';
 import type { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import {
-    isBot,
-    PrecalculatedBot,
-    isPrecalculated,
-    isExistingBot,
-    createPrecalculatedBot,
-    filterBotsBySelection,
-    botsInDimension,
-    SHEET_PORTAL,
     IDE_PORTAL,
     isPortalScript,
-    DNA_TAG_PREFIX,
     isScript,
     isFormula,
     KNOWN_TAG_PREFIXES,

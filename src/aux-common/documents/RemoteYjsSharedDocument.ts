@@ -15,44 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {
-    BehaviorSubject,
-    filter,
-    firstValueFrom,
-    Observable,
-    startWith,
-    Subject,
-    Subscription,
-} from 'rxjs';
+import { filter, firstValueFrom, Subscription } from 'rxjs';
 import type { SharedDocument } from './SharedDocument';
-import {
-    RelativePosition,
-    SharedArray,
-    SharedArrayChanges,
-    SharedArrayDelta,
-    SharedMap,
-    SharedMapChanges,
-    SharedText,
-    SharedTextChanges,
-    SharedTextDelta,
-    SharedType,
-    SharedTypeChanges,
-} from './SharedDocument';
+
 import type { Doc, Transaction } from 'yjs';
-import {
-    createRelativePositionFromTypeIndex,
-    createAbsolutePositionFromRelativePosition,
-    AbstractType as YType,
-    Map as YMap,
-    Array as YArray,
-    Text as YText,
-    YMapEvent,
-    YEvent,
-    YArrayEvent,
-    YTextEvent,
-    encodeStateAsUpdate,
-    applyUpdate,
-} from 'yjs';
+import { encodeStateAsUpdate } from 'yjs';
 import type {
     ClientError,
     ClientEvent,
@@ -64,13 +31,8 @@ import type {
 import type { SharedDocumentConfig } from './SharedDocumentConfig';
 import type { PartitionAuthSource } from '../partitions/PartitionAuthSource';
 import { YjsIndexedDBPersistence } from '../yjs/YjsIndexedDBPersistence';
-import { fromByteArray, toByteArray } from 'base64-js';
-import {
-    Action,
-    CurrentVersion,
-    getConnectionId,
-    StatusUpdate,
-} from '../common';
+import { fromByteArray } from 'base64-js';
+import { getConnectionId } from '../common';
 import {
     YjsSharedDocument,
     APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN,
@@ -411,9 +373,11 @@ export class RemoteYjsSharedDocument
             });
         }
         this._synced = synced;
-        this._onStatusUpdated.next({
-            type: 'sync',
-            synced: synced,
+        queueMicrotask(() => {
+            this._onStatusUpdated.next({
+                type: 'sync',
+                synced: synced,
+            });
         });
     }
 }

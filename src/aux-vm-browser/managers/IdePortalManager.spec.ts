@@ -18,22 +18,17 @@
 import type { IdeNode } from './IdePortalManager';
 import { IdePortalManager } from './IdePortalManager';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
-import type { BotAction } from '@casual-simulation/aux-common';
 import {
     createBot,
-    createPrecalculatedBot,
     botAdded,
-    PrecalculatedBot,
     BotIndex,
     botUpdated,
-    botRemoved,
     registerPrefix,
-    BotsState,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import { Subject } from 'rxjs';
-import { locale } from 'faker';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 describe('IdePortalManager', () => {
     let manager: IdePortalManager;
@@ -42,7 +37,7 @@ describe('IdePortalManager', () => {
     let index: BotIndex;
     let vm: TestAuxVM;
     let userId = 'user';
-    let localEvents: Subject<BotAction[]>;
+    let localEvents: Subject<RuntimeActions[]>;
 
     beforeEach(async () => {
         vm = new TestAuxVM('sim', userId);

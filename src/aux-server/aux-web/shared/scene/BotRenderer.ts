@@ -22,7 +22,6 @@ import {
     Scene,
     Box3,
     Vector3,
-    MathUtils as ThreeMath,
     Color,
     Object3D,
     sRGBEncoding,

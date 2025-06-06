@@ -21,6 +21,7 @@ import {
     Subscription,
     bufferCount,
     firstValueFrom,
+    skip,
     takeWhile,
 } from 'rxjs';
 import {
@@ -36,14 +37,15 @@ import { RemoteYjsPartitionImpl } from './RemoteYjsPartition';
 import type {
     AsyncAction,
     Bot,
+    BotSpace,
     InstUpdate,
     StateUpdatedEvent,
+    StoredAux,
     UpdatedBot,
 } from '../bots';
 import {
     action,
     applyUpdatesToInst,
-    asyncError,
     asyncResult,
     botAdded,
     botUpdated,
@@ -58,9 +60,10 @@ import {
     stateUpdatedEvent,
     getCurrentInstUpdate,
     getRemoteCount,
+    installAuxFile,
 } from '../bots';
 import type { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
-import { wait, waitAsync } from '../test/TestHelpers';
+import { waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../bots';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
@@ -73,14 +76,13 @@ import type {
     UpdatesReceivedMessage,
     WatchBranchResultMessage,
 } from '../websockets';
-import {
-    DEFAULT_BRANCH_NAME,
-    InstRecordsClient,
-    MemoryConnectionClient,
-} from '../websockets';
+import { InstRecordsClient, MemoryConnectionClient } from '../websockets';
 import type { Action, CurrentVersion, StatusUpdate } from '../common';
 import { connectionInfo, device, remote } from '../common';
-import { getStateFromUpdates } from './PartitionUtils';
+import {
+    constructInitializationUpdate,
+    getStateFromUpdates,
+} from './PartitionUtils';
 import type { PartitionAuthRequest } from './PartitionAuthSource';
 import { PartitionAuthSource } from './PartitionAuthSource';
 import { case1 } from './test/UpdateCases';
@@ -286,6 +288,111 @@ describe('RemoteYjsPartition', () => {
                         inst: 'inst',
                         branch: 'testBranch',
                     },
+                ]);
+            });
+
+            it('should send the sync event after the updates are processed', async () => {
+                partition.space = 'test';
+
+                let events: (StatusUpdate | StateUpdatedEvent)[] = [];
+                partition.onStatusUpdated.subscribe((s) => {
+                    if (s.type === 'sync') {
+                        events.push(s);
+                    }
+                });
+                partition.onStateUpdated
+                    .pipe(skip(1))
+                    .subscribe((s) => events.push(s));
+
+                partition.connect();
+
+                const updates = [
+                    ...getUpdates((doc, bots) => {
+                        bots.set('bot1', new YMap([['tag1', 'abc']]));
+                    }),
+                    ...getUpdates((doc, bots) => {
+                        bots.set('bot2', new YMap([['tag2', 'def']]));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot3:tag3', new YText('ghi'));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot4:tag4', new YText('jfk'));
+                    }),
+                    ...getUpdates((doc, bots, masks) => {
+                        masks.set('bot5:tag5', new YText('lmn'));
+                    }),
+                ];
+
+                addAtoms.next({
+                    type: 'repo/add_updates',
+                    recordName: recordName,
+                    inst: 'inst',
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    stateUpdatedEvent(
+                        {
+                            bot1: createBot(
+                                'bot1',
+                                { tag1: 'abc' },
+                                'test' as BotSpace
+                            ),
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot2: createBot(
+                                'bot2',
+                                { tag2: 'def' },
+                                'test' as BotSpace
+                            ),
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot3: {
+                                masks: {
+                                    test: {
+                                        tag3: 'ghi',
+                                    },
+                                },
+                            },
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot4: {
+                                masks: {
+                                    test: {
+                                        tag4: 'jfk',
+                                    },
+                                },
+                            },
+                        },
+                        expect.any(Object)
+                    ),
+                    stateUpdatedEvent(
+                        {
+                            bot5: {
+                                masks: {
+                                    test: {
+                                        tag5: 'lmn',
+                                    },
+                                },
+                            },
+                        },
+                        expect.any(Object)
+                    ),
+                    { type: 'sync', synced: true },
                 ]);
             });
 
@@ -1056,6 +1163,467 @@ describe('RemoteYjsPartition', () => {
                                 },
                                 false
                             ),
+                        ]);
+                    });
+                });
+
+                describe('install_aux_file', () => {
+                    it('should add the version 2 state to the inst', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const update = constructInitializationUpdate(
+                            createInitializationUpdate([
+                                createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                            ])
+                        );
+
+                        const state: StoredAux = {
+                            version: 2,
+                            updates: [update],
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'default'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                abc: 'def',
+                            }),
+                            installed2: createBot('installed2', {
+                                abc: 'ghi',
+                            }),
+                        });
+
+                        const addedAtoms = connection.sentMessages.filter(
+                            (m) => m.type === 'repo/add_updates'
+                        );
+                        expect(addedAtoms).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: state.updates.map((u) => u.update),
+                                updateId: 1,
+                            },
+                        ]);
+                    });
+
+                    it('should add the version 1 state to the inst', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const state: StoredAux = {
+                            version: 1,
+                            state: {
+                                installed1: createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                installed2: createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                            },
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'default'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                abc: 'def',
+                            }),
+                            installed2: createBot('installed2', {
+                                abc: 'ghi',
+                            }),
+                        });
+
+                        const addedAtoms = connection.sentMessages.filter(
+                            (m) => m.type === 'repo/add_updates'
+                        );
+                        expect(addedAtoms).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: [expect.any(String)],
+                                updateId: 1,
+                            },
+                        ]);
+                    });
+
+                    it('should overwrite existing bots when installing a version 1 aux with the default mode', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const state: StoredAux = {
+                            version: 1,
+                            state: {
+                                installed1: createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                installed2: createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                            },
+                        };
+
+                        partition.applyEvents([
+                            botAdded(
+                                createBot('installed1', {
+                                    abc: 'xyz',
+                                })
+                            ),
+                            botAdded(
+                                createBot('installed2', {
+                                    abc: 'xyz',
+                                })
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'default'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                abc: 'def',
+                            }),
+                            installed2: createBot('installed2', {
+                                abc: 'ghi',
+                            }),
+                        });
+
+                        const addedAtoms = connection.sentMessages.filter(
+                            (m) => m.type === 'repo/add_updates'
+                        );
+                        expect(addedAtoms).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: [expect.any(String)],
+                                updateId: 1,
+                            },
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: [expect.any(String)],
+                                updateId: 2,
+                            },
+                        ]);
+                    });
+
+                    it('should do nothing when installing a version 2 state again with the default mode', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const update = constructInitializationUpdate(
+                            createInitializationUpdate([
+                                createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                            ])
+                        );
+
+                        const state: StoredAux = {
+                            version: 2,
+                            updates: [update],
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'default'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                abc: 'def',
+                            }),
+                            installed2: createBot('installed2', {
+                                abc: 'ghi',
+                            }),
+                        });
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'default'),
+                                undefined,
+                                undefined,
+                                'task2'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events.slice(1)).toEqual([
+                            asyncResult('task2', null, false),
+                        ]);
+
+                        expect(partition.state).toEqual({
+                            installed1: createBot('installed1', {
+                                abc: 'def',
+                            }),
+                            installed2: createBot('installed2', {
+                                abc: 'ghi',
+                            }),
+                        });
+
+                        const addedAtoms = connection.sentMessages.filter(
+                            (m) => m.type === 'repo/add_updates'
+                        );
+                        expect(addedAtoms).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: state.updates.map((u) => u.update),
+                                updateId: 1,
+                            },
+                        ]);
+                    });
+
+                    it('should create new bots from the version 2 aux if the mode is copy', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const update = constructInitializationUpdate(
+                            createInitializationUpdate([
+                                createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                            ])
+                        );
+
+                        const state: StoredAux = {
+                            version: 2,
+                            updates: [update],
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'copy'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                        ]);
+
+                        expect(Object.values(partition.state)).toEqual([
+                            createBot(expect.any(String), {
+                                abc: 'def',
+                            }),
+                            createBot(expect.any(String), {
+                                abc: 'ghi',
+                            }),
+                        ]);
+
+                        const addedAtoms = connection.sentMessages.filter(
+                            (m) => m.type === 'repo/add_updates'
+                        );
+                        expect(addedAtoms).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: [expect.any(String)],
+                                updateId: 1,
+                            },
+                        ]);
+                    });
+
+                    it('should create new bots from the version 1 aux if the mode is copy', async () => {
+                        setupPartition({
+                            type: 'remote_yjs',
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            host: 'testHost',
+                        });
+
+                        partition.connect();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const state: StoredAux = {
+                            version: 1,
+                            state: {
+                                installed1: createBot('installed1', {
+                                    abc: 'def',
+                                }),
+                                installed2: createBot('installed2', {
+                                    abc: 'ghi',
+                                }),
+                            },
+                        };
+
+                        await waitAsync();
+
+                        await partition.sendRemoteEvents([
+                            remote(
+                                installAuxFile(state, 'copy'),
+                                undefined,
+                                undefined,
+                                'task1'
+                            ),
+                        ]);
+
+                        await waitAsync();
+
+                        expect(events).toEqual([
+                            asyncResult('task1', null, false),
+                        ]);
+
+                        expect(Object.values(partition.state)).toEqual([
+                            createBot(expect.any(String), {
+                                abc: 'def',
+                            }),
+                            createBot(expect.any(String), {
+                                abc: 'ghi',
+                            }),
+                        ]);
+
+                        const addedAtoms = connection.sentMessages.filter(
+                            (m) => m.type === 'repo/add_updates'
+                        );
+                        expect(addedAtoms).toEqual([
+                            {
+                                type: 'repo/add_updates',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                                updates: [expect.any(String)],
+                                updateId: 1,
+                            },
                         ]);
                     });
                 });

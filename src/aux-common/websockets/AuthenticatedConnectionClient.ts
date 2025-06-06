@@ -17,25 +17,15 @@
  */
 import {
     BehaviorSubject,
+    NEVER,
     Observable,
-    concat,
-    concatMap,
-    defer,
     distinctUntilChanged,
-    distinctUntilKeyChanged,
     filter,
-    first,
-    from,
+    firstValueFrom,
     map,
-    mergeWith,
     of,
-    share,
-    shareReplay,
-    skip,
     startWith,
     switchMap,
-    takeUntil,
-    tap,
 } from 'rxjs';
 import type {
     ClientConnectionState,
@@ -43,25 +33,7 @@ import type {
     WebsocketType,
 } from './ConnectionClient';
 import type { WebsocketMessage } from './WebsocketEvents';
-import {
-    LoginMessage,
-    WatchBranchMessage,
-    UnwatchBranchMessage,
-    AddUpdatesMessage,
-    SendActionMessage,
-    WatchBranchDevicesMessage,
-    UnwatchBranchDevicesMessage,
-    ConnectionCountMessage,
-    TimeSyncRequestMessage,
-    GetUpdatesMessage,
-    LoginResultMessage,
-    TimeSyncResponseMessage,
-    UpdatesReceivedMessage,
-    ReceiveDeviceActionMessage,
-    ConnectedToBranchMessage,
-    DisconnectedFromBranchMessage,
-    RateLimitExceededMessage,
-} from './WebsocketEvents';
+
 import type { ConnectionIndicator } from '../common';
 import type {
     PartitionAuthResponse,
@@ -214,7 +186,8 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
                     (r): r is PartitionAuthResponseSuccess => r.success === true
                 ),
                 map((r) => r.indicator),
-                switchMap((indicator) => this._loginWithIndicator(indicator))
+                switchMap((indicator) => this._loginWithIndicator(indicator)),
+                switchMap((v) => v)
             );
 
             return loginStates;
@@ -226,26 +199,42 @@ export class AuthenticatedConnectionClient implements ConnectionClient {
         }
     }
 
-    private _loginWithIndicator(indicator: ConnectionIndicator) {
+    private async _loginWithIndicator(
+        indicator: ConnectionIndicator
+    ): Promise<Observable<ClientConnectionState>> {
         const onLoginResult = this._inner.event('login_result');
         this._inner.send({
             type: 'login',
             ...indicator,
         });
 
-        return onLoginResult.pipe(
-            tap(() => console.log('[AuthencatedConnectionClient] Logged in.')),
-            map((result) => ({
+        const result = await firstValueFrom(onLoginResult);
+        if (result.success === true) {
+            console.log('[AuthencatedConnectionClient] Logged in.');
+            return of({
                 connected: true,
-                info: (result as any).info,
-            })),
-            first(),
-            takeUntil(
-                this._inner.connectionState.pipe(
-                    first((state) => !state.connected)
-                )
-            )
-        );
+                info: result.info,
+            });
+        } else {
+            // handle login failure
+            console.error(
+                '[AuthenticatedConnectionClient] Login failed:',
+                result
+            );
+
+            // Resend request for indicator
+            this._authSource.sendAuthRequest({
+                type: 'request',
+                origin: this.origin,
+                kind: 'invalid_indicator',
+                indicator: indicator,
+                errorCode: result.errorCode,
+                errorMessage: result.errorMessage,
+                reason: result.reason,
+            });
+
+            return NEVER;
+        }
     }
 }
 

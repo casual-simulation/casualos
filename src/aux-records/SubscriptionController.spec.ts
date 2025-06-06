@@ -18,15 +18,13 @@
 import { SubscriptionController } from './SubscriptionController';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type { AuthUser } from './AuthStore';
-import { AuthStore } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { AuthMessenger } from './AuthMessenger';
-import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import type { StripeInterface, StripeProduct } from './StripeInterface';
 import {
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
+    formatV1SessionKey,
+    parseSessionKey,
+} from '@casual-simulation/aux-common';
+import type { StripeInterface, StripeProduct } from './StripeInterface';
+import { allowAllFeatures } from './SubscriptionConfiguration';
 import type { Studio } from './RecordsStore';
 import { MemoryStore } from './MemoryStore';
 import { createTestUser } from './TestUtils';

@@ -17,11 +17,7 @@
  */
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { CodeLanguageManager } from './CodeLanguageManager';
-import {
-    createPrecalculatedBot,
-    createBot,
-    botAdded,
-} from '@casual-simulation/aux-common';
+import { createBot, botAdded } from '@casual-simulation/aux-common';
 
 describe('CodeLanguageManager', () => {
     let vm: TestAuxVM;

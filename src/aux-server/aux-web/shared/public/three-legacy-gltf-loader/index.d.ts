@@ -1,10 +1,7 @@
 import type {
     LoadingManager} from '@casual-simulation/three';
-import {
-    AnimationClip,
-    Camera,
-    Scene,
-  } from '@casual-simulation/three';
+
+
 import type {GLTF} from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
   
 export class LegacyGLTFLoader {

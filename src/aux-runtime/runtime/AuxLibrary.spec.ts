@@ -28,7 +28,6 @@ import {
 } from './AuxLibrary';
 import type { WatchBotTimer, WatchPortalTimer } from './AuxGlobalContext';
 import {
-    AuxGlobalContext,
     addToContext,
     MemoryGlobalContext,
     SET_INTERVAL_ANIMATION_FRAME_TIME,
@@ -42,6 +41,7 @@ import type {
     PartialBotsState,
     StoredAuxVersion2,
     InstUpdate,
+    StoredAux,
 } from '@casual-simulation/aux-common/bots';
 import {
     toast,
@@ -97,7 +97,6 @@ import {
     localRotationTween,
     SET_TAG_MASK_SYMBOL,
     CLEAR_CHANGES_SYMBOL,
-    animateTag,
     showUploadFiles,
     registerPrefix,
     circleWipe,
@@ -168,9 +167,12 @@ import {
     watchLoom,
     getLoomMetadata,
     loadSharedDocument,
+    getBotsStateFromStoredAux,
+    installAuxFile,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
+import type { RecordPackageVersionAction } from './RecordsEvents';
 import {
     aiChat,
     aiGenerateSkybox,
@@ -221,9 +223,15 @@ import {
     listNotificationSubscriptions,
     listUserNotificationSubscriptions,
     aiOpenAICreateRealtimeSession,
+    recordsCallProcedure,
+    grantEntitlements,
+    recordPackageVersion,
+    installPackage,
+    listInstalledPackages,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
+    PRIVATE_MARKER,
     remote,
     reportInst,
     showAccountInfo,
@@ -240,12 +248,10 @@ import type {
 } from './RuntimeBot';
 import type { AuxVersion } from './AuxVersion';
 import type { AuxDevice } from './AuxDevice';
-import { shuffle } from 'lodash';
 import {
     asymmetricDecryptV1,
     asymmetricKeypairV1,
     decryptV1,
-    keypair,
 } from '@casual-simulation/crypto';
 import {
     del,
@@ -256,22 +262,16 @@ import {
 } from '@casual-simulation/aux-common/bots';
 import { RanOutOfEnergyError } from './AuxResults';
 import type { SubscriptionLike } from 'rxjs';
-import { Subscription } from 'rxjs';
 import {
     waitAsync,
     customDataTypeCases,
 } from '@casual-simulation/aux-common/test/TestHelpers';
-import { embedBase64InPdf, formatAuthToken, fromHexString } from './Utils';
+import { embedBase64InPdf, fromHexString } from './Utils';
 import { convertErrorToCopiableValue } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
 import type { AIChatInterfaceStreamResponse } from '@casual-simulation/aux-records';
-import {
-    AIChatMessage,
-    formatV1RecordKey,
-    formatV2RecordKey,
-} from '@casual-simulation/aux-records';
 import {
     isGenerator,
     UNCOPIABLE,
@@ -299,8 +299,11 @@ import {
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
-import { JSDOM } from 'jsdom';
 import { unwindAndCaptureAsync } from '@casual-simulation/aux-records/TestUtils';
+import {
+    formatV1RecordKey,
+    formatV2RecordKey,
+} from '@casual-simulation/aux-common/records/RecordKeys';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -4602,6 +4605,7 @@ describe('AuxLibrary', () => {
                 );
             });
         });
+
         describe('os.downloadBotsAsInitalizationUpdate()', () => {
             let dateNowMock: jest.Mock<number>;
             let originalDateNow: (typeof Date)['now'];
@@ -4703,6 +4707,163 @@ describe('AuxLibrary', () => {
                     }),
                     test2: createBot('test2'),
                 });
+            });
+        });
+
+        describe('os.getAuxFileForBots()', () => {
+            let dateNowMock: jest.Mock<number>;
+            let originalDateNow: (typeof Date)['now'];
+
+            beforeEach(() => {
+                originalDateNow = Date.now;
+                Date.now = dateNowMock = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = originalDateNow;
+            });
+
+            it('should return the aux file for the given bots', () => {
+                dateNowMock.mockReturnValueOnce(1);
+                const json = library.api.os.getAuxFileForBots([
+                    bot1,
+                    bot2,
+                ]) as StoredAuxVersion2;
+                expect(json).toEqual({
+                    version: 2,
+                    updates: [
+                        {
+                            id: 0,
+                            timestamp: 1,
+                            update: expect.any(String),
+                        },
+                    ],
+                });
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(json.updates)
+                );
+
+                expect(state).toEqual({
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                });
+            });
+
+            it('should return a v1 aux file if specified', () => {
+                const json = library.api.os.getAuxFileForBots([bot1, bot2], {
+                    version: 1,
+                });
+                expect(json).toEqual({
+                    version: 1,
+                    state: {
+                        [bot1.id]: createBot(
+                            bot1.id,
+                            {
+                                ...bot1.tags,
+                            },
+                            bot1.space
+                        ),
+                        [bot2.id]: createBot(
+                            bot2.id,
+                            {
+                                ...bot2.tags,
+                            },
+                            bot2.space
+                        ),
+                    },
+                });
+            });
+        });
+
+        describe('os.installAuxFile()', () => {
+            it('should emit an InstallAuxFileAction', () => {
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.installAuxFile(state);
+                const expected = remote(
+                    installAuxFile(state, 'default'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to use the copy mode', () => {
+                const update = constructInitializationUpdate(
+                    createInitializationUpdate([
+                        createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    ])
+                );
+
+                const state: StoredAux = {
+                    version: 2,
+                    updates: [update],
+                };
+
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.installAuxFile(
+                    state,
+                    'copy'
+                );
+                const expected = remote(
+                    installAuxFile(state, 'copy'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support version 1 aux files', () => {
+                const state: StoredAux = {
+                    version: 1,
+                    state: {
+                        installed1: createBot('installed1', {
+                            abc: 'def',
+                        }),
+                        installed2: createBot('installed2', {
+                            abc: 'ghi',
+                        }),
+                    },
+                };
+
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.installAuxFile(state);
+                const expected = remote(
+                    installAuxFile(state, 'default'),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -5087,15 +5248,54 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.loadServer()', () => {
-            it('should emit a LoadServerAction', () => {
+            it('should add the inst to the player bot', () => {
+                const player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+
                 const action = library.api.os.loadServer('abc');
+
+                expect(action).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                expect(context.playerBot.tags.inst).toEqual(['channel', 'abc']);
+            });
+
+            it('should emit the LoadServerAction when there is no player bot', () => {
+                const action = library.api.os.loadServer('abc');
+
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
             });
         });
 
         describe('os.unloadServer()', () => {
-            it('should emit a UnloadServerAction', () => {
+            it('should add the inst to the player bot', () => {
+                const player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: ['channel', 'abc'],
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+
+                const action = library.api.os.unloadServer('abc');
+
+                expect(action).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                expect(context.playerBot.tags.inst).toEqual(['channel']);
+            });
+
+            it('should emit a UnloadServerAction when there is no player bot', () => {
                 const action = library.api.os.unloadServer('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
@@ -8454,6 +8654,691 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.countEvents('key', {} as string);
                 }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe('os.grantEntitlements()', () => {
+            it('should emit a GrantEntitlementAction', async () => {
+                const action: any = library.api.os.grantEntitlements({
+                    packageId: 'packageId',
+                    features: ['data'],
+                    scope: 'designated',
+                    recordName: 'recordName',
+                    expireTimeMs: 999,
+                });
+
+                const expected = grantEntitlements(
+                    {
+                        packageId: 'packageId',
+                        features: ['data'],
+                        scope: 'designated',
+                        recordName: 'recordName',
+                        expireTimeMs: 999,
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.parseVersionKey()', () => {
+            it('should return a package version key object', () => {
+                expect(library.api.os.parseVersionKey('1.0.0')).toEqual({
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: null,
+                    alpha: false,
+                    version: '1.0.0',
+                });
+                expect(library.api.os.parseVersionKey('v1.2.3')).toEqual({
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    tag: null,
+                    alpha: false,
+                    version: 'v1.2.3',
+                });
+                expect(library.api.os.parseVersionKey('1.2.3-alpha')).toEqual({
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    tag: 'alpha',
+                    alpha: true,
+                    version: '1.2.3-alpha',
+                });
+            });
+        });
+
+        describe('os.formatVersionKey()', () => {
+            it('should return the formatted version', () => {
+                expect(
+                    library.api.os.formatVersionKey({
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    })
+                ).toEqual('v1.0.0');
+                expect(
+                    library.api.os.formatVersionKey({
+                        major: 1,
+                        minor: 2,
+                        patch: 3,
+                        tag: null,
+                    })
+                ).toEqual('v1.2.3');
+                expect(
+                    library.api.os.formatVersionKey({
+                        major: 1,
+                        minor: 2,
+                        patch: 3,
+                        tag: 'alpha',
+                    })
+                ).toEqual('v1.2.3-alpha');
+            });
+        });
+
+        describe('os.recordPackageVersion()', () => {
+            it('should emit a RecordPackageVersionAction', async () => {
+                const action: any = library.api.os.recordPackageVersion({
+                    recordName: 'test',
+                    address: 'test',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    description: 'This is my first package!',
+                    bots: [bot1, bot2],
+                    entitlements: [
+                        {
+                            feature: 'data',
+                            scope: 'personal',
+                        },
+                    ],
+                });
+
+                const expected = recordPackageVersion(
+                    {
+                        recordName: 'test',
+                        address: 'test',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        description: 'This is my first package!',
+                        state: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    timestamp: expect.any(Number),
+                                    update: expect.any(String),
+                                },
+                            ],
+                        },
+                        entitlements: [
+                            {
+                                feature: 'data',
+                                scope: 'personal',
+                            },
+                        ],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                const state = getBotsStateFromStoredAux(
+                    (context.actions[0] as RecordPackageVersionAction).request
+                        .state
+                );
+
+                expect(state).toEqual({
+                    [bot1.id]: createBot(bot1.id, bot1.tags, bot1.space),
+                    [bot2.id]: createBot(bot2.id, bot2.tags, bot2.space),
+                });
+            });
+
+            it('should support markers', async () => {
+                const action: any = library.api.os.recordPackageVersion({
+                    recordName: 'test',
+                    address: 'test',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    description: 'This is my first package!',
+                    bots: [bot1, bot2],
+                    entitlements: [
+                        {
+                            feature: 'data',
+                            scope: 'personal',
+                        },
+                    ],
+                    markers: ['test'],
+                });
+
+                const expected = recordPackageVersion(
+                    {
+                        recordName: 'test',
+                        address: 'test',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        description: 'This is my first package!',
+                        state: {
+                            version: 2,
+                            updates: [
+                                {
+                                    id: 0,
+                                    timestamp: expect.any(Number),
+                                    update: expect.any(String),
+                                },
+                            ],
+                        },
+                        entitlements: [
+                            {
+                                feature: 'data',
+                                scope: 'personal',
+                            },
+                        ],
+                        markers: ['test'],
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                const state = getBotsStateFromStoredAux(
+                    (context.actions[0] as RecordPackageVersionAction).request
+                        .state
+                );
+
+                expect(state).toEqual({
+                    [bot1.id]: createBot(bot1.id, bot1.tags, bot1.space),
+                    [bot2.id]: createBot(bot2.id, bot2.tags, bot2.space),
+                });
+            });
+        });
+
+        describe('os.listPackageVersions()', () => {
+            it('should emit a ListPackageVersionsAction', async () => {
+                const action: any = library.api.os.listPackageVersions(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listPackageVersions: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getPackageVersion()', () => {
+            it('should emit a GetPackageVersionAction', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support string keys', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    '1.0.0'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                key: '1.0.0',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support omitting the key', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support partial keys', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                major: 1,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support using sha256', async () => {
+                const action: any = library.api.os.getPackageVersion(
+                    'test',
+                    'address',
+                    {
+                        sha256: 'sha256',
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                sha256: 'sha256',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.erasePackageVersion()', () => {
+            it('should emit a ErasePackageVersionAction', async () => {
+                const action: any = library.api.os.erasePackageVersion(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        erasePackageVersion: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                key: {
+                                    major: 1,
+                                    minor: 0,
+                                    patch: 0,
+                                    tag: '',
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordPackageContainer()', () => {
+            it('should emit a RecordPackageAction', async () => {
+                const action: any = library.api.os.recordPackageContainer(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordPackage: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'address',
+                                    markers: [PRIVATE_MARKER],
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow specifying a marker', async () => {
+                const action: any = library.api.os.recordPackageContainer(
+                    'test',
+                    'address',
+                    'custom'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordPackage: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'address',
+                                    markers: ['custom'],
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should allow specifying markers', async () => {
+                const action: any = library.api.os.recordPackageContainer(
+                    'test',
+                    'address',
+                    ['custom', 'test']
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordPackage: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'address',
+                                    markers: ['custom', 'test'],
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.erasePackageContainer()', () => {
+            it('should emit a ErasePackageAction', async () => {
+                const action: any = library.api.os.erasePackageContainer(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        erasePackage: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPackageContainers()', () => {
+            it('should emit a ListPackagesAction', async () => {
+                const action: any = library.api.os.listPackageContainers(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listPackages: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPackageContainersByMarker()', () => {
+            it('should emit a ListPackagesAction', async () => {
+                const action: any =
+                    library.api.os.listPackageContainersByMarker(
+                        'test',
+                        'marker',
+                        'address'
+                    );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listPackages: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                marker: 'marker',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getPackageContainer()', () => {
+            it('should emit a GetPackageAction', async () => {
+                const action: any = library.api.os.getPackageContainer(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getPackage: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.installPackage()', () => {
+            it('should emit a InstallPackageAction', async () => {
+                const action: any = library.api.os.installPackage(
+                    'test',
+                    'address'
+                );
+
+                const expected = installPackage(
+                    'test',
+                    'address',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a key', async () => {
+                const action: any = library.api.os.installPackage(
+                    'test',
+                    'address',
+                    'v1.0.0'
+                );
+
+                const expected = installPackage(
+                    'test',
+                    'address',
+                    'v1.0.0',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a key object', async () => {
+                const action: any = library.api.os.installPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                const expected = installPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a key object with partial specifier', async () => {
+                const action: any = library.api.os.installPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                    }
+                );
+
+                const expected = installPackage(
+                    'test',
+                    'address',
+                    {
+                        major: 1,
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInstalledPackages()', () => {
+            it('should emit a ListInstalledPackagesAction', async () => {
+                const action: any = library.api.os.listInstalledPackages();
+
+                const expected = listInstalledPackages({}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -15302,7 +16187,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should short circuit when null is returned', () => {
-                const abc1 = (bot1.listeners.abc = jest.fn(() => null));
+                const abc1 = (bot1.listeners.abc = jest.fn(() => null as any));
                 const abc2 = (bot2.listeners.abc = jest.fn(() => 456));
 
                 const def1 = (bot1.listeners.def = jest.fn(() => 789));

@@ -44,6 +44,8 @@ export const HUME_RESOURCE_KIND = 'ai.hume';
 export const OPENAI_REALTIME_RESOURCE_KIND = 'ai.openai.realtime';
 export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
+export const PACKAGE_RESOURCE_KIND = 'package';
+export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
 
 /**
  * The possible types of resources that can be affected by permissions.
@@ -60,6 +62,8 @@ export type ResourceKinds =
     | 'inst'
     | 'webhook'
     | 'notification'
+    | 'package'
+    | 'package.version'
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume'
@@ -238,6 +242,34 @@ export type NotificationActionKinds =
     | 'listSubscriptions';
 
 /**
+ * The possible types of actions that can be performed on package resources.
+ *
+ * @dochash types/permissions
+ * @docname PackageActionKinds
+ */
+export type PackageActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'run';
+
+/**
+ * The possible types of actions that can be performed on package.version resources.
+ *
+ * @dochash types/permissions
+ * @docname PackageVersionActionKinds
+ */
+export type PackageVersionActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list'
+    | 'run';
+
+/**
  * The possible types of permissions that can be added to policies.
  *
  * @dochash types/permissions
@@ -258,7 +290,9 @@ export type AvailablePermissions =
     | HumePermission
     | OpenAIRealtimePermission
     | WebhookPermission
-    | NotificationPermission;
+    | NotificationPermission
+    | PackagePermission
+    | PackageVersionPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -340,6 +374,24 @@ export const NOTIFICATION_ACTION_KINDS_VALIDATION = z.enum([
     LIST_SUBSCRIPTIONS_ACTION,
 ]);
 
+export const PACKAGE_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    RUN_ACTION,
+]);
+
+export const PACKAGE_VERSION_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+    RUN_ACTION,
+]);
+
 export const RESOURCE_KIND_VALIDATION = z.enum([
     DATA_RESOURCE_KIND,
     FILE_RESOURCE_KIND,
@@ -353,6 +405,8 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     OPENAI_REALTIME_RESOURCE_KIND,
     WEBHOOK_RESOURCE_KIND,
     NOTIFICATION_RESOURCE_KIND,
+    PACKAGE_RESOURCE_KIND,
+    PACKAGE_VERSION_RESOURCE_KIND,
 ]);
 
 export const ACTION_KINDS_VALIDATION = z.enum([
@@ -383,6 +437,103 @@ export const ACTION_KINDS_VALIDATION = z.enum([
     UNSUBSCRIBE_ACTION,
     LIST_SUBSCRIPTIONS_ACTION,
 ]);
+
+/**
+ * The scopes that can be used for requested entitlements.
+ * This can be used to limit the entitlement to requesting a category of resources.
+ * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
+ *
+ * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in the user's player record. Once granted, the package would have access to the user's personal record.
+ * - "owned" - The entitlement is for user (user-owned) records. This would allow the package to request access to resources in a record that the user owns. Once granted, the package would have access to the user's owned records.
+ * - "studio" - The entitlement is for studio records. This would allow the package to request access to resources in studios in which the user is an admin or member of.
+ * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
+ * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
+ */
+export type EntitlementScope =
+    | 'personal'
+    | 'owned'
+    | 'studio'
+    | 'shared'
+    | 'designated';
+
+/**
+ * The scopes that can be granted for entitlements.
+ * Compared to the requested entitlement scopes, the granted entitlement scopes are more restrictive.
+ *
+ * This ultimately means that while a package can have the ability to request access to a bunch of different records,
+ * they can only be granted access to a single record at once (for now).
+ *
+ * - "designated" - The entitlement is for specific records. This would allow the package to access specific records.
+ */
+export type GrantedEntitlementScope = 'designated';
+
+/**
+ * The feature categories that entitlements support.
+ * Generally, features align with resource kinds, but don't have to.
+ */
+export type EntitlementFeature =
+    | 'data'
+    | 'file'
+    | 'event'
+    | 'inst'
+    | 'notification'
+    | 'package'
+    | 'permissions'
+    | 'webhook'
+    | 'ai';
+
+/**
+ * Defines an interface that represents an entitlement.
+ * That is, a feature that can be granted to a package but still requires user approval.
+ *
+ * In essence, this allows a package to ask the user for permission for a category of permissions.
+ */
+export interface Entitlement {
+    /**
+     * The feature category that the entitlement is for.
+     * Generally, features align with resource kinds, but don't have to.
+     */
+    feature: EntitlementFeature;
+
+    /**
+     * The scope of the entitlement.
+     * This can be used to limit the entitlement to a category of resources.
+     * For example, the "personal" scope would limit the entitlement to requesting access to the user's personal resources.
+     *
+     *
+     * - "personal" - The entitlement is for personal (user-specific) records. This would allow the package to request access to resources in the user's player record.
+     * - "owned" - The entitlement is for user (user-owned) records. This would allow the package to request access to resources in a record that the user owns.
+     * - "studio" - The entitlement is for studio records. This would allow the package to request access to resources in studios in which the user is an admin or member of.
+     * - "shared" - The entitlement is for shared records. This would allow the package to request access to records that are either owned or granted to the user.
+     * - "designated" - The entitlement is for specific records. This would allow the package to only request access to specific records.
+     */
+    scope: EntitlementScope;
+
+    /**
+     * The list of records that the entitlement is for.
+     */
+    designatedRecords?: string[];
+}
+
+export const ENTITLEMENT_FEATURE_VALIDATION = z.enum([
+    'data',
+    'file',
+    'event',
+    'inst',
+    'notification',
+    'package',
+    'permissions',
+    'webhook',
+    'ai',
+]);
+
+export const ENTITLEMENT_VALIDATION = z.object({
+    feature: ENTITLEMENT_FEATURE_VALIDATION,
+    scope: z.enum(['personal', 'owned', 'studio', 'shared', 'designated']),
+    designatedRecords: z.array(z.string()).optional(),
+});
+type ZodEntitlement = z.infer<typeof ENTITLEMENT_VALIDATION>;
+type ZodEntitlementAssertion = HasType<ZodEntitlement, Entitlement>;
 
 /**
  * Defines an interface that describes common options for all permissions.
@@ -847,6 +998,65 @@ type ZodNotificationPermissionAssertion = HasType<
     NotificationPermission
 >;
 
+/**
+ * Defines an interface that describes common options for all permissions that affect package resources.
+ *
+ * @dochash types/permissions
+ * @docname PackagePermission
+ */
+export interface PackagePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'package';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: PackageActionKinds | null;
+}
+export const PACKAGE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(PACKAGE_RESOURCE_KIND),
+    action: PACKAGE_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodPackagePermission = z.infer<typeof PACKAGE_PERMISSION_VALIDATION>;
+type ZodPackagePermissionAssertion = HasType<
+    ZodPackagePermission,
+    PackagePermission
+>;
+
+/**
+ * Defines an interface that describes common options for all permissions that affect package.version resources.
+ *
+ * @dochash types/permissions
+ * @docname PackageVersionPermission
+ */
+export interface PackageVersionPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'package.version';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: PackageVersionActionKinds | null;
+}
+export const PACKAGE_VERSION_PERMISSION_VALIDATION =
+    PERMISSION_VALIDATION.extend({
+        resourceKind: z.literal(PACKAGE_VERSION_RESOURCE_KIND),
+        action: PACKAGE_VERSION_ACTION_KINDS_VALIDATION.nullable(),
+    });
+type ZodPackageVersionPermission = z.infer<
+    typeof PACKAGE_VERSION_PERMISSION_VALIDATION
+>;
+type ZodPackageVersionPermissionAssertion = HasType<
+    ZodPackageVersionPermission,
+    PackageVersionPermission
+>;
+
 export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
     'resourceKind',
     [
@@ -862,6 +1072,8 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         OPENAI_REALTIME_PERMISSION_VALIDATION,
         WEBHOOK_PERMISSION_VALIDATION,
         NOTIFICATION_PERMISSION_VALIDATION,
+        PACKAGE_PERMISSION_VALIDATION,
+        PACKAGE_VERSION_PERMISSION_VALIDATION,
     ]
 );
 

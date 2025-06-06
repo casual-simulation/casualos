@@ -1,4 +1,4 @@
-import { cleanDirectory, setupWatch } from '../../../script/build-helpers.mjs';
+import { setupWatch } from '../../../script/build-helpers.mjs';
 import { createConfigs, cleanDirectories } from './bench-configs';
 
 cleanDirectories();

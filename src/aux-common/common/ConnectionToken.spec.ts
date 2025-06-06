@@ -19,7 +19,7 @@ import {
     formatV1ConnectionToken,
     parseConnectionToken,
 } from './ConnectionToken';
-import { toBase64String, fromBase64String } from '../utils';
+import { toBase64String } from '../utils';
 
 describe('formatV1ConnectionToken()', () => {
     it('should combine the given user id, session id, and password', () => {

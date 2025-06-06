@@ -16,35 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Bot } from '@casual-simulation/aux-common';
-import {
-    BotCalculationContext,
-    PrecalculatedBot,
-    calculateGridScale,
-    calculateBotValue,
-    hasValue,
-    calculateBooleanTagValue,
-    calculateNumericalTagValue,
-    isDimensionLocked,
-    toast,
-    DEFAULT_PORTAL_ZOOMABLE,
-    DEFAULT_PORTAL_ROTATABLE,
-    DEFAULT_PORTAL_PANNABLE,
-    DEFAULT_MINI_PORTAL_RESIZABLE,
-    DEFAULT_MINI_PORTAL_HEIGHT,
-    MINI_PORTAL,
-} from '@casual-simulation/aux-common';
-import { Simulation3D } from '../../shared/scene/Simulation3D';
+import { MINI_PORTAL } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import {
-    userBotChanged,
-    watchPortalConfigBot,
-} from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { tap, filter } from 'rxjs/operators';
 import { MiniPortalContextGroup3D } from './MiniPortalContextGroup3D';
 import type { CameraRig } from '../../shared/scene/CameraRigFactory';
 import type { Game } from '../../shared/scene/Game';
-import { BotDimensionEvent } from '@casual-simulation/aux-vm';
-import { Color, Texture } from '@casual-simulation/three';
 import type { DimensionGroup3D } from '../../shared/scene/DimensionGroup3D';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { MiniPortalConfig } from './MiniPortalConfig';

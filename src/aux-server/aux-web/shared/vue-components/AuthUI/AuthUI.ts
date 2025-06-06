@@ -17,18 +17,17 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
 import type {
     ActionKinds,
     AuthorizeActionMissingPermission,
 } from '@casual-simulation/aux-common';
-import { Bot, toast } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { appManager } from '../../../shared/AppManager';
 import type { LoginStatus } from '@casual-simulation/aux-vm';
 import FieldErrors from '../FieldErrors/FieldErrors';
-import type { FormError } from '@casual-simulation/aux-records';
-import { getFormErrors } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
+import { getFormErrors } from '@casual-simulation/aux-common';
+import type { GrantEntitlementsEvent } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     components: {
@@ -70,6 +69,9 @@ export default class AuthUI extends Vue {
 
     reportInstVisible: boolean = false;
 
+    showGrantEntitlements: boolean = false;
+    entitlementGrantEvent: GrantEntitlementsEvent = null;
+
     private _simId: string = null;
     private _origin: string = null;
 
@@ -84,6 +86,7 @@ export default class AuthUI extends Vue {
         this.showAccountInfo = false;
         this.loginStatus = null;
         this.supportUrl = null;
+        this.entitlementGrantEvent = null;
         this._sub = new Subscription();
 
         this._sub.add(
@@ -159,6 +162,14 @@ export default class AuthUI extends Vue {
                 }
             })
         );
+        this._sub.add(
+            appManager.authCoordinator.onGrantEntitlements.subscribe((e) => {
+                this.showGrantEntitlements = true;
+                this.entitlementGrantEvent = e;
+                this._simId = e.simulationId;
+                // this._origin = e.origin;
+            })
+        );
     }
 
     beforeDestroy() {
@@ -178,6 +189,32 @@ export default class AuthUI extends Vue {
         this.showAccountInfo = false;
         this._simId = null;
         this._origin = null;
+    }
+
+    closeGrantEntitlements() {
+        if (
+            this.entitlementGrantEvent &&
+            this.entitlementGrantEvent.action.taskId
+        ) {
+            appManager.authCoordinator.denyEntitlements(
+                this.entitlementGrantEvent
+            );
+        }
+
+        this.showGrantEntitlements = false;
+        this._simId = null;
+    }
+
+    async grantEntitlements() {
+        try {
+            this.processing = true;
+            await appManager.authCoordinator.grantEntitlements(
+                this.entitlementGrantEvent
+            );
+        } finally {
+            this.showGrantEntitlements = false;
+            this.processing = false;
+        }
     }
 
     async openAccountDashboard() {

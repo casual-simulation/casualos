@@ -17,7 +17,7 @@
  */
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Inject, Watch, Prop } from 'vue-property-decorator';
+import { Watch, Prop } from 'vue-property-decorator';
 import type {
     Bot,
     BotCalculationContext,
@@ -29,7 +29,6 @@ import type {
 import {
     calculateFormattedBotValue,
     calculateBotValue,
-    isFormula,
     getBotLabelAlignment,
     CLICK_ACTION_NAME,
     onClickArg,
@@ -71,14 +70,11 @@ import type { DimensionItem } from '../DimensionItem';
 import { first } from '@casual-simulation/aux-common';
 import { safeParseURL } from '../PlayerUtils';
 import PieProgress from '../../shared/vue-components/PieProgress/PieProgress';
-import {
-    formatModalityButtonId,
-    getModalityKey,
-    Input,
-} from '../../shared/scene/Input';
+import { formatModalityButtonId, Input } from '../../shared/scene/Input';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import { Subscription } from 'rxjs';
 import type { BotManager } from '@casual-simulation/aux-vm-browser';
+import Bowser from 'bowser';
 
 @Component({
     components: {
@@ -113,6 +109,7 @@ export default class MenuBot extends Vue {
     hoverStyle: MenuBotResolvedHoverStyle = 'hover';
     cursor: string = null;
     alwaysShowSubmit: boolean = false;
+    inputMultiline: 'default' | boolean = 'default';
 
     private _down: boolean = false;
     private _hover: boolean = false;
@@ -132,7 +129,8 @@ export default class MenuBot extends Vue {
         return {
             ...this.extraStyle,
             'background-color': this.backgroundColor,
-            height: this.scaleY === 'auto' ? 'auto' : this.scaleY * 40 + 'px',
+            'min-height':
+                this.scaleY === 'auto' ? 'auto' : this.scaleY * 40 + 'px',
         };
     }
 
@@ -173,6 +171,7 @@ export default class MenuBot extends Vue {
             this._updateText(calc, item.bot);
             this._updateCursor(calc, item.bot);
             this._updateAlwaysShowSubmit(calc, item.bot);
+            this._updateInputMultiline(calc, item.bot);
 
             this._updateSim(simulation);
         } else {
@@ -419,6 +418,63 @@ export default class MenuBot extends Vue {
         }
     }
 
+    handleKeyDown(event: KeyboardEvent) {
+        const simulation = _simulation(this.item);
+        if (simulation) {
+            simulation.helper.shout('onKeyDown', [this.item.bot], {
+                keys: [event.key],
+            });
+        }
+    }
+
+    handleKeyUp(event: KeyboardEvent) {
+        // If the user is typing, we want to update the text.
+        const simulation = _simulation(this.item);
+        if (simulation) {
+            simulation.helper.shout('onKeyUp', [this.item.bot], {
+                keys: [event.key],
+            });
+        }
+    }
+
+    handleInputEnter(event: KeyboardEvent) {
+        const conditionalSubmit = () => {
+            if (hasValue(this.text)) {
+                this.submitInput(false);
+            }
+        };
+
+        const parsed = Bowser.parse(navigator.userAgent);
+        const isMobile = parsed.platform.type === 'mobile';
+        const isMac = /mac/gi.test(parsed.os.name);
+        if (this.inputMultiline === false) {
+            // always prevent newlines
+            event.preventDefault();
+
+            if (!isMobile) {
+                // On desktop, hitting Enter should submit the input.
+                conditionalSubmit();
+            }
+            return;
+        } else if (this.inputMultiline === 'default') {
+            // allow newlines using shift+enter or on mobile
+            if (!event.shiftKey && !isMobile) {
+                event.preventDefault();
+                conditionalSubmit();
+                return;
+            }
+        }
+
+        if (
+            !event.shiftKey &&
+            ((event.ctrlKey && !isMac) || (isMac && event.metaKey))
+        ) {
+            // If ctrl/cmd is pressed, submit the input.
+            event.preventDefault();
+            conditionalSubmit();
+        }
+    }
+
     async submitInput(dropFocus: boolean) {
         if (dropFocus) {
             const input = <Vue>this.$refs.textInput;
@@ -501,12 +557,12 @@ export default class MenuBot extends Vue {
 
         this.progress = hasValue(progress) ? clamp(progress, 0, 1) : null;
 
-        let colorTagValue: any = calculateBotValue(
+        let colorTagValue: string = calculateBotValue(
             calc,
             bot,
             'auxProgressBarColor'
         );
-        let bgColorTagValue: any = calculateBotValue(
+        let bgColorTagValue: string = calculateBotValue(
             calc,
             bot,
             'auxProgressBarBackgroundColor'
@@ -552,6 +608,16 @@ export default class MenuBot extends Vue {
             'menuItemShowSubmitWhenEmpty',
             false
         );
+    }
+
+    private _updateInputMultiline(calc: BotCalculationContext, bot: Bot) {
+        this.inputMultiline =
+            calculateBooleanTagValue(
+                calc,
+                bot,
+                'auxFormInputMultiline',
+                null
+            ) ?? 'default';
     }
 
     private async _ignoreTextUpdates(action: (text: string) => Promise<void>) {

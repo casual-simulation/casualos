@@ -22,13 +22,8 @@ import type {
     BotTags,
 } from '@casual-simulation/aux-common';
 import {
-    Bot,
-    merge,
-    BotIndexEvent,
     tagsOnBot,
     applyUpdates,
-    hasTagOrMask,
-    getTagValueForSpace,
     hasValue,
 } from '@casual-simulation/aux-common';
 import type { Observable, SubscriptionLike } from 'rxjs';

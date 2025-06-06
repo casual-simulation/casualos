@@ -598,10 +598,12 @@ There is no `that` argument for this listen tag.
 A whisper that is sent when a tag on the bot is updated.
 
 This listen tag is triggered whenever the bot has been updated in the current device's inst, even if the bot was not updated locally.
-An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
+An example of this happening is when another player changes a tag in the sheet portal. Even though the change was not made on their device, it will show up on the current device.
 
 Note that this listen tag is triggered after executing scripts have finished running. This means that if a script updates the same tag multiple times, `@onBotChanged` will still only be triggered once.
 This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
+
+Additionally, if the bot was created and then immediately updated, `@onBotChanged` will not be triggered. Instead, use <TagLink tag='@onBotAdded'/>.
 
 Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
 
@@ -1220,6 +1222,8 @@ let that: string;
 
 A shout that is sent to all bots whenever the user starts pressing a key.
 
+When a user is typing into a `input` form menu bot, this shout is converted into a whisper that is only sent to the menu bot.
+
 #### Arguments:
 ```typescript
 let that: {
@@ -1233,6 +1237,8 @@ let that: {
 ### `@onKeyUp`
 
 A shout that is sent to all bots whenever the user stops pressing a key.
+
+When a user is typing into a `input` form menu bot, this shout is converted into a whisper that is only sent to the menu bot.
 
 #### Arguments:
 ```typescript
@@ -1975,6 +1981,8 @@ An example of this happening is when another player changes a tag in the sheet p
 Note that this listen tag is triggered after executing scripts have finished running. This means that if a script updates the same tag multiple times, `@onAnyBotsChanged` will still only be triggered once.
 This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
 
+Additionally, a bot was created and then immediately updated, `@onAnyBotsChanged` will not be triggered for that bot. Instead, use <TagLink tag='@onAnyBotsAdded'/>.
+
 Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
 
 #### Arguments:
@@ -2112,6 +2120,11 @@ let that: {
     roomName: string;
 
     /**
+     * The address of the track that was discovered.
+     */
+    address: string;
+
+    /**
      * Whether the track is streaming from a remote user.
      */
     isRemote: boolean;
@@ -2172,6 +2185,11 @@ let that: {
      * The name of the room that the track was discovered in.
      */
     roomName: string;
+
+    /**
+     * The address of the track that was discovered.
+     */
+    address: string;
 
     /**
      * Whether the track is streaming from a remote user.

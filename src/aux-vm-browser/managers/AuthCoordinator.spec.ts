@@ -17,6 +17,7 @@
  */
 import { Subject, Subscription } from 'rxjs';
 import type {
+    GrantEntitlementsEvent,
     MissingPermissionEvent,
     NotAuthorizedEvent,
     ShowAccountInfoEvent,
@@ -25,19 +26,12 @@ import { AuthCoordinator } from './AuthCoordinator';
 import { BotManager } from './BotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import type { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
-import {
-    SimulationManager,
-    SimulationOrigin,
-} from '@casual-simulation/aux-vm/managers';
+import { SimulationManager } from '@casual-simulation/aux-vm/managers';
 import type {
     AuthData,
     PartitionAuthResponse,
 } from '@casual-simulation/aux-common';
 import {
-    AsyncErrorAction,
-    AsyncResultAction,
-    ConnectionInfo,
-    PartitionAuthMessage,
     asyncResult,
     botAdded,
     createBot,
@@ -49,15 +43,13 @@ import { AuthHelper } from './AuthHelper';
 import { randomBytes } from 'crypto';
 import { fromByteArray } from 'base64-js';
 import type { GrantResourcePermissionResult } from '@casual-simulation/aux-records';
-import {
-    GrantMarkerPermissionResult,
-    SESSION_SECRET_BYTE_LENGTH,
-} from '@casual-simulation/aux-records';
+import { SESSION_SECRET_BYTE_LENGTH } from '@casual-simulation/aux-records';
 import {
     formatV1ConnectionKey,
     generateV1ConnectionToken,
-} from '@casual-simulation/aux-records/AuthUtils';
+} from '@casual-simulation/aux-common';
 import type { LoginStatus } from '@casual-simulation/aux-vm/auth';
+import { grantEntitlements } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();
 
@@ -79,6 +71,7 @@ describe('AuthCoordinator', () => {
         getConnectionKey: jest.fn(),
         logout: jest.fn(),
         grantPermission: jest.fn(),
+        relogin: jest.fn(),
     };
 
     let simManager: SimulationManager<BotManager>;
@@ -117,6 +110,7 @@ describe('AuthCoordinator', () => {
             cancelLogin: jest.fn(),
             loginStatus: null,
             loginUIStatus: new Subject(),
+            relogin: jest.fn(),
             logout: jest.fn(),
             getConnectionKey: jest.fn(),
             provideEmailAddress: jest.fn(),
@@ -505,7 +499,7 @@ describe('AuthCoordinator', () => {
             expect(authMock.authenticate).toHaveBeenCalled();
         });
 
-        it('should logout and login if the error code indicates that the connection token is invalid', async () => {
+        it('should relogin if the error code indicates that the connection token is invalid', async () => {
             const connectionSecret = fromByteArray(
                 randomBytes(SESSION_SECRET_BYTE_LENGTH)
             );
@@ -524,12 +518,16 @@ describe('AuthCoordinator', () => {
 
             authMock.isAuthenticated.mockResolvedValueOnce(true);
             authMock.getConnectionKey.mockResolvedValueOnce(key);
-            authMock.authenticate.mockResolvedValueOnce({
+            authMock.relogin.mockResolvedValueOnce({
                 userId: 'userId',
                 hasActiveSubscription: false,
             } as AuthData);
+            // authMock.authenticate.mockResolvedValueOnce({
+            //     userId: 'userId',
+            //     hasActiveSubscription: false,
+            // } as AuthData);
 
-            authMock.logout.mockResolvedValueOnce(null);
+            // authMock.logout.mockResolvedValueOnce(null);
 
             await sim.sendAuthMessage({
                 type: 'request',
@@ -551,8 +549,8 @@ describe('AuthCoordinator', () => {
                 },
             ]);
             expect(authMock.isAuthenticated).toHaveBeenCalled();
-            expect(authMock.logout).toHaveBeenCalled();
-            expect(authMock.authenticate).toHaveBeenCalled();
+            expect(authMock.relogin).toHaveBeenCalled();
+            // expect(authMock.authenticate).toHaveBeenCalled();
         });
     });
 
@@ -942,6 +940,47 @@ describe('AuthCoordinator', () => {
 
             const vm = vms.get('sim-1');
             expect(vm?.sentAuthMessages).toEqual([]);
+        });
+    });
+
+    describe('grant_entitlements', () => {
+        it('should send a grant_entitlements message', async () => {
+            let events: GrantEntitlementsEvent[] = [];
+            manager.onGrantEntitlements.subscribe((e) => events.push(e));
+
+            const vm = vms.get('sim-1');
+            vm.localEvents.next([
+                grantEntitlements(
+                    {
+                        packageId: 'packageId',
+                        features: ['data'],
+                        scope: 'designated',
+                        expireTimeMs: 1000,
+                        recordName: 'recordName',
+                    },
+                    {},
+                    1
+                ),
+            ]);
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                {
+                    simulationId: 'sim-1',
+                    action: grantEntitlements(
+                        {
+                            packageId: 'packageId',
+                            features: ['data'],
+                            scope: 'designated',
+                            expireTimeMs: 1000,
+                            recordName: 'recordName',
+                        },
+                        {},
+                        1
+                    ),
+                },
+            ]);
         });
     });
 });

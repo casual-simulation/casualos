@@ -20,9 +20,10 @@ import type {
     RemoteCausalRepoProtocol,
     GenericHttpRequest,
     GetRecordsEndpointAction,
+    StoredAux,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
 import {
-    BotAction,
     hasValue,
     asyncResult,
     asyncError,
@@ -30,6 +31,12 @@ import {
     iterableNext,
     iterableThrow,
     iterableComplete,
+    formatVersionNumber,
+    remote,
+    installAuxFile,
+    formatInstId,
+    isRecordKey,
+    parseRecordKey,
 } from '@casual-simulation/aux-common';
 import type {
     ListRecordDataAction,
@@ -63,37 +70,16 @@ import type {
     AIHumeGetAccessTokenAction,
     AISloydGenerateModelAction,
     RecordsCallProcedureAction,
+    GrantEntitlementsAction,
+    RecordPackageVersionAction,
+    InstallPackageAction,
+    InstallPackageSuccess,
+    ListInstalledPackagesAction,
 } from '@casual-simulation/aux-runtime';
 import type { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
-import { AuthHelperInterface } from './AuthHelperInterface';
 import type { BotHelper } from './BotHelper';
-import type {
-    EraseFileResult,
-    GetDataResult,
-    ListDataResult,
-    RecordDataResult,
-    RecordFileResult,
-    IssueMeetTokenResult,
-    GrantMarkerPermissionResult,
-    GrantRoleResult,
-    RevokeRoleResult,
-    ReadFileResult,
-    ReadFileFailure,
-    ReportInstRequest,
-    ReportInstResult,
-    GrantResourcePermissionResult,
-    RevokePermissionResult,
-    PublicRecordKeyPolicy,
-} from '@casual-simulation/aux-records';
-import {
-    isRecordKey,
-    RevokeMarkerPermissionResult,
-    GetFileRecordResult,
-    formatInstId,
-    parseRecordKey,
-} from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
@@ -101,12 +87,10 @@ import type { Observable } from 'rxjs';
 import {
     ReplaySubject,
     Subject,
-    connectable,
     filter,
     firstValueFrom,
     map,
     share,
-    takeUntil,
     takeWhile,
 } from 'rxjs';
 import { DateTime } from 'luxon';
@@ -117,11 +101,32 @@ import type {
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';
-import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
-import {
+import type {
+    RecordsClientActions,
     RecordsClientInputs,
-    createRecordsClient,
 } from '@casual-simulation/aux-records/RecordsClient';
+
+/* eslint-disable casualos/no-non-type-imports */
+import { createRecordsClient } from '@casual-simulation/aux-records/RecordsClient';
+import type {
+    EraseFileResult,
+    GetDataResult,
+    GrantMarkerPermissionResult,
+    GrantResourcePermissionResult,
+    GrantRoleResult,
+    IssueMeetTokenResult,
+    ListDataResult,
+    ReadFileFailure,
+    ReadFileResult,
+    ReadFileSuccess,
+    RecordDataResult,
+    RecordFileFailure,
+    RecordFileResult,
+    ReportInstRequest,
+    ReportInstResult,
+    RevokePermissionResult,
+    RevokeRoleResult,
+} from '@casual-simulation/aux-records';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -228,6 +233,13 @@ export class RecordsManager {
         'listNotificationSubscriptions',
         'listUserNotificationSubscriptions',
         'createOpenAIRealtimeSession',
+        'erasePackageVersion',
+        'listPackageVersions',
+        'getPackageVersion',
+        'recordPackage',
+        'erasePackage',
+        'listPackages',
+        'getPackage',
     ]);
 
     /**
@@ -353,14 +365,70 @@ export class RecordsManager {
                 this._getRecordsEndpoint(event);
             } else if (event.type === 'records_call_procedure') {
                 this._recordsCallProcedure(event);
+            } else if (event.type === 'record_package_version') {
+                this._recordPackageVersion(event);
+            } else if (event.type === 'install_package') {
+                this._installPackage(event);
+            } else if (event.type === 'list_installed_packages') {
+                this._listInstalledPackages(event);
             }
+        }
+    }
+
+    async grantEntitlements(event: GrantEntitlementsAction) {
+        const info = await this._resolveInfoForEvent(event);
+
+        if (info.error) {
+            return;
+        }
+
+        let grantIds: string[] = [];
+
+        for (let feature of event.request.features) {
+            const result = await this._client.grantEntitlement(
+                {
+                    packageId: event.request.packageId,
+                    feature: feature,
+                    scope: event.request.scope,
+                    recordName: event.request.recordName,
+                    expireTimeMs: event.request.expireTimeMs,
+                },
+                {
+                    sessionKey: info.token,
+                    endpoint: info.recordsOrigin,
+                }
+            );
+
+            if (result.success === false) {
+                console.error(
+                    '[RecordsManager] Unable to grant entitlement:',
+                    result
+                );
+                if (hasValue(event.taskId)) {
+                    await this._helper.transaction(
+                        asyncResult(event.taskId, result)
+                    );
+                }
+                return;
+            } else {
+                grantIds.push(result.grantId);
+            }
+        }
+
+        if (hasValue(event.taskId)) {
+            await this._helper.transaction(
+                asyncResult(event.taskId, {
+                    success: true,
+                    grantIds,
+                })
+            );
         }
     }
 
     private _getRecordsEndpoint(event: GetRecordsEndpointAction) {
         if (hasValue(event.taskId)) {
             this._helper.transaction(
-                asyncResult(event.taskId, this._config.recordsOrigin)
+                asyncResult(event.taskId, this._config.authOrigin)
             );
         }
     }
@@ -445,7 +513,10 @@ export class RecordsManager {
             'reportingUserId' | 'reportingIpAddress'
         >
     ): Promise<ReportInstResult> {
-        const info = await this._getEndpointInfo(null, false);
+        const info = await this._resolveInfoForEvent(
+            { options: {} } as any,
+            false
+        );
         if (info.error) {
             return;
         }
@@ -473,6 +544,10 @@ export class RecordsManager {
      */
     async getLoomToken(recordName: string): Promise<string> {
         const info = await this._resolveInfoForEvent({ options: {} } as any);
+
+        if (info.error) {
+            return;
+        }
 
         const result = await this._client.getLoomAccessToken(
             {
@@ -760,99 +835,21 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording file...', event);
 
-            let byteLength: number;
-            let hash: string;
-            let mimeType: string;
-            let data: any;
+            const fileInfo = await this._resolveRecordFileInfo(
+                event.data,
+                event.mimeType
+            );
 
-            if (typeof event.data === 'function') {
+            if (fileInfo.success === false) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'invalid_file_data',
-                            errorMessage:
-                                'Function instances cannot be stored in files.',
-                        } as RecordFileResult)
+                        asyncResult(event.taskId, fileInfo)
                     );
                 }
                 return;
-            } else if (
-                typeof event.data === 'undefined' ||
-                event.data === null
-            ) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'invalid_file_data',
-                            errorMessage:
-                                'Null or undefined values cannot be stored in files.',
-                        } as RecordFileResult)
-                    );
-                }
-                return;
-            } else if (
-                typeof event.data === 'string' ||
-                typeof event.data === 'number' ||
-                typeof event.data === 'boolean'
-            ) {
-                const encoder = new TextEncoder();
-                data = encoder.encode(event.data.toString());
-                byteLength = data.byteLength;
-                mimeType = event.mimeType || 'text/plain';
-                hash = getHash(data);
-            } else if (typeof event.data === 'object') {
-                if (event.data instanceof Blob) {
-                    const buffer = await event.data.arrayBuffer();
-                    data = new Uint8Array(buffer);
-                    byteLength = data.byteLength;
-                    mimeType =
-                        event.mimeType ||
-                        event.data.type ||
-                        'application/octet-stream';
-                    hash = getHash(data);
-                } else if (event.data instanceof ArrayBuffer) {
-                    data = new Uint8Array(event.data);
-                    byteLength = data.byteLength;
-                    mimeType = event.mimeType || 'application/octet-stream';
-                    hash = getHash(data);
-                } else if (ArrayBuffer.isView(event.data)) {
-                    data = new Uint8Array(event.data.buffer);
-                    byteLength = data.byteLength;
-                    mimeType = event.mimeType || 'application/octet-stream';
-                    hash = getHash(data);
-                } else {
-                    const obj = event.data;
-                    if (
-                        'data' in obj &&
-                        'mimeType' in obj &&
-                        (obj.data instanceof ArrayBuffer ||
-                            typeof obj.data === 'string') &&
-                        typeof obj.mimeType === 'string'
-                    ) {
-                        if (typeof obj.data === 'string') {
-                            data = new TextEncoder().encode(obj.data);
-                        } else {
-                            data = new Uint8Array(obj.data);
-                        }
-                        byteLength = data.byteLength;
-                        mimeType =
-                            event.mimeType ||
-                            obj.mimeType ||
-                            (typeof obj.data === 'string'
-                                ? 'text/plain'
-                                : 'application/octet-stream');
-                        hash = getHash(data);
-                    } else {
-                        let json = stringify(event.data);
-                        data = new TextEncoder().encode(json);
-                        byteLength = data.byteLength;
-                        mimeType = event.mimeType || 'application/json';
-                        hash = getHash(data);
-                    }
-                }
             }
+
+            const { byteLength, hash, mimeType, data } = fileInfo;
 
             let instances: string[] = undefined;
             if (hasValue(this._helper.origin)) {
@@ -884,56 +881,16 @@ export class RecordsManager {
                 }
             );
 
-            if (result.data.success === true) {
-                const method = result.data.uploadMethod;
-                const url = result.data.uploadUrl;
-                const headers = { ...result.data.uploadHeaders };
+            const uploadResult = await this._uploadFile(
+                result.data,
+                data,
+                hash
+            );
 
-                for (let name of UNSAFE_HEADERS) {
-                    delete headers[name];
-                }
-
-                const uploadResult = await axios.request({
-                    ...this._axiosOptions,
-                    method: method.toLowerCase() as any,
-                    url: url,
-                    headers: headers,
-                    data: data,
-                });
-
-                if (uploadResult.status >= 200 && uploadResult.status < 300) {
-                    console.log('[RecordsManager] File recorded!');
-
-                    if (hasValue(event.taskId)) {
-                        this._helper.transaction(
-                            asyncResult(event.taskId, {
-                                success: true,
-                                url: url,
-                                sha256Hash: hash,
-                            } as FileRecordedResult)
-                        );
-                    }
-                } else {
-                    console.error(
-                        '[RecordsManager] File upload failed!',
-                        uploadResult
-                    );
-                    if (hasValue(event.taskId)) {
-                        this._helper.transaction(
-                            asyncResult(event.taskId, {
-                                success: false,
-                                errorCode: 'upload_failed',
-                                errorMessage: 'The file upload failed.',
-                            } as FileRecordedResult)
-                        );
-                    }
-                }
-            } else {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, result.data)
-                    );
-                }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, uploadResult)
+                );
             }
         } catch (e) {
             console.error('[RecordsManager] Error recording file:', e);
@@ -943,6 +900,179 @@ export class RecordsManager {
                 );
             }
         }
+    }
+
+    private async _uploadFile(
+        result: RecordFileResult,
+        data: any,
+        hash: string
+    ): Promise<FileRecordedResult> {
+        if (result.success === false) {
+            return result;
+        }
+        const method = result.uploadMethod;
+        const url = result.uploadUrl;
+        const headers = { ...result.uploadHeaders };
+
+        for (let name of UNSAFE_HEADERS) {
+            delete headers[name];
+        }
+
+        const uploadResult = await axios.request({
+            ...this._axiosOptions,
+            method: method.toLowerCase() as any,
+            url: url,
+            headers: headers,
+            data: data,
+        });
+
+        if (uploadResult.status >= 200 && uploadResult.status < 300) {
+            console.log('[RecordsManager] File recorded!');
+
+            return {
+                success: true,
+                url: url,
+                sha256Hash: hash,
+            };
+            // if (hasValue(event.taskId)) {
+
+            //     this._helper.transaction(
+            //         asyncResult(event.taskId, {
+            //             success: true,
+            //             url: url,
+            //             sha256Hash: hash,
+            //         } as FileRecordedResult)
+            //     );
+            // }
+        } else {
+            console.error('[RecordsManager] File upload failed!', uploadResult);
+            return {
+                success: false,
+                errorCode: 'upload_failed',
+                errorMessage: 'The file upload failed.',
+            };
+            // if (hasValue(event.taskId)) {
+            //     this._helper.transaction(
+            //         asyncResult(event.taskId, {
+            //             success: false,
+            //             errorCode: 'upload_failed',
+            //             errorMessage: 'The file upload failed.',
+            //         } as FileRecordedResult)
+            //     );
+            // }
+        }
+    }
+
+    private async _resolveRecordFileInfo(
+        eventData: any,
+        eventMimeType: string
+    ): Promise<
+        | RecordFileFailure
+        | {
+              success: true;
+              byteLength: number;
+              hash: string;
+              mimeType: string;
+              data: any;
+          }
+    > {
+        let byteLength: number;
+        let hash: string;
+        let mimeType: string;
+        let data: any;
+
+        if (typeof eventData === 'function') {
+            // if (hasValue(event.taskId)) {
+            //     this._helper.transaction(
+            //         asyncResult(event.taskId, {
+            //             success: false,
+            //             errorCode: 'invalid_file_data',
+            //             errorMessage:
+            //                 'Function instances cannot be stored in files.',
+            //         } as RecordFileResult)
+            //     );
+            // }
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage: 'Function instances cannot be stored in files.',
+            };
+        } else if (typeof eventData === 'undefined' || eventData === null) {
+            return {
+                success: false,
+                errorCode: 'invalid_file_data',
+                errorMessage:
+                    'Null or undefined values cannot be stored in files.',
+            };
+        } else if (
+            typeof eventData === 'string' ||
+            typeof eventData === 'number' ||
+            typeof eventData === 'boolean'
+        ) {
+            const encoder = new TextEncoder();
+            data = encoder.encode(eventData.toString());
+            byteLength = data.byteLength;
+            mimeType = eventMimeType || 'text/plain';
+            hash = getHash(data);
+        } else if (typeof eventData === 'object') {
+            if (eventData instanceof Blob) {
+                const buffer = await eventData.arrayBuffer();
+                data = new Uint8Array(buffer);
+                byteLength = data.byteLength;
+                mimeType =
+                    eventMimeType ||
+                    eventData.type ||
+                    'application/octet-stream';
+                hash = getHash(data);
+            } else if (eventData instanceof ArrayBuffer) {
+                data = new Uint8Array(eventData);
+                byteLength = data.byteLength;
+                mimeType = eventMimeType || 'application/octet-stream';
+                hash = getHash(data);
+            } else if (ArrayBuffer.isView(eventData)) {
+                data = new Uint8Array(eventData.buffer);
+                byteLength = data.byteLength;
+                mimeType = eventMimeType || 'application/octet-stream';
+                hash = getHash(data);
+            } else {
+                const obj = eventData;
+                if (
+                    'data' in obj &&
+                    'mimeType' in obj &&
+                    (obj.data instanceof ArrayBuffer ||
+                        typeof obj.data === 'string') &&
+                    typeof obj.mimeType === 'string'
+                ) {
+                    if (typeof obj.data === 'string') {
+                        data = new TextEncoder().encode(obj.data);
+                    } else {
+                        data = new Uint8Array(obj.data);
+                    }
+                    byteLength = data.byteLength;
+                    mimeType =
+                        eventMimeType ||
+                        obj.mimeType ||
+                        (typeof obj.data === 'string'
+                            ? 'text/plain'
+                            : 'application/octet-stream');
+                    hash = getHash(data);
+                } else {
+                    let json = stringify(eventData);
+                    data = new TextEncoder().encode(json);
+                    byteLength = data.byteLength;
+                    mimeType = eventMimeType || 'application/json';
+                    hash = getHash(data);
+                }
+            }
+        }
+
+        return {
+            success: true,
+            byteLength,
+            hash,
+            mimeType,
+            data,
+        };
     }
 
     private async _getFile(event: GetFileAction) {
@@ -1017,6 +1147,36 @@ export class RecordsManager {
                     asyncError(event.taskId, e.toString())
                 );
             }
+        }
+    }
+
+    private async _readFile(result: ReadFileSuccess) {
+        const getResult = await axios.request({
+            ...this._axiosOptions,
+            method: result.requestMethod as any,
+            url: result.requestUrl,
+            headers: result.requestHeaders,
+        });
+
+        if (getResult.status >= 200 && getResult.status < 300) {
+            return {
+                success: true,
+                data: getResult.data,
+            } as const;
+        } else {
+            return {
+                success: false,
+                errorCode:
+                    getResult.status === 404
+                        ? 'file_not_found'
+                        : getResult.status >= 500
+                        ? 'server_error'
+                        : 'not_authorized',
+                errorMessage:
+                    getResult.status === 404
+                        ? 'The file was not found.'
+                        : 'The file download failed.',
+            } as ReadFileFailure;
         }
     }
 
@@ -2168,6 +2328,312 @@ export class RecordsManager {
         }
     }
 
+    private async _recordPackageVersion(event: RecordPackageVersionAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            const fileInfo = await this._resolveRecordFileInfo(
+                event.request.state,
+                'application/json'
+            );
+
+            if (fileInfo.success === false) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, fileInfo)
+                    );
+                }
+                return;
+            }
+
+            const { byteLength, hash, mimeType, data } = fileInfo;
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            const result = await this._client.recordPackageVersion(
+                {
+                    recordName: event.request.recordName,
+                    item: {
+                        address: event.request.address,
+                        key: event.request.key,
+                        description: event.request.description,
+                        entitlements: event.request.entitlements,
+                        markers: event.request.markers as [string, ...string[]],
+                        auxFileRequest: {
+                            fileByteLength: byteLength,
+                            fileSha256Hex: hash,
+                            fileMimeType: mimeType,
+                            fileDescription: `${event.request.recordName}/${
+                                event.request.address
+                            }@${formatVersionNumber(
+                                event.request.key.major,
+                                event.request.key.minor,
+                                event.request.key.patch,
+                                event.request.key.tag
+                            )}`,
+                        },
+                    },
+                    instances,
+                },
+                {
+                    endpoint: info.recordsOrigin,
+                    sessionKey: info.token,
+                }
+            );
+
+            if (result.success === false) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
+                return;
+            }
+
+            const uploadResult = await this._uploadFile(
+                result.auxFileResult,
+                data,
+                hash
+            );
+
+            if (uploadResult.success === false) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, uploadResult)
+                    );
+                }
+                return;
+            }
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: true,
+                        recordName: result.recordName,
+                        address: result.address,
+                        auxFileResult: uploadResult,
+                    })
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error recording package version:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _installPackage(event: InstallPackageAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            if (this._helper.origin?.isStatic) {
+                // static origins need to install packages via fetching the package
+
+                const input: RecordsClientInputs['getPackageVersion'] = {
+                    recordName: event.recordName,
+                    address: event.address,
+                    instances,
+                };
+
+                if (typeof event.key === 'string') {
+                    input.key = event.key;
+                } else if (typeof event.key === 'object') {
+                    if (event.key.sha256) {
+                        input.sha256 = event.key.sha256;
+                    } else {
+                        input.major = event.key.major;
+                        input.minor = event.key.minor;
+                        input.patch = event.key.patch;
+                        input.tag = event.key.tag;
+                    }
+                }
+
+                const result = await this._client.getPackageVersion(input, {
+                    sessionKey: info.token,
+                    endpoint: info.recordsOrigin,
+                });
+
+                if (result.success === false) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, result)
+                        );
+                    }
+                    return;
+                }
+                if (result.auxFile.success === false) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, result.auxFile)
+                        );
+                    }
+                    return;
+                }
+
+                const fileResult = await this._readFile(result.auxFile);
+
+                if (fileResult.success === false) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, fileResult)
+                        );
+                    }
+                    return;
+                } else {
+                    // get json and apply it
+                    const aux: StoredAux = fileResult.data;
+
+                    await this._helper.transaction(
+                        remote(installAuxFile(aux, 'default'))
+                    );
+
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: true,
+                                packageLoadId: null,
+                                package: result.item,
+                            } as InstallPackageSuccess)
+                        );
+                    }
+                }
+            } else {
+                if (!this._helper.origin) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncError(
+                                event.taskId,
+                                'Unable to install package with no simulation origin!'
+                            )
+                        );
+                    }
+                    return;
+                }
+
+                // other origins can install via a HTTP request
+                const result = await this._client.installPackage(
+                    {
+                        recordName: this._helper.origin.recordName,
+                        inst: this._helper.origin.inst,
+                        package: {
+                            recordName: event.recordName,
+                            address: event.address,
+                            key: event.key,
+                        },
+                        instances,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error installing package:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _listInstalledPackages(event: ListInstalledPackagesAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.origin)) {
+                instances = [
+                    formatInstId(
+                        this._helper.origin.recordName,
+                        this._helper.origin.inst
+                    ),
+                ];
+            }
+
+            if (
+                !hasValue(this._helper.origin) ||
+                this._helper.origin.isStatic
+            ) {
+                console.warn(
+                    `[RecordsManager] Unable to list packages for local insts.`
+                );
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage:
+                                'Listing packages is not supported for local insts.',
+                        })
+                    );
+                }
+            } else {
+                const result = await this._client.listInstalledPackages(
+                    {
+                        recordName: this._helper.origin.recordName,
+                        inst: this._helper.origin.inst,
+                        instances,
+                    },
+                    {
+                        sessionKey: info.token,
+                        endpoint: info.recordsOrigin,
+                    }
+                );
+
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(asyncResult(event.taskId, result));
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error listing packages:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _sendWebsocketSupportedRequest<TResponse>(
         recordsOrigin: string,
         websocketOrigin: string,
@@ -2483,7 +2949,7 @@ export class RecordsManager {
                 if (Array.isArray(val)) {
                     url.searchParams.set(key, val.join(','));
                 } else {
-                    url.searchParams.set(key, val);
+                    url.searchParams.set(key, val as string);
                 }
             }
         }

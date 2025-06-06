@@ -22,7 +22,7 @@ import type {
     DeviceConnection,
     WebsocketConnectionStore,
 } from './WebsocketConnectionStore';
-import { branchNamespace } from './Utils';
+import { branchNamespace } from '@casual-simulation/aux-common';
 
 /**
  * Defines a WebsocketConnectionStore that keeps all data in memory.

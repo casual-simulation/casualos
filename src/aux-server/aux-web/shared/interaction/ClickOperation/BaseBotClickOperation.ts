@@ -16,21 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { InputMethod, InputModality } from '../../../shared/scene/Input';
-import { InputType, ControllerData } from '../../../shared/scene/Input';
 import type { Intersection } from '@casual-simulation/three';
 import { Vector2 } from '@casual-simulation/three';
-import { IOperation } from '../IOperation';
 import type { BaseInteractionManager } from '../BaseInteractionManager';
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
-import { isBotMovable, getBotPosition } from '@casual-simulation/aux-common';
+import { getBotPosition } from '@casual-simulation/aux-common';
 import type { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import type { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import type { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import type { Simulation3D } from '../../scene/Simulation3D';
-import {
-    VRDragThresholdPassed,
-    DragThresholdPassed,
-} from './ClickOperationUtils';
+
 import { BaseClickOperation } from './BaseClickOperation';
 
 /**
