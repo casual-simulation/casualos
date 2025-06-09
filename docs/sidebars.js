@@ -68,6 +68,7 @@ export default {
                                 'actions/os/media',
                                 'actions/os/moderation',
                                 'actions/os/portals',
+                                'actions/os/spaces',
                                 'actions/os/system',
                                 'actions/os/records',
                                 'actions/os/remotes',
