@@ -21,6 +21,10 @@
     ```
     will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where the DOM was not able to be interacted with.
+
 ## V3.5.0
 
 #### Date: 6/6/2025
