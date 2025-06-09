@@ -122,6 +122,7 @@ export default {
                                 'types/os/media',
                                 'types/os/moderation',
                                 'types/os/portals',
+                                'types/os/spaces',
                                 'types/os/system',
                                 'types/os/xr',
                             ]
