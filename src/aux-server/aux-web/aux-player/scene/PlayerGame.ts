@@ -1969,11 +1969,30 @@ export class PlayerGame extends Game {
 
         if (visible && this.gameView.container.style.display !== 'block') {
             this.gameView.container.style.display = 'block';
+
+            // containerId doesn't match gameView.container (bad naming I know)
+            if (this.gameView.containerId) {
+                const gameContainer = document.getElementById(
+                    this.gameView.containerId
+                );
+                if (gameContainer) {
+                    gameContainer.style.display = 'block';
+                }
+            }
         } else if (
             !visible &&
             this.gameView.container.style.display !== 'none'
         ) {
             this.gameView.container.style.display = 'none';
+            // containerId doesn't match gameView.container (bad naming I know)
+            if (this.gameView.containerId) {
+                const gameContainer = document.getElementById(
+                    this.gameView.containerId
+                );
+                if (gameContainer) {
+                    gameContainer.style.display = 'none';
+                }
+            }
         }
     }
 
