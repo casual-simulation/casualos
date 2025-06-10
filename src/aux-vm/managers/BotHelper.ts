@@ -60,7 +60,7 @@ import type { SimulationOrigin } from './Simulation';
 export class BotHelper extends BaseHelper<PrecalculatedBot> {
     private static readonly _debug = false;
     // private _localEvents: Subject<LocalActions>;
-    private _state: PrecalculatedBotsState;
+    private _state: PrecalculatedBotsState = {};
     private _vm: AuxVM;
     private _batchUpdates: boolean;
     private _botUpdates: UpdateBotAction[] = [];
