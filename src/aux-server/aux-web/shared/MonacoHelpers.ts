@@ -337,7 +337,7 @@ export function watchSimulation(
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'typescript',
         {
-            triggerCharacters: ['#', '.'],
+            triggerCharacters: ['#', '.', '"', "'", '`'],
             async provideCompletionItems(
                 model,
                 position,
@@ -346,61 +346,259 @@ export function watchSimulation(
             ): Promise<monaco.languages.CompletionList> {
                 const lineText = model.getLineContent(position.lineNumber);
                 const textBeforeCursor = lineText.substring(0, position.column);
-                let tagIndex = textBeforeCursor.lastIndexOf('#');
-                let offset = '#'.length;
+                const tagCompletions = async () => {
+                    let tagIndex = textBeforeCursor.lastIndexOf('#');
+                    let offset = '#'.length;
 
-                // TODO: Allow configuring which variables tag autocomplete shows up for
-                if (tagIndex < 0) {
-                    tagIndex = textBeforeCursor.lastIndexOf('tags.');
-                    offset = 'tags.'.length;
-                }
+                    // TODO: Allow configuring which variables tag autocomplete shows up for
+                    if (tagIndex < 0) {
+                        tagIndex = textBeforeCursor.lastIndexOf('tags.');
+                        offset = 'tags.'.length;
+                    }
 
-                if (tagIndex < 0) {
+                    if (tagIndex < 0) {
+                        return {
+                            suggestions: [],
+                        };
+                    }
+
+                    const usedTags = await simulation.code.getTags();
+                    const knownTags = KNOWN_TAGS;
+                    const allTags = sortBy(union(usedTags, knownTags)).filter(
+                        (t) => !/[()]/g.test(t)
+                    );
+
+                    const tagColumn = tagIndex + offset;
+                    const completionStart = tagColumn + 1;
+
                     return {
-                        suggestions: [],
+                        suggestions: allTags.map(
+                            (t) =>
+                                <monaco.languages.CompletionItem>{
+                                    kind: monaco.languages.CompletionItemKind
+                                        .Field,
+                                    label: t,
+                                    insertText: propertyInsertText(t),
+                                    additionalTextEdits: [
+                                        {
+                                            text: '',
+                                            range: new monaco.Range(
+                                                position.lineNumber,
+                                                tagColumn,
+                                                position.lineNumber,
+                                                tagColumn + 1
+                                            ),
+                                            forceMoveMarkers: true,
+                                        },
+                                    ],
+                                    range: new monaco.Range(
+                                        position.lineNumber,
+                                        completionStart,
+                                        position.lineNumber,
+                                        position.column
+                                    ),
+                                }
+                        ),
                     };
-                }
+                };
 
-                const usedTags = await simulation.code.getTags();
-                const knownTags = KNOWN_TAGS;
-                const allTags = sortBy(union(usedTags, knownTags)).filter(
-                    (t) => !/[()]/g.test(t)
-                );
+                const listenerCompletions = async () => {
+                    let quoteIndex: number = -1;
+                    let quoteType = '"';
+                    let offset = '"'.length;
 
-                const tagColumn = tagIndex + offset;
-                const completionStart = tagColumn + 1;
+                    const findIndex = (prefix: string) => {
+                        if (quoteIndex >= 0) {
+                            return;
+                        }
+
+                        quoteIndex = textBeforeCursor.lastIndexOf(prefix + '"');
+                        quoteType = '"';
+
+                        if (quoteIndex < 0) {
+                            quoteIndex = textBeforeCursor.lastIndexOf(
+                                prefix + "'"
+                            );
+                            quoteType = "'";
+                        }
+                        if (quoteIndex < 0) {
+                            quoteIndex = textBeforeCursor.lastIndexOf(
+                                prefix + '`'
+                            );
+                            quoteType = '`';
+                        }
+                    };
+
+                    findIndex('shout(');
+                    findIndex('whisper(');
+
+                    if (quoteIndex < 0) {
+                        return {
+                            suggestions: [],
+                        };
+                    }
+
+                    let usedTags: string[] = KNOWN_TAGS.filter((t) =>
+                        t.startsWith('on')
+                    );
+                    // for (let tag of simulation.index.tags) {
+                    //     if (KNOWN_TAGS.includes(tag)) {
+                    //         continue;
+                    //     }
+
+                    //     for (let bot of simulation.index.findBotsWithTag(tag)) {
+                    //         const val = calculateBotValue(null, bot, tag);
+
+                    //         if (isScript(val)) {
+                    //             usedTags.push(tag);
+                    //             break;
+                    //         }
+                    //     }
+                    // }
+
+                    const tagColumn = quoteIndex + offset;
+                    const completionStart = tagColumn;
+
+                    return {
+                        suggestions: usedTags.map(
+                            (t) =>
+                                <monaco.languages.CompletionItem>{
+                                    kind: monaco.languages.CompletionItemKind
+                                        .Function,
+                                    label: t,
+                                    insertText: t,
+                                    additionalTextEdits: [
+                                        // {
+                                        //     text: '',
+                                        //     range: new monaco.Range(
+                                        //         position.lineNumber,
+                                        //         tagColumn,
+                                        //         position.lineNumber,
+                                        //         tagColumn + 1
+                                        //     ),
+                                        //     forceMoveMarkers: true,
+                                        // },
+                                    ],
+                                    range: new monaco.Range(
+                                        position.lineNumber,
+                                        completionStart,
+                                        position.lineNumber,
+                                        position.column
+                                    ),
+                                }
+                        ),
+                    };
+                };
+
+                const [tags, listeners] = await Promise.all([
+                    tagCompletions(),
+                    listenerCompletions(),
+                ]);
 
                 return {
-                    suggestions: allTags.map(
-                        (t) =>
-                            <monaco.languages.CompletionItem>{
-                                kind: monaco.languages.CompletionItemKind.Field,
-                                label: t,
-                                insertText: propertyInsertText(t),
-                                additionalTextEdits: [
-                                    {
-                                        text: '',
-                                        range: new monaco.Range(
-                                            position.lineNumber,
-                                            tagColumn,
-                                            position.lineNumber,
-                                            tagColumn + 1
-                                        ),
-                                        forceMoveMarkers: true,
-                                    },
-                                ],
-                                range: new monaco.Range(
-                                    position.lineNumber,
-                                    completionStart,
-                                    position.lineNumber,
-                                    position.column
-                                ),
-                            }
-                    ),
+                    suggestions: [
+                        ...tags.suggestions,
+                        ...listeners.suggestions,
+                    ],
                 };
             },
         }
     );
+
+    // let listenerCompletionDisposable = monaco.languages.registerCompletionItemProvider(
+    //     'typescript',
+    //     {
+    //         triggerCharacters: ['"', "'", '`', '.', '('],
+    //         async provideCompletionItems(
+    //             model,
+    //             position,
+    //             context,
+    //             token
+    //         ): Promise<monaco.languages.CompletionList> {
+    //             const lineText = model.getLineContent(position.lineNumber);
+    //             const textBeforeCursor = lineText.substring(0, position.column);
+
+    //             let quoteIndex: number = -1;
+    //             let quoteType = '"';
+    //             let offset = '"'.length;
+
+    //             const findIndex = (prefix: string) => {
+    //                 if (quoteIndex >= 0) {
+    //                     return;
+    //                 }
+
+    //                 quoteIndex = textBeforeCursor.lastIndexOf(prefix + '"')
+    //                 quoteType = '"';
+
+    //                 if (quoteIndex < 0) {
+    //                     quoteIndex = textBeforeCursor.lastIndexOf(prefix + "'");
+    //                     quoteType = "'";
+    //                 }
+    //                 if (quoteIndex < 0) {
+    //                     quoteIndex = textBeforeCursor.lastIndexOf(prefix + '`');
+    //                     quoteType = '`';
+    //                 }
+    //             };
+
+    //             findIndex('shout(');
+    //             findIndex('whisper(');
+
+    //             if (quoteIndex < 0) {
+    //                 return {
+    //                     suggestions: [],
+    //                 };
+    //             }
+
+    //             let usedTags: string[] = KNOWN_TAGS.filter(t => t.startsWith('on'));
+    //             // for (let tag of simulation.index.tags) {
+    //             //     if (KNOWN_TAGS.includes(tag)) {
+    //             //         continue;
+    //             //     }
+
+    //             //     for (let bot of simulation.index.findBotsWithTag(tag)) {
+    //             //         const val = calculateBotValue(null, bot, tag);
+
+    //             //         if (isScript(val)) {
+    //             //             usedTags.push(tag);
+    //             //             break;
+    //             //         }
+    //             //     }
+    //             // }
+
+    //             const tagColumn = quoteIndex + offset;
+    //             const completionStart = tagColumn;
+
+    //             return {
+    //                 suggestions: usedTags.map(
+    //                     (t) =>
+    //                         <monaco.languages.CompletionItem>{
+    //                             kind: monaco.languages.CompletionItemKind.Function,
+    //                             label: t,
+    //                             insertText: t,
+    //                             additionalTextEdits: [
+    //                                 // {
+    //                                 //     text: '',
+    //                                 //     range: new monaco.Range(
+    //                                 //         position.lineNumber,
+    //                                 //         tagColumn,
+    //                                 //         position.lineNumber,
+    //                                 //         tagColumn + 1
+    //                                 //     ),
+    //                                 //     forceMoveMarkers: true,
+    //                                 // },
+    //                             ],
+    //                             range: new monaco.Range(
+    //                                 position.lineNumber,
+    //                                 completionStart,
+    //                                 position.lineNumber,
+    //                                 position.column
+    //                             ),
+    //                         }
+    //                 ),
+    //             };
+    //         },
+    //     }
+    // );
 
     let commandDisposable = monaco.editor.registerCommand(
         'clickCodeButton',

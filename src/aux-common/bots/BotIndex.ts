@@ -80,6 +80,10 @@ export class BotIndex {
 
     private _batch: BotIndexEvent[] = null;
 
+    get tags() {
+        return this._tagMap.keys();
+    }
+
     get events(): Observable<BotIndexEvent[]> {
         let events = this.initialEvents();
         return this._events.pipe(

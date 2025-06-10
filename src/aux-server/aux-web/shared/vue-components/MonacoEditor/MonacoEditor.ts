@@ -74,6 +74,11 @@ export default class MonacoEditor extends Vue {
             minimap: {
                 enabled: false,
             },
+            inlineSuggest: {
+                enabled: true,
+                mode: 'subword',
+                suppressSuggestions: false,
+            },
         });
         this._applyViewZones();
         this._watchSizeChanges();
