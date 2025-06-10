@@ -86,6 +86,8 @@ html.ar-app .webxr-sessions canvas {
     left: 33%;
     width: 33%;
     z-index: 3;
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
 }
 
 @media (max-width: 768px) {

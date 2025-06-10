@@ -1,5 +1,33 @@
 # CasualOS Changelog
 
+## V3.5.1
+
+#### Date: 6/10/2025
+
+### :rocket: Features
+
+-   Improved `os.loadInst()` and `os.unloadInst()` to accept a configuration object that can specify more information on the kind of inst to load.
+    -   Loading insts in this manner will not add them to the URL.
+    -   The following properties are supported:
+        -   `staticInst`: Equivalent to the [`staticInst` tag](https://docs.casualos.com/tags/config-bot#staticinst).
+        -   `inst`: Equivalent to the [`inst` tag](https://docs.casualos.com/tags/config-bot#inst)
+        -   `record`: Equivalent to the [`record` tag](https://docs.casualos.com/tags/config-bot#record)
+        -   `owner`: Equivalent to the [`owner` tag](https://docs.casualos.com/tags/config-bot#owner).
+    -   For example:
+    ```typescript
+    os.loadInst({
+        staticInst: 'myInst',
+    });
+    ```
+    will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
+-   Added a [Fiduciary License Agreement](https://gist.github.com/KallynGowdy/5cbc3a6da651e88838c02b734d3b7e80) for CasualOS to help ensure that Casual Simulation has proper licensing agreements with individual contributors.
+    -   Uses [cla-assistant](https://cla-assistant.io/) to collect signatures to the FLA.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the DOM was not able to be interacted with.
+-   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
+
 ## V3.5.0
 
 #### Date: 6/6/2025
