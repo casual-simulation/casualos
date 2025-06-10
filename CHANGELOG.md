@@ -22,6 +22,7 @@
     will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
 -   Added a [Fiduciary License Agreement](https://gist.github.com/KallynGowdy/5cbc3a6da651e88838c02b734d3b7e80) for CasualOS to help ensure that Casual Simulation has proper licensing agreements with individual contributors.
     -   Uses [cla-assistant](https://cla-assistant.io/) to collect signatures to the FLA.
+-   Improved the menuPortal to support scrolling when the bots would exceed the size of the screen.
 
 ### :bug: Bug Fixes
 
