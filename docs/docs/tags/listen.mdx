@@ -1383,6 +1383,102 @@ let that: {
 };
 ```
 
+### `@onPackageInstalled`
+
+A shout that is sent whenever a package has successfully been installed by this device.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The ID of the metadata record that records that the package was installed into this inst.
+     * Null when installing packages into static insts.
+    */
+    packageLoadId: string | null,
+
+    /**
+     * The information about the package that was installed.
+     */
+    package: {
+        /**
+         * The unique ID of the package version.
+         */
+        id: string;
+
+        /**
+         * The unique ID of the package container.
+         */
+        packageId: string;
+
+        /**
+         * The name of the aux file that is stored for this version.
+         */
+        auxFileName: string;
+
+        /**
+         * Whether the aux file was created for this version.
+         */
+        createdFile: boolean;
+
+        /**
+         * The SHA-256 hash of the package version.
+         */
+        sha256: string;
+
+        /**
+         * The SHA-256 hash of the aux.
+         */
+        auxSha256: string;
+
+        /**
+         * The list of entitlements that the package requires.
+         */
+        entitlements: Entitlement[];
+
+        /**
+         * Whether the package version requires review.
+         * Packages that do not require review are automatically approved and cannot have entitlements that require review.
+         */
+        requiresReview: boolean;
+
+        /**
+         * The description of the package.
+         */
+        description: string;
+
+        /**
+         * The size of the package version in bytes.
+         */
+        sizeInBytes: number;
+
+        /**
+         * The unix time in miliseconds that this package version was created at.
+         */
+        createdAtMs: number;
+
+        /**
+         * The markers for the package version.
+         */
+        markers: string[];
+
+        /**
+         * Whether the package version has been approved.
+         * If true, then the package either has been manually approved or does not require approval.
+         */
+        approved: boolean;
+
+        /**
+         * The type of approval that was given to the package.
+         * 
+         * - null means that the package has not been approved.
+         * - "normal" means that the package was approved by the reviewer, but that individual permissions still need to be approved by the user.
+         * - "super" means that the package was approved by the reviewer and that individual permissions will not need to be approved by the user.
+         */
+        approvalType: null | 'normal' | 'super';
+    }
+};
+```
+
 ### `@onAnyBotDrag`
 
 A shout that is sent whenever a bot starts to be dragged.
