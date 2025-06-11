@@ -4,6 +4,32 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Made the VM iframe be hidden while the game view (gridPortal, mapPortal, etc.) is visible.
+
+    -   This is a breaking change because the VM iframe (DOM) used to be always visible behind the game view.
+    -   Now, it will only be visible when all the game portals are hidden (set to null).
+    -   This change is a workaround to fix a bug in MacOS Chrome that causes iframes to intercept some events from the main window. In particular, this bug broke the CasualOS `@onFileUpload` shout.
+    -   To preserve the old behavior, you can use the following code:
+
+        ```typescript
+        await os.registerApp('alwaysShowIframe', thisBot);
+
+        const css = `
+        .vm-iframe-container iframe:first-child {
+            display: block !important;
+        }
+        `;
+
+        os.compileApp(
+            'alwaysShowIframe',
+            <div>
+                <style>{css}</style>
+            </div>
+        );
+        ```
+
 ### :rocket: Features
 
 -   Improved `os.loadInst()` and `os.unloadInst()` to accept a configuration object that can specify more information on the kind of inst to load.
