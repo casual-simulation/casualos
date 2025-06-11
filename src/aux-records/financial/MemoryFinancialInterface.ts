@@ -26,14 +26,14 @@ import type {
     CreateTransfersError,
     QueryFilter,
     Transfer,
-} from './Types';
-import { CreateAccountError } from './Types';
+} from 'tigerbeetle-node';
+import { CreateAccountError } from 'tigerbeetle-node';
 import {
     AccountFilterFlags,
     AccountFlags,
     CreateTransferError,
     TransferFlags,
-} from './Types';
+} from 'tigerbeetle-node';
 
 /**
  * The max bigint tigerbeetle can handle. 2^128 - 1 is reserved.

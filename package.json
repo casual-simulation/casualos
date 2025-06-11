@@ -183,7 +183,8 @@
         "typescript-eslint": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7"
+        "wait-on": "7",
+        "@zip.js/zip.js": "2.6.40"
     },
     "engines": {
         "node": ">=v20.18",

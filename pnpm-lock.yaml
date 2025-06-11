@@ -158,6 +158,9 @@ importers:
       '@typescript-eslint/utils':
         specifier: ^8.26.1
         version: 8.32.0(eslint@9.26.0(jiti@1.21.7))(typescript@5.8.3)
+      '@zip.js/zip.js':
+        specifier: 2.6.40
+        version: 2.6.40
       browserslist:
         specifier: '>=4.16.5'
         version: 4.24.5
@@ -759,6 +762,9 @@ importers:
       openid-client:
         specifier: 5.6.1
         version: 5.6.1
+      tigerbeetle-node:
+        specifier: 0.16.44
+        version: 0.16.44
       tweetnacl:
         specifier: 1.0.3
         version: 1.0.3
@@ -1250,8 +1256,8 @@ importers:
         specifier: 1.3.0
         version: 1.3.0
       tigerbeetle-node:
-        specifier: 0.16.20
-        version: 0.16.20
+        specifier: 0.16.44
+        version: 0.16.44
       troika-three-text:
         specifier: 0.46.4
         version: 0.46.4(three@0.176.0)
@@ -6018,6 +6024,10 @@ packages:
   '@yarnpkg/parsers@3.0.0-rc.46':
     resolution: {integrity: sha512-aiATs7pSutzda/rq8fnuPwTglyVwjM22bNnK2ZgjrpAjQHSSl3lztd2f9evst1W/qnC58DRz7T7QndUDumAR4Q==}
     engines: {node: '>=14.15.0'}
+
+  '@zip.js/zip.js@2.6.40':
+    resolution: {integrity: sha512-S23j3nNwrxnlNFViXV+JIJEosbB1CrntsIB8Zdsok9pWionK+2X09cJvFhvL1okkjp5Dv9wJp449rQ7IYh+snw==}
+    engines: {deno: '>=1.0.0', node: '>=16.5.0'}
 
   '@zkochan/js-yaml@0.0.6':
     resolution: {integrity: sha512-nzvgl3VfhcELQ8LyVrYOru+UtAy1nrygk2+AGbTm8a5YcO6o8lSjAT+pfg3vJWxIoZKOUhrK6UU7xW/+00kQrg==}
@@ -13327,8 +13337,8 @@ packages:
   thunky@1.1.0:
     resolution: {integrity: sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA==}
 
-  tigerbeetle-node@0.16.20:
-    resolution: {integrity: sha512-T+NxM8Qo0Z/niF3rL1pDVo7rxdSpJ9Ke1gYZO7kv+TCRwB1660bVsWu1TNvr10/oMi0/qVOrzLPYUc4B2xf2YA==}
+  tigerbeetle-node@0.16.44:
+    resolution: {integrity: sha512-D2VD/N7lP53Uea+AY12liUL8NSBmRQgqkLu+e4Q1JJCIdqWkJ37niMdFLepNA3VH2olTM5/krNLzOE4HTr8xFA==}
     engines: {node: '>=14.0.0'}
 
   timers-browserify@1.4.2:
@@ -21107,6 +21117,8 @@ snapshots:
     dependencies:
       js-yaml: 3.14.1
       tslib: 2.8.1
+
+  '@zip.js/zip.js@2.6.40': {}
 
   '@zkochan/js-yaml@0.0.6':
     dependencies:
@@ -30229,7 +30241,7 @@ snapshots:
 
   thunky@1.1.0: {}
 
-  tigerbeetle-node@0.16.20: {}
+  tigerbeetle-node@0.16.44: {}
 
   timers-browserify@1.4.2:
     dependencies:

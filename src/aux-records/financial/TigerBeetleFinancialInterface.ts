@@ -17,16 +17,15 @@
  */
 import type { FinancialInterface } from './FinancialInterface';
 import type {
-    Client,
-    id,
     Account,
-    CreateAccountsError,
-    Transfer,
-    CreateTransfersError,
-    AccountFilter,
     AccountBalance,
+    AccountFilter,
+    Client,
+    CreateAccountsError,
+    CreateTransfersError,
     QueryFilter,
-} from './Types';
+    Transfer,
+} from 'tigerbeetle-node';
 
 /**
  * Configuration for the instantiation of the TigerBeetleFinancialInterface.
@@ -39,7 +38,13 @@ export interface Config {
     /**
      * A function that generates a unique ID for accounts, transfers, etc.
      */
-    id: typeof id;
+    id: () => Account['id'];
+
+    /**
+     * The offset that should be added to the generated IDs.
+     * This is useful for testing purposes to avoid ID collisions.
+     */
+    idOffset?: bigint;
 }
 
 /**
@@ -49,39 +54,96 @@ export interface Config {
 export class TigerBeetleFinancialInterface implements FinancialInterface {
     private _client: Client;
     private _id: () => Account['id'];
+    private _idOffset: bigint = 0n;
+
     constructor(config: Config) {
         this._client = config.client;
         this._id = config.id;
     }
 
+    private _mapAccountIds(accounts: Account[], offset: bigint) {
+        if (offset === 0n) {
+            return accounts;
+        }
+
+        return accounts.map((a) => ({
+            ...a,
+            id: a.id + offset,
+        }));
+    }
+
+    private _mapTransferIds(transfers: Transfer[], offset: bigint) {
+        if (offset === 0n) {
+            return transfers;
+        }
+
+        return transfers.map((t) => ({
+            ...t,
+            id: t.id + offset,
+            credit_account_id: t.credit_account_id + offset,
+            debit_account_id: t.debit_account_id + offset,
+            pending_id: t.pending_id ? t.pending_id + offset : undefined,
+        }));
+    }
+
     generateId(): Account['id'] {
         return this._id();
     }
+
     createAccount(account: Account): Promise<CreateAccountsError[]> {
-        return this._client.createAccounts([account]);
+        return this._client.createAccounts(
+            this._mapAccountIds([account], this._idOffset)
+        );
     }
+
     createAccounts(batch: Account[]): Promise<CreateAccountsError[]> {
-        return this._client.createAccounts(batch);
+        return this._client.createAccounts(
+            this._mapAccountIds(batch, this._idOffset)
+        );
     }
+
     createTransfers(batch: Transfer[]): Promise<CreateTransfersError[]> {
-        return this._client.createTransfers(batch);
+        return this._client.createTransfers(
+            this._mapTransferIds(batch, this._idOffset)
+        );
     }
-    lookupAccounts(batch: Account['id'][]): Promise<Account[]> {
-        return this._client.lookupAccounts(batch);
+
+    async lookupAccounts(batch: Account['id'][]): Promise<Account[]> {
+        return this._mapAccountIds(
+            await this._client.lookupAccounts(batch),
+            -this._idOffset
+        );
     }
-    lookupTransfers(batch: Transfer['id'][]): Promise<Transfer[]> {
-        return this._client.lookupTransfers(batch);
+
+    async lookupTransfers(batch: Transfer['id'][]): Promise<Transfer[]> {
+        return this._mapTransferIds(
+            await this._client.lookupTransfers(batch),
+            -this._idOffset
+        );
     }
-    getAccountTransfers(filter: AccountFilter): Promise<Transfer[]> {
-        return this._client.getAccountTransfers(filter);
+
+    async getAccountTransfers(filter: AccountFilter): Promise<Transfer[]> {
+        return this._mapTransferIds(
+            await this._client.getAccountTransfers(filter),
+            -this._idOffset
+        );
     }
+
     getAccountBalances(filter: AccountFilter): Promise<AccountBalance[]> {
         return this._client.getAccountBalances(filter);
     }
-    queryAccounts(filter: QueryFilter): Promise<Account[]> {
-        return this._client.queryAccounts(filter);
+
+    async queryAccounts(filter: QueryFilter): Promise<Account[]> {
+        return this._mapAccountIds(
+            await this._client.queryAccounts(filter),
+            -this._idOffset
+        );
     }
-    queryTransfers(filter: QueryFilter): Promise<Transfer[]> {
-        return this._client.queryTransfers(filter);
+
+    async queryTransfers(filter: QueryFilter): Promise<Transfer[]> {
+        return this._mapTransferIds(
+            await this._client.queryTransfers(filter),
+            -this._idOffset
+        );
     }
 }

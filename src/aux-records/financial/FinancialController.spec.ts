@@ -30,26 +30,60 @@ import {
     LEDGERS,
     TransferCodes,
 } from './FinancialInterface';
-import { MemoryFinancialInterface } from './MemoryFinancialInterface';
-import type { Account } from './Types';
-import { AccountFlags, TransferFlags } from './Types';
+import type { Account } from 'tigerbeetle-node';
+import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 import { MemoryStore } from '../MemoryStore';
 import { checkAccounts, checkTransfers, mapBigInts } from '../TestUtils';
+import { runTigerBeetle } from './TigerBeetleTestUtils';
+import { TigerBeetleFinancialInterface } from './TigerBeetleFinancialInterface';
+import type { Client } from 'tigerbeetle-node';
+import { createClient, id as randomId } from 'tigerbeetle-node';
+import type { ChildProcess } from 'child_process';
 
 console.log = jest.fn();
 console.error = jest.fn();
 
 describe('FinancialController', () => {
-    let financialInterface: MemoryFinancialInterface;
+    let financialInterface: TigerBeetleFinancialInterface;
     let store: MemoryStore;
     let controller: FinancialController;
     let dateNowMock: jest.Mock<number>;
+    let currentId = 1n;
 
     const realDateNow = Date.now;
 
-    beforeEach(() => {
+    let tbClient: Client;
+    let tbProcess: ChildProcess;
+
+    beforeAll(async () => {
+        const { port, process } = await runTigerBeetle('financial-controller');
+
+        tbProcess = process;
+        if (!port) {
+            throw new Error('Failed to start TigerBeetle!');
+        }
+
+        tbClient = createClient({
+            replica_addresses: [port],
+            cluster_id: 0n,
+        });
+    });
+
+    afterAll(async () => {
+        if (tbProcess) {
+            tbProcess.kill();
+        }
+    });
+
+    beforeEach(async () => {
+        currentId = 1n;
         dateNowMock = Date.now = jest.fn(() => 123);
-        financialInterface = new MemoryFinancialInterface();
+
+        financialInterface = new TigerBeetleFinancialInterface({
+            client: tbClient,
+            id: () => currentId++,
+            idOffset: randomId(),
+        });
         store = new MemoryStore({
             subscriptions: null,
         });
@@ -64,9 +98,21 @@ describe('FinancialController', () => {
         it('should create all the default accounts', async () => {
             await controller.init();
 
-            expect(
-                mapBigInts([...financialInterface.accounts.values()])
-            ).toMatchSnapshot();
+            const accounts = await financialInterface.lookupAccounts([
+                ACCOUNT_IDS.assets_cash,
+                ACCOUNT_IDS.assets_stripe,
+                ACCOUNT_IDS.revenue_xp_platform_fees,
+                ACCOUNT_IDS.revenue_store_platform_fees,
+                ACCOUNT_IDS.liquidity_usd,
+                ACCOUNT_IDS.liquidity_credits,
+                ACCOUNT_IDS.USD_SETUP,
+                ACCOUNT_IDS.USD_LIMIT_CREDITS,
+                ACCOUNT_IDS.USD_LIMIT_DEBITS,
+                ACCOUNT_IDS.CREDITS_SETUP,
+                ACCOUNT_IDS.CREDITS_LIMIT_CREDITS,
+                ACCOUNT_IDS.CREDITS_LIMIT_DEBITS,
+            ]);
+            expect(mapBigInts([...accounts])).toMatchSnapshot();
         });
     });
 
@@ -83,7 +129,7 @@ describe('FinancialController', () => {
             );
 
             expect(
-                mapBigInts([...financialInterface.accounts.values()])
+                mapBigInts(await financialInterface.lookupAccounts([1n]))
             ).toEqual([
                 {
                     id: 1,
@@ -117,7 +163,7 @@ describe('FinancialController', () => {
             );
 
             expect(
-                mapBigInts([...financialInterface.accounts.values()])
+                mapBigInts(await financialInterface.lookupAccounts([1n]))
             ).toEqual([
                 {
                     id: 1,
@@ -603,7 +649,9 @@ describe('FinancialController', () => {
                     transferIds: ['4'],
                 })
             );
-            expect(mapBigInts(financialInterface.transfers)).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([4n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 4,
@@ -667,7 +715,9 @@ describe('FinancialController', () => {
                     // ],
                 })
             );
-            expect(mapBigInts(financialInterface.transfers.slice(1))).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([6n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 6,
@@ -718,7 +768,9 @@ describe('FinancialController', () => {
                     // ],
                 })
             );
-            expect(mapBigInts(financialInterface.transfers)).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([100n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 100,
@@ -761,7 +813,9 @@ describe('FinancialController', () => {
                     accountId: account1Id,
                 })
             );
-            expect(financialInterface.transfers).toEqual([]);
+            expect(await financialInterface.lookupTransfers([100n])).toEqual(
+                []
+            );
         });
 
         it('should be able to perform transfers in a transaction', async () => {
@@ -807,7 +861,11 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers)).toEqual(
+            expect(
+                mapBigInts(
+                    await financialInterface.lookupTransfers([100n, 101n])
+                )
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 100,
@@ -878,7 +936,11 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers)).toEqual(
+            expect(
+                mapBigInts(
+                    await financialInterface.lookupTransfers([100n, 101n])
+                )
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 100,
@@ -965,7 +1027,9 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([102n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 102,
@@ -1037,7 +1101,9 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([102n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 102,
@@ -1146,60 +1212,69 @@ describe('FinancialController', () => {
                 })
             );
 
-            checkTransfers(financialInterface.transfers.slice(2), [
-                {
-                    id: 998n,
-                    amount: 2000n,
-                    credit_account_id: ACCOUNT_IDS.USD_LIMIT_DEBITS,
-                    debit_account_id: ACCOUNT_IDS.USD_SETUP,
-                    code: TransferCodes.control,
-                    flags: TransferFlags.linked,
-                    user_data_128: 4n,
-                },
-                {
-                    id: 102n,
-                    amount: 1000n,
-                    credit_account_id: ACCOUNT_IDS.USD_SETUP,
-                    debit_account_id: BigInt(account1Id),
-                    code: TransferCodes.admin_debit,
-                    flags:
-                        TransferFlags.linked |
-                        TransferFlags.balancing_debit |
-                        TransferFlags.balancing_credit,
-                    user_data_128: 4n,
-                },
-                {
-                    id: 103n,
-                    credit_account_id: ACCOUNT_IDS.USD_SETUP,
-                    debit_account_id: BigInt(account2Id),
+            checkTransfers(
+                await financialInterface.lookupTransfers([
+                    998n,
+                    102n,
+                    103n,
+                    104n,
+                    999n,
+                ]),
+                [
+                    {
+                        id: 998n,
+                        amount: 2000n,
+                        credit_account_id: ACCOUNT_IDS.USD_LIMIT_DEBITS,
+                        debit_account_id: ACCOUNT_IDS.USD_SETUP,
+                        code: TransferCodes.control,
+                        flags: TransferFlags.linked,
+                        user_data_128: 4n,
+                    },
+                    {
+                        id: 102n,
+                        amount: 1000n,
+                        credit_account_id: ACCOUNT_IDS.USD_SETUP,
+                        debit_account_id: BigInt(account1Id),
+                        code: TransferCodes.admin_debit,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.balancing_debit |
+                            TransferFlags.balancing_credit,
+                        user_data_128: 4n,
+                    },
+                    {
+                        id: 103n,
+                        credit_account_id: ACCOUNT_IDS.USD_SETUP,
+                        debit_account_id: BigInt(account2Id),
 
-                    amount: 1000n,
-                    code: TransferCodes.admin_debit,
-                    flags:
-                        TransferFlags.linked |
-                        TransferFlags.balancing_debit |
-                        TransferFlags.balancing_credit,
-                    user_data_128: 4n,
-                },
-                {
-                    id: 104n,
-                    amount: 2000n,
-                    credit_account_id: ACCOUNT_IDS.assets_stripe,
-                    debit_account_id: ACCOUNT_IDS.USD_SETUP,
-                    code: TransferCodes.admin_debit,
-                    flags: TransferFlags.linked,
-                    user_data_128: 4n,
-                },
-                {
-                    id: 999n,
-                    amount: 2000n,
-                    credit_account_id: ACCOUNT_IDS.USD_SETUP,
-                    debit_account_id: ACCOUNT_IDS.USD_LIMIT_DEBITS,
-                    code: TransferCodes.control,
-                    flags: TransferFlags.balancing_credit,
-                    user_data_128: 4n,
-                },
-            ]);
+                        amount: 1000n,
+                        code: TransferCodes.admin_debit,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.balancing_debit |
+                            TransferFlags.balancing_credit,
+                        user_data_128: 4n,
+                    },
+                    {
+                        id: 104n,
+                        amount: 2000n,
+                        credit_account_id: ACCOUNT_IDS.assets_stripe,
+                        debit_account_id: ACCOUNT_IDS.USD_SETUP,
+                        code: TransferCodes.admin_debit,
+                        flags: TransferFlags.linked,
+                        user_data_128: 4n,
+                    },
+                    {
+                        id: 999n,
+                        amount: 2000n,
+                        credit_account_id: ACCOUNT_IDS.USD_SETUP,
+                        debit_account_id: ACCOUNT_IDS.USD_LIMIT_DEBITS,
+                        code: TransferCodes.control,
+                        flags: TransferFlags.balancing_credit,
+                        user_data_128: 4n,
+                    },
+                ]
+            );
 
             checkAccounts(financialInterface, [
                 {
@@ -1336,7 +1411,11 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+            expect(
+                mapBigInts(
+                    await financialInterface.lookupTransfers([102n, 103n])
+                )
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 102,
@@ -1449,7 +1528,9 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([5n, 6n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 5,
@@ -1528,7 +1609,9 @@ describe('FinancialController', () => {
                 })
             );
 
-            expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
+            expect(
+                mapBigInts(await financialInterface.lookupTransfers([5n, 6n]))
+            ).toEqual(
                 mapBigInts([
                     {
                         id: 5,

@@ -29,9 +29,9 @@ import type {
     CreateTransfersError,
     QueryFilter,
     Transfer,
-} from './Types';
-import { CreateTransferError, TransferFlags } from './Types';
-import { AccountFlags, CreateAccountError } from './Types';
+} from 'tigerbeetle-node';
+import { CreateTransferError, TransferFlags } from 'tigerbeetle-node';
+import { AccountFlags, CreateAccountError } from 'tigerbeetle-node';
 
 export type Ledgers = (typeof LEDGERS)[keyof typeof LEDGERS];
 
@@ -589,8 +589,6 @@ export function getMessageForTransferError(error: CreateTransferError) {
             return 'The transfer code must not be zero.';
         case CreateTransferError.accounts_must_be_different:
             return 'The transfer accounts must be different.';
-        case CreateTransferError.amount_must_not_be_zero:
-            return 'The transfer amount must not be zero.';
         case CreateTransferError.accounts_must_have_the_same_ledger:
             return 'The transfer accounts must have the same ledger.';
         case CreateTransferError.closing_transfer_must_be_pending:
@@ -658,8 +656,6 @@ export function getCodeForTransferError(
             return 'code_must_not_be_zero';
         case CreateTransferError.accounts_must_be_different:
             return 'accounts_must_be_different';
-        case CreateTransferError.amount_must_not_be_zero:
-            return 'amount_must_not_be_zero';
         case CreateTransferError.accounts_must_have_the_same_ledger:
             return 'accounts_must_have_the_same_ledger';
         case CreateTransferError.closing_transfer_must_be_pending:
