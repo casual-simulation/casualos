@@ -55,6 +55,8 @@ interface StaticAuxAuth {
     new (sessionKey?: string, connectionKey?: string): AuxAuth;
 }
 
+export const WRAPPER_CREATION_TIMEOUT_MS = 2000;
+
 /**
  * Defines a class that helps handle authentication/authorization for a particular endpoint.
  */
@@ -176,6 +178,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         const iframeUrl = new URL(`/iframe.html${query}`, this._origin).href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
+        let promise = waitForLoad(this._iframe);
         this._sub.add(() => {
             iframe.remove();
         });
@@ -184,7 +187,6 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._iframe.allow = 'publickey-credentials-get *';
         this._iframe.className = 'auth-helper-iframe';
 
-        let promise = waitForLoad(this._iframe);
         document.body.insertBefore(this._iframe, document.body.firstChild);
 
         await promise;
@@ -192,10 +194,14 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._channel = setupChannel(this._iframe.contentWindow);
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
-        this._proxy = await new wrapper(
-            this._initialSessionKey,
-            this._initialConnectionKey
-        );
+        this._proxy = await Promise.race([
+            new wrapper(this._initialSessionKey, this._initialConnectionKey),
+            new Promise<Remote<AuxAuth>>((resolve, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Failed to communicate with endpoint.'));
+                }, WRAPPER_CREATION_TIMEOUT_MS);
+            }),
+        ]);
         try {
             this._protocolVersion = await this._proxy.getProtocolVersion();
         } catch (err) {

@@ -2,7 +2,33 @@
 
 ## V3.5.1
 
-#### Date: 6/10/2025
+#### Date: 6/11/2025
+
+### :boom: Breaking Changes
+
+-   Made the VM iframe be hidden while the game view (gridPortal, mapPortal, etc.) is visible.
+
+    -   This is a breaking change because the VM iframe (DOM) used to be always visible behind the game view.
+    -   Now, it will only be visible when all the game portals are hidden (set to null).
+    -   This change is a workaround to fix a bug in MacOS Chrome that causes iframes to intercept some events from the main window. In particular, this bug broke the CasualOS `@onFileUpload` shout.
+    -   To preserve the old behavior, you can use the following code:
+
+        ```typescript
+        await os.registerApp('alwaysShowIframe', thisBot);
+
+        const css = `
+        .vm-iframe-container iframe:first-child {
+            display: block !important;
+        }
+        `;
+
+        os.compileApp(
+            'alwaysShowIframe',
+            <div>
+                <style>{css}</style>
+            </div>
+        );
+        ```
 
 ### :rocket: Features
 
@@ -22,11 +48,13 @@
     will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
 -   Added a [Fiduciary License Agreement](https://gist.github.com/KallynGowdy/5cbc3a6da651e88838c02b734d3b7e80) for CasualOS to help ensure that Casual Simulation has proper licensing agreements with individual contributors.
     -   Uses [cla-assistant](https://cla-assistant.io/) to collect signatures to the FLA.
+-   Improved the menuPortal to support scrolling when the bots would exceed the size of the screen.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the DOM was not able to be interacted with.
 -   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
+-   Fixed an issue where providing an invalid endpoint to a records function would cause the function to never resolve.
 
 ## V3.5.0
 
