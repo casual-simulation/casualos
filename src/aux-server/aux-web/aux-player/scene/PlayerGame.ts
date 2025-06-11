@@ -1979,6 +1979,16 @@ export class PlayerGame extends Game {
                     gameContainer.style.display = 'block';
                 }
             }
+
+            // Hide all VM containers when the game view is visible
+            const vmContainers = document.querySelectorAll(
+                '.vm-iframe-container'
+            );
+            for (let container of vmContainers) {
+                if (container instanceof HTMLElement) {
+                    container.classList.add('game-view-visible');
+                }
+            }
         } else if (
             !visible &&
             this.gameView.container.style.display !== 'none'
@@ -1991,6 +2001,16 @@ export class PlayerGame extends Game {
                 );
                 if (gameContainer) {
                     gameContainer.style.display = 'none';
+                }
+            }
+
+            // show all VM containers when the game view is visible
+            const vmContainers = document.querySelectorAll(
+                '.vm-iframe-container'
+            );
+            for (let container of vmContainers) {
+                if (container instanceof HTMLElement) {
+                    container.classList.remove('game-view-visible');
                 }
             }
         }
