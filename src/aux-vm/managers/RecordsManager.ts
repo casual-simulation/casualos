@@ -37,6 +37,8 @@ import {
     formatInstId,
     isRecordKey,
     parseRecordKey,
+    action,
+    ON_PACKAGE_INSTALLED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import type {
     ListRecordDataAction,
@@ -2711,7 +2713,16 @@ export class RecordsManager {
                                 success: true,
                                 packageLoadId: null,
                                 package: result.item,
-                            } as InstallPackageSuccess)
+                            } as InstallPackageSuccess),
+                            action(
+                                ON_PACKAGE_INSTALLED_ACTION_NAME,
+                                null,
+                                null,
+                                {
+                                    packageLoadId: null,
+                                    package: result.item,
+                                }
+                            )
                         );
                     }
                 }
@@ -2747,7 +2758,24 @@ export class RecordsManager {
                 );
 
                 if (hasValue(event.taskId)) {
-                    this._helper.transaction(asyncResult(event.taskId, result));
+                    if (result.success === false) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, result)
+                        );
+                    } else {
+                        const { success, ...data } = result;
+                        this._helper.transaction(
+                            asyncResult(event.taskId, result),
+                            action(
+                                ON_PACKAGE_INSTALLED_ACTION_NAME,
+                                null,
+                                null,
+                                {
+                                    ...data,
+                                }
+                            )
+                        );
+                    }
                 }
             }
         } catch (e) {

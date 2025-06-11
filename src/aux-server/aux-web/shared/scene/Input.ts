@@ -138,6 +138,9 @@ export class Input {
         return this._htmlElements();
     }
 
+    /**
+     * The list of HTML elements that the input system should ignore zoom events on.
+     */
     get zoomElements() {
         return this._zoomElements();
     }
@@ -1480,10 +1483,11 @@ export class Input {
     }
 
     private _handleWheel(event: WheelEvent) {
-        if (
-            this.isMouseFocusingOnElement(this._game.gameView.gameView) ||
-            Input.isEventForAnyElement(event, this.zoomElements)
-        ) {
+        if (Input.isEventForAnyElement(event, this.zoomElements)) {
+            return;
+        }
+
+        if (this.isMouseFocusingOnElement(this._game.gameView.gameView)) {
             event.preventDefault();
         }
 
@@ -1517,7 +1521,10 @@ export class Input {
         }
 
         // Ignore all touches on elements that are not in the HTML elements list
-        if (!Input.isEventForAnyElement(event, this.htmlElements)) {
+        if (
+            !Input.isEventForAnyElement(event, this.htmlElements) ||
+            Input.isEventForAnyElement(event, this.zoomElements)
+        ) {
             return;
         }
 
@@ -1891,7 +1898,10 @@ export class Input {
         }
 
         // Ignore all touches on elements that are not in the HTML elements list
-        if (!Input.isEventForAnyElement(event, this.htmlElements)) {
+        if (
+            !Input.isEventForAnyElement(event, this.htmlElements) ||
+            Input.isEventForAnyElement(event, this.zoomElements)
+        ) {
             return;
         }
 

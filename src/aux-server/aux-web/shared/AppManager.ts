@@ -27,7 +27,6 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     getUploadState,
-    parseVersionNumber,
     remapProgressPercent,
 } from '@casual-simulation/aux-common';
 import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
@@ -637,17 +636,8 @@ export class AppManager {
             console.log('[AppManager] Using configured AB-1');
             ab1Bootstrap = this._config.ab1BootstrapURL;
         } else {
-            const version = parseVersionNumber(
-                this.version.latestTaggedVersion
-            );
-            if (version.alpha) {
-                console.log('[AppManager] Using alpha AB-1');
-                ab1Bootstrap = new URL('ab1/staging/ab1.aux', location.href)
-                    .href;
-            } else {
-                console.log('[AppManager] Using production AB-1');
-                ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
-            }
+            console.log('[AppManager] Using built-in AB-1');
+            ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
         }
 
         this._arSupported = arSupported;

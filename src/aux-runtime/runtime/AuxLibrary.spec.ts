@@ -5255,18 +5255,93 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.loadServer()', () => {
-            it('should emit a LoadServerAction', () => {
+            it('should add the inst to the player bot', () => {
+                const player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: 'channel',
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+
                 const action = library.api.os.loadServer('abc');
+
+                expect(action).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                expect(context.playerBot.tags.inst).toEqual(['channel', 'abc']);
+            });
+
+            it('should emit the LoadServerAction when there is no player bot', () => {
+                const action = library.api.os.loadServer('abc');
+
                 expect(action).toEqual(loadSimulation('abc'));
                 expect(context.actions).toEqual([loadSimulation('abc')]);
+            });
+
+            describe('config', () => {
+                it('should accept a config object and emit a LoadServerConfigAction', () => {
+                    const action = library.api.os.loadServer({
+                        inst: 'abc',
+                    });
+
+                    expect(action).toEqual(
+                        loadSimulation({
+                            inst: 'abc',
+                        })
+                    );
+                    expect(context.actions).toEqual([
+                        loadSimulation({
+                            inst: 'abc',
+                        }),
+                    ]);
+                });
             });
         });
 
         describe('os.unloadServer()', () => {
-            it('should emit a UnloadServerAction', () => {
+            it('should add the inst to the player bot', () => {
+                const player = createDummyRuntimeBot(
+                    'player',
+                    {
+                        inst: ['channel', 'abc'],
+                    },
+                    'tempLocal'
+                );
+                addToContext(context, player);
+                context.playerBot = player;
+
+                const action = library.api.os.unloadServer('abc');
+
+                expect(action).toBeUndefined();
+                expect(context.actions).toEqual([]);
+
+                expect(context.playerBot.tags.inst).toEqual(['channel']);
+            });
+
+            it('should emit a UnloadServerAction when there is no player bot', () => {
                 const action = library.api.os.unloadServer('abc');
                 expect(action).toEqual(unloadSimulation('abc'));
                 expect(context.actions).toEqual([unloadSimulation('abc')]);
+            });
+
+            it('should emit a UnloadServerConfigAction when given a config object', () => {
+                const action = library.api.os.unloadServer({
+                    inst: 'abc',
+                });
+
+                expect(action).toEqual(
+                    unloadSimulation({
+                        inst: 'abc',
+                    })
+                );
+                expect(context.actions).toEqual([
+                    unloadSimulation({
+                        inst: 'abc',
+                    }),
+                ]);
             });
         });
 

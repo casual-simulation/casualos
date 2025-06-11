@@ -1969,11 +1969,50 @@ export class PlayerGame extends Game {
 
         if (visible && this.gameView.container.style.display !== 'block') {
             this.gameView.container.style.display = 'block';
+
+            // containerId doesn't match gameView.container (bad naming I know)
+            if (this.gameView.containerId) {
+                const gameContainer = document.getElementById(
+                    this.gameView.containerId
+                );
+                if (gameContainer) {
+                    gameContainer.style.display = 'block';
+                }
+            }
+
+            // Hide all VM containers when the game view is visible
+            const vmContainers = document.querySelectorAll(
+                '.vm-iframe-container'
+            );
+            for (let container of vmContainers) {
+                if (container instanceof HTMLElement) {
+                    container.classList.add('game-view-visible');
+                }
+            }
         } else if (
             !visible &&
             this.gameView.container.style.display !== 'none'
         ) {
             this.gameView.container.style.display = 'none';
+            // containerId doesn't match gameView.container (bad naming I know)
+            if (this.gameView.containerId) {
+                const gameContainer = document.getElementById(
+                    this.gameView.containerId
+                );
+                if (gameContainer) {
+                    gameContainer.style.display = 'none';
+                }
+            }
+
+            // show all VM containers when the game view is visible
+            const vmContainers = document.querySelectorAll(
+                '.vm-iframe-container'
+            );
+            for (let container of vmContainers) {
+                if (container instanceof HTMLElement) {
+                    container.classList.remove('game-view-visible');
+                }
+            }
         }
     }
 

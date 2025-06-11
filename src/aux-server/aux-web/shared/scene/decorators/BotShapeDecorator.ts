@@ -1765,7 +1765,6 @@ export class BotShapeDecorator
         const colliderPlane = (this.collider = createPlane(1));
         setColor(colliderPlane, 'clear');
 
-        this.collider = this._mapView;
         this._mapProviderName = providerName;
 
         this.container.add(this._mapView);
