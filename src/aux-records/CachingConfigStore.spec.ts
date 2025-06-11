@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { CachingConfigStore } from './CachingConfigStore';
-import { Cache } from './Cache';
 import { MemoryStore } from './MemoryStore';
 import { MemoryCache } from './MemoryCache';
 import {

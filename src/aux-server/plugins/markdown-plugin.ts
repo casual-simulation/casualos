@@ -19,10 +19,8 @@ import type { Plugin } from 'vite';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
-import remarkToc from 'remark-toc';
 import rehypeSlug from 'rehype-slug';
 import { unified } from 'unified';
-import { createFilter } from '@rollup/pluginutils';
 
 export interface Options {
     files: {

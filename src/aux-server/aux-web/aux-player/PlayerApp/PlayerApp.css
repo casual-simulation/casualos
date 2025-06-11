@@ -10,7 +10,8 @@
     top: 16px;
 }
 
-#app-game-container {
+#app-game-container,
+.main-content {
     position: absolute;
     top: 0;
     width: 100%;
@@ -229,6 +230,10 @@
 
 .vm-iframe-container iframe:first-child {
     display: block;
+}
+
+.vm-iframe-container.game-view-visible iframe:first-child {
+    display: none;
 }
 
 .vm-iframe-container iframe {

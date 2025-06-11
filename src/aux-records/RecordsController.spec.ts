@@ -15,43 +15,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import {
-    fromBase64String,
-    toBase64String,
-} from '@casual-simulation/aux-common';
 import type {
     CreatePublicRecordKeyFailure,
     CreatePublicRecordKeySuccess,
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeySuccess,
 } from './RecordsController';
-import {
-    DEFAULT_RECORD_KEY_POLICY,
-    formatV1RecordKey,
-    formatV2RecordKey,
-    isRecordKey,
-    parseRecordKey,
-    RecordsController,
-} from './RecordsController';
+import { RecordsController } from './RecordsController';
 import {
     hashHighEntropyPasswordWithSalt,
-    hashPassword,
     hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { v4 as uuid } from 'uuid';
-import { ConfigurationStore } from './ConfigurationStore';
 import { createTestSubConfiguration } from './TestUtils';
-import { merge } from 'lodash';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import type { PrivoClientInterface } from './PrivoClient';
+import {
+    formatV1RecordKey,
+    formatV2RecordKey,
+    isRecordKey,
+} from '@casual-simulation/aux-common/records/RecordKeys';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2706,6 +2692,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2749,6 +2740,67 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the configured store features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreMaxItems(100)
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 10,
+                                maxCost: 10000,
+                            })
+                    )
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: true,
+                        maxItems: 100,
+                        currencyLimits: {
+                            usd: {
+                                maxCost: 10000,
+                                minCost: 10,
+                            },
+                        },
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2790,6 +2842,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2809,7 +2866,6 @@ describe('RecordsController', () => {
                 appId: 'appId',
                 privateKey: 'privateKey',
             });
-
             const result = await manager.getStudio('studioId', 'userId');
 
             expect(result).toEqual({
@@ -2831,12 +2887,69 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: true,
                     },
-                    humeFeatures: {
-                        allowed: true,
-                    },
                     loomConfig: {
                         appId: 'appId',
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the studio stripe account status', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                comId: 'comId1',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'acct_123',
+                stripeAccountRequirementsStatus: 'incomplete',
+                stripeAccountStatus: 'pending',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: 'pending',
+                    stripeRequirementsStatus: 'incomplete',
                 },
             });
         });
@@ -2876,6 +2989,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2923,6 +3041,11 @@ describe('RecordsController', () => {
                     humeConfig: {
                         apiKey: 'apiKey',
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -4910,148 +5033,6 @@ describe('RecordsController', () => {
                     studioId: 'studioId',
                 },
             ]);
-        });
-    });
-});
-
-describe('formatV1RecordKey()', () => {
-    it('should combine the given record name and password', () => {
-        const result = formatV1RecordKey('name', 'password');
-
-        const [version, name, password] = result.split('.');
-
-        expect(version).toBe('vRK1');
-        expect(name).toBe(toBase64String('name'));
-        expect(password).toBe(toBase64String('password'));
-    });
-});
-
-describe('formatV2RecordKey()', () => {
-    it('should combine the given record name and password and policy', () => {
-        const result = formatV2RecordKey('name', 'password', 'subjectless');
-
-        const split = result.split('.');
-
-        expect(split).toEqual([
-            'vRK2',
-            toBase64String('name'),
-            toBase64String('password'),
-            'subjectless',
-        ]);
-    });
-
-    it('should default to subjectfull policies', () => {
-        const result = formatV2RecordKey('name', 'password', null);
-
-        const split = result.split('.');
-
-        expect(split).toEqual([
-            'vRK2',
-            toBase64String('name'),
-            toBase64String('password'),
-            'subjectfull',
-        ]);
-    });
-});
-
-describe('parseRecordKey()', () => {
-    describe('v1', () => {
-        it('should parse the given key into the name and password', () => {
-            const key = formatV1RecordKey('name', 'password');
-            const [name, password, policy] = parseRecordKey(key);
-
-            expect(name).toBe('name');
-            expect(password).toBe('password');
-            expect(policy).toBe(DEFAULT_RECORD_KEY_POLICY); // Should always be the default policy
-        });
-
-        it('should return null if given an empty string', () => {
-            const result = parseRecordKey('');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with the wrong version', () => {
-            const result = parseRecordKey('vK1');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no data', () => {
-            const result = parseRecordKey('vRK1.');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no password', () => {
-            const result = parseRecordKey(`vRK1.${toBase64String('name')}`);
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a null key', () => {
-            const result = parseRecordKey(null);
-
-            expect(result).toBe(null);
-        });
-    });
-
-    describe('v2', () => {
-        it('should parse the given key into the name and password', () => {
-            const key = formatV2RecordKey('name', 'password', 'subjectless');
-            const [name, password, policy] = parseRecordKey(key);
-
-            expect(name).toBe('name');
-            expect(password).toBe('password');
-            expect(policy).toBe('subjectless');
-        });
-
-        it('should return null if given an empty string', () => {
-            const result = parseRecordKey('');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with the wrong version', () => {
-            const result = parseRecordKey('vK2');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no data', () => {
-            const result = parseRecordKey('vRK2.');
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no password', () => {
-            const result = parseRecordKey(`vRK2.${toBase64String('name')}`);
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with no policy', () => {
-            const result = parseRecordKey(
-                `vRK2.${toBase64String('name')}.${toBase64String('password')}`
-            );
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a string with an unknown policy', () => {
-            const result = parseRecordKey(
-                `vRK2.${toBase64String('name')}.${toBase64String(
-                    'password'
-                )}.wrong`
-            );
-
-            expect(result).toBe(null);
-        });
-
-        it('should return null if given a null key', () => {
-            const result = parseRecordKey(null);
-
-            expect(result).toBe(null);
         });
     });
 });

@@ -17,7 +17,6 @@
  */
 import type { BotCalculationContext, Bot } from '@casual-simulation/aux-common';
 import type { AuxBotVisualizer } from './AuxBotVisualizer';
-import { Grid3D } from './Grid3D';
 
 /**
  * Defines an interface for an object that provides a container for one or more contexts.

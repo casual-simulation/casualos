@@ -19,7 +19,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide } from 'vue-property-decorator';
 import { Tagline, EventBus } from '@casual-simulation/aux-components';
-import { appManager } from '../../shared/AppManager';
+import { appManager, PLAYER_OWNER } from '../../shared/AppManager';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import type { SubscriptionLike } from 'rxjs';
@@ -117,13 +117,13 @@ import AuthUI from '../../shared/vue-components/AuthUI/AuthUI';
 import LoginUI from '../../shared/vue-components/LoginUI/LoginUI';
 import ReportInstDialog from '../../shared/vue-components/ReportInstDialog/ReportInstDialog';
 import EnableXRModal from '../../shared/vue-components/EnableXRModal/EnableXRModal';
-import { oembed } from '@loomhq/loom-embed';
+// import { oembed } from '@loomhq/loom-embed';
 import type { SDKResult as LoomSDKResult } from '@loomhq/record-sdk';
-import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
+// import { createInstance as createLoomInstance } from '@loomhq/record-sdk';
 import { isSupported as isLoomSupported } from '@loomhq/record-sdk/is-supported';
 import type { SubscribeToNotificationAction } from '@casual-simulation/aux-runtime';
 import { recordsCallProcedure } from '@casual-simulation/aux-runtime';
-import type { NotificationRecord } from '@casual-simulation/aux-records';
+import { getSimulationId } from '../../../shared/SimulationHelpers';
 
 let syntheticVoices = [] as SyntheticVoice[];
 
@@ -810,6 +810,67 @@ export default class PlayerApp extends Vue {
                     this.finishAddSimulation(e.id);
                 } else if (e.type === 'unload_server') {
                     this.removeSimulationById(e.id);
+                } else if (e.type === 'load_server_config') {
+                    let simId: string;
+                    let recordName: string = null;
+                    let inst: string = null;
+                    let isStatic: boolean = false;
+                    if (e.config.staticInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.staticInst,
+                            true
+                        );
+                        inst = e.config.staticInst;
+                        isStatic = true;
+                    } else {
+                        recordName = e.config.owner ?? e.config.record ?? null;
+                        inst = e.config.inst;
+                        isStatic = false;
+
+                        let recordInfo = appManager.getRecordName(recordName);
+
+                        while (
+                            recordInfo.owner === PLAYER_OWNER &&
+                            !recordInfo.recordName
+                        ) {
+                            await appManager.auth.primary.authenticate();
+                            recordInfo = appManager.getRecordName(recordName);
+                        }
+
+                        recordName = recordInfo.recordName;
+                        simId = getSimulationId(recordName, inst, false);
+                    }
+
+                    appManager.simulationManager.addSimulation(simId, {
+                        recordName,
+                        inst,
+                        isStatic,
+                    });
+                } else if (e.type === 'unload_server_config') {
+                    let simId: string;
+                    let recordName: string = null;
+                    let inst: string = null;
+                    let isStatic: boolean = false;
+                    if (e.config.staticInst) {
+                        simId = getSimulationId(
+                            null,
+                            e.config.staticInst,
+                            true
+                        );
+                        inst = e.config.staticInst;
+                        isStatic = true;
+                    } else {
+                        recordName = e.config.owner ?? e.config.record ?? null;
+                        inst = e.config.inst;
+                        isStatic = false;
+
+                        const recordInfo = appManager.getRecordName(recordName);
+                        recordName = recordInfo.recordName;
+                        simId = getSimulationId(recordName, inst, false);
+                    }
+
+                    appManager.simulationManager.removeSimulation(simId);
                 } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
                 } else if (e.type === 'show_qr_code') {
@@ -1603,6 +1664,15 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            if (import.meta.env.MODE === 'static') {
+                simulation.helper.transaction(
+                    asyncError(
+                        e.taskId,
+                        'getScriptIssues() is not supported in static mode.'
+                    )
+                );
+                return;
+            }
             const helpers = await import('../../shared/MonacoHelpers');
             const bot = simulation.helper.botsState[e.botId];
             const issues = await helpers.getScriptIssues(
@@ -1627,6 +1697,7 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            const { oembed } = await import('@loomhq/loom-embed');
             const metadata = await oembed(e.sharedUrl);
 
             if (hasValue(e.taskId)) {
@@ -1647,6 +1718,7 @@ export default class PlayerApp extends Vue {
         simulation: BrowserSimulation
     ) {
         try {
+            const { oembed } = await import('@loomhq/loom-embed');
             const metadata = await oembed(e.sharedUrl);
             this.loomEmbedHtml = metadata.html;
             this.showLoom = true;
@@ -1670,6 +1742,9 @@ export default class PlayerApp extends Vue {
                 throw new Error(error);
             }
 
+            const { createInstance: createLoomInstance } = await import(
+                '@loomhq/record-sdk'
+            );
             let result: LoomSDKResult;
             if (hasValue(e.options.publicAppId)) {
                 result = await createLoomInstance({

@@ -46,6 +46,21 @@ module.exports = {
             'ts-jest',
             {
                 tsconfig: 'tsconfig.test.json',
+                diagnostics: {
+                    ignoreCodes: [1343],
+                },
+                astTransformers: {
+                    before: [
+                        {
+                            path: 'ts-jest-mock-import-meta',
+                            options: {
+                                metaObjectReplacement: {
+                                    url: 'https://example.com',
+                                },
+                            },
+                        },
+                    ],
+                },
             },
         ],
         '^.+\\.(js|jsx)$': 'babel-jest',

@@ -30,7 +30,6 @@ import {
     map,
     distinctUntilChanged,
 } from 'rxjs/operators';
-import { isEqual } from 'lodash';
 
 /**
  * Defines a class that is able to help manage the login state of a simulation.

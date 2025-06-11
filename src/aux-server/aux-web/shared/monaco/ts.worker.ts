@@ -3,11 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-    initialize,
-    ts,
-    TypeScriptWorker,
-} from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
+import { initialize } from '@casual-simulation/monaco-editor/esm/vs/language/typescript/ts.worker';
 import type { worker } from '@casual-simulation/monaco-editor';
 import {
     CustomTypeScriptWorker,

@@ -267,6 +267,11 @@ export interface PartitionAuthRequest {
     errorMessage?: string;
 
     /**
+     * The indicator that was used to connect.
+     */
+    indicator?: ConnectionIndicator;
+
+    /**
      * The denial reason. Only present if the kind is "not_authorized".
      */
     reason?: DenialReason;

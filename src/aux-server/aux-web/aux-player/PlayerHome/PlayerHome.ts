@@ -25,10 +25,8 @@ import type {
     BiosOption,
 } from '@casual-simulation/aux-common';
 import {
-    goToDimension,
     calculateBotValue,
     hasValue,
-    BotCalculationContext,
     QUERY_PORTALS,
     KNOWN_PORTALS,
     ON_PLAYER_PORTAL_CHANGED_ACTION_NAME,
@@ -49,12 +47,11 @@ import { first } from 'rxjs/operators';
 import type { Dictionary } from 'vue-router/types/router';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    userBotChanged,
     getUserBotAsync,
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual, sortBy } from 'lodash';
+import { intersection, isEqual } from 'lodash';
 import type { Subscription } from 'rxjs';
 import type { Config } from 'unique-names-generator';
 import { uniqueNamesGenerator } from 'unique-names-generator';
@@ -63,7 +60,7 @@ import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
 import { getInstParameters, getPermalink } from '../UrlUtils';
-import type { FormError } from '@casual-simulation/aux-records';
+import type { FormError } from '@casual-simulation/aux-common';
 import FieldErrors from '../../shared/vue-components/FieldErrors/FieldErrors';
 import { MdField } from 'vue-material/dist/components';
 import { sortInsts } from '../PlayerUtils';

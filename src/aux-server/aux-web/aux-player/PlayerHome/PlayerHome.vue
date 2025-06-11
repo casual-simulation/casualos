@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div id="app-game-container">
         <game-view
             v-if="!isLoading"
             class="game-view"

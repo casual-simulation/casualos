@@ -17,8 +17,7 @@
  */
 import Vue from 'vue';
 import type { IGameView } from './IGameView';
-import { BotRenderer } from '../scene/BotRenderer';
-import { Provide, Component, Prop } from 'vue-property-decorator';
+import { Component, Prop } from 'vue-property-decorator';
 import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
 import type { Game } from '../scene/Game';

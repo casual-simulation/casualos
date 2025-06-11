@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Remote } from 'comlink';
-import { wrap, proxy, expose, transfer, createEndpoint } from 'comlink';
+import { wrap, proxy } from 'comlink';
 import type {
     AuthHelperInterface,
     AuxAuth,
@@ -28,26 +28,25 @@ import type {
     PrivoSignUpInfo,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-common';
-import { hasValue } from '@casual-simulation/aux-common';
+import { hasValue, parseRecordKey } from '@casual-simulation/aux-common';
 import type {
     GetPlayerConfigResult,
     CreatePublicRecordKeyResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
-import { parseRecordKey } from '@casual-simulation/aux-records';
 
 // Save the query string that was used when the site loaded
 const query = typeof location !== 'undefined' ? location.search : null;
@@ -55,6 +54,8 @@ const query = typeof location !== 'undefined' ? location.search : null;
 interface StaticAuxAuth {
     new (sessionKey?: string, connectionKey?: string): AuxAuth;
 }
+
+export const WRAPPER_CREATION_TIMEOUT_MS = 2000;
 
 /**
  * Defines a class that helps handle authentication/authorization for a particular endpoint.
@@ -177,6 +178,7 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         const iframeUrl = new URL(`/iframe.html${query}`, this._origin).href;
 
         const iframe = (this._iframe = document.createElement('iframe'));
+        let promise = waitForLoad(this._iframe);
         this._sub.add(() => {
             iframe.remove();
         });
@@ -185,7 +187,6 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._iframe.allow = 'publickey-credentials-get *';
         this._iframe.className = 'auth-helper-iframe';
 
-        let promise = waitForLoad(this._iframe);
         document.body.insertBefore(this._iframe, document.body.firstChild);
 
         await promise;
@@ -193,10 +194,14 @@ export class AuthEndpointHelper implements AuthHelperInterface {
         this._channel = setupChannel(this._iframe.contentWindow);
 
         const wrapper = wrap<StaticAuxAuth>(this._channel.port1);
-        this._proxy = await new wrapper(
-            this._initialSessionKey,
-            this._initialConnectionKey
-        );
+        this._proxy = await Promise.race([
+            new wrapper(this._initialSessionKey, this._initialConnectionKey),
+            new Promise<Remote<AuxAuth>>((resolve, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Failed to communicate with endpoint.'));
+                }, WRAPPER_CREATION_TIMEOUT_MS);
+            }),
+        ]);
         try {
             this._protocolVersion = await this._proxy.getProtocolVersion();
         } catch (err) {
@@ -274,6 +279,22 @@ export class AuthEndpointHelper implements AuthHelperInterface {
 
     protected async _isAuthenticatedCore() {
         return await this._proxy.isLoggedIn();
+    }
+
+    async relogin(): Promise<void> {
+        if (!hasValue(this._origin)) {
+            return;
+        }
+        if (!this._initialized) {
+            await this._init();
+        }
+
+        if (this._protocolVersion < 12) {
+            await this._proxy.logout();
+            await this._proxy.login(true);
+        } else {
+            await this._proxy.relogin();
+        }
     }
 
     /**

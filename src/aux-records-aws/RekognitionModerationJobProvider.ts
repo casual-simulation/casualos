@@ -31,10 +31,7 @@ import type {
     CreateJobCommandInput,
     S3ControlClient,
 } from '@aws-sdk/client-s3-control';
-import {
-    CreateJobCommand,
-    JobManifestGeneratorFilter,
-} from '@aws-sdk/client-s3-control';
+import { CreateJobCommand } from '@aws-sdk/client-s3-control';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { S3 } from '@aws-sdk/client-s3';

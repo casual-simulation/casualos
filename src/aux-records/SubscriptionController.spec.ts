@@ -15,41 +15,105 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { SubscriptionController } from './SubscriptionController';
-import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
-import type { AuthUser } from './AuthStore';
-import { AuthStore } from './AuthStore';
-import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { AuthMessenger } from './AuthMessenger';
-import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import type { StripeInterface, StripeProduct } from './StripeInterface';
+import type {
+    ClaimActivationKeySuccess,
+    FulfillCheckoutSessionSuccess,
+} from './SubscriptionController';
 import {
+    SubscriptionController,
+    formatV1ActivationKey,
+    getAccountStatus,
+    parseActivationKey,
+} from './SubscriptionController';
+import type { AuthController } from './AuthController';
+import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
+import type { AuthUser } from './AuthStore';
+import type { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import {
+    failure,
+    formatV1SessionKey,
+    generateV1ConnectionToken,
+    parseSessionKey,
+    PUBLIC_WRITE_MARKER,
+    success,
+    unwrap,
+} from '@casual-simulation/aux-common';
+import type {
+    StripeAccount,
+    StripeAccountLink,
+    StripeAccountStatus,
+    StripeCheckoutResponse,
+    StripeCreateCustomerResponse,
+    StripeInterface,
+    StripeProduct,
+} from './StripeInterface';
+import type {
+    FeaturesConfiguration,
     SubscriptionConfiguration,
-    allowAllFeatures,
 } from './SubscriptionConfiguration';
+import { allowAllFeatures } from './SubscriptionConfiguration';
 import type { Studio } from './RecordsStore';
-import { MemoryStore } from './MemoryStore';
-import { createTestUser } from './TestUtils';
+import type { MemoryStore } from './MemoryStore';
+import {
+    checkAccounts,
+    checkTransfers,
+    createTestControllers,
+    createTestSubConfiguration,
+    createTestUser,
+} from './TestUtils';
+import { merge } from 'lodash';
+import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
+import {
+    PRIVATE_MARKER,
+    PUBLIC_READ_MARKER,
+    toBase64String,
+} from '@casual-simulation/aux-common';
+import type {
+    Account,
+    FinancialController,
+    MemoryFinancialInterface,
+} from './financial';
+import {
+    ACCOUNT_IDS,
+    AccountCodes,
+    AccountFlags,
+    CurrencyCodes,
+    LEDGERS,
+    TransferCodes,
+    TransferFlags,
+    USD_TO_CREDITS,
+} from './financial';
+import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
+console.warn = jest.fn();
+// console.error = jest.fn();
 
 describe('SubscriptionController', () => {
     let controller: SubscriptionController;
     let auth: AuthController;
     let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
+    let financialInterface: MemoryFinancialInterface;
+    let financialController: FinancialController;
+    let purchasableItemsStore: MemoryPurchasableItemRecordsStore;
+    let contractStore: MemoryContractRecordsStore;
 
     let stripeMock: {
         publishableKey: string;
         getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
         listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<any>;
+        createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
         createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<any>;
+        createCustomer: jest.Mock<Promise<StripeCreateCustomerResponse>>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
+        createAccount: jest.Mock<Promise<StripeAccount>>;
+        getAccountById: jest.Mock<Promise<StripeAccount>>;
+        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>;
     };
 
     let stripe: StripeInterface;
@@ -59,45 +123,49 @@ describe('SubscriptionController', () => {
 
     beforeEach(async () => {
         nowMock = Date.now = jest.fn();
-        store = new MemoryStore({
-            subscriptions: {
-                subscriptions: [
-                    {
-                        id: 'sub_1',
-                        product: 'product_99_id',
-                        eligibleProducts: [
-                            'product_99_id',
-                            'product_1_id',
-                            'product_2_id',
-                            'product_3_id',
-                        ],
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                    },
-                    {
-                        id: 'sub_2',
-                        product: 'product_1000_id',
-                        eligibleProducts: ['product_1000_id'],
-                        featureList: [
-                            'Feature 1000',
-                            'Feature 2000',
-                            'Feature 3000',
-                        ],
-                        purchasable: false,
-                    },
-                ],
-                webhookSecret: 'webhook_secret',
-                cancelUrl: 'http://cancel_url/',
-                returnUrl: 'http://return_url/',
-                successUrl: 'http://success_url/',
-                tiers: {},
-                defaultFeatures: {
-                    user: allowAllFeatures(),
-                    studio: allowAllFeatures(),
+        const services = createTestControllers({
+            subscriptions: [
+                {
+                    id: 'sub_1',
+                    product: 'product_99_id',
+                    eligibleProducts: [
+                        'product_99_id',
+                        'product_1_id',
+                        'product_2_id',
+                        'product_3_id',
+                    ],
+                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
                 },
+                {
+                    id: 'sub_2',
+                    product: 'product_1000_id',
+                    eligibleProducts: ['product_1000_id'],
+                    featureList: [
+                        'Feature 1000',
+                        'Feature 2000',
+                        'Feature 3000',
+                    ],
+                    purchasable: false,
+                },
+            ],
+            webhookSecret: 'webhook_secret',
+            cancelUrl: 'http://cancel_url/',
+            returnUrl: 'http://return_url/',
+            successUrl: 'http://success_url/',
+            tiers: {},
+            defaultFeatures: {
+                user: allowAllFeatures(),
+                studio: allowAllFeatures(),
             },
         });
-        authMessenger = new MemoryAuthMessenger();
-        auth = new AuthController(store, authMessenger, store);
+
+        store = services.store;
+        authMessenger = services.authMessenger;
+        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
+        contractStore = new MemoryContractRecordsStore(store);
+        auth = services.auth;
+        financialInterface = services.financialInterface;
+        financialController = services.financialController;
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -109,6 +177,10 @@ describe('SubscriptionController', () => {
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
             getSubscriptionById: jest.fn(),
+            createAccountLink: jest.fn(),
+            createAccount: jest.fn(),
+            getAccountById: jest.fn(),
+            getCheckoutSessionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -151,7 +223,12 @@ describe('SubscriptionController', () => {
             auth,
             store,
             store,
-            store
+            store,
+            services.policies,
+            store,
+            purchasableItemsStore,
+            services.financialController,
+            contractStore
         );
 
         const request = await auth.requestLogin({
@@ -1711,6 +1788,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -1846,6 +1926,9 @@ describe('SubscriptionController', () => {
                     );
                     stripeMock.createCheckoutSession.mockResolvedValueOnce({
                         url: 'checkout_url',
+                        id: 'session_id',
+                        status: 'open',
+                        payment_status: 'unpaid',
                     });
 
                     await store.saveUser({
@@ -2090,6 +2173,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2174,6 +2260,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2258,6 +2347,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2342,6 +2434,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -2397,6 +2492,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.saveUser({
@@ -3019,6 +3117,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 const result = await controller.createManageSubscriptionLink({
@@ -3155,6 +3256,9 @@ describe('SubscriptionController', () => {
                     );
                     stripeMock.createCheckoutSession.mockResolvedValueOnce({
                         url: 'checkout_url',
+                        id: 'session_id',
+                        status: 'open',
+                        payment_status: 'unpaid',
                     });
                 });
 
@@ -3339,6 +3443,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3427,6 +3534,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3515,6 +3625,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3603,6 +3716,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 await store.updateStudio({
@@ -3662,6 +3778,9 @@ describe('SubscriptionController', () => {
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'checkout_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 store.subscriptionConfiguration = {
@@ -4264,6 +4383,5196 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('createManageStoreAccountLink()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should create a link to manage the studio account and return it', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_update',
+            });
+        });
+
+        it('should create a link to onboard the studio if the requirements are incomplete', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            await store.updateStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should create a new account for the studio if it doesnt have one', async () => {
+            stripeMock.createAccount.mockResolvedValueOnce({
+                id: 'accountId',
+                requirements: {
+                    currently_due: ['requirement1'],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+                charges_enabled: false,
+            });
+
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            await store.updateStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
+                stripeAccountRequirementsStatus: null,
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            await expect(store.getStudioById('studioId')).resolves.toEqual({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+
+            expect(stripeMock.createAccount).toHaveBeenCalledWith({
+                controller: {
+                    fees: {
+                        payer: 'account',
+                    },
+                    losses: {
+                        payments: 'stripe',
+                    },
+                    requirement_collection: 'stripe',
+                    stripe_dashboard: {
+                        type: 'full',
+                    },
+                },
+                metadata: {
+                    studioId: 'studioId',
+                },
+            });
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should return not_authorized if store features are not allowed', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+
+        it('should return not_authorized if the user is not a member of the studio', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: 'wrongUserId',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+
+        it('should return not_authorized if the user is not an admin in the studio', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            await store.saveNewUser({
+                id: 'wrongUserId',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'wrongUserId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'studioId',
+                userId: 'wrongUserId',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+
+        it('should return studio_not_found if the studio does not exist', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageStoreAccountLink({
+                studioId: 'missingStudio',
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('createManageXpAccountLink()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration();
+            nowMock.mockReturnValue(101);
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+        });
+
+        it('should create a link to manage the stripe account and return it', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_update',
+            });
+
+            const user = await store.findUser(userId);
+            expect(user.stripeAccountId).toBe('accountId');
+            expect(user.stripeAccountRequirementsStatus).toBe('complete');
+            expect(user.stripeAccountStatus).toBe('active');
+        });
+
+        it('should create a link to onboard the user if the requirements are incomplete', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should create a new stripe account for the studio if it doesnt have one', async () => {
+            stripeMock.createAccount.mockResolvedValueOnce({
+                id: 'accountId',
+                requirements: {
+                    currently_due: ['requirement1'],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+                charges_enabled: false,
+            });
+
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
+                stripeAccountRequirementsStatus: null,
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            await expect(store.findUser(userId)).resolves.toEqual({
+                ...user,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'incomplete',
+            });
+
+            expect(stripeMock.createAccount).toHaveBeenCalledWith({
+                controller: {
+                    fees: {
+                        payer: 'application',
+                    },
+                    losses: {
+                        payments: 'application',
+                    },
+                    requirement_collection: 'stripe',
+                    stripe_dashboard: {
+                        type: 'express',
+                    },
+                },
+                metadata: {
+                    userId: userId,
+                },
+            });
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_onboarding',
+            });
+        });
+
+        it('should create a new financial account for the studio if it doesnt have one', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'account_link',
+                })
+            );
+
+            expect(store.financialAccounts).toEqual([
+                {
+                    id: '1',
+                    userId: userId,
+                    ledger: LEDGERS.usd,
+                    currency: 'usd',
+                },
+            ]);
+
+            expect([...financialInterface.accounts.values()]).toEqual([
+                {
+                    id: 1n,
+                    debits_pending: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    credits_posted: 0n,
+                    user_data_128: 0n,
+                    user_data_64: 0n,
+                    user_data_32: 0,
+                    reserved: 0,
+                    ledger: 1,
+                    flags:
+                        AccountFlags.debits_must_not_exceed_credits |
+                        AccountFlags.history,
+                    code: AccountCodes.liabilities_user,
+                    timestamp: 0n,
+                },
+            ]);
+        });
+
+        it('should return user_not_found if the user does not exist', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await controller.createManageXpAccountLink({
+                userId: 'missing_user_id',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
+                })
+            );
+
+            expect(stripeMock.createAccountLink).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('createPurchaseItemLink()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                studioId: 'studioId',
+                ownerId: null,
+                secretHashes: [],
+                secretSalt: 'secret',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should create a new checkout session', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+                sessionId: expect.any(String),
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
+            ]);
+
+            await expect(store.findUser(userId)).resolves.toEqual({
+                ...user,
+            });
+        });
+
+        it('should support users that are not logged in', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: null,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+                sessionId: expect.any(String),
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: null,
+                metadata: {
+                    userId: null,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: null,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should be able to charge fixed application fees', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+                sessionId: expect.any(String),
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 10,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should be able to charge percentage application fees', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'percent',
+                                                percent: 15,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+                sessionId: expect.any(String),
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    application_fee_amount: 15,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should round partial cents from the application fee up', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'percent',
+                                                percent: 15,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                cost: 49,
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 49,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                url: 'checkout_url',
+                sessionId: expect.any(String),
+            });
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 49,
+                            product_data: {
+                                name: 'Item 1',
+                                description: 'Description 1',
+                                images: [],
+                                metadata: {
+                                    recordName: 'studioId',
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // 49 * 0.15 = 7.35 rounds up 8
+                    application_fee_amount: 8,
+                },
+                connect: {
+                    stripeAccount: 'accountId',
+                },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should return price_does_not_match if the expected cost doesnt match the item cost', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 999,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'price_does_not_match',
+                errorMessage:
+                    'The expected price does not match the actual price of the item.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return price_does_not_match if the currency doesnt match the item currency', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'wrong',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'price_does_not_match',
+                errorMessage:
+                    'The expected price does not match the actual price of the item.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if store subscription doesnt allow store features', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'store_disabled',
+                errorMessage:
+                    'The store you are trying to purchase from is disabled.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if the store doesnt have a stripe account', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const studio = await store.getStudioById('studioId');
+            await store.updateStudio({
+                ...studio,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
+                stripeAccountRequirementsStatus: null,
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'store_disabled',
+                errorMessage:
+                    'The store you are trying to purchase from is disabled.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if the store doesnt have an active status', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const studio = await store.getStudioById('studioId');
+            await store.updateStudio({
+                ...studio,
+                stripeAccountId: 'account_id',
+                stripeAccountStatus: 'pending',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'store_disabled',
+                errorMessage:
+                    'The store you are trying to purchase from is disabled.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return currency_not_supported if the subscription doesnt have limits for it', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                currency: 'eur',
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'eur',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'currency_not_supported',
+                errorMessage: 'The currency is not supported.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return subscription_limit_reached if the item cost is greater than the max cost for the subscription', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                cost: 10001,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 10001,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The item you are trying to purchase has a price that is not allowed.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return server_error if the application fee is greater than the item cost', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 100,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                cost: 10,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 10,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'server_error',
+                errorMessage:
+                    'The application fee is greater than the cost of the item.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return not_authorized if the user does not have the purchase permission for the item', async () => {
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'studioId',
+                    resourceKind: 'purchasableItem',
+                    resourceId: 'item1',
+                    action: 'purchase',
+                    subjectType: 'user',
+                    subjectId: userId,
+                },
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return not_authorized if the inst does not have the purchase permission for the item', async () => {
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    recordName: 'studioId',
+                    resourceKind: 'purchasableItem',
+                    resourceId: 'item1',
+                    action: 'purchase',
+                    subjectType: 'inst',
+                    subjectId: '/myInst',
+                },
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return item_already_purchased if the user already has the role', async () => {
+            await store.assignSubjectRole('studioId', userId, 'user', {
+                role: 'myRole',
+                expireTimeMs: null,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'item_already_purchased',
+                errorMessage:
+                    'You already have the role that the item would grant.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+    });
+
+    describe('purchaseContract()', () => {
+        const recordName = 'recordName';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'fixed',
+                                    amount: 10,
+                                },
+                            })
+                    )
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveUser({
+                id: 'xpUserId',
+                email: 'xpUser@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should create a new checkout session', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 110,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    // contract value
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Contract',
+                                images: [],
+                                metadata: {
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                    // platform fee
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 10,
+                            product_data: {
+                                name: 'Application Fee',
+                                images: [],
+                                metadata: {
+                                    fee: true,
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                    transactionId: '2',
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // application_fee_amount: 10,
+                    transfer_group: 'contract1',
+                },
+                // connect: {
+                //     stripeAccount: 'accountId',
+                // },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.linked | TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 10n,
+                    code: TransferCodes.xp_platform_fee,
+                    // contract account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 110n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 10n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 100n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should allow using the users USD account for the purchase', async () => {
+            const userAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: userId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            // Give the user 1000 USD
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            creditAccountId: userAccount!.id,
+                            amount: 1000n,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 110,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'no_payment_required',
+                    paid: true,
+                    stripeCheckoutSessionId: null,
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['6', '7'],
+                    transactionId: '5',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers.slice(1), [
+                {
+                    id: 6n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 4n,
+                    // User account
+                    debit_account_id: userAccount!.id,
+                    flags: TransferFlags.linked,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 5n,
+                },
+                {
+                    id: 7n,
+                    amount: 10n,
+                    code: TransferCodes.xp_platform_fee,
+                    // revenue account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // User account
+                    debit_account_id: userAccount!.id,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 5n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.assets_cash,
+                    credits_posted: 0n,
+                    debits_posted: 1000n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: userAccount!.id,
+                    credits_posted: 1000n,
+                    debits_posted: 110n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 10n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 4n,
+                    code: AccountCodes.liabilities_contract,
+                    credits_posted: 100n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should allow using the users Credits account for the purchase', async () => {
+            const userAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: userId,
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            // Give the user 1000 USD
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                            amount: 1000n,
+                            code: TransferCodes.exchange,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: userAccount!.id,
+                            amount: 1000n * USD_TO_CREDITS,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                })
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 110,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'no_payment_required',
+                    paid: true,
+                    stripeCheckoutSessionId: null,
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['7', '8', '9'],
+                    transactionId: '6',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers.slice(2), [
+                {
+                    id: 7n,
+                    amount: 110n * USD_TO_CREDITS,
+                    code: TransferCodes.exchange,
+                    credit_account_id: ACCOUNT_IDS.liquidity_credits,
+                    debit_account_id: userAccount!.id,
+                    flags: TransferFlags.linked,
+                    ledger: LEDGERS.credits,
+
+                    user_data_128: 6n,
+                },
+                {
+                    id: 8n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 5n,
+                    // User account
+                    debit_account_id: ACCOUNT_IDS.liquidity_usd,
+                    flags: TransferFlags.linked,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 6n,
+                },
+                {
+                    id: 9n,
+                    amount: 10n,
+                    code: TransferCodes.xp_platform_fee,
+                    // contract account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // User account
+                    debit_account_id: ACCOUNT_IDS.liquidity_usd,
+                    flags: TransferFlags.none,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 6n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.assets_cash,
+                    credits_posted: 0n,
+                    debits_posted: 1000n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: userAccount!.id,
+                    credits_posted: 1000n * USD_TO_CREDITS,
+                    debits_posted: 110n * USD_TO_CREDITS,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 10n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 5n,
+                    code: AccountCodes.liabilities_contract,
+                    credits_posted: 100n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.liquidity_credits,
+                    credits_posted: 110n * USD_TO_CREDITS,
+                    debits_posted: 1000n * USD_TO_CREDITS,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.liquidity_usd,
+                    credits_posted: 1000n,
+                    debits_posted: 110n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should support users that are not logged in for publicWrite contracts', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PUBLIC_WRITE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: null,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 110,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Contract',
+                                images: [],
+                                metadata: {
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 10,
+                            product_data: {
+                                name: 'Application Fee',
+                                images: [],
+                                metadata: {
+                                    fee: true,
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: null,
+                metadata: {
+                    userId: null,
+                    checkoutSessionId: expect.any(String),
+                    transactionId: '2',
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    transfer_group: 'contract1',
+                    // application_fee_amount: 10,
+                },
+                // connect: {
+                //     stripeAccount: 'accountId',
+                // },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: null,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.linked | TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 10n,
+                    code: TransferCodes.xp_platform_fee,
+                    // contract account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 110n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 10n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 100n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should automatically void the transfers when stripe fails to create a checkout session', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            stripeMock.createCheckoutSession.mockRejectedValueOnce(
+                new Error('Stripe error')
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'server_error',
+                    errorMessage:
+                        'Failed to create checkout session for contract.',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalled();
+
+            expect(store.checkoutSessions).toEqual([]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 0n,
+                    code: 0,
+                    // contract account
+                    credit_account_id: 0n,
+                    // Stripe account
+                    debit_account_id: 0n,
+                    flags: TransferFlags.void_pending_transfer,
+                    ledger: 0,
+
+                    pending_id: 3n,
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should be able to charge no fee', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Contract',
+                                images: [],
+                                metadata: {
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                    transactionId: '2',
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // application_fee_amount: 10,
+                    transfer_group: 'contract1',
+                },
+                // connect: {
+                //     stripeAccount: 'accountId',
+                // },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['3'],
+                    transfersPending: true,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 100n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 100n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should be able to charge fixed application fees', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'fixed',
+                                    amount: 20,
+                                },
+                            })
+                    )
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 120,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Contract',
+                                images: [],
+                                metadata: {
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 20,
+                            product_data: {
+                                name: 'Application Fee',
+                                images: [],
+                                metadata: {
+                                    fee: true,
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                    transactionId: '2',
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // application_fee_amount: 10,
+                    transfer_group: 'contract1',
+                },
+                // connect: {
+                //     stripeAccount: 'accountId',
+                // },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.linked | TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 20n,
+                    code: TransferCodes.xp_platform_fee,
+                    // contract account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 120n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 20n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 100n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should be able to charge a percentage application fee', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'percent',
+                                    percent: 35,
+                                },
+                            })
+                    )
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 135,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 100,
+                            product_data: {
+                                name: 'Contract',
+                                images: [],
+                                metadata: {
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 35,
+                            product_data: {
+                                name: 'Application Fee',
+                                images: [],
+                                metadata: {
+                                    fee: true,
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                    transactionId: '2',
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // application_fee_amount: 10,
+                    transfer_group: 'contract1',
+                },
+                // connect: {
+                //     stripeAccount: 'accountId',
+                // },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.linked | TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 35n,
+                    code: TransferCodes.xp_platform_fee,
+                    // contract account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 135n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 35n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 100n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should round partial cents from the application fee up', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'percent',
+                                    percent: 15,
+                                },
+                            })
+                    )
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 49,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 49 + 8,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'checkout_url',
+                    sessionId: expect.any(String),
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                mode: 'payment',
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 49,
+                            product_data: {
+                                name: 'Contract',
+                                images: [],
+                                metadata: {
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            unit_amount: 8,
+                            product_data: {
+                                name: 'Application Fee',
+                                images: [],
+                                metadata: {
+                                    fee: true,
+                                    resourceKind: 'contract',
+                                    recordName: recordName,
+                                    address: 'item1',
+                                },
+                            },
+                        },
+                        quantity: 1,
+                    },
+                ],
+                success_url: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/fulfillment\//
+                ),
+                cancel_url: 'return-url',
+                customer_email: 'test@example.com',
+                metadata: {
+                    userId: userId,
+                    checkoutSessionId: expect.any(String),
+                    transactionId: '2',
+                },
+                client_reference_id: expect.any(String),
+                payment_intent_data: {
+                    // application_fee_amount: 10,
+                    transfer_group: 'contract1',
+                },
+                // connect: {
+                //     stripeAccount: 'accountId',
+                // },
+            });
+
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: expect.any(String),
+                    stripeStatus: 'open',
+                    stripePaymentStatus: 'unpaid',
+                    paid: false,
+                    stripeCheckoutSessionId: 'checkout_id',
+                    invoiceId: null,
+                    userId: userId,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: recordName,
+                            contractAddress: 'item1',
+                            contractId: 'contract1',
+                            value: 49,
+                        },
+                    ],
+                    transferIds: ['3', '4'],
+                    transfersPending: true,
+                    transactionId: '2',
+                },
+            ]);
+
+            checkTransfers(financialInterface.transfers, [
+                {
+                    id: 3n,
+                    amount: 49n,
+                    code: TransferCodes.contract_payment,
+                    // contract account
+                    credit_account_id: 1n,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.linked | TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+                {
+                    id: 4n,
+                    amount: 8n,
+                    code: TransferCodes.xp_platform_fee,
+                    // contract account
+                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    // Stripe account
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    flags: TransferFlags.pending,
+                    ledger: LEDGERS.usd,
+
+                    user_data_128: 2n,
+                },
+            ]);
+
+            await checkAccounts(financialInterface, [
+                {
+                    id: ACCOUNT_IDS.assets_stripe,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 0n,
+                    debits_pending: 49n + 8n,
+                },
+                {
+                    id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 8n,
+                    debits_pending: 0n,
+                },
+                {
+                    id: 1n,
+                    credits_posted: 0n,
+                    debits_posted: 0n,
+                    credits_pending: 49n,
+                    debits_pending: 0n,
+                },
+            ]);
+        });
+
+        it('should return price_does_not_match if the expected cost doesnt match the item cost', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 999,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price of the contract.',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return price_does_not_match if the currency doesnt match the item currency', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'wrong',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price of the contract.',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return store_disabled if store subscription doesnt allow contract features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withAllDefaultFeatures()
+                    )
+            );
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'store_disabled',
+                    errorMessage:
+                        "The account you are trying to purchase the contract for doesn't have access to contracting features.",
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it.skip('should return currency_not_supported if the subscription doesnt have limits for it', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                currency: 'eur',
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.createPurchaseItemLink({
+                userId: userId,
+                item: {
+                    recordName: 'studioId',
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'eur',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'currency_not_supported',
+                errorMessage: 'The currency is not supported.',
+            });
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return subscription_limit_reached if the item cost is greater than the max cost for the subscription', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 10001,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 10001,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The contract you are trying to purchase has a price that is not allowed.',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return not_authorized if the user does not have the purchase permission for the item', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: 'xpUserId',
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'item1',
+                        action: 'purchase',
+                        subjectType: 'user',
+                        subjectId: 'xpUserId',
+                    },
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return not_authorized if the inst does not have the purchase permission for the item', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'item1',
+                        action: 'purchase',
+                        subjectType: 'inst',
+                        subjectId: '/myInst',
+                    },
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+
+        it('should return item_already_purchased if the contract has a status other than pending', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'checkout_url',
+                id: 'checkout_id',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            stripeMock.createCustomer.mockResolvedValueOnce({
+                id: 'customer_id',
+            });
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await controller.purchaseContract({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'return-url',
+                successUrl: 'success-url',
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'item_already_purchased',
+                    errorMessage: 'The contract has already been purchased.',
+                })
+            );
+
+            expect(stripeMock.createCheckoutSession).not.toHaveBeenCalled();
+            expect(stripeMock.createCustomer).not.toHaveBeenCalled();
+            expect(store.checkoutSessions).toEqual([]);
+        });
+    });
+
+    describe.only('cancelContract()', () => {
+        const recordName = 'recordName';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'fixed',
+                                    amount: 10,
+                                },
+                            })
+                    )
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveUser({
+                id: 'xpUserId',
+                email: 'xpUser@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should return not_found if the contract does not exist', async () => {
+            const result = await controller.cancelContract({
+                recordName: recordName,
+                address: 'missing',
+                userId: userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The contract could not be found.',
+                })
+            );
+        });
+
+        describe('USD', () => {
+            let contractAccount: Account | null;
+            let userAccount: Account | null;
+            beforeEach(async () => {
+                userAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                contractAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId: 'contract1',
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: '200',
+                                amount: 200,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: userAccount!.id,
+                                currency: CurrencyCodes.usd,
+                            },
+                            {
+                                transferId: '201',
+                                amount: 100,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: userAccount!.id,
+                                creditAccountId: contractAccount!.id,
+                                currency: CurrencyCodes.usd,
+                            },
+                            {
+                                transferId: '202',
+                                amount: 10,
+                                code: TransferCodes.xp_platform_fee,
+                                debitAccountId: userAccount!.id,
+                                creditAccountId:
+                                    ACCOUNT_IDS.revenue_xp_platform_fees,
+                                currency: CurrencyCodes.usd,
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should cancel the contract and refund the payment to the USD account', async () => {
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 100,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const contract = await contractStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(contract).toMatchObject({
+                    status: 'closed',
+                    closedAtMs: 101,
+                });
+
+                checkTransfers(financialInterface.transfers.slice(3), [
+                    {
+                        id: 4n,
+                        amount: 100n,
+                        code: TransferCodes.contract_refund,
+                        credit_account_id: userAccount!.id,
+                        debit_account_id: contractAccount!.id,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.balancing_debit,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 6n,
+                    },
+                    {
+                        id: 5n,
+                        amount: 0n,
+                        code: TransferCodes.account_closing,
+                        credit_account_id: userAccount!.id,
+                        debit_account_id: contractAccount!.id,
+                        flags:
+                            TransferFlags.closing_debit | TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 6n,
+                    },
+                ]);
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.id,
+                        credits_posted: 300n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.id,
+                        credits_posted: 100n,
+                        credits_pending: 0n,
+                        debits_posted: 100n,
+                        debits_pending: 0n,
+                        flags:
+                            AccountFlags.history |
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.closed,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should be able to cancel pending contracts', async () => {
+                await contractStore.updateItem(recordName, {
+                    id: 'differentContractId',
+                    address: 'item1',
+                    status: 'pending',
+                });
+
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 0,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const contract = await contractStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(contract).toMatchObject({
+                    status: 'closed',
+                    closedAtMs: 101,
+                });
+
+                checkTransfers(financialInterface.transfers.slice(3), []);
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.id,
+                        credits_posted: 200n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should do nothing if the contract is already closed', async () => {
+                await contractStore.updateItem(recordName, {
+                    address: 'item1',
+                    status: 'closed',
+                    closedAtMs: 99,
+                });
+
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 0,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const contract = await contractStore.getItemByAddress(
+                    recordName,
+                    'item1'
+                );
+
+                expect(contract).toMatchObject({
+                    status: 'closed',
+                    closedAtMs: 99,
+                });
+
+                checkTransfers(financialInterface.transfers.slice(3), []);
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.id,
+                        credits_posted: 200n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.id,
+                        credits_posted: 100n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                        flags:
+                            AccountFlags.history |
+                            AccountFlags.debits_must_not_exceed_credits,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+        });
+    });
+
+    describe('fulfillCheckoutSession()', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                studioId: 'studioId',
+                ownerId: null,
+                secretHashes: [],
+                secretSalt: 'secret',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'open',
+                paymentStatus: 'unpaid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: {
+                    currency: 'usd',
+                    paid: false,
+                    status: 'open',
+                    description: 'description',
+                    stripeInvoiceId: 'invoice1',
+                    tax: 0,
+                    subtotal: 100,
+                    total: 100,
+                    stripeHostedInvoiceUrl: 'hosted-url',
+                    stripeInvoicePdfUrl: 'pdf-url',
+                },
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+        });
+
+        it('should return not_found if the checkout session does not exist', async () => {
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'missing',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_found',
+                errorMessage: 'The checkout session does not exist.',
+            });
+        });
+
+        it('should return not_authorized if the user ID doesnt match the session', async () => {
+            const result = await controller.fulfillCheckoutSession({
+                userId: 'different',
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to accept fulfillment of this checkout session.',
+            });
+        });
+
+        it('should return invalid_request if the session has expired', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'expired',
+                paymentStatus: 'unpaid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The checkout session has expired.',
+            });
+        });
+
+        it('should return invalid_request if the session is still open', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'open',
+                paymentStatus: 'paid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The checkout session has not been completed.',
+            });
+        });
+
+        it('should return invalid_request if the session is complete but not paid', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'unpaid',
+                paid: false,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The checkout session has not been paid for.',
+            });
+        });
+
+        it('should return success if the session has already been fulfilled', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: 199,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+            expect(store.purchasedItems).toEqual([]);
+        });
+
+        it('should grant the purchased items if personally accepting fulfillment', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null,
+                },
+            ]);
+
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 200,
+                    activationKeyId: null,
+                },
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                    transfersPending: false,
+                },
+            ]);
+        });
+
+        describe('contract', () => {
+            beforeEach(async () => {
+                await financialController.init();
+                await contractStore.createItem('studioId', {
+                    id: 'contractId',
+                    address: 'item1',
+                    holdingUserId: userId,
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    issuedAtMs: 100,
+                    markers: [PUBLIC_READ_MARKER],
+                    status: 'pending',
+                });
+            });
+
+            it('should open the contract and complete the pending transfers', async () => {
+                const contractAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId: 'contractId',
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: '10',
+                                amount: 100,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: contractAccount!.id,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                            {
+                                transferId: '11',
+                                amount: 10,
+                                code: TransferCodes.contract_payment,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId:
+                                    ACCOUNT_IDS.revenue_xp_platform_fees,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                        ],
+                        transactionId: '9',
+                    })
+                );
+
+                await store.updateCheckoutSessionInfo({
+                    id: 'session1',
+                    status: 'complete',
+                    paymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoice: null,
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'contract',
+                            recordName: 'studioId',
+                            contractAddress: 'item1',
+                            contractId: 'contractId',
+                            value: 100,
+                        },
+                    ],
+                    transferIds: ['10', '11'],
+                    transfersPending: true,
+                    transactionId: '9',
+                });
+
+                nowMock.mockReturnValue(200);
+
+                const result = await controller.fulfillCheckoutSession({
+                    userId: userId,
+                    sessionId: 'session1',
+                    activation: 'now',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                });
+
+                expect(store.checkoutSessions).toEqual([
+                    {
+                        id: 'session1',
+                        stripeStatus: 'complete',
+                        stripePaymentStatus: 'paid',
+                        paid: true,
+                        stripeCheckoutSessionId: 'checkout1',
+                        userId: userId,
+                        invoiceId: expect.any(String),
+                        fulfilledAtMs: 200,
+                        items: [
+                            {
+                                type: 'contract',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                contractId: 'contractId',
+                                value: 100,
+                            },
+                        ],
+                        transferIds: ['10', '11'],
+                        transfersPending: false,
+                        transactionId: '9',
+                    },
+                ]);
+
+                const contract = await contractStore.getItemByAddress(
+                    'studioId',
+                    'item1'
+                );
+                expect(contract).toEqual({
+                    id: 'contractId',
+                    address: 'item1',
+                    holdingUserId: userId,
+                    issuingUserId: userId,
+                    initialValue: 100,
+                    rate: 1,
+                    issuedAtMs: 100,
+                    markers: [PUBLIC_READ_MARKER],
+                    status: 'open',
+                });
+
+                // Check that the pending transfers have been posted
+                checkTransfers(financialInterface.transfers, [
+                    {
+                        id: 10n,
+                        amount: 100n,
+                        code: TransferCodes.contract_payment,
+                        credit_account_id: contractAccount!.id,
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        flags: TransferFlags.linked | TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 9n,
+                    },
+                    {
+                        id: 11n,
+                        amount: 10n,
+                        code: TransferCodes.contract_payment,
+                        credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        debit_account_id: ACCOUNT_IDS.assets_stripe,
+                        flags: TransferFlags.pending,
+                        ledger: LEDGERS.usd,
+                        user_data_128: 9n,
+                    },
+                    {
+                        id: 2n,
+                        pending_id: 10n,
+                        flags:
+                            TransferFlags.linked |
+                            TransferFlags.post_pending_transfer,
+                        user_data_128: 9n,
+                    },
+                    {
+                        id: 3n,
+                        pending_id: 11n,
+                        flags: TransferFlags.post_pending_transfer,
+                        user_data_128: 9n,
+                    },
+                ]);
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: ACCOUNT_IDS.assets_stripe,
+                        credits_posted: 0n,
+                        debits_posted: 110n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.id,
+                        credits_posted: 100n,
+                        debits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+        });
+
+        it('should return invalid_request if trying to personally accept fulfillment as a guest', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: null,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: null,
+                sessionId: 'session1',
+                activation: 'now',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage:
+                    'Guests cannot accept immediate fulfillment of a checkout session.',
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+
+            expect(store.purchasedItems).toEqual([]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: null,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: null,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                },
+            ]);
+        });
+
+        it('should return an access key if not personally accepting fulfillment', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: null,
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+                transfersPending: false,
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'later',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                activationKey: expect.any(String),
+                activationUrl: expect.stringMatching(
+                    /^https:\/\/return-url\/store\/activate\?key=/
+                ),
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: null,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: null,
+                    activationKeyId: expect.any(String),
+                },
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                    transfersPending: false,
+                },
+            ]);
+        });
+    });
+
+    describe('claimActivationKey()', () => {
+        let activationKey: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 10000,
+                                            minCost: 10,
+                                            fee: {
+                                                type: 'fixed',
+                                                amount: 10,
+                                            },
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 100,
+                subscriptionPeriodEndMs: 1000,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                studioId: 'studioId',
+                ownerId: null,
+                secretHashes: [],
+                secretSalt: 'secret',
+            });
+
+            await purchasableItemsStore.putItem('studioId', {
+                address: 'item1',
+                name: 'Item 1',
+                description: 'Description 1',
+                imageUrls: [],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'myRole',
+                taxCode: null,
+                roleGrantTimeMs: null,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: {
+                    currency: 'usd',
+                    paid: false,
+                    status: 'open',
+                    description: 'description',
+                    stripeInvoiceId: 'invoice1',
+                    tax: 0,
+                    subtotal: 100,
+                    total: 100,
+                    stripeHostedInvoiceUrl: 'hosted-url',
+                    stripeInvoicePdfUrl: 'pdf-url',
+                },
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            nowMock.mockReturnValue(200);
+
+            const result = (await controller.fulfillCheckoutSession({
+                userId: userId,
+                sessionId: 'session1',
+                activation: 'later',
+            })) as FulfillCheckoutSessionSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                activationKey: expect.any(String),
+                activationUrl: expect.any(String),
+            });
+
+            activationKey = result.activationKey;
+
+            nowMock.mockReturnValue(300);
+        });
+
+        it('should grant the purchased items to the user if the activation key is valid', async () => {
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey,
+                target: 'self',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null,
+                },
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 300,
+                    activationKeyId: expect.any(String),
+                },
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                    transfersPending: false,
+                },
+            ]);
+        });
+
+        it('should create a new user account when the target is a guest', async () => {
+            const result = (await controller.claimActivationKey({
+                userId,
+                activationKey,
+                target: 'guest',
+                ipAddress: '127.0.0.1',
+            })) as ClaimActivationKeySuccess;
+
+            expect(result).toEqual({
+                success: true,
+                userId: expect.any(String),
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: null,
+            });
+
+            const roles = await store.listRolesForUser(
+                'studioId',
+                result.userId
+            );
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null,
+                },
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: result.userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 300,
+                    activationKeyId: expect.any(String),
+                },
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                    transfersPending: false,
+                },
+            ]);
+
+            const validation = await auth.validateSessionKey(result.sessionKey);
+            expect(validation).toMatchObject({
+                success: true,
+                userId: result.userId,
+                sessionId: expect.any(String),
+            });
+
+            const token = generateV1ConnectionToken(
+                result.connectionKey,
+                'connectionId',
+                'recordName',
+                'inst'
+            );
+
+            const validation2 = await auth.validateConnectionToken(token);
+            expect(validation2).toMatchObject({
+                success: true,
+                userId: result.userId,
+                sessionId: expect.any(String),
+                connectionId: 'connectionId',
+                recordName: 'recordName',
+                inst: 'inst',
+            });
+        });
+
+        it('should return invalid_request if given an invalid activation key', async () => {
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey: 'invalid',
+                target: 'self',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The activation key is invalid.',
+            });
+        });
+
+        it('should return not_logged_in if given a null user when self activating', async () => {
+            const result = await controller.claimActivationKey({
+                userId: null,
+                activationKey: activationKey,
+                target: 'self',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage: 'You need to be logged in to use target = self.',
+            });
+        });
+
+        it('should do nothing if the items have already been activated', async () => {
+            const item = store.purchasedItems[0];
+            await store.savePurchasedItem({
+                ...item,
+                activatedTimeMs: 100,
+            });
+
+            const result = await controller.claimActivationKey({
+                userId,
+                activationKey,
+                target: 'self',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId,
+            });
+
+            const roles = await store.listRolesForUser('studioId', userId);
+
+            expect(roles).toEqual([]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: null,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: 100,
+                    activationKeyId: expect.any(String),
+                },
+            ]);
+            expect(store.checkoutSessions).toEqual([
+                {
+                    id: 'session1',
+                    stripeStatus: 'complete',
+                    stripePaymentStatus: 'paid',
+                    paid: true,
+                    stripeCheckoutSessionId: 'checkout1',
+                    userId: userId,
+                    invoiceId: expect.any(String),
+                    fulfilledAtMs: 200,
+                    items: [
+                        {
+                            type: 'role',
+                            recordName: 'studioId',
+                            purchasableItemAddress: 'item1',
+                            role: 'myRole',
+                            roleGrantTimeMs: null,
+                        },
+                    ],
+                    transfersPending: false,
+                },
+            ]);
+        });
+    });
+
     describe('handleStripeWebhook()', () => {
         describe('user', () => {
             let user: AuthUser;
@@ -4582,6 +9891,7 @@ describe('SubscriptionController', () => {
                         total: 1000,
                         subtotal: 1000,
                         tax: 0,
+                        checkoutSessionId: null,
                     });
                 });
             });
@@ -4907,5 +10217,1287 @@ describe('SubscriptionController', () => {
                 errorMessage: 'This method is not supported.',
             });
         });
+
+        describe('store', () => {
+            let studio: Studio;
+            let studioId: string;
+
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    store: {
+                                        allowed: true,
+                                        currencyLimits: {
+                                            usd: {
+                                                maxCost: 10000,
+                                                minCost: 10,
+                                            },
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    subscriptionPeriodStartMs: 100,
+                    subscriptionPeriodEndMs: 1000,
+                    displayName: 'my studio',
+                    stripeCustomerId: 'customer_id',
+                    stripeAccountId: 'account_id',
+                    stripeAccountRequirementsStatus: null,
+                    stripeAccountStatus: null,
+                };
+
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
+                    userId,
+                    studioId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+
+                nowMock.mockReturnValue(200);
+            });
+
+            describe('account.updated', () => {
+                it('should update account statuses', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'account_id',
+                                object: 'account',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: [],
+                        },
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.getStudioById(studioId);
+                    expect(studio?.stripeAccountStatus).toBe('active');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(
+                        'complete'
+                    );
+                });
+
+                it('should do nothing if no studio matches the account', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'missing',
+                                object: 'account',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: [],
+                        },
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.getStudioById(studioId);
+                    expect(studio?.stripeAccountStatus).toBe(null);
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(null);
+                });
+            });
+
+            describe('checkout.session.completed', () => {
+                it('should update checkout session status', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.completed',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'paid',
+                                status: 'complete',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'role',
+                                recordName: 'studioId',
+                                purchasableItemAddress: 'item1',
+                                role: 'myRole',
+                                roleGrantTimeMs: null,
+                            },
+                        ],
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: true,
+                            stripeStatus: 'complete',
+                            stripePaymentStatus: 'paid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'role',
+                                    recordName: 'studioId',
+                                    purchasableItemAddress: 'item1',
+                                    role: 'myRole',
+                                    roleGrantTimeMs: null,
+                                },
+                            ],
+                        },
+                    ]);
+                });
+            });
+
+            describe('checkout.session.expired', () => {
+                it('should update checkout session status', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.expired',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'unpaid',
+                                status: 'expired',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'role',
+                                recordName: 'studioId',
+                                purchasableItemAddress: 'item1',
+                                role: 'myRole',
+                                roleGrantTimeMs: null,
+                            },
+                        ],
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: false,
+                            stripeStatus: 'expired',
+                            stripePaymentStatus: 'unpaid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'role',
+                                    recordName: 'studioId',
+                                    purchasableItemAddress: 'item1',
+                                    role: 'myRole',
+                                    roleGrantTimeMs: null,
+                                },
+                            ],
+                        },
+                    ]);
+                });
+            });
+
+            describe('invoice.paid', () => {
+                it('should update the invoice attached to a checkout session', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 100,
+                                subtotal: 100,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: {
+                            stripeInvoiceId: 'invoiceId',
+                            currency: 'usd',
+                            description: 'description',
+                            status: 'open',
+                            paid: false,
+                            tax: 0,
+                            subtotal: 100,
+                            total: 100,
+                            stripeHostedInvoiceUrl: 'invoiceUrl',
+                            stripeInvoicePdfUrl: 'pdfUrl',
+                        },
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'role',
+                                recordName: 'studioId',
+                                purchasableItemAddress: 'item1',
+                                role: 'myRole',
+                                roleGrantTimeMs: null,
+                            },
+                        ],
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(
+                        await store.getInvoiceByStripeId('invoiceId')
+                    ).toEqual({
+                        id: expect.any(String),
+                        stripeInvoiceId: 'invoiceId',
+                        currency: 'usd',
+                        description: 'description',
+                        status: 'paid',
+                        paid: true,
+                        tax: 0,
+                        subtotal: 100,
+                        total: 100,
+                        stripeHostedInvoiceUrl: 'invoiceUrl',
+                        stripeInvoicePdfUrl: 'pdfUrl',
+                        subscriptionId: null,
+                        checkoutSessionId: 'uuid',
+                        periodId: null,
+                    });
+                });
+            });
+        });
+
+        describe('xp', () => {
+            let user: AuthUser;
+            const recordName = 'recordName';
+
+            beforeEach(async () => {
+                await financialController.init();
+                store.subscriptionConfiguration = createTestSubConfiguration();
+
+                const userAccount = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+                user = await store.findUser(userId);
+
+                user = {
+                    ...user,
+                    stripeAccountId: 'account_id',
+                    stripeAccountRequirementsStatus: null,
+                    stripeAccountStatus: null,
+                };
+
+                await store.saveUser(user);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    secretHashes: [],
+                    secretSalt: '',
+                    studioId: null,
+                });
+
+                nowMock.mockReturnValue(200);
+            });
+
+            describe('account.updated', () => {
+                it('should update account statuses', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'account_id',
+                                object: 'account',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: [],
+                        },
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.findUser(userId);
+                    expect(studio?.stripeAccountStatus).toBe('active');
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(
+                        'complete'
+                    );
+                });
+
+                it('should do nothing if no user matches the account', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'account.updated',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'missing',
+                                object: 'account',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    stripeMock.getAccountById.mockResolvedValueOnce({
+                        id: 'account_id',
+                        charges_enabled: true,
+                        requirements: {
+                            currently_due: [],
+                            current_deadline: null,
+                            disabled_reason: null,
+                            errors: [],
+                            eventually_due: [],
+                            past_due: [],
+                            pending_verification: [],
+                        },
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    const studio = await store.findUser(userId);
+                    expect(studio?.stripeAccountStatus).toBe(null);
+                    expect(studio?.stripeAccountRequirementsStatus).toBe(null);
+                });
+            });
+
+            describe('checkout.session.completed', () => {
+                it('should update checkout session status', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.completed',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'paid',
+                                status: 'complete',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                        shouldBeAutomaticallyFulfilled: true,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: true,
+                            stripeStatus: 'complete',
+                            stripePaymentStatus: 'paid',
+                            invoiceId: null,
+                            fulfilledAtMs: 200,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                            shouldBeAutomaticallyFulfilled: true,
+                            transfersPending: false,
+                        },
+                    ]);
+                });
+
+                it('should automatically fulfill the checkout session if paid', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.completed',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'paid',
+                                status: 'complete',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
+
+                    const contractAccount = unwrap(
+                        await financialController.getOrCreateFinancialAccount({
+                            contractId: 'contractId',
+                            ledger: LEDGERS.usd,
+                        })
+                    );
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: '10',
+                                    amount: 100,
+                                    code: TransferCodes.contract_payment,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                    creditAccountId: contractAccount!.id,
+                                    currency: CurrencyCodes.usd,
+                                    pending: true,
+                                },
+                                {
+                                    transferId: '11',
+                                    amount: 10,
+                                    code: TransferCodes.xp_platform_fee,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_xp_platform_fees,
+                                    currency: CurrencyCodes.usd,
+                                    pending: true,
+                                },
+                            ],
+                        })
+                    );
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: recordName,
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                        transferIds: ['10', '11'],
+                        transfersPending: true,
+                        transactionId: '9',
+                        shouldBeAutomaticallyFulfilled: true,
+                    });
+
+                    nowMock.mockReturnValue(333);
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: true,
+                            stripeStatus: 'complete',
+                            stripePaymentStatus: 'paid',
+                            invoiceId: null,
+                            fulfilledAtMs: 333,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: recordName,
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                            transferIds: ['10', '11'],
+                            transfersPending: false,
+                            transactionId: '9',
+                            shouldBeAutomaticallyFulfilled: true,
+                        },
+                    ]);
+
+                    const contract = await contractStore.getItemByAddress(
+                        recordName,
+                        'item1'
+                    );
+                    expect(contract).toMatchObject({
+                        status: 'open',
+                    });
+
+                    checkTransfers(financialInterface.transfers, [
+                        {
+                            id: 10n,
+                            amount: 100n,
+                            code: TransferCodes.contract_payment,
+                            credit_account_id: contractAccount!.id,
+                            debit_account_id: ACCOUNT_IDS.assets_stripe,
+                            // Should no longer be pending
+                            flags: TransferFlags.linked | TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                        },
+                        {
+                            id: 11n,
+                            amount: 10n,
+                            code: TransferCodes.xp_platform_fee,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_xp_platform_fees,
+                            debit_account_id: ACCOUNT_IDS.assets_stripe,
+                            flags: TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                        },
+                        {
+                            id: 4n,
+                            pending_id: 10n,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.post_pending_transfer,
+                            user_data_128: 9n,
+                        },
+                        {
+                            id: 5n,
+                            pending_id: 11n,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_128: 9n,
+                        },
+                    ]);
+
+                    await checkAccounts(financialInterface, [
+                        {
+                            id: ACCOUNT_IDS.assets_stripe,
+                            credits_posted: 0n,
+                            debits_posted: 110n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                            credits_posted: 10n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                        {
+                            id: contractAccount!.id,
+                            credits_posted: 100n,
+                            debits_posted: 0n,
+                            credits_pending: 0n,
+                            debits_pending: 0n,
+                        },
+                    ]);
+                });
+            });
+
+            describe('checkout.session.expired', () => {
+                it('should update checkout session status', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.expired',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'unpaid',
+                                status: 'expired',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: false,
+                            stripeStatus: 'expired',
+                            stripePaymentStatus: 'unpaid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                        },
+                    ]);
+                });
+
+                it('should void any pending transfers', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'checkout.session.expired',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'checkout_id',
+                                object: 'checkout.session',
+                                client_reference_id: 'uuid',
+                                payment_status: 'unpaid',
+                                status: 'expired',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    await contractStore.createItem(recordName, {
+                        id: 'contractId',
+                        address: 'item1',
+                        holdingUserId: userId,
+                        issuingUserId: userId,
+                        initialValue: 100,
+                        rate: 1,
+                        issuedAtMs: 100,
+                        markers: [PUBLIC_READ_MARKER],
+                        status: 'pending',
+                    });
+
+                    unwrap(
+                        await financialController.internalTransaction({
+                            transfers: [
+                                {
+                                    transferId: '10',
+                                    amount: 100,
+                                    currency: CurrencyCodes.usd,
+                                    code: TransferCodes.contract_payment,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_xp_platform_fees,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                },
+                                {
+                                    transferId: '11',
+                                    amount: 999,
+                                    currency: CurrencyCodes.usd,
+                                    code: TransferCodes.contract_payment,
+                                    creditAccountId:
+                                        ACCOUNT_IDS.revenue_xp_platform_fees,
+                                    debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                },
+                            ],
+                            transactionId: '9',
+                        })
+                    );
+
+                    await store.updateCheckoutSessionInfo({
+                        id: 'uuid',
+                        userId: userId,
+                        stripeCheckoutSessionId: 'checkout_id',
+                        paid: false,
+                        status: 'open',
+                        paymentStatus: 'unpaid',
+                        invoice: null,
+                        fulfilledAtMs: null,
+                        items: [
+                            {
+                                type: 'contract',
+                                contractId: 'contractId',
+                                recordName: 'studioId',
+                                contractAddress: 'item1',
+                                value: 100,
+                            },
+                        ],
+                        transferIds: ['10', '11'],
+                        transfersPending: true,
+                        transactionId: '9',
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    expect(store.checkoutSessions).toEqual([
+                        {
+                            id: 'uuid',
+                            userId,
+                            stripeCheckoutSessionId: 'checkout_id',
+                            paid: false,
+                            stripeStatus: 'expired',
+                            stripePaymentStatus: 'unpaid',
+                            invoiceId: null,
+                            fulfilledAtMs: null,
+                            items: [
+                                {
+                                    type: 'contract',
+                                    contractId: 'contractId',
+                                    recordName: 'studioId',
+                                    contractAddress: 'item1',
+                                    value: 100,
+                                },
+                            ],
+                            transferIds: ['10', '11'],
+                            transfersPending: false,
+                            transactionId: '9',
+                        },
+                    ]);
+
+                    checkTransfers(financialInterface.transfers, [
+                        {
+                            id: 10n,
+                            amount: 100n,
+                        },
+                        {
+                            id: 11n,
+                            amount: 999n,
+                        },
+                        {
+                            id: 2n,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.void_pending_transfer,
+                            pending_id: 10n,
+                        },
+                        {
+                            id: 3n,
+                            flags: TransferFlags.void_pending_transfer,
+                            pending_id: 11n,
+                        },
+                    ]);
+                });
+            });
+
+            // describe('invoice.paid', () => {
+            //     it('should update the invoice attached to a checkout session', async () => {
+            //         stripeMock.constructWebhookEvent.mockReturnValueOnce({
+            //             id: 'event_id',
+            //             type: 'invoice.paid',
+            //             object: 'event',
+            //             account: 'account_id',
+            //             api_version: 'api_version',
+            //             created: 123,
+            //             data: {
+            //                 object: {
+            //                     id: 'invoiceId',
+            //                     customer: 'customer_id',
+            //                     currency: 'usd',
+            //                     total: 100,
+            //                     subtotal: 100,
+            //                     tax: 0,
+            //                     description: 'description',
+            //                     status: 'paid',
+            //                     paid: true,
+            //                     hosted_invoice_url: 'invoiceUrl',
+            //                     invoice_pdf: 'pdfUrl',
+            //                     lines: {
+            //                         object: 'list',
+            //                         data: [
+            //                             {
+            //                                 id: 'line_item_1_id',
+            //                                 price: {
+            //                                     id: 'price_1',
+            //                                     product: 'product_1_id',
+            //                                 },
+            //                             },
+            //                         ],
+            //                     },
+            //                 },
+            //             },
+            //             livemode: true,
+            //             pending_webhooks: 1,
+            //             request: {},
+            //         });
+
+            //         await store.updateCheckoutSessionInfo({
+            //             id: 'uuid',
+            //             userId: userId,
+            //             stripeCheckoutSessionId: 'checkout_id',
+            //             paid: false,
+            //             status: 'open',
+            //             paymentStatus: 'unpaid',
+            //             invoice: {
+            //                 stripeInvoiceId: 'invoiceId',
+            //                 currency: 'usd',
+            //                 description: 'description',
+            //                 status: 'open',
+            //                 paid: false,
+            //                 tax: 0,
+            //                 subtotal: 100,
+            //                 total: 100,
+            //                 stripeHostedInvoiceUrl: 'invoiceUrl',
+            //                 stripeInvoicePdfUrl: 'pdfUrl',
+            //             },
+            //             fulfilledAtMs: null,
+            //             items: [
+            //                 {
+            //                     type: 'role',
+            //                     recordName: 'studioId',
+            //                     purchasableItemAddress: 'item1',
+            //                     role: 'myRole',
+            //                     roleGrantTimeMs: null,
+            //                 },
+            //             ],
+            //         });
+
+            //         const result = await controller.handleStripeWebhook({
+            //             requestBody: 'request_body',
+            //             signature: 'request_signature',
+            //         });
+
+            //         expect(result).toEqual({
+            //             success: true,
+            //         });
+
+            //         expect(
+            //             await store.getInvoiceByStripeId('invoiceId')
+            //         ).toEqual({
+            //             id: expect.any(String),
+            //             stripeInvoiceId: 'invoiceId',
+            //             currency: 'usd',
+            //             description: 'description',
+            //             status: 'paid',
+            //             paid: true,
+            //             tax: 0,
+            //             subtotal: 100,
+            //             total: 100,
+            //             stripeHostedInvoiceUrl: 'invoiceUrl',
+            //             stripeInvoicePdfUrl: 'pdfUrl',
+            //             subscriptionId: null,
+            //             checkoutSessionId: 'uuid',
+            //             periodId: null,
+            //         });
+            //     });
+            // });
+        });
+    });
+});
+
+describe('getAccountStatus()', () => {
+    const disabledReasonCases: [string, StripeAccountStatus][] = [
+        ['action_required.requested_capabilities', 'disabled'],
+        ['requirements.past_due', 'disabled'],
+        ['requirements.pending_verification', 'pending'],
+        ['listed', 'disabled'],
+        ['platform_paused', 'disabled'],
+        ['rejected.fraud', 'rejected'],
+        ['rejected.incomplete_verification', 'rejected'],
+        ['rejected.listed', 'rejected'],
+        ['rejected.other', 'rejected'],
+        ['rejected.terms_of_service', 'rejected'],
+        ['under_review', 'pending'],
+        ['other', 'disabled'],
+    ];
+
+    it.each(disabledReasonCases)(
+        'should return %s for %s',
+        (reason, expected) => {
+            expect(
+                getAccountStatus({
+                    id: 'account_id',
+                    charges_enabled: false,
+                    requirements: {
+                        currently_due: [],
+                        current_deadline: null,
+                        disabled_reason: reason,
+                        errors: [],
+                        eventually_due: [],
+                        past_due: [],
+                        pending_verification: [],
+                    },
+                })
+            ).toBe(expected);
+        }
+    );
+
+    it('should return pending if there is no disabled reason but charges are also not enabled', () => {
+        expect(
+            getAccountStatus({
+                id: 'account_id',
+                charges_enabled: false,
+                requirements: {
+                    currently_due: [],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+            })
+        ).toBe('pending');
+    });
+
+    it('should return active if charges are enabled', () => {
+        expect(
+            getAccountStatus({
+                id: 'account_id',
+                charges_enabled: true,
+                requirements: {
+                    currently_due: [],
+                    current_deadline: null,
+                    disabled_reason: null,
+                    errors: [],
+                    eventually_due: [],
+                    past_due: [],
+                    pending_verification: [],
+                },
+            })
+        ).toBe('active');
+    });
+});
+
+describe('formatV1ActivationKey()', () => {
+    it('should format an access key', () => {
+        const result = formatV1ActivationKey('id', 'password');
+
+        const [version, id, password] = result.split('.');
+
+        expect(version).toBe('vAK1');
+        expect(id).toBe(toBase64String('id'));
+        expect(password).toBe(toBase64String('password'));
+    });
+});
+
+describe('parseActivationKey()', () => {
+    it('should be able to parse the given access key', () => {
+        const result = formatV1ActivationKey('id', 'password');
+        const parsed = parseActivationKey(result);
+        expect(parsed).toEqual(['id', 'password']);
+    });
+
+    it('should return null if given null', () => {
+        expect(parseActivationKey(null)).toBeNull();
+    });
+
+    it('should return null if given a string without a version', () => {
+        expect(parseActivationKey('')).toBeNull();
+    });
+
+    it('should return null if given a string without an id', () => {
+        expect(parseActivationKey('vAK1.')).toBeNull();
+    });
+
+    it('should return null if given a string without a password', () => {
+        expect(parseActivationKey('vAK1.id')).toBeNull();
+    });
+
+    it('should return null if given a string with invalid base64', () => {
+        expect(parseActivationKey('vAK1.id.password')).toBeNull();
     });
 });

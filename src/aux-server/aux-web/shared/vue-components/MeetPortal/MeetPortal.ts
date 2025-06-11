@@ -31,7 +31,6 @@ import {
     ON_MEET_LOADED,
     asyncError,
     asyncResult,
-    action,
     ON_MEET_ENTERED,
     ON_MEET_EXITED,
     ON_MEET_RECORDING_LINK_AVAILABLE,

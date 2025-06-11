@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { type } from 'os';
 import type { TagEditOp } from './AuxStateHelpers';
 import type { BotModule, BotModuleResult } from './BotModule';
 import type { Point2D } from './BotEvents';
@@ -929,6 +928,7 @@ export type BotShape =
     | 'skybox'
     | 'sphere'
     | 'sprite'
+    | 'map'
     | 'mesh'
     | 'iframe'
     | 'frustum'
@@ -2031,6 +2031,11 @@ export const ON_DOCUMENT_AVAILABLE_ACTION_NAME: string = 'onDocumentAvailable';
 export const ON_KEY_CLICK_ACTION_NAME = 'onKeyClick';
 
 /**
+ * The name of the event that is triggered when a package is installed.
+ */
+export const ON_PACKAGE_INSTALLED_ACTION_NAME: string = 'onPackageInstalled';
+
+/**
  * The tag used to set the space that the tag portal operates in.
  */
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
@@ -2752,6 +2757,13 @@ export const KNOWN_TAGS: string[] = [
     'formLightGroundColor',
     'formBuildStep',
     'formLDrawPartsAddress',
+    'formMapLOD',
+    'formMapProvider',
+    'formMapProviderAPIKey',
+    'formMapHeightProvider',
+    'formMapHeightProviderAPIKey',
+    'formMapHeightOffset',
+    'formInputMultiline',
     'meshPositioningMode',
     'orientationMode',
     'anchorPoint',
@@ -2850,6 +2862,7 @@ export const KNOWN_TAGS: string[] = [
     'onKeyRepeat',
     'onKeyUp',
     ON_KEY_CLICK_ACTION_NAME,
+    ON_PACKAGE_INSTALLED_ACTION_NAME,
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,

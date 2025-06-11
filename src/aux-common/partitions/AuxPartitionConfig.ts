@@ -17,13 +17,11 @@
  */
 import type { InstRecordsClient } from '../websockets';
 import type { BotsState } from '../bots';
-import { RemoteBotActions } from '../bots';
 import type {
     AuxPartition,
     MemoryPartition,
     AuxPartitionRealtimeStrategy,
 } from './AuxPartition';
-import { ProxyBridgePartition, YjsPartition } from './AuxPartition';
 
 /**
  * Defines a set of options for configuring partitioning of bots.

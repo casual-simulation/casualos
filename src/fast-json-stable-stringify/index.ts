@@ -17,7 +17,7 @@ export interface StringifyOptions {
 export default function (
     data: any,
     options?: StringifyOptions | CompareFunction
-) {
+): string {
     if (!options) options = {};
     if (typeof options === 'function') options = { cmp: options };
     let cycles = typeof options.cycles === 'boolean' ? options.cycles : false;

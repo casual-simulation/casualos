@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { WEB_CONFIG_SCHEMA, WebConfig } from '@casual-simulation/aux-common';
+import { WEB_CONFIG_SCHEMA } from '@casual-simulation/aux-common';
 import { z } from 'zod';
 
 const ALLOWED_STUDIO_CREATORS_SCHEMA = z.union([

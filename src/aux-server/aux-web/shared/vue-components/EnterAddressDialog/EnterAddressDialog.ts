@@ -23,16 +23,16 @@ import type {
     AuthHelperInterface,
     LoginUIAddressStatus,
 } from '@casual-simulation/aux-vm';
+import type { FormError } from '@casual-simulation/aux-common';
 import {
     cleanPhoneNumber,
     mightBeEmailAddress,
 } from '@casual-simulation/aux-common';
 import type {
     CompleteWebAuthnLoginResult,
-    FormError,
     RequestWebAuthnLoginResult,
 } from '@casual-simulation/aux-records';
-import { ADDRESS_FIELD, getFormErrors } from '@casual-simulation/aux-records';
+import { ADDRESS_FIELD, getFormErrors } from '@casual-simulation/aux-common';
 import { Prop, Watch } from 'vue-property-decorator';
 import FieldErrors from '../FieldErrors/FieldErrors';
 import {

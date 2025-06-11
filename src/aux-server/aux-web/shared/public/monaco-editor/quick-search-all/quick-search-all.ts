@@ -1,7 +1,6 @@
 
 import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/browser/editorExtensions';
 import { EditorContextKeys } from 'monaco-editor/esm/vs/editor/common/editorContextKeys';
-import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
 import { KeyCode, KeyMod } from '../KeyCodes';
 import { onFocusSearch } from '../../../vue-components/SystemPortal/SystemPortalHelpers';
 

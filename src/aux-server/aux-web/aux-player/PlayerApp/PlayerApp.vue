@@ -21,7 +21,7 @@
                         <bot-sheet></bot-sheet>
                         <ide-portal></ide-portal>
                         <system-portal></system-portal>
-                        <md-content id="app-game-container">
+                        <md-content class="main-content">
                             <div class="vm-iframe-container"></div>
                             <router-view></router-view>
                         </md-content>

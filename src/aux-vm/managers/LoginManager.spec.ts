@@ -19,7 +19,6 @@ import { LoginManager } from './LoginManager';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { first } from 'rxjs/operators';
 import type { ConnectionInfo } from '@casual-simulation/aux-common';
-import { Bot } from '@casual-simulation/aux-common';
 import { firstValueFrom } from 'rxjs';
 
 describe('LoginManager', () => {

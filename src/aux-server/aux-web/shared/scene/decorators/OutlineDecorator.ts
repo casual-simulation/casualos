@@ -18,15 +18,13 @@
 import {
     Group,
     Mesh,
-    MathUtils as ThreeMath,
-    Color,
     MeshBasicMaterial,
     BackSide,
 } from '@casual-simulation/three';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import { calculateBotValue, hasValue } from '@casual-simulation/aux-common';
 import { disposeMesh, isTransparent, buildSRGBColor } from '../SceneUtils';
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
@@ -96,7 +94,7 @@ export class OutlineDecorator
 
     botUpdated(calc: BotCalculationContext): void {
         // Color
-        const colorValue = calculateBotValue(
+        const colorValue: string = calculateBotValue(
             calc,
             this.bot3D.bot,
             'auxStrokeColor'
@@ -108,7 +106,7 @@ export class OutlineDecorator
         }
 
         // Width
-        const widthValue = calculateBotValue(
+        const widthValue: number = calculateBotValue(
             calc,
             this.bot3D.bot,
             'auxStrokeWidth'

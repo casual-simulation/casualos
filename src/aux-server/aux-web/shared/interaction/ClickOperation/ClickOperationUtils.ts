@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Vector2, Object3D } from '@casual-simulation/three';
-import { Sphere } from '@casual-simulation/three';
 import { MouseButtonId } from '../../scene/Input';
 
 export const DragThreshold: number = 0.03;

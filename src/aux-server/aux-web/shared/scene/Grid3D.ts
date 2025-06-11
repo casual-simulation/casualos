@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { SnapPoint } from '@casual-simulation/aux-common';
 import type { Ray, Vector3, Vector2 } from '@casual-simulation/three';
 
 /**

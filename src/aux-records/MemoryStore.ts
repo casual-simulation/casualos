@@ -17,6 +17,7 @@
  */
 import { cloneDeep, orderBy, sortBy } from 'lodash';
 import type { RegexRule } from './Utils';
+import { cloneDeepNull } from './Utils';
 import type {
     AddressType,
     AuthInvoice,
@@ -30,11 +31,15 @@ import type {
     AuthUserAuthenticator,
     AuthUserAuthenticatorWithUser,
     AuthWebAuthnLoginRequest,
+    AuthCheckoutSession,
     ListSessionsDataResult,
     SaveNewUserResult,
+    UpdateCheckoutSessionRequest,
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
+    PurchasedItem,
+    ActivationKey,
 } from './AuthStore';
 import type {
     ListStudioAssignmentFilters,
@@ -77,11 +82,6 @@ import type {
     PresignFileUploadResult,
     UpdateFileResult,
 } from './FileRecordsStore';
-import {
-    FileRecord,
-    FileRecordsLookup,
-    ListFilesLookupResult,
-} from './FileRecordsStore';
 import type {
     AddEventCountStoreResult,
     EventRecordUpdate,
@@ -97,6 +97,7 @@ import type {
     DeletePermissionAssignmentResult,
     GetMarkerPermissionResult,
     GetResourcePermissionResult,
+    GrantedPackageEntitlement,
     ListPermissionsInRecordResult,
     ListedRoleAssignments,
     MarkerPermissionAssignment,
@@ -113,12 +114,8 @@ import type {
     ResourceKinds,
     SubjectType,
     PrivacyFeatures,
-} from '@casual-simulation/aux-common';
-import {
-    ADMIN_ROLE_NAME,
-    PUBLIC_READ_MARKER,
-    PUBLIC_WRITE_MARKER,
-    ACCOUNT_MARKER,
+    Entitlement,
+    GrantedEntitlementScope,
 } from '@casual-simulation/aux-common';
 import type {
     AIChatMetrics,
@@ -153,6 +150,7 @@ import type {
     InstWithBranches,
     InstWithSubscriptionInfo,
     ListInstsStoreResult,
+    LoadedPackage,
     ReplaceUpdatesResult,
     SaveBranchResult,
     SaveInstResult,
@@ -170,7 +168,19 @@ import type {
     RecordsNotification,
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
-import { uniq } from 'lodash';
+import type {
+    XpContract,
+    XpInvoice,
+    XpStore,
+    XpUser,
+    XpUserWithUserInfo,
+} from './XpStore';
+import type {
+    FinancialAccount,
+    FinancialAccountFilter,
+    FinancialStore,
+    UniqueFinancialAccountFilter,
+} from './financial/FinancialStore';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -190,7 +200,9 @@ export class MemoryStore
         ConfigurationStore,
         InstRecordsStore,
         ModerationStore,
-        SystemNotificationMessenger
+        SystemNotificationMessenger,
+        XpStore,
+        FinancialStore
 {
     private _users: AuthUser[] = [];
     private _userAuthenticators: AuthUserAuthenticator[] = [];
@@ -201,6 +213,7 @@ export class MemoryStore
     private _subscriptions: AuthSubscription[] = [];
     private _periods: AuthSubscriptionPeriod[] = [];
     private _invoices: AuthInvoice[] = [];
+    private _checkoutSessions: AuthCheckoutSession[] = [];
 
     private _records: Record[] = [];
     private _recordKeys: RecordKey[] = [];
@@ -233,13 +246,24 @@ export class MemoryStore
 
     private _resourcePermissionAssignments: ResourcePermissionAssignment[] = [];
     private _markerPermissionAssignments: MarkerPermissionAssignment[] = [];
+    private _grantedPackageEntitlements: GrantedPackageEntitlement[] = [];
     private _studioLoomConfigs: Map<string, LoomConfig> = new Map();
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
+
+    private _loadedPackages: Map<string, LoadedPackage> = new Map();
+
+    private _xpUsers: Map<string, XpUser> = new Map();
+    private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
+    private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
+
+    private _financialAccounts: FinancialAccount[] = [];
 
     get aiOpenAIRealtimeMetrics(): AIOpenAIRealtimeMetrics[] {
         return this._aiRealtimeMetrics;
     }
 
+    private _purchasedItems: PurchasedItem[] = [];
+    private _activationKeys: ActivationKey[] = [];
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
@@ -369,6 +393,26 @@ export class MemoryStore
         return this._comIdRequests;
     }
 
+    get grantedPackageEntitlements() {
+        return this._grantedPackageEntitlements;
+    }
+
+    get checkoutSessions() {
+        return this._checkoutSessions;
+    }
+
+    get purchasedItems() {
+        return this._purchasedItems;
+    }
+
+    get activationKeys() {
+        return this._activationKeys;
+    }
+
+    get financialAccounts() {
+        return this._financialAccounts;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -376,6 +420,174 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async getAccountById(id: string): Promise<FinancialAccount | null> {
+        return this._financialAccounts.find((a) => a.id === id) ?? null;
+    }
+
+    async getAccountByFilter(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<FinancialAccount | null> {
+        if (filter.userId) {
+            return this._financialAccounts.find(
+                (a) => a.userId === filter.userId && a.ledger === filter.ledger
+            );
+        } else if (filter.studioId) {
+            return this._financialAccounts.find(
+                (a) =>
+                    a.studioId === filter.studioId && a.ledger === filter.ledger
+            );
+        } else if (filter.contractId) {
+            return this._financialAccounts.find(
+                (a) =>
+                    a.contractId === filter.contractId &&
+                    a.ledger === filter.ledger
+            );
+        }
+        return null;
+    }
+
+    async listAccounts(
+        filter: FinancialAccountFilter
+    ): Promise<FinancialAccount[]> {
+        return this._financialAccounts.filter((a) => {
+            if (filter.userId && a.userId !== filter.userId) {
+                return false;
+            }
+            if (filter.studioId && a.studioId !== filter.studioId) {
+                return false;
+            }
+            if (filter.contractId && a.contractId !== filter.contractId) {
+                return false;
+            }
+            if (filter.ledger && a.ledger !== filter.ledger) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    async createAccount(account: FinancialAccount): Promise<void> {
+        this._financialAccounts.push({
+            ...account,
+        });
+    }
+
+    // async batchQueryXpUsers(
+    //     queryOptions:
+    //         | {
+    //               xpId: XpUser['id'][];
+    //               authId?: AuthUser['id'][];
+    //           }
+    //         | {
+    //               authId: AuthUser['id'][];
+    //               xpId?: XpUser['id'][];
+    //           }
+    // ): Promise<XpUser[]> {
+    //     const users = [];
+    //     if ('xpId' in queryOptions) {
+    //         for (const id of queryOptions.xpId) {
+    //             const user = this._xpUsers.get(id);
+    //             if (user) {
+    //                 users.push(cloneDeep(user));
+    //             }
+    //         }
+    //     }
+    //     if ('authId' in queryOptions) {
+    //         const xpUsers = Array.from(this._xpUsers.values());
+    //         for (const id of queryOptions.authId) {
+    //             const user = xpUsers.find((u: XpUser) => u.userId === id);
+    //             if (user) {
+    //                 users.push(cloneDeep(user));
+    //             }
+    //         }
+    //     }
+    //     return users;
+    // }
+
+    async saveXpUser(user: XpUser) {
+        const u = cloneDeep(user);
+        this._xpUsers.set(u.xpId, u);
+    }
+
+    async saveXpContract(contract: XpContract) {
+        const c = cloneDeep(contract);
+        this._xpContracts.set(contract.id, c);
+        return c;
+    }
+
+    async updateXpContract(
+        id: XpContract['id'],
+        config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
+    ): ReturnType<XpStore['updateXpContract']> {
+        const contract = this._xpContracts.get(id);
+        if (!contract)
+            throw new Error(`Contract with id ${id} not found in memory store`);
+        for (const key in config) {
+            if (config[key as keyof typeof config] !== undefined) {
+                (contract as any)[key] = config[key as keyof typeof config];
+            }
+        }
+        return cloneDeep(contract);
+    }
+
+    async saveXpInvoice(invoice: XpInvoice) {
+        const i = cloneDeep(invoice);
+        this._xpInvoices.set(invoice.id, i);
+        return i;
+    }
+
+    async getXpUserByUserId(id: string): Promise<XpUserWithUserInfo> {
+        const authUser = this._users.find((u) => u.id === id);
+
+        if (!authUser) {
+            return null;
+        }
+
+        let xpUser = null;
+        for (let user of this._xpUsers.values()) {
+            if (user.userId === id) {
+                xpUser = user;
+                break;
+            }
+        }
+
+        if (!xpUser) {
+            return null;
+        }
+
+        return {
+            ...xpUser,
+            ...authUser,
+        };
+    }
+
+    async getXpUserByXpId(id: string): Promise<XpUserWithUserInfo> {
+        const xpUser = this._xpUsers.get(id);
+        if (!xpUser) {
+            return null;
+        }
+
+        const authUser = this._users.find((u) => u.id === xpUser.userId);
+
+        if (!authUser) {
+            console.warn('No auth user found for xp user', xpUser);
+            return null;
+        }
+
+        return {
+            ...xpUser,
+            ...authUser,
+        };
+    }
+
+    async getXpContract(contractId: XpContract['id']): Promise<XpContract> {
+        return cloneDeepNull(this._xpContracts.get(contractId) ?? undefined);
+    }
+
+    async getXpInvoice(invoiceId: XpInvoice['id']): Promise<XpInvoice> {
+        return cloneDeepNull(this._xpInvoices.get(invoiceId) ?? undefined);
     }
 
     init?(): Promise<void>;
@@ -684,6 +896,10 @@ export class MemoryStore
 
     async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
         return this._studios.find((s) => s.stripeCustomerId === customerId);
+    }
+
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return this._studios.find((s) => s.stripeAccountId === accountId);
     }
 
     async listStudiosForUser(userId: string): Promise<StoreListedStudio[]> {
@@ -1189,6 +1405,94 @@ export class MemoryStore
         };
     }
 
+    async saveGrantedPackageEntitlement(
+        grantedEntitlement: GrantedPackageEntitlement
+    ): Promise<void> {
+        const existingIndex = this._grantedPackageEntitlements.findIndex(
+            (e) => e.id === grantedEntitlement.id
+        );
+
+        if (existingIndex >= 0) {
+            this._grantedPackageEntitlements[existingIndex] = {
+                ...grantedEntitlement,
+            };
+        } else {
+            this._grantedPackageEntitlements.push({
+                ...grantedEntitlement,
+            });
+        }
+    }
+
+    async listGrantedEntitlementsByFeatureAndUserId(
+        packageIds: string[],
+        feature: Entitlement['feature'],
+        userId: string,
+        recordName: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.feature === feature &&
+                e.recordName === recordName &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null &&
+                packageIds.includes(e.packageId)
+        );
+    }
+
+    async findGrantedPackageEntitlementByUserIdPackageIdFeatureAndScope(
+        userId: string,
+        packageId: string,
+        feature: Entitlement['feature'],
+        scope: GrantedEntitlementScope,
+        recordName: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return (
+            this._grantedPackageEntitlements.find(
+                (e) =>
+                    e.userId === userId &&
+                    e.packageId === packageId &&
+                    e.feature === feature &&
+                    e.scope === scope &&
+                    e.revokeTimeMs === null &&
+                    e.recordName === recordName
+            ) ?? null
+        );
+    }
+
+    async findGrantedPackageEntitlementById(
+        id: string
+    ): Promise<GrantedPackageEntitlement | null> {
+        return this._grantedPackageEntitlements.find((e) => e.id === id);
+    }
+
+    async listGrantedEntitlementsForUser(
+        userId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null
+        );
+    }
+
+    async listGrantedEntitlementsForUserAndPackage(
+        userId: string,
+        packageId: string,
+        nowMs: number
+    ): Promise<GrantedPackageEntitlement[]> {
+        return this._grantedPackageEntitlements.filter(
+            (e) =>
+                e.userId === userId &&
+                e.packageId === packageId &&
+                e.expireTimeMs > nowMs &&
+                e.revokeTimeMs === null
+        );
+    }
+
     async countRecords(filter: CountRecordsFilter): Promise<number> {
         let count = 0;
         for (let record of this._records) {
@@ -1267,6 +1571,13 @@ export class MemoryStore
     async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
         const user = this._users.find((u) => u.stripeCustomerId === customerId);
         return user;
+    }
+
+    async findUserByStripeAccountId(
+        accountId: string
+    ): Promise<AuthUser | null> {
+        const user = this._users.find((u) => u.stripeAccountId === accountId);
+        return user || null;
     }
 
     async findUserByPrivoServiceId(serviceId: string): Promise<AuthUser> {
@@ -1626,6 +1937,10 @@ export class MemoryStore
         return this._invoices.find((i) => i.id === id);
     }
 
+    async getInvoiceByStripeId(id: string): Promise<AuthInvoice> {
+        return this._invoices.find((i) => i.stripeInvoiceId === id);
+    }
+
     async updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
     ): Promise<void> {
@@ -1763,6 +2078,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1813,6 +2129,7 @@ export class MemoryStore
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1824,6 +2141,105 @@ export class MemoryStore
                 periodStartMs: request.currentPeriodStartMs,
             });
         }
+    }
+
+    async updateCheckoutSessionInfo(
+        request: UpdateCheckoutSessionRequest
+    ): Promise<void> {
+        let sessionIndex = this._checkoutSessions.findIndex(
+            (s) => s.id === request.id
+        );
+
+        let invoiceId: string = null;
+        if (request.invoice) {
+            let invoice = this._invoices.find(
+                (i) => i.stripeInvoiceId === request.invoice.stripeInvoiceId
+            );
+
+            if (!invoice) {
+                invoice = {
+                    id: uuid(),
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                    subscriptionId: null,
+                    periodId: null,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            } else {
+                invoice = {
+                    ...invoice,
+                    ...request.invoice,
+                    checkoutSessionId: request.id,
+                };
+                await this.saveInvoice(invoice);
+                invoiceId = invoice.id;
+            }
+        }
+
+        if (sessionIndex < 0) {
+            const session: AuthCheckoutSession = {
+                id: request.id,
+                paid: request.paid,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
+                userId: request.userId,
+                invoiceId,
+                items: request.items,
+                transferIds: request.transferIds,
+                transfersPending: request.transfersPending,
+                transactionId: request.transactionId,
+                shouldBeAutomaticallyFulfilled:
+                    request.shouldBeAutomaticallyFulfilled,
+            };
+            this._checkoutSessions.push(session);
+        } else {
+            let session = this._checkoutSessions[sessionIndex];
+            session = {
+                ...session,
+                paid: request.paid,
+                stripePaymentStatus: request.paymentStatus,
+                stripeStatus: request.status,
+                stripeCheckoutSessionId: request.stripeCheckoutSessionId,
+                fulfilledAtMs: request.fulfilledAtMs,
+                userId: request.userId,
+                items: request.items,
+                transferIds: request.transferIds,
+                transfersPending: request.transfersPending,
+                transactionId: request.transactionId,
+                shouldBeAutomaticallyFulfilled:
+                    request.shouldBeAutomaticallyFulfilled,
+            };
+
+            if (request.invoice) {
+                session.invoiceId = invoiceId;
+            }
+
+            this._checkoutSessions[sessionIndex] = session;
+        }
+    }
+
+    async markCheckoutSessionFulfilled(
+        sessionId: string,
+        fulfilledAtMs: number
+    ): Promise<void> {
+        const index = this._checkoutSessions.findIndex(
+            (s) => s.id === sessionId
+        );
+        if (index >= 0) {
+            const session = this._checkoutSessions[index];
+            this._checkoutSessions[index] = {
+                ...session,
+                fulfilledAtMs,
+                transfersPending: false,
+            };
+        }
+    }
+
+    async getCheckoutSessionById(id: string): Promise<AuthCheckoutSession> {
+        return this._checkoutSessions.find((s) => s.id === id);
     }
 
     private _findUserIndex(id: string): number {
@@ -2106,8 +2522,8 @@ export class MemoryStore
     async addFileRecord(
         recordName: string,
         fileName: string,
-        publisherId: string,
-        subjectId: string,
+        publisherId: string | null,
+        subjectId: string | null,
         sizeInBytes: number,
         description: string,
         markers: string[]
@@ -2666,10 +3082,6 @@ export class MemoryStore
         return await this._getSubscriptionInfo(recordName);
     }
 
-    async listRecordsForSubscriptionByRecordName(recordName: string) {
-        return await this._listRecordsForSubscription(recordName);
-    }
-
     async getSubscriptionAiSloydMetrics(
         filter: SubscriptionFilter
     ): Promise<AISloydSubscriptionMetrics> {
@@ -2893,6 +3305,10 @@ export class MemoryStore
         return metrics;
     }
 
+    async listRecordsForSubscriptionByRecordName(recordName: string) {
+        return await this._listRecordsForSubscription(recordName);
+    }
+
     private async _listRecordsForSubscription(recordName: string) {
         const record = await this.getRecordByName(recordName);
 
@@ -3019,6 +3435,36 @@ export class MemoryStore
         };
     }
 
+    async saveLoadedPackage(loadedPackage: LoadedPackage): Promise<void> {
+        this._loadedPackages.set(loadedPackage.id, { ...loadedPackage });
+    }
+
+    async listLoadedPackages(
+        recordName: string | null,
+        inst: string
+    ): Promise<LoadedPackage[]> {
+        let loadedPackages: LoadedPackage[] = [];
+        for (let [id, loadedPackage] of this._loadedPackages) {
+            if (
+                loadedPackage.recordName === recordName &&
+                loadedPackage.inst === inst
+            ) {
+                loadedPackages.push(loadedPackage);
+            }
+        }
+
+        return loadedPackages;
+    }
+
+    async isPackageLoaded(
+        recordName: string | null,
+        inst: string,
+        packageId: string
+    ): Promise<LoadedPackage | null> {
+        const loaded = await this.listLoadedPackages(recordName, inst);
+        return loaded.find((p) => p.packageId === packageId) ?? null;
+    }
+
     async saveInst(inst: InstWithBranches): Promise<SaveInstResult> {
         const r = await this._getInstRecord(inst.recordName);
 
@@ -3057,7 +3503,7 @@ export class MemoryStore
                         updates: [],
                         timestamps: [],
                     },
-                };
+                } as BranchWithUpdates;
             });
         } else if (!update.branches) {
             update.branches = [];
@@ -3382,6 +3828,35 @@ export class MemoryStore
         }
         return record;
     }
+
+    async savePurchasedItem(item: PurchasedItem): Promise<void> {
+        const index = this._purchasedItems.findIndex((i) => i.id === item.id);
+        if (index >= 0) {
+            this._purchasedItems[index] = {
+                ...item,
+            };
+        } else {
+            this._purchasedItems.push({
+                ...item,
+            });
+        }
+    }
+
+    async createActivationKey(key: ActivationKey): Promise<void> {
+        this._activationKeys.push({
+            ...key,
+        });
+    }
+
+    async getActivationKeyById(id: string): Promise<ActivationKey> {
+        return this._activationKeys.find((k) => k.id === id);
+    }
+
+    async listPurchasedItemsByActivationKeyId(
+        keyId: string
+    ): Promise<PurchasedItem[]> {
+        return this._purchasedItems.filter((i) => i.activationKeyId === keyId);
+    }
 }
 
 interface RecordData {
@@ -3401,8 +3876,8 @@ interface EventData {
 interface StoredFile {
     fileName: string;
     recordName: string;
-    publisherId: string;
-    subjectId: string;
+    publisherId: string | null;
+    subjectId: string | null;
     sizeInBytes: number;
     uploaded: boolean;
     description: string;

@@ -1,5 +1,174 @@
 # CasualOS Changelog
 
+## V3.5.1
+
+#### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Made the VM iframe be hidden while the game view (gridPortal, mapPortal, etc.) is visible.
+
+    -   This is a breaking change because the VM iframe (DOM) used to be always visible behind the game view.
+    -   Now, it will only be visible when all the game portals are hidden (set to null).
+    -   This change is a workaround to fix a bug in MacOS Chrome that causes iframes to intercept some events from the main window. In particular, this bug broke the CasualOS `@onFileUpload` shout.
+    -   To preserve the old behavior, you can use the following code:
+
+        ```typescript
+        await os.registerApp('alwaysShowIframe', thisBot);
+
+        const css = `
+        .vm-iframe-container iframe:first-child {
+            display: block !important;
+        }
+        `;
+
+        os.compileApp(
+            'alwaysShowIframe',
+            <div>
+                <style>{css}</style>
+            </div>
+        );
+        ```
+
+### :rocket: Features
+
+-   Improved `os.loadInst()` and `os.unloadInst()` to accept a configuration object that can specify more information on the kind of inst to load.
+    -   Loading insts in this manner will not add them to the URL.
+    -   The following properties are supported:
+        -   `staticInst`: Equivalent to the [`staticInst` tag](https://docs.casualos.com/tags/config-bot#staticinst).
+        -   `inst`: Equivalent to the [`inst` tag](https://docs.casualos.com/tags/config-bot#inst)
+        -   `record`: Equivalent to the [`record` tag](https://docs.casualos.com/tags/config-bot#record)
+        -   `owner`: Equivalent to the [`owner` tag](https://docs.casualos.com/tags/config-bot#owner).
+    -   For example:
+    ```typescript
+    os.loadInst({
+        staticInst: 'myInst',
+    });
+    ```
+    will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
+-   Added a [Fiduciary License Agreement](https://gist.github.com/KallynGowdy/5cbc3a6da651e88838c02b734d3b7e80) for CasualOS to help ensure that Casual Simulation has proper licensing agreements with individual contributors.
+    -   Uses [cla-assistant](https://cla-assistant.io/) to collect signatures to the FLA.
+-   Improved the menuPortal to support scrolling when the bots would exceed the size of the screen.
+-   Added the `@onPackageInstalled` shout.
+    -   Sent once `os.installPackage()` completes successfully.
+    -   `that` includes information about the package which was installed.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the DOM was not able to be interacted with.
+-   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
+-   Fixed an issue where providing an invalid endpoint to a records function would cause the function to never resolve.
+
+## V3.5.0
+
+#### Date: 6/6/2025
+
+### :boom: Breaking Changes
+
+-   Updated to Node 20.18 and PNPM 10.10.
+    -   Updating PNPM required updating the `pnpm-lock.yaml` file.
+-   Changed `@onKeyDown` and `@onKeyUp` to whisper when a user is typing in a menu bot.
+-   Moved `#app-game-container` ID to the DIV that directly contains the gridPortal canvas.
+    -   This will make it easier to control the sizing of the gridPortal and mapPortal by applying custom styles that affect `#app-game-container`.
+    -   This may break existing custom apps which apply custom styles to `#app-game-container`.
+-   Reset the built-in (default) version of ab-1 to a much older version that respects CasualOS defaults behaviors.
+    -   This only affects environments which do not configure an `AB1_BOOTSTRAP_URL`.
+
+### :rocket: Features
+
+-   Added Package Records
+    -   Packages make it easy to save and load different versions of AUX files.
+    -   Packages are organized by record name, address, and then key.
+        -   Keys help differentiate between package versions and they look like this: `v1.0.0`
+        -   Each key has four components:
+            -   `major` number
+            -   `minor` number
+            -   `patch` number
+            -   `tag` string
+        -   When formatted, a key looks like this: `v{major}.{minor}.{patch}`.
+        -   When a tag is specified, then the key looks like this: `v{major}.{minor}.{patch}-{tag}`.
+    -   Packages are easy to install, and scripts have the ability to request a particular version of a package to install.
+    -   Packages can request entitlements, which will make it easier to manage permissions for insts.
+    -   Once recorded, the contents of a package version cannot be updated.
+-   Added the following functions:
+    -   `os.grantEntitlements(request)`: Requests that a package be granted a list of entitlement features for a record.
+    -   `os.parseVersionKey(key)`: Parses the given string into a package version key.
+    -   `os.formatVersionKey(key)`: Formats the given version key as a string.
+    -   `os.recordPackageVersion(request)`: Records a package version to the given record name, address, and key.
+    -   `os.listPackageVersions(recordName, address)`: Gets the list of package versions that are available for the given record name and address.
+    -   `os.getPackageVersion(recordName, address, key?)`: Gets the package version with the given key. If the key is omitted, then the latest package version will be retrieved. The returned package includes information about the file that should be downloaded to get the package contents.
+    -   `os.erasePackageVersion(recordName, address, key)`: Deletes the given package version.
+    -   `os.recordPackageContainer(recordName, address, markers?)`: Creates a new container for package versions. The given marker can be used to restrict who is able to list package versions.
+    -   `os.erasePackageContainer(recordName, address)`: Deletes the given package container and all packages stored in it.
+    -   `os.listPackageContainers(recordName, address?)`: Lists package containers in the given record.
+    -   `os.listPackageContainersByMarker(recordName, marker, address?)`: Lists package containers with the given marker.
+    -   `os.getPackageContainer(recordName, address)`: Gets a package container by address.
+    -   `os.installPackage(recordName, address, key?)`: Installs the specified package version in the current inst. If key is omitted, then the latest package version will be installed.
+    -   `os.listInstalledPackages()`: Gets the list of packages that have been installed in this inst.
+    -   `os.installAuxFile(state, mode?)`: Installs the given AUX file in this inst. `mode` can be set to "copy" to force CasualOS to always produce new copies of bots.
+    -   `os.getAuxFileForBots(bots, options?)`: Gets an AUX file that represents the given bots. `options` can be used to specify which version of the AUX file format you want to receive. This function works like `os.downloadBots()`, but it returns the AUX file instead of downloading it to the user's device.
+-   Added support for multi-server websocket deployments of CasualOS.
+    -   Uses Redis pub/sub as a message broker.
+    -   Individual CasualOS deployments are still stateless: they only need to be able to access Redis and the DB.
+-   Improved `experiment.createStaticHtmlFromBots()` to return a smaller file and also better support alternative enviroments.
+    -   There is no background thread when bots are running in static HTML, so they have full access to everything in CasualOS and also the main thread.
+    -   Static HTML also doesn't have access to every CasualOS feature. Non-essential features have been removed, like:
+        -   The multi-line code editor.
+        -   Some built-in fonts like `noto-sans-kr`.
+        -   Some built-in GLTF models (like VR controller models).
+        -   Some icons (some CasualOS-custom icons in the sheet portal and system portal).
+-   Added support for the `map` form.
+    -   Set `formAddress` to a [Vector](https://docs.casualos.com/tags#vector-tags) to center the map on a particular longitude and latitude.
+    -   `formMapProvider` can be set to one of the following values:
+        -   `bing`, `bingmaps` to use [Bing Maps](https://www.bing.com/maps).
+        -   `openstreetmap`, `openstreetmaps`, `osm` to use [OpenStreetMap](https://www.openstreetmap.org/).
+        -   `mapbox` to use [MapBox](https://www.mapbox.com/)
+        -   `google`, `googlemaps` to use [Google Maps](https://maps.google.com/)
+        -   `maptiler` to use [MapTiler](https://www.maptiler.com/)
+        -   `openmaptiles`, `openmaptile`, `omt` to use [OpenMapTiles](https://openmaptiles.org/)
+        -   `here`, `heremap`, `heremaps` to use [Here Maps](https://www.here.com/)
+        -   A custom URL of the format: `https://{s}.example.com/{z}/{x}/{y}.png`
+    -   `formMapProviderAPIKey` can be provided to set an API key for map providers.
+    -   `formMapLOD` can be used to set the zoom level (higher values appear more zoomed in).
+    -   `formMapHeightProvider` can be set to `maptiler` to load elevation data from the MapTiler API.
+    -   `formMapHeightProviderAPIKey` can be set to use a specific API key for the `formMapHeightProvider`.
+    -   `formMapHeightOffset` can be set to offset the displayed heights when a `formMapHeightProvider` is provided.
+-   Updated lambda functions to use 1024 MB instead of 256 MB.
+-   Added a note for `@onBotChanged` to the documentation that it will only be triggered if the bot was not just created.
+-   Added the `formInputMultiline` tag.
+    -   Set to `true` to allow multiple lines in `input` form menu bots.
+    -   Set to `false` to disallow multiple lines.
+    -   Set to `null` to allow multiple lines by using <kbd>Shift</kbd>+<kbd>Enter</kbd>.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where quickly typing in an input element could cause the cursor to jump to the end of the content in the input box.
+-   Fixed an issue where it was possible for the `@onInstJoined` shout to be sent before all initial tag mask have been processed.
+-   Fixed an issue where updating a new bot could cause the new bot to not be properly synchronized throughout the system.
+-   Fixed an issue where it was impossible to upload files to records that have spaces in their names.
+-   Fixed an issue where bots in the `tempShared` space might not re-appear on other devices after reconnecting.
+-   Fixed an issue where it was impossible to report an inst.
+
+## V3.4.5
+
+#### Date: 4/18/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `os.calculateViewportCoordinatesFromPosition()` function returned incorrect coordinate values when used in the mapPortal.
+    -   Function now properly converts longitude/latitude coordinates to accurate viewport positions, ensuring consistent behavior between gridPortal and mapPortal.
+-   Fixed an issue with custom apps where setting the `selected` property on an `<option>` element would appear to have no effect.
+-   Fixed an issue with custom apps where setting the `checked` property on `<input>` elements would have no effect.
+
+## V3.4.4
+
+#### Date: 4/17/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with custom apps where setting an attribute to `null` would not remove the attribute.
+-   Fixed an issue with custom apps where SVG elements would not work when DOM support is enabled.
+
 ## V3.4.3
 
 #### Date: 4/10/2025

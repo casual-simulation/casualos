@@ -28,7 +28,6 @@ import {
     createOtherPlayersClientPartition,
     createYjsPartition,
     createRemoteClientYjsPartition,
-    ConnectionIndicator,
 } from '@casual-simulation/aux-common';
 import type { AuxConfig } from '@casual-simulation/aux-vm';
 import { BaseAuxChannel } from '@casual-simulation/aux-vm/vm';

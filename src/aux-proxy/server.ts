@@ -19,7 +19,6 @@ import type { Config } from './config';
 import type { Handler } from 'express';
 import express from 'express';
 import * as bodyParser from 'body-parser';
-import { promisify } from 'util';
 import { verify } from 'jsonwebtoken';
 import { WebSocketServer, requestUrl } from '@casual-simulation/tunnel';
 import type { IncomingMessage } from 'http';

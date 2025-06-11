@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { PrivacyFeatures } from '@casual-simulation/aux-common';
+import type { PrivacyFeatures, UserRole } from '@casual-simulation/aux-common';
 import { hasValue } from '@casual-simulation/aux-common';
 import type {
     RegexRule,
@@ -51,7 +51,6 @@ import type {
     UpdateSubscriptionInfoRequest,
     UpdateSubscriptionPeriodRequest,
     UserLoginMetadata,
-    UserRole,
 } from '@casual-simulation/aux-records/AuthStore';
 import type { Db, Collection, FilterQuery } from 'mongodb';
 import { v4 as uuid } from 'uuid';
@@ -326,6 +325,12 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
     async getStudioByComId(comId: string): Promise<Studio> {
         return await this._studios.findOne({
             comId: comId,
+        });
+    }
+
+    async getStudioByStripeAccountId(accountId: string): Promise<Studio> {
+        return await this._studios.findOne({
+            stripeAccountId: accountId,
         });
     }
 
@@ -1182,6 +1187,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                     stripeCustomerId: studio.stripeCustomerId,
                     subscriptionId: studio.subscriptionId,
                     subscriptionStatus: studio.subscriptionStatus,
+                    subscriptionInfoId: studio.subscriptionInfoId,
+                    subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+                    subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+                    playerConfig: studio.playerConfig,
+                    stripeAccountId: studio.stripeAccountId,
+                    stripeAccountStatus: studio.stripeAccountStatus,
+                    stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+                    comId: studio.comId,
+                    comIdConfig: studio.comIdConfig,
+                    logoUrl: studio.logoUrl,
+                    ownerStudioComId: studio.ownerStudioComId,
                 },
             },
             { upsert: true }
@@ -1203,6 +1219,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             stripeCustomerId: studio.stripeCustomerId,
             subscriptionId: studio.subscriptionId,
             subscriptionStatus: studio.subscriptionStatus,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+            playerConfig: studio.playerConfig,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+            comId: studio.comId,
+            comIdConfig: studio.comIdConfig,
+            ownerStudioComId: studio.ownerStudioComId,
+            logoUrl: studio.logoUrl,
         };
     }
 
@@ -1221,6 +1248,17 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
             stripeCustomerId: studio.stripeCustomerId,
             subscriptionId: studio.subscriptionId,
             subscriptionStatus: studio.subscriptionStatus,
+            subscriptionInfoId: studio.subscriptionInfoId,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStartMs,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEndMs,
+            playerConfig: studio.playerConfig,
+            stripeAccountId: studio.stripeAccountId,
+            stripeAccountStatus: studio.stripeAccountStatus,
+            stripeAccountRequirementsStatus: studio.stripeAccountRequirementsStatus,
+            comId: studio.comId,
+            comIdConfig: studio.comIdConfig,
+            ownerStudioComId: studio.ownerStudioComId,
+            logoUrl: studio.logoUrl,
         };
     }
 

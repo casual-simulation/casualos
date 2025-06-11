@@ -19,18 +19,18 @@ import type {
     AuthData,
     AvailablePermissions,
     RemoteCausalRepoProtocol,
+    FormError,
 } from '@casual-simulation/aux-common';
+import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import type {
     CompleteLoginSuccess,
     CompleteWebAuthnLoginSuccess,
     CreatePublicRecordKeyResult,
-    FormError,
     GetPlayerConfigResult,
     GrantMarkerPermissionResult,
     GrantResourcePermissionResult,
     IsValidDisplayNameResult,
     IsValidEmailAddressResult,
-    PublicRecordKeyPolicy,
     ValidateSessionKeyFailure,
 } from '@casual-simulation/aux-records';
 import type {
@@ -343,6 +343,15 @@ export interface AuxAuth {
      * Only supported on protocol version 8 or more.
      */
     logout(): Promise<void>;
+
+    /**
+     * Ensures that the user is logged in.
+     * Validates the current session and re-authenticates the user if necessary.
+     * Returns a promise that resolves with data about the user.
+     *
+     * Only supported on protocol version 12 or more.
+     */
+    relogin(): Promise<AuthData>;
 
     /**
      * Gets a record key for the given record.

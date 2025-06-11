@@ -15,14 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { addState } from '@casual-simulation/aux-common';
 import { WEBHOOK_STATE_SCHEMA } from '@casual-simulation/aux-records';
-import { error } from 'console';
 import { z } from 'zod';
 
 export const HANDLE_WEBHOOK_PAYLOAD_SCHEMA = z.object({
-    recordName: z.string(),
-    inst: z.string().optional().nullable(),
+    recordName: z.string().nullable().optional(),
+    inst: z.string().nullable().optional(),
     request: z.object({
         method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']),
         path: z.string(),
