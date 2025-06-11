@@ -54,6 +54,7 @@
 
 -   Fixed an issue where the DOM was not able to be interacted with.
 -   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
+-   Fixed an issue where providing an invalid endpoint to a records function would cause the function to never resolve.
 
 ## V3.5.0
 
