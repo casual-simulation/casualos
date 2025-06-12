@@ -2,7 +2,7 @@
 
 ## V3.5.1
 
-#### Date: 6/11/2025
+#### Date: 6/12/2025
 
 ### :boom: Breaking Changes
 
@@ -49,12 +49,16 @@
 -   Added a [Fiduciary License Agreement](https://gist.github.com/KallynGowdy/5cbc3a6da651e88838c02b734d3b7e80) for CasualOS to help ensure that Casual Simulation has proper licensing agreements with individual contributors.
     -   Uses [cla-assistant](https://cla-assistant.io/) to collect signatures to the FLA.
 -   Improved the menuPortal to support scrolling when the bots would exceed the size of the screen.
+-   Added the `@onPackageInstalled` shout.
+    -   Sent once `os.installPackage()` completes successfully.
+    -   `that` includes information about the package which was installed.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the DOM was not able to be interacted with.
 -   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
 -   Fixed an issue where providing an invalid endpoint to a records function would cause the function to never resolve.
+-   Fixed an issue where package versions could not be recorded on Privo-enabled deployments.
 
 ## V3.5.0
 
