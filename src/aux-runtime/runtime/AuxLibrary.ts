@@ -11277,6 +11277,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Attempts to install the given package into the inst.
      *
+     * Returns a promise that resolves with the result of the installation.
+     *
+     * If the package was successfully installed, then a {@tag @onPackageInstalled} shout will be sent.
+     *
      * @param recordName the name of the record that the package is in.
      * @param address the address of the package that should be loaded.
      * @param key the key that specifies the version of the package that should be loaded. If not specified, then the latest version will be loaded.
@@ -11305,6 +11309,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets the list of packages that are installed in the inst.
+     *
      * @param options the options for the request.
      *
      * @example List all installed packages
