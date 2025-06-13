@@ -233,7 +233,7 @@
 }
 
 .vm-iframe-container.game-view-visible iframe:first-child {
-    display: none;
+    pointer-events: none;
 }
 
 .vm-iframe-container iframe {
