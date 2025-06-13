@@ -355,8 +355,13 @@ export class PolicyController {
             );
         }
 
+        const userRole =
+            (request.userId
+                ? userPrivacyFeatures?.userRole
+                : request.userRole) ?? 'none';
+
         if (!userPrivacyFeatures) {
-            if (this._auth.privoEnabled) {
+            if (this._auth.privoEnabled && userRole !== 'system') {
                 userPrivacyFeatures = {
                     allowAI: false,
                     allowPublicData: false,
@@ -384,10 +389,7 @@ export class PolicyController {
             recordStudioId: studioId,
             recordStudioMembers: studioMembers,
             userId: request.userId,
-            userRole:
-                (request.userId
-                    ? userPrivacyFeatures?.userRole
-                    : request.userRole) ?? 'none',
+            userRole: userRole,
             userPrivacyFeatures,
             sendNotLoggedIn: request.sendNotLoggedIn ?? true,
         };

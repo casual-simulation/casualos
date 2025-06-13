@@ -1,5 +1,65 @@
 # CasualOS Changelog
 
+## V3.5.1
+
+#### Date: 6/13/2025
+
+### :boom: Breaking Changes
+
+-   Made the VM iframe be hidden while the game view (gridPortal, mapPortal, etc.) is visible.
+
+    -   This is a breaking change because the VM iframe (DOM) used to be always visible behind the game view.
+    -   Now, it will only be visible when all the game portals are hidden (set to null).
+    -   This change is a workaround to fix a bug in MacOS Chrome that causes iframes to intercept some events from the main window. In particular, this bug broke the CasualOS `@onFileUpload` shout.
+    -   To preserve the old behavior, you can use the following code:
+
+        ```typescript
+        await os.registerApp('alwaysShowIframe', thisBot);
+
+        const css = `
+        .vm-iframe-container iframe:first-child {
+            display: block !important;
+        }
+        `;
+
+        os.compileApp(
+            'alwaysShowIframe',
+            <div>
+                <style>{css}</style>
+            </div>
+        );
+        ```
+
+### :rocket: Features
+
+-   Improved `os.loadInst()` and `os.unloadInst()` to accept a configuration object that can specify more information on the kind of inst to load.
+    -   Loading insts in this manner will not add them to the URL.
+    -   The following properties are supported:
+        -   `staticInst`: Equivalent to the [`staticInst` tag](https://docs.casualos.com/tags/config-bot#staticinst).
+        -   `inst`: Equivalent to the [`inst` tag](https://docs.casualos.com/tags/config-bot#inst)
+        -   `record`: Equivalent to the [`record` tag](https://docs.casualos.com/tags/config-bot#record)
+        -   `owner`: Equivalent to the [`owner` tag](https://docs.casualos.com/tags/config-bot#owner).
+    -   For example:
+    ```typescript
+    os.loadInst({
+        staticInst: 'myInst',
+    });
+    ```
+    will load the `myInst` static (local) inst just like using the `?staticInst=myInst` query parameter in the URL.
+-   Added a [Fiduciary License Agreement](https://gist.github.com/KallynGowdy/5cbc3a6da651e88838c02b734d3b7e80) for CasualOS to help ensure that Casual Simulation has proper licensing agreements with individual contributors.
+    -   Uses [cla-assistant](https://cla-assistant.io/) to collect signatures to the FLA.
+-   Improved the menuPortal to support scrolling when the bots would exceed the size of the screen.
+-   Added the `@onPackageInstalled` shout.
+    -   Sent once `os.installPackage()` completes successfully.
+    -   `that` includes information about the package which was installed.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the DOM was not able to be interacted with.
+-   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
+-   Fixed an issue where providing an invalid endpoint to a records function would cause the function to never resolve.
+-   Fixed an issue where package versions could not be recorded on Privo-enabled deployments.
+
 ## V3.5.0
 
 #### Date: 6/6/2025

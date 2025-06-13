@@ -109,10 +109,6 @@
     cursor: auto;
 }
 
-.menu-bot {
-    touch-action: none;
-}
-
 .menu-bot .md-field.md-theme-none:after {
     background-color: var(--menu-label-color);
 }

@@ -91,7 +91,7 @@ export function getPortalConfigBot(
 ): PrecalculatedBot {
     const data = simulation.portals.portalBots.get(portal);
 
-    if (data && data.botId) {
+    if (data && data.botId && simulation.helper.botsState) {
         return simulation.helper.botsState[data.botId] ?? null;
     }
 

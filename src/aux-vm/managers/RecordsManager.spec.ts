@@ -37,6 +37,7 @@ import {
     installAuxFile,
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
+    action,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -9945,6 +9946,27 @@ describe('RecordsManager', () => {
                             approvalType: 'normal',
                         },
                     }),
+                    action('onPackageInstalled', null, null, {
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
                 ]);
             });
 
@@ -10061,6 +10083,27 @@ describe('RecordsManager', () => {
                     ),
                     asyncResult(1, {
                         success: true,
+                        packageLoadId: null,
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                    action('onPackageInstalled', null, null, {
                         packageLoadId: null,
                         package: {
                             id: 'packageId',

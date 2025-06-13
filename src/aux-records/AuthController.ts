@@ -240,6 +240,20 @@ export class AuthController {
         this._privoEnabled = value;
     }
 
+    /**
+     * Gets the privo client interface.
+     */
+    get privoClient(): PrivoClientInterface {
+        return this._privoClient;
+    }
+
+    /**
+     * Sets the privo client interface.
+     */
+    set privoClient(value: PrivoClientInterface) {
+        this._privoClient = value;
+    }
+
     @traced(TRACE_NAME)
     async createAccount(
         request: CreateAccountRequest

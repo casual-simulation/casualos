@@ -2031,6 +2031,11 @@ export const ON_DOCUMENT_AVAILABLE_ACTION_NAME: string = 'onDocumentAvailable';
 export const ON_KEY_CLICK_ACTION_NAME = 'onKeyClick';
 
 /**
+ * The name of the event that is triggered when a package is installed.
+ */
+export const ON_PACKAGE_INSTALLED_ACTION_NAME: string = 'onPackageInstalled';
+
+/**
  * The tag used to set the space that the tag portal operates in.
  */
 export const TAG_PORTAL_SPACE: string = 'tagPortalSpace';
@@ -2857,6 +2862,7 @@ export const KNOWN_TAGS: string[] = [
     'onKeyRepeat',
     'onKeyUp',
     ON_KEY_CLICK_ACTION_NAME,
+    ON_PACKAGE_INSTALLED_ACTION_NAME,
     ON_GRID_CLICK_ACTION_NAME,
     ON_GRID_UP_ACTION_NAME,
     ON_GRID_DOWN_ACTION_NAME,

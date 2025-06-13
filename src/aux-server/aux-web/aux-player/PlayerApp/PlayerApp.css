@@ -232,6 +232,10 @@
     display: block;
 }
 
+.vm-iframe-container.game-view-visible iframe:first-child {
+    display: none;
+}
+
 .vm-iframe-container iframe {
     display: none;
 }

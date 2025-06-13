@@ -355,7 +355,7 @@ export abstract class Game {
     abstract getUIHtmlElements(): HTMLElement[];
 
     /**
-     * Gets the HTML elements that the input should prevent browser zooming on.
+     * Gets the HTML elements that the input should allow browser wheel events on.
      */
     abstract getUIZoomElements(): HTMLElement[];
 

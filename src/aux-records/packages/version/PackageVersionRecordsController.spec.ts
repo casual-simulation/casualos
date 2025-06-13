@@ -51,6 +51,7 @@ import { getHash } from '@casual-simulation/crypto/HashHelpers';
 import { FileRecordsController } from '../../FileRecordsController';
 import type { UserRole } from '@casual-simulation/aux-common';
 import { PackageRecordsController } from '../PackageRecordsController';
+import type { PrivoClientInterface } from '../../PrivoClient';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -317,6 +318,114 @@ describe('PackageVersionRecordsController', () => {
                         entitlements: [],
                         description: 'def',
                         markers: [PUBLIC_READ_MARKER],
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: `${getHash(aux)}.json`,
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                });
+
+                const item = await itemsStore.getItemByKey(
+                    recordName,
+                    'address',
+                    {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    }
+                );
+
+                expect(!!item.item).toBe(true);
+
+                const {
+                    sha256,
+                    address,
+                    key,
+                    createdFile,
+                    approved,
+                    approvalType,
+                    requiresReview,
+                    id,
+                    markers,
+                    ...hashedProperties
+                } = item.item as PackageRecordVersionWithMetadata;
+                expect(hashedProperties.createdAtMs).toBe(123);
+                expect(
+                    getHash({
+                        ...hashedProperties,
+                    })
+                ).toBe(sha256);
+            });
+
+            it('should work on privo enabled deployments', async () => {
+                const privoClient: jest.Mocked<PrivoClientInterface> = {
+                    createAdultAccount: jest.fn(),
+                    createChildAccount: jest.fn(),
+                    getUserInfo: jest.fn(),
+                    generateAuthorizationUrl: jest.fn(),
+                    processAuthorizationCallback: jest.fn(),
+                    checkEmail: jest.fn(),
+                    checkDisplayName: jest.fn(),
+                    generateLogoutUrl: jest.fn(),
+                    resendConsentRequest: jest.fn(),
+                    lookupServiceId: jest.fn(),
+                };
+
+                const owner = await store.findUser(userId);
+                await store.saveUser({
+                    ...owner,
+                    privacyFeatures: {
+                        allowAI: false,
+                        allowPublicData: false,
+                        publishData: true,
+                        allowPublicInsts: false,
+                    },
+                });
+                services.auth.privoEnabled = true;
+                services.auth.privoClient = privoClient;
+
+                dateNowMock.mockReturnValue(123);
+                let aux: StoredAux = {
+                    version: 1,
+                    state: {},
+                };
+
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileSha256Hex: getHash(aux),
+                            fileByteLength: 123,
+                            fileDescription: 'aux.json',
+                            fileMimeType: 'application/json',
+                            headers: {},
+                        },
+                        entitlements: [],
+                        description: 'def',
+                        markers: [PRIVATE_MARKER],
                     },
                     userId,
                     instances: [],
