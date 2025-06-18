@@ -39,6 +39,7 @@ import { XpController } from './XpController';
 import type { FinancialInterface } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
 import type { Account, Transfer } from 'tigerbeetle-node';
+import { v4 as uuidv4, parse } from 'uuid';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -88,7 +89,8 @@ export function createTestPrivoConfiguration(): PrivoConfiguration {
 }
 
 export function createTestControllers(
-    config?: SubscriptionConfiguration | null
+    config?: SubscriptionConfiguration | null,
+    financialInterface?: FinancialInterface
 ) {
     const subConfig: SubscriptionConfiguration | null =
         typeof config === 'undefined' ? createTestSubConfiguration() : config;
@@ -111,7 +113,7 @@ export function createTestControllers(
         store,
         packagesStore
     );
-    const financialInterface = new MemoryFinancialInterface();
+    financialInterface ??= new MemoryFinancialInterface();
     const financialController = new FinancialController(
         financialInterface,
         store
@@ -386,4 +388,11 @@ export function checkTransfers(
 
     //     expect(mapBigInts(actual)).toMatchObject(mapBigInts(expected));
     // }
+}
+
+export function randomBigInt() {
+    const uuid = uuidv4();
+    const uuidBytes = parse(uuid);
+    // get bigint from uuid bytes
+    return BigInt('0x' + Buffer.from(uuidBytes).toString('hex'));
 }

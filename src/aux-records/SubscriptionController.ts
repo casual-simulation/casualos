@@ -98,11 +98,7 @@ import type { PolicyStore } from './PolicyStore';
 import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import type {
-    Account,
-    FinancialController,
-    InternalTransfer,
-} from './financial';
+import type { FinancialController, InternalTransfer } from './financial';
 import {
     ACCOUNT_IDS,
     AMOUNT_MAX,
@@ -113,12 +109,13 @@ import {
     getLiquidityAccountByLedger,
     LEDGERS,
     TransferCodes,
-    TransferFlags,
 } from './financial';
 import type {
     ContractRecord,
     ContractRecordsStore,
 } from './contracts/ContractRecordsStore';
+import type { Account } from 'tigerbeetle-node';
+import { TransferFlags } from 'tigerbeetle-node';
 
 /**
  * The number of bytes that the access key secret should be.

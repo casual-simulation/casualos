@@ -33,13 +33,17 @@ import {
 import type { Account } from 'tigerbeetle-node';
 import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 import { MemoryStore } from '../MemoryStore';
-import { checkAccounts, checkTransfers, mapBigInts } from '../TestUtils';
+import {
+    checkAccounts,
+    checkTransfers,
+    mapBigInts,
+    randomBigInt,
+} from '../TestUtils';
 import { runTigerBeetle } from './TigerBeetleTestUtils';
 import { TigerBeetleFinancialInterface } from './TigerBeetleFinancialInterface';
 import type { Client } from 'tigerbeetle-node';
 import { createClient } from 'tigerbeetle-node';
 import type { ChildProcess } from 'child_process';
-import { parse, v4 as uuidv4 } from 'uuid';
 
 console.log = jest.fn();
 console.error = jest.fn();
@@ -80,14 +84,11 @@ describe('FinancialController', () => {
         currentId = 1n;
         dateNowMock = Date.now = jest.fn(() => 123);
 
-        const uuid = uuidv4();
-        const uuidBytes = parse(uuid);
-        // get bigint from uuid bytes
-        const offset = BigInt('0x' + Buffer.from(uuidBytes).toString('hex'));
+        const idOffset = randomBigInt();
         financialInterface = new TigerBeetleFinancialInterface({
             client: tbClient,
             id: () => currentId++,
-            idOffset: offset,
+            idOffset: idOffset,
         });
         store = new MemoryStore({
             subscriptions: null,

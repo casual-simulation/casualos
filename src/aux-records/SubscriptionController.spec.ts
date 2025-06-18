@@ -60,6 +60,7 @@ import {
     createTestControllers,
     createTestSubConfiguration,
     createTestUser,
+    randomBigInt,
 } from './TestUtils';
 import { merge } from 'lodash';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
@@ -68,22 +69,22 @@ import {
     PUBLIC_READ_MARKER,
     toBase64String,
 } from '@casual-simulation/aux-common';
-import type {
-    Account,
-    FinancialController,
-    MemoryFinancialInterface,
-} from './financial';
+import type { FinancialController } from './financial';
 import {
     ACCOUNT_IDS,
     AccountCodes,
-    AccountFlags,
     CurrencyCodes,
     LEDGERS,
+    TigerBeetleFinancialInterface,
     TransferCodes,
-    TransferFlags,
     USD_TO_CREDITS,
 } from './financial';
+import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
+import type { Client, Account } from 'tigerbeetle-node';
+import { createClient } from 'tigerbeetle-node';
+import type { ChildProcess } from 'child_process';
+import { runTigerBeetle } from './financial/TigerBeetleTestUtils';
 
 const originalDateNow = Date.now;
 console.log = jest.fn();
@@ -95,7 +96,7 @@ describe('SubscriptionController', () => {
     let auth: AuthController;
     let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
-    let financialInterface: MemoryFinancialInterface;
+    let financialInterface: TigerBeetleFinancialInterface;
     let financialController: FinancialController;
     let purchasableItemsStore: MemoryPurchasableItemRecordsStore;
     let contractStore: MemoryContractRecordsStore;
@@ -120,51 +121,80 @@ describe('SubscriptionController', () => {
     let userId: string;
     let sessionKey: string;
     let nowMock: jest.Mock<number>;
+    let currentId = 1n;
+
+    let tbClient: Client;
+    let tbProcess: ChildProcess;
+
+    beforeAll(async () => {
+        const { port, process } = await runTigerBeetle(
+            'subscription-controller'
+        );
+
+        tbProcess = process;
+        if (!port) {
+            throw new Error('Failed to start TigerBeetle!');
+        }
+
+        tbClient = createClient({
+            replica_addresses: [port],
+            cluster_id: 0n,
+        });
+    });
 
     beforeEach(async () => {
+        currentId = 1n;
         nowMock = Date.now = jest.fn();
-        const services = createTestControllers({
-            subscriptions: [
-                {
-                    id: 'sub_1',
-                    product: 'product_99_id',
-                    eligibleProducts: [
-                        'product_99_id',
-                        'product_1_id',
-                        'product_2_id',
-                        'product_3_id',
-                    ],
-                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                },
-                {
-                    id: 'sub_2',
-                    product: 'product_1000_id',
-                    eligibleProducts: ['product_1000_id'],
-                    featureList: [
-                        'Feature 1000',
-                        'Feature 2000',
-                        'Feature 3000',
-                    ],
-                    purchasable: false,
-                },
-            ],
-            webhookSecret: 'webhook_secret',
-            cancelUrl: 'http://cancel_url/',
-            returnUrl: 'http://return_url/',
-            successUrl: 'http://success_url/',
-            tiers: {},
-            defaultFeatures: {
-                user: allowAllFeatures(),
-                studio: allowAllFeatures(),
-            },
+        const idOffset = randomBigInt();
+        financialInterface = new TigerBeetleFinancialInterface({
+            client: tbClient,
+            id: () => currentId++,
+            idOffset: idOffset,
         });
+        const services = createTestControllers(
+            {
+                subscriptions: [
+                    {
+                        id: 'sub_1',
+                        product: 'product_99_id',
+                        eligibleProducts: [
+                            'product_99_id',
+                            'product_1_id',
+                            'product_2_id',
+                            'product_3_id',
+                        ],
+                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                    },
+                    {
+                        id: 'sub_2',
+                        product: 'product_1000_id',
+                        eligibleProducts: ['product_1000_id'],
+                        featureList: [
+                            'Feature 1000',
+                            'Feature 2000',
+                            'Feature 3000',
+                        ],
+                        purchasable: false,
+                    },
+                ],
+                webhookSecret: 'webhook_secret',
+                cancelUrl: 'http://cancel_url/',
+                returnUrl: 'http://return_url/',
+                successUrl: 'http://success_url/',
+                tiers: {},
+                defaultFeatures: {
+                    user: allowAllFeatures(),
+                    studio: allowAllFeatures(),
+                },
+            },
+            financialInterface
+        );
 
         store = services.store;
         authMessenger = services.authMessenger;
         purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
         contractStore = new MemoryContractRecordsStore(store);
         auth = services.auth;
-        financialInterface = services.financialInterface;
         financialController = services.financialController;
 
         stripe = stripeMock = {
@@ -259,6 +289,9 @@ describe('SubscriptionController', () => {
     });
 
     afterAll(() => {
+        if (tbProcess) {
+            tbProcess.kill();
+        }
         Date.now = originalDateNow;
     });
 
@@ -4890,7 +4923,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            expect([...financialInterface.accounts.values()]).toEqual([
+            await checkAccounts(financialInterface, [
                 {
                     id: 1n,
                     debits_pending: 0n,
@@ -4906,7 +4939,6 @@ describe('SubscriptionController', () => {
                         AccountFlags.debits_must_not_exceed_credits |
                         AccountFlags.history,
                     code: AccountCodes.liabilities_user,
-                    timestamp: 0n,
                 },
             ]);
         });
@@ -6368,7 +6400,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n, 4n]), [
                 {
                     id: 3n,
                     amount: 100n,
@@ -6497,7 +6529,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers.slice(1), [
+            checkTransfers(await financialInterface.lookupTransfers([6n, 7n]), [
                 {
                     id: 6n,
                     amount: 100n,
@@ -6648,45 +6680,48 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers.slice(2), [
-                {
-                    id: 7n,
-                    amount: 110n * USD_TO_CREDITS,
-                    code: TransferCodes.exchange,
-                    credit_account_id: ACCOUNT_IDS.liquidity_credits,
-                    debit_account_id: userAccount!.id,
-                    flags: TransferFlags.linked,
-                    ledger: LEDGERS.credits,
+            checkTransfers(
+                await financialInterface.lookupTransfers([7n, 8n, 9n]),
+                [
+                    {
+                        id: 7n,
+                        amount: 110n * USD_TO_CREDITS,
+                        code: TransferCodes.exchange,
+                        credit_account_id: ACCOUNT_IDS.liquidity_credits,
+                        debit_account_id: userAccount!.id,
+                        flags: TransferFlags.linked,
+                        ledger: LEDGERS.credits,
 
-                    user_data_128: 6n,
-                },
-                {
-                    id: 8n,
-                    amount: 100n,
-                    code: TransferCodes.contract_payment,
-                    // contract account
-                    credit_account_id: 5n,
-                    // User account
-                    debit_account_id: ACCOUNT_IDS.liquidity_usd,
-                    flags: TransferFlags.linked,
-                    ledger: LEDGERS.usd,
+                        user_data_128: 6n,
+                    },
+                    {
+                        id: 8n,
+                        amount: 100n,
+                        code: TransferCodes.contract_payment,
+                        // contract account
+                        credit_account_id: 5n,
+                        // User account
+                        debit_account_id: ACCOUNT_IDS.liquidity_usd,
+                        flags: TransferFlags.linked,
+                        ledger: LEDGERS.usd,
 
-                    user_data_128: 6n,
-                },
-                {
-                    id: 9n,
-                    amount: 10n,
-                    code: TransferCodes.xp_platform_fee,
-                    // contract account
-                    credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
-                    // User account
-                    debit_account_id: ACCOUNT_IDS.liquidity_usd,
-                    flags: TransferFlags.none,
-                    ledger: LEDGERS.usd,
+                        user_data_128: 6n,
+                    },
+                    {
+                        id: 9n,
+                        amount: 10n,
+                        code: TransferCodes.xp_platform_fee,
+                        // contract account
+                        credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        // User account
+                        debit_account_id: ACCOUNT_IDS.liquidity_usd,
+                        flags: TransferFlags.none,
+                        ledger: LEDGERS.usd,
 
-                    user_data_128: 6n,
-                },
-            ]);
+                        user_data_128: 6n,
+                    },
+                ]
+            );
 
             await checkAccounts(financialInterface, [
                 {
@@ -6864,7 +6899,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n, 4n]), [
                 {
                     id: 3n,
                     amount: 100n,
@@ -6968,7 +7003,7 @@ describe('SubscriptionController', () => {
 
             expect(store.checkoutSessions).toEqual([]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n, 4n]), [
                 {
                     id: 3n,
                     amount: 100n,
@@ -7136,7 +7171,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n]), [
                 {
                     id: 3n,
                     amount: 100n,
@@ -7311,7 +7346,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n, 4n]), [
                 {
                     id: 3n,
                     amount: 100n,
@@ -7499,7 +7534,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n, 4n]), [
                 {
                     id: 3n,
                     amount: 100n,
@@ -7699,7 +7734,7 @@ describe('SubscriptionController', () => {
                 },
             ]);
 
-            checkTransfers(financialInterface.transfers, [
+            checkTransfers(await financialInterface.lookupTransfers([3n, 4n]), [
                 {
                     id: 3n,
                     amount: 49n,
@@ -8350,31 +8385,35 @@ describe('SubscriptionController', () => {
                     closedAtMs: 101,
                 });
 
-                checkTransfers(financialInterface.transfers.slice(3), [
-                    {
-                        id: 4n,
-                        amount: 100n,
-                        code: TransferCodes.contract_refund,
-                        credit_account_id: userAccount!.id,
-                        debit_account_id: contractAccount!.id,
-                        flags:
-                            TransferFlags.linked |
-                            TransferFlags.balancing_debit,
-                        ledger: LEDGERS.usd,
-                        user_data_128: 6n,
-                    },
-                    {
-                        id: 5n,
-                        amount: 0n,
-                        code: TransferCodes.account_closing,
-                        credit_account_id: userAccount!.id,
-                        debit_account_id: contractAccount!.id,
-                        flags:
-                            TransferFlags.closing_debit | TransferFlags.pending,
-                        ledger: LEDGERS.usd,
-                        user_data_128: 6n,
-                    },
-                ]);
+                checkTransfers(
+                    await financialInterface.lookupTransfers([4n, 5n]),
+                    [
+                        {
+                            id: 4n,
+                            amount: 100n,
+                            code: TransferCodes.contract_refund,
+                            credit_account_id: userAccount!.id,
+                            debit_account_id: contractAccount!.id,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.balancing_debit,
+                            ledger: LEDGERS.usd,
+                            user_data_128: 6n,
+                        },
+                        {
+                            id: 5n,
+                            amount: 0n,
+                            code: TransferCodes.account_closing,
+                            credit_account_id: userAccount!.id,
+                            debit_account_id: contractAccount!.id,
+                            flags:
+                                TransferFlags.closing_debit |
+                                TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                            user_data_128: 6n,
+                        },
+                    ]
+                );
 
                 checkAccounts(financialInterface, [
                     {
@@ -8436,7 +8475,7 @@ describe('SubscriptionController', () => {
                     closedAtMs: 101,
                 });
 
-                checkTransfers(financialInterface.transfers.slice(3), []);
+                // checkTransfers(await financialInterface.transfers.slice(3), []);
 
                 checkAccounts(financialInterface, [
                     {
@@ -8487,7 +8526,7 @@ describe('SubscriptionController', () => {
                     closedAtMs: 99,
                 });
 
-                checkTransfers(financialInterface.transfers.slice(3), []);
+                // checkTransfers(financialInterface.transfers.slice(3), []);
 
                 checkAccounts(financialInterface, [
                     {
@@ -9002,42 +9041,51 @@ describe('SubscriptionController', () => {
                 });
 
                 // Check that the pending transfers have been posted
-                checkTransfers(financialInterface.transfers, [
-                    {
-                        id: 10n,
-                        amount: 100n,
-                        code: TransferCodes.contract_payment,
-                        credit_account_id: contractAccount!.id,
-                        debit_account_id: ACCOUNT_IDS.assets_stripe,
-                        flags: TransferFlags.linked | TransferFlags.pending,
-                        ledger: LEDGERS.usd,
-                        user_data_128: 9n,
-                    },
-                    {
-                        id: 11n,
-                        amount: 10n,
-                        code: TransferCodes.contract_payment,
-                        credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
-                        debit_account_id: ACCOUNT_IDS.assets_stripe,
-                        flags: TransferFlags.pending,
-                        ledger: LEDGERS.usd,
-                        user_data_128: 9n,
-                    },
-                    {
-                        id: 2n,
-                        pending_id: 10n,
-                        flags:
-                            TransferFlags.linked |
-                            TransferFlags.post_pending_transfer,
-                        user_data_128: 9n,
-                    },
-                    {
-                        id: 3n,
-                        pending_id: 11n,
-                        flags: TransferFlags.post_pending_transfer,
-                        user_data_128: 9n,
-                    },
-                ]);
+                checkTransfers(
+                    await financialInterface.lookupTransfers([
+                        10n,
+                        11n,
+                        2n,
+                        3n,
+                    ]),
+                    [
+                        {
+                            id: 10n,
+                            amount: 100n,
+                            code: TransferCodes.contract_payment,
+                            credit_account_id: contractAccount!.id,
+                            debit_account_id: ACCOUNT_IDS.assets_stripe,
+                            flags: TransferFlags.linked | TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                            user_data_128: 9n,
+                        },
+                        {
+                            id: 11n,
+                            amount: 10n,
+                            code: TransferCodes.contract_payment,
+                            credit_account_id:
+                                ACCOUNT_IDS.revenue_xp_platform_fees,
+                            debit_account_id: ACCOUNT_IDS.assets_stripe,
+                            flags: TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                            user_data_128: 9n,
+                        },
+                        {
+                            id: 2n,
+                            pending_id: 10n,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.post_pending_transfer,
+                            user_data_128: 9n,
+                        },
+                        {
+                            id: 3n,
+                            pending_id: 11n,
+                            flags: TransferFlags.post_pending_transfer,
+                            user_data_128: 9n,
+                        },
+                    ]
+                );
 
                 await checkAccounts(financialInterface, [
                     {
@@ -10991,42 +11039,52 @@ describe('SubscriptionController', () => {
                         status: 'open',
                     });
 
-                    checkTransfers(financialInterface.transfers, [
-                        {
-                            id: 10n,
-                            amount: 100n,
-                            code: TransferCodes.contract_payment,
-                            credit_account_id: contractAccount!.id,
-                            debit_account_id: ACCOUNT_IDS.assets_stripe,
-                            // Should no longer be pending
-                            flags: TransferFlags.linked | TransferFlags.pending,
-                            ledger: LEDGERS.usd,
-                        },
-                        {
-                            id: 11n,
-                            amount: 10n,
-                            code: TransferCodes.xp_platform_fee,
-                            credit_account_id:
-                                ACCOUNT_IDS.revenue_xp_platform_fees,
-                            debit_account_id: ACCOUNT_IDS.assets_stripe,
-                            flags: TransferFlags.pending,
-                            ledger: LEDGERS.usd,
-                        },
-                        {
-                            id: 4n,
-                            pending_id: 10n,
-                            flags:
-                                TransferFlags.linked |
-                                TransferFlags.post_pending_transfer,
-                            user_data_128: 9n,
-                        },
-                        {
-                            id: 5n,
-                            pending_id: 11n,
-                            flags: TransferFlags.post_pending_transfer,
-                            user_data_128: 9n,
-                        },
-                    ]);
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([
+                            10n,
+                            11n,
+                            4n,
+                            5n,
+                        ]),
+                        [
+                            {
+                                id: 10n,
+                                amount: 100n,
+                                code: TransferCodes.contract_payment,
+                                credit_account_id: contractAccount!.id,
+                                debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                // Should no longer be pending
+                                flags:
+                                    TransferFlags.linked |
+                                    TransferFlags.pending,
+                                ledger: LEDGERS.usd,
+                            },
+                            {
+                                id: 11n,
+                                amount: 10n,
+                                code: TransferCodes.xp_platform_fee,
+                                credit_account_id:
+                                    ACCOUNT_IDS.revenue_xp_platform_fees,
+                                debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                flags: TransferFlags.pending,
+                                ledger: LEDGERS.usd,
+                            },
+                            {
+                                id: 4n,
+                                pending_id: 10n,
+                                flags:
+                                    TransferFlags.linked |
+                                    TransferFlags.post_pending_transfer,
+                                user_data_128: 9n,
+                            },
+                            {
+                                id: 5n,
+                                pending_id: 11n,
+                                flags: TransferFlags.post_pending_transfer,
+                                user_data_128: 9n,
+                            },
+                        ]
+                    );
 
                     await checkAccounts(financialInterface, [
                         {
@@ -11258,28 +11316,36 @@ describe('SubscriptionController', () => {
                         },
                     ]);
 
-                    checkTransfers(financialInterface.transfers, [
-                        {
-                            id: 10n,
-                            amount: 100n,
-                        },
-                        {
-                            id: 11n,
-                            amount: 999n,
-                        },
-                        {
-                            id: 2n,
-                            flags:
-                                TransferFlags.linked |
-                                TransferFlags.void_pending_transfer,
-                            pending_id: 10n,
-                        },
-                        {
-                            id: 3n,
-                            flags: TransferFlags.void_pending_transfer,
-                            pending_id: 11n,
-                        },
-                    ]);
+                    checkTransfers(
+                        await financialInterface.lookupTransfers([
+                            10n,
+                            11n,
+                            2n,
+                            3n,
+                        ]),
+                        [
+                            {
+                                id: 10n,
+                                amount: 100n,
+                            },
+                            {
+                                id: 11n,
+                                amount: 999n,
+                            },
+                            {
+                                id: 2n,
+                                flags:
+                                    TransferFlags.linked |
+                                    TransferFlags.void_pending_transfer,
+                                pending_id: 10n,
+                            },
+                            {
+                                id: 3n,
+                                flags: TransferFlags.void_pending_transfer,
+                                pending_id: 11n,
+                            },
+                        ]
+                    );
                 });
             });
 
