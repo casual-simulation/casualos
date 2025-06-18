@@ -580,68 +580,6 @@ describe('FinancialController', () => {
             ));
         });
 
-        // it.skip('should be able to be idempotent', async () => {
-        //     const result = await controller.internalTransaction({
-        //         transfers: [
-        //             {
-        //                 debitAccountId: ACCOUNT_IDS.assets_stripe,
-        //                 creditAccountId: account1Id,
-        //                 currency: 'credits',
-        //                 amount: 100n,
-        //                 code: TransferCodes.admin_credit,
-        //             },
-        //         ],
-        //         idempotencyKey: '1b671a64-40d5-491e-99b0-da01ff1f3341',
-        //     });
-
-        //     expect(mapBigInts(result)).toEqual(
-        //         success({
-        //             transactionId: '3',
-        //             transferIds: ['4'],
-        //         })
-        //     );
-
-        //     const result2 = await controller.internalTransaction({
-        //         transfers: [
-        //             {
-        //                 debitAccountId: ACCOUNT_IDS.assets_stripe,
-        //                 creditAccountId: account1Id,
-        //                 currency: 'credits',
-        //                 amount: 100n,
-        //                 code: TransferCodes.admin_credit,
-        //             },
-        //         ],
-        //         idempotencyKey: '1b671a64-40d5-491e-99b0-da01ff1f3341',
-        //     });
-
-        //     expect(mapBigInts(result2)).toEqual(
-        //         success({
-        //             transactionId: '3',
-        //             transferIds: ['4'],
-        //         })
-        //     );
-
-        //     expect(mapBigInts(financialInterface.transfers)).toEqual(
-        //         mapBigInts([
-        //             {
-        //                 id: 4,
-        //                 amount: 100,
-        //                 code: TransferCodes.admin_credit,
-        //                 credit_account_id: Number(account1Id),
-        //                 debit_account_id: ACCOUNT_IDS.assets_stripe,
-        //                 flags: TransferFlags.none,
-        //                 ledger: LEDGERS.credits,
-        //                 pending_id: 0,
-        //                 timeout: 0,
-        //                 timestamp: 0,
-        //                 user_data_128: 3,
-        //                 user_data_64: 0,
-        //                 user_data_32: 0,
-        //             },
-        //         ])
-        //     );
-        // });
-
         it('should be able to transfer money from the assets_cash account to a user account', async () => {
             const result = await controller.internalTransaction({
                 transfers: [
@@ -673,27 +611,6 @@ describe('FinancialController', () => {
                     user_data_128: 3n,
                 },
             ]);
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([4n]))
-            // ).toEqual(
-            //     [
-            //         {
-            //             id: 4,
-            //             amount: 100,
-            //             code: TransferCodes.admin_credit,
-            //             credit_account_id: Number(account1Id),
-            //             debit_account_id: Number(ACCOUNT_IDS.assets_stripe),
-            //             flags: TransferFlags.none,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: expect.any(Number),
-            //             user_data_128: 3,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ]
-            // );
         });
 
         it('should be able to transfer money from one user account to another', async () => {
@@ -727,16 +644,6 @@ describe('FinancialController', () => {
                 success({
                     transactionId: '5',
                     transferIds: ['6'],
-                    // accountBalances: [
-                    //     {
-                    //         accountId: account1Id,
-                    //         balance: 900n,
-                    //     },
-                    //     {
-                    //         accountId: account2Id,
-                    //         balance: 100n,
-                    //     },
-                    // ],
                 })
             );
 
@@ -752,13 +659,6 @@ describe('FinancialController', () => {
                     user_data_128: 5n,
                 },
             ]);
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([6n]))
-            // ).toEqual(
-            //     mapBigInts([
-
-            //     ])
-            // );
         });
 
         it('should use the given transfer Id', async () => {
@@ -779,16 +679,6 @@ describe('FinancialController', () => {
                 success({
                     transactionId: '3',
                     transferIds: ['100'],
-                    // accountBalances: [
-                    //     {
-                    //         accountId: ACCOUNT_IDS.assets_stripe,
-                    //         balance: -100n,
-                    //     },
-                    //     {
-                    //         accountId: account1Id,
-                    //         balance: 100n,
-                    //     },
-                    // ],
                 })
             );
 
@@ -804,28 +694,6 @@ describe('FinancialController', () => {
                     user_data_128: 3n,
                 },
             ]);
-
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([100n]))
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 100,
-            //             amount: 100,
-            //             credit_account_id: Number(account1Id),
-            //             debit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             code: TransferCodes.admin_credit,
-            //             flags: TransferFlags.none,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: expect.any(Number),
-            //             user_data_128: 3,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
 
         it('should reject the transfer if it would cause a user account to go negative', async () => {
@@ -881,20 +749,6 @@ describe('FinancialController', () => {
                 success({
                     transactionId: '3',
                     transferIds: ['100', '101'],
-                    // accountBalances: [
-                    //     {
-                    //         accountId: ACCOUNT_IDS.assets_stripe,
-                    //         balance: -100n,
-                    //     },
-                    //     {
-                    //         accountId: account1Id,
-                    //         balance: 0n,
-                    //     },
-                    //     {
-                    //         accountId: account2Id,
-                    //         balance: 100n,
-                    //     },
-                    // ],
                 })
             );
 
@@ -923,48 +777,6 @@ describe('FinancialController', () => {
                     },
                 ]
             );
-            // expect(
-            //     mapBigInts(
-            //         await financialInterface.lookupTransfers([100n, 101n])
-            //     )
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 100,
-            //             amount: 100,
-            //             credit_account_id: Number(account1Id),
-            //             debit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             code: TransferCodes.admin_credit,
-            //             flags: TransferFlags.linked,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: expect.any(Number),
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 3,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //         {
-            //             id: 101,
-            //             amount: 100,
-            //             credit_account_id: Number(account2Id),
-            //             debit_account_id: Number(account1Id),
-            //             code: TransferCodes.admin_credit,
-            //             flags: TransferFlags.none,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: expect.any(Number),
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 3,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
 
         it.skip('should be able to perform pending transfers in a transaction', async () => {
@@ -1101,30 +913,6 @@ describe('FinancialController', () => {
                     user_data_128: 4n,
                 },
             ]);
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([102n]))
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 102,
-            //             amount: 1000,
-            //             credit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             debit_account_id: Number(account1Id),
-            //             code: TransferCodes.admin_debit,
-            //             flags:
-            //                 TransferFlags.none | TransferFlags.balancing_credit,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: expect.any(Number),
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
 
         it('should be able to perform balancing debits in a transaction', async () => {
@@ -1187,31 +975,6 @@ describe('FinancialController', () => {
                     user_data_128: 4n,
                 },
             ]);
-
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([102n]))
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 102,
-            //             amount: 1000,
-            //             credit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             debit_account_id: Number(account1Id),
-            //             code: TransferCodes.admin_debit,
-            //             flags:
-            //                 TransferFlags.none | TransferFlags.balancing_debit,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: expect.any(Number),
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
 
         it('should be able to perform balancing credits and debits in a transaction', async () => {
@@ -1400,45 +1163,6 @@ describe('FinancialController', () => {
                     debits_posted: 1000n,
                 },
             ]);
-
-            // expect(mapBigInts(financialInterface.transfers.slice(2))).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 102,
-            //             amount: 1000,
-            //             credit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             debit_account_id: Number(account1Id),
-            //             code: TransferCodes.admin_debit,
-            //             flags: TransferFlags.linked | TransferFlags.balancing_debit | TransferFlags.balancing_credit,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //         {
-            //             id: 103,
-            //             amount: 1500,
-            //             credit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             debit_account_id: Number(account2Id),
-            //             code: TransferCodes.admin_debit,
-            //             flags: TransferFlags.none | TransferFlags.balancing_debit | TransferFlags.balancing_credit,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
 
         it('should be able to perform closing debits in a transaction', async () => {
@@ -1530,53 +1254,6 @@ describe('FinancialController', () => {
                     },
                 ]
             );
-            // expect(
-            //     mapBigInts(
-            //         await financialInterface.lookupTransfers([102n, 103n])
-            //     )
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 102,
-            //             amount: 1000,
-            //             credit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             debit_account_id: Number(account1Id),
-            //             code: TransferCodes.admin_debit,
-            //             flags:
-            //                 TransferFlags.linked |
-            //                 TransferFlags.balancing_debit,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //         {
-            //             id: 103,
-            //             amount: 0,
-            //             credit_account_id: ACCOUNT_IDS.assets_stripe,
-            //             debit_account_id: Number(account1Id),
-            //             code: TransferCodes.account_closing,
-            //             flags:
-            //                 TransferFlags.none |
-            //                 TransferFlags.closing_debit |
-            //                 TransferFlags.pending,
-            //             ledger: LEDGERS.usd,
-            //             pending_id: 0,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
 
             const account = unwrap(await controller.getAccount(account1Id));
 
@@ -1669,48 +1346,6 @@ describe('FinancialController', () => {
                     user_data_128: 4n,
                 },
             ]);
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([5n, 6n]))
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 5,
-            //             amount: Number.MAX_SAFE_INTEGER,
-            //             credit_account_id: 0,
-            //             debit_account_id: 0,
-            //             code: 0,
-            //             flags:
-            //                 TransferFlags.linked |
-            //                 TransferFlags.post_pending_transfer,
-            //             ledger: 0,
-            //             pending_id: 100,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //         {
-            //             id: 6,
-            //             amount: Number.MAX_SAFE_INTEGER,
-            //             credit_account_id: 0,
-            //             debit_account_id: 0,
-            //             code: 0,
-            //             flags: TransferFlags.post_pending_transfer,
-            //             ledger: 0,
-            //             pending_id: 101,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
 
         it('should return a specific error code if the transfers have already been completed', async () => {
@@ -1772,49 +1407,6 @@ describe('FinancialController', () => {
                     user_data_128: 4n,
                 },
             ]);
-
-            // expect(
-            //     mapBigInts(await financialInterface.lookupTransfers([5n, 6n]))
-            // ).toEqual(
-            //     mapBigInts([
-            //         {
-            //             id: 5,
-            //             amount: 0,
-            //             credit_account_id: 0,
-            //             debit_account_id: 0,
-            //             code: 0,
-            //             flags:
-            //                 TransferFlags.linked |
-            //                 TransferFlags.void_pending_transfer,
-            //             ledger: 0,
-            //             pending_id: 100,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //         {
-            //             id: 6,
-            //             amount: 0,
-            //             credit_account_id: 0,
-            //             debit_account_id: 0,
-            //             code: 0,
-            //             flags: TransferFlags.void_pending_transfer,
-            //             ledger: 0,
-            //             pending_id: 101,
-            //             timeout: 0,
-            //             timestamp: 0,
-
-            //             // should put the transaction id in user_data_128
-            //             user_data_128: 4,
-            //             user_data_64: 0,
-            //             user_data_32: 0,
-            //         },
-            //     ])
-            // );
         });
     });
 });
