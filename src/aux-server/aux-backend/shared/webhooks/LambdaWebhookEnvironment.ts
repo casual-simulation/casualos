@@ -91,8 +91,14 @@ export class LambdaWebhookEnvironment implements WebhookEnvironment {
         if (result.FunctionError) {
             console.error(
                 '[LambdaWebhookEnvironment] Lambda returned an error:',
-                result.FunctionError
+                result
             );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage:
+                    'An unknown error occurred while processing the webhook.',
+            };
         }
 
         if (!result.Payload) {

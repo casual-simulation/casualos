@@ -15,18 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { GameObject, IGameObject } from './GameObject';
+import { GameObject } from './GameObject';
 import type {
     Bot,
     BotCalculationContext,
     AuxDomain,
 } from '@casual-simulation/aux-common';
-import {
-    TagUpdatedEvent,
-    hasValue,
-    calculateBotValue,
-    getBotConfigDimensions,
-} from '@casual-simulation/aux-common';
+
 import { flatMap } from 'lodash';
 import type { Object3D } from '@casual-simulation/three';
 import { Group } from '@casual-simulation/three';

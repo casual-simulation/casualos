@@ -28,8 +28,18 @@ import type {
     GenericPathParameters,
     GenericQueryStringParameters,
     GenericWebsocketRequest,
+    UserRole,
 } from '@casual-simulation/aux-common';
-import { DEFAULT_BRANCH_NAME, procedure } from '@casual-simulation/aux-common';
+import {
+    DEFAULT_BRANCH_NAME,
+    formatV1SessionKey,
+    generateV1ConnectionToken,
+    getStateFromUpdates,
+    isRecordKey,
+    merge,
+    parseSessionKey,
+    SUBSCRIPTION_ID_NAMESPACE,
+} from '@casual-simulation/aux-common';
 import type { RelyingParty } from './AuthController';
 import {
     AuthController,
@@ -37,37 +47,32 @@ import {
     PRIVO_OPEN_ID_PROVIDER,
 } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import {
-    formatV1OpenAiKey,
-    formatV1SessionKey,
-    generateV1ConnectionToken,
-    parseSessionKey,
-} from './AuthUtils';
 import type { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import type { CreateStudioSuccess } from './RecordsController';
-import {
-    CreateStudioInComIdResult,
-    isRecordKey,
-    RecordsController,
-} from './RecordsController';
+import { RecordsController } from './RecordsController';
 import type { Studio } from './RecordsStore';
-import { RecordKey, RecordsStore } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
-import { EventRecordsStore } from './EventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
 import type { DataRecordsStore } from './DataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
-import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
+import type { FulfillCheckoutSessionSuccess } from './SubscriptionController';
 import { SubscriptionController } from './SubscriptionController';
-import type { StripeInterface, StripeProduct } from './StripeInterface';
-import {
-    FeaturesConfiguration,
-    SubscriptionConfiguration,
-    allowAllFeatures,
-} from './SubscriptionConfiguration';
+import type {
+    StripeAccount,
+    StripeAccountLink,
+    StripeCheckoutResponse,
+    StripeCreateCustomerResponse,
+    StripeInterface,
+    StripeProduct,
+} from './StripeInterface';
+
 import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
+import { MemoryPackageRecordsStore } from './packages/MemoryPackageRecordsStore';
+import { MemoryPackageVersionRecordsStore } from './packages/version/MemoryPackageVersionRecordsStore';
+import { PackageRecordsController } from './packages/PackageRecordsController';
+import { PackageVersionRecordsController } from './packages/version/PackageVersionRecordsController';
 import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
@@ -81,7 +86,6 @@ import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
     createTestControllers,
-    createTestRecordKey,
     createTestSubConfiguration,
     createTestUser,
     unwindAndCaptureAsync,
@@ -101,7 +105,7 @@ import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
-import { merge, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
@@ -120,11 +124,13 @@ import type {
     WebsocketUploadRequestEvent,
 } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import type { StoredAuxVersion1 } from '@casual-simulation/aux-common/bots';
-import {
-    botAdded,
-    createBot,
+import type {
+    StoredAuxVersion1,
     StoredAux,
+} from '@casual-simulation/aux-common/bots';
+import {
+    createBot,
+    getInstStateFromUpdates,
     toast,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -133,8 +139,8 @@ import {
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import type { ConnectionInfo } from '@casual-simulation/aux-common/common/ConnectionInfo';
 import {
-    YjsPartitionImpl,
     constructInitializationUpdate,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type { PrivoClientInterface } from './PrivoClient';
 import { DateTime } from 'luxon';
@@ -179,13 +185,23 @@ import type {
     HandleHttpRequestRequest,
     HandleHttpRequestResult,
 } from './webhooks/WebhookEnvironment';
-import { tryParseJson } from './Utils';
 import { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import type { WebPushInterface } from './notifications/WebPushInterface';
-import { SUBSCRIPTION_ID_NAMESPACE } from './notifications/WebPushInterface';
 import { v5 as uuidv5 } from 'uuid';
 import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
-import { OpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
+import type { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
+import { version } from './packages/version/PackageVersionRecordsStore';
+import type { FinancialInterface } from './financial';
+import { MemoryFinancialInterface } from './financial';
+import { XpController } from './XpController';
+import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
+import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
+import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
+import type {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
+import { allowAllFeatures } from './SubscriptionConfiguration';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -342,6 +358,8 @@ describe('RecordsServer', () => {
     let websocketController: WebsocketController;
     let moderationController: ModerationController;
     let loomController: LoomController;
+    let purchasableItemsStore: PurchasableItemRecordsStore;
+    let purchasableItemsController: PurchasableItemRecordsController;
 
     let policyController: PolicyController;
     let webhookController: WebhookRecordsController;
@@ -357,6 +375,11 @@ describe('RecordsServer', () => {
     let notificationController: NotificationRecordsController;
     let webPushInterface: jest.Mocked<WebPushInterface>;
 
+    let packageStore: MemoryPackageRecordsStore;
+    let packageController: PackageRecordsController;
+    let packageVersionsStore: MemoryPackageVersionRecordsStore;
+    let packageVersionController: PackageVersionRecordsController;
+
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
 
@@ -366,12 +389,16 @@ describe('RecordsServer', () => {
         publishableKey: string;
         getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
         listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<any>;
+        createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
         createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<any>;
+        createCustomer: jest.Mock<Promise<StripeCreateCustomerResponse>>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
         getSubscriptionById: jest.Mock<any>;
+        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
+        createAccount: jest.Mock<Promise<StripeAccount>>;
+        getAccountById: jest.Mock<Promise<StripeAccount>>;
+        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>;
     };
 
     let aiController: AIController;
@@ -415,6 +442,9 @@ describe('RecordsServer', () => {
 
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
+
+    let finanacialInterface: FinancialInterface;
+    let xpController: XpController;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -539,10 +569,26 @@ describe('RecordsServer', () => {
             privo: privoClient,
         });
 
+        websocketConnectionStore = new MemoryWebsocketConnectionStore();
+        websocketMessenger = new MemoryWebsocketMessenger();
+        instStore = new SplitInstRecordsStore(
+            new MemoryTempInstRecordsStore(),
+            store
+        );
+        tempInstStore = new MemoryTempInstRecordsStore();
+
+        packageStore = new MemoryPackageRecordsStore(store);
+        packageVersionsStore = new MemoryPackageVersionRecordsStore(
+            store,
+            packageStore
+        );
+
         policyController = new PolicyController(
             authController,
             recordsController,
-            store
+            store,
+            instStore,
+            packageVersionsStore
         );
 
         eventsController = new EventRecordsController({
@@ -579,13 +625,22 @@ describe('RecordsServer', () => {
             windowMs: 1000,
         });
 
-        websocketConnectionStore = new MemoryWebsocketConnectionStore();
-        websocketMessenger = new MemoryWebsocketMessenger();
-        instStore = new SplitInstRecordsStore(
-            new MemoryTempInstRecordsStore(),
-            store
-        );
-        tempInstStore = new MemoryTempInstRecordsStore();
+        packageController = new PackageRecordsController({
+            config: store,
+            policies: policyController,
+            store: packageStore,
+        });
+
+        packageVersionController = new PackageVersionRecordsController({
+            config: store,
+            policies: policyController,
+            recordItemStore: packageStore,
+            store: packageVersionsStore,
+            files: filesController,
+            systemNotifications: store,
+            packages: packageController,
+        });
+
         websocketController = new WebsocketController(
             websocketConnectionStore,
             websocketMessenger,
@@ -595,7 +650,8 @@ describe('RecordsServer', () => {
             policyController,
             store,
             store,
-            store
+            store,
+            packageVersionController
         );
 
         webhookStore = new MemoryWebhookRecordsStore(store);
@@ -624,6 +680,12 @@ describe('RecordsServer', () => {
             store: notificationStore,
             pushInterface: webPushInterface,
         });
+        purchasableItemsStore = new MemoryPurchasableItemRecordsStore(store);
+        purchasableItemsController = new PurchasableItemRecordsController({
+            config: store,
+            policies: policyController,
+            store: purchasableItemsStore,
+        });
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -635,6 +697,10 @@ describe('RecordsServer', () => {
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
             getSubscriptionById: jest.fn(),
+            createAccountLink: jest.fn(),
+            createAccount: jest.fn(),
+            getAccountById: jest.fn(),
+            getCheckoutSessionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -662,7 +728,10 @@ describe('RecordsServer', () => {
             authController,
             store,
             store,
-            store
+            store,
+            policyController,
+            store,
+            purchasableItemsStore
         );
 
         chatInterface = {
@@ -767,6 +836,14 @@ describe('RecordsServer', () => {
             policies: policyController,
         });
 
+        finanacialInterface = new MemoryFinancialInterface();
+        xpController = new XpController({
+            authStore: store,
+            xpStore: store,
+            authController,
+            financialInterface: finanacialInterface,
+        });
+
         server = new RecordsServer({
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -787,6 +864,10 @@ describe('RecordsServer', () => {
             websocketRateLimitController: rateLimitController,
             webhooksController: webhookController,
             notificationsController: notificationController,
+            packagesController: packageController,
+            packageVersionController: packageVersionController,
+            xpController: xpController,
+            purchasableItemsController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -1683,6 +1764,9 @@ describe('RecordsServer', () => {
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
                 url: 'http://create_url',
+                id: 'session_id',
+                status: 'open',
+                payment_status: 'unpaid',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -1726,6 +1810,9 @@ describe('RecordsServer', () => {
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
                 url: 'http://create_url',
+                id: 'session_id',
+                status: 'open',
+                payment_status: 'unpaid',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -4682,6 +4769,127 @@ describe('RecordsServer', () => {
                 }),
             () => authenticatedHeaders
         );
+    });
+
+    describe('GET /api/v2/xp/user', () => {
+        it('should return not_supported if the server doesnt have an XpController', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/xp/user', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'xpAPI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the user info', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/xp/user', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    user: {
+                        userId: userId,
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                        displayName: null,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        hasActiveSubscription: false,
+                        subscriptionTier: null,
+                        role: 'none',
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the info for the given user', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'superUser',
+            });
+
+            const otherUserId = 'otherUserId';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                phoneNumber: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/xp/user?userId=${otherUserId}`, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    user: {
+                        userId: otherUserId,
+                        email: 'other@example.com',
+                        phoneNumber: null,
+                        displayName: null,
+                        accountId: '0',
+                        accountBalance: 0,
+                        accountCurrency: 'usd',
+                        requestedRate: null,
+                        hasActiveSubscription: false,
+                        subscriptionTier: null,
+                        role: 'none',
+                        privacyFeatures: {
+                            allowAI: true,
+                            allowPublicData: true,
+                            allowPublicInsts: true,
+                            publishData: true,
+                        },
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', `/api/v2/xp/user`);
+        testRateLimit('GET', `/api/v2/xp/user`);
     });
 
     describe('POST /api/v2/meet/token', () => {
@@ -12525,6 +12733,1788 @@ describe('RecordsServer', () => {
         });
     });
 
+    describe('GET /api/v2/records/package', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return the given package', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageId',
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package?recordName=${recordName}&address=address`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package?recordName=${recordName}&address=address`
+        );
+    });
+
+    describe('POST /api/v2/records/package', () => {
+        beforeEach(async () => {
+            // await packageStore.createItem(recordName, {
+            //     address: 'address',
+            //     markers: [PUBLIC_READ_MARKER],
+            // });
+        });
+
+        it('should store the given package', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'test',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        subjectType: 'user',
+                        subjectId: userId,
+                        action: 'create',
+                        resourceKind: 'package',
+                        resourceId: 'test',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/package',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'test',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('DELETE /api/v2/records/package', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should delete the given package', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/package`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await packageStore.getItemByAddress(recordName, 'address')
+            ).toBe(null);
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/package',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/package/list', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageStore.createItem(recordName, {
+                id: 'packageId2',
+                address: 'address2',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageStore.createItem(recordName, {
+                id: 'packageId3',
+                address: 'address3',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageStore.createItem(recordName, {
+                id: 'packageId4',
+                address: 'address4',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should return the list of packages', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            id: 'packageId',
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            id: 'packageId2',
+                            address: 'address2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            id: 'packageId3',
+                            address: 'address3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`
+        );
+    });
+
+    describe('GET /api/v2/records/package/version', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'test.aux',
+                userId,
+                userId,
+                123,
+                '',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.setFileRecordAsUploaded(recordName, 'test.aux');
+
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId',
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should get the package version', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        description: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the latest package version', async () => {
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId2',
+                address: 'address',
+                key: {
+                    major: 2,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId2',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 2,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        description: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the package version by SHA-256', async () => {
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId2',
+                address: 'address',
+                key: {
+                    major: 2,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'test',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&sha256=test`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId2',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 2,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        description: '',
+                        requiresReview: false,
+                        sha256: 'test',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the latest version that matches the given major number', async () => {
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId2',
+                address: 'address',
+                key: {
+                    major: 2,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'test',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        description: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get the package version by key', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&key=v1.0.0`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        id: 'packageVersionId',
+                        packageId: 'packageId',
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileName: 'test.aux',
+                        auxSha256: 'auxSha256',
+                        sizeInBytes: 123,
+                        createdAtMs: 999,
+                        createdFile: true,
+                        entitlements: [],
+                        description: '',
+                        requiresReview: false,
+                        sha256: 'sha256',
+                        approved: true,
+                        approvalType: 'normal',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    auxFile: {
+                        success: true,
+                        requestMethod: 'GET',
+                        requestUrl: expect.any(String),
+                        requestHeaders: expect.any(Object),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package/version?recordName=${recordName}&address=${'address'}&major=1`
+        );
+    });
+
+    describe('POST /api/v2/records/package/version', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should save the given package version and return a file upload result', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package/version`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileByteLength: 123,
+                                fileDescription: 'description',
+                                fileMimeType: 'application/json',
+                                fileSha256Hex: getHash('aux'),
+                                headers: {},
+                            },
+                            entitlements: [],
+                            description: 'description',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: expect.any(String),
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should allow markers to be optional', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/package/version`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileRequest: {
+                                fileByteLength: 123,
+                                fileDescription: 'description',
+                                fileMimeType: 'application/json',
+                                fileSha256Hex: getHash('aux'),
+                                headers: {},
+                            },
+                            entitlements: [],
+                            description: 'description',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'address',
+                    auxFileResult: {
+                        success: true,
+                        fileName: expect.any(String),
+                        markers: [PRIVATE_MARKER],
+                        uploadHeaders: {
+                            'content-type': 'application/json',
+                            'record-name': recordName,
+                        },
+                        uploadMethod: 'POST',
+                        uploadUrl: expect.any(String),
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            `/api/v2/records/package/version`,
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                        auxFileRequest: {
+                            fileByteLength: 123,
+                            fileDescription: 'description',
+                            fileMimeType: 'application/json',
+                            fileSha256Hex: getHash('aux'),
+                            headers: {},
+                        },
+                        entitlements: [],
+                        description: 'description',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/package/version/list', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            for (let i = 1; i <= 3; i++) {
+                await packageVersionsStore.createItem(recordName, {
+                    id: `packageVersionId${i}`,
+                    address: 'address',
+                    key: {
+                        major: i,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'test.aux',
+                    auxSha256: 'auxSha256',
+                    sizeInBytes: 123,
+                    createdAtMs: 999,
+                    createdFile: true,
+                    entitlements: [],
+                    description: '',
+                    requiresReview: false,
+                    sha256: 'sha256',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            }
+        });
+
+        it('should return the list of versions for a package', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    totalCount: 3,
+                    items: [
+                        {
+                            id: 'packageVersionId3',
+                            address: 'address',
+                            key: {
+                                major: 3,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileName: 'test.aux',
+                            auxSha256: 'auxSha256',
+                            sizeInBytes: 123,
+                            createdAtMs: 999,
+                            createdFile: true,
+                            entitlements: [],
+                            description: '',
+                            requiresReview: false,
+                            sha256: 'sha256',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            id: 'packageVersionId2',
+                            address: 'address',
+                            key: {
+                                major: 2,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileName: 'test.aux',
+                            auxSha256: 'auxSha256',
+                            sizeInBytes: 123,
+                            createdAtMs: 999,
+                            createdFile: true,
+                            entitlements: [],
+                            description: '',
+                            requiresReview: false,
+                            sha256: 'sha256',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            id: 'packageVersionId1',
+                            address: 'address',
+                            key: {
+                                major: 1,
+                                minor: 0,
+                                patch: 0,
+                                tag: '',
+                            },
+                            auxFileName: 'test.aux',
+                            auxSha256: 'auxSha256',
+                            sizeInBytes: 123,
+                            createdAtMs: 999,
+                            createdFile: true,
+                            entitlements: [],
+                            description: '',
+                            requiresReview: false,
+                            sha256: 'sha256',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`
+        );
+        testRateLimit(
+            'GET',
+            `/api/v2/records/package/version/list?recordName=${recordName}&address=${'address'}`
+        );
+    });
+
+    describe('DELETE /api/v2/records/package/version', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            for (let i = 1; i <= 3; i++) {
+                await packageVersionsStore.createItem(recordName, {
+                    id: `packageVersionId${i}`,
+                    address: 'address',
+                    key: {
+                        major: i,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                    auxFileName: 'test.aux',
+                    auxSha256: 'auxSha256',
+                    sizeInBytes: 123,
+                    createdAtMs: 999,
+                    createdFile: true,
+                    entitlements: [],
+                    description: '',
+                    requiresReview: false,
+                    sha256: 'sha256',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            }
+        });
+
+        it('should delete the given package version', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/package/version`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                        key: {
+                            major: 1,
+                            minor: 0,
+                            patch: 0,
+                            tag: '',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await packageVersionsStore.getItemByKey(recordName, 'address', {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                })
+            ).toEqual({
+                item: null,
+                recordName,
+                parentMarkers: [PUBLIC_READ_MARKER],
+                packageId: 'packageId',
+            });
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/package/version',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                    key: {
+                        major: 1,
+                        minor: 0,
+                        patch: 0,
+                        tag: '',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/package/version/review', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: 'packageVersionId',
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        const roleCases: [UserRole][] = [
+            ['superUser'],
+            ['system'],
+            ['moderator'],
+        ];
+
+        it.each(roleCases)(
+            'should allow %s to save a review for the given version',
+            async (role) => {
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    role,
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpPost(
+                        '/api/v2/records/package/version/review',
+                        JSON.stringify({
+                            packageVersionId: 'packageVersionId',
+                            review: {
+                                approved: true,
+                                approvalType: 'normal',
+                                reviewComments: 'good',
+                                reviewStatus: 'approved',
+                            },
+                        }),
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        reviewId: expect.any(String),
+                    },
+                    headers: apiCorsHeaders,
+                });
+            }
+        );
+
+        it('should not allow regular users to save a review for the given version', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                role: 'none',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/version/review',
+                    JSON.stringify({
+                        packageVersionId: 'packageVersionId',
+                        review: {
+                            approved: true,
+                            approvalType: 'normal',
+                            reviewComments: 'good',
+                            reviewStatus: 'approved',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to submit reviews for package versions.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/package/version/review',
+            () =>
+                JSON.stringify({
+                    packageVersionId: 'packageVersionId',
+                    review: {
+                        approved: true,
+                        approvalType: 'normal',
+                        reviewComments: 'good',
+                        reviewStatus: 'approved',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/package/install', () => {
+        const inst = 'myInst';
+
+        async function recordPackage(
+            recordName: string,
+            address: string,
+            markers: string[],
+            key: PackageRecordVersionKey,
+            aux: StoredAux
+        ) {
+            const r = await store.getRecordByName(recordName);
+            if (!r) {
+                await recordsController.createRecord({
+                    recordName,
+                    userId: ownerId,
+                    ownerId: ownerId,
+                });
+            }
+            await packageStore.createItem(recordName, {
+                id: address,
+                address: address,
+                markers,
+            });
+
+            const json = JSON.stringify(aux);
+            const sha256 = getHash(json);
+
+            const result = await packageVersionController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId: ownerId,
+                item: {
+                    address,
+                    key,
+                    description: '',
+                    entitlements: [],
+                    auxFileRequest: {
+                        fileSha256Hex: sha256,
+                        fileByteLength: json.length,
+                        fileDescription: 'aux.json',
+                        fileMimeType: 'application/json',
+                        headers: {},
+                    },
+                },
+                instances: [],
+            });
+            expect(result).toMatchObject({
+                success: true,
+            });
+            if (!result.success) {
+                console.error(result);
+                throw new Error('Failed to record package');
+            }
+
+            if (!result.auxFileResult.success) {
+                console.error(result.auxFileResult);
+                throw new Error('Failed to record file');
+            }
+
+            files.set(result.auxFileResult.uploadUrl, json);
+        }
+
+        let originalFetch: typeof fetch;
+        let fetchMock: jest.Mock;
+        let files: Map<string, string>;
+
+        beforeEach(async () => {
+            files = new Map();
+
+            originalFetch = global.fetch;
+            fetchMock = global.fetch = jest.fn(async (request) => {
+                const url =
+                    typeof request === 'string'
+                        ? request
+                        : request instanceof URL
+                        ? request.href
+                        : request.url;
+
+                const text = files.get(url);
+                return {
+                    status: text ? 200 : 404,
+                    text: async () => text,
+                } as Response;
+            });
+
+            await recordPackage(
+                recordName,
+                'public',
+                [PUBLIC_READ_MARKER],
+                version(1),
+                {
+                    version: 1,
+                    state: {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    },
+                }
+            );
+        });
+
+        afterEach(() => {
+            global.fetch = originalFetch;
+        });
+
+        it('should install the package version', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName: null,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packageLoadId: expect.any(String),
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: userId,
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should support string version keys', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName: null,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: 'v1.0.0',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packageLoadId: expect.any(String),
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: userId,
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should support installing into private insts', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packageLoadId: expect.any(String),
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                recordName,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(
+                await instStore.listLoadedPackages(recordName, inst)
+            ).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: userId,
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        it('should support anonymous users', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/package/install',
+                    JSON.stringify({
+                        recordName: null,
+                        inst,
+                        package: {
+                            recordName,
+                            address: 'public',
+                            key: version(1),
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { package: p } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packageLoadId: expect.any(String),
+                    package: {
+                        id: expect.any(String),
+                        packageId: 'public',
+                        address: 'public',
+                        key: version(1),
+                        entitlements: [],
+                        description: '',
+                        markers: [PUBLIC_READ_MARKER],
+                        createdAtMs: expect.any(Number),
+                        sha256: expect.any(String),
+                        auxSha256: expect.any(String),
+                        auxFileName: expect.any(String),
+                        createdFile: true,
+                        requiresReview: false,
+                        sizeInBytes: expect.any(Number),
+                        approved: true,
+                        approvalType: 'normal',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                DEFAULT_BRANCH_NAME
+            );
+            const state = getStateFromUpdates(
+                getInstStateFromUpdates(
+                    updates!.updates.map((u, index) => ({
+                        id: index,
+                        update: u,
+                        timestamp: 123,
+                    }))
+                )
+            );
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+
+            expect(await instStore.listLoadedPackages(null, inst)).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: null,
+                    inst,
+                    packageId: 'public',
+                    packageVersionId: p.id,
+                    userId: null,
+                    branch: DEFAULT_BRANCH_NAME,
+                },
+            ]);
+        });
+
+        testOrigin('POST', '/api/v2/records/package/install', () =>
+            JSON.stringify({
+                recordName: null,
+                inst,
+                package: {
+                    recordName,
+                    address: 'public',
+                    key: version(1),
+                },
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/records/package/install', body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/records/package/install',
+                JSON.stringify({
+                    recordName: null,
+                    inst,
+                    package: {
+                        recordName,
+                        address: 'public',
+                        key: version(1),
+                    },
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/package/install/list', () => {
+        const inst = 'myInst';
+
+        beforeEach(async () => {
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId',
+                recordName: null,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.0',
+                userId: userId,
+            });
+
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId2',
+                recordName: null,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.1',
+                userId: userId,
+            });
+
+            await instStore.saveInst({
+                recordName,
+                inst: inst,
+                markers: [PRIVATE_MARKER],
+            });
+
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId3',
+                recordName,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.0',
+                userId: userId,
+            });
+
+            await instStore.saveLoadedPackage({
+                id: 'loadedPackageId4',
+                recordName,
+                inst: inst,
+                branch: DEFAULT_BRANCH_NAME,
+                packageId: 'public',
+                packageVersionId: 'public@1.0.1',
+                userId: userId,
+            });
+        });
+
+        it('should list the installed packages from a public inst', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId2',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.1',
+                            userId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should allow anonymous users to list packages in a public inst', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId2',
+                            recordName: null,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.1',
+                            userId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the installed packages from a private inst', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    packages: [
+                        {
+                            id: 'loadedPackageId3',
+                            recordName,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.0',
+                            userId: userId,
+                        },
+                        {
+                            id: 'loadedPackageId4',
+                            recordName,
+                            inst: inst,
+                            branch: DEFAULT_BRANCH_NAME,
+                            packageId: 'public',
+                            packageVersionId: 'public@1.0.1',
+                            userId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 if the user is not allowed to read the inst', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'user',
+                        subjectId: userId,
+                        action: 'read',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 if the inst is not allowed to read the inst', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}&instances=/otherInst`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'inst',
+                        resourceId: inst,
+                        subjectType: 'inst',
+                        subjectId: '/otherInst',
+                        action: 'read',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
+            () => null,
+            () => apiHeaders
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
@@ -15097,6 +17087,586 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/entitlement/grants/list', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: `packageVersionId`,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId2',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'file',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId3',
+                userId: userId,
+                recordName,
+                packageId: 'packageId2',
+                feature: 'file',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+        });
+
+        it('should return the list of grants for a package and user', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    grants: [
+                        {
+                            id: 'grantId',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'data',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                        {
+                            id: 'grantId2',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'file',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the list of grants for the user', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(`/api/v2/records/entitlement/grants/list`, apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    grants: [
+                        {
+                            id: 'grantId',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'data',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                        {
+                            id: 'grantId2',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId',
+                            feature: 'file',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                        {
+                            id: 'grantId3',
+                            userId: userId,
+                            recordName,
+                            packageId: 'packageId2',
+                            feature: 'file',
+                            scope: 'designated',
+                            expireTimeMs: expect.any(Number),
+                            revokeTimeMs: null,
+                            createdAtMs: expect.any(Number),
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 401 not_logged_in if the user is not logged in', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                apiHeaders
+            )
+        );
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/entitlement/grants/list?packageId=${'packageId'}`,
+                apiHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/entitlement/grants', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: `packageVersionId`,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should save the given entitlement grant', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/grants`,
+                    JSON.stringify({
+                        packageId: 'packageId',
+                        recordName,
+                        feature: 'data',
+                        scope: 'designated',
+                        expireTimeMs: Date.now() + 1000 * 60,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { grantId } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    feature: 'data',
+                    grantId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: grantId,
+                    packageId: 'packageId',
+                    userId,
+                    recordName,
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should save the entitlement grant for the given user if the current user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/grants`,
+                    JSON.stringify({
+                        packageId: 'packageId',
+                        userId,
+                        recordName,
+                        feature: 'data',
+                        scope: 'designated',
+                        expireTimeMs: Date.now() + 1000 * 60,
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            const { grantId } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    feature: 'data',
+                    grantId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: grantId,
+                    packageId: 'packageId',
+                    userId,
+                    recordName,
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                    revokeTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user isnt a super user and trying to grant an entitlement for someone else', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/grants`,
+                    JSON.stringify({
+                        packageId: 'packageId',
+                        userId,
+                        recordName,
+                        feature: 'data',
+                        scope: 'designated',
+                        expireTimeMs: Date.now() + 1000 * 60,
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/entitlement/grants',
+            () =>
+                JSON.stringify({
+                    packageId: 'packageId',
+                    userId,
+                    recordName,
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: Date.now() + 1000 * 60,
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/entitlement/revoke', () => {
+        beforeEach(async () => {
+            await packageStore.createItem(recordName, {
+                id: 'packageId',
+                address: 'address',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await packageVersionsStore.createItem(recordName, {
+                id: `packageVersionId`,
+                address: 'address',
+                key: {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                    tag: '',
+                },
+                auxFileName: 'test.aux',
+                auxSha256: 'auxSha256',
+                sizeInBytes: 123,
+                createdAtMs: 999,
+                createdFile: true,
+                entitlements: [],
+                description: '',
+                requiresReview: false,
+                sha256: 'sha256',
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'data',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+
+            await store.saveGrantedPackageEntitlement({
+                id: 'grantId2',
+                userId: userId,
+                recordName,
+                packageId: 'packageId',
+                feature: 'file',
+                scope: 'designated',
+                expireTimeMs: Date.now() + 1000 * 60,
+                revokeTimeMs: null,
+                createdAtMs: Date.now(),
+            });
+        });
+
+        it('should revoke the given entitlement grant', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/revoke`,
+                    JSON.stringify({
+                        grantId: 'grantId',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                },
+                {
+                    id: 'grantId2',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'file',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        it('should revoke the grant for other users if the current user is a super user', async () => {
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                role: 'superUser',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/revoke`,
+                    JSON.stringify({
+                        grantId: 'grantId',
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: expect.any(Number),
+                    createdAtMs: expect.any(Number),
+                },
+                {
+                    id: 'grantId2',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'file',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is trying to revoke a grant for someone else', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/entitlement/revoke`,
+                    JSON.stringify({
+                        grantId: 'grantId',
+                    }),
+                    {
+                        ...apiHeaders,
+                        authorization: `Bearer ${ownerSessionKey}`,
+                    }
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(store.grantedPackageEntitlements).toEqual([
+                {
+                    id: 'grantId',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'data',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+                {
+                    id: 'grantId2',
+                    userId: userId,
+                    recordName,
+                    packageId: 'packageId',
+                    feature: 'file',
+                    scope: 'designated',
+                    expireTimeMs: expect.any(Number),
+                    revokeTimeMs: null,
+                    createdAtMs: expect.any(Number),
+                },
+            ]);
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/entitlement/revoke',
+            () =>
+                JSON.stringify({
+                    grantId: 'grantId',
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('GET /api/v2/records/insts/list', () => {
         const inst1 = 'myInst';
         const inst2 = 'myInst2';
@@ -15601,6 +18171,2048 @@ describe('RecordsServer', () => {
                     automaticReport: false,
                 }),
                 apiHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/purchasableItems', () => {
+        beforeEach(async () => {
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
+            });
+        });
+
+        it('should be able to get the item', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'item1',
+                        name: 'Item 1',
+                        roleName: 'role1',
+                        roleGrantTimeMs: 1000,
+                        description: 'description1',
+                        currency: 'usd',
+                        cost: 100,
+                        imageUrls: ['image1'],
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 401 when the user needs to be logged in', async () => {
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: ['secret'],
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the user is not authorized', async () => {
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: ['secret'],
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'item1',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the inst is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'item1',
+                name: 'Item 1',
+                markers: ['secret'],
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'item1',
+                        action: 'read',
+                        subjectType: 'inst',
+                        subjectId: '/inst',
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a address', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'address is required.',
+                            path: ['address'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 404 when trying to get an item that doesnt exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems?recordName=${recordName}&address=missing`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/purchasableItems?recordName=${recordName}&address=item1`,
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/purchasableItems/list', () => {
+        beforeEach(async () => {
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address3',
+                name: 'Item 3',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role3',
+                roleGrantTimeMs: 1000,
+                description: 'description3',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image3'],
+            });
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address1',
+                name: 'Item 1',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role1',
+                roleGrantTimeMs: 1000,
+                description: 'description1',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image1'],
+            });
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address2',
+                name: 'Item 2',
+                markers: [PUBLIC_READ_MARKER],
+                roleName: 'role2',
+                roleGrantTimeMs: 1000,
+                description: 'description2',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image2'],
+            });
+        });
+
+        describe('?marker', () => {
+            it('should return a list of data', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                description: 'description3',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image3'],
+                            },
+                            {
+                                address: 'address1',
+                                name: 'Item 1',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role1',
+                                roleGrantTimeMs: 1000,
+                                description: 'description1',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image1'],
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                description: 'description2',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image2'],
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to list data by address', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&address=address1&marker=${PUBLIC_READ_MARKER}`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                description: 'description3',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image3'],
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                description: 'description2',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image2'],
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to sort by address', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}&sort=descending`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                description: 'description3',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image3'],
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                description: 'description2',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image2'],
+                            },
+                            {
+                                address: 'address1',
+                                name: 'Item 1',
+                                markers: [PUBLIC_READ_MARKER],
+                                roleName: 'role1',
+                                roleGrantTimeMs: 1000,
+                                description: 'description1',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image1'],
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+
+            it('should be able to list custom markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['/inst']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                await purchasableItemsStore.putItem(recordName, {
+                    address: 'address3',
+                    name: 'Item 3',
+                    markers: ['secret'],
+                    roleName: 'role3',
+                    roleGrantTimeMs: 1000,
+                    description: 'description3',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image3'],
+                });
+                await purchasableItemsStore.putItem(recordName, {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: ['secret'],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                });
+                await purchasableItemsStore.putItem(recordName, {
+                    address: 'address2',
+                    name: 'Item 2',
+                    markers: ['secret'],
+                    roleName: 'role2',
+                    roleGrantTimeMs: 1000,
+                    description: 'description2',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image2'],
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&marker=${'secret'}&instances=${'inst'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address3',
+                                name: 'Item 3',
+                                markers: ['secret'],
+                                roleName: 'role3',
+                                roleGrantTimeMs: 1000,
+                                description: 'description3',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image3'],
+                            },
+                            {
+                                address: 'address1',
+                                name: 'Item 1',
+                                markers: ['secret'],
+                                roleName: 'role1',
+                                roleGrantTimeMs: 1000,
+                                description: 'description1',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image1'],
+                            },
+                            {
+                                address: 'address2',
+                                name: 'Item 2',
+                                markers: ['secret'],
+                                roleName: 'role2',
+                                roleGrantTimeMs: 1000,
+                                description: 'description2',
+                                currency: 'usd',
+                                cost: 100,
+                                imageUrls: ['image2'],
+                            },
+                        ],
+                        totalCount: 3,
+                    },
+                    headers: corsHeaders(apiHeaders['origin']),
+                });
+            });
+
+            it('return a not_authorized error if the user is not authorized to access the marker', async () => {
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address3',
+                        name: 'Item 3',
+                        markers: ['secret'],
+                        roleName: 'role3',
+                        roleGrantTimeMs: 1000,
+                        description: 'description3',
+                        currency: 'usd',
+                        cost: 100,
+                        imageUrls: ['image3'],
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address1',
+                        name: 'Item 1',
+                        markers: ['secret'],
+                        roleName: 'role1',
+                        roleGrantTimeMs: 1000,
+                        description: 'description1',
+                        currency: 'usd',
+                        cost: 100,
+                        imageUrls: ['image1'],
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+                await purchasableItemsController.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'address2',
+                        name: 'Item 2',
+                        markers: ['secret'],
+                        roleName: 'role2',
+                        roleGrantTimeMs: 1000,
+                        description: 'description2',
+                        currency: 'usd',
+                        cost: 100,
+                        imageUrls: ['image2'],
+                    },
+                    userId: ownerId,
+                    instances: [],
+                });
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?recordName=${recordName}&instances=${'inst'}&marker=${'secret'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'purchasableItem',
+                            action: 'list',
+                            subjectType: 'user',
+                            subjectId: userId,
+                        },
+                    },
+                    headers: corsHeaders(apiHeaders['origin']),
+                });
+            });
+
+            it('should return an unacceptable_request result when not given a recordName', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/purchasableItems/list?address=testAddress`,
+                        defaultHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'recordName is required.',
+                                path: ['recordName'],
+                                received: 'undefined',
+                            },
+                        ],
+                    },
+                    headers: corsHeaders(defaultHeaders['origin']),
+                });
+            });
+        });
+
+        it('should be able to list all items', async () => {
+            await purchasableItemsStore.putItem(recordName, {
+                address: 'address0',
+                name: 'Item 0',
+                markers: ['secret'],
+                roleName: 'role0',
+                roleGrantTimeMs: 1000,
+                description: 'description0',
+                currency: 'usd',
+                cost: 100,
+                imageUrls: ['image0'],
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address3',
+                            name: 'Item 3',
+                            markers: [PUBLIC_READ_MARKER],
+                            roleName: 'role3',
+                            roleGrantTimeMs: 1000,
+                            description: 'description3',
+                            currency: 'usd',
+                            cost: 100,
+                            imageUrls: ['image3'],
+                        },
+                        {
+                            address: 'address1',
+                            name: 'Item 1',
+                            markers: [PUBLIC_READ_MARKER],
+                            roleName: 'role1',
+                            roleGrantTimeMs: 1000,
+                            description: 'description1',
+                            currency: 'usd',
+                            cost: 100,
+                            imageUrls: ['image1'],
+                        },
+                        {
+                            address: 'address2',
+                            name: 'Item 2',
+                            markers: [PUBLIC_READ_MARKER],
+                            roleName: 'role2',
+                            roleGrantTimeMs: 1000,
+                            description: 'description2',
+                            currency: 'usd',
+                            cost: 100,
+                            imageUrls: ['image2'],
+                        },
+                        {
+                            address: 'address0',
+                            name: 'Item 0',
+                            markers: ['secret'],
+                            roleName: 'role0',
+                            roleGrantTimeMs: 1000,
+                            description: 'description0',
+                            currency: 'usd',
+                            cost: 100,
+                            imageUrls: ['image0'],
+                        },
+                    ],
+                    totalCount: 4,
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return 403 not_authorized if the user does not have access to the account marker', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/purchasableItems/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/purchasableItems/list?recordName=${recordName}`,
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/purchasableItems', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should save the given item', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            name: 'name',
+                            description: 'description',
+                            imageUrls: ['image1', 'image2'],
+                            currency: 'usd',
+                            cost: 100,
+                            roleName: 'role',
+                            roleGrantTimeMs: 1000,
+                            markers: [PUBLIC_READ_MARKER],
+                            redirectUrl: 'http://example.com',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                name: 'name',
+                description: 'description',
+                imageUrls: ['image1', 'image2'],
+                currency: 'usd',
+                cost: 100,
+                roleName: 'role',
+                roleGrantTimeMs: 1000,
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'http://example.com',
+            });
+        });
+
+        it('should support items that are free', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            name: 'name',
+                            description: 'description',
+                            imageUrls: ['image1', 'image2'],
+                            currency: 'usd',
+                            cost: 0,
+                            roleName: 'role',
+                            roleGrantTimeMs: 1000,
+                            markers: [PUBLIC_READ_MARKER],
+                            redirectUrl: 'http://example.com',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toEqual({
+                address: 'testAddress',
+                name: 'name',
+                description: 'description',
+                imageUrls: ['image1', 'image2'],
+                currency: 'usd',
+                cost: 0,
+                roleName: 'role',
+                roleGrantTimeMs: 1000,
+                markers: [PUBLIC_READ_MARKER],
+                redirectUrl: 'http://example.com',
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            name: 'name',
+                            description: 'description',
+                            imageUrls: ['image1', 'image2'],
+                            currency: 'usd',
+                            cost: 100,
+                            roleName: 'role',
+                            roleGrantTimeMs: 1000,
+                            markers: [PUBLIC_READ_MARKER],
+                            redirectUrl: 'http://example.com',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'testAddress',
+                        action: 'create',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toBe(null);
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'testAddress',
+                            name: 'name',
+                            description: 'description',
+                            imageUrls: ['image1', 'image2'],
+                            currency: 'usd',
+                            cost: 100,
+                            roleName: 'role',
+                            roleGrantTimeMs: 1000,
+                            markers: [PUBLIC_READ_MARKER],
+                            redirectUrl: 'http://example.com',
+                        },
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'testAddress',
+                        action: 'create',
+                        subjectType: 'inst',
+                        subjectId: '/inst',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'testAddress'
+            );
+            expect(item).toBe(null);
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordName', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName: 123,
+                        item: {
+                            address: 'testAddress',
+                            name: 'name',
+                            description: 'description',
+                            imageUrls: ['image1', 'image2'],
+                            currency: 'usd',
+                            cost: 100,
+                            roleName: 'role',
+                            roleGrantTimeMs: 1000,
+                            markers: [PUBLIC_READ_MARKER],
+                            redirectUrl: 'http://example.com',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName must be a string.',
+                            path: ['recordName'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given undefined data', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems`,
+                    JSON.stringify({
+                        recordName,
+                        item: undefined,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'object',
+                            message: 'Required',
+                            path: ['item'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/purchasableItems`, () =>
+            JSON.stringify({
+                recordName,
+                item: {
+                    address: 'testAddress',
+                    name: 'name',
+                    description: 'description',
+                    imageUrls: ['image1', 'image2'],
+                    currency: 'usd',
+                    cost: 100,
+                    roleName: 'role',
+                    roleGrantTimeMs: 1000,
+                    markers: [PUBLIC_READ_MARKER],
+                    redirectUrl: 'http://example.com',
+                },
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/records/purchasableItems',
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'testAddress',
+                        name: 'name',
+                        description: 'description',
+                        imageUrls: ['image1', 'image2'],
+                        currency: 'usd',
+                        cost: 100,
+                        roleName: 'role',
+                        roleGrantTimeMs: 1000,
+                        markers: [PUBLIC_READ_MARKER],
+                        redirectUrl: 'http://example.com',
+                    },
+                }),
+                apiHeaders
+            )
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/purchasableItems`, body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/purchasableItems`,
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'testAddress',
+                        name: 'name',
+                        description: 'description',
+                        imageUrls: ['image1', 'image2'],
+                        currency: 'usd',
+                        cost: 100,
+                        roleName: 'role',
+                        roleGrantTimeMs: 1000,
+                        markers: [PUBLIC_READ_MARKER],
+                        redirectUrl: 'http://example.com',
+                    },
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/purchasableItems/erase', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address3',
+                    name: 'Item 3',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role3',
+                    roleGrantTimeMs: 1000,
+                    description: 'description3',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image3'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should delete the given item', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/purchasableItems/erase',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address3',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await purchasableItemsStore.getItemByAddress(
+                recordName,
+                'address3'
+            );
+            expect(item).toBe(null);
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/purchasableItems/erase',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address3',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'address3',
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/purchasableItems/erase',
+                    JSON.stringify({
+                        recordName,
+                        address: 'address3',
+                        instances: ['inst1'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'purchasableItem',
+                        resourceId: 'address3',
+                        action: 'delete',
+                        subjectType: 'inst',
+                        subjectId: '/inst1',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/purchasableItems/erase',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address3',
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/purchasableItems/purchase', () => {
+        const recordName = 'studioId';
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: recordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return the checkout URL', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems/purchase`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address1',
+                            expectedCost: 100,
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: expect.any(String),
+                    url: 'checkoutUrl',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to checkout as a guest', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/purchasableItems/purchase`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address1',
+                            expectedCost: 100,
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: expect.any(String),
+                    url: 'checkoutUrl',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/purchasableItems/purchase`, () =>
+            JSON.stringify({
+                recordName,
+                item: {
+                    address: 'address1',
+                    expectedCost: 100,
+                    currency: 'usd',
+                },
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(
+                `/api/v2/records/purchasableItems/purchase`,
+                body,
+                authenticatedHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/purchasableItems/purchase`,
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'address1',
+                        expectedCost: 100,
+                        currency: 'usd',
+                    },
+                    returnUrl: 'http://example.com',
+                    successUrl: 'http://example.com/success',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/checkoutSession/fulfill', () => {
+        const recordName = 'studioId';
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: recordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should fulfill the checkout session', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'sessionId',
+                fulfilledAtMs: null,
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: 'address1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+                stripeCheckoutSessionId: 'session_id',
+                userId: userId,
+                invoice: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/checkoutSession/fulfill`,
+                    JSON.stringify({
+                        sessionId: 'sessionId',
+                        activation: 'now',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should fulfill the checkout session with an activation key', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'sessionId',
+                fulfilledAtMs: null,
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: 'address1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+                stripeCheckoutSessionId: 'session_id',
+                userId: userId,
+                invoice: null,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/checkoutSession/fulfill`,
+                    JSON.stringify({
+                        sessionId: 'sessionId',
+                        activation: 'later',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    activationKey: expect.any(String),
+                    activationUrl: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to fulfill a session as a guest', async () => {
+            await store.updateCheckoutSessionInfo({
+                id: 'sessionId',
+                fulfilledAtMs: null,
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: recordName,
+                        purchasableItemAddress: 'address1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+                stripeCheckoutSessionId: 'session_id',
+                userId: null,
+                invoice: null,
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/checkoutSession/fulfill`,
+                    JSON.stringify({
+                        sessionId: 'sessionId',
+                        activation: 'later',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    activationKey: expect.any(String),
+                    activationUrl: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/checkoutSession/fulfill`, () =>
+            JSON.stringify({
+                sessionId: 'sessionId',
+                activation: 'now',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(
+                `/api/v2/records/checkoutSession/fulfill`,
+                body,
+                authenticatedHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/checkoutSession/fulfill`,
+                JSON.stringify({
+                    sessionId: 'sessionId',
+                    activation: 'now',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/activationKey/claim', () => {
+        const recordName = 'studioId';
+        let activationKey: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                store: {
+                                    allowed: true,
+                                    currencyLimits: {
+                                        usd: {
+                                            maxCost: 1000,
+                                            minCost: 1,
+                                        },
+                                    },
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: recordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            const result = await purchasableItemsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'address1',
+                    name: 'Item 1',
+                    markers: [PUBLIC_READ_MARKER],
+                    roleName: 'role1',
+                    roleGrantTimeMs: 1000,
+                    description: 'description1',
+                    currency: 'usd',
+                    cost: 100,
+                    imageUrls: ['image1'],
+                },
+                userId: ownerId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(result.errorMessage);
+            }
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.updateCheckoutSessionInfo({
+                id: 'session1',
+                status: 'complete',
+                paymentStatus: 'paid',
+                paid: true,
+                stripeCheckoutSessionId: 'checkout1',
+                userId: userId,
+                invoice: {
+                    currency: 'usd',
+                    paid: false,
+                    status: 'open',
+                    description: 'description',
+                    stripeInvoiceId: 'invoice1',
+                    tax: 0,
+                    subtotal: 100,
+                    total: 100,
+                    stripeHostedInvoiceUrl: 'hosted-url',
+                    stripeInvoicePdfUrl: 'pdf-url',
+                },
+                fulfilledAtMs: null,
+                items: [
+                    {
+                        type: 'role',
+                        recordName: 'studioId',
+                        purchasableItemAddress: 'item1',
+                        role: 'myRole',
+                        roleGrantTimeMs: null,
+                    },
+                ],
+            });
+
+            const checkoutResult =
+                (await subscriptionController.fulfillCheckoutSession({
+                    userId: userId,
+                    sessionId: 'session1',
+                    activation: 'later',
+                })) as FulfillCheckoutSessionSuccess;
+
+            expect(checkoutResult).toEqual({
+                success: true,
+                activationKey: expect.any(String),
+                activationUrl: expect.any(String),
+            });
+
+            activationKey = checkoutResult.activationKey;
+        });
+
+        it('should claim the activation key', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/activationKey/claim',
+                    JSON.stringify({
+                        activationKey: activationKey,
+                        target: 'self',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: userId,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const roles = (
+                await store.listRolesForUser('studioId', userId)
+            ).filter((r) => r.role === 'myRole');
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null,
+                },
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: expect.any(Number),
+                    activationKeyId: expect.any(String),
+                },
+            ]);
+        });
+
+        it('should generate a user account for guests', async () => {
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/activationKey/claim',
+                    JSON.stringify({
+                        activationKey: activationKey,
+                        target: 'guest',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            const body = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    userId: expect.any(String),
+                    sessionKey: expect.any(String),
+                    connectionKey: expect.any(String),
+                    expireTimeMs: null,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const roles = (
+                await store.listRolesForUser('studioId', body.userId)
+            ).filter((r) => r.role === 'myRole');
+
+            expect(roles).toEqual([
+                {
+                    role: 'myRole',
+                    expireTimeMs: null,
+                },
+            ]);
+            expect(store.purchasedItems).toEqual([
+                {
+                    id: expect.any(String),
+                    recordName: 'studioId',
+                    userId: body.userId,
+                    purchasableItemAddress: 'item1',
+                    checkoutSessionId: 'session1',
+                    roleName: 'myRole',
+                    roleGrantTimeMs: null,
+                    activatedTimeMs: expect.any(Number),
+                    activationKeyId: expect.any(String),
+                },
+            ]);
+        });
+
+        testOrigin('POST', `/api/v2/records/activationKey/claim`, () =>
+            JSON.stringify({
+                activationKey: activationKey,
+                target: 'self',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(
+                `/api/v2/records/activationKey/claim`,
+                body,
+                authenticatedHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/activationKey/claim`,
+                JSON.stringify({
+                    activationKey: activationKey,
+                    target: 'self',
+                }),
+                defaultHeaders
             )
         );
     });
@@ -16961,6 +21573,11 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         humeFeatures: {
                             allowed: true,
                         },
+                        storeFeatures: {
+                            allowed: false,
+                        },
+                        stripeAccountStatus: null,
+                        stripeRequirementsStatus: null,
                     },
                 },
                 headers: accountCorsHeaders,
@@ -18254,6 +22871,119 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('POST /api/v2/studios/store/manage', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 1,
+                                maxCost: 1000,
+                            })
+                    )
+            );
+
+            await store.addStudio({
+                id: 'studioId',
+                comId: 'comId1',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: Date.now(),
+                subscriptionPeriodEndMs: Date.now() + 1000 * 60 * 60 * 24 * 365,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            stripeMock.createAccountLink.mockResolvedValue({
+                url: 'https://example.com/account-link',
+            });
+        });
+
+        it('should create an account link', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'https://example.com/account-link',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/store/manage',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'https://example.com/account-link',
+                },
+                headers: accountCorsHeaders,
+            });
+
+            expect(stripeMock.createAccountLink).toHaveBeenCalledWith({
+                account: 'accountId',
+                refresh_url: 'https://return-url/',
+                return_url: 'https://return-url/',
+                type: 'account_update',
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/studios/store/manage',
+                    JSON.stringify({
+                        studioId: 'studioId',
+                    }),
+                    {
+                        origin: accountOrigin,
+                    }
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/studios/store/manage',
+            () =>
+                JSON.stringify({
+                    studioId: 'studioId',
+                }),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /api/v2/player/config', () => {
         beforeEach(async () => {
             await store.addStudio({
@@ -19102,6 +23832,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -19146,6 +23879,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -19402,6 +24138,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
@@ -19446,6 +24185,9 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
                     url: 'http://create_url',
+                    id: 'session_id',
+                    status: 'open',
+                    payment_status: 'unpaid',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({

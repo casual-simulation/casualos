@@ -1,7 +1,8 @@
 {
   "packages": [
-    "src/*"
+    "src/aux-server",
+    "src/casualos-cli"
   ],
-  "version": "3.4.3",
+  "version": "3.5.2",
   "npmClient": "pnpm"
 }

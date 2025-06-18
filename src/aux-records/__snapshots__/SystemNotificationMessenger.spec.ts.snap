@@ -14,6 +14,30 @@ Labels:
 Time: 1970-01-01T00:00:00.123Z"
 `;
 
+exports[`formatNotificationAsString() should consistently format package version publish notifications 1`] = `
+"A package_version_publish was created.
+
+RecordName: test_record
+Address: test_id
+Version: v1.0.0
+RequiresReview: false
+Entitlements: []
+Markers: [publicRead]
+Time: 1970-01-01T00:00:00.123Z"
+`;
+
+exports[`formatNotificationAsString() should consistently format package version publish notifications 2`] = `
+"A package_version_publish was created.
+
+RecordName: test_record
+Address: test_id
+Version: v1.0.0-tag
+RequiresReview: true
+Entitlements: [data:shared, file:owned]
+Markers: [publicRead]
+Time: 1970-01-01T00:00:00.123Z"
+`;
+
 exports[`formatNotificationAsString() should consistently format studio comId request notifications 1`] = `
 "A comId request was created for test_id:
 Request ID: test_id

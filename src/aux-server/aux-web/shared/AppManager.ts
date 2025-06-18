@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import Axios from 'axios';
-import Vue, { inject } from 'vue';
 import type { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { filter, first, map, scan, tap } from 'rxjs/operators';
@@ -27,18 +26,14 @@ import type {
     ProgressMessage,
 } from '@casual-simulation/aux-common';
 import {
-    AuxPartitionConfig,
     getUploadState,
     remapProgressPercent,
-    remote,
 } from '@casual-simulation/aux-common';
 import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
 import {
     hasValue,
     KNOWN_PORTALS,
-    normalizeAUXBotURL,
     getBotsStateFromStoredAux,
-    applyUpdatesToInst,
     isStoredVersion2,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
@@ -48,10 +43,7 @@ import type {
     SimulationOrigin,
     AuthHelperInterface,
 } from '@casual-simulation/aux-vm';
-import {
-    SimulationManager,
-    parseVersionNumber,
-} from '@casual-simulation/aux-vm';
+import { SimulationManager } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     AuthCoordinator,
@@ -60,15 +52,14 @@ import {
     SystemPortalCoordinator,
 } from '@casual-simulation/aux-vm-browser';
 import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
-import { fromByteArray } from 'base64-js';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
-import { isEqual, merge } from 'lodash';
+import { merge } from 'lodash';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
-import { generateV1ConnectionToken } from '@casual-simulation/aux-records/AuthUtils';
+import { generateV1ConnectionToken } from '@casual-simulation/aux-common';
 import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
-import { ComIdConfig, tryParseJson } from '@casual-simulation/aux-records';
+import { tryParseJson } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
 
@@ -207,6 +198,8 @@ export class AppManager {
                         );
                     }
                 }
+
+                config.staticRepoLocalPersistence = false;
             }
 
             const partitions = isStatic
@@ -643,17 +636,8 @@ export class AppManager {
             console.log('[AppManager] Using configured AB-1');
             ab1Bootstrap = this._config.ab1BootstrapURL;
         } else {
-            const version = parseVersionNumber(
-                this.version.latestTaggedVersion
-            );
-            if (version.alpha) {
-                console.log('[AppManager] Using alpha AB-1');
-                ab1Bootstrap = new URL('ab1/staging/ab1.aux', location.href)
-                    .href;
-            } else {
-                console.log('[AppManager] Using production AB-1');
-                ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
-            }
+            console.log('[AppManager] Using built-in AB-1');
+            ab1Bootstrap = new URL('ab1/prod/ab1.aux', location.href).href;
         }
 
         this._arSupported = arSupported;

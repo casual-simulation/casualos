@@ -21,12 +21,7 @@ import type {
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
-    LocalActions,
-    ProxyBridgePartitionImpl,
-    AsyncResultAction,
-    ConnectionIndicator,
-} from '@casual-simulation/aux-common';
+import { ProxyBridgePartitionImpl } from '@casual-simulation/aux-common';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { Remote } from 'comlink';
@@ -40,12 +35,9 @@ import type {
     AuxChannelErrorType,
 } from '@casual-simulation/aux-vm/vm';
 import type { SimulationOrigin } from '@casual-simulation/aux-vm';
-import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
-import {
-    remapProgressPercent,
-    CurrentVersion,
-} from '@casual-simulation/aux-common';
+import { remapProgressPercent } from '@casual-simulation/aux-common';
 import type { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client/vm/RemoteAuxVM';
 import type {

@@ -131,6 +131,61 @@
                 <md-button @click="denyAccess()">Deny Access</md-button>
             </md-dialog-actions>
         </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showGrantEntitlements"
+            class="grant-entitlements-dialog"
+            :md-close-on-esc="true"
+            :md-click-outside-to-close="true"
+            @md-closed="closeGrantEntitlements()"
+        >
+            <md-dialog-title>Grant Entitlements?</md-dialog-title>
+            <md-dialog-content v-if="entitlementGrantEvent">
+                <p>
+                    Do you want to grant
+                    <strong>{{ entitlementGrantEvent.action.request.packageId }}</strong> the
+                    following features?
+                </p>
+                <div>
+                    <p>
+                        <strong>Package ID:</strong>
+                        <span>{{ entitlementGrantEvent.action.request.packageId }}</span>
+                    </p>
+                    <p>
+                        <strong>Record Name:</strong>
+                        <span>{{ entitlementGrantEvent.action.request.recordName }}</span>
+                    </p>
+                    <p>
+                        <strong>Duration:</strong>
+                        <span>{{ entitlementGrantEvent.action.request.expireTimeMs }}</span>
+                    </p>
+                    <div>
+                        <strong>Features:</strong>
+                        <ul>
+                            <li
+                                v-for="feature in entitlementGrantEvent.action.request.features"
+                                :key="feature"
+                            >
+                                {{ feature }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button @click="grantEntitlements()" :disabled="processing">
+                    <md-progress-spinner
+                        v-if="processing"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        >Processing</md-progress-spinner
+                    >
+                    <span v-else>Grant</span>
+                </md-button>
+                <md-button class="md-primary" @click="closeGrantEntitlements()">Deny</md-button>
+            </md-dialog-actions>
+        </md-dialog>
     </div>
 </template>
 <script src="./AuthUI.ts"></script>

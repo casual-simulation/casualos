@@ -85,7 +85,7 @@ import {
     WORLD_UP,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { add, merge, union } from 'lodash';
+import { merge, union } from 'lodash';
 import { EventBus } from '@casual-simulation/aux-components';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';
@@ -355,7 +355,7 @@ export abstract class Game {
     abstract getUIHtmlElements(): HTMLElement[];
 
     /**
-     * Gets the HTML elements that the input should prevent browser zooming on.
+     * Gets the HTML elements that the input should allow browser wheel events on.
      */
     abstract getUIZoomElements(): HTMLElement[];
 

@@ -1,6 +1,4 @@
 import { TimeSyncController } from './TimeSyncController';
-import { TimeSyncConnection } from './TimeSyncConnection';
-import { TimeSync } from './TimeSync';
 
 describe('TimeSyncController', () => {
     let controller: TimeSyncController;

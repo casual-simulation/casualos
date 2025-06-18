@@ -1,0 +1,23 @@
+.webhook-container {
+    margin-top: 12px;
+}
+
+.info-container {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Responsive layout - makes a one column layout instead of a two-column layout */
+@media (max-width: 1400px) {
+    .info-container {
+        flex-direction: column;
+    }
+}
+
+.details {
+    flex: auto;
+}
+
+.file {
+    flex: 1 1 auto;
+}

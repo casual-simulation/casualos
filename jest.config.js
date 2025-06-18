@@ -27,7 +27,7 @@ module.exports = {
     setupFiles: ['fake-indexeddb/auto'],
     setupFilesAfterEnv: ['<rootDir>/jest/jest-setup.ts'],
     transformIgnorePatterns: [
-        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru).+\\.js$',
+        '/node_modules/\\.pnpm/(?!livekit-server-sdk|@livekit\\+protocol|camelcase-keys|map-obj|camelcase|quick-lru|@zip\\.js\\+zip\\.js).+\\.js$',
     ],
     moduleNameMapper: {
         '^aux-common/(.*)$': '<rootDir>/src/aux-common/$1',
@@ -46,6 +46,21 @@ module.exports = {
             'ts-jest',
             {
                 tsconfig: 'tsconfig.test.json',
+                diagnostics: {
+                    ignoreCodes: [1343],
+                },
+                astTransformers: {
+                    before: [
+                        {
+                            path: 'ts-jest-mock-import-meta',
+                            options: {
+                                metaObjectReplacement: {
+                                    url: 'https://example.com',
+                                },
+                            },
+                        },
+                    ],
+                },
             },
         ],
         '^.+\\.(js|jsx)$': 'babel-jest',

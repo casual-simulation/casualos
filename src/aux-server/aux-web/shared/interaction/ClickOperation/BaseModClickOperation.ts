@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { InputMethod, InputModality } from '../../../shared/scene/Input';
-import { InputType } from '../../../shared/scene/Input';
 import type { Vector2 } from '@casual-simulation/three';
 import type { IOperation } from '../IOperation';
 import type { BaseInteractionManager } from '../BaseInteractionManager';
@@ -24,8 +23,6 @@ import type {
     BotCalculationContext,
     BotTags,
 } from '@casual-simulation/aux-common';
-import { Bot } from '@casual-simulation/aux-common';
-import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import type { Simulation3D } from '../../scene/Simulation3D';
 import { BaseClickOperation } from './BaseClickOperation';
 

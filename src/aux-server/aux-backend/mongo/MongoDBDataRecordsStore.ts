@@ -24,7 +24,6 @@ import type {
     UserPolicy,
     ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
-import { Record, RecordsStore } from '@casual-simulation/aux-records';
 import type { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBDataRecordsStore implements DataRecordsStore {

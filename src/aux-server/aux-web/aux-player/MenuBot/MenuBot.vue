@@ -15,14 +15,31 @@
                 <md-field class="menu-input" md-inline md-theme="none">
                     <label v-show="label">{{ label }}</label>
                     <md-input
+                        v-if="subType === 'password'"
                         :type="subType"
                         class="text-input"
                         :style="{ color: labelColor }"
                         ref="textInput"
                         v-model="text"
                         @input="onTextUpdated()"
-                        v-on:keyup.enter="submitInput(false)"
+                        v-on:keydown.enter="submitInput(false)"
+                        v-on:keydown.stop="handleKeyDown"
+                        v-on:keyup.stop="handleKeyUp"
+                        md-autogrow
                     ></md-input>
+                    <md-textarea
+                        v-else
+                        :type="subType"
+                        class="text-input"
+                        :style="{ color: labelColor }"
+                        ref="textInput"
+                        v-model="text"
+                        @input="onTextUpdated()"
+                        v-on:keydown.enter="handleInputEnter"
+                        v-on:keydown.stop="handleKeyDown"
+                        v-on:keyup.stop="handleKeyUp"
+                        md-autogrow
+                    ></md-textarea>
                 </md-field>
                 <md-button
                     v-show="text || alwaysShowSubmit"
@@ -64,9 +81,7 @@
                     <svg-icon v-else-if="icon === 'helix'" name="Helix"></svg-icon>
                     <md-icon v-else>{{ icon }}</md-icon>
                 </span>
-                <span :style="labelStyle">
-                    {{ label }}
-                </span>
+                <span :style="labelStyle">{{ label }}</span>
                 <span class="menu-bot-progress" v-if="hasProgress">
                     <pie-progress
                         :progress="progress"

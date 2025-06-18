@@ -17,25 +17,34 @@
  */
 import type {
     AIChatMessage,
-    PublicRecordKeyPolicy,
     RecordFileFailure,
     WebhookRecord,
     NotificationRecord,
     PushNotificationPayload,
+    GrantEntitlementFailure,
 } from '@casual-simulation/aux-records';
-import type { RecordsClientActions } from '@casual-simulation/aux-records/RecordsClient';
+import type {
+    RecordsClientActions,
+    RecordsClientInputs,
+} from '@casual-simulation/aux-records/RecordsClient';
 import type {
     APPROVED_SYMBOL,
     AsyncAction,
     AvailablePermissions,
+    Entitlement,
+    EntitlementFeature,
+    GrantedEntitlementScope,
+    KnownErrorCodes,
+    PublicRecordKeyPolicy,
+    StoredAux,
 } from '@casual-simulation/aux-common';
-import {
-    ProcedureInputs,
-    ProcedureQueries,
-    Procedures,
-} from '@casual-simulation/aux-common';
-import { AICreateOpenAIRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIController';
+
 import type { CreateRealtimeSessionTokenRequest } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
+import type {
+    PackageRecordVersionKey,
+    PackageRecordVersionKeySpecifier,
+    PackageRecordVersionWithMetadata,
+} from '@casual-simulation/aux-records/packages/version';
 
 export type RecordsActions = RecordsAsyncActions;
 
@@ -71,7 +80,18 @@ export type RecordsAsyncActions =
     | SetRoomTrackOptionsAction
     | GetRoomRemoteOptionsAction
     | RecordsCallProcedureAction
-    | SubscribeToNotificationAction;
+    | SubscribeToNotificationAction
+    | GrantEntitlementsAction
+    | RevokeEntitlementGrantAction
+    | RecordPackageVersionAction
+    | InstallPackageAction
+    | ListInstalledPackagesAction
+    | RecordStoreItemAction
+    | GetStoreItemAction
+    | EraseStoreItemAction
+    | ListStoreItemsAction
+    | ListStoreItemsByMarkerAction
+    | PurchaseStoreItemAction;
 
 /**
  * An event that is used to chat with an AI.
@@ -846,11 +866,354 @@ export interface GetEventCountAction extends RecordsAction {
     eventName: string;
 }
 
+export interface InstallPackageAction extends RecordsAction {
+    type: 'install_package';
+
+    /**
+     * The name of the record that the package should be loaded from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the package that should be loaded.
+     */
+    address: string;
+
+    /**
+     * The key for the package version that should be loaded.
+     * If null, then the latest version will be loaded.
+     */
+    key: string | PackageRecordVersionKeySpecifier | null;
+
+    /**
+     * The options for the request.
+     */
+    options: RecordActionOptions;
+}
+
+export type InstallPackageResult =
+    | InstallPackageSuccess
+    | InstallPackageFailure;
+export interface InstallPackageSuccess {
+    success: true;
+
+    /**
+     * The ID of the record which records that the package was loaded into the inst.
+     * Null if the inst is a local inst.
+     */
+    packageLoadId: string | null;
+
+    /**
+     * The package that was loaded.
+     */
+    package: PackageRecordVersionWithMetadata;
+}
+
+export interface InstallPackageFailure {
+    success: false;
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+}
+
+export interface ListInstalledPackagesAction extends RecordsAction {
+    type: 'list_installed_packages';
+}
+
+/**
+ * Defines a request that grants a package entitlements to access a record.
+ *
+ * @dochash types/records/packages
+ * @docname GrantEntitlementsRequest
+ */
+export interface GrantEntitlementsRequest {
+    /**
+     * The ID of the package that should be granted entitlements.
+     */
+    packageId: string;
+
+    /**
+     * The scope that the entitlements should have.
+     */
+    scope: GrantedEntitlementScope;
+
+    /**
+     * The name of the record that the entitlements cover.
+     */
+    recordName: string;
+
+    /**
+     * The time that the entitlements should expire.
+     */
+    expireTimeMs: number;
+
+    /**
+     * The features that should be granted.
+     */
+    features: EntitlementFeature[];
+}
+
+export type GrantEntitlementsResult =
+    | GrantEntitlementFailure
+    | GrantEntitlementsSuccess;
+
+export interface GrantEntitlementsSuccess {
+    success: true;
+
+    grantedEntitlements: {
+        grantId: string;
+        feature: EntitlementFeature;
+    }[];
+}
+
+/**
+ * Defines an action that grants a package entitlements to access a record.
+ */
+export interface GrantEntitlementsAction extends RecordsAction {
+    type: 'grant_record_entitlements';
+
+    request: GrantEntitlementsRequest;
+}
+
+/**
+ * Defines a request that revokes an entitlement grant from a package.
+ * @dochash types/records/packages
+ * @docname GrantRecordEntitlementsRequest
+ */
+export interface RevokeEntitlementGrantRequest {
+    /**
+     * The ID of the entitlement grant to revoke.
+     */
+    grantId: string;
+}
+
+export interface RevokeEntitlementGrantAction extends RecordsAction {
+    type: 'revoke_record_entitlements';
+
+    request: RevokeEntitlementGrantRequest;
+}
+
+export interface RecordPackageVersionRequest {
+    /**
+     * The record that the package version should be stored in.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be stored in.
+     */
+    address: string;
+
+    /**
+     * The key for the package version.
+     */
+    key: PackageRecordVersionKey;
+
+    /**
+     * The list of entitlements that the package version can request.
+     */
+    entitlements: Entitlement[];
+
+    /**
+     * The description for the package version.
+     */
+    description: string;
+
+    /**
+     * The state that should be saved in the package.
+     */
+    state: StoredAux;
+
+    /**
+     * The markers that should be set on the package version.
+     */
+    markers?: string[];
+}
+
+export interface RecordPackageVersionAction extends RecordsAction {
+    type: 'record_package_version';
+
+    request: RecordPackageVersionRequest;
+}
+
 /**
  * Defines an action that retrieves the list of studios that the user has access to.
  */
 export interface ListUserStudiosAction extends RecordsAction {
     type: 'list_user_studios';
+}
+
+export interface RecordStoreItemAction extends RecordsAction {
+    type: 'record_store_item';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the item.
+     */
+    address: string;
+
+    /**
+     * The item that should be recorded.
+     */
+    item: Omit<StoreItem, 'address'>;
+}
+
+export interface GetStoreItemAction extends RecordsAction {
+    type: 'get_store_item';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the item.
+     */
+    address: string;
+}
+
+export interface EraseStoreItemAction extends RecordsAction {
+    type: 'erase_store_item';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address of the item.
+     */
+    address: string;
+}
+
+export interface ListStoreItemsAction extends RecordsAction {
+    type: 'list_store_items';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The address to start listing items after.
+     */
+    address: string | null;
+}
+
+export interface ListStoreItemsByMarkerAction
+    extends Omit<ListStoreItemsAction, 'type'> {
+    type: 'list_store_items_by_marker';
+
+    /**
+     * The marker that should be used to filter the list.
+     */
+    marker: string;
+}
+
+export interface PurchaseStoreItemAction extends RecordsAction {
+    type: 'purchase_store_item';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The item that should be purchased.
+     */
+    item: PurchasableItemReference;
+}
+
+/**
+ * Defines an interface that represents a reference to a store item.
+ *
+ * @dochash types/records/store
+ * @docname PurchasableItemReference
+ * @docid PurchasableItemReference
+ */
+export interface PurchasableItemReference {
+    /**
+     * The address of the item.
+     */
+    address: string;
+
+    /**
+     * The currency that the item is priced in.
+     */
+    currency: string;
+
+    /**
+     * The expected cost of the item in the currency's smallest unit (cents, etc.).
+     */
+    cost: number;
+}
+
+/**
+ * Defines an interface that represents a store item.
+ * That is, an item that can be purchased by a user to grant them a role.
+ *
+ * @dochash types/records/store
+ * @doctitle Store Types
+ * @docdescription Types that are used for store actions.
+ * @docsidebar Store
+ * @docname StoreItem
+ * @docid StoreItem
+ */
+export interface StoreItem {
+    /**
+     * The markers that are associated with the item.
+     */
+    markers: string[];
+
+    /**
+     * The name of the item.
+     */
+    name: string;
+
+    /**
+     * The description of the item.
+     */
+    description: string;
+
+    /**
+     * The list of image URLs that represent the item.
+     */
+    imageUrls: string[];
+
+    /**
+     * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
+     *
+     * See https://www.iso.org/iso-4217-currency-codes.html
+     */
+    currency: string;
+
+    /**
+     * The cost of the item in the currency's smallest unit. (e.g. cents, pence, etc.)
+     * Must be an interger.
+     */
+    cost: number;
+
+    /**
+     * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
+     * Currently only stripe tax codes are supported.
+     *
+     * See https://docs.stripe.com/tax/tax-codes
+     */
+    taxCode?: string | null;
+
+    /**
+     * The name of the role that the item grants.
+     */
+    roleName: string;
+
+    /**
+     * The amount of time in miliseconds that the role is granted for after purchase.
+     * If null, then the role is granted forever.
+     */
+    roleGrantTimeMs: number | null;
 }
 
 /**
@@ -1292,6 +1655,95 @@ export interface RoomRemoteOptions {
      * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
      */
     audioLevel: number;
+}
+
+/**
+ * Defines an interface that represents a reference to a store item.
+ *
+ * @dochash types/records/store
+ * @docname PurchasableItemReference
+ * @docid PurchasableItemReference
+ */
+export interface PurchasableItemReference {
+    /**
+     * The address of the item.
+     */
+    address: string;
+
+    /**
+     * The currency that the item is priced in.
+     */
+    currency: string;
+
+    /**
+     * The expected cost of the item in the currency's smallest unit (cents, etc.).
+     */
+    cost: number;
+}
+
+/**
+ * Defines an interface that represents a store item.
+ * That is, an item that can be purchased by a user to grant them a role.
+ *
+ * @dochash types/records/store
+ * @doctitle Store Types
+ * @docdescription Types that are used for store actions.
+ * @docsidebar Store
+ * @docname StoreItem
+ * @docid StoreItem
+ */
+export interface StoreItem {
+    /**
+     * The markers that are associated with the item.
+     */
+    markers: string[];
+
+    /**
+     * The name of the item.
+     */
+    name: string;
+
+    /**
+     * The description of the item.
+     */
+    description: string;
+
+    /**
+     * The list of image URLs that represent the item.
+     */
+    imageUrls: string[];
+
+    /**
+     * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
+     *
+     * See https://www.iso.org/iso-4217-currency-codes.html
+     */
+    currency: string;
+
+    /**
+     * The cost of the item in the currency's smallest unit. (e.g. cents, pence, etc.)
+     * Must be an interger.
+     */
+    cost: number;
+
+    /**
+     * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
+     * Currently only stripe tax codes are supported.
+     *
+     * See https://docs.stripe.com/tax/tax-codes
+     */
+    taxCode?: string | null;
+
+    /**
+     * The name of the role that the item grants.
+     */
+    roleName: string;
+
+    /**
+     * The amount of time in miliseconds that the role is granted for after purchase.
+     * If null, then the role is granted forever.
+     */
+    roleGrantTimeMs: number | null;
 }
 
 /**
@@ -2218,6 +2670,88 @@ export function listUserNotificationSubscriptions(
     );
 }
 
+export interface xpUserIdQuery {
+    /** The auth user Id of the xp user. */
+    userId?: string;
+    /** The xp user Id of the xp user. */
+    xpId?: string;
+}
+
+/**
+ * Possible statuses for an xp contract.
+ */
+export type xpContractStatus = 'open' | 'draft' | 'closed';
+
+// /**
+//  * Creates an action that can be used to provide meta data on an auth users Xp (user) identity.
+//  */
+// export function getXpUserMeta(
+//     by: xpUserIdQuery | string | undefined,
+//     options: RecordActionOptions,
+//     taskId: string | number
+// ): RecordsCallProcedureAction {
+//     if (typeof by === 'string') by = { userId: by };
+//     if (!by) by = {};
+//     return recordsCallProcedure(
+//         {
+//             getXpUserMeta: {
+//                 input: {
+//                     ...by,
+//                 },
+//             },
+//         },
+//         options,
+//         taskId
+//     );
+// }
+
+// /**
+//  * Creates an action that can be used to create a contract between two xp users.
+//  */
+// export function createXpContract(
+//     contractMeta: {
+//         forUser: xpUserIdQuery | string | null;
+//         gigRate: number;
+//         gigs: number;
+//         status: Exclude<xpContractStatus, 'closed'>;
+//         description?: string;
+//         accountCurrency?: string;
+//     },
+//     options: RecordActionOptions,
+//     taskId: string | number
+// ): RecordsCallProcedureAction {
+//     if (typeof contractMeta.forUser === 'string')
+//         contractMeta.forUser = { userId: contractMeta.forUser };
+//     return recordsCallProcedure(
+//         {
+//             createXpContract: {
+//                 input: {
+//                     contract: {
+//                         contractedUserId: contractMeta.forUser,
+//                         gigRate: contractMeta.gigRate,
+//                         gigs: contractMeta.gigs,
+//                         status: contractMeta.status,
+//                         description: contractMeta.description,
+//                         accountCurrency: contractMeta.accountCurrency,
+//                     },
+//                 },
+//             },
+//         },
+//         options,
+//         taskId
+//     );
+// }
+
+// TODO: Implement this
+// export function issueDraftXpContractToUser(config: {
+//     draftContractId: string;
+//     receivingUserId: string;
+// }): RecordsCallProcedureAction  {
+//     return recordsCallProcedure({
+
+//     });
+// }
+
 /**
  * Creates a RecordFileAction.
  * @param recordKey The key that should be used to access the record.
@@ -2336,6 +2870,267 @@ export function getEventCount(
 }
 
 /**
+ * Creates a GrantRecordEntitlementsAction.
+ * @param request The request that should be used to grant the entitlements.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantEntitlements(
+    request: GrantEntitlementsRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GrantEntitlementsAction {
+    return {
+        type: 'grant_record_entitlements',
+        request,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RevokeEntitlementGrantAction.
+ * @param request The request that should be used to revoke the entitlement.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeEntitlement(
+    request: RevokeEntitlementGrantRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RevokeEntitlementGrantAction {
+    return {
+        type: 'revoke_record_entitlements',
+        request,
+        options,
+        taskId,
+    };
+}
+
+export function recordPackageVersion(
+    request: RecordPackageVersionRequest,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordPackageVersionAction {
+    return {
+        type: 'record_package_version',
+        request,
+        options,
+        taskId,
+    };
+}
+
+export function listPackageVersions(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackageVersions: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function getPackageVersion(
+    recordName: string,
+    address: string,
+    key: string | PackageRecordVersionKeySpecifier,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    let input: RecordsClientInputs['getPackageVersion'] = {
+        recordName,
+        address,
+    };
+
+    if (typeof key === 'string') {
+        input.key = key;
+    } else if (key) {
+        input = {
+            ...input,
+            ...key,
+        };
+    }
+
+    return recordsCallProcedure(
+        {
+            getPackageVersion: {
+                input,
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function erasePackageVersion(
+    recordName: string,
+    address: string,
+    key: PackageRecordVersionKey,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            erasePackageVersion: {
+                input: {
+                    recordName,
+                    address,
+                    key,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function recordPackageContainer(
+    recordName: string,
+    address: string,
+    markers: string[],
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            recordPackage: {
+                input: {
+                    recordName,
+                    item: {
+                        address,
+                        markers: markers as [string, ...string[]],
+                    },
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function erasePackageContaienr(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            erasePackage: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function listPackageContainers(
+    recordName: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackages: {
+                input: {
+                    recordName,
+                    address,
+                    sort: options?.sort,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function listPackageContainersByMarker(
+    recordName: string,
+    marker: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            listPackages: {
+                input: {
+                    recordName,
+                    address,
+                    sort: options?.sort,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function getPackageContainer(
+    recordName: string,
+    address: string,
+    options: ListDataOptions,
+    taskId?: number | string
+) {
+    return recordsCallProcedure(
+        {
+            getPackage: {
+                input: {
+                    recordName,
+                    address,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+export function installPackage(
+    recordName: string,
+    address: string,
+    key: string | Partial<PackageRecordVersionKey> | null,
+    options: RecordActionOptions,
+    taskId?: number | string
+): InstallPackageAction {
+    return {
+        type: 'install_package',
+        recordName,
+        address,
+        key,
+        options,
+        taskId,
+    };
+}
+
+export function listInstalledPackages(
+    options: RecordActionOptions,
+    taskId?: number | string
+): ListInstalledPackagesAction {
+    return {
+        type: 'list_installed_packages',
+        options,
+        taskId,
+    };
+}
+
+/**
  * Creates a ListUserStudiosAction.
  * @param options The options that should be used for the action.
  * @param taskId The ID of the task.
@@ -2346,6 +3141,144 @@ export function listUserStudios(
 ): ListUserStudiosAction {
     return {
         type: 'list_user_studios',
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RecordStoreItemAction.
+ * @param recordName The name of the record.
+ * @param address The address of the item in the record.
+ * @param item The item.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function recordStoreItem(
+    recordName: string,
+    address: string,
+    item: StoreItem,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordStoreItemAction {
+    return {
+        type: 'record_store_item',
+        recordName,
+        address,
+        item,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetStoreItemAction.
+ * @param recordName The name of the record.
+ * @param address The address of the item in the record.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function getStoreItem(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GetStoreItemAction {
+    return {
+        type: 'get_store_item',
+        recordName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseStoreItemAction.
+ * @param recordName The name of the record.
+ * @param address The address of the item in the record.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function eraseStoreItem(
+    recordName: string,
+    address: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): EraseStoreItemAction {
+    return {
+        type: 'erase_store_item',
+        recordName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a EraseStoreItemAction.
+ * @param recordName The name of the record.
+ * @param address The address to start listing items after.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function listStoreItems(
+    recordName: string,
+    address: string | null,
+    options: RecordActionOptions,
+    taskId?: number | string
+): ListStoreItemsAction {
+    return {
+        type: 'list_store_items',
+        recordName,
+        address,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListStoreItemsByMarkerAction.
+ * @param recordName The name of the record.
+ * @param marker The marker to filter by.
+ * @param address The address to start listing items after.
+ * @param options The options.
+ * @param taskId The ID of the task.
+ */
+export function listStoreItemsByMarker(
+    recordName: string,
+    marker: string,
+    address: string | null,
+    options: RecordActionOptions,
+    taskId?: number | string
+): ListStoreItemsByMarkerAction {
+    return {
+        type: 'list_store_items_by_marker',
+        recordName,
+        address,
+        marker,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a PurchaseStoreItemAction.
+ * @param recordName The name of the record.
+ * @param item The item to purchase.
+ * @param options The options to use.
+ * @param taskId The ID of the task.
+ */
+export function purchaseStoreItem(
+    recordName: string,
+    item: PurchasableItemReference,
+    options: RecordActionOptions,
+    taskId?: number | string
+): PurchaseStoreItemAction {
+    return {
+        type: 'purchase_store_item',
+        recordName,
+        item,
         options,
         taskId,
     };

@@ -21,30 +21,22 @@ import {
     BotWatcher,
     PortalManager,
 } from '@casual-simulation/aux-vm';
-import type {
-    PrecalculatedBot,
-    LocalActions,
-} from '@casual-simulation/aux-common';
+import type { PrecalculatedBot } from '@casual-simulation/aux-common';
 import {
     BotIndex,
-    createBot,
     createPrecalculatedBot,
-    Bot,
     registerBuiltinPortal,
     defineGlobalBot,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import {
     userBotChangedCore,
-    watchPortalConfigBot,
     watchPortalConfigBotCore,
 } from './BrowserSimulationCalculations';
 import { first } from 'rxjs/operators';
-import {
-    waitAsync,
-    wait,
-} from '@casual-simulation/aux-common/test/TestHelpers';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subject, firstValueFrom } from 'rxjs';
+import type { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 console.log = jest.fn();
 
@@ -54,7 +46,7 @@ describe('BrowserSimulationCalculations', () => {
     let portals: PortalManager;
     let index: BotIndex;
     let vm: TestAuxVM;
-    let localEvents: Subject<LocalActions[]>;
+    let localEvents: Subject<RuntimeActions[]>;
     let userId = 'user';
 
     beforeEach(() => {

@@ -16,33 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import {
-    isDimensionLocked,
-    DEFAULT_PORTAL_ZOOMABLE,
-    DEFAULT_PORTAL_PANNABLE,
     hasValue,
-    calculateBotValue,
-    BotCalculationContext,
-    PrecalculatedBot,
-    calculateGridScale,
     calculateBooleanTagValue,
-    calculateNumericalTagValue,
-    DEFAULT_PORTAL_ROTATABLE,
-    getBotMeetPortalAnchorPointOffset,
-    DEFAULT_MEET_PORTAL_ANCHOR_POINT,
-    calculateMeetPortalAnchorPointOffset,
-    DEFAULT_TAG_PORTAL_ANCHOR_POINT,
-    getBotTagPortalAnchorPointOffset,
     calculateStringTagValue,
-    Bot,
     calculateStringListTagValue,
 } from '@casual-simulation/aux-common';
-import { Color } from '@casual-simulation/three';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import type { SubscriptionLike, Observable } from 'rxjs';
 import { Subscription, Subject } from 'rxjs';
-import { merge } from 'lodash';
 import type { Simulation } from '@casual-simulation/aux-vm';
 
 /**

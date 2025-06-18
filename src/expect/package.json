@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/expect",
-    "version": "3.1.28",
+    "version": "3.5.0",
     "repository": {
         "type": "git",
         "url": "https://github.com/casual-simulation/casualos.git",

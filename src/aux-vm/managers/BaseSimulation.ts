@@ -19,27 +19,17 @@ import type {
     StoredAux,
     PartitionAuthMessage,
 } from '@casual-simulation/aux-common';
-import {
-    botRemoved,
-    parseSimulationId,
-    SimulationIdParseSuccess,
-    BotIndex,
-    AuxPartitionConfig,
-    LocalActions,
-    ConnectionIndicator,
-} from '@casual-simulation/aux-common';
+import { BotIndex } from '@casual-simulation/aux-common';
 import type { Observable, SubscriptionLike } from 'rxjs';
 import { Subject } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { BotHelper } from './BotHelper';
 import { BotWatcher } from './BotWatcher';
 import type { AuxVM } from '../vm/AuxVM';
-import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import type { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import type { DeviceAction } from '@casual-simulation/aux-common';
 import type { Simulation } from './Simulation';
-import { SimulationOrigin } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
 import type { RuntimeActions } from '@casual-simulation/aux-runtime';

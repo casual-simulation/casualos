@@ -15,17 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import type { AuxBot3D } from '../AuxBot3D';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
-import {
-    calculateGridScale,
-    getBuilderDimensionGrid,
-    DEFAULT_WORKSPACE_GRID_SCALE,
-    getBotScale,
-} from '@casual-simulation/aux-common';
+
 import { calculateScale } from '../SceneUtils';
-import { CoordinateSystem } from '../CoordinateSystem';
 
 export class ScaleDecorator extends AuxBot3DDecoratorBase {
     constructor(bot3D: AuxBot3D) {

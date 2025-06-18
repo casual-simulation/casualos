@@ -18,7 +18,6 @@
 import type { Bot } from '@casual-simulation/aux-common';
 import {
     asyncResult,
-    BotAction,
     hasValue,
     ON_ROOM_JOINED,
     ON_ROOM_LEAVE,
@@ -40,7 +39,6 @@ import type {
     SetRoomTrackOptionsAction,
     TrackVideoQuality,
 } from '@casual-simulation/aux-runtime';
-import { RoomJoinOptions } from '@casual-simulation/aux-runtime';
 import type {
     BotHelper,
     GetRoomOptions,
@@ -53,16 +51,13 @@ import type {
     LocalTrackPublication,
     Participant,
     RemoteParticipant,
-    RemoteTrackPublication,
     Room,
-    RoomEvent,
     Track,
     TrackPublication,
-    VideoQuality,
 } from 'livekit-client';
 import type Livekit from 'livekit-client';
 import type { Observable, SubscriptionLike } from 'rxjs';
-import { Subject, Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
 
 /**
  * Defines a class that is able to manage Livekit rooms and make streams available to scripts.

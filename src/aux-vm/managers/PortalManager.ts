@@ -28,7 +28,6 @@ import {
     DNA_TAG_PREFIX,
     enqueueAsyncError,
     enqueueAsyncResult,
-    LocalActions,
     hasValue,
     getScriptPrefix,
     KNOWN_TAG_PREFIXES,

@@ -7,9 +7,9 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) v18.17.1 or later.
+-   [Node.js](https://nodejs.org/en/download/) v20.18.1 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
-    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v18.17.1` in your favorite terminal.
+    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v20.18.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
 -   [Rancher Desktop](https://rancherdesktop.io/)
     -   Used to make development with extra services (MongoDB, Redis, etc.) easy.
@@ -29,6 +29,10 @@ Make sure you have all the prerequisite tools installed:
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. Enable corepack
     - `corepack enable`
+    - If you are trying to update PNPM, follow these steps:
+        1. Install the latest corepack: `npm install --global corepack@latest`
+        2. Enable pnpm with corepack: `corepack enable pnpm`
+        3. Use the latest PNPM version: `corepack use pnpm@latest-10`
 4. Start CockroachDB
     - Use a separate terminal tab
     - `npm run cockroach`
@@ -43,12 +47,31 @@ Make sure you have all the prerequisite tools installed:
             ```
             127.0.0.1 casualos.localhost
             ```
-6. Start related services:
+6. (Optional) Start TigerBeetle
+   _This is used to enable financial features within casualos_
+
+    - You can install and start the tigerbeetle server by following the quick start guide linked below.
+    - Before jumping in, please take note that the guide (as of documenting) recommends starting the replica addresses at port 3000.
+    - However, due to the default configurations of the casualos environment, it is **highly recommended** to start development replica addresses from port 3100 (or in another non-conflicting port range); and increment/decrement away from commonly used ports if additional replicas are needed.
+    - The guide may cover more than what is necessary, following along until a cluster is started, is all this step requires to continue.
+    - With that in mind, the guide can be found [here][tigerbeetle].
+    - To configure the connection details from casualos to the tigerbeetle server, visit the [development server config](./src/aux-server/aux-backend/server/.dev.env.json).
+    - Be sure to set the `_enabled` property in `tigerBeetle` to `true` as it defaults to `false`.
+    - All other property keys are their camelcase equivalent in the tigerbeetle CLI.
+        ```json
+        "tigerBeetle": {
+            "_enabled": true,
+            "clusterId": "0",
+            "replicaAddresses": ["3100"]
+        },
+        ```
+
+7. Start related services:
     - If using `nerdctl`: `npm run nerdctl:dev`
     - If using `docker`: `npm run docker:dev`
-7. Bootstrap the project.
+8. Bootstrap the project.
     - `npm run bootstrap`
-8. Install commit hooks.
+9. Install commit hooks.
     - `npx husky install`
 
 ## Commands
@@ -134,6 +157,31 @@ Here is a brief list of tags that are used to help generate the documentation:
 -   `@docreferenceactions` - Tells the generator to find all other types/properties whose IDs match the given regex pattern and include them as extra references for the type.
 -   `{@link [ref]}` - Renders a link to the type with `@docid` matching `[ref]`.
 -   `{@tag [tag]}` - Renders a link to the given `[tag]`. Prefix the tag with `@` to link to listen tags.
+
+## Code Style
+
+We use prettier and git hooks to enforce syntax formatting across the entire repo.
+
+Here are a couple conventions that we follow:
+
+-   Naming:
+    -   camelCase for methods/properties/variables.
+    -   PascalCase for classes/interfaces.
+    -   SCREAMING_CASE for constants.
+    -   private properties/methods should use the `private` keyword and start with an underscore (`_`).
+    -   public properties/methods should not have any access modifiers, using TypeScript's default visibility of public.
+-   Structure
+    -   Use an interface if it is already available and suitable.
+    -   Use interfaces for data transfer objects and for defining the structure of plain javascript objects.
+    -   Only use classes if you need methods attached to data/implementations.
+        -   Prefer interfaces if you just need data objects.
+        -   Prefer standalone functions if you just need to process data once.
+        -   Classes are best for scenarios where we need to process data across multiple different runs.
+    -   Don't write a new interface for a class unless you have a good reason to believe you will have/need multiple different implementations for the interface.
+        -   Controllers should pretty much never be used through an interface.
+        -   Stores should pretty much always be used through an interface.
+-   Coding
+    -   Don't make major refactors without consulting the architect.
 
 ## Projects
 
@@ -238,3 +286,4 @@ If you're using Visual Studio Code, I recommend getting the Jest extension. It m
 [nvm-mac]: https://github.com/creationix/nvm
 [nvm-windows]: https://github.com/coreybutler/nvm-windows
 [hosts-file]: https://en.wikipedia.org/wiki/Hosts_(file)
+[tigerbeetle]: https://docs.tigerbeetle.com/quick-start

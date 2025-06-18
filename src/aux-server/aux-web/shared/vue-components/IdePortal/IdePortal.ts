@@ -15,18 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import type { Bot, BotTags } from '@casual-simulation/aux-common';
 import {
     hasValue,
-    ON_SHEET_TAG_CLICK,
-    ON_SHEET_BOT_ID_CLICK,
-    ON_SHEET_BOT_CLICK,
-    toast,
-    tweenTo,
-    SHEET_PORTAL,
     CLICK_ACTION_NAME,
     onClickArg,
     IDE_PORTAL,
@@ -37,11 +30,8 @@ import type {
     BrowserSimulation,
     IdeTagNode,
 } from '@casual-simulation/aux-vm-browser';
-import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import type { SubscriptionLike } from 'rxjs';
-import { Subject } from 'rxjs';
-import { copyToClipboard } from '../../SharedUtils';
 import { tap } from 'rxjs/operators';
 import { IdePortalConfig } from './IdePortalConfig';
 import type { IdeNode } from '@casual-simulation/aux-vm-browser';

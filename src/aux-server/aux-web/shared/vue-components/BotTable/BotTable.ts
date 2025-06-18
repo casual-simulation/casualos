@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import Vue, { ComponentOptions } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 import { some, union, sortBy } from 'lodash';
 import type { Bot, BotTags, BotSpace } from '@casual-simulation/aux-common';
 import {
@@ -27,22 +27,13 @@ import {
     isFormula,
     getShortId,
     merge,
-    botAdded,
-    getAllBotTags,
     toast,
     isEditable,
-    createDimensionId,
     addToDimensionDiff,
-    DEFAULT_WORKSPACE_SCALE,
-    PrecalculatedBot,
     isScript,
-    parseScript,
     parseNewTag,
     BOT_SPACE_TAG,
-    getBotSpace,
     getBotTag,
-    goToDimension,
-    tweenTo,
     getTagValueForSpace,
     TAG_MASK_SPACE_PRIORITIES,
     getScriptPrefix,
@@ -61,14 +52,11 @@ import AlertDialogOptions from '../../AlertDialogOptions';
 import BotTag from '../BotTag/BotTag';
 import BotID from '../BotID/BotID';
 import { TreeView } from 'vue-json-tree-view';
-import { downloadAuxState } from '../../DownloadHelpers';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
-import Bowser from 'bowser';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
-import { first } from 'rxjs/operators';
 import { sumBy } from 'lodash';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import { getModelUriFromId } from '../../MonacoUtils';
