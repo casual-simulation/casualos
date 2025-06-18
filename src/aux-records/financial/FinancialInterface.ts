@@ -643,8 +643,10 @@ export function getMessageForTransferError(error: CreateTransferError) {
             return 'The transfer would cause the timeout on the account to overflow a 64-bit unsigned int.';
         case CreateTransferError.transfer_must_have_the_same_ledger_as_accounts:
             return 'The transfer must have the same ledger as the accounts.';
+        case CreateTransferError.linked_event_failed:
+            return 'The linked event for the transfer failed.';
         default:
-            return 'An unknown error occurred.';
+            return `An unknown error occurred (${error}).`;
     }
 }
 

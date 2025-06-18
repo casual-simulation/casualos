@@ -45,8 +45,12 @@ import {
     processTransferErrors,
     type FinancialInterface,
 } from './FinancialInterface';
-import type { Account, CreateTransferError, Transfer } from './Types';
-import { AccountFlags, CreateAccountError, TransferFlags } from './Types';
+import type { Account, CreateTransferError, Transfer } from 'tigerbeetle-node';
+import {
+    AccountFlags,
+    CreateAccountError,
+    TransferFlags,
+} from 'tigerbeetle-node';
 import { traced } from '../tracing/TracingDecorators';
 import type {
     FinancialAccountFilter,
@@ -648,6 +652,14 @@ export class FinancialController {
 
         const transfers = await this._financialInterface.getAccountTransfers({
             account_id: accountId,
+            code: 0, // 0 means all codes
+            flags: 0, // 0 means all flags
+            limit: 1000, // Limit to 1000 transfers
+            timestamp_max: 0n, // No timestamp limit
+            timestamp_min: 0n, // No timestamp limit
+            user_data_128: 0n, // No user data filter
+            user_data_64: 0n, // No user data filter
+            user_data_32: 0, // No user data filter
         });
 
         return success(transfers);
@@ -660,6 +672,13 @@ export class FinancialController {
         const transfers = await this._financialInterface.queryTransfers({
             user_data_128: BigInt(query.transactionId ?? 0n),
             code: query.code ?? 0,
+            flags: 0,
+            ledger: 0,
+            limit: 1000,
+            timestamp_max: 0n,
+            timestamp_min: 0n,
+            user_data_64: 0n,
+            user_data_32: 0,
         });
 
         return success(transfers);

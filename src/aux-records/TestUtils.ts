@@ -36,8 +36,9 @@ import { FileRecordsController } from './FileRecordsController';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
 import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
 import { XpController } from './XpController';
-import type { Account, FinancialInterface, Transfer } from './financial';
+import type { FinancialInterface } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
+import type { Account, Transfer } from 'tigerbeetle-node';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 

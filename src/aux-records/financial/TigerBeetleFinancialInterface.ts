@@ -59,6 +59,7 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
     constructor(config: Config) {
         this._client = config.client;
         this._id = config.id;
+        this._idOffset = config.idOffset || 0n;
     }
 
     private _mapAccountIds(accounts: Account[], offset: bigint) {
@@ -80,10 +81,71 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
         return transfers.map((t) => ({
             ...t,
             id: t.id + offset,
-            credit_account_id: t.credit_account_id + offset,
-            debit_account_id: t.debit_account_id + offset,
-            pending_id: t.pending_id ? t.pending_id + offset : undefined,
+            credit_account_id: t.credit_account_id
+                ? t.credit_account_id + offset
+                : 0n,
+            debit_account_id: t.debit_account_id
+                ? t.debit_account_id + offset
+                : 0n,
+            pending_id: t.pending_id ? t.pending_id + offset : 0n,
         }));
+    }
+
+    private _mapIds(ids: bigint[], offset: bigint) {
+        if (offset === 0n) {
+            return ids;
+        }
+
+        return ids.map((id) => id + offset);
+    }
+
+    private _mapAccountFilter(
+        filter: AccountFilter,
+        offset: bigint
+    ): AccountFilter {
+        if (offset === 0n) {
+            return filter;
+        }
+
+        return {
+            ...filter,
+            account_id:
+                filter.account_id !== 0n ? filter.account_id + offset : 0n,
+            user_data_128:
+                filter.user_data_128 !== 0n
+                    ? filter.user_data_128 + offset
+                    : 0n,
+            user_data_64:
+                filter.user_data_64 !== 0n
+                    ? filter.user_data_64 + (offset % 2n ** 64n)
+                    : 0n,
+            user_data_32:
+                filter.user_data_32 !== 0
+                    ? filter.user_data_32 + Number(offset % 2n ** 32n)
+                    : 0,
+        };
+    }
+
+    private _mapQueryFilter(filter: QueryFilter, offset: bigint): QueryFilter {
+        if (offset === 0n) {
+            return filter;
+        }
+
+        return {
+            ...filter,
+            user_data_128:
+                filter.user_data_128 !== 0n
+                    ? filter.user_data_128 + offset
+                    : 0n,
+            user_data_64:
+                filter.user_data_64 !== 0n
+                    ? filter.user_data_64 + (offset % 2n ** 64n)
+                    : 0n,
+            user_data_32:
+                filter.user_data_32 !== 0
+                    ? filter.user_data_32 + Number(offset % 2n ** 32n)
+                    : 0,
+        };
     }
 
     generateId(): Account['id'] {
@@ -110,14 +172,18 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
 
     async lookupAccounts(batch: Account['id'][]): Promise<Account[]> {
         return this._mapAccountIds(
-            await this._client.lookupAccounts(batch),
+            await this._client.lookupAccounts(
+                this._mapIds(batch, this._idOffset)
+            ),
             -this._idOffset
         );
     }
 
     async lookupTransfers(batch: Transfer['id'][]): Promise<Transfer[]> {
         return this._mapTransferIds(
-            await this._client.lookupTransfers(batch),
+            await this._client.lookupTransfers(
+                this._mapIds(batch, this._idOffset)
+            ),
             -this._idOffset
         );
     }
@@ -130,19 +196,25 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
     }
 
     getAccountBalances(filter: AccountFilter): Promise<AccountBalance[]> {
-        return this._client.getAccountBalances(filter);
+        return this._client.getAccountBalances(
+            this._mapAccountFilter(filter, this._idOffset)
+        );
     }
 
     async queryAccounts(filter: QueryFilter): Promise<Account[]> {
         return this._mapAccountIds(
-            await this._client.queryAccounts(filter),
+            await this._client.queryAccounts(
+                this._mapQueryFilter(filter, this._idOffset)
+            ),
             -this._idOffset
         );
     }
 
     async queryTransfers(filter: QueryFilter): Promise<Transfer[]> {
         return this._mapTransferIds(
-            await this._client.queryTransfers(filter),
+            await this._client.queryTransfers(
+                this._mapQueryFilter(filter, this._idOffset)
+            ),
             -this._idOffset
         );
     }

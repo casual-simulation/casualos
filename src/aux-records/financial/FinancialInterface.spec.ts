@@ -24,7 +24,7 @@ import {
     LEDGERS,
     TransferCodes,
 } from './FinancialInterface';
-import { AccountFlags, TransferFlags } from './Types';
+import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 
 describe('getFlagsForAccountCode()', () => {
     it('should require that assets_cash cannot carry a credit balance', () => {

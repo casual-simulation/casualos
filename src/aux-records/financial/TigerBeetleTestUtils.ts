@@ -21,14 +21,19 @@ import os from 'os';
 import { sha256 } from 'hash.js';
 import { existsSync } from 'fs';
 import { mkdir, writeFile } from 'fs/promises';
-import { ZipReader, BlobReader, BlobWriter } from '@zip.js/zip.js';
+// import { ZipReader, BlobReader, BlobWriter } from '@zip.js/zip.js';
 import { promisify } from 'util';
 import type { ChildProcess } from 'child_process';
-import {
-    spawn as spawnCallback,
-    execFile as execFileCallback,
-} from 'child_process';
-const spawn = promisify(spawnCallback);
+import { spawn, execFile as execFileCallback } from 'child_process';
+
+const {
+    ZipReader,
+    BlobReader,
+    BlobWriter,
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+} = require('@zip.js/zip.js/dist/zip.js');
+
+// const spawn = promisify(spawnCallback);
 const execFile = promisify(execFileCallback);
 
 /**
@@ -104,31 +109,53 @@ export async function runTigerBeetle(label: string): Promise<{
 
     const tbFile = path.join(tbDir, `0_0.tigerbeetle.${label}`);
 
-    await execFile(
-        exePath,
-        [
-            'format',
-            '--cluster=0',
-            '--replica=0',
-            '--replica-count=1',
-            '--development',
-            tbFile,
-        ],
-        {
-            cwd: tbDir,
+    try {
+        console.log('TigerBeetle file:', tbFile);
+        if (!existsSync(tbFile)) {
+            await execFile(
+                exePath,
+                [
+                    'format',
+                    '--cluster=0',
+                    '--replica=0',
+                    '--replica-count=1',
+                    '--development',
+                    tbFile,
+                ],
+                {
+                    cwd: tbDir,
+                }
+            );
         }
-    );
+    } catch (err) {
+        console.error('Failed to format TigerBeetle file:', err);
+        throw err;
+    }
 
-    const process = (await spawn(
+    // const tbFileHash = sha256()
+    //     .update(tbFile)
+    //     .digest('hex');
+
+    // // get bigint from the first 8 bytes of the hash
+    // const tbFileId = BigInt(
+    //     '0x' + tbFileHash.slice(0, 16)
+    // );
+
+    // // calculate port number from the hash
+    // const port = String((tbFileId % 10000n) + 50000n); // Port range 50000-59999
+
+    let process: ChildProcess | null = null;
+    process = spawn(
         exePath,
-        ['start', '--addresses=0', '--development', tbFile],
+        ['start', `--addresses=0`, '--development', tbFile],
         {
             cwd: tbDir,
             detached: true,
-            stdio: 'ignore',
+            stdio: ['pipe', 'pipe', 'pipe'],
         }
-    )) as ChildProcess;
+    ) as ChildProcess;
 
+    console.log('TigerBeetle started with PID:', process.pid);
     // read first line from stdout to get the port
     const stdout = process.stdout;
 
@@ -136,6 +163,7 @@ export async function runTigerBeetle(label: string): Promise<{
         let line = '';
         const dataListener = (data: Buffer) => {
             const chunk = data.toString();
+            // console.log('TigerBeetle:', chunk);
             let newline = chunk.indexOf('\n');
             if (newline < 0) {
                 line += chunk;
@@ -150,6 +178,7 @@ export async function runTigerBeetle(label: string): Promise<{
 
     const closePromise = new Promise<void>((resolve) => {
         process.on('close', () => {
+            console.log('TigerBeetle process closed');
             resolve();
         });
     });

@@ -28,8 +28,8 @@ import type { AuthStore } from './AuthStore';
 import type { FailedResult, StatefulResult } from './TypeUtils';
 
 import { traced } from './tracing/TracingDecorators';
-import type { Account, Transfer } from './financial/Types';
-import { TransferFlags } from './financial/Types';
+import type { Account, Transfer } from 'tigerbeetle-node';
+import { TransferFlags } from 'tigerbeetle-node';
 import type {
     FinancialInterface,
     TransferCodes,
