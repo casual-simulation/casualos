@@ -5871,6 +5871,52 @@ describe('PolicyController', () => {
 
                     expect(auth.privoEnabled).toBe(true);
                 });
+
+                it('should allow all privacy features if there is no user, but the role is the system', async () => {
+                    const owner = await store.findUser(ownerId);
+                    await store.saveUser({
+                        ...owner,
+                        privacyFeatures: null,
+                    });
+
+                    const context =
+                        await controller.constructAuthorizationContext({
+                            recordKeyOrRecordName: recordName,
+                            userId: null,
+                            userRole: 'system',
+                        });
+
+                    expect(context).toEqual({
+                        success: true,
+                        context: {
+                            recordName,
+                            recordKeyResult: null,
+                            subjectPolicy: 'subjectfull',
+                            recordKeyProvided: false,
+                            recordKeyCreatorId: undefined,
+                            recordOwnerId: ownerId,
+                            recordOwnerPrivacyFeatures: {
+                                allowAI: true,
+                                allowPublicData: true,
+                                allowPublicInsts: true,
+                                publishData: true,
+                            },
+                            recordStudioId: null,
+                            recordStudioMembers: undefined,
+                            userId: null,
+                            userPrivacyFeatures: {
+                                allowAI: true,
+                                allowPublicData: true,
+                                allowPublicInsts: true,
+                                publishData: true,
+                            },
+                            sendNotLoggedIn: true,
+                            userRole: 'system',
+                        },
+                    });
+
+                    expect(auth.privoEnabled).toBe(true);
+                });
             });
 
             describe('publishData', () => {

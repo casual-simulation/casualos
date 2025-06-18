@@ -1,8 +1,39 @@
 # CasualOS Changelog
 
+## V3.5.2
+
+#### Date: 6/13/2025
+
+### :boom: Breaking Changes
+
+-   Made the VM iframe unable to process pointer events while the game view (gridPortal, mapPortal, etc.) is visible. The VM iframe is now always shown.
+
+    -   This is a breaking change because the VM iframe (DOM) used to be always interactable behind the game view.
+    -   Now, it will always be shown, but only be interactable when all the game portals are hidden (set to null).
+    -   The previous breaking change was a workaround to fix a bug in MacOS Chrome that causes iframes to intercept some events from the main window.
+    -   This change is a another workaround to fix a bug in MacOS Chrome that causes the game portals frame rate to be severly reduced while the VM iframe is hidden.
+    -   To preserve the old behavior, you can use the following code:
+
+        ```typescript
+        await os.registerApp('alwaysShowIframe', thisBot);
+
+        const css = `
+        .vm-iframe-container iframe:first-child {
+            pointer-events: auto !important;
+        }
+        `;
+
+        os.compileApp(
+            'alwaysShowIframe',
+            <div>
+                <style>{css}</style>
+            </div>
+        );
+        ```
+
 ## V3.5.1
 
-#### Date: TBD
+#### Date: 6/13/2025
 
 ### :boom: Breaking Changes
 
@@ -58,6 +89,7 @@
 -   Fixed an issue where the DOM was not able to be interacted with.
 -   Fixed an issue where CasualOS may break during initialization if a `define_global_bot` event is processed before the initial state update.
 -   Fixed an issue where providing an invalid endpoint to a records function would cause the function to never resolve.
+-   Fixed an issue where package versions could not be recorded on Privo-enabled deployments.
 
 ## V3.5.0
 
