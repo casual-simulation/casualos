@@ -85,7 +85,7 @@ export type RecordsAsyncActions =
     | RevokeEntitlementGrantAction
     | RecordPackageVersionAction
     | InstallPackageAction
-    | ListInstalledPackagesAction;
+    | ListInstalledPackagesAction
     | RecordStoreItemAction
     | GetStoreItemAction
     | EraseStoreItemAction
@@ -1129,15 +1129,15 @@ export interface PurchaseStoreItemAction extends RecordsAction {
 
 /**
  * Defines an interface that represents a reference to a store item.
- * 
+ *
  * @dochash types/records/store
  * @docname PurchasableItemReference
  * @docid PurchasableItemReference
  */
 export interface PurchasableItemReference {
     /**
-         * The address of the item.
-         */
+     * The address of the item.
+     */
     address: string;
 
     /**
@@ -1154,7 +1154,7 @@ export interface PurchasableItemReference {
 /**
  * Defines an interface that represents a store item.
  * That is, an item that can be purchased by a user to grant them a role.
- * 
+ *
  * @dochash types/records/store
  * @doctitle Store Types
  * @docdescription Types that are used for store actions.
@@ -1185,7 +1185,7 @@ export interface StoreItem {
 
     /**
      * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
-     * 
+     *
      * See https://www.iso.org/iso-4217-currency-codes.html
      */
     currency: string;
@@ -1199,7 +1199,7 @@ export interface StoreItem {
     /**
      * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
      * Currently only stripe tax codes are supported.
-     * 
+     *
      * See https://docs.stripe.com/tax/tax-codes
      */
     taxCode?: string | null;
@@ -1655,6 +1655,95 @@ export interface RoomRemoteOptions {
      * Between 0 and 1 with 1 being the loudest and 0 being the quietest.
      */
     audioLevel: number;
+}
+
+/**
+ * Defines an interface that represents a reference to a store item.
+ *
+ * @dochash types/records/store
+ * @docname PurchasableItemReference
+ * @docid PurchasableItemReference
+ */
+export interface PurchasableItemReference {
+    /**
+     * The address of the item.
+     */
+    address: string;
+
+    /**
+     * The currency that the item is priced in.
+     */
+    currency: string;
+
+    /**
+     * The expected cost of the item in the currency's smallest unit (cents, etc.).
+     */
+    cost: number;
+}
+
+/**
+ * Defines an interface that represents a store item.
+ * That is, an item that can be purchased by a user to grant them a role.
+ *
+ * @dochash types/records/store
+ * @doctitle Store Types
+ * @docdescription Types that are used for store actions.
+ * @docsidebar Store
+ * @docname StoreItem
+ * @docid StoreItem
+ */
+export interface StoreItem {
+    /**
+     * The markers that are associated with the item.
+     */
+    markers: string[];
+
+    /**
+     * The name of the item.
+     */
+    name: string;
+
+    /**
+     * The description of the item.
+     */
+    description: string;
+
+    /**
+     * The list of image URLs that represent the item.
+     */
+    imageUrls: string[];
+
+    /**
+     * The [3-letter ISO currency code](https://www.iso.org/iso-4217-currency-codes.html) that the item is priced in.
+     *
+     * See https://www.iso.org/iso-4217-currency-codes.html
+     */
+    currency: string;
+
+    /**
+     * The cost of the item in the currency's smallest unit. (e.g. cents, pence, etc.)
+     * Must be an interger.
+     */
+    cost: number;
+
+    /**
+     * The [tax code](https://docs.stripe.com/tax/tax-codes) for the item.
+     * Currently only stripe tax codes are supported.
+     *
+     * See https://docs.stripe.com/tax/tax-codes
+     */
+    taxCode?: string | null;
+
+    /**
+     * The name of the role that the item grants.
+     */
+    roleName: string;
+
+    /**
+     * The amount of time in miliseconds that the role is granted for after purchase.
+     * If null, then the role is granted forever.
+     */
+    roleGrantTimeMs: number | null;
 }
 
 /**
@@ -2593,65 +2682,65 @@ export interface xpUserIdQuery {
  */
 export type xpContractStatus = 'open' | 'draft' | 'closed';
 
-/**
- * Creates an action that can be used to provide meta data on an auth users Xp (user) identity.
- */
-export function getXpUserMeta(
-    by: xpUserIdQuery | string | undefined,
-    options: RecordActionOptions,
-    taskId: string | number
-): RecordsCallProcedureAction {
-    if (typeof by === 'string') by = { userId: by };
-    if (!by) by = {};
-    return recordsCallProcedure(
-        {
-            getXpUserMeta: {
-                input: {
-                    ...by,
-                },
-            },
-        },
-        options,
-        taskId
-    );
-}
+// /**
+//  * Creates an action that can be used to provide meta data on an auth users Xp (user) identity.
+//  */
+// export function getXpUserMeta(
+//     by: xpUserIdQuery | string | undefined,
+//     options: RecordActionOptions,
+//     taskId: string | number
+// ): RecordsCallProcedureAction {
+//     if (typeof by === 'string') by = { userId: by };
+//     if (!by) by = {};
+//     return recordsCallProcedure(
+//         {
+//             getXpUserMeta: {
+//                 input: {
+//                     ...by,
+//                 },
+//             },
+//         },
+//         options,
+//         taskId
+//     );
+// }
 
-/**
- * Creates an action that can be used to create a contract between two xp users.
- */
-export function createXpContract(
-    contractMeta: {
-        forUser: xpUserIdQuery | string | null;
-        gigRate: number;
-        gigs: number;
-        status: Exclude<xpContractStatus, 'closed'>;
-        description?: string;
-        accountCurrency?: string;
-    },
-    options: RecordActionOptions,
-    taskId: string | number
-): RecordsCallProcedureAction {
-    if (typeof contractMeta.forUser === 'string')
-        contractMeta.forUser = { userId: contractMeta.forUser };
-    return recordsCallProcedure(
-        {
-            createXpContract: {
-                input: {
-                    contract: {
-                        contractedUserId: contractMeta.forUser,
-                        gigRate: contractMeta.gigRate,
-                        gigs: contractMeta.gigs,
-                        status: contractMeta.status,
-                        description: contractMeta.description,
-                        accountCurrency: contractMeta.accountCurrency,
-                    },
-                },
-            },
-        },
-        options,
-        taskId
-    );
-}
+// /**
+//  * Creates an action that can be used to create a contract between two xp users.
+//  */
+// export function createXpContract(
+//     contractMeta: {
+//         forUser: xpUserIdQuery | string | null;
+//         gigRate: number;
+//         gigs: number;
+//         status: Exclude<xpContractStatus, 'closed'>;
+//         description?: string;
+//         accountCurrency?: string;
+//     },
+//     options: RecordActionOptions,
+//     taskId: string | number
+// ): RecordsCallProcedureAction {
+//     if (typeof contractMeta.forUser === 'string')
+//         contractMeta.forUser = { userId: contractMeta.forUser };
+//     return recordsCallProcedure(
+//         {
+//             createXpContract: {
+//                 input: {
+//                     contract: {
+//                         contractedUserId: contractMeta.forUser,
+//                         gigRate: contractMeta.gigRate,
+//                         gigs: contractMeta.gigs,
+//                         status: contractMeta.status,
+//                         description: contractMeta.description,
+//                         accountCurrency: contractMeta.accountCurrency,
+//                     },
+//                 },
+//             },
+//         },
+//         options,
+//         taskId
+//     );
+// }
 
 // TODO: Implement this
 // export function issueDraftXpContractToUser(config: {
@@ -3070,7 +3159,7 @@ export function recordStoreItem(
     address: string,
     item: StoreItem,
     options: RecordActionOptions,
-    taskId?: number | string,
+    taskId?: number | string
 ): RecordStoreItemAction {
     return {
         type: 'record_store_item',
@@ -3093,7 +3182,7 @@ export function getStoreItem(
     recordName: string,
     address: string,
     options: RecordActionOptions,
-    taskId?: number | string,
+    taskId?: number | string
 ): GetStoreItemAction {
     return {
         type: 'get_store_item',
@@ -3115,7 +3204,7 @@ export function eraseStoreItem(
     recordName: string,
     address: string,
     options: RecordActionOptions,
-    taskId?: number | string,
+    taskId?: number | string
 ): EraseStoreItemAction {
     return {
         type: 'erase_store_item',
@@ -3125,7 +3214,6 @@ export function eraseStoreItem(
         taskId,
     };
 }
-
 
 /**
  * Creates a EraseStoreItemAction.
@@ -3138,7 +3226,7 @@ export function listStoreItems(
     recordName: string,
     address: string | null,
     options: RecordActionOptions,
-    taskId?: number | string,
+    taskId?: number | string
 ): ListStoreItemsAction {
     return {
         type: 'list_store_items',
@@ -3148,7 +3236,6 @@ export function listStoreItems(
         taskId,
     };
 }
-
 
 /**
  * Creates a ListStoreItemsByMarkerAction.
@@ -3163,7 +3250,7 @@ export function listStoreItemsByMarker(
     marker: string,
     address: string | null,
     options: RecordActionOptions,
-    taskId?: number | string,
+    taskId?: number | string
 ): ListStoreItemsByMarkerAction {
     return {
         type: 'list_store_items_by_marker',
@@ -3182,7 +3269,12 @@ export function listStoreItemsByMarker(
  * @param options The options to use.
  * @param taskId The ID of the task.
  */
-export function purchaseStoreItem(recordName: string, item: PurchasableItemReference, options: RecordActionOptions, taskId?: number | string): PurchaseStoreItemAction {
+export function purchaseStoreItem(
+    recordName: string,
+    item: PurchasableItemReference,
+    options: RecordActionOptions,
+    taskId?: number | string
+): PurchaseStoreItemAction {
     return {
         type: 'purchase_store_item',
         recordName,
