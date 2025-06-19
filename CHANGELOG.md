@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.5.3
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
+    -   This can help load balancers differentiate between records requests and inst requests.
+
 ## V3.5.2
 
 #### Date: 6/13/2025
