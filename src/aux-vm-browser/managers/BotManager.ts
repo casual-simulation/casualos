@@ -39,6 +39,7 @@ import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     BaseSimulation,
     LoginManager,
+    RECORDS_WS_PROTOCOL,
     RecordsManager,
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
@@ -379,7 +380,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     } else if (url.protocol === 'https:') {
                         url.protocol = 'wss:';
                     }
-                    const manager = new WebSocketManager(url);
+                    const manager = new WebSocketManager(
+                        url,
+                        RECORDS_WS_PROTOCOL
+                    );
                     manager.init();
                     return new ApiGatewayWebsocketConnectionClient(
                         manager.socket
@@ -391,7 +395,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     } else if (url.protocol === 'https:') {
                         url.protocol = 'wss:';
                     }
-                    const manager = new WebSocketManager(url);
+                    const manager = new WebSocketManager(
+                        url,
+                        RECORDS_WS_PROTOCOL
+                    );
                     manager.init();
 
                     return new WebsocketConnectionClient(manager.socket);

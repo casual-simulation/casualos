@@ -1,8 +1,48 @@
 # CasualOS Changelog
 
+## V3.5.3
+
+#### Date: 6/19/2025
+
+### :rocket: Features
+
+-   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
+    -   This can help load balancers differentiate between records requests and inst requests.
+
+## V3.5.2
+
+#### Date: 6/13/2025
+
+### :boom: Breaking Changes
+
+-   Made the VM iframe unable to process pointer events while the game view (gridPortal, mapPortal, etc.) is visible. The VM iframe is now always shown.
+
+    -   This is a breaking change because the VM iframe (DOM) used to be always interactable behind the game view.
+    -   Now, it will always be shown, but only be interactable when all the game portals are hidden (set to null).
+    -   The previous breaking change was a workaround to fix a bug in MacOS Chrome that causes iframes to intercept some events from the main window.
+    -   This change is a another workaround to fix a bug in MacOS Chrome that causes the game portals frame rate to be severly reduced while the VM iframe is hidden.
+    -   To preserve the old behavior, you can use the following code:
+
+        ```typescript
+        await os.registerApp('alwaysShowIframe', thisBot);
+
+        const css = `
+        .vm-iframe-container iframe:first-child {
+            pointer-events: auto !important;
+        }
+        `;
+
+        os.compileApp(
+            'alwaysShowIframe',
+            <div>
+                <style>{css}</style>
+            </div>
+        );
+        ```
+
 ## V3.5.1
 
-#### Date: 6/12/2025
+#### Date: 6/13/2025
 
 ### :boom: Breaking Changes
 
