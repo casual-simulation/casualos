@@ -67,6 +67,7 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
     private _url: URL;
     private _socket: WebSocket;
     private _closing: boolean;
+    private _protocol: string | undefined;
 
     private _onOpen = new Subject<void>();
     private _onClose = new Subject<CloseReason>();
@@ -101,12 +102,13 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
         this._socket.send(data);
     }
 
-    constructor(url: string | URL) {
+    constructor(url: string | URL, protocol?: string) {
         if (typeof url === 'string') {
             this._url = new URL(url);
         } else {
             this._url = url;
         }
+        this._protocol = protocol || undefined;
     }
 
     open() {
@@ -132,7 +134,7 @@ export class ReconnectableSocket implements ReconnectableSocketInterface {
 
     private _setupSocket() {
         this._closing = false;
-        this._socket = new WebSocket(this._url);
+        this._socket = new WebSocket(this._url, this._protocol);
         this._socket.onopen = () => {
             this._onOpen.next();
         };

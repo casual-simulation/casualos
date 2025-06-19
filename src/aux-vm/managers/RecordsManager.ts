@@ -197,6 +197,8 @@ export type GetEndpointInfoFunction = (
     authenticateIfNotLoggedIn: boolean
 ) => Promise<RecordsEndpointInfo | null>;
 
+export const RECORDS_WS_PROTOCOL = 'casualos.records';
+
 /**
  * Defines a class that provides capabilities for storing and retrieving records.
  */
