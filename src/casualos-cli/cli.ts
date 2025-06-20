@@ -29,6 +29,7 @@ import repl from 'node:repl';
 // @ts-ignore
 import Conf from 'conf';
 
+import type { BotsState } from '@casual-simulation/aux-common';
 import {
     getBotsStateFromStoredAux,
     getSessionKeyExpiration,
@@ -49,7 +50,13 @@ import { readFile } from 'fs/promises';
 import { setupInfraCommands } from 'infra';
 import type { CliConfig } from './config';
 import { z } from 'zod';
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import {
+    existsSync,
+    mkdirSync,
+    readdirSync,
+    statSync,
+    writeFileSync,
+} from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
@@ -241,7 +248,7 @@ program
         });
     });
 
-const auxActions = new Set(['convert']);
+const auxActions = new Set(['convert', 'genfs']);
 
 program
     .command('aux')
@@ -265,6 +272,9 @@ program
         switch (action) {
             case 'convert':
                 return await auxConvert();
+                break;
+            case 'genfs':
+                return await auxGenFs();
                 break;
             default:
                 break;
@@ -320,78 +330,259 @@ program
 
 setupInfraCommands(program.command('infra'), config);
 
-async function auxConvert() {
-    const targetFD = sanitizePath(
-        await askForInputs(
-            getSchemaMetadata(z.string().min(1)),
-            'target file or directory containing files (path)'
-        )
-    );
-    if (existsSync(targetFD)) {
-        const targetStat = statSync(targetFD);
-        const auxFiles = [];
-        if (targetStat.isDirectory()) {
-            for (let file of readdirSync(targetFD)) {
-                if (file.slice(-4) === '.aux') {
-                    auxFiles.push(file);
-                }
-            }
-        } else if (targetStat.isFile()) {
-            if (targetFD.slice(-4) === '.aux') {
-                auxFiles.push(path.basename(targetFD));
-            } else {
-                console.warn(`Invalid file type provided.\nExpected ".aux"`);
-                return;
-            }
-        } else {
-            console.error('Unknown item at path.');
-            return;
-        }
-        if (auxFiles.length < 1) return;
-        const outDir = sanitizePath(
-            await askForInputs(
-                getSchemaMetadata(z.string().min(1)),
-                'output directory to write files to'
-            )
+/**
+ * Validates the given file is a proper aux file.
+ * This function checks if the file exists, is a file, and has the correct extension.
+ * If the file is valid, it returns the parsed bot state from the aux file.
+ * @param filePath The path to the file whose to be validated.
+ * @param opts Optional options to skip parsing or contents validation.
+ */
+async function validateAuxFile(
+    filePath: string,
+    opts?: { skipParse?: true; skipContents?: true }
+) {
+    const targetStat = statSync(filePath);
+    if (!targetStat.isFile())
+        return { success: false, error: 'Path is not a file.' };
+    if (filePath.slice(-4) !== '.aux')
+        return {
+            success: false,
+            error: 'Invalid file type provided. Expected ".aux"',
+        };
+
+    if (opts?.skipParse) return { success: true, botState: null };
+
+    try {
+        const contents = JSON.parse(
+            await readFile(filePath, { encoding: 'utf-8' })
         );
-        if (existsSync(outDir) && statSync(outDir).isDirectory()) {
-            let converted = 0;
-            const prefix = outDir === getDir(targetFD) ? '_' : '';
-            for (let file of auxFiles) {
-                try {
-                    await writeFile(
-                        path.join(outDir, `${prefix}${file}`),
-                        JSON.stringify(
-                            getBotsStateFromStoredAux(
-                                JSON.parse(
-                                    await readFile(
-                                        replaceWithBasename(targetFD, file),
-                                        { encoding: 'utf-8' }
-                                    )
-                                )
-                            )
-                        )
-                    );
-                    converted++;
-                } catch (err) {
-                    console.error(`Could not convert: ${file}.\n\n${err}\n`);
-                }
+        if (opts?.skipContents)
+            return {
+                success: contents !== null,
+                botState: null,
+            };
+        const botState = getBotsStateFromStoredAux(contents);
+        if (!botState)
+            return {
+                success: false,
+                error: `Aux file at ${filePath} is not a valid (or supported) aux file.`,
+            };
+        return { success: true, botState };
+    } catch (err) {
+        return {
+            success: false,
+            error: `Could not read or parse aux file at ${filePath}.\n\n${err}`,
+        };
+    }
+}
+
+/**
+ * Allows usage of instanceof DirectoryMarker to quickly check if a property is meant to represent a directory.
+ */
+class DirectoryMarker {
+    constructor() {}
+}
+
+const prefixes = new Set(['@', '📖', '🧬', '📝', '🔢', '📅', '➡️', '🔁']);
+
+function botStateToFileSystem(botState: BotsState) {
+    const directory: Record<string, any> = new DirectoryMarker();
+    const paths = new Set<string>();
+    for (const botId of Object.keys(botState)) {
+        const tags = botState[botId].tags;
+        const system = tags.system ?? botId;
+        paths.add(system.replace(/\./g, '/'));
+        const subDirs = system.split('.');
+        let curDir = directory;
+        for (const subDirI in subDirs) {
+            const subDir = subDirs[subDirI];
+            if (!curDir[subDir]) {
+                curDir[subDir] = new DirectoryMarker();
             }
-            console.log(
-                `\n🍵 Converted ${converted}/${
-                    auxFiles.length
-                } Files.\n--------------------------\n${auxFiles
-                    .map((f) => `|✔️ | ${f}`)
-                    .join('\n')}\n`
-            );
+            curDir = curDir[subDir];
+        }
+        curDir['bot.json'] = {
+            tags: {},
+            ...(curDir['bot.json'] ?? {}),
+            id: botId,
+        };
+        for (const tag of Object.keys(tags)) {
+            const tVal = tags[tag];
+            if (typeof tVal !== 'string' || !tVal.includes('\n')) {
+                curDir['bot.json'].tags[tag] = tVal;
+            } else {
+                curDir[
+                    `${tag}.${
+                        {
+                            '@': 'tsx',
+                            '📖': 'tsm',
+                            '🧬': 'json',
+                            '📝': 'text',
+                            '🔢': 'number.text',
+                            '📅': 'date.text',
+                            '➡️': 'vector.text',
+                            '🔁': 'rotation.text',
+                        }[tVal[0]] ?? 'text'
+                    }`
+                ] = prefixes.has(tVal[0]) ? tVal.slice(1) : tVal; // Remove prefix if it exists
+            }
+        }
+    }
+    return { directory, paths };
+}
+
+async function requestFiles(opts: {
+    query?: string;
+    allowedExtensions?: Set<string>;
+}) {
+    opts = {
+        query: 'target file or directory containing files (path)',
+        allowedExtensions: new Set(['.aux']),
+        ...opts,
+    };
+    const targetFD = sanitizePath(
+        await askForInputs(getSchemaMetadata(z.string().min(1)), opts.query)
+    );
+    if (!existsSync(targetFD)) return { directory: null, files: [] };
+    const targetStat = statSync(targetFD);
+    const files = [];
+    if (targetStat.isDirectory()) {
+        for (let file of readdirSync(targetFD)) {
+            if (opts.allowedExtensions.has(path.extname(file).toLowerCase())) {
+                files.push(file);
+            }
+        }
+    } else if (targetStat.isFile()) {
+        if (opts.allowedExtensions.has(path.extname(targetFD).toLowerCase())) {
+            files.push(path.basename(targetFD));
         } else {
-            console.error(`Invalid path provided for output directory.`);
+            console.warn(
+                `Invalid file type provided.\nExpected one of ${Array.from(
+                    opts.allowedExtensions
+                ).join(' | ')}.\nGot: ${path.extname(targetFD).toLowerCase()}`
+            );
             return;
         }
     } else {
-        console.warn(`Invalid directory or file at path: ${targetFD}`);
+        console.error('Unknown item at path.');
         return;
     }
+    return { directory: getDir(targetFD), files };
+}
+
+async function requestOutputDirectory(
+    query: string = 'output directory to write files to'
+) {
+    const outDir = sanitizePath(
+        await askForInputs(getSchemaMetadata(z.string().min(1)), query)
+    );
+    if (existsSync(outDir) && statSync(outDir).isDirectory()) return outDir;
+    console.error(`Directory does not exist or is not a directory.`);
+    return null;
+}
+
+async function auxGenFs() {
+    const { directory, files } = await requestFiles({
+        allowedExtensions: new Set(['.aux']),
+    });
+    if (files.length < 1) {
+        console.error(`No aux file found at/in the provided path.`);
+        return;
+    }
+    const outDir = await requestOutputDirectory();
+    if (!outDir) {
+        console.error(`Invalid output directory provided.`);
+        return;
+    }
+
+    for (const file of files) {
+        const fileSystem = botStateToFileSystem(
+            (await validateAuxFile(replaceWithBasename(directory, file)))
+                .botState
+        );
+        fileSystem.paths.forEach((p) => {
+            const fullPath = path.join(outDir, p);
+            mkdirSync(fullPath, {
+                recursive: true,
+            });
+            const targetFSDir = p
+                .split('/')
+                .reduce(
+                    (curDir, subDir) => curDir[subDir],
+                    fileSystem.directory
+                );
+            const subFiles = Object.keys(targetFSDir).filter(
+                (f) => f !== 'bot.json' && !f.endsWith('.json')
+            );
+            for (const subFile of subFiles) {
+                const writeFilePath = path.join(fullPath, subFile);
+                try {
+                    writeFileSync(writeFilePath, targetFSDir[subFile]);
+                } catch (err) {
+                    console.error(
+                        `Could not write file: ${writeFilePath}.\n\n${err}\n`
+                    );
+                }
+            }
+            try {
+                writeFileSync(
+                    path.join(fullPath, 'bot.json'),
+                    JSON.stringify(targetFSDir['bot.json'], null, 2)
+                );
+            } catch (err) {
+                console.error(
+                    `Could not write bot.json file: ${path.join(
+                        fullPath,
+                        'bot.json'
+                    )}.\n\n${err}\n`
+                );
+            }
+        });
+    }
+}
+
+async function auxConvert() {
+    const { directory: targetFD, files: auxFiles } = await requestFiles({
+        allowedExtensions: new Set(['.aux']),
+    });
+    if (auxFiles.length < 1) {
+        console.error(`No aux file found at/in the provided path.`);
+        return;
+    }
+    const outDir = await requestOutputDirectory();
+    if (!outDir) {
+        console.error(`Invalid output directory provided.`);
+        return;
+    }
+    let converted = 0;
+    const prefix = outDir === targetFD ? '_' : '';
+    for (let file of auxFiles) {
+        try {
+            await writeFile(
+                path.join(outDir, `${prefix}${file}`),
+                JSON.stringify(
+                    getBotsStateFromStoredAux(
+                        JSON.parse(
+                            await readFile(
+                                replaceWithBasename(targetFD, file),
+                                { encoding: 'utf-8' }
+                            )
+                        )
+                    )
+                )
+            );
+            converted++;
+        } catch (err) {
+            console.error(`Could not convert: ${file}.\n\n${err}\n`);
+        }
+    }
+    console.log(
+        `\n🍵 Converted ${converted}/${
+            auxFiles.length
+        } Files.\n--------------------------\n${auxFiles
+            .map((f) => `|✔️ | ${f}`)
+            .join('\n')}\n`
+    );
 }
 
 async function query(
