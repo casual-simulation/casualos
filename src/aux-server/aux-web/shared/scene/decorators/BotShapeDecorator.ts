@@ -428,6 +428,7 @@ export class BotShapeDecorator
         }
 
         if (this._mapView) {
+            address = String(address); // The address could be coerced to a number, ensure it's a string.
             // Check if the address is a URL
             if (
                 address &&
