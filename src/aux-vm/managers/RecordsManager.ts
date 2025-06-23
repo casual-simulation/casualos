@@ -2695,11 +2695,19 @@ export class RecordsManager {
                 client.connectionState.pipe(filter((c) => c.connected))
             );
 
+            const disconnected = client.connectionState.pipe(
+                filter((c) => !c.connected),
+                map(() => {
+                    throw new Error('The request encountered an error.');
+                })
+            );
+
             const id = this._httpRequestId++;
             const promise = firstValueFrom(
-                client
-                    .event('http_response')
-                    .pipe(filter((response) => response.id === id))
+                client.event('http_response').pipe(
+                    mergeWith(disconnected),
+                    filter((response) => response.id === id)
+                )
             );
 
             client.send({

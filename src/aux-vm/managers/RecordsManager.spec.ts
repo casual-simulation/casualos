@@ -8794,6 +8794,79 @@ describe('RecordsManager', () => {
                     }),
                 ]);
             });
+
+            it('should return websocket errors', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses = new Subject<WebsocketHttpResponseMessage>();
+                client.events.set('http_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    getEndpointInfo,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(client.sentMessages).toEqual([
+                    {
+                        type: 'http_request',
+                        id: 0,
+                        request: {
+                            path: '/api/v2/ai/image',
+                            method: 'POST',
+                            body: expect.any(String),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                            query: {},
+                            pathParams: {},
+                        },
+                    },
+                ]);
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body
+                );
+                expect(body).toEqual({
+                    prompt: 'a blue bridge',
+                });
+
+                client.disconnect();
+
+                await waitAsync();
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncError(1, 'Error: The request encountered an error.'),
+                ]);
+            });
         });
 
         describe('ai_hume_get_access_token', () => {
