@@ -86,6 +86,7 @@ import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { Observable } from 'rxjs';
+import { mergeWith } from 'rxjs';
 import {
     ReplaySubject,
     Subject,
@@ -2747,7 +2748,16 @@ export class RecordsManager {
         );
 
         const id = this._httpRequestId++;
+
+        const disconnected = client.connectionState.pipe(
+            filter((c) => !c.connected),
+            map(() => {
+                throw new Error('The request encountered an error.');
+            })
+        );
+
         const responses = client.event('http_partial_response').pipe(
+            mergeWith(disconnected),
             filter((response) => response.id === id),
             takeWhile((response) => !response.final),
             map((response) => {
