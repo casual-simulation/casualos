@@ -9,6 +9,10 @@
 -   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
     -   This can help load balancers differentiate between records requests and inst requests.
 
+### :bug: Bug Fixes
+
+-   Improved error handling for `ai.stream.chat()` and `ai.generateImage()`.
+
 ## V3.5.2
 
 #### Date: 6/13/2025
