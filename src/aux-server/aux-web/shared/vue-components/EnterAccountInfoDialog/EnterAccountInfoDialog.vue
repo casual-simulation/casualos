@@ -101,6 +101,7 @@
                                 name="email"
                                 id="email"
                                 autocomplete="email"
+                                inputmode="email"
                                 v-model="email"
                                 :disabled="processing"
                                 @blur="checkEmail()"
@@ -117,6 +118,7 @@
                                 name="parentEmail"
                                 id="parentEmail"
                                 autocomplete="email"
+                                inputmode="email"
                                 v-model="parentEmail"
                                 :disabled="processing"
                             />
