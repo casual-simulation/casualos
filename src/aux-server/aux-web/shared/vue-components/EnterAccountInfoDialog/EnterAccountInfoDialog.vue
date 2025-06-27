@@ -19,8 +19,7 @@
                                 id="dateOfBirth"
                                 v-model="dateOfBirth"
                                 ref="dateOfBirth"
-                            >
-                            </date-of-birth-input>
+                            ></date-of-birth-input>
                             <field-errors field="dateOfBirth" :errors="errors" />
                         </md-field>
                     </div>
