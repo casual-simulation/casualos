@@ -21,10 +21,8 @@ import { Prop, Watch } from 'vue-property-decorator';
 
 @Component
 export default class DateOfBirthInput extends Vue {
-    // @Prop({ type: String, default: 'Date of Birth' }) label!: string;
     @Prop({ type: Boolean, default: false }) disabled!: boolean;
     @Prop({ type: String, default: '' }) value!: string;
-    // @Prop({ type: String, default: '' }) errorMessage!: string;
 
     month = '';
     day = '';
@@ -63,7 +61,13 @@ export default class DateOfBirthInput extends Vue {
         }
 
         if (this.isValidDate()) {
-            this.$emit('input', `${this.year}-${this.month.padStart(2, '0')}-${this.day.padStart(2, '0')}`);
+            this.$emit(
+                'input',
+                `${this.year}-${this.month.padStart(
+                    2,
+                    '0'
+                )}-${this.day.padStart(2, '0')}`
+            );
         } else {
             this.$emit('input', '');
         }

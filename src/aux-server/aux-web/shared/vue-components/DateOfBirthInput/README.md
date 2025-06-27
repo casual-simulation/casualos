@@ -19,8 +19,6 @@ A Vue component for entering a date of birth with separate fields for month, day
     <div>
         <date-of-birth-input
             v-model="dateOfBirth"
-            label="Date of Birth"
-            :error-message="dobError"
             :disabled="processing"
             @input="validateDateOfBirth"
         />
@@ -56,12 +54,10 @@ export default {
 
 ## Props
 
-| Name           | Type    | Default         | Description                          |
-| -------------- | ------- | --------------- | ------------------------------------ |
-| `label`        | String  | 'Date of Birth' | Label text for the input             |
-| `disabled`     | Boolean | false           | Whether the input is disabled        |
-| `value`        | String  | ''              | The date string in MM/DD/YYYY format |
-| `errorMessage` | String  | ''              | Error message to display             |
+| Name       | Type    | Default | Description                          |
+| ---------- | ------- | ------- | ------------------------------------ |
+| `disabled` | Boolean | false   | Whether the input is disabled        |
+| `value`    | String  | ''      | The date string in MM/DD/YYYY format |
 
 ## Events
 
