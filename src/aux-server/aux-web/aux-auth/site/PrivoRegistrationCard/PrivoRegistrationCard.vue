@@ -13,7 +13,7 @@
                     <div class="md-layout md-gutter">
                         <div class="md-layout-item">
                             <md-field class="md-has-value" :class="dateOfBirthFieldClass">
-                                <label for="dateOfBirth">Date of Birth</label>
+                                <label>Date of Birth</label>
                                 <date-of-birth-input
                                     name="dateOfBirth"
                                     id="dateOfBirth"
