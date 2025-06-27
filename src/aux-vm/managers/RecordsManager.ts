@@ -2470,16 +2470,18 @@ export class RecordsManager {
                     instances,
                 };
 
-                if (typeof event.key === 'string') {
-                    input.key = event.key;
-                } else if (typeof event.key === 'object') {
-                    if (event.key.sha256) {
-                        input.sha256 = event.key.sha256;
-                    } else {
-                        input.major = event.key.major;
-                        input.minor = event.key.minor;
-                        input.patch = event.key.patch;
-                        input.tag = event.key.tag;
+                if (event.key) {
+                    if (typeof event.key === 'string') {
+                        input.key = event.key;
+                    } else if (typeof event.key === 'object') {
+                        if (event.key.sha256) {
+                            input.sha256 = event.key.sha256;
+                        } else {
+                            input.major = event.key.major;
+                            input.minor = event.key.minor;
+                            input.patch = event.key.patch;
+                            input.tag = event.key.tag;
+                        }
                     }
                 }
 
