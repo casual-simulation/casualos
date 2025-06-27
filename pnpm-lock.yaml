@@ -391,7 +391,7 @@ importers:
   src/aux-benchmarks:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       benchmark:
         specifier: 2.1.4
@@ -516,22 +516,22 @@ importers:
   src/aux-components:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-vm':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -697,7 +697,7 @@ importers:
         specifier: 0.24.3
         version: 0.24.3(encoding@0.1.13)
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -793,10 +793,10 @@ importers:
         specifier: ^3.609.0
         version: 3.804.0
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records
       axios:
         specifier: 1.7.7
@@ -817,10 +817,10 @@ importers:
   src/aux-runtime:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -971,31 +971,31 @@ importers:
         specifier: ^3.609.0
         version: 3.804.0
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records
       '@casual-simulation/aux-records-aws':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records-aws
       '@casual-simulation/aux-runtime':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm
       '@casual-simulation/aux-vm-browser':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-browser
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-client
       '@casual-simulation/aux-vm-deno':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-deno
       '@casual-simulation/aux-vm-node':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-node
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1034,7 +1034,7 @@ importers:
         specifier: ^3.2.7
         version: link:../vue-shortkey
       '@casual-simulation/websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../websocket
       '@chenfengyuan/vue-qrcode':
         specifier: ^1.0.0
@@ -1299,7 +1299,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@casual-simulation/aux-components':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-components
       '@rollup/plugin-virtual':
         specifier: 3.0.2
@@ -1386,13 +1386,13 @@ importers:
   src/aux-vm:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-runtime
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1437,25 +1437,25 @@ importers:
   src/aux-vm-browser:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records
       '@casual-simulation/aux-runtime':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-client
       '@casual-simulation/aux-websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1464,7 +1464,7 @@ importers:
         specifier: ^3.5.0
         version: link:../crypto-browser
       '@casual-simulation/websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../websocket
       axios:
         specifier: 1.7.7
@@ -1495,19 +1495,19 @@ importers:
   src/aux-vm-client:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm
       '@casual-simulation/aux-websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-websocket
       '@casual-simulation/aux-websocket-aws':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-websocket-aws
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1516,7 +1516,7 @@ importers:
         specifier: ^3.5.0
         version: link:../timesync
       '@casual-simulation/websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../websocket
       axios:
         specifier: 1.7.7
@@ -1537,16 +1537,16 @@ importers:
   src/aux-vm-deno:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1573,16 +1573,16 @@ importers:
   src/aux-vm-node:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-runtime':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-runtime
       '@casual-simulation/aux-vm':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm
       '@casual-simulation/aux-vm-client':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-vm-client
       '@casual-simulation/crypto':
         specifier: ^3.5.0
@@ -1603,10 +1603,10 @@ importers:
   src/aux-websocket:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../websocket
       rxjs:
         specifier: 8.0.0-alpha.14
@@ -1615,10 +1615,10 @@ importers:
   src/aux-websocket-aws:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/websocket':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../websocket
       axios:
         specifier: 1.7.7
@@ -1630,10 +1630,10 @@ importers:
   src/casualos-cli:
     dependencies:
       '@casual-simulation/aux-common':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-common
       '@casual-simulation/aux-records':
-        specifier: ^3.5.3-alpha.15762726436
+        specifier: ^3.5.3-alpha.15934994547
         version: link:../aux-records
       '@octokit/app':
         specifier: ^15.1.0
