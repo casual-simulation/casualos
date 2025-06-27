@@ -58,3 +58,4 @@
 
 <script src="./DateOfBirthInput.ts"></script>
 <style src="./DateOfBirthInput.css" scoped></style>
+<style src="./DateOfBirthInputGlobals.css"></style>
