@@ -1,7 +1,7 @@
 .date-of-birth-input {
     display: flex;
     flex-direction: column;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
 
 .dob-label {
@@ -13,14 +13,20 @@
 .dob-inputs {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
 }
 
 .dob-inputs .md-input {
     margin: 0;
+    text-align: center;
 }
 
-.dob-month .dob-day {
+.md-input .md-count {
+    display: none;
+}
+
+.dob-month,
+.dob-day {
     width: 40px;
 }
 
