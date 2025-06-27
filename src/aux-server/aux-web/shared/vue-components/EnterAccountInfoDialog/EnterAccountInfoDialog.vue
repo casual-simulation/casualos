@@ -17,7 +17,7 @@
                             <date-of-birth-input
                                 name="dateOfBirth"
                                 id="dateOfBirth"
-                                v-model="dateOfBirthText"
+                                v-model="dateOfBirth"
                             >
                             </date-of-birth-input>
                             <!-- <md-input
