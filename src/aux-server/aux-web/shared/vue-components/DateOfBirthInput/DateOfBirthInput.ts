@@ -63,7 +63,7 @@ export default class DateOfBirthInput extends Vue {
         }
 
         if (this.isValidDate()) {
-            this.$emit('input', `${this.year}-${this.month}-${this.day}`);
+            this.$emit('input', `${this.year}-${this.month.padStart(2, '0')}-${this.day.padStart(2, '0')}`);
         } else {
             this.$emit('input', '');
         }
