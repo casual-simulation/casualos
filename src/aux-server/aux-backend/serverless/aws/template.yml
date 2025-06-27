@@ -104,8 +104,8 @@ Resources:
                             Resource:
                                 - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}'
                                 - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}/*'
-                                - !Sub 'arn:${AWS::Partition}:s3:::${FilesBucket}'
-                                - !Sub 'arn:${AWS::Partition}:s3:::${FilesBucket}/*'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-filesbucket-${AWS::AccountId}/*'
                                 - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
                                 - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
                 - PolicyName: !Sub '${AWS::StackName}-records-rekognition-policy'
