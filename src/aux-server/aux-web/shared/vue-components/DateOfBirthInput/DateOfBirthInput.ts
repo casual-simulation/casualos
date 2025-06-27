@@ -29,6 +29,7 @@ export default class DateOfBirthInput extends Vue {
     month = '';
     day = '';
     year = '';
+    error = '';
 
     $refs!: {
         monthInput: Vue & { $el: HTMLElement };
@@ -62,7 +63,7 @@ export default class DateOfBirthInput extends Vue {
         }
 
         if (this.isValidDate()) {
-            this.$emit('input', `${this.month}/${this.day}/${this.year}`);
+            this.$emit('input', `${this.year}-${this.month}-${this.day}`);
         } else {
             this.$emit('input', '');
         }
@@ -70,6 +71,7 @@ export default class DateOfBirthInput extends Vue {
 
     isValidDate(): boolean {
         if (!this.month || !this.day || !this.year) {
+            this.error = 'Please enter a valid date.';
             return false;
         }
 
@@ -78,24 +80,27 @@ export default class DateOfBirthInput extends Vue {
         const yearNum = parseInt(this.year);
 
         if (isNaN(monthNum) || isNaN(dayNum) || isNaN(yearNum)) {
+            this.error = 'Please enter a valid date.';
             return false;
         }
 
         if (monthNum < 1 || monthNum > 12) {
-            return false;
-        }
-
-        if (dayNum < 1 || dayNum > 31) {
-            return false;
-        }
-
-        if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
+            this.error = 'Please enter a valid month (1-12).';
             return false;
         }
 
         // Check for valid days in month
         const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
         if (dayNum > daysInMonth) {
+            this.error = `Please enter a valid day (1-${daysInMonth}) for the selected month.`;
+            return false;
+        } else if (dayNum < 1 || dayNum > 31) {
+            this.error = `Please enter a valid day (1-${daysInMonth}) for the selected month.`;
+            return false;
+        }
+
+        if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
+            this.error = `Please enter a valid year (1900 - ${new Date().getFullYear()}).`;
             return false;
         }
 

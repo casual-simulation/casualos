@@ -38,12 +38,6 @@
     font-size: 18px;
 }
 
-.dob-error {
-    color: #ff1744;
-    font-size: 12px;
-    margin-top: 4px;
-}
-
 /* Screen reader only class for accessibility */
 .sr-only {
     position: absolute;
