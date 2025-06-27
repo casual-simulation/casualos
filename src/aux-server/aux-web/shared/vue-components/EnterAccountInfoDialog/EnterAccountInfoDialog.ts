@@ -37,10 +37,12 @@ import {
     getFormErrors,
 } from '@casual-simulation/aux-common';
 import FieldErrors from '../FieldErrors/FieldErrors';
+import DateOfBirthInput from '../DateOfBirthInput/DateOfBirthInput';
 
 @Component({
     components: {
         'field-errors': FieldErrors,
+        'date-of-birth-input': DateOfBirthInput,
     },
 })
 export default class EnterAccountInfoDialog extends Vue {

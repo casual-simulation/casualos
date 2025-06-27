@@ -14,13 +14,19 @@
                     <div class="md-layout-item">
                         <md-field class="md-has-value" :class="dateOfBirthFieldClass">
                             <label for="dateOfBirth">Date of Birth</label>
-                            <md-input
+                            <date-of-birth-input
+                                name="dateOfBirth"
+                                id="dateOfBirth"
+                                v-model="dateOfBirthText"
+                            >
+                            </date-of-birth-input>
+                            <!-- <md-input
                                 name="dateOfBirth"
                                 id="dateOfBirth"
                                 type="date"
                                 v-model="dateOfBirth"
                                 :max="maxDate"
-                            />
+                            /> -->
                             <field-errors field="dateOfBirth" :errors="errors" />
                         </md-field>
                     </div>

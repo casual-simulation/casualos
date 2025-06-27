@@ -1,0 +1,39 @@
+.date-of-birth-input {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.dob-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: rgba(0, 0, 0, 0.54);
+}
+
+.dob-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dob-inputs .md-input {
+    margin: 0;
+}
+
+.dob-month .dob-day {
+    width: 40px;
+}
+
+.dob-year {
+    width: 60px;
+}
+
+.dob-separator {
+    font-size: 18px;
+}
+
+.dob-error {
+    color: #ff1744;
+    font-size: 12px;
+    margin-top: 4px;
+}
