@@ -112,7 +112,7 @@ export default class DateOfBirthInput extends Vue {
             // Validate month (1-12)
             const monthNum = parseInt(this.month);
             if (monthNum > 0 && monthNum <= 12) {
-                this.$refs.dayInput.$el.querySelector('input').focus();
+                this.$refs.dayInput.$el.focus();
             }
         }
     }
@@ -126,7 +126,7 @@ export default class DateOfBirthInput extends Vue {
             // Validate day (1-31)
             const dayNum = parseInt(this.day);
             if (dayNum > 0 && dayNum <= 31) {
-                this.$refs.yearInput.$el.querySelector('input').focus();
+                this.$refs.yearInput.$el.focus();
             }
         }
     }
@@ -141,19 +141,63 @@ export default class DateOfBirthInput extends Vue {
         if (event.key === 'Backspace' && this.month === '') {
             // No previous field for month
         }
+        // Navigate with arrow keys only when cursor is at the edge
+        else if (event.key === 'ArrowRight') {
+            const input = event.target as HTMLInputElement;
+            const cursorPosition = input.selectionStart;
+            const inputLength = this.month.length;
+
+            // Only move to next field if cursor is at the end
+            if (cursorPosition === inputLength) {
+                event.preventDefault();
+                this.$refs.dayInput.$el.focus();
+            }
+        }
     }
 
     handleDayKeydown(event: KeyboardEvent) {
         // Move to previous field when backspace is pressed on empty input
         if (event.key === 'Backspace' && this.day === '') {
-            this.$refs.monthInput.$el.querySelector('input').focus();
+            this.$refs.monthInput.$el.focus();
+        }
+        // Navigate with arrow keys only when cursor is at the edge
+        else if (event.key === 'ArrowLeft') {
+            const input = event.target as HTMLInputElement;
+            const cursorPosition = input.selectionStart;
+
+            // Only move to previous field if cursor is at the beginning
+            if (cursorPosition === 0) {
+                event.preventDefault();
+                this.$refs.monthInput.$el.focus();
+            }
+        } else if (event.key === 'ArrowRight') {
+            const input = event.target as HTMLInputElement;
+            const cursorPosition = input.selectionStart;
+            const inputLength = this.day.length;
+
+            // Only move to next field if cursor is at the end
+            if (cursorPosition === inputLength) {
+                event.preventDefault();
+                this.$refs.yearInput.$el.focus();
+            }
         }
     }
 
     handleYearKeydown(event: KeyboardEvent) {
         // Move to previous field when backspace is pressed on empty input
         if (event.key === 'Backspace' && this.year === '') {
-            this.$refs.dayInput.$el.querySelector('input').focus();
+            this.$refs.dayInput.$el.focus();
+        }
+        // Navigate with arrow keys only when cursor is at the edge
+        else if (event.key === 'ArrowLeft') {
+            const input = event.target as HTMLInputElement;
+            const cursorPosition = input.selectionStart;
+
+            // Only move to previous field if cursor is at the beginning
+            if (cursorPosition === 0) {
+                event.preventDefault();
+                this.$refs.dayInput.$el.focus();
+            }
         }
     }
 }
