@@ -18,7 +18,7 @@
                         <a
                             href="https://www.privo.com/parents#why-is-parent-permission-required"
                             target="_blank"
-                            >PRIVO</a
+                            >Casual Simulation Support (support@privo.com)</a
                         >. If they don't see it, ask them to check the spam folder.
                     </p>
                     <p v-else>
@@ -26,7 +26,7 @@
                         <a
                             href="https://www.privo.com/parents#why-is-parent-permission-required"
                             target="_blank"
-                            >PRIVO</a
+                            >Casual Simulation Support (support@privo.com)</a
                         >. If you don't see it, check your spam folder.
                     </p>
 

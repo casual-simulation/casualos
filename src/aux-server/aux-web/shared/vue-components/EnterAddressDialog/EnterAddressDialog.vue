@@ -19,6 +19,7 @@
                                 id="email"
                                 :type="supportsSms ? 'text' : 'email'"
                                 autocomplete="email webauthn"
+                                inputmode="email"
                                 v-model="address"
                                 :disabled="processing"
                             />

@@ -88,6 +88,15 @@ Resources:
                 # Give the ability to invoke the handle webhook function
                 - LambdaInvokePolicy:
                       FunctionName: !Ref HandleWebhookFunction
+                - PolicyName: !Sub '${AWS::StackName}-records-execute-api-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'execute-api:ManageConnections'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/Prod/*/@connections/*'
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'

@@ -2,12 +2,17 @@
 
 ## V3.5.3
 
-#### Date: 6/19/2025
+#### Date: 6/27/2025
 
 ### :rocket: Features
 
 -   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
     -   This can help load balancers differentiate between records requests and inst requests.
+-   Added a better date of birth input to the "Sign Up" page.
+
+### :bug: Bug Fixes
+
+-   Improved error handling for `ai.stream.chat()` and `ai.generateImage()`.
 
 ## V3.5.2
 
