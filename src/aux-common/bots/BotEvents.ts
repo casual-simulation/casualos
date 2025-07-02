@@ -3488,6 +3488,27 @@ export interface CalculateScreenCoordinatesFromViewportCoordinatesAction
 }
 
 /**
+ * Defines an event that calculates the 2D screen coordinates from the given 3D positions.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateScreenCoordinatesFromPositionAction
+ */
+export interface CalculateScreenCoordinatesFromPositionAction
+    extends AsyncAction {
+    type: 'calculate_screen_coordinates_from_position';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 3D positions that the screen coordinates should be calculated for.
+     */
+    coordinates: Point3D[];
+}
+
+/**
  * Defines an event that calculates the 2D viewport coordinates from the given 2D screen coordinates.
  *
  * @dochash types/os/portals
