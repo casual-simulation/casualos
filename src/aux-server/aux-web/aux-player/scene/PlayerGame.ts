@@ -159,6 +159,8 @@ const MINI_PORTAL_SMALL_WIDTH = 0.9;
  */
 const MINI_PORTAL_DEFAULT_HEIGHT_PADDING = 40;
 
+const _tempVector = new Vector3();
+
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
 
@@ -1147,32 +1149,23 @@ export class PlayerGame extends Game {
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
 
-            const position = {
-                x: e.position.x,
-                y: e.position.y,
-                z: e.position.z,
-            };
-
-            let vector;
-
-            const coordinateTransform = _3dSim.coordinateTransformer
-                ? _3dSim.coordinateTransformer(position)
-                : null;
-
-            if (coordinateTransform) {
-                vector = new Vector3(0, 0, 0);
-                vector.applyMatrix4(coordinateTransform);
+            if (_3dSim.coordinateTransformer) {
+                const coordinateTransform = _3dSim.coordinateTransformer(
+                    e.position
+                );
+                _tempVector.set(0, 0, 0);
+                _tempVector.applyMatrix4(coordinateTransform);
             } else {
-                vector = new Vector3(
-                    position.x * gridScale,
-                    position.y * gridScale,
-                    position.z * gridScale
+                _tempVector.set(
+                    e.position.x * gridScale,
+                    e.position.y * gridScale,
+                    e.position.z * gridScale
                 );
             }
 
-            vector.project(rig.mainCamera);
+            _tempVector.project(rig.mainCamera);
 
-            const viewportPosition = convertVector2(vector);
+            const viewportPosition = convertVector2(_tempVector);
 
             sim.helper.transaction(
                 asyncResult(e.taskId, viewportPosition, true)
