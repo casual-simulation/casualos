@@ -72,6 +72,9 @@ export default class AuxVMImpl implements AuxVM {
         }
     >;
     protected _onAuthMessage: Subject<PartitionAuthMessage>;
+    private _batchPending: boolean = false;
+    private _autoBatch: boolean = true;
+    private _batchedEvents: BotAction[] = [];
 
     protected _config: AuxConfig;
     protected _iframe: HTMLIFrameElement;
@@ -111,6 +114,7 @@ export default class AuxVMImpl implements AuxVM {
         this._origin = origin;
         this._config = config;
         this._relaxOrigin = relaxOrigin;
+        this._batchedEvents = [];
         this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -235,7 +239,16 @@ export default class AuxVMImpl implements AuxVM {
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
-            proxy((events) => this._localEvents.next(events)),
+            proxy((events) => {
+                for (let e of events) {
+                    if ('taskId' in e) {
+                        console.log(
+                            `${e.taskId}::vm::${e.type}::${Date.now()}`
+                        );
+                    }
+                }
+                this._localEvents.next(events);
+            }),
             proxy((events) => this._deviceEvents.next(events)),
             proxy((state) => this._stateUpdated.next(state)),
             proxy((version) => this._versionUpdated.next(version)),
@@ -277,6 +290,37 @@ export default class AuxVMImpl implements AuxVM {
      */
     async sendEvents(events: BotAction[]): Promise<void> {
         if (!this._proxy) return null;
+        this._batchOrSendEvents(events);
+    }
+
+    private _batchOrSendEvents(events: BotAction[]) {
+        if (this._autoBatch) {
+            for (let event of events) {
+                this._batchedEvents.push(event);
+            }
+            this._scheduleBatch();
+        } else {
+            this._sendEventsToProxy(events);
+        }
+    }
+
+    private _scheduleBatch() {
+        if (!this._batchPending && this._batchedEvents.length > 0) {
+            this._batchPending = true;
+            queueMicrotask(() => {
+                this._processBatch();
+            });
+        }
+    }
+
+    private _processBatch() {
+        this._batchPending = false;
+        let events = this._batchedEvents;
+        this._batchedEvents = [];
+        this._sendEventsToProxy(events);
+    }
+
+    private _sendEventsToProxy(events: BotAction[]) {
         if (events && events.length) {
             const transferables: Transferable[] = [];
             for (let event of events) {
@@ -300,8 +344,7 @@ export default class AuxVMImpl implements AuxVM {
                 events = transfer(events, transferables);
             }
         }
-
-        return await this._proxy.sendEvents(events);
+        this._proxy.sendEvents(events);
     }
 
     /**
