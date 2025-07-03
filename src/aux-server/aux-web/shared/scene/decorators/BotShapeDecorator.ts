@@ -121,6 +121,7 @@ import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
 import { MapTilerProvider } from 'geo-three';
 import { CustomMapProvider } from '../map/CustomMapProvider';
+import { MapViewExtensions } from '../map/MapViewExtensions';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
 
 export const gltfPool = getGLTFPool('main');
@@ -308,6 +309,35 @@ export class BotShapeDecorator
             this._updateMapTags(calc);
             this._updateMapProvider(calc);
             this._updateCustomMapProviderURL(calc);
+
+            const geojsonRaw = calculateBotValue(
+                calc,
+                this.bot3D.bot,
+                'formMapGeoJSON'
+            );
+            const geojsonLayerId = 'formMapGeoJSON';
+            const extendedMapView = MapViewExtensions.extendMapView(
+                this._mapView
+            );
+            let parsedGeoJSON: any = null;
+            if (geojsonRaw) {
+                try {
+                    parsedGeoJSON =
+                        typeof geojsonRaw === 'string'
+                            ? JSON.parse(geojsonRaw)
+                            : geojsonRaw;
+                } catch (err) {
+                    console.warn('Invalid formMapGeoJSON data:', err);
+                }
+            }
+            if (extendedMapView.getGeoJSONLayer(geojsonLayerId)) {
+                extendedMapView.removeGeoJSONLayer(geojsonLayerId);
+            }
+            if (parsedGeoJSON) {
+                extendedMapView
+                    .addGeoJSONLayer(geojsonLayerId)
+                    .setData(parsedGeoJSON);
+            }
         }
 
         if (this._iframe) {
