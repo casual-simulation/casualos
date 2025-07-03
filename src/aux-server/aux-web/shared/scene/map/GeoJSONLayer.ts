@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 import type { Object3D, BufferGeometry } from '@casual-simulation/three';
 import {
     Vector3,
@@ -38,6 +39,7 @@ import {
     calculateNumericalTagValue,
     calculateStringTagValue,
 } from '@casual-simulation/aux-common';
+import { MapViewUtils } from './MapViewUtils';
 
 // GeoJSON type definitions
 export interface GeoJSONCoordinate extends Array<number> {
@@ -133,6 +135,7 @@ export class GeoJSONLayer extends ThreeGroup {
     private _options: GeoJSONLayerOptions;
     private _features: Map<string, FeatureRenderInfo> = new Map();
     private _geoJsonData: GeoJSONData | null = null;
+    private _allFeatures: GeoJSONFeature[] = [];
 
     // Geometry containers for different types
     private _pointsContainer: ThreeGroup;
@@ -179,6 +182,7 @@ export class GeoJSONLayer extends ThreeGroup {
         this.add(this._polygonsContainer);
 
         this.name = 'GeoJSONLayer';
+        this._setupMapViewListener();
     }
 
     /**
@@ -187,7 +191,149 @@ export class GeoJSONLayer extends ThreeGroup {
     setData(data: GeoJSONData): void {
         this.clear();
         this._geoJsonData = data;
-        this._renderGeoJSON(data);
+        this._allFeatures = this._extractAllFeatures(data);
+        this.updateVisibleFeatures();
+    }
+
+    /**
+     * Update the rendered features based on the current viewport bounds
+     */
+    updateVisibleFeatures(): void {
+        this.clear();
+        if (!this._geoJsonData) return;
+        const bounds = this._getCurrentViewportBounds();
+        let featuresToRender = this._allFeatures;
+        if (bounds) {
+            featuresToRender = this._allFeatures.filter((f) => {
+                const info = this._getFeatureRenderInfo(f);
+                if (!info || !info.bounds) return true;
+                return !(
+                    info.bounds.maxX < bounds.west ||
+                    info.bounds.minX > bounds.east ||
+                    info.bounds.maxY < bounds.south ||
+                    info.bounds.minY > bounds.north
+                );
+            });
+        }
+        for (const feature of featuresToRender) {
+            const rendered = this._renderFeature(feature);
+            if (rendered) {
+                const id = this._getFeatureId(feature);
+                this._features.set(id, rendered);
+                if (this._options.enableSpatialIndex) {
+                    this._spatialIndex.push(rendered);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set up a listener to update features when the map view changes
+     */
+    private _setupMapViewListener() {
+        // If MapView emits events, hook here. Otherwise, monkey-patch setZoom/setCenter.
+        const mapView = this._mapView as any;
+        const origSetZoom = mapView.setZoom?.bind(mapView);
+        const origSetCenter = mapView.setCenter?.bind(mapView);
+        if (origSetZoom) {
+            mapView.setZoom = (...args: any[]) => {
+                const result = origSetZoom(...args);
+                this.updateVisibleFeatures();
+                return result;
+            };
+        }
+        if (origSetCenter) {
+            mapView.setCenter = (...args: any[]) => {
+                const result = origSetCenter(...args);
+                this.updateVisibleFeatures();
+                return result;
+            };
+        }
+    }
+
+    /**
+     * Extract all features from GeoJSONData
+     */
+    private _extractAllFeatures(data: GeoJSONData): GeoJSONFeature[] {
+        if (!data) return [];
+        if (data.type === 'FeatureCollection') {
+            return (data as GeoJSONFeatureCollection).features;
+        } else if (data.type === 'Feature') {
+            return [data as GeoJSONFeature];
+        } else {
+            // Raw geometry
+            return [
+                {
+                    type: 'Feature',
+                    geometry: data as GeoJSONGeometry,
+                    properties: {},
+                },
+            ];
+        }
+    }
+
+    /**
+     * Get the bounds for a feature (used for filtering)
+     */
+    private _getFeatureRenderInfo(
+        feature: GeoJSONFeature
+    ): FeatureRenderInfo | null {
+        if (!feature.geometry) return null;
+        let bounds:
+            | { minX: number; minY: number; maxX: number; maxY: number }
+            | undefined;
+        switch (feature.geometry.type) {
+            case 'Point':
+                bounds = this._calculatePointBounds(
+                    feature.geometry.coordinates
+                );
+                break;
+            case 'LineString':
+                bounds = this._calculateLineStringBounds(
+                    feature.geometry.coordinates
+                );
+                break;
+            case 'Polygon':
+                bounds = this._calculatePolygonBounds(
+                    feature.geometry.coordinates
+                );
+                break;
+            case 'MultiPoint':
+                bounds = this._calculateMultiPointBounds(
+                    feature.geometry.coordinates
+                );
+                break;
+            case 'MultiLineString':
+                bounds = this._calculateMultiLineStringBounds(
+                    feature.geometry.coordinates
+                );
+                break;
+            case 'MultiPolygon':
+                bounds = this._calculateMultiPolygonBounds(
+                    feature.geometry.coordinates
+                );
+                break;
+            default:
+                bounds = undefined;
+        }
+        return {
+            feature,
+            object3D: null as any,
+            geometryType: feature.geometry.type,
+            bounds,
+        };
+    }
+
+    /**
+     * Get the current viewport bounds from the map view
+     */
+    private _getCurrentViewportBounds() {
+        if (!this._mapView) return null;
+        try {
+            return MapViewUtils.getViewportBounds(this._mapView);
+        } catch {
+            return null;
+        }
     }
 
     /**
@@ -331,39 +477,6 @@ export class GeoJSONLayer extends ThreeGroup {
         const worldY = altitude;
 
         return new Vector3(worldX, worldY, worldZ);
-    }
-
-    /**
-     * Get MapView properties directly
-     */
-    private _getMapViewZoom(): number {
-        const mapViewAny = this._mapView as any;
-        return mapViewAny._zoom || 1;
-    }
-
-    private _getMapViewCenterTileX(): number {
-        const mapViewAny = this._mapView as any;
-        return mapViewAny._x || 0;
-    }
-
-    private _getMapViewCenterTileY(): number {
-        const mapViewAny = this._mapView as any;
-        return mapViewAny._y || 0;
-    }
-
-    private _getMapViewTileSize(): number {
-        const mapViewAny = this._mapView as any;
-        return mapViewAny._tileSize || 1;
-    }
-
-    private _getMapViewCenterLongitude(): number {
-        const mapViewAny = this._mapView as any;
-        return mapViewAny._longitude || 0;
-    }
-
-    private _getMapViewCenterLatitude(): number {
-        const mapViewAny = this._mapView as any;
-        return mapViewAny._latitude || 0;
     }
 
     /**
