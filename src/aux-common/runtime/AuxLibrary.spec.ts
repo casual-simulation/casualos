@@ -4008,6 +4008,12 @@ describe('AuxLibrary', () => {
                 expect(result).toBeUndefined();
             });
 
+            it('should return first when multiple inst are loaded', () => {
+                player.tags.inst = ['inst', 'secondInst'];
+                const result = library.api.os.getCurrentInst();
+                expect(result).toEqual('inst');
+            });
+
             it.each(numberCases)(
                 'should return "%s" when given %s',
                 (expected, given) => {
