@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V3.1.38
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Backported a couple of bug fixes that improved the behavior of `os.getCurrentInst()`.
+    -   Previously, `os.getCurrentInst()` would return the loaded insts as a comma-separated string instead of the current inst.
+    -   [`79ad235`](https://github.com/casual-simulation/casualos/commit/79ad2357abf4d328d9d50e344192b1895ced62f4)
+    -   [`145e88b`](https://github.com/casual-simulation/casualos/commit/145e88bac41cd0befddce170b8d63d1f75aa9f68)
+
 ## V3.1.37
 
 #### Date: TBD
