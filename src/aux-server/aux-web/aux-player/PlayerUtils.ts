@@ -4,6 +4,7 @@ import {
     calculateBotValue,
     getBotConfigDimensions,
 } from '@casual-simulation/aux-common';
+import { sortBy } from 'lodash';
 
 interface PlayerContextSearchResult {
     /**
@@ -39,5 +40,21 @@ export function safeParseURL(url: string): URL {
         return new URL(url);
     } catch (err) {
         return null;
+    }
+}
+
+/**
+ * Sorts the given insts in the order that they should be stored in the inst tag.
+ * @param insts The instance or instances.
+ * @param currentInst The instance that the tag is being stored in.
+ */
+export function sortInsts<T extends string | string[]>(
+    insts: T,
+    currentInst: string
+): T {
+    if (Array.isArray(insts)) {
+        return sortBy(insts, (i) => i !== currentInst) as T;
+    } else {
+        return insts;
     }
 }

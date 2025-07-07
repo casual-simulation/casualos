@@ -37,6 +37,7 @@ import adjectives from '../../shared/dictionaries/adjectives';
 import colors from '../../shared/dictionaries/colors';
 import animals from '../../shared/dictionaries/animals';
 import { setTheme } from '../../shared/StyleHelpers';
+import { sortInsts } from '../PlayerUtils';
 
 const namesConfig: Config = {
     dictionaries: [adjectives, colors, animals],
@@ -289,6 +290,10 @@ export default class PlayerHome extends Vue {
         if (bot.tags.url !== location.href) {
             changes.url = location.href;
             hasChange = true;
+        }
+        if (hasChange && hasValue(changes.inst)) {
+            // Note: botManager.id is the inst name in v3.1.x, but not in much later versions
+            changes.inst = sortInsts(changes.inst, botManager.id);
         }
         if (hasChange) {
             await botManager.helper.updateBot(bot, {
