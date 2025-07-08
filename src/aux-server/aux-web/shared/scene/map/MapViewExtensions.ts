@@ -68,6 +68,8 @@ export class MapViewExtensions {
             extension.projectCoordinate.bind(extension);
         extended.unprojectCoordinate =
             extension.unprojectCoordinate.bind(extension);
+        extended.updateRendererResolution =
+            extension.updateRendererResolution.bind(extension);
 
         return extended as MapView & MapViewGeoJSONMethods;
     }
@@ -97,6 +99,7 @@ export interface MapViewGeoJSONMethods {
         x: number,
         y: number
     ): { longitude: number; latitude: number };
+    updateRendererResolution(width: number, height: number): void;
 }
 
 /**
@@ -115,6 +118,15 @@ class MapViewGeoJSONExtension {
     constructor(mapView: MapView) {
         this._mapView = mapView;
         this._extractMapViewState();
+    }
+
+    /**
+     * Update renderer resolution for all GeoJSON layers
+     */
+    updateRendererResolution(width: number, height: number): void {
+        this._geoJSONLayers.forEach((layer) => {
+            layer.setRendererResolution(width, height);
+        });
     }
 
     /**

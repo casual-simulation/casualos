@@ -31,7 +31,11 @@ import {
     Shape,
     ExtrudeGeometry,
     ShapeGeometry,
+    Vector2,
 } from '@casual-simulation/three';
+import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
+import { Line2 } from '@casual-simulation/three/examples/jsm/lines/Line2';
+import { LineGeometry } from '@casual-simulation/three/examples/jsm/lines/LineGeometry';
 import { MapView } from './MapView';
 import { buildSRGBColor, disposeObject3D } from '../SceneUtils';
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
@@ -87,11 +91,13 @@ export interface GeoJSONLayerOptions {
         pointSize?: number;
         lineColor?: string;
         lineWidth?: number;
+        lineOpacity?: number;
         fillColor?: string;
         fillOpacity?: number;
         strokeColor?: string;
         strokeWidth?: number;
         extrudeHeight?: number;
+        useModernLines?: boolean;
     };
 
     /**
@@ -144,6 +150,7 @@ export class GeoJSONLayer extends ThreeGroup {
 
     // Spatial index for performance
     private _spatialIndex: FeatureRenderInfo[] = [];
+    private _rendererResolution: Vector2 = new Vector2(1920, 1080);
 
     constructor(mapView: MapView, options: GeoJSONLayerOptions = {}) {
         super();
@@ -155,11 +162,13 @@ export class GeoJSONLayer extends ThreeGroup {
                 pointSize: 5,
                 lineColor: '#0000ff',
                 lineWidth: 2,
+                lineOpacity: 1.0,
                 fillColor: '#00ff00',
                 fillOpacity: 0.7,
                 strokeColor: '#000000',
                 strokeWidth: 1,
                 extrudeHeight: 0,
+                useModernLines: true,
             },
             enableExtrusion: false,
             extrusionProperty: 'height',
@@ -196,11 +205,28 @@ export class GeoJSONLayer extends ThreeGroup {
     }
 
     /**
+     * Set renderer resolution for proper line width rendering
+     */
+    setRendererResolution(width: number, height: number): void {
+        this._rendererResolution.set(width, height);
+
+        // Update existing line materials
+        this._linesContainer.traverse((child) => {
+            if (child instanceof Line2) {
+                const material = child.material as LineMaterial;
+                material.resolution.set(width, height);
+            }
+        });
+    }
+
+    /**
      * Update the rendered features based on the current viewport bounds
      */
     updateVisibleFeatures(): void {
         this.clear();
-        if (!this._geoJsonData) return;
+        if (!this._geoJsonData) {
+            return;
+        }
         const bounds = this._getCurrentViewportBounds();
         let featuresToRender = this._allFeatures;
         if (bounds) {
@@ -255,7 +281,10 @@ export class GeoJSONLayer extends ThreeGroup {
      * Extract all features from GeoJSONData
      */
     private _extractAllFeatures(data: GeoJSONData): GeoJSONFeature[] {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
+
         if (data.type === 'FeatureCollection') {
             return (data as GeoJSONFeatureCollection).features;
         } else if (data.type === 'Feature') {
@@ -479,6 +508,46 @@ export class GeoJSONLayer extends ThreeGroup {
         return new Vector3(worldX, worldY, worldZ);
     }
 
+    private _validateCoordinates(
+        coordinates: GeoJSONCoordinate[]
+    ): GeoJSONCoordinate[] {
+        const validCoords: GeoJSONCoordinate[] = [];
+
+        for (const coord of coordinates) {
+            const [lng, lat, alt = 0] = coord;
+
+            // Validate longitude and latitude ranges
+            if (
+                typeof lng !== 'number' ||
+                typeof lat !== 'number' ||
+                isNaN(lng) ||
+                isNaN(lat) ||
+                lng < -180 ||
+                lng > 180 ||
+                lat < -90 ||
+                lat > 90
+            ) {
+                console.warn(`Invalid coordinate skipped: [${lng}, ${lat}]`);
+                continue;
+            }
+
+            // Skip duplicate consecutive points
+            if (validCoords.length > 0) {
+                const lastCoord = validCoords[validCoords.length - 1];
+                if (
+                    Math.abs(lastCoord[0] - lng) < 1e-10 &&
+                    Math.abs(lastCoord[1] - lat) < 1e-10
+                ) {
+                    continue;
+                }
+            }
+
+            validCoords.push([lng, lat, alt]);
+        }
+
+        return validCoords;
+    }
+
     /**
      * Render GeoJSON data
      */
@@ -554,7 +623,9 @@ export class GeoJSONLayer extends ThreeGroup {
      * Render a single feature
      */
     private _renderFeature(feature: GeoJSONFeature): FeatureRenderInfo | null {
-        if (!feature.geometry) return null;
+        if (!feature.geometry) {
+            return null;
+        }
 
         const style = this._getFeatureStyle(feature);
         let object3D: Object3D | null = null;
@@ -632,7 +703,10 @@ export class GeoJSONLayer extends ThreeGroup {
                 break;
         }
 
-        if (!object3D) return null;
+        if (!object3D) {
+            console.error('Failed to create object3D for feature:', feature);
+            return null;
+        }
 
         return {
             feature,
@@ -770,6 +844,66 @@ export class GeoJSONLayer extends ThreeGroup {
         coordinates: GeoJSONCoordinate[],
         style: any
     ): Object3D {
+        // Validate coordinates first
+        const validCoords = this._validateCoordinates(coordinates);
+
+        if (validCoords.length < 2) {
+            console.warn('LineString must have at least 2 valid coordinates');
+            return new ThreeGroup();
+        }
+
+        // Use modern line rendering if enabled and line width > 1
+        if (style.useModernLines && style.lineWidth > 1) {
+            return this._renderModernLineString(validCoords, style);
+        } else {
+            return this._renderBasicLineString(validCoords, style);
+        }
+    }
+
+    /**
+     * Render LineString using modern Line2/LineMaterial for thick lines
+     */
+    private _renderModernLineString(
+        coordinates: GeoJSONCoordinate[],
+        style: any
+    ): Object3D {
+        const positions: number[] = [];
+
+        coordinates.forEach((coord) => {
+            const [lng, lat, alt = 0] = coord;
+            const worldPos = this._geoToWorld(lng, lat, alt);
+            positions.push(worldPos.x, worldPos.y, worldPos.z);
+        });
+
+        const geometry = new LineGeometry();
+        geometry.setPositions(positions);
+
+        const material = new LineMaterial({
+            color: buildSRGBColor(style.lineColor).getHex(),
+            linewidth: style.lineWidth,
+            transparent: true,
+            opacity: style.lineOpacity || 1,
+        });
+
+        // Set resolution for proper line width rendering
+        material.resolution.copy(this._rendererResolution);
+
+        const line = new Line2(geometry, material);
+
+        // Disable frustum culling for long lines
+        line.frustumCulled = false;
+
+        this._linesContainer.add(line);
+        return line;
+    }
+
+    /**
+     * Render LineString using basic Line/LineBasicMaterial for thin lines
+     */
+    private _renderBasicLineString(
+        coordinates: GeoJSONCoordinate[],
+        style: any
+    ): Object3D {
         const positions: number[] = [];
 
         coordinates.forEach((coord) => {
@@ -784,14 +918,22 @@ export class GeoJSONLayer extends ThreeGroup {
             new Float32BufferAttribute(positions, 3)
         );
 
+        // Compute bounding sphere for proper frustum culling
+        geometry.computeBoundingSphere();
+        geometry.computeBoundingBox();
+
         const material = new ThreeLineBasicMaterial({
             color: buildSRGBColor(style.lineColor),
-            linewidth: style.lineWidth,
+            transparent: true,
+            opacity: style.lineOpacity || 1,
         });
 
         const line = new ThreeLine(geometry, material);
-        this._linesContainer.add(line);
 
+        // Disable frustum culling for long lines that might span large areas
+        line.frustumCulled = false;
+
+        this._linesContainer.add(line);
         return line;
     }
 
@@ -955,6 +1097,8 @@ export class GeoJSONLayer extends ThreeGroup {
                 style.lineColor = feature.properties.lineColor;
             if (feature.properties.lineWidth)
                 style.lineWidth = feature.properties.lineWidth;
+            if (feature.properties.lineOpacity)
+                style.lineOpacity = feature.properties.lineOpacity;
             if (feature.properties.fillColor)
                 style.fillColor = feature.properties.fillColor;
             if (feature.properties.fillOpacity)
@@ -1006,6 +1150,13 @@ export class GeoJSONLayer extends ThreeGroup {
                 'geoLineWidth',
                 this._options.defaultStyle!.lineWidth!
             ),
+            lineOpacity: calculateNumericalTagValue(
+                calc,
+                bot,
+                'geoLineOpacity',
+                this._options.defaultStyle!.lineOpacity!
+            ),
+            useModernLines: this._options.defaultStyle!.useModernLines!,
             fillColor: calculateStringTagValue(
                 calc,
                 bot,

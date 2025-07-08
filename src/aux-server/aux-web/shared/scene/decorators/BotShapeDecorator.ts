@@ -334,9 +334,90 @@ export class BotShapeDecorator
                 extendedMapView.removeGeoJSONLayer(geojsonLayerId);
             }
             if (parsedGeoJSON) {
-                extendedMapView
-                    .addGeoJSONLayer(geojsonLayerId)
-                    .setData(parsedGeoJSON);
+                const options = {
+                    defaultStyle: {
+                        pointColor: calculateStringTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoPointColor',
+                            '#ff0000'
+                        ),
+                        pointSize: calculateNumericalTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoPointSize',
+                            5
+                        ),
+                        lineColor: calculateStringTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoLineColor',
+                            '#0000ff'
+                        ),
+                        lineWidth: calculateNumericalTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoLineWidth',
+                            2
+                        ),
+                        lineOpacity: calculateNumericalTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoLineOpacity',
+                            1.0
+                        ),
+                        fillColor: calculateStringTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoFillColor',
+                            '#00ff00'
+                        ),
+                        fillOpacity: calculateNumericalTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoFillOpacity',
+                            0.7
+                        ),
+                        strokeColor: calculateStringTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoStrokeColor',
+                            '#000000'
+                        ),
+                        strokeWidth: calculateNumericalTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoStrokeWidth',
+                            1
+                        ),
+                        extrudeHeight: calculateNumericalTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoExtrudeHeight',
+                            0
+                        ),
+                        useModernLines: calculateBooleanTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoUseModernLines',
+                            true
+                        ),
+                    },
+                };
+
+                const layer = extendedMapView.addGeoJSONLayer(
+                    geojsonLayerId,
+                    options
+                );
+
+                layer.setData(parsedGeoJSON);
+
+                // Set initial renderer resolution
+                const renderer = this._game?.getRenderer();
+                if (renderer) {
+                    const size = renderer.getSize(new Vector2());
+                    layer.setRendererResolution(size.x, size.y);
+                }
             }
         }
 
