@@ -11598,31 +11598,82 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Calculates the screen coordinates that the given 3D position map to on the screen.
      * Returns a promise that resolves with the calculated screen coordinates.
-     * 
+     *
      * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
-     * 
+     *
      * @param portal the name of the portal that should be tested.
-     * @param coordinates the 3D positions that should be converted to screen coordinates.
-     * 
+     * @param coordinate the 3D position that should be converted to screen coordinates.
+     *
      * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
      * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
      * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
-     * 
+     *
      * @dochash actions/os/portals
      * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition
      * @docgroup 10-raycast
      */
     function calculateScreenCoordinatesFromPosition(
         portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinate: Point3D
+    ): Promise<Vector2>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition-array
+     * @docgroup 10-raycast
+     */
+    function calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D[]
+    ): Promise<Vector2[]>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     */
+    function calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
         coordinates: Point3D | Point3D[]
-    ): Promise<Vector2[]> {
+    ): Promise<Vector2[] | Vector2> {
         const task = context.createTask();
         const event = calcCalculateScreenCoordinatesFromPosition(
             portal,
             Array.isArray(coordinates) ? coordinates : [coordinates],
             task.taskId
         );
-        return addAsyncAction(task, event);
+        const promise = addAsyncAction(task, event);
+
+        if (Array.isArray(coordinates)) {
+            return promise;
+        } else {
+            return promise.then((r) => {
+                if (Array.isArray(r) && r.length === 1) {
+                    return [0];
+                }
+                return r;
+            });
+        }
     }
 
     /**
