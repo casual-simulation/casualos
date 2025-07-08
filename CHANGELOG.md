@@ -9,6 +9,7 @@
 -   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
     -   This can help load balancers differentiate between records requests and inst requests.
 -   Added a better date of birth input to the "Sign Up" page.
+-   Added the `os.calculateScreenCoordinatesFromPosition()` function.
 
 ### :bug: Bug Fixes
 
