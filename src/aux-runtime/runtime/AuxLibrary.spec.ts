@@ -169,6 +169,7 @@ import {
     loadSharedDocument,
     getBotsStateFromStoredAux,
     installAuxFile,
+    calculateScreenCoordinatesFromPosition,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -9553,6 +9554,60 @@ describe('AuxLibrary', () => {
                     );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateScreenCoordinatesFromPosition()', () => {
+            it('should emit a CalculateScreenCoordinatesFromPosition', async () => {
+                const promise: any =
+                    library.api.os.calculateScreenCoordinatesFromPosition(
+                        'grid',
+                        new Vector3(1, 2, 3)
+                    );
+                const expected =
+                    calculateScreenCoordinatesFromPosition(
+                        'grid',
+                        [new Vector3(1, 2, 3)],
+                        context.tasks.size
+                    );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(context.tasks.size, [
+                    new Vector3(4, 5, 6)
+                ], false);
+
+                const result = await promise;
+
+                expect(result).toEqual(new Vector3(4, 5, 6));
+            });
+
+            it('should support arrays', async () => {
+                const promise: any =
+                    library.api.os.calculateScreenCoordinatesFromPosition(
+                        'grid',
+                        [new Vector3(1, 2, 3), new Vector3(4, 5, 6)]
+                    );
+                const expected =
+                    calculateScreenCoordinatesFromPosition(
+                        'grid',
+                        [new Vector3(1, 2, 3), new Vector3(4, 5, 6)],
+                        context.tasks.size
+                    );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(context.tasks.size, [
+                    new Vector3(7, 8, 9),
+                    new Vector3(10, 11, 12),
+                ], false);
+
+                const result = await promise;
+
+                expect(result).toEqual([
+                    new Vector3(7, 8, 9),
+                    new Vector3(10, 11, 12),
+                ]);
             });
         });
 

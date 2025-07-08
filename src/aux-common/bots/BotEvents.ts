@@ -204,7 +204,8 @@ export type AsyncActions =
     | WatchLoomAction
     | GetLoomMetadataAction
     | GetScriptIssuesAction
-    | LoadSharedDocumentAction;
+    | LoadSharedDocumentAction
+    | CalculateScreenCoordinatesFromPositionAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -5932,6 +5933,19 @@ export function calculateViewportCoordinatesFromScreenCoordinates(
 ): CalculateViewportCoordinatesFromScreenCoordinatesAction {
     return {
         type: 'calculate_viewport_coordinates_from_screen_coordinates',
+        portal,
+        coordinates,
+        taskId,
+    };
+}
+
+export function calculateScreenCoordinatesFromPosition(
+    portal: CameraPortal,
+    coordinates: Point3D[],
+    taskId?: number | string,
+): CalculateScreenCoordinatesFromPositionAction {
+    return {
+        type: 'calculate_screen_coordinates_from_position',
         portal,
         coordinates,
         taskId,

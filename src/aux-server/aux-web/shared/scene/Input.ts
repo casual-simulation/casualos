@@ -43,6 +43,7 @@ import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
 import Bowser from 'bowser';
+import { Point2D } from '@casual-simulation/aux-common';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
@@ -281,7 +282,7 @@ export class Input {
      * @param pagePos The current global page position (pixels).
      */
     public static screenPositionForViewport(
-        pagePos: Vector2,
+        pagePos: Point2D,
         viewport: Viewport
     ): Vector2 {
         const viewPos = Input.offsetPositionForViewport(pagePos, viewport);
@@ -298,7 +299,7 @@ export class Input {
      * @param viewport The viewport.
      */
     public static pagePositionForViewport(
-        screenPosition: Vector2,
+        screenPosition: Point2D,
         viewport: Viewport
     ): Vector2 {
         const viewPos = new Vector2(

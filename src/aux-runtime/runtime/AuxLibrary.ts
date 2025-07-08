@@ -111,6 +111,7 @@ import type {
     LoadServerConfigAction,
     InstConfig,
     UnloadServerConfigAction,
+    Point3D,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -268,6 +269,7 @@ import {
     loadSharedDocument,
     installAuxFile as calcInstallAuxFile,
     calculateStringListTagValue,
+    calculateScreenCoordinatesFromPosition as calcCalculateScreenCoordinatesFromPosition,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3438,6 +3440,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 calculateRayFromCamera,
                 calculateViewportCoordinatesFromPosition,
                 calculateScreenCoordinatesFromViewportCoordinates,
+                calculateScreenCoordinatesFromPosition,
                 calculateViewportCoordinatesFromScreenCoordinates,
                 bufferFormAddressGLTF,
                 startFormAnimation,
@@ -11587,6 +11590,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 x: coordinates.x || 0,
                 y: coordinates.y || 0,
             },
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docgroup 10-raycast
+     */
+    function calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D | Point3D[]
+    ): Promise<Vector2[]> {
+        const task = context.createTask();
+        const event = calcCalculateScreenCoordinatesFromPosition(
+            portal,
+            Array.isArray(coordinates) ? coordinates : [coordinates],
             task.taskId
         );
         return addAsyncAction(task, event);
