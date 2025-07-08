@@ -43,7 +43,7 @@ import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
 import Bowser from 'bowser';
-import { Point2D } from '@casual-simulation/aux-common';
+import type { Point2D } from '@casual-simulation/aux-common';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
@@ -211,10 +211,12 @@ export class Input {
      * @param pagePos The page position of the coordinates that we want converted.
      * @param view The HTML element that we want the position to be relative to.
      */
-    public static offsetPosition(pagePos: Vector2, view: HTMLElement) {
-        let globalPos = new Vector2(pagePos.x, pagePos.y);
+    public static offsetPosition(pagePos: Point2D, view: HTMLElement) {
         let viewRect = view.getBoundingClientRect();
-        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        let viewPos = new Vector2(
+            pagePos.x - viewRect.left,
+            pagePos.y - viewRect.top
+        );
         return viewPos;
     }
 
@@ -224,10 +226,12 @@ export class Input {
      * @param event The mouse event to get the viewport position out of.
      * @param view The HTML element that we want the position to be relative to.
      */
-    public static screenPosition(pagePos: Vector2, view: HTMLElement) {
-        let globalPos = new Vector2(pagePos.x, pagePos.y);
+    public static screenPosition(pagePos: Point2D, view: HTMLElement) {
         let viewRect = view.getBoundingClientRect();
-        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        let viewPos = new Vector2(
+            pagePos.x - viewRect.left,
+            pagePos.y - viewRect.top
+        );
         return new Vector2(
             (viewPos.x / viewRect.width) * 2 - 1,
             -(viewPos.y / viewRect.height) * 2 + 1
@@ -240,7 +244,7 @@ export class Input {
      * @param viewport The viewport that we want the position to be relative to.
      */
     public static offsetPositionForViewport(
-        pagePos: Vector2,
+        pagePos: Point2D,
         viewport: Viewport
     ): Vector2 {
         const globalPos = new Vector2(pagePos.x, pagePos.y);
@@ -258,15 +262,14 @@ export class Input {
      * @param viewport The viewport that we want the position to be relative to.
      */
     public static unoffsetPositionForViewport(
-        viewPos: Vector2,
+        viewPos: Point2D,
         viewport: Viewport
     ): Vector2 {
-        viewPos = viewPos.clone();
         const viewRect = viewport.getRootElement().getBoundingClientRect();
         const left = viewRect.left + viewport.x;
         const top =
             viewRect.height - (viewport.y + viewport.height) + viewRect.top;
-        const globalPos = viewPos.add(new Vector2(left, top));
+        const globalPos = new Vector2(viewPos.x + left, viewPos.y + top);
         return globalPos;
     }
 
@@ -317,7 +320,7 @@ export class Input {
      * @param viewports Other viewports to check if they are occluding the given viewport above.
      */
     public static pagePositionOnViewport(
-        pagePos: Vector2,
+        pagePos: Point2D,
         viewport: Viewport,
         otherViewports?: Viewport[]
     ): boolean {
@@ -365,7 +368,7 @@ export class Input {
      * @param element The HTML element to test against.
      */
     public static eventIsDirectlyOverElement(
-        clientPos: Vector2,
+        clientPos: Point2D,
         element: HTMLElement
     ): boolean {
         let mouseOver = document.elementFromPoint(clientPos.x, clientPos.y);
@@ -378,7 +381,7 @@ export class Input {
      * @param element The HTML element to test against.
      */
     public static eventIsOverElement(
-        clientPos: Vector2,
+        clientPos: Point2D,
         element: HTMLElement
     ): boolean {
         let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
