@@ -315,10 +315,14 @@ export class BotShapeDecorator
                 this.bot3D.bot,
                 'formMapGeoJSON'
             );
+            console.log('Processing GeoJSON update, raw data:', geojsonRaw);
+
             const geojsonLayerId = 'formMapGeoJSON';
             const extendedMapView = MapViewExtensions.extendMapView(
                 this._mapView
             );
+
+            // Parse GeoJSON data
             let parsedGeoJSON: any = null;
             if (geojsonRaw) {
                 try {
@@ -326,14 +330,41 @@ export class BotShapeDecorator
                         typeof geojsonRaw === 'string'
                             ? JSON.parse(geojsonRaw)
                             : geojsonRaw;
+                    console.log('Successfully parsed GeoJSON:', parsedGeoJSON);
                 } catch (err) {
                     console.warn('Invalid formMapGeoJSON data:', err);
+                    return;
                 }
+            }
+
+            // Check if we already have a layer with the same data
+            const existingLayer =
+                extendedMapView.getGeoJSONLayer(geojsonLayerId);
+            if (existingLayer && parsedGeoJSON) {
+                // Only update if data has actually changed
+                const currentData = (existingLayer as any)._geoJsonData;
+                const dataChanged =
+                    JSON.stringify(currentData) !==
+                    JSON.stringify(parsedGeoJSON);
+
+                if (!dataChanged) {
+                    console.log('GeoJSON data unchanged, skipping update');
+                    return; // Skip update if data hasn't changed
+                }
+                console.log('GeoJSON data changed, updating layer');
+            }
+
+            // Remove existing layer only if we're going to replace it
+            if (existingLayer) {
+                console.log('Removing existing GeoJSON layer');
+                extendedMapView.removeGeoJSONLayer(geojsonLayerId);
             }
             if (extendedMapView.getGeoJSONLayer(geojsonLayerId)) {
                 extendedMapView.removeGeoJSONLayer(geojsonLayerId);
             }
             if (parsedGeoJSON) {
+                console.log('Creating new GeoJSON layer');
+
                 const options = {
                     defaultStyle: {
                         pointColor: calculateStringTagValue(
@@ -400,6 +431,12 @@ export class BotShapeDecorator
                             calc,
                             this.bot3D.bot,
                             'geoUseModernLines',
+                            false
+                        ),
+                        forceBasicLines: calculateBooleanTagValue(
+                            calc,
+                            this.bot3D.bot,
+                            'geoForceBasicLines',
                             true
                         ),
                     },
@@ -409,6 +446,7 @@ export class BotShapeDecorator
                     geojsonLayerId,
                     options
                 );
+                console.log('GeoJSON layer created, setting data');
 
                 layer.setData(parsedGeoJSON);
 
@@ -416,7 +454,24 @@ export class BotShapeDecorator
                 const renderer = this._game?.getRenderer();
                 if (renderer) {
                     const size = renderer.getSize(new Vector2());
-                    layer.setRendererResolution(size.x, size.y);
+                    console.log('Raw renderer size:', size.x, size.y);
+
+                    // Use fallback resolution if renderer reports 0x0
+                    const finalWidth = size.x > 0 ? size.x : 1920;
+                    const finalHeight = size.y > 0 ? size.y : 1080;
+
+                    layer.setRendererResolution(finalWidth, finalHeight);
+                    console.log(
+                        'Renderer resolution set:',
+                        finalWidth,
+                        finalHeight
+                    );
+                } else {
+                    // Fallback if no renderer available
+                    layer.setRendererResolution(1920, 1080);
+                    console.log(
+                        'Using fallback renderer resolution: 1920 1080'
+                    );
                 }
             }
         }

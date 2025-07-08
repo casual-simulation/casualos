@@ -98,6 +98,7 @@ export interface GeoJSONLayerOptions {
         strokeWidth?: number;
         extrudeHeight?: number;
         useModernLines?: boolean;
+        forceBasicLines?: boolean;
     };
 
     /**
@@ -198,23 +199,50 @@ export class GeoJSONLayer extends ThreeGroup {
      * Set the GeoJSON data to render
      */
     setData(data: GeoJSONData): void {
-        this.clear();
+        console.log('GeoJSONLayer.setData called with:', data);
+
+        // Store the data
         this._geoJsonData = data;
         this._allFeatures = this._extractAllFeatures(data);
-        this.updateVisibleFeatures();
-    }
+        console.log('Extracted features:', this._allFeatures.length);
 
+        // Clear existing features
+        this.clear();
+
+        // Start checking for valid renderer resolution
+        this.updateRendererResolutionWhenReady();
+
+        // Ensure map view is ready before rendering
+        if (this._mapView) {
+            // Small delay to ensure map view is fully initialized
+            setTimeout(() => {
+                console.log('Delayed render of GeoJSON features');
+                this.updateVisibleFeatures();
+            }, 100);
+        } else {
+            console.warn('Map view not available, rendering immediately');
+            this.updateVisibleFeatures();
+        }
+    }
     /**
      * Set renderer resolution for proper line width rendering
      */
     setRendererResolution(width: number, height: number): void {
-        this._rendererResolution.set(width, height);
+        console.log('setRendererResolution called with:', width, height);
+
+        // Ensure we have valid dimensions
+        const finalWidth = width > 0 ? width : 1920;
+        const finalHeight = height > 0 ? height : 1080;
+
+        this._rendererResolution.set(finalWidth, finalHeight);
+        console.log('Set renderer resolution to:', finalWidth, finalHeight);
 
         // Update existing line materials
         this._linesContainer.traverse((child) => {
             if (child instanceof Line2) {
                 const material = child.material as LineMaterial;
-                material.resolution.set(width, height);
+                material.resolution.set(finalWidth, finalHeight);
+                console.log('Updated existing Line2 material resolution');
             }
         });
     }
@@ -223,12 +251,30 @@ export class GeoJSONLayer extends ThreeGroup {
      * Update the rendered features based on the current viewport bounds
      */
     updateVisibleFeatures(): void {
-        this.clear();
+        console.log('updateVisibleFeatures called');
+
         if (!this._geoJsonData) {
+            console.log('No GeoJSON data available');
             return;
         }
+
+        // Don't clear if we're just refreshing
+        const wasEmpty = this._features.size === 0;
+        if (!wasEmpty) {
+            console.log('Clearing existing features');
+            this.clear();
+        }
+
         const bounds = this._getCurrentViewportBounds();
+        console.log('Current viewport bounds:', bounds);
+
         let featuresToRender = this._allFeatures;
+        console.log(
+            'Total features before filtering:',
+            featuresToRender.length
+        );
+
+        // Apply spatial filtering if bounds are available
         if (bounds) {
             featuresToRender = this._allFeatures.filter((f) => {
                 const info = this._getFeatureRenderInfo(f);
@@ -241,7 +287,20 @@ export class GeoJSONLayer extends ThreeGroup {
                 );
             });
         }
+
+        console.log(
+            'Features to render after filtering:',
+            featuresToRender.length
+        );
+
+        // Render features
+        let renderedCount = 0;
         for (const feature of featuresToRender) {
+            console.log(
+                'Rendering feature:',
+                feature.geometry?.type,
+                feature.properties?.name
+            );
             const rendered = this._renderFeature(feature);
             if (rendered) {
                 const id = this._getFeatureId(feature);
@@ -249,31 +308,48 @@ export class GeoJSONLayer extends ThreeGroup {
                 if (this._options.enableSpatialIndex) {
                     this._spatialIndex.push(rendered);
                 }
+                renderedCount++;
+                console.log('Successfully rendered feature:', id);
+            } else {
+                console.error('Failed to render feature:', feature);
             }
         }
+
+        console.log(`Rendered ${renderedCount} features total`);
     }
 
     /**
      * Set up a listener to update features when the map view changes
      */
     private _setupMapViewListener() {
-        // If MapView emits events, hook here. Otherwise, monkey-patch setZoom/setCenter.
+        console.log('Setting up map view listener');
+
+        // Store original methods
         const mapView = this._mapView as any;
         const origSetZoom = mapView.setZoom?.bind(mapView);
         const origSetCenter = mapView.setCenter?.bind(mapView);
-        if (origSetZoom) {
+
+        // Only patch if methods exist and haven't been patched already
+        if (origSetZoom && !mapView._geoJsonZoomPatched) {
             mapView.setZoom = (...args: any[]) => {
+                console.log('Map zoom changed, updating GeoJSON features');
                 const result = origSetZoom(...args);
-                this.updateVisibleFeatures();
+                // Delay the update to ensure map is ready
+                setTimeout(() => this.updateVisibleFeatures(), 50);
                 return result;
             };
+            mapView._geoJsonZoomPatched = true;
         }
-        if (origSetCenter) {
+
+        if (origSetCenter && !mapView._geoJsonCenterPatched) {
             mapView.setCenter = (...args: any[]) => {
+                console.log('Map center changed, updating GeoJSON features');
                 const result = origSetCenter(...args);
-                this.updateVisibleFeatures();
+                // Delay the update to ensure map is ready
+                setTimeout(() => this.updateVisibleFeatures(), 50);
                 return result;
             };
+            mapView._geoJsonCenterPatched = true;
         }
     }
 
@@ -844,18 +920,40 @@ export class GeoJSONLayer extends ThreeGroup {
         coordinates: GeoJSONCoordinate[],
         style: any
     ): Object3D {
+        console.log('_renderLineString called with coordinates:', coordinates);
+        console.log('Style:', style);
+        console.log(
+            'Current renderer resolution:',
+            this._rendererResolution.x,
+            this._rendererResolution.y
+        );
+
         // Validate coordinates first
         const validCoords = this._validateCoordinates(coordinates);
+        console.log('Valid coordinates after validation:', validCoords);
 
         if (validCoords.length < 2) {
             console.warn('LineString must have at least 2 valid coordinates');
             return new ThreeGroup();
         }
 
-        // Use modern line rendering if enabled and line width > 1
-        if (style.useModernLines && style.lineWidth > 1) {
+        // Check if we should use modern lines
+        const hasValidResolution =
+            this._rendererResolution.x > 0 && this._rendererResolution.y > 0;
+        const shouldUseModern =
+            style.useModernLines && style.lineWidth > 1 && hasValidResolution;
+
+        console.log('Should use modern lines?', shouldUseModern, {
+            useModernLines: style.useModernLines,
+            lineWidth: style.lineWidth,
+            hasValidResolution: hasValidResolution,
+        });
+
+        if (shouldUseModern) {
+            console.log('Using modern line rendering');
             return this._renderModernLineString(validCoords, style);
         } else {
+            console.log('Using basic line rendering');
             return this._renderBasicLineString(validCoords, style);
         }
     }
@@ -867,34 +965,95 @@ export class GeoJSONLayer extends ThreeGroup {
         coordinates: GeoJSONCoordinate[],
         style: any
     ): Object3D {
-        const positions: number[] = [];
+        console.log('_renderModernLineString called');
 
-        coordinates.forEach((coord) => {
-            const [lng, lat, alt = 0] = coord;
-            const worldPos = this._geoToWorld(lng, lat, alt);
-            positions.push(worldPos.x, worldPos.y, worldPos.z);
-        });
+        try {
+            const positions: number[] = [];
 
-        const geometry = new LineGeometry();
-        geometry.setPositions(positions);
+            coordinates.forEach((coord) => {
+                const [lng, lat, alt = 0] = coord;
+                const worldPos = this._geoToWorld(lng, lat, alt);
+                positions.push(worldPos.x, worldPos.y, worldPos.z);
+                console.log(
+                    `Coordinate [${lng}, ${lat}] -> World [${worldPos.x}, ${worldPos.y}, ${worldPos.z}]`
+                );
+            });
 
-        const material = new LineMaterial({
-            color: buildSRGBColor(style.lineColor).getHex(),
-            linewidth: style.lineWidth,
-            transparent: true,
-            opacity: style.lineOpacity || 1,
-        });
+            console.log('Modern line positions array:', positions);
 
-        // Set resolution for proper line width rendering
-        material.resolution.copy(this._rendererResolution);
+            const geometry = new LineGeometry();
+            geometry.setPositions(positions);
 
-        const line = new Line2(geometry, material);
+            const material = new LineMaterial({
+                color: buildSRGBColor(style.lineColor).getHex(),
+                linewidth: style.lineWidth,
+                transparent: true,
+                opacity: style.lineOpacity || 1,
+            });
 
-        // Disable frustum culling for long lines
-        line.frustumCulled = false;
+            // Set resolution for proper line width rendering
+            material.resolution.copy(this._rendererResolution);
+            console.log(
+                'Modern line material resolution set to:',
+                material.resolution.x,
+                material.resolution.y
+            );
 
-        this._linesContainer.add(line);
-        return line;
+            const line = new Line2(geometry, material);
+            line.frustumCulled = false;
+
+            console.log('Adding modern line to container');
+            this._linesContainer.add(line);
+            console.log(
+                'Modern line added, container children count:',
+                this._linesContainer.children.length
+            );
+
+            return line;
+        } catch (error) {
+            console.error(
+                'Error creating modern line, falling back to basic line:',
+                error
+            );
+            return this._renderBasicLineString(coordinates, style);
+        }
+    }
+
+    /**
+     * Update renderer resolution when it becomes available
+     */
+    updateRendererResolutionWhenReady(): void {
+        // Try to get a valid resolution from the parent map view's game instance
+        const mapViewAny = this._mapView as any;
+        const game = mapViewAny._game || mapViewAny.game;
+
+        if (game) {
+            const renderer = game.getRenderer();
+            if (renderer) {
+                const size = renderer.getSize(new Vector2());
+                console.log(
+                    'Checking renderer size for delayed update:',
+                    size.x,
+                    size.y
+                );
+
+                if (size.x > 0 && size.y > 0) {
+                    this.setRendererResolution(size.x, size.y);
+                    console.log(
+                        'Updated renderer resolution to:',
+                        size.x,
+                        size.y
+                    );
+
+                    // Re-render features that might need the resolution
+                    this.updateVisibleFeatures();
+                    return;
+                }
+            }
+        }
+
+        // Try again in a bit if resolution still not available
+        setTimeout(() => this.updateRendererResolutionWhenReady(), 500);
     }
 
     /**
@@ -904,13 +1063,19 @@ export class GeoJSONLayer extends ThreeGroup {
         coordinates: GeoJSONCoordinate[],
         style: any
     ): Object3D {
+        console.log('_renderBasicLineString called');
         const positions: number[] = [];
 
         coordinates.forEach((coord) => {
             const [lng, lat, alt = 0] = coord;
             const worldPos = this._geoToWorld(lng, lat, alt);
             positions.push(worldPos.x, worldPos.y, worldPos.z);
+            console.log(
+                `Coordinate [${lng}, ${lat}] -> World [${worldPos.x}, ${worldPos.y}, ${worldPos.z}]`
+            );
         });
+
+        console.log('Line positions array:', positions);
 
         const geometry = new ThreeBufferGeometry();
         geometry.setAttribute(
@@ -922,18 +1087,28 @@ export class GeoJSONLayer extends ThreeGroup {
         geometry.computeBoundingSphere();
         geometry.computeBoundingBox();
 
+        console.log('Line geometry bounding box:', geometry.boundingBox);
+        console.log('Line geometry bounding sphere:', geometry.boundingSphere);
+
         const material = new ThreeLineBasicMaterial({
             color: buildSRGBColor(style.lineColor),
             transparent: true,
             opacity: style.lineOpacity || 1,
         });
 
-        const line = new ThreeLine(geometry, material);
+        console.log('Line material created:', material);
 
-        // Disable frustum culling for long lines that might span large areas
+        const line = new ThreeLine(geometry, material);
         line.frustumCulled = false;
 
+        console.log('Adding line to container');
         this._linesContainer.add(line);
+
+        console.log(
+            'Line added to scene, container children count:',
+            this._linesContainer.children.length
+        );
+
         return line;
     }
 
