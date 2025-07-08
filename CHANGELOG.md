@@ -10,6 +10,7 @@
     -   This can help load balancers differentiate between records requests and inst requests.
 -   Added a better date of birth input to the "Sign Up" page.
 -   Added the `os.calculateScreenCoordinatesFromPosition()` function.
+-   Added batching for events sent from the main thread to the worker thread.
 
 ### :bug: Bug Fixes
 
