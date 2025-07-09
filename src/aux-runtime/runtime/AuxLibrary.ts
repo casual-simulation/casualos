@@ -11667,12 +11667,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (Array.isArray(coordinates)) {
             return promise;
         } else {
-            return promise.then((r) => {
+            const final = promise.then((r) => {
                 if (Array.isArray(r) && r.length === 1) {
-                    return [0];
+                    return r[0];
                 }
                 return r;
             });
+            (final as any)[ORIGINAL_OBJECT] = event;
+            return final;
         }
     }
 
