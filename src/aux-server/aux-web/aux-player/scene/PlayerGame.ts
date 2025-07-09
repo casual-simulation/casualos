@@ -81,6 +81,7 @@ import type {
     CapturePortalScreenshotAction,
     CameraPortal,
     Photo,
+    CalculateScreenCoordinatesFromPositionAction,
 } from '@casual-simulation/aux-common';
 import {
     clamp,
@@ -158,6 +159,8 @@ const MINI_PORTAL_SMALL_WIDTH = 0.9;
  * The default padding needed for the available height padding.
  */
 const MINI_PORTAL_DEFAULT_HEIGHT_PADDING = 40;
+
+const _tempVector = new Vector3();
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -919,10 +922,10 @@ export class PlayerGame extends Game {
                         targetPortal === 'mapPortal'
                             ? mapPortalSim3D
                             : targetPortal === 'miniMapPortal'
-                            ? miniMapPortalSim3D
-                            : targetPortal === 'miniGridPortal'
-                            ? miniPortalSim3D
-                            : playerSim3D;
+                                ? miniMapPortalSim3D
+                                : targetPortal === 'miniGridPortal'
+                                    ? miniPortalSim3D
+                                    : playerSim3D;
 
                     let position: TweenCameraPosition;
                     const cameraRig = sim.getMainCameraRig();
@@ -941,9 +944,9 @@ export class PlayerGame extends Game {
                             type: 'world',
                             position: new Vector3(
                                 realNumberOrDefault(e.position.x, 0) *
-                                    gridScale,
+                                gridScale,
                                 realNumberOrDefault(e.position.y, 0) *
-                                    gridScale,
+                                gridScale,
                                 realNumberOrDefault(e.position.z, 0) * gridScale
                             ),
                         };
@@ -998,6 +1001,8 @@ export class PlayerGame extends Game {
                         sim,
                         e
                     );
+                } else if (e.type === 'calculate_screen_coordinates_from_position') {
+                    this._calculateScreenCoordinatesFromPosition(sim, e);
                 } else if (e.type === 'buffer_form_address_gltf') {
                     this._bufferFormAddressGltf(sim, e);
                 } else if (e.type === 'start_form_animation') {
@@ -1147,32 +1152,23 @@ export class PlayerGame extends Game {
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
 
-            const position = {
-                x: e.position.x,
-                y: e.position.y,
-                z: e.position.z,
-            };
-
-            let vector;
-
-            const coordinateTransform = _3dSim.coordinateTransformer
-                ? _3dSim.coordinateTransformer(position)
-                : null;
-
-            if (coordinateTransform) {
-                vector = new Vector3(0, 0, 0);
-                vector.applyMatrix4(coordinateTransform);
+            if (_3dSim.coordinateTransformer) {
+                const coordinateTransform = _3dSim.coordinateTransformer(
+                    e.position
+                );
+                _tempVector.set(0, 0, 0);
+                _tempVector.applyMatrix4(coordinateTransform);
             } else {
-                vector = new Vector3(
-                    position.x * gridScale,
-                    position.y * gridScale,
-                    position.z * gridScale
+                _tempVector.set(
+                    e.position.x * gridScale,
+                    e.position.y * gridScale,
+                    e.position.z * gridScale
                 );
             }
 
-            vector.project(rig.mainCamera);
+            _tempVector.project(rig.mainCamera);
 
-            const viewportPosition = convertVector2(vector);
+            const viewportPosition = convertVector2(_tempVector);
 
             sim.helper.transaction(
                 asyncResult(e.taskId, viewportPosition, true)
@@ -1228,6 +1224,59 @@ export class PlayerGame extends Game {
                 );
             } else {
                 sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private _calculateScreenCoordinatesFromPosition(
+        sim: BrowserSimulation,
+        e: CalculateScreenCoordinatesFromPositionAction
+    ) {
+        try {
+            const _3dSim = this._findSimulationForPortalTag(
+                sim,
+                getPortalTag(e.portal)
+            );
+
+            if (_3dSim) {
+                const rig = _3dSim.getMainCameraRig();
+                const gridScale = _3dSim.getDefaultGridScale();
+
+                const results: string[] = [];
+
+                for(let position of e.coordinates) {
+                    if (_3dSim.coordinateTransformer) {
+                        const coordinateTransform = _3dSim.coordinateTransformer(
+                            position
+                        );
+                        _tempVector.set(0, 0, 0);
+                        _tempVector.applyMatrix4(coordinateTransform);
+                    } else {
+                        _tempVector.set(
+                            position.x * gridScale,
+                            position.y * gridScale,
+                            position.z * gridScale
+                        );
+                    }
+    
+                    _tempVector.project(rig.mainCamera);
+
+                    // convert to screen position
+                    const pagePosition = Input.pagePositionForViewport(
+                        _tempVector,
+                        rig.viewport
+                    );
+
+                    results.push(convertVector2(pagePosition));
+                }
+
+                sim.helper.transaction(
+                    asyncResult(e.taskId, results, true)
+                );
+            } else {
+                sim.helper.transaction(asyncResult(e.taskId, []));
             }
         } catch (err) {
             sim.helper.transaction(asyncError(e.taskId, err.toString()));
@@ -1327,14 +1376,14 @@ export class PlayerGame extends Game {
             const ldraw: Group = e.address
                 ? await loader.loadAsync(e.address)
                 : await new Promise<Group>((resolve, reject) => {
-                      try {
-                          (loader.parse as any)(e.text, (group: Group) =>
-                              resolve(group)
-                          );
-                      } catch (err) {
-                          reject(err);
-                      }
-                  });
+                    try {
+                        (loader.parse as any)(e.text, (group: Group) =>
+                            resolve(group)
+                        );
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
             const steps = ldraw.userData.numBuildingSteps;
             sim.helper.transaction(asyncResult(e.taskId, steps));
         } catch (err) {
@@ -1924,7 +1973,7 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.slider).style.width = width.toString() + 'px';
     }
 
-    private _showMiniPortal() {}
+    private _showMiniPortal() { }
 
     private _hideMiniPortal() {
         this.miniViewport.setScale(null, 0);
@@ -2089,7 +2138,7 @@ export class PlayerGame extends Game {
                     );
                     this.mapAmbientLight.updateMatrixWorld(true);
                 },
-                dispose: (context) => {},
+                dispose: (context) => { },
             });
         } else {
             for (let sim of this.mapSimulations) {
@@ -2164,7 +2213,7 @@ export class PlayerGame extends Game {
                     this.miniMapAmbientLight.updateMatrixWorld(true);
                     // this.renderMapViewport();
                 },
-                dispose: (context) => {},
+                dispose: (context) => { },
             });
         } else {
             for (let sim of this.miniMapSimulations) {
@@ -2495,8 +2544,8 @@ export class PlayerGame extends Game {
         this.backgroundCursor = isMiniPortal
             ? this.getMiniPortalCursor()
             : isMiniMapPortal
-            ? this.getMiniMapPortalCursor()
-            : this.getCursor();
+                ? this.getMiniMapPortalCursor()
+                : this.getCursor();
 
         super.renderCursor();
     }
@@ -2730,9 +2779,8 @@ function esriEasing(easing: Easing): string {
 }
 
 function convertVector3(vector: Vector3, scale: number): string {
-    return `${VECTOR_TAG_PREFIX}${vector.x * scale},${vector.y * scale},${
-        vector.z * scale
-    }`;
+    return `${VECTOR_TAG_PREFIX}${vector.x * scale},${vector.y * scale},${vector.z * scale
+        }`;
 }
 
 function convertVector2(vector: Vector2 | Vector3): string {
