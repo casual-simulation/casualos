@@ -13,6 +13,7 @@
 ### :bug: Bug Fixes
 
 -   Improved error handling for `ai.stream.chat()` and `ai.generateImage()`.
+-   Added documentation for `crypto.decrypt()`.
 
 ## V3.5.2
 
