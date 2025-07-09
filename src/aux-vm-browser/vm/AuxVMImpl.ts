@@ -239,16 +239,7 @@ export default class AuxVMImpl implements AuxVM {
 
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
-            proxy((events) => {
-                for (let e of events) {
-                    if ('taskId' in e) {
-                        console.log(
-                            `${e.taskId}::vm::${e.type}::${Date.now()}`
-                        );
-                    }
-                }
-                this._localEvents.next(events);
-            }),
+            proxy((events) => this._localEvents.next(events)),
             proxy((events) => this._deviceEvents.next(events)),
             proxy((state) => this._stateUpdated.next(state)),
             proxy((version) => this._versionUpdated.next(version)),
