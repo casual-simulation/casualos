@@ -15433,6 +15433,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Decrypt the given data and toast it.
      * const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
      * os.toast(decrypted);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.decrypt
      */
     function decrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
