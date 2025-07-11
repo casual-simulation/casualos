@@ -1344,6 +1344,18 @@ export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
 export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
 
 /**
+ * The possible kinds of map portals.
+ * - "globe" means that the map portal is rendered as a globe.
+ * - "plane" means that the map portal is rendered as a flat plane.
+ */
+export type MapPortalKind = 'globe' | 'plane';
+
+/**
+ * The default kind of map portal.
+ */
+export const DEFAULT_MAP_PORTAL_KIND: MapPortalKind = 'globe';
+
+/**
  * The default longitude that the map portal should show.
  */
 export const DEFAULT_MAP_PORTAL_LONGITUDE = -84.71112905478944;

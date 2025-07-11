@@ -180,6 +180,26 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         this._setBasemap(this._mapView, basemapId);
     }
 
+    /**
+     * Updates the viewing mode of the map view.
+     * Returns true if the viewing mode was changed, false otherwise.
+     * @param viewingMode The viewing mode to set for the map view. Can be 'global' or 'local'.
+     * @returns
+     */
+    setMapViewingMode(viewingMode: 'global' | 'local') {
+        return this._setViewingMode(this._mapView, viewingMode);
+    }
+
+    /**
+     * Updates the viewing mode of the mini map view.
+     * Returns true if the viewing mode was changed, false otherwise.
+     * @param viewingMode The viewing mode to set for the mini map view. Can be 'global' or 'local'.
+     * @returns
+     */
+    setMiniMapViewingMode(viewingMode: 'global' | 'local') {
+        return this._setViewingMode(this._miniMapView, viewingMode);
+    }
+
     setMiniMapBasemap(basemapId: string) {
         this._setBasemap(this._miniMapView, basemapId);
     }
@@ -193,6 +213,20 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 }
             }
         }
+    }
+
+    private _setViewingMode(
+        view: EsriSceneView,
+        viewingMode: 'global' | 'local'
+    ) {
+        if (view) {
+            if (view.viewingMode !== viewingMode) {
+                view.viewingMode = viewingMode;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     moveTouch(e: TouchEvent) {

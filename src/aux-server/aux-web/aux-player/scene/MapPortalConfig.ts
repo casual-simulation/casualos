@@ -17,6 +17,7 @@
  */
 import type {
     BotCalculationContext,
+    MapPortalKind,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import {
@@ -25,6 +26,8 @@ import {
     DEFAULT_MAP_PORTAL_SCALE,
     DEFAULT_MAP_PORTAL_BASEMAP,
     calculateStringTagValue,
+    DEFAULT_MAP_PORTAL_KIND,
+    getMapPortalKind,
 } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { PortalConfig } from './PortalConfig';
@@ -35,9 +38,14 @@ import type { TileableGrid3D } from '../../shared/scene/Grid3D';
  */
 export class MapPortalConfig extends PortalConfig {
     private _basemap: string;
+    private _kind: MapPortalKind;
 
     get basemap() {
         return this._basemap ?? DEFAULT_MAP_PORTAL_BASEMAP;
+    }
+
+    get kind() {
+        return this._kind ?? DEFAULT_MAP_PORTAL_KIND;
     }
 
     constructor(
@@ -52,6 +60,7 @@ export class MapPortalConfig extends PortalConfig {
     protected _clearPortalValues() {
         super._clearPortalValues();
         this._basemap = null;
+        this._kind = null;
     }
 
     protected _updatePortalValues(
@@ -72,6 +81,7 @@ export class MapPortalConfig extends PortalConfig {
             'auxMapPortalBasemap',
             null
         );
+        this._kind = getMapPortalKind(bot);
     }
 
     protected _getDefaultGridScale() {
