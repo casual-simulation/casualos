@@ -552,6 +552,46 @@ Sets the style of the bottom layer of the map in the mapPortal/miniMapPortal.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `mapPortalKind`
+<Badges>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+How the map portal should be displayed.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='globe'>
+    The map of Earth is displayed as a globe. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value="plane">
+    The map of Earth is projected onto a flat plane using the Mercator projection.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `mapPortalGridKind`
+<Badges>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+How the grid should be positioned and scaled in the map portal.
+This tag can be used to make the map portal have a grid that is aligned with the globular projection of the Earth, or a grid that is aligned with the Mercator projection of the Earth.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The grid is aligned to match the <TagLink tag='mapPortalKind'/> of the portal.
+  </PossibleValueCode>
+  <PossibleValueCode value='globe'>
+    The grid is aligned with the globular projection of the Earth.
+  </PossibleValueCode>
+  <PossibleValueCode value='plane'>
+    The grid is aligned with the Mercator projection of the Earth.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `wristPortalHeight`
 <Badges>
     <LeftWristPortalBadge/>

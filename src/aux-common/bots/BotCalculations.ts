@@ -2140,12 +2140,15 @@ export function calculateAnchorPoint(value: BotAnchorPoint) {
 }
 
 export function getMapPortalKind(bot: Bot): MapPortalKind {
-    const kind = calculateStringTagValue(null, bot, 'auxKind', null);
-    if (kind === 'globe' || kind === 'plane') {
-        return kind;
-    }
+    const kind = calculateStringTagValue(null, bot, 'auxMapPortalKind', null);
+    return calculateMapPortalKind(kind) ?? DEFAULT_MAP_PORTAL_KIND;
+}
 
-    return DEFAULT_MAP_PORTAL_KIND;
+export function calculateMapPortalKind(value: string): MapPortalKind | null {
+    if (value === 'globe' || value === 'plane') {
+        return value;
+    }
+    return null;
 }
 
 /**

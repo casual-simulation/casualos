@@ -2698,6 +2698,8 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalJWT',
     'meetPortalLanguage',
     'mapPortalBasemap',
+    'mapPortalKind',
+    'mapPortalGridKind',
 
     'tagPortalAnchorPoint',
     'tagPortalStyle',

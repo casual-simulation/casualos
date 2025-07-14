@@ -28,10 +28,12 @@ import {
     calculateStringTagValue,
     DEFAULT_MAP_PORTAL_KIND,
     getMapPortalKind,
+    calculateMapPortalKind,
 } from '@casual-simulation/aux-common';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { PortalConfig } from './PortalConfig';
 import type { TileableGrid3D } from '../../shared/scene/Grid3D';
+import { MapPortalGrid3D } from './MapPortalGrid3D';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.
@@ -82,6 +84,16 @@ export class MapPortalConfig extends PortalConfig {
             null
         );
         this._kind = getMapPortalKind(bot);
+
+        if (this.grid3D instanceof MapPortalGrid3D) {
+            const gridKind = calculateStringTagValue(
+                calc,
+                bot,
+                'auxMapPortalGridKind',
+                null
+            );
+            this.grid3D.gridKind = calculateMapPortalKind(gridKind);
+        }
     }
 
     protected _getDefaultGridScale() {
