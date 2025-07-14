@@ -359,7 +359,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      * Optionally adds the given external renderer to the view.
      * @param externalRenderer The external renderer that should be used to integrate with the map's rendering system.
      */
-    async enableMapView(externalRenderer?: __esri.ExternalRenderer) {
+    async enableMapView(
+        externalRenderer?: __esri.ExternalRenderer,
+        camera?: __esri.CameraProperties
+    ) {
         console.log('[PlayerGameView] Enable Map');
         this.wantsMap = true;
         await loadMapModules();
@@ -381,6 +384,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             center: [DEFAULT_MAP_PORTAL_LONGITUDE, DEFAULT_MAP_PORTAL_LATITUDE],
             zoom: DEFAULT_MAP_PORTAL_ZOOM,
             container: this.mapViewId,
+            camera,
         });
 
         try {
@@ -419,7 +423,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         }
     }
 
-    async enableMiniMapView(externalRenderer?: __esri.ExternalRenderer) {
+    async enableMiniMapView(
+        externalRenderer?: __esri.ExternalRenderer,
+        camera?: __esri.CameraProperties
+    ) {
         console.log('[PlayerGameView] Enable Mini Map');
         this.wantsMiniMap = true;
         await loadMapModules();
@@ -444,6 +451,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             ui: {
                 components: [],
             },
+            camera,
         });
 
         try {

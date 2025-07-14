@@ -2110,8 +2110,14 @@ export class PlayerGame extends Game {
             const viewingMode = kind === 'globe' ? 'global' : 'local';
             if (view.viewingMode !== viewingMode) {
                 if (view.ready) {
+                    const cameraProperties: __esri.CameraProperties = {
+                        position: view.camera.position.toJSON(),
+                        fov: view.camera.fov,
+                        tilt: view.camera.tilt,
+                        heading: view.camera.heading,
+                    };
                     this._disableMapPortal();
-                    this._setupMapPortal();
+                    this._setupMapPortal(cameraProperties);
                 } else {
                     view.viewingMode = viewingMode;
                     // // update the bot positions
@@ -2149,8 +2155,14 @@ export class PlayerGame extends Game {
 
             if (view.viewingMode !== viewingMode) {
                 if (view.ready) {
+                    const cameraProperties: __esri.CameraProperties = {
+                        position: view.camera.position.toJSON(),
+                        fov: view.camera.fov,
+                        tilt: view.camera.tilt,
+                        heading: view.camera.heading,
+                    };
                     this._disableMiniMapPortal();
-                    this._setupMiniMapPortal();
+                    this._setupMiniMapPortal(cameraProperties);
                 } else {
                     view.viewingMode = viewingMode;
                 }
@@ -2197,58 +2209,63 @@ export class PlayerGame extends Game {
         this.mapViewport.layer = -1;
     }
 
-    private async _setupMapPortal() {
-        await this.gameView.enableMapView({
-            setup: (context) => {
-                const view = this.gameView.getMapView();
-                const coordinateTransform =
-                    this.gameView.getMapCoordinateTransformer();
-                for (let sim of this.mapSimulations) {
-                    sim.coordinateTransformer = coordinateTransform;
-                    sim.mapView = view;
-                }
+    private async _setupMapPortal(camera?: __esri.CameraProperties) {
+        await this.gameView.enableMapView(
+            {
+                setup: (context) => {
+                    const view = this.gameView.getMapView();
+                    const coordinateTransform =
+                        this.gameView.getMapCoordinateTransformer();
+                    for (let sim of this.mapSimulations) {
+                        sim.coordinateTransformer = coordinateTransform;
+                        sim.mapView = view;
+                    }
 
-                this.mapViewport.layer = 0.5;
+                    this.mapViewport.layer = 0.5;
+                },
+                render: (context) => {
+                    let contextCam = context.camera;
+                    let camera = this.mapCameraRig.mainCamera;
+                    camera.position.fromArray(contextCam.eye);
+                    camera.up.fromArray(contextCam.up);
+                    camera.lookAt(
+                        new Vector3(
+                            contextCam.center[0],
+                            contextCam.center[1],
+                            contextCam.center[2]
+                        )
+                    );
+                    camera.projectionMatrix.fromArray(
+                        contextCam.projectionMatrix
+                    );
+                    camera.projectionMatrixInverse
+                        .copy(camera.projectionMatrix)
+                        .invert();
+                    camera.near = contextCam.near;
+                    camera.far = contextCam.far;
+                    camera.updateMatrixWorld(true);
+
+                    this.mapDirectionalLight.position.fromArray(
+                        context.sunLight.direction
+                    );
+                    this.mapDirectionalLight.intensity =
+                        context.sunLight.diffuse.intensity;
+                    this.mapDirectionalLight.color = new Color().fromArray(
+                        context.sunLight.diffuse.color
+                    );
+                    this.mapDirectionalLight.updateMatrixWorld(true);
+
+                    this.mapAmbientLight.intensity =
+                        context.sunLight.ambient.intensity;
+                    this.mapAmbientLight.color = new Color().fromArray(
+                        context.sunLight.ambient.color
+                    );
+                    this.mapAmbientLight.updateMatrixWorld(true);
+                },
+                dispose: (context) => {},
             },
-            render: (context) => {
-                let contextCam = context.camera;
-                let camera = this.mapCameraRig.mainCamera;
-                camera.position.fromArray(contextCam.eye);
-                camera.up.fromArray(contextCam.up);
-                camera.lookAt(
-                    new Vector3(
-                        contextCam.center[0],
-                        contextCam.center[1],
-                        contextCam.center[2]
-                    )
-                );
-                camera.projectionMatrix.fromArray(contextCam.projectionMatrix);
-                camera.projectionMatrixInverse
-                    .copy(camera.projectionMatrix)
-                    .invert();
-                camera.near = contextCam.near;
-                camera.far = contextCam.far;
-                camera.updateMatrixWorld(true);
-
-                this.mapDirectionalLight.position.fromArray(
-                    context.sunLight.direction
-                );
-                this.mapDirectionalLight.intensity =
-                    context.sunLight.diffuse.intensity;
-                this.mapDirectionalLight.color = new Color().fromArray(
-                    context.sunLight.diffuse.color
-                );
-                this.mapDirectionalLight.updateMatrixWorld(true);
-
-                this.mapAmbientLight.intensity =
-                    context.sunLight.ambient.intensity;
-                this.mapAmbientLight.color = new Color().fromArray(
-                    context.sunLight.ambient.color
-                );
-                this.mapAmbientLight.updateMatrixWorld(true);
-            },
-            dispose: (context) => {},
-        });
+            camera
+        );
     }
 
     private _updateMiniMapPortalVisibility() {
@@ -2274,62 +2291,67 @@ export class PlayerGame extends Game {
         this.miniMapViewport.layer = -1;
     }
 
-    private _setupMiniMapPortal() {
+    private _setupMiniMapPortal(camera?: __esri.CameraProperties) {
         this.miniMapViewport.setScale(null, 0);
-        this.gameView.enableMiniMapView({
-            setup: (context) => {
-                const view = this.gameView.getMiniMapView();
-                const coordinateTransform =
-                    this.gameView.getMiniMapCoordinateTransformer();
-                for (let sim of this.miniMapSimulations) {
-                    sim.coordinateTransformer = coordinateTransform;
-                    sim.mapView = view;
-                }
+        this.gameView.enableMiniMapView(
+            {
+                setup: (context) => {
+                    const view = this.gameView.getMiniMapView();
+                    const coordinateTransform =
+                        this.gameView.getMiniMapCoordinateTransformer();
+                    for (let sim of this.miniMapSimulations) {
+                        sim.coordinateTransformer = coordinateTransform;
+                        sim.mapView = view;
+                    }
 
-                this.miniMapViewport.layer = 1.5;
-                this.miniMapViewport.targetElement =
-                    this.gameView.getMiniMapViewportTarget();
+                    this.miniMapViewport.layer = 1.5;
+                    this.miniMapViewport.targetElement =
+                        this.gameView.getMiniMapViewportTarget();
+                },
+                render: (context) => {
+                    let contextCam = context.camera;
+                    let camera = this.miniMapCameraRig.mainCamera;
+                    camera.position.fromArray(contextCam.eye);
+                    camera.up.fromArray(contextCam.up);
+                    camera.lookAt(
+                        new Vector3(
+                            contextCam.center[0],
+                            contextCam.center[1],
+                            contextCam.center[2]
+                        )
+                    );
+                    camera.projectionMatrix.fromArray(
+                        contextCam.projectionMatrix
+                    );
+                    camera.projectionMatrixInverse
+                        .copy(camera.projectionMatrix)
+                        .invert();
+                    camera.near = contextCam.near;
+                    camera.far = contextCam.far;
+                    camera.updateMatrixWorld(true);
+
+                    this.miniMapDirectionalLight.position.fromArray(
+                        context.sunLight.direction
+                    );
+                    this.miniMapDirectionalLight.intensity =
+                        context.sunLight.diffuse.intensity;
+                    this.miniMapDirectionalLight.color = new Color().fromArray(
+                        context.sunLight.diffuse.color
+                    );
+                    this.miniMapDirectionalLight.updateMatrixWorld(true);
+
+                    this.miniMapAmbientLight.intensity =
+                        context.sunLight.ambient.intensity;
+                    this.miniMapAmbientLight.color = new Color().fromArray(
+                        context.sunLight.ambient.color
+                    );
+                    this.miniMapAmbientLight.updateMatrixWorld(true);
+                    // this.renderMapViewport();
+                },
+                dispose: (context) => {},
             },
-            render: (context) => {
-                let contextCam = context.camera;
-                let camera = this.miniMapCameraRig.mainCamera;
-                camera.position.fromArray(contextCam.eye);
-                camera.up.fromArray(contextCam.up);
-                camera.lookAt(
-                    new Vector3(
-                        contextCam.center[0],
-                        contextCam.center[1],
-                        contextCam.center[2]
-                    )
-                );
-                camera.projectionMatrix.fromArray(contextCam.projectionMatrix);
-                camera.projectionMatrixInverse
-                    .copy(camera.projectionMatrix)
-                    .invert();
-                camera.near = contextCam.near;
-                camera.far = contextCam.far;
-                camera.updateMatrixWorld(true);
-
-                this.miniMapDirectionalLight.position.fromArray(
-                    context.sunLight.direction
-                );
-                this.miniMapDirectionalLight.intensity =
-                    context.sunLight.diffuse.intensity;
-                this.miniMapDirectionalLight.color = new Color().fromArray(
-                    context.sunLight.diffuse.color
-                );
-                this.miniMapDirectionalLight.updateMatrixWorld(true);
-
-                this.miniMapAmbientLight.intensity =
-                    context.sunLight.ambient.intensity;
-                this.miniMapAmbientLight.color = new Color().fromArray(
-                    context.sunLight.ambient.color
-                );
-                this.miniMapAmbientLight.updateMatrixWorld(true);
-                // this.renderMapViewport();
-            },
-            dispose: (context) => {},
-        });
+            camera
+        );
     }
 
     private _updateMiniMapPortalBasemap() {
