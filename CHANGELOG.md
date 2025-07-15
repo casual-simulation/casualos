@@ -30,6 +30,16 @@
         -   `https://some.domain.com/{level}/{col}/{row}.png`
         -   `https://some.domain.com/{z}/{x}/{y}.png`
         -   Where anything in curly braces `{}` represents a template parameter that the mapPortal/miniMapPortal will fill with the corresponding coordinate information for the requested tile.
+-   Added the `os.addMapLayer(portal, layer)` and `os.removeMapLayer(layerId)` functions.
+    -   These functions allow you to visualize and render [GeoJSON](https://geojson.org/) data in the mapPortal or miniMapPortal.
+    -   `os.addMapLayer(portal, layer)` - Adds a map layer to the given portal. Returns a promise that resolves with string with the ID of the layer that was added. It accepts the following arguments:
+        -   `portal` - The portal that the layer should be rendered in. Can either be `map` or `miniMap`.
+        -   `layer` - The layer that should be displayed. Should be an object with the following structure:
+            -   `type` - The type of the layer. Currently only `geojson` is supported.
+            -   `url` - (Optional) The URL that the GeoJSON data can be downloaded from.
+            -   `data` - (Optional) The GeoJSON data that is contained in the layer. Required if `url` is not specified.
+    -   `os.removeMapLayer(layerId)` - Removes a map layer from the portal it is in. Returns a promise that resolves once the layer has been removed.
+        -   `layerId` - The ID of the layer that should be removed. You can get this from the resolved value from `os.addMapLayer()`.
 
 ### :bug: Bug Fixes
 
