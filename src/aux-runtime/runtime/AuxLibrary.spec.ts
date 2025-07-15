@@ -170,6 +170,8 @@ import {
     getBotsStateFromStoredAux,
     installAuxFile,
     calculateScreenCoordinatesFromPosition,
+    addMapLayer,
+    removeMapLayer,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -9564,18 +9566,19 @@ describe('AuxLibrary', () => {
                         'grid',
                         new Vector3(1, 2, 3)
                     );
-                const expected =
-                    calculateScreenCoordinatesFromPosition(
-                        'grid',
-                        [new Vector3(1, 2, 3)],
-                        context.tasks.size
-                    );
+                const expected = calculateScreenCoordinatesFromPosition(
+                    'grid',
+                    [new Vector3(1, 2, 3)],
+                    context.tasks.size
+                );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
 
-                context.resolveTask(context.tasks.size, [
-                    new Vector3(4, 5, 6)
-                ], false);
+                context.resolveTask(
+                    context.tasks.size,
+                    [new Vector3(4, 5, 6)],
+                    false
+                );
 
                 const result = await promise;
 
@@ -9588,19 +9591,19 @@ describe('AuxLibrary', () => {
                         'grid',
                         [new Vector3(1, 2, 3), new Vector3(4, 5, 6)]
                     );
-                const expected =
-                    calculateScreenCoordinatesFromPosition(
-                        'grid',
-                        [new Vector3(1, 2, 3), new Vector3(4, 5, 6)],
-                        context.tasks.size
-                    );
+                const expected = calculateScreenCoordinatesFromPosition(
+                    'grid',
+                    [new Vector3(1, 2, 3), new Vector3(4, 5, 6)],
+                    context.tasks.size
+                );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
 
-                context.resolveTask(context.tasks.size, [
-                    new Vector3(7, 8, 9),
-                    new Vector3(10, 11, 12),
-                ], false);
+                context.resolveTask(
+                    context.tasks.size,
+                    [new Vector3(7, 8, 9), new Vector3(10, 11, 12)],
+                    false
+                );
 
                 const result = await promise;
 
@@ -9935,6 +9938,41 @@ describe('AuxLibrary', () => {
                 };
                 const promise: any = library.api.os.detachDebugger(debug);
                 const expected = detachRuntime(runtime, context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.addMapLayer()', () => {
+            it('should send a AddMapLayerAction', () => {
+                const promise: any = library.api.os.addMapLayer('map', {
+                    type: 'geojson',
+                    data: {
+                        abc: 'def',
+                    },
+                });
+
+                const expected = addMapLayer(
+                    'map',
+                    {
+                        type: 'geojson',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.removeMapLayer()', () => {
+            it('should send a RemoveMapLayerAction', () => {
+                const promise: any = library.api.os.removeMapLayer('layer');
+                const expected = removeMapLayer('layer', context.tasks.size);
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

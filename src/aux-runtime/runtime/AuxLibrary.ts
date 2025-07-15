@@ -112,6 +112,7 @@ import type {
     InstConfig,
     UnloadServerConfigAction,
     Point3D,
+    MapLayer,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -270,6 +271,8 @@ import {
     installAuxFile as calcInstallAuxFile,
     calculateStringListTagValue,
     calculateScreenCoordinatesFromPosition as calcCalculateScreenCoordinatesFromPosition,
+    addMapLayer as calcAddMapLayer,
+    removeMapLayer as calcRemoveMapLayer,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3450,6 +3453,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 ldrawCountTextBuildSteps,
                 attachDebugger,
                 detachDebugger,
+
+                addMapLayer,
+                removeMapLayer,
 
                 remotes,
                 listInstUpdates,
@@ -11955,6 +11961,93 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = detachRuntime(runtime, task.taskId);
         return addAsyncAction(task, event as any);
+    }
+
+    /**
+     * Adds a map layer to the map or miniMap portal.
+     *
+     * Returns a promise that resolves with the ID of the layer that was added.
+     *
+     * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
+     * @param layer The layer that should be added.
+     * @param index The index that the layer should be added at. If omitted, the layer will be added to the end of the list.
+     *
+     * @example Add a GeoJSON layer to the map portal
+     * const layerId = await os.addMapLayer('map', {
+     *    type: 'geojson',
+     *    data: {
+     *       type: "FeatureCollection",
+     *       features: [
+     *           {
+     *               type: "Feature",
+     *               geometry: { type: "Point", coordinates: [102.0, 0.5] },
+     *               properties: { prop0: "value0" }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "LineString",
+     *                   coordinates: [
+     *                       [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: 0.0
+     *               }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "Polygon",
+     *                   coordinates: [
+     *                       [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+     *                       [100.0, 1.0], [100.0, 0.0]]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: { "this": "that" }
+     *               }
+     *           }
+     *       ]
+     *   }
+     * });
+     *
+     * @dochash action/os/maps
+     * @doctitle Map Actions
+     * @docsidebar Maps
+     * @docdescription Actions for working with maps and map layers.
+     * @docid os.addMapLayer
+     */
+    function addMapLayer(
+        portal: 'map' | 'miniMap',
+        layer: MapLayer,
+        index?: number
+    ): Promise<string> {
+        const task = context.createTask();
+        const event = calcAddMapLayer(portal, layer, index, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Removes a layer from the map or miniMap portal.
+     *
+     * Returns a promise that resolves when the layer has been removed.
+     *
+     * @param layerId The ID of the layer to remove.
+     * @returns A promise that resolves when the layer has been removed.
+     *
+     * @example Remove a layer from the map portal
+     * await os.removeMapLayer('my-layer-id');
+     *
+     * @dochash action/os/maps
+     * @docid os.removeMapLayer
+     */
+    function removeMapLayer(layerId: string): Promise<void> {
+        const task = context.createTask();
+        const event = calcRemoveMapLayer(layerId, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

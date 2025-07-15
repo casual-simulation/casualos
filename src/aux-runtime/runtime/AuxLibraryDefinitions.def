@@ -12251,6 +12251,49 @@ export interface RecordPackageVersionSuccess extends CrudRecordItemSuccess {
     auxFileResult: RecordFileResult;
 }
 
+/**
+ * The kinds of map layers that can be added to the map or miniMapPortal.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayer
+ */
+export type MapLayer = GeoJSONMapLayer;
+
+/**
+ * Defines a base interface for map layers.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayerBase
+ */
+export interface MapLayerBase {
+    /**
+     * Copyright information for the layer.
+     */
+    copyright?: string;
+}
+
+/**
+ * A map layer that contains GeoJSON data.
+ *
+ * @dochash types/os/maps
+ * @docid GeoJSONMapLayer
+ */
+export interface GeoJSONMapLayer extends MapLayerBase {
+    type: 'geojson';
+
+    /**
+     * The URL that contains the GeoJSON data.
+     *
+     * Can be a blob url, a data url, or a regular URL.
+     */
+    url?: string;
+
+    /**
+     * The GeoJSON data for the layer.
+     */
+    data?: object;
+}
+
 interface Ai {
     /**
      * Sends a chat message to the AI.
@@ -15512,6 +15555,81 @@ interface Os {
      * @param debug The debugger that should be detached.
      */
     detachDebugger(debug: Debugger): Promise<void>;
+
+    /**
+     * Adds a map layer to the map or miniMap portal.
+     * 
+     * Returns a promise that resolves with the ID of the layer that was added.
+     * 
+     * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
+     * @param layer The layer that should be added.
+     * @param index The index that the layer should be added at. If omitted, the layer will be added to the end of the list.
+     * 
+     * @example Add a GeoJSON layer to the map portal
+     * const layerId = await os.addMapLayer('map', {
+     *    type: 'geojson',
+     *    data: {
+     *       type: "FeatureCollection",
+     *       features: [
+     *           {
+     *               type: "Feature",
+     *               geometry: { type: "Point", coordinates: [102.0, 0.5] },
+     *               properties: { prop0: "value0" }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "LineString",
+     *                   coordinates: [
+     *                       [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: 0.0
+     *               }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "Polygon",
+     *                   coordinates: [
+     *                       [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+     *                       [100.0, 1.0], [100.0, 0.0]]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: { "this": "that" }
+     *               }
+     *           }
+     *       ]
+     *   }
+     * });
+     * 
+     * @dochash action/os/maps
+     * @doctitle Map Actions
+     * @docsidebar Maps
+     * @docdescription Actions for working with maps and map layers.
+     * @docid os.addMapLayer
+     */
+    addMapLayer(portal: 'map' | 'miniMap', layer: MapLayer, index?: number): Promise<string>;
+    
+    /**
+     * Removes a layer from the map or miniMap portal.
+     * 
+     * Returns a promise that resolves when the layer has been removed.
+     * 
+     * @param layerId The ID of the layer to remove.
+     * @returns A promise that resolves when the layer has been removed.
+     * 
+     * @example Remove a layer from the map portal
+     * await os.removeMapLayer('my-layer-id');
+     * 
+     * @dochash action/os/maps
+     * @docid os.removeMapLayer
+     */
+    removeMapLayer(layerId: string): Promise<void>;
 
     /**
      * The global variables that are stored in the OS.
