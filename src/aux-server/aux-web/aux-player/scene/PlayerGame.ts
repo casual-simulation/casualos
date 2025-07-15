@@ -2120,29 +2120,11 @@ export class PlayerGame extends Game {
                     this._setupMapPortal(cameraProperties);
                 } else {
                     view.viewingMode = viewingMode;
-                    // // update the bot positions
-                    // for (let sim of this.mapSimulations) {
-                    //     sim.ensureUpdate(sim.bots.map((b) => b.bot.id));
-                    // }
                 }
             }
 
             // update the globe mask visibility
             this._mapGlobeMask.visible = kind === 'globe';
-
-            // if (
-            //     this.gameView.setMiniMapViewingMode(
-            //         kind === 'globe' ? 'global' : 'local'
-            //     )
-            // ) {
-            //     // update the bot positions
-            //     for (let sim of this.mapSimulations) {
-            //         sim.ensureUpdate(sim.bots.map((b) => b.bot.id));
-            //     }
-
-            //     // update the globe mask
-            //     this._miniMapGlobeMask.visible = kind === 'globe';
-            // }
         }
     }
 
@@ -2169,20 +2151,6 @@ export class PlayerGame extends Game {
             }
 
             this._miniMapGlobeMask.visible = kind === 'globe';
-
-            // if (
-            //     this.gameView.setMiniMapViewingMode(
-            //         kind === 'globe' ? 'global' : 'local'
-            //     )
-            // ) {
-            //     // update the bot positions
-            //     for (let sim of this.mapSimulations) {
-            //         sim.ensureUpdate(sim.bots.map((b) => b.bot.id));
-            //     }
-
-            //     // update the globe mask
-            //     this._miniMapGlobeMask.visible = kind === 'globe';
-            // }
         }
     }
 
