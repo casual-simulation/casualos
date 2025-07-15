@@ -46,8 +46,10 @@ import {
     SpatialReference,
     WebMercatorUtils,
     Basemap,
+    WebTileLayer,
 } from '../MapUtils';
 import { Matrix4 } from '@casual-simulation/three';
+import { isUrl } from '@casual-simulation/aux-runtime';
 
 @Component({
     components: {
@@ -96,6 +98,9 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     lastMenuCount: number = null;
     private _mapView: EsriSceneView;
     private _miniMapView: EsriSceneView;
+    private _mapBasemap: string = DEFAULT_MAP_PORTAL_BASEMAP;
+    private _miniMapBasemap: string = DEFAULT_MAP_PORTAL_BASEMAP;
+
     private _coordinateTransformer: (pos: {
         x: number;
         y: number;
@@ -177,7 +182,9 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     }
 
     setBasemap(basemapId: string) {
-        this._setBasemap(this._mapView, basemapId);
+        if (this._setBasemap(this._mapView, basemapId, this._mapBasemap)) {
+            this._mapBasemap = basemapId;
+        }
     }
 
     /**
@@ -201,18 +208,39 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     }
 
     setMiniMapBasemap(basemapId: string) {
-        this._setBasemap(this._miniMapView, basemapId);
+        if (
+            this._setBasemap(this._miniMapView, basemapId, this._miniMapBasemap)
+        ) {
+            this._miniMapBasemap = basemapId;
+        }
     }
 
-    private _setBasemap(view: EsriSceneView, basemapId: string) {
-        if (view) {
-            const basemap = Basemap.fromId(basemapId);
-            if (basemap && view) {
-                if (view.map.basemap.id !== basemap.id) {
-                    view.map.basemap = basemap;
-                }
+    private _setBasemap(
+        view: EsriSceneView,
+        basemapId: string,
+        oldBasemapId: string
+    ) {
+        basemapId ??= DEFAULT_MAP_PORTAL_BASEMAP;
+        if (view && basemapId !== oldBasemapId) {
+            let basemap: __esri.Basemap;
+            if (isUrl(basemapId)) {
+                basemap = new Basemap({
+                    baseLayers: [
+                        new WebTileLayer({
+                            urlTemplate: basemapId,
+                        }),
+                    ],
+                });
+            } else {
+                basemap = Basemap.fromId(basemapId);
+            }
+            if (basemap) {
+                view.map.basemap = basemap;
+                return true;
             }
         }
+
+        return false;
     }
 
     private _setViewingMode(
@@ -375,6 +403,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             Config.apiKey = appManager.config.arcGisApiKey;
         }
 
+        this._mapBasemap = DEFAULT_MAP_PORTAL_BASEMAP;
         const map = new GeoMap({
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
@@ -439,6 +468,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             Config.apiKey = appManager.config.arcGisApiKey;
         }
 
+        this._miniMapBasemap = DEFAULT_MAP_PORTAL_BASEMAP;
         const map = new GeoMap({
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
