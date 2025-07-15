@@ -552,6 +552,62 @@ Sets the style of the bottom layer of the map in the mapPortal/miniMapPortal.
   </PossibleValue>
 </PossibleValuesTable>
 
+### `mapPortalKind`
+<Badges>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+How the map portal should be displayed.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='globe'>
+    The map of Earth is displayed as a globe. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value="plane">
+    The map of Earth is projected onto a flat plane using the Mercator projection.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `mapPortalGridKind`
+<Badges>
+    <MapPortalBadge/>
+    <MiniMapPortalBadge/>
+</Badges>
+
+How the grid should be positioned and scaled in the map portal.
+
+This tag can be used to make the map portal have a grid that is aligned with the globular projection of the Earth, or a grid that is aligned with the Mercator projection of the Earth.
+Note that this tag only has an effect on the placement of bots in the grid using the <ActionLink action='os.addBotDropSnap'/> action.
+
+When set to `globe`, the grid will be perfectly aligned with the globe such that two bots can be placed directly next to each other anywhere on Earth by using the grid snap.
+Because the Earth is a globe, and it is impossible for a uniform grid to perfectly align with the surface of a globe, each row of the grid will be slightly offset from the previous row.
+
+This leads to the following behaviors:
+-   When <TagLink tag='mapPortalKind'/> is set to `globe`, bots which are placed next to each other in the same row will be perfectly aligned with each other, but bots in different rows might be offset a bit.
+-   When <TagLink tag='mapPortalKind'/> is set to `plane`, bots which are placed next to each other will have space between them due to the Mercator projection.
+
+When set to `plane`, the grid will be uniform and aligned with the Mercator projection of the Earth.
+Because the Earth is a globe, flat projections like the Mercator projection will cause the grid spaces to be wider further away from the equator and narrower closer to the equator.
+
+This leads to the following behaviors:
+-  When <TagLink tag='mapPortalKind'/> is set to `globe`, bots which are placed next to each other in the same row might overlap due to the Mercator projection, but bots in different rows will be perfectly aligned with each other.
+-  When <TagLink tag='mapPortalKind'/> is set to `plane`, bots which are placed next to each other will be perfectly aligned with each other.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The grid is aligned to match the <TagLink tag='mapPortalKind'/> of the portal.
+  </PossibleValueCode>
+  <PossibleValueCode value='globe'>
+    The grid is aligned with the globular projection of the Earth.
+  </PossibleValueCode>
+  <PossibleValueCode value='plane'>
+    The grid is aligned with the Mercator projection of the Earth.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
 ### `wristPortalHeight`
 <Badges>
     <LeftWristPortalBadge/>

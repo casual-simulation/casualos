@@ -11,6 +11,14 @@
 -   Added a better date of birth input to the "Sign Up" page.
 -   Added the `os.calculateScreenCoordinatesFromPosition()` function.
 -   Added batching for events sent from the main thread to the worker thread.
+-   Added the `mapPortalKind` and `mapPortalGridKind` tags for the `mapPortalBot` and `miniMapPortalBot`.
+    -   `mapPortalKind` can be used to cause the mapPortal or miniMapPortal to display the map as a flat plane instead of a sphere.
+        -   `globe` - The Earth is displayed as a globe. (Default)
+        -   `plane` - The Earth is displayed as a flat plane by using the Mercator projection.
+    -   `mapPortalGridKind` can be used to cause the mapPortal or miniMapPortal use a grid that matches the globe or plane settings from `mapPortalKind`.
+        -   `null` - The grid matches the `mapPortalKind`. (Default)
+        -   `globe` - The grid aligns best with the `globe` `mapPortalKind`.
+        -   `plane` - The grid aligns best with the `plane` `mapPortalKind`.
 
 ### :bug: Bug Fixes
 

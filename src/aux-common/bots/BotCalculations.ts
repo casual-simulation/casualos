@@ -48,6 +48,7 @@ import type {
     SystemPortalPane,
     MenuBotSubtype,
     BotMeshPositioningMode,
+    MapPortalKind,
 } from './Bot';
 import {
     DEFAULT_WORKSPACE_SCALE,
@@ -85,6 +86,7 @@ import {
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
     DEFAULT_MESH_POSITIONING_MODE,
+    DEFAULT_MAP_PORTAL_KIND,
 } from './Bot';
 import type { Easing as TweenEasing } from '@tweenjs/tween.js';
 import TWEEN from '@tweenjs/tween.js';
@@ -2135,6 +2137,18 @@ export function calculateAnchorPoint(value: BotAnchorPoint) {
         return value;
     }
     return DEFAULT_ANCHOR_POINT;
+}
+
+export function getMapPortalKind(bot: Bot): MapPortalKind {
+    const kind = calculateStringTagValue(null, bot, 'auxMapPortalKind', null);
+    return calculateMapPortalKind(kind) ?? DEFAULT_MAP_PORTAL_KIND;
+}
+
+export function calculateMapPortalKind(value: string): MapPortalKind | null {
+    if (value === 'globe' || value === 'plane') {
+        return value;
+    }
+    return null;
 }
 
 /**

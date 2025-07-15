@@ -180,6 +180,26 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         this._setBasemap(this._mapView, basemapId);
     }
 
+    /**
+     * Updates the viewing mode of the map view.
+     * Returns true if the viewing mode was changed, false otherwise.
+     * @param viewingMode The viewing mode to set for the map view. Can be 'global' or 'local'.
+     * @returns
+     */
+    setMapViewingMode(viewingMode: 'global' | 'local') {
+        return this._setViewingMode(this._mapView, viewingMode);
+    }
+
+    /**
+     * Updates the viewing mode of the mini map view.
+     * Returns true if the viewing mode was changed, false otherwise.
+     * @param viewingMode The viewing mode to set for the mini map view. Can be 'global' or 'local'.
+     * @returns
+     */
+    setMiniMapViewingMode(viewingMode: 'global' | 'local') {
+        return this._setViewingMode(this._miniMapView, viewingMode);
+    }
+
     setMiniMapBasemap(basemapId: string) {
         this._setBasemap(this._miniMapView, basemapId);
     }
@@ -193,6 +213,20 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 }
             }
         }
+    }
+
+    private _setViewingMode(
+        view: EsriSceneView,
+        viewingMode: 'global' | 'local'
+    ) {
+        if (view) {
+            if (view.viewingMode !== viewingMode) {
+                view.viewingMode = viewingMode;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     moveTouch(e: TouchEvent) {
@@ -325,7 +359,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
      * Optionally adds the given external renderer to the view.
      * @param externalRenderer The external renderer that should be used to integrate with the map's rendering system.
      */
-    async enableMapView(externalRenderer?: __esri.ExternalRenderer) {
+    async enableMapView(
+        externalRenderer?: __esri.ExternalRenderer,
+        camera?: __esri.CameraProperties
+    ) {
         console.log('[PlayerGameView] Enable Map');
         this.wantsMap = true;
         await loadMapModules();
@@ -347,6 +384,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             center: [DEFAULT_MAP_PORTAL_LONGITUDE, DEFAULT_MAP_PORTAL_LATITUDE],
             zoom: DEFAULT_MAP_PORTAL_ZOOM,
             container: this.mapViewId,
+            camera,
         });
 
         try {
@@ -385,7 +423,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         }
     }
 
-    async enableMiniMapView(externalRenderer?: __esri.ExternalRenderer) {
+    async enableMiniMapView(
+        externalRenderer?: __esri.ExternalRenderer,
+        camera?: __esri.CameraProperties
+    ) {
         console.log('[PlayerGameView] Enable Mini Map');
         this.wantsMiniMap = true;
         await loadMapModules();
@@ -410,6 +451,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             ui: {
                 components: [],
             },
+            camera,
         });
 
         try {

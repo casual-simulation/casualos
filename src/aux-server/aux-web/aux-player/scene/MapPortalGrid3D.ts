@@ -17,6 +17,7 @@
  */
 import type { Grid3D, GridTile } from '../../shared/scene/Grid3D';
 import type { Ray } from '@casual-simulation/three';
+import { Plane } from '@casual-simulation/three';
 import { MathUtils, Sphere, Vector2, Vector3 } from '@casual-simulation/three';
 import type { MapSimulation3D } from './MapSimulation3D';
 import { Input } from '../../shared/scene/Input';
@@ -25,6 +26,8 @@ import {
     snapToTileCoord,
 } from '../../shared/scene/BoundedGrid3D';
 import { SpatialReference, ExternalRenderers } from '../MapUtils';
+import { WORLD_UP } from '../../shared/scene/SceneUtils';
+import type { MapPortalKind } from '@casual-simulation/aux-common';
 
 /**
  * The number of meters in a single degree of latitude.
@@ -42,6 +45,8 @@ export class MapPortalGrid3D implements Grid3D {
     private _enabled: boolean = true;
     private _tileScale: number = 1;
     private _globe: Sphere;
+    private _plane: Plane;
+    private _gridKind: MapPortalKind | null = null;
 
     private _temp: Vector3 = new Vector3();
 
@@ -61,6 +66,14 @@ export class MapPortalGrid3D implements Grid3D {
         this._tileScale = value;
     }
 
+    get gridKind(): MapPortalKind {
+        return this._gridKind;
+    }
+
+    set gridKind(value: MapPortalKind) {
+        this._gridKind = value;
+    }
+
     get mapView() {
         return this._mapSimulation.mapView;
     }
@@ -68,23 +81,41 @@ export class MapPortalGrid3D implements Grid3D {
     constructor(mapSimulation: MapSimulation3D, tileScale?: number) {
         this._mapSimulation = mapSimulation;
         this._globe = new Sphere(new Vector3(), EARTH_RADIUS);
+        this._plane = new Plane(WORLD_UP.clone());
         this._tileScale = tileScale ?? 1;
     }
 
     getPointFromRay(ray: Ray): Vector3 {
-        const hitPoint = new Vector3();
-        if (ray.intersectSphere(this._globe, hitPoint)) {
-            const [x, y, z] = ExternalRenderers.fromRenderCoordinates(
-                this.mapView,
-                [hitPoint.x, hitPoint.y, hitPoint.z],
-                0,
-                [0, 0, 0],
-                0,
-                SpatialReference.WGS84,
-                1
-            );
+        if (this.mapView.viewingMode === 'global') {
+            const hitPoint = new Vector3();
+            if (ray.intersectSphere(this._globe, hitPoint)) {
+                const [x, y, z] = ExternalRenderers.fromRenderCoordinates(
+                    this.mapView,
+                    [hitPoint.x, hitPoint.y, hitPoint.z],
+                    0,
+                    [0, 0, 0],
+                    0,
+                    SpatialReference.WGS84,
+                    1
+                );
 
-            return new Vector3(x, 0, y);
+                return new Vector3(x, 0, y);
+            }
+        } else {
+            const hitPoint = new Vector3();
+            if (ray.intersectPlane(this._plane, hitPoint)) {
+                const [x, y, z] = ExternalRenderers.fromRenderCoordinates(
+                    this.mapView,
+                    [hitPoint.x, hitPoint.y, hitPoint.z],
+                    0,
+                    [0, 0, 0],
+                    0,
+                    SpatialReference.WGS84,
+                    1
+                );
+
+                return new Vector3(x, 0, y);
+            }
         }
 
         return null;
@@ -147,18 +178,33 @@ export class MapPortalGrid3D implements Grid3D {
             snapToTileCoord(localPos.z * latScale, roundToWholeNumber, 1) /
             latScale;
 
+        const gridKind: MapPortalKind =
+            this._gridKind ??
+            (this.mapView.viewingMode === 'global' ? 'globe' : 'plane');
+
+        let radiusAtLatitude: number;
+        if (gridKind === 'globe') {
+            // The grid should match up perfectly with a spherical globe
+
+            // Because the earth is a sphere(ish), we need to calculate the circumference
+            // at the specific latitude so that our spacing can be correct.
+            // We do this calculation at the rounded latitude so that they match up when rounding
+            radiusAtLatitude =
+                EARTH_RADIUS * Math.cos(MathUtils.DEG2RAD * tileY);
+        } else {
+            // The grid should match up perfectly with a flat plane that is as long as the equator
+
+            // Calculate the circumference of the earth at the equator
+            radiusAtLatitude = EARTH_RADIUS;
+        }
+
         // 10 meter grid spaces
-        // Because the earth is a sphere(ish), we need to calculate the circumference
-        // at the specific latitude so that our spacing can be correct.
-        // We do this calculation at the rounded latitude so that they match up when rounding
-        const radiusAtLatitude =
-            EARTH_RADIUS * Math.cos(MathUtils.DEG2RAD * tileY);
         const circumferenceAtLatitude = 2 * Math.PI * radiusAtLatitude;
         const metersPerDegreeOfLongitude = circumferenceAtLatitude / 360;
         const lonScale = metersPerDegreeOfLongitude / this.tileScale;
 
         // Snap position to a grid center.
-        let tileX =
+        const tileX =
             snapToTileCoord(localPos.x * lonScale, roundToWholeNumber, 1) /
             lonScale;
 
