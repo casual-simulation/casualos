@@ -11970,7 +11970,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
      * @param layer The layer that should be added.
-     * @param index The index that the layer should be added at. If omitted, the layer will be added to the end of the list.
      *
      * @example Add a GeoJSON layer to the map portal
      * const layerId = await os.addMapLayer('map', {
@@ -12022,11 +12021,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function addMapLayer(
         portal: 'map' | 'miniMap',
-        layer: MapLayer,
-        index?: number
+        layer: MapLayer
     ): Promise<string> {
         const task = context.createTask();
-        const event = calcAddMapLayer(portal, layer, index, task.taskId);
+        const event = calcAddMapLayer(portal, layer, task.taskId);
         return addAsyncAction(task, event);
     }
 

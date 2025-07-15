@@ -3952,13 +3952,6 @@ export interface AddMapLayerAction extends AsyncAction {
     portal: 'map' | 'miniMap';
 
     /**
-     * The index that the layer should be added at.
-     *
-     * If not specified, then the layer is added at the end of the list.
-     */
-    index?: number;
-
-    /**
      * The layer that should be added to the portal.
      */
     layer: MapLayer;
@@ -6314,14 +6307,12 @@ export function installAuxFile(
 export function addMapLayer(
     portal: 'map' | 'miniMap',
     layer: MapLayer,
-    index?: number,
     taskId?: number | string
 ): AddMapLayerAction {
     return {
         type: 'add_map_layer',
         portal,
         layer,
-        index,
         taskId,
     };
 }

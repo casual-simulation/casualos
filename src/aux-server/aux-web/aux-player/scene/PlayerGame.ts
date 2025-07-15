@@ -83,6 +83,8 @@ import type {
     Photo,
     CalculateScreenCoordinatesFromPositionAction,
     MapPortalKind,
+    AddMapLayerAction,
+    RemoveMapLayerAction,
 } from '@casual-simulation/aux-common';
 import {
     clamp,
@@ -139,6 +141,8 @@ import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
 import { EARTH_RADIUS } from './MapPortalGrid3D';
 import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 import { Subscription } from 'rxjs';
+import { v4 as uuid } from 'uuid';
+import { loadModules as loadEsriModules } from 'esri-loader';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -1037,10 +1041,80 @@ export class PlayerGame extends Game {
                     this._countLDrawBuildSteps(sim, e);
                 } else if (e.type === 'capture_portal_screenshot') {
                     this._capturePortalScreenshot(sim, e);
+                } else if (e.type === 'add_map_layer') {
+                    this._addMapLayer(sim, e);
+                } else if (e.type === 'remove_map_layer') {
+                    this._removeMapLayer(sim, e);
                 }
             }),
             sub
         );
+    }
+
+    private _removeMapLayer(sim: BrowserSimulation, e: RemoveMapLayerAction) {
+        try {
+            this.gameView.removeMapLayer(e.layerId);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            console.error('Error removing map layer:', err);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncError(e.taskId, err));
+            }
+        }
+    }
+
+    private async _addMapLayer(sim: BrowserSimulation, e: AddMapLayerAction) {
+        try {
+            // Add the map layer
+            const portalTag = getPortalTag(e.portal);
+
+            let layer: __esri.Layer = null;
+            if (e.layer.type === 'geojson') {
+                const [GeoJSONLayer] = (await loadEsriModules([
+                    'esri/layers/GeoJSONLayer',
+                ])) as [typeof __esri.GeoJSONLayer];
+
+                let url: string;
+                if (e.layer.data) {
+                    const blob = new Blob([JSON.stringify(e.layer.data)], {
+                        type: 'application/json',
+                    });
+                    url = URL.createObjectURL(blob);
+                } else {
+                    url = e.layer.url;
+                }
+
+                if (!url) {
+                    throw new Error(
+                        'No URL or data provided for GeoJSON layer.'
+                    );
+                }
+
+                layer = new GeoJSONLayer({
+                    url,
+                    copyright: e.layer.copyright,
+                });
+            }
+
+            const layerId = layer.id || uuid();
+
+            if (portalTag === 'mapPortal') {
+                this.gameView.addMapLayer(layerId, layer);
+            } else {
+                this.gameView.addMiniMapLayer(layerId, layer);
+            }
+
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncResult(e.taskId, layerId));
+            }
+        } catch (err) {
+            console.error('Error adding map layer:', err);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncError(e.taskId, err));
+            }
+        }
     }
 
     private simulationRemoved(sim: BrowserSimulation) {

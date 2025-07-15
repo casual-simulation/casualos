@@ -58,6 +58,9 @@ import { isUrl } from '@casual-simulation/aux-runtime';
     },
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {
+    private _mapViewLayers: Map<string, __esri.Layer> = new Map();
+    private _miniMapLayers: Map<string, __esri.Layer> = new Map();
+
     _game: PlayerGame = null;
     menuExpanded: boolean = false;
     showMiniPortalCameraHome: boolean = false;
@@ -264,6 +267,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     setupCore() {
         this.menu = [];
         this.extraMenuStyle = {};
+        this._mapViewLayers = new Map();
+        this._miniMapLayers = new Map();
         this._subscriptions.push(
             this._game
                 .watchCameraRigDistanceSquared(this._game.miniCameraRig)
@@ -408,6 +413,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
 
+        for (let layer of this._mapViewLayers.values()) {
+            map.add(layer);
+        }
+
         this._mapView = new SceneView({
             map: map,
             center: [DEFAULT_MAP_PORTAL_LONGITUDE, DEFAULT_MAP_PORTAL_LATITUDE],
@@ -472,6 +481,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         const map = new GeoMap({
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
+
+        for (let layer of this._mapViewLayers.values()) {
+            map.add(layer);
+        }
 
         this._miniMapView = new SceneView({
             map: map,
@@ -558,6 +571,34 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 '[PlayerGameView] Failed to destroy the mini map view.',
                 err
             );
+        }
+    }
+
+    addMapLayer(id: string, layer: __esri.Layer) {
+        if (!this._mapViewLayers.has(id)) {
+            this._mapViewLayers.set(id, layer);
+            this._mapView?.map.add(layer);
+        }
+    }
+
+    addMiniMapLayer(id: string, layer: __esri.Layer) {
+        if (!this._miniMapLayers.has(id)) {
+            this._miniMapLayers.set(id, layer);
+            this._miniMapView?.map.add(layer);
+        }
+    }
+
+    removeMapLayer(id: string) {
+        const mapLayer = this._mapViewLayers.get(id);
+        if (mapLayer) {
+            this._mapView?.map.remove(mapLayer);
+            this._mapViewLayers.delete(id);
+        }
+
+        const miniMapLayer = this._miniMapLayers.get(id);
+        if (miniMapLayer) {
+            this._miniMapView?.map.remove(miniMapLayer);
+            this._miniMapLayers.delete(id);
         }
     }
 
