@@ -344,6 +344,8 @@ export const tagMap = {
     hasActiveSubscription: 'tags/auth-bot',
     subscriptionTier: 'tags/auth-bot',
     privacyFeatures: 'tags/auth-bot',
+    mapPortalKind: 'tags/portal-bot',
+    mapPortalGridKind: 'tags/portal-bot',
 };
 
 function relativeLink(path) {
