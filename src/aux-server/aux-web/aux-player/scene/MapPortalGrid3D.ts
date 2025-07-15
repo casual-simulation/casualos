@@ -46,7 +46,7 @@ export class MapPortalGrid3D implements Grid3D {
     private _tileScale: number = 1;
     private _globe: Sphere;
     private _plane: Plane;
-    private _gridKind: MapPortalKind = null;
+    private _gridKind: MapPortalKind | null = null;
 
     private _temp: Vector3 = new Vector3();
 
