@@ -266,6 +266,11 @@ export class PlayerGame extends Game {
      */
     private _miniPortalMaxWidth: number = 700;
 
+    /**
+     * The map of layer IDs to the object URLs that were created for the GeoJSON data.
+     */
+    private _geoJsonUrls: Map<string, string> = new Map();
+
     defaultPlayerZoom: number = null;
     defaultPlayerRotationX: number = null;
     defaultPlayerRotationY: number = null;
@@ -1053,6 +1058,16 @@ export class PlayerGame extends Game {
 
     private _removeMapLayer(sim: BrowserSimulation, e: RemoveMapLayerAction) {
         try {
+            if (this._geoJsonUrls.has(e.layerId)) {
+                // Revoke the object URL if it was created for a GeoJSON layer
+                const url = this._geoJsonUrls.get(e.layerId);
+                try {
+                    URL.revokeObjectURL(url);
+                } catch (revokeError) {
+                    console.warn('Failed to revoke object URL:', revokeError);
+                }
+                this._geoJsonUrls.delete(e.layerId);
+            }
             this.gameView.removeMapLayer(e.layerId);
             if (hasValue(e.taskId)) {
                 sim.helper.transaction(asyncResult(e.taskId, null));
@@ -1083,6 +1098,7 @@ export class PlayerGame extends Game {
                         type: 'application/json',
                     });
                     url = URL.createObjectURL(blob);
+                    this._geoJsonUrls.set(layerId, url);
                 } else {
                     url = e.layer.url;
                 }
