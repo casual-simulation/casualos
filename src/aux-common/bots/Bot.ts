@@ -1341,7 +1341,19 @@ export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
  * The default basemap that should be used for the map portal.
  * See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap
  */
-export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
+export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray-vector';
+
+/**
+ * The possible kinds of map portals.
+ * - "globe" means that the map portal is rendered as a globe.
+ * - "plane" means that the map portal is rendered as a flat plane.
+ */
+export type MapPortalKind = 'globe' | 'plane';
+
+/**
+ * The default kind of map portal.
+ */
+export const DEFAULT_MAP_PORTAL_KIND: MapPortalKind = 'globe';
 
 /**
  * The default longitude that the map portal should show.
@@ -2686,6 +2698,8 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalJWT',
     'meetPortalLanguage',
     'mapPortalBasemap',
+    'mapPortalKind',
+    'mapPortalGridKind',
 
     'tagPortalAnchorPoint',
     'tagPortalStyle',
