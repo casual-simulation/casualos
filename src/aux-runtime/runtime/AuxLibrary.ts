@@ -113,6 +113,7 @@ import type {
     UnloadServerConfigAction,
     Point3D,
     MapLayer,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -274,6 +275,8 @@ import {
     addMapLayer as calcAddMapLayer,
     removeMapLayer as calcRemoveMapLayer,
     GET_DYNAMIC_LISTENERS_SYMBOL,
+    ADD_BOT_LISTENER_SYMBOL,
+    REMOVE_BOT_LISTENER_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3137,6 +3140,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             os: {
                 [UNCOPIABLE]: true,
+
+                addBotListener,
+                removeBotListener,
 
                 sleep,
                 toast,
@@ -16890,6 +16896,45 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return yield* event(eventName, bots, arg);
+    }
+
+    /**
+     * Adds the given listener to the given bot for the given tag.
+     *
+     * @param bot The bot that the listener should be added to.
+     * @param tagName The name of the tag that the listener should be added to.
+     * @param listener The listener that should be added to the bot.
+     *
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.addBotListener
+     * @docid os.addBotListener
+     */
+    function addBotListener(
+        bot: RuntimeBot,
+        tagName: string,
+        listener: DynamicListener
+    ): void {
+        bot[ADD_BOT_LISTENER_SYMBOL](tagName, listener);
+    }
+
+    /**
+     * Removes the given listener from a bot for a specific tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tagName The name of the tag that the listener should be removed from.
+     * @param listener The listener that should be removed from the bot.
+     *
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.removeBotListener
+     * @docid os.removeBotListener
+     */
+    function removeBotListener(
+        bot: RuntimeBot,
+        tagName: string,
+        listener: DynamicListener
+    ): void {
+        bot[REMOVE_BOT_LISTENER_SYMBOL](tagName, listener);
     }
 
     /**

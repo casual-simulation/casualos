@@ -173,6 +173,7 @@ import {
     addMapLayer,
     removeMapLayer,
     ADD_BOT_LISTENER_SYMBOL,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -17851,6 +17852,47 @@ describe('AuxLibrary', () => {
             expect(() => {
                 library.api.assertEqual(new Error('abc'), new Error('def'));
             }).toThrow();
+        });
+    });
+
+    describe('os.addBotListener()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+        });
+
+        it('should add a listener to the bot', () => {
+            const fn = jest.fn();
+
+            library.api.os.addBotListener(bot1, 'test', fn);
+
+            const listeners = bot1[GET_DYNAMIC_LISTENERS_SYMBOL]('test');
+
+            expect(listeners).toBeDefined();
+            expect(listeners!.length).toBe(1);
+            expect(listeners![0]).toBe(fn);
+        });
+    });
+
+    describe('os.removeBotListener()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+        });
+
+        it('should add a listener to the bot', () => {
+            const fn = jest.fn();
+
+            library.api.os.addBotListener(bot1, 'test', fn);
+            library.api.os.removeBotListener(bot1, 'test', fn);
+
+            const listeners = bot1[GET_DYNAMIC_LISTENERS_SYMBOL]('test');
+
+            expect(listeners).toBe(null);
         });
     });
 
