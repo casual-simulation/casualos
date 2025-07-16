@@ -12013,11 +12013,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   }
      * });
      *
-     * @dochash action/os/maps
+     * @dochash actions/os/maps
      * @doctitle Map Actions
      * @docsidebar Maps
      * @docdescription Actions for working with maps and map layers.
      * @docid os.addMapLayer
+     * @docname os.addMapLayer
      */
     function addMapLayer(
         portal: 'map' | 'miniMap',
@@ -12039,8 +12040,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Remove a layer from the map portal
      * await os.removeMapLayer('my-layer-id');
      *
-     * @dochash action/os/maps
+     * @dochash actions/os/maps
      * @docid os.removeMapLayer
+     * @docname os.removeMapLayer
      */
     function removeMapLayer(layerId: string): Promise<void> {
         const task = context.createTask();
