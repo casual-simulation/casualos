@@ -2406,6 +2406,7 @@ export class AuxRuntime
                     }
                 }
 
+                newBot.dynamicListeners = existing.dynamicListeners;
                 existing.script[REPLACE_BOT_SYMBOL](newBot.script);
             }
 

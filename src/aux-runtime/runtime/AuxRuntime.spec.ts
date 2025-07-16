@@ -376,6 +376,36 @@ describe('AuxRuntime', () => {
                     expect(runtime.context.state['test'].vars.myVar).toBe(true);
                 });
 
+                it('should preserve the dynamic listeners that a bot has if it is overwritten', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    const test = runtime.currentState['test'];
+                    const listener = jest.fn();
+                    runtime.addDynamicListener(test, 'abc', listener);
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 123,
+                            }),
+                        })
+                    );
+
+                    const listeners = runtime.getDynamicListeners(
+                        runtime.currentState['test'],
+                        'abc'
+                    );
+                    expect(listeners).toBeTruthy();
+                    expect(listeners!.length).toBe(1);
+                    expect(listeners![0] === listener).toBe(true);
+                });
+
                 it('should include the space the bot was in', () => {
                     const update = runtime.stateUpdated(
                         stateUpdatedEvent({
