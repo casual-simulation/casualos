@@ -9960,7 +9960,6 @@ describe('AuxLibrary', () => {
                             abc: 'def',
                         },
                     },
-                    undefined,
                     context.tasks.size
                 );
 
