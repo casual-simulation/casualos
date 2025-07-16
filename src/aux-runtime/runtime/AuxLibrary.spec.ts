@@ -172,6 +172,7 @@ import {
     calculateScreenCoordinatesFromPosition,
     addMapLayer,
     removeMapLayer,
+    ADD_BOT_LISTENER_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -16512,6 +16513,23 @@ describe('AuxLibrary', () => {
                     expect(sayHello1).toHaveBeenCalled();
                     expect(sayHello2).not.toHaveBeenCalled();
                 });
+
+                it('should ignore dynamic listeners on bots that are not listening', () => {
+                    const sayHello1 = jest.fn(() => 1);
+                    const sayHello2 = jest.fn(() => 2);
+                    bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                    bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+
+                    context.recordListenerPresense(bot1.id, 'sayHello', true);
+                    context.recordListenerPresense(bot2.id, 'sayHello', true);
+
+                    bot2.tags[tag] = false;
+
+                    const results = handleResult(shout('sayHello'));
+                    expect(results).toEqual([]);
+                    expect(sayHello1).toHaveBeenCalled();
+                    expect(sayHello2).not.toHaveBeenCalled();
+                });
             });
 
             it('should ignore bots where either listening tag is false', () => {
@@ -16807,6 +16825,102 @@ describe('AuxLibrary', () => {
                 });
             });
 
+            it('should call dynamic listeners even when there is a regular listener', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello22 = jest.fn(() => 22);
+                const sayHello33 = jest.fn(() => 33);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello22);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello33);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                const results = handleResult(shout('sayHello', 123));
+
+                // dynamic listeners cant return values, but they should cause the results array
+                // to include an undefined value for the called bot
+                expect(results).toEqual([1]);
+                expect(sayHello1).toHaveBeenCalledWith(123);
+                expect(sayHello11).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello22).toHaveBeenCalledWith(123, bot2, 'sayHello');
+                expect(sayHello33).toHaveBeenCalledWith(123, bot3, 'sayHello');
+            });
+
+            it('should call dynamic listeners', () => {
+                const sayHello1 = jest.fn(() => 1);
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello2 = jest.fn(() => 2);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+
+                const results = handleResult(
+                    shout('sayHello', {
+                        abc: 'def',
+                    })
+                );
+
+                // dynamic listeners cannot return values to shout()
+                expect(results).toEqual([]);
+                expect(sayHello1).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello11).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello2).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot2,
+                    'sayHello'
+                );
+            });
+
+            it('should call onListen listeners for dynamic listeners', () => {
+                const sayHello1 = jest.fn();
+                const sayHello11 = jest.fn();
+                const sayHello2 = jest.fn();
+                const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+                const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+
+                handleResult(shout('sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [] as any[],
+                    targets: [bot1, bot2],
+                    listeners: [bot1, bot2], // should exclude erroring listeners
+                };
+                expect(onListen1).toHaveBeenCalledTimes(1);
+                expect(onListen1).toHaveBeenCalledWith(expected);
+                expect(onListen2).toHaveBeenCalledTimes(1);
+                expect(onListen2).toHaveBeenCalledWith(expected);
+            });
+
             it('should throw a reasonable error if given a null listener name', () => {
                 expect(() => {
                     handleResult(shout(null));
@@ -16952,6 +17066,29 @@ describe('AuxLibrary', () => {
                         whisper([bot2, bot1], 'sayHello')
                     );
                     expect(results).toEqual([1]);
+                    expect(sayHello1).toHaveBeenCalled();
+                    expect(sayHello2).not.toHaveBeenCalled();
+                    expect(sayHello3).not.toHaveBeenCalled();
+                });
+
+                it('should ignore dynamic listeners on bots that are not listening', () => {
+                    const sayHello1 = jest.fn(() => 1);
+                    const sayHello2 = jest.fn(() => 2);
+                    const sayHello3 = jest.fn(() => 3);
+                    bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                    bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+                    bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello3);
+
+                    context.recordListenerPresense(bot1.id, 'sayHello', true);
+                    context.recordListenerPresense(bot2.id, 'sayHello', true);
+                    context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                    bot2.tags[tag] = false;
+
+                    const results = handleResult(
+                        whisper([bot2, bot1], 'sayHello')
+                    );
+                    expect(results).toEqual([undefined]);
                     expect(sayHello1).toHaveBeenCalled();
                     expect(sayHello2).not.toHaveBeenCalled();
                     expect(sayHello3).not.toHaveBeenCalled();
@@ -17149,6 +17286,94 @@ describe('AuxLibrary', () => {
                 context.energy = 20;
 
                 expect(handleResult(whisper(bot1, 'first'))).toEqual([3]);
+            });
+
+            it('should call dynamic listeners even when there is a regular listener', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello22 = jest.fn(() => 22);
+                const sayHello33 = jest.fn(() => 33);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello22);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello33);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                const results = handleResult(
+                    whisper([bot2, bot1], 'sayHello', 123)
+                );
+
+                // dynamic listeners cant return values, but they should cause the results array
+                // to include an undefined value for the called bot
+                expect(results).toEqual([1]);
+                expect(sayHello1).toHaveBeenCalledWith(123);
+                expect(sayHello11).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello22).toHaveBeenCalledWith(123, bot2, 'sayHello');
+                expect(sayHello33).not.toHaveBeenCalled();
+            });
+
+            it('should call dynamic listeners', () => {
+                const sayHello1 = jest.fn(() => 1);
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello2 = jest.fn(() => 2);
+                const sayHello3 = jest.fn(() => 3);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello3);
+
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                const results = handleResult(
+                    whisper([bot2, bot1], 'sayHello', 123)
+                );
+
+                // dynamic listeners cant return values via shout() or whisper()
+                expect(results.length).toBe(0);
+                expect(results).toEqual([]);
+                expect(sayHello1).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello11).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello2).toHaveBeenCalledWith(123, bot2, 'sayHello');
+                expect(sayHello3).not.toHaveBeenCalled();
+            });
+
+            it('should call onListen listeners for dynamic listeners', () => {
+                const sayHello1 = jest.fn();
+                const sayHello11 = jest.fn();
+                const sayHello2 = jest.fn();
+                const sayHello3 = jest.fn();
+                const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+                const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+                const onListen3 = (bot3.listeners.onListen = jest.fn(() => {}));
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello3);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                handleResult(whisper([bot2, bot1], 'sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [] as any[],
+                    targets: [bot2, bot1],
+                    listeners: [bot2, bot1], // should exclude erroring listeners
+                };
+                expect(onListen1).toHaveBeenCalledTimes(1);
+                expect(onListen1).toHaveBeenCalledWith(expected);
+                expect(onListen2).toHaveBeenCalledTimes(1);
+                expect(onListen2).toHaveBeenCalledWith(expected);
+                expect(onListen3).not.toHaveBeenCalledWith(expected);
             });
         });
 

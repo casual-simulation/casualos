@@ -148,6 +148,33 @@ export const testScriptBotInterface: RuntimeBotInterface = {
     getTagLink(bot: CompiledBot, tag: string) {
         return null;
     },
+    addDynamicListener(bot, tag, listener) {
+        if (!bot.dynamicListeners) {
+            bot.dynamicListeners = {};
+        }
+        if (!bot.dynamicListeners[tag]) {
+            bot.dynamicListeners[tag] = [];
+        }
+        bot.dynamicListeners[tag].push(listener);
+    },
+    removeDynamicListener(bot, tag, listener) {
+        if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+            const listeners = bot.dynamicListeners[tag];
+            const index = listeners.indexOf(listener);
+            if (index >= 0) {
+                listeners.splice(index, 1);
+                if (listeners.length <= 0) {
+                    delete bot.dynamicListeners[tag];
+                }
+            }
+        }
+    },
+    getDynamicListeners(bot, tag) {
+        if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+            return bot.dynamicListeners[tag];
+        }
+        return null;
+    },
 
     currentVersion: {
         localSites: {},

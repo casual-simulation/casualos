@@ -25,6 +25,7 @@ import type {
     RuntimeBot,
     CompiledBotModules,
     CompiledBotExports,
+    DynamicBotListeners,
 } from '@casual-simulation/aux-common/bots';
 import { hasValue } from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
@@ -62,6 +63,11 @@ export interface CompiledBot extends PrecalculatedBot {
      * The tags that are listeners and have been compiled into functions.
      */
     listeners: CompiledBotListeners;
+
+    /**
+     * The dynamic listeners that have been registered at runtime.
+     */
+    dynamicListeners: DynamicBotListeners;
 
     /**
      * The modules that are defined by this bot.
@@ -192,7 +198,8 @@ export function createCompiledBot(
     space?: BotSpace,
     listeners: CompiledBotListeners = {},
     signatures?: BotSignatures,
-    modules: CompiledBotModules = {}
+    modules: CompiledBotModules = {},
+    dynamicListeners: DynamicBotListeners = {}
 ): CompiledBot {
     if (hasValue(space)) {
         return {
@@ -202,6 +209,7 @@ export function createCompiledBot(
             tags: tags || values,
             values,
             listeners: listeners,
+            dynamicListeners: dynamicListeners,
             modules: modules,
             exports: {},
             signatures,
@@ -218,6 +226,7 @@ export function createCompiledBot(
         tags: tags || values,
         values,
         listeners: listeners,
+        dynamicListeners: dynamicListeners,
         modules: modules,
         exports: {},
         signatures,

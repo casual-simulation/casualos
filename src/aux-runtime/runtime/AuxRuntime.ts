@@ -35,6 +35,7 @@ import type {
     SourceModule,
     ResolvedBotModule,
     ImportMetadata,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -2968,6 +2969,7 @@ export class AuxRuntime
             precalculated: true,
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
+            dynamicListeners: {},
             modules: {},
             exports: {},
             values: {},
@@ -3197,6 +3199,54 @@ export class AuxRuntime
         return bot.listeners[tag] || null;
     }
 
+    getDynamicListeners(
+        bot: CompiledBot,
+        tag: string
+    ): DynamicListener[] | null {
+        if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+            return bot.dynamicListeners[tag];
+        }
+        return null;
+    }
+
+    addDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void {
+        if (!bot.dynamicListeners) {
+            bot.dynamicListeners = {};
+        }
+        if (!bot.dynamicListeners[tag]) {
+            bot.dynamicListeners[tag] = [];
+        }
+        const listeners = bot.dynamicListeners[tag];
+        if (listeners.includes(listener)) {
+            // If the listener already exists, do not add it again.
+            return;
+        }
+        listeners.push(listener);
+        this._updateListenerPresense(bot, tag);
+    }
+
+    removeDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void {
+        if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+            const listeners = bot.dynamicListeners[tag];
+            const index = listeners.indexOf(listener);
+            if (index >= 0) {
+                listeners.splice(index, 1);
+                if (listeners.length <= 0) {
+                    delete bot.dynamicListeners[tag];
+                }
+                this._updateListenerPresense(bot, tag);
+            }
+        }
+    }
+
     getTagLink(bot: CompiledBot, tag: string): RuntimeBot | RuntimeBot[] {
         const tagValue = bot.values[tag];
         if (isBotLink(tagValue)) {
@@ -3292,6 +3342,14 @@ export class AuxRuntime
         this._compileTagValue(bot, tag, tagValue);
     }
 
+    private _updateListenerPresense(bot: CompiledBot, tag: string) {
+        this._globalContext.recordListenerPresense(
+            bot.id,
+            tag,
+            !!bot.listeners[tag] || !!bot.dynamicListeners[tag]
+        );
+    }
+
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener, module } = this._compileValue(
             bot,
@@ -3300,10 +3358,10 @@ export class AuxRuntime
         );
         if (listener) {
             bot.listeners[tag] = listener;
-            this._globalContext.recordListenerPresense(bot.id, tag, true);
+            this._updateListenerPresense(bot, tag);
         } else if (!!bot.listeners[tag]) {
             delete bot.listeners[tag];
-            this._globalContext.recordListenerPresense(bot.id, tag, false);
+            this._updateListenerPresense(bot, tag);
         }
 
         if (module) {

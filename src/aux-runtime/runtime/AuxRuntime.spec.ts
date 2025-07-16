@@ -31,6 +31,7 @@ import type {
     IdentifiedBotModule,
     ExportsModule,
     PartialPrecalculatedBotsState,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     createBot,
@@ -11705,6 +11706,153 @@ describe('AuxRuntime', () => {
                 await waitAsync();
 
                 expect(events).toEqual([[toast('def')]]);
+            });
+        });
+
+        describe('addDynamicListener()', () => {
+            it('should add a dynamic listener to the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                runtime.addDynamicListener(b, 'abc', listener);
+
+                expect(b.dynamicListeners.abc).toBeDefined();
+                const listeners = b.dynamicListeners.abc;
+                expect(listeners.length).toBe(1);
+                expect(listeners[0] === listener).toBe(true);
+            });
+
+            it('should add the bot to the list of listeners for the tag', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                runtime.addDynamicListener(b, 'abc', listener);
+
+                const ids = runtime.context.getBotIdsWithListener('abc');
+                expect(ids).toEqual(['test']);
+            });
+
+            it('should do nothing if the listener has already been added to the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                runtime.addDynamicListener(b, 'abc', listener);
+                runtime.addDynamicListener(b, 'abc', listener);
+
+                expect(b.dynamicListeners.abc).toBeDefined();
+                const listeners = b.dynamicListeners.abc;
+                expect(listeners.length).toBe(1);
+                expect(listeners[0] === listener).toBe(true);
+            });
+        });
+
+        describe('removeDynamicListener()', () => {
+            it('should remove a dynamic listener from the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                const listener2: DynamicListener = jest.fn();
+                runtime.addDynamicListener(b, 'abc', listener);
+                runtime.addDynamicListener(b, 'abc', listener2);
+                runtime.removeDynamicListener(b, 'abc', listener);
+
+                expect(b.dynamicListeners.abc).toBeDefined();
+                const listeners = b.dynamicListeners.abc;
+                expect(listeners.length).toBe(1);
+                expect(listeners[0] === listener2).toBe(true);
+            });
+
+            it('should remove the bot from the list of listeners for the tag', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                runtime.addDynamicListener(b, 'abc', listener);
+                runtime.removeDynamicListener(b, 'abc', listener);
+
+                const ids = runtime.context.getBotIdsWithListener('abc');
+                expect(ids).toEqual([]);
+            });
+
+            it('should do nothing if the listener was not on the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                runtime.removeDynamicListener(b, 'abc', listener);
+
+                expect(b.dynamicListeners).not.toHaveProperty('abc');
+            });
+        });
+
+        describe('getDynamicListeners()', () => {
+            it('should return the dynamic listeners for the bot', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+
+                const listener: DynamicListener = jest.fn();
+                const listener2: DynamicListener = jest.fn();
+                runtime.addDynamicListener(b, 'abc', listener);
+                runtime.addDynamicListener(b, 'abc', listener2);
+
+                const listeners = runtime.getDynamicListeners(b, 'abc');
+
+                expect(listeners).toBeDefined();
+                expect(listeners!.length).toBe(2);
+                expect(listeners![0] === listener).toBe(true);
+                expect(listeners![1] === listener2).toBe(true);
+            });
+
+            it('should return null if the bot has no dynamic listeners', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {}),
+                    })
+                );
+
+                const b = runtime.currentState['test'];
+                const listeners = runtime.getDynamicListeners(b, 'abc');
+
+                expect(listeners).toBeNull();
             });
         });
 

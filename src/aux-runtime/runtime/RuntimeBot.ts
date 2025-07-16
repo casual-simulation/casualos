@@ -25,12 +25,18 @@ import {
     UNCOPIABLE,
     INTERPRETER_OBJECT,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
-import type { TagEditOp } from '@casual-simulation/aux-common/bots';
+import type {
+    DynamicListener,
+    TagEditOp,
+} from '@casual-simulation/aux-common/bots';
 import {
+    ADD_BOT_LISTENER_SYMBOL,
     applyTagEdit,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
     isTagEdit,
     mergeEdits,
     remoteEdit,
+    REMOVE_BOT_LISTENER_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type {
     BotTags,
@@ -636,6 +642,9 @@ export function createRuntimeBot(
         [EDIT_TAG_SYMBOL]: null,
         [EDIT_TAG_MASK_SYMBOL]: null,
         [REPLACE_BOT_SYMBOL]: null,
+        [ADD_BOT_LISTENER_SYMBOL]: null,
+        [REMOVE_BOT_LISTENER_SYMBOL]: null,
+        [GET_DYNAMIC_LISTENERS_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -770,6 +779,33 @@ export function createRuntimeBot(
             } else {
                 replacement[REPLACE_BOT_SYMBOL](bot);
             }
+        },
+        configurable: true,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, ADD_BOT_LISTENER_SYMBOL, {
+        value: (tag: string, listener: DynamicListener) => {
+            manager.addDynamicListener(bot, tag, listener);
+        },
+        configurable: true,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, REMOVE_BOT_LISTENER_SYMBOL, {
+        value: (tag: string, listener: DynamicListener) => {
+            manager.removeDynamicListener(bot, tag, listener);
+        },
+        configurable: true,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, GET_DYNAMIC_LISTENERS_SYMBOL, {
+        value: (tag: string) => {
+            return manager.getDynamicListeners(bot, tag);
         },
         configurable: true,
         enumerable: false,
@@ -948,6 +984,41 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param signature The tag.
      */
     getSignature(bot: CompiledBot, signature: string): string;
+
+    /**
+     * Adds the given listener to the bot for the given tag.
+     * @param bot The bot that the listener should be added to.
+     * @param tag The tag that the listener should be added for.
+     * @param listener The listener that should be added.
+     */
+    addDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void;
+
+    /**
+     * Removes the given listener from the bot for the given tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tag The tag that the listener should be removed for.
+     * @param listener The listener that should be removed.
+     */
+    removeDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void;
+
+    /**
+     * Gets the dynamic listeners for the given bot and tag.
+     * @param bot The bot that the listeners should be retrieved for.
+     * @param tag The tag that the listeners should be retrieved for.
+     * @returns The list of dynamic listeners for the tag, or null if none are registered.
+     */
+    getDynamicListeners(
+        bot: CompiledBot,
+        tag: string
+    ): DynamicListener[] | null;
 
     /**
      * Gets the current version that the interface is at.

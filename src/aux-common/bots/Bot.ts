@@ -66,6 +66,21 @@ export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
 export const REPLACE_BOT_SYMBOL = Symbol('replace_bot');
 
 /**
+ * Defines a symbol that is used to add a bot listener.
+ */
+export const ADD_BOT_LISTENER_SYMBOL = Symbol('add_bot_listener');
+
+/**
+ * Defines a symbol that is used to remove a bot listener.
+ */
+export const REMOVE_BOT_LISTENER_SYMBOL = Symbol('remove_bot_listener');
+
+/**
+ * Defines a symbol that is used to get dynamic listeners for a bot.
+ */
+export const GET_DYNAMIC_LISTENERS_SYMBOL = Symbol('get_dynamic_listeners');
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags
@@ -202,6 +217,36 @@ export interface RuntimeBot {
     [REPLACE_BOT_SYMBOL]: (bot: RuntimeBot) => void;
 
     /**
+     * Registers the given function as a listener for events that would trigger the given tag.
+     * @param tagName The name of the tag that the listener should be registered for.
+     * @param listener The listener function that should be called when the tag is triggered.
+     */
+    [ADD_BOT_LISTENER_SYMBOL]: (
+        tagName: string,
+        listener: DynamicListener
+    ) => void;
+
+    /**
+     * Unregisters the given function as a listener for events that would trigger the given tag.
+     *
+     * @param tagName The name of the tag that the listener should be unregistered for.
+     * @param listener The listener function that should be removed.
+     */
+    [REMOVE_BOT_LISTENER_SYMBOL]: (
+        tagName: string,
+        listener: DynamicListener
+    ) => void;
+
+    /**
+     * Gets the list of dynamic listeners that are registered for the given tag.
+     * @param tagName The name of the tag that the listeners are registered for.
+     * @returns The list of dynamic listeners for the tag, or null if none are registered.
+     */
+    [GET_DYNAMIC_LISTENERS_SYMBOL]: (
+        tagName: string
+    ) => DynamicListener[] | null;
+
+    /**
      * Gets the listener or bot property with the given name.
      *
      * If given a property name, like `"tags"` or `"vars"`, then it will return the value of that property.
@@ -319,6 +364,24 @@ export interface CompiledBotListeners {
 }
 
 /**
+ * An interface that maps tag names to dynamic listeners which have been registered.
+ *
+ * ```typescript
+ * interface DynamicListeners {
+ *      [tag: string]: Listener[];
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname DynamicListeners
+ * @docid DynamicBotListeners
+ */
+export interface DynamicBotListeners {
+    [tag: string]: DynamicListener[];
+}
+
+/**
  * An interface that maps module names to compiled modules.
  *
  * ```typescript
@@ -347,6 +410,22 @@ export interface CompiledBotExports {
  * The function signature of a bot listener.
  */
 export type CompiledBotListener = (arg?: any) => any;
+
+/**
+ * The function signature of a dynamic bot listener.
+ *
+ * That is, a listener that is registered at runtime by a user script instead of parsed from a tag.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listener
+ * @docid DynamicListener
+ */
+export type DynamicListener = (
+    that: any,
+    bot: RuntimeBot,
+    tagName: string
+) => any;
 
 /**
  * Defines an interface for a bot that is precalculated.

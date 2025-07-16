@@ -273,6 +273,7 @@ import {
     calculateScreenCoordinatesFromPosition as calcCalculateScreenCoordinatesFromPosition,
     addMapLayer as calcAddMapLayer,
     removeMapLayer as calcRemoveMapLayer,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -17541,6 +17542,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 continue;
             }
 
+            let addedListener = false;
             let listener = bot.listeners[tag];
             if (listener) {
                 if (!checkedEnergy) {
@@ -17575,7 +17577,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     context.enqueueError(ex);
                     results.push(undefined);
                 }
-                listeners.push(bot);
+                if (!addedListener) {
+                    listeners.push(bot);
+                    addedListener = true;
+                }
+            }
+
+            const dynamicListeners = bot[GET_DYNAMIC_LISTENERS_SYMBOL](tag);
+            if (dynamicListeners) {
+                for (let listener of dynamicListeners) {
+                    if (!checkedEnergy) {
+                        checkedEnergy = true;
+                        __energyCheck();
+                    }
+                    try {
+                        let result: any;
+                        if (INTERPRETABLE_FUNCTION in listener) {
+                            result = yield* (listener as any)[
+                                INTERPRETABLE_FUNCTION
+                            ](arg, bot, tag);
+                        } else {
+                            result = listener(arg, bot, tag);
+                        }
+
+                        if (isGenerator(result)) {
+                            result = yield* result;
+                        }
+
+                        if (result instanceof Promise) {
+                            result.catch((ex) => {
+                                context.enqueueError(ex);
+                            });
+                        }
+                    } catch (ex) {
+                        context.enqueueError(ex);
+                    }
+                    if (!addedListener) {
+                        listeners.push(bot);
+                        addedListener = true;
+                    }
+                }
             }
         }
 
