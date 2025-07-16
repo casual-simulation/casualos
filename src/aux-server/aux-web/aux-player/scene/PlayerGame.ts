@@ -1070,6 +1070,7 @@ export class PlayerGame extends Game {
             // Add the map layer
             const portalTag = getPortalTag(e.portal);
 
+            const layerId = uuid();
             let layer: __esri.Layer = null;
             if (e.layer.type === 'geojson') {
                 const [GeoJSONLayer] = (await loadEsriModules([
@@ -1103,7 +1104,6 @@ export class PlayerGame extends Game {
                     `Unsupported layer type: ${e.layer.type}. Only 'geojson' is supported.`
                 );
             }
-            const layerId = layer.id || uuid();
 
             if (portalTag === 'mapPortal') {
                 this.gameView.addMapLayer(layerId, layer);
