@@ -550,6 +550,16 @@ Sets the style of the bottom layer of the map in the mapPortal/miniMapPortal.
   <PossibleValue value="Any Basemap">
       See <a target='_blank' href='https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap'>this</a> for a full list.
   </PossibleValue>
+  <PossibleValue value="Any WebTiles URL">
+      The URL should follow one of the following templates:
+      <ul>
+        <li><NormalCode>{"https://some.domain.com/{level}/{col}/{row}.png"}</NormalCode></li>
+        <li><NormalCode>{"https://some.domain.com/{z}/{x}/{y}.png"}</NormalCode></li>
+      </ul>
+      Where anything in curly braces (<NormalCode>{"{}"}</NormalCode>) represents a template parameter that the mapPortal/miniMapPortal will fill with the corresponding coordinate information for the requested tile.
+      
+      An example is the <a target="_blank" href="https://cawm.lib.uiowa.edu/index.html">CAWM Map Tiles</a>: <NormalCode>{"https://cawm.lib.uiowa.edu/tiles/{z}/{x}/{y}.png"}</NormalCode>.
+  </PossibleValue>
 </PossibleValuesTable>
 
 ### `mapPortalKind`

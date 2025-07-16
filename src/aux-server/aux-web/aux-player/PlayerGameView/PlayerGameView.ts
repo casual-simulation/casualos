@@ -46,8 +46,10 @@ import {
     SpatialReference,
     WebMercatorUtils,
     Basemap,
+    WebTileLayer,
 } from '../MapUtils';
 import { Matrix4 } from '@casual-simulation/three';
+import { isUrl } from '@casual-simulation/aux-runtime';
 
 @Component({
     components: {
@@ -56,6 +58,9 @@ import { Matrix4 } from '@casual-simulation/three';
     },
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {
+    private _mapViewLayers: Map<string, __esri.Layer> = new Map();
+    private _miniMapLayers: Map<string, __esri.Layer> = new Map();
+
     _game: PlayerGame = null;
     menuExpanded: boolean = false;
     showMiniPortalCameraHome: boolean = false;
@@ -96,6 +101,9 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     lastMenuCount: number = null;
     private _mapView: EsriSceneView;
     private _miniMapView: EsriSceneView;
+    private _mapBasemap: string = DEFAULT_MAP_PORTAL_BASEMAP;
+    private _miniMapBasemap: string = DEFAULT_MAP_PORTAL_BASEMAP;
+
     private _coordinateTransformer: (pos: {
         x: number;
         y: number;
@@ -177,7 +185,9 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     }
 
     setBasemap(basemapId: string) {
-        this._setBasemap(this._mapView, basemapId);
+        if (this._setBasemap(this._mapView, basemapId, this._mapBasemap)) {
+            this._mapBasemap = basemapId;
+        }
     }
 
     /**
@@ -201,18 +211,39 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     }
 
     setMiniMapBasemap(basemapId: string) {
-        this._setBasemap(this._miniMapView, basemapId);
+        if (
+            this._setBasemap(this._miniMapView, basemapId, this._miniMapBasemap)
+        ) {
+            this._miniMapBasemap = basemapId;
+        }
     }
 
-    private _setBasemap(view: EsriSceneView, basemapId: string) {
-        if (view) {
-            const basemap = Basemap.fromId(basemapId);
-            if (basemap && view) {
-                if (view.map.basemap.id !== basemap.id) {
-                    view.map.basemap = basemap;
-                }
+    private _setBasemap(
+        view: EsriSceneView,
+        basemapId: string,
+        oldBasemapId: string
+    ) {
+        basemapId ??= DEFAULT_MAP_PORTAL_BASEMAP;
+        if (view && basemapId !== oldBasemapId) {
+            let basemap: __esri.Basemap;
+            if (isUrl(basemapId)) {
+                basemap = new Basemap({
+                    baseLayers: [
+                        new WebTileLayer({
+                            urlTemplate: basemapId,
+                        }),
+                    ],
+                });
+            } else {
+                basemap = Basemap.fromId(basemapId);
+            }
+            if (basemap) {
+                view.map.basemap = basemap;
+                return true;
             }
         }
+
+        return false;
     }
 
     private _setViewingMode(
@@ -236,6 +267,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     setupCore() {
         this.menu = [];
         this.extraMenuStyle = {};
+        this._mapViewLayers = new Map();
+        this._miniMapLayers = new Map();
         this._subscriptions.push(
             this._game
                 .watchCameraRigDistanceSquared(this._game.miniCameraRig)
@@ -375,9 +408,14 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             Config.apiKey = appManager.config.arcGisApiKey;
         }
 
+        this._mapBasemap = DEFAULT_MAP_PORTAL_BASEMAP;
         const map = new GeoMap({
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
+
+        for (let layer of this._mapViewLayers.values()) {
+            map.add(layer);
+        }
 
         this._mapView = new SceneView({
             map: map,
@@ -439,9 +477,14 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             Config.apiKey = appManager.config.arcGisApiKey;
         }
 
+        this._miniMapBasemap = DEFAULT_MAP_PORTAL_BASEMAP;
         const map = new GeoMap({
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
+
+        for (let layer of this._miniMapLayers.values()) {
+            map.add(layer);
+        }
 
         this._miniMapView = new SceneView({
             map: map,
@@ -528,6 +571,34 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 '[PlayerGameView] Failed to destroy the mini map view.',
                 err
             );
+        }
+    }
+
+    addMapLayer(id: string, layer: __esri.Layer) {
+        if (!this._mapViewLayers.has(id)) {
+            this._mapViewLayers.set(id, layer);
+            this._mapView?.map.add(layer);
+        }
+    }
+
+    addMiniMapLayer(id: string, layer: __esri.Layer) {
+        if (!this._miniMapLayers.has(id)) {
+            this._miniMapLayers.set(id, layer);
+            this._miniMapView?.map.add(layer);
+        }
+    }
+
+    removeMapLayer(id: string) {
+        const mapLayer = this._mapViewLayers.get(id);
+        if (mapLayer) {
+            this._mapView?.map.remove(mapLayer);
+            this._mapViewLayers.delete(id);
+        }
+
+        const miniMapLayer = this._miniMapLayers.get(id);
+        if (miniMapLayer) {
+            this._miniMapView?.map.remove(miniMapLayer);
+            this._miniMapLayers.delete(id);
         }
     }
 

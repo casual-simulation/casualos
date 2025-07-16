@@ -83,6 +83,8 @@ import type {
     Photo,
     CalculateScreenCoordinatesFromPositionAction,
     MapPortalKind,
+    AddMapLayerAction,
+    RemoveMapLayerAction,
 } from '@casual-simulation/aux-common';
 import {
     clamp,
@@ -139,6 +141,8 @@ import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
 import { EARTH_RADIUS } from './MapPortalGrid3D';
 import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 import { Subscription } from 'rxjs';
+import { v4 as uuid } from 'uuid';
+import { loadModules as loadEsriModules } from 'esri-loader';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -261,6 +265,11 @@ export class PlayerGame extends Game {
      * The maximum width of the miniGridPortal in px.
      */
     private _miniPortalMaxWidth: number = 700;
+
+    /**
+     * The map of layer IDs to the object URLs that were created for the GeoJSON data.
+     */
+    private _geoJsonUrls: Map<string, string> = new Map();
 
     defaultPlayerZoom: number = null;
     defaultPlayerRotationX: number = null;
@@ -1037,10 +1046,96 @@ export class PlayerGame extends Game {
                     this._countLDrawBuildSteps(sim, e);
                 } else if (e.type === 'capture_portal_screenshot') {
                     this._capturePortalScreenshot(sim, e);
+                } else if (e.type === 'add_map_layer') {
+                    this._addMapLayer(sim, e);
+                } else if (e.type === 'remove_map_layer') {
+                    this._removeMapLayer(sim, e);
                 }
             }),
             sub
         );
+    }
+
+    private _removeMapLayer(sim: BrowserSimulation, e: RemoveMapLayerAction) {
+        try {
+            if (this._geoJsonUrls.has(e.layerId)) {
+                // Revoke the object URL if it was created for a GeoJSON layer
+                const url = this._geoJsonUrls.get(e.layerId);
+                try {
+                    URL.revokeObjectURL(url);
+                } catch (revokeError) {
+                    console.warn('Failed to revoke object URL:', revokeError);
+                }
+                this._geoJsonUrls.delete(e.layerId);
+            }
+            this.gameView.removeMapLayer(e.layerId);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            console.error('Error removing map layer:', err);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncError(e.taskId, err));
+            }
+        }
+    }
+
+    private async _addMapLayer(sim: BrowserSimulation, e: AddMapLayerAction) {
+        try {
+            // Add the map layer
+            const portalTag = getPortalTag(e.portal);
+
+            const layerId = uuid();
+            let layer: __esri.Layer = null;
+            if (e.layer.type === 'geojson') {
+                const [GeoJSONLayer] = (await loadEsriModules([
+                    'esri/layers/GeoJSONLayer',
+                ])) as [typeof __esri.GeoJSONLayer];
+
+                let url: string;
+                if (e.layer.data) {
+                    const blob = new Blob([JSON.stringify(e.layer.data)], {
+                        type: 'application/json',
+                    });
+                    url = URL.createObjectURL(blob);
+                    this._geoJsonUrls.set(layerId, url);
+                } else {
+                    url = e.layer.url;
+                }
+
+                if (!url) {
+                    throw new Error(
+                        'No URL or data provided for GeoJSON layer.'
+                    );
+                }
+
+                layer = new GeoJSONLayer({
+                    url,
+                    copyright: e.layer.copyright,
+                });
+            }
+
+            if (!layer) {
+                throw new Error(
+                    `Unsupported layer type: ${e.layer.type}. Only 'geojson' is supported.`
+                );
+            }
+
+            if (portalTag === 'mapPortal') {
+                this.gameView.addMapLayer(layerId, layer);
+            } else {
+                this.gameView.addMiniMapLayer(layerId, layer);
+            }
+
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncResult(e.taskId, layerId));
+            }
+        } catch (err) {
+            console.error('Error adding map layer:', err);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncError(e.taskId, err));
+            }
+        }
     }
 
     private simulationRemoved(sim: BrowserSimulation) {
@@ -2120,29 +2215,11 @@ export class PlayerGame extends Game {
                     this._setupMapPortal(cameraProperties);
                 } else {
                     view.viewingMode = viewingMode;
-                    // // update the bot positions
-                    // for (let sim of this.mapSimulations) {
-                    //     sim.ensureUpdate(sim.bots.map((b) => b.bot.id));
-                    // }
                 }
             }
 
             // update the globe mask visibility
             this._mapGlobeMask.visible = kind === 'globe';
-
-            // if (
-            //     this.gameView.setMiniMapViewingMode(
-            //         kind === 'globe' ? 'global' : 'local'
-            //     )
-            // ) {
-            //     // update the bot positions
-            //     for (let sim of this.mapSimulations) {
-            //         sim.ensureUpdate(sim.bots.map((b) => b.bot.id));
-            //     }
-
-            //     // update the globe mask
-            //     this._miniMapGlobeMask.visible = kind === 'globe';
-            // }
         }
     }
 
@@ -2169,20 +2246,6 @@ export class PlayerGame extends Game {
             }
 
             this._miniMapGlobeMask.visible = kind === 'globe';
-
-            // if (
-            //     this.gameView.setMiniMapViewingMode(
-            //         kind === 'globe' ? 'global' : 'local'
-            //     )
-            // ) {
-            //     // update the bot positions
-            //     for (let sim of this.mapSimulations) {
-            //         sim.ensureUpdate(sim.bots.map((b) => b.bot.id));
-            //     }
-
-            //     // update the globe mask
-            //     this._miniMapGlobeMask.visible = kind === 'globe';
-            // }
         }
     }
 

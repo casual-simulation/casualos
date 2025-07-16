@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Changed the default mapPortal and miniMapPortal basemap to `dark-gray-vector` from `dark-gray`
+    -   This may cause some things like labels and street markings to appear different.
+
 ### :rocket: Features
 
 -   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
@@ -19,6 +24,22 @@
         -   `null` - The grid matches the `mapPortalKind`. (Default)
         -   `globe` - The grid aligns best with the `globe` `mapPortalKind`.
         -   `plane` - The grid aligns best with the `plane` `mapPortalKind`.
+-   Improved `mapPortalBasemap` to support [web tile URLs](https://developers.arcgis.com/javascript/latest/api-reference/esri-layers-WebTileLayer.html#urlTemplate).
+    -   This allows you to set a custom basemap in the mapPortal or miniMapPortal.
+    -   The URL should follow one of the following templates:
+        -   `https://some.domain.com/{level}/{col}/{row}.png`
+        -   `https://some.domain.com/{z}/{x}/{y}.png`
+        -   Where anything in curly braces `{}` represents a template parameter that the mapPortal/miniMapPortal will fill with the corresponding coordinate information for the requested tile.
+-   Added the `os.addMapLayer(portal, layer)` and `os.removeMapLayer(layerId)` functions.
+    -   These functions allow you to visualize and render [GeoJSON](https://geojson.org/) data in the mapPortal or miniMapPortal.
+    -   `os.addMapLayer(portal, layer)` - Adds a map layer to the given portal. Returns a promise that resolves with string with the ID of the layer that was added. It accepts the following arguments:
+        -   `portal` - The portal that the layer should be rendered in. Can either be `map` or `miniMap`.
+        -   `layer` - The layer that should be displayed. Should be an object with the following structure:
+            -   `type` - The type of the layer. Currently only `geojson` is supported.
+            -   `url` - (Optional) The URL that the GeoJSON data can be downloaded from.
+            -   `data` - (Optional) The GeoJSON data that is contained in the layer. Required if `url` is not specified.
+    -   `os.removeMapLayer(layerId)` - Removes a map layer from the portal it is in. Returns a promise that resolves once the layer has been removed.
+        -   `layerId` - The ID of the layer that should be removed. You can get this from the resolved value from `os.addMapLayer()`.
 
 ### :bug: Bug Fixes
 

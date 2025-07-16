@@ -1341,7 +1341,7 @@ export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
  * The default basemap that should be used for the map portal.
  * See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap
  */
-export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
+export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray-vector';
 
 /**
  * The possible kinds of map portals.
