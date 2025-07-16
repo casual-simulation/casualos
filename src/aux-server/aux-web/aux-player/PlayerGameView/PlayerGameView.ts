@@ -482,7 +482,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
             basemap: DEFAULT_MAP_PORTAL_BASEMAP,
         });
 
-        for (let layer of this._mapViewLayers.values()) {
+        for (let layer of this._miniMapLayers.values()) {
             map.add(layer);
         }
 

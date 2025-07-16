@@ -1098,6 +1098,11 @@ export class PlayerGame extends Game {
                 });
             }
 
+            if (!layer) {
+                throw new Error(
+                    `Unsupported layer type: ${e.layer.type}. Only 'geojson' is supported.`
+                );
+            }
             const layerId = layer.id || uuid();
 
             if (portalTag === 'mapPortal') {
