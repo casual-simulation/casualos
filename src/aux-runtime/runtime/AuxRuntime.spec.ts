@@ -9634,6 +9634,70 @@ describe('AuxRuntime', () => {
                     ]);
                 });
 
+                it('should not override module imports', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.addBotListener(thisBot, 'abc', (arg, bot, tag) => "wrong");`,
+                                test: `@import val from ".abc"; os.toast(val);`,
+                                abc: '📄export default "def";',
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+                    await runtime.shout('test');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should be able to import from other bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.addBotListener(thisBot, 'onClick', async (arg, bot, tag) => {
+                                    const { default: value } = await import('.abc');
+                                    os.toast(value);
+                                });`,
+                                abc: '📄export default "def";',
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+                    await runtime.shout('onClick');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([[toast('def')]]);
+                });
+
+                it('should not be able to export for the module', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `📄os.addBotListener(thisBot, 'module', async (arg, bot, tag) => {
+                                    export default "wrong";
+                                    os.toast(123);
+                                });`,
+                                test: `@import value from ".hello"; os.toast('first:' + (value ?? 'correct'));`,
+                                onClick: `@import value from ".module"; os.toast('second:' + value);`,
+                                module: '📄export default "def";',
+                            }),
+                        })
+                    );
+                    await runtime.shout('test');
+                    await runtime.shout('onClick');
+
+                    await waitAsync();
+
+                    // should not have called the listener when importing "module"
+                    expect(events).toEqual([
+                        [toast('first:correct')],
+                        [toast('second:def')],
+                    ]);
+                });
+
                 it('should support removing dynamic listeners from bots', async () => {
                     runtime.stateUpdated(
                         stateUpdatedEvent({
