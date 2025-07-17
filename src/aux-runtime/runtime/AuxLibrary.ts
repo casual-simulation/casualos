@@ -16905,6 +16905,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param tagName The name of the tag that the listener should be added to.
      * @param listener The listener that should be added to the bot.
      *
+     * @example Add a listener to the bot for the "onClick" tag
+     * const listener = (that) => {
+     *   os.toast("Clicked on " + that.face);
+     * };
+     * os.addBotListener(thisBot, "onClick", listener);
+     *
      * @dochash actions/os/event
      * @docgroup 02-event-actions
      * @docname os.addBotListener
@@ -16923,6 +16929,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot that the listener should be removed from.
      * @param tagName The name of the tag that the listener should be removed from.
      * @param listener The listener that should be removed from the bot.
+     *
+     * @example Remove a listener from the bot for the "onClick" tag
+     * os.removeBotListener(thisBot, "onClick", listener);
      *
      * @dochash actions/os/event
      * @docgroup 02-event-actions
