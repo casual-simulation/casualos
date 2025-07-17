@@ -1118,6 +1118,21 @@ describe('RuntimeBot', () => {
             expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
         });
 
+        it('should be able to enumerate the listeners on the bot', () => {
+            let func = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func;
+            script.listeners.def = func2;
+
+            const keys = Object.keys(script.listeners);
+            expect(keys).toEqual(['abc', 'def']);
+
+            script.listeners.def = null;
+
+            const keys2 = Object.keys(script.listeners);
+            expect(keys2).toEqual(['abc']);
+        });
+
         describe('listener shortcut', () => {
             it('should support getting listeners directly from the runtime bot', () => {
                 let func = () => {};

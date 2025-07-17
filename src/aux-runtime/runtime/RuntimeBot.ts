@@ -403,6 +403,12 @@ export function createRuntimeBot(
                 return false;
             }
             manager.setListener(bot, key, value);
+            // Keep the bot listener keys and the listener override keys in sync.
+            if (key in bot.listenerOverrides && !(key in bot.listeners)) {
+                bot.listeners[key] = undefined;
+            } else if (!bot.listeners[key]) {
+                delete bot.listeners[key];
+            }
             return true;
         },
     });

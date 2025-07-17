@@ -99,7 +99,7 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         return bot.tags[tag];
     },
     getListener(bot: CompiledBot, tag: string) {
-        return bot.listeners[tag];
+        return bot.listenerOverrides[tag] ?? bot.listeners[tag] ?? null;
     },
     setListener(bot: CompiledBot, tag: string, value: DynamicListener | null) {
         if (!hasValue(value)) {
