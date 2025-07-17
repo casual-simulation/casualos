@@ -88,7 +88,11 @@ describe('RuntimeBot', () => {
         RealtimeEditConfig,
         [CompiledBot, string, any]
     >;
-    let getListenerMock: jest.Mock;
+    let getListenerMock: jest.Mock<DynamicListener, [CompiledBot, string]>;
+    let setListenerMock: jest.Mock<
+        void,
+        [CompiledBot, string, DynamicListener]
+    >;
     let getRawValueMock: jest.Mock;
     let getSignatureMock: jest.Mock;
     let notifyChangeMock: jest.Mock;
@@ -198,7 +202,17 @@ describe('RuntimeBot', () => {
         });
 
         getListenerMock = jest.fn(
-            (bot: CompiledBot, tag: string) => bot.listeners[tag]
+            (bot: CompiledBot, tag: string) =>
+                bot.listenerOverrides[tag] ?? bot.listeners[tag]
+        );
+        setListenerMock = jest.fn(
+            (bot: CompiledBot, tag: string, listener: DynamicListener) => {
+                if (!hasValue(listener)) {
+                    delete bot.listenerOverrides[tag];
+                } else {
+                    bot.listenerOverrides[tag] = listener;
+                }
+            }
         );
 
         getRawValueMock = jest.fn((bot: PrecalculatedBot, tag: string) => {
@@ -252,6 +266,7 @@ describe('RuntimeBot', () => {
             },
             getRawValue: getRawValueMock,
             getListener: getListenerMock,
+            setListener: setListenerMock,
             getSignature: getSignatureMock,
             notifyChange: notifyChangeMock,
             notifyActionEnqueued: jest.fn(),
@@ -1062,6 +1077,45 @@ describe('RuntimeBot', () => {
             getListenerMock.mockReturnValueOnce(func);
             const listener = script.listeners.abc;
             expect(listener).toBe(func);
+        });
+
+        it('should support setting a listener', () => {
+            let func = () => {};
+            script.listeners.abc = func;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func);
+
+            const listener = script.listeners.abc;
+            expect(listener === func).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
+        it('should override the existing listener', () => {
+            let func1 = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func1;
+
+            script.listeners.abc = func2;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func2);
+
+            const listener = script.listeners.abc;
+            expect(listener === func2).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
+        it('should revert back to the existing listener when set to null', () => {
+            let func1 = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func1;
+
+            script.listeners.abc = func2;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func2);
+
+            script.listeners.abc = null;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', null);
+
+            const listener = script.listeners.abc;
+            expect(listener === func1).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
         });
 
         describe('listener shortcut', () => {

@@ -44,7 +44,6 @@ import type {
     ScriptTags,
     BotTagMasks,
     RuntimeBot,
-    CompiledBotListener,
     RuntimeBotLinks,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -384,6 +383,27 @@ export function createRuntimeBot(
                 return null;
             }
             return manager.getListener(bot, key);
+        },
+        set(target, key, value, proxy) {
+            if (replacement) {
+                return Reflect.set(
+                    replacement.listeners,
+                    key,
+                    value,
+                    replacement.listeners
+                );
+            }
+            if (typeof key === 'symbol') {
+                return Reflect.set(target, key, value, proxy);
+            }
+            if (key in constantTags) {
+                return true;
+            }
+            if (typeof value !== 'function' && value !== null) {
+                return false;
+            }
+            manager.setListener(bot, key, value);
+            return true;
         },
     });
 
@@ -976,7 +996,20 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param bot The bot.
      * @param tag The tag.
      */
-    getListener(bot: CompiledBot, tag: string): CompiledBotListener;
+    getListener(bot: CompiledBot, tag: string): DynamicListener | null;
+
+    /**
+     * Sets the listener for the given bot and tag.
+     * If the listener is null, then the listener will be removed.
+     * @param bot The bot.
+     * @param tag The tag.
+     * @param listener The listener.
+     */
+    setListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener | null
+    ): void;
 
     /**
      * Gets whether the given signature on the bot is valid.

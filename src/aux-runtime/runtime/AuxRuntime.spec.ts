@@ -9614,6 +9614,45 @@ describe('AuxRuntime', () => {
                     expect(events).toEqual([[toast({ a: 123 })]]);
                 });
             });
+
+            describe('listeners', () => {
+                it('should support adding dynamic listeners to bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@os.addBotListener(thisBot, 'onClick', (arg, bot, tag) => os.toast('clicked: ' + arg + ',' + bot.id + ',' + tag));`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+                    await runtime.shout('onClick', null, 'arg');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [toast('clicked: arg,test1,onClick')],
+                    ]);
+                });
+
+                it('should support removing dynamic listeners from bots', async () => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test1: createBot('test1', {
+                                hello: `@
+                                const func = () => os.toast('clicked');
+                                os.addBotListener(thisBot, 'onClick', func);
+                                os.removeBotListener(thisBot, 'onClick', func);`,
+                            }),
+                        })
+                    );
+                    await runtime.shout('hello');
+                    await runtime.shout('onClick');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([]);
+                });
+            });
         });
 
         describe('resolveModule()', () => {
@@ -10488,6 +10527,35 @@ describe('AuxRuntime', () => {
                     updatedBots: [],
                     version: null,
                 });
+
+                const bot = runtime.currentState['test'];
+                const listener = bot.listeners.onClick;
+
+                expect(listener).toBeInstanceOf(Function);
+            });
+
+            it('should be able to set a listener override', () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            onClick: '@123',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const func = () => {
+                    return 456;
+                };
+                bot.script.listeners.onClick = func;
+
+                const listener = bot.listenerOverrides.onClick;
+
+                expect(listener === func).toBe(true);
+
+                const result = bot.script.onClick();
+
+                expect(result).toBe(456);
             });
         });
 
@@ -11091,7 +11159,7 @@ describe('AuxRuntime', () => {
                 const listener = runtime.getListener(bot, 'abc');
                 expect(listener).toBeInstanceOf(Function);
 
-                expect(listener()).toEqual(55 + 9);
+                expect(listener!(undefined, bot.script, 'abc')).toEqual(55 + 9);
             });
 
             it('should support setting a tag to null to clear the listener', () => {
@@ -11709,14 +11777,14 @@ describe('AuxRuntime', () => {
 
                 expect(!!listener).toBe(true);
 
-                listener!();
+                listener!(undefined, bot.script, 'hello');
 
                 await waitAsync();
 
                 expect(events).toEqual([[toast('def')]]);
             });
 
-            it('should listeners should be able to import modules', async () => {
+            it('listeners should be able to import modules', async () => {
                 runtime.stateUpdated(
                     stateUpdatedEvent({
                         test: createBot('test', {
@@ -11731,10 +11799,90 @@ describe('AuxRuntime', () => {
 
                 expect(!!listener).toBe(true);
 
-                listener!();
+                listener!(undefined, bot.script, 'hello');
 
                 await waitAsync();
 
+                expect(events).toEqual([[toast('def')]]);
+            });
+
+            it('should return the override first', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@os.toast("def");',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const func = () => {
+                    runtime.context.enqueueAction(toast('other'));
+                };
+                runtime.setListener(bot, 'hello', func);
+
+                const listener = runtime.getListener(bot, 'hello');
+
+                expect(!!listener).toBe(true);
+                expect(listener === func).toBe(true);
+
+                listener!(undefined, bot.script, 'hello');
+
+                await waitAsync();
+
+                expect(events).toEqual([[toast('other')]]);
+            });
+        });
+
+        describe('setListener()', () => {
+            it('should set a listener override on the bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@os.toast("def");',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const func = () => {
+                    runtime.context.enqueueAction(toast('other'));
+                };
+                runtime.setListener(bot, 'hello', func);
+
+                expect(bot.listenerOverrides.hello === func).toBe(true);
+
+                const result = await runtime.shout('hello', [bot.id]);
+
+                await waitAsync();
+
+                expect(result.actions).toEqual([toast('other')]);
+                expect(events).toEqual([[toast('other')]]);
+            });
+
+            it('should be able to clear a listener override by setting it to null', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            hello: '@os.toast("def");',
+                        }),
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const func = () => {
+                    runtime.context.enqueueAction(toast('other'));
+                };
+                runtime.setListener(bot, 'hello', func);
+                runtime.setListener(bot, 'hello', null);
+
+                expect(bot.listenerOverrides.hello).toBeUndefined();
+
+                const result = await runtime.shout('hello', [bot.id]);
+
+                await waitAsync();
+
+                expect(result.actions).toEqual([toast('def')]);
                 expect(events).toEqual([[toast('def')]]);
             });
         });

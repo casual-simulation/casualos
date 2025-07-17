@@ -17601,7 +17601,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                             INTERPRETABLE_FUNCTION
                         ](arg);
                     } else {
-                        result = listener(arg);
+                        result = listener(arg, bot, tag);
                     }
 
                     if (isGenerator(result)) {

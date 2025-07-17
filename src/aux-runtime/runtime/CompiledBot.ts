@@ -65,6 +65,12 @@ export interface CompiledBot extends PrecalculatedBot {
     listeners: CompiledBotListeners;
 
     /**
+     * The listeners that have been overridden by the user.
+     * These listeners will override the compiled listeners.
+     */
+    listenerOverrides: CompiledBotListeners;
+
+    /**
      * The dynamic listeners that have been registered at runtime.
      */
     dynamicListeners: DynamicBotListeners;
@@ -199,7 +205,8 @@ export function createCompiledBot(
     listeners: CompiledBotListeners = {},
     signatures?: BotSignatures,
     modules: CompiledBotModules = {},
-    dynamicListeners: DynamicBotListeners = {}
+    dynamicListeners: DynamicBotListeners = {},
+    listenerOverrides: CompiledBotListeners = {}
 ): CompiledBot {
     if (hasValue(space)) {
         return {
@@ -209,6 +216,7 @@ export function createCompiledBot(
             tags: tags || values,
             values,
             listeners: listeners,
+            listenerOverrides: listenerOverrides,
             dynamicListeners: dynamicListeners,
             modules: modules,
             exports: {},
@@ -226,6 +234,7 @@ export function createCompiledBot(
         tags: tags || values,
         values,
         listeners: listeners,
+        listenerOverrides: listenerOverrides,
         dynamicListeners: dynamicListeners,
         modules: modules,
         exports: {},

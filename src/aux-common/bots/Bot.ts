@@ -359,8 +359,12 @@ export interface RuntimeBotVars {
 export interface CompiledBotListeners {
     /**
      * Gets the listener in the given tag.
+     *
+     * Can be one of the following:
+     * - A function that takes an optional argument and returns a value.
+     * - A function that takes the bot and tag name as arguments and returns a value.
      */
-    [tag: string]: (arg?: any) => any;
+    [tag: string]: DynamicListener | null;
 }
 
 /**
@@ -405,11 +409,6 @@ export interface CompiledBotModules {
 export interface CompiledBotExports {
     [tag: string]: Promise<BotModuleResult>;
 }
-
-/**
- * The function signature of a bot listener.
- */
-export type CompiledBotListener = (arg?: any) => any;
 
 /**
  * The function signature of a dynamic bot listener.

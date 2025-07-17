@@ -22,6 +22,7 @@ import type {
     Bot,
     BotSignatures,
     RuntimeBot,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     TAG_MASK_SPACE_PRIORITIES,
@@ -99,6 +100,13 @@ export const testScriptBotInterface: RuntimeBotInterface = {
     },
     getListener(bot: CompiledBot, tag: string) {
         return bot.listeners[tag];
+    },
+    setListener(bot: CompiledBot, tag: string, value: DynamicListener | null) {
+        if (!hasValue(value)) {
+            delete bot.listenerOverrides[tag];
+        } else {
+            bot.listenerOverrides[tag] = value;
+        }
     },
     getSignature(bot: PrecalculatedBot, signature: string): string {
         if (bot.signatures) {

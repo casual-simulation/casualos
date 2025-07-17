@@ -25,7 +25,6 @@ import type {
     PartialBot,
     BotTagMasks,
     RuntimeBot,
-    CompiledBotListener,
     UpdateBotAction,
     BotModule,
     IdentifiedBotModule,
@@ -339,6 +338,10 @@ export class AuxRuntime
      * The number of times that the runtime can call onError for an error from the same script.
      */
     repeatedErrorLimit: number = 1000;
+
+    get library() {
+        return this._library;
+    }
 
     get context() {
         return this._globalContext;
@@ -2970,6 +2973,7 @@ export class AuxRuntime
             precalculated: true,
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
+            listenerOverrides: {},
             dynamicListeners: {},
             modules: {},
             exports: {},
@@ -3191,13 +3195,21 @@ export class AuxRuntime
         return undefined;
     }
 
-    getListener(bot: CompiledBot, tag: string): CompiledBotListener {
-        const listener = bot.listeners[tag];
-        if (listener) {
-            return listener;
+    getListener(bot: CompiledBot, tag: string): DynamicListener | null {
+        return bot.listenerOverrides[tag] || bot.listeners[tag] || null;
+    }
+
+    setListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener | null
+    ): void {
+        if (hasValue(listener)) {
+            bot.listenerOverrides[tag] = listener;
+        } else {
+            delete bot.listenerOverrides[tag];
         }
-        this.getValue(bot, tag);
-        return bot.listeners[tag] || null;
+        this._updateListenerPresense(bot, tag);
     }
 
     getDynamicListeners(
@@ -3347,7 +3359,9 @@ export class AuxRuntime
         this._globalContext.recordListenerPresense(
             bot.id,
             tag,
-            !!bot.listeners[tag] || !!bot.dynamicListeners[tag]
+            !!bot.listenerOverrides[tag] ||
+                !!bot.listeners[tag] ||
+                !!bot.dynamicListeners[tag]
         );
     }
 
@@ -3537,7 +3551,7 @@ export class AuxRuntime
     }
 
     private _compile(
-        bot: CompiledBot,
+        bot: CompiledBot | null,
         tag: string,
         script: string,
         options: CompileOptions
@@ -3646,7 +3660,13 @@ export class AuxRuntime
                     () => (module: string, meta: ImportMetadata) =>
                         this._importModule(module, meta),
             },
-            arguments: [['that', 'data'], IMPORT_FACTORY, EXPORT_FACTORY],
+            arguments: [
+                ['that', 'data'],
+                '$__bot',
+                '$__tag',
+                IMPORT_FACTORY,
+                EXPORT_FACTORY,
+            ],
         }) as CompiledBotModule;
 
         if (hasValue(bot)) {
@@ -3665,7 +3685,7 @@ export class AuxRuntime
                     exp: (string | [string, string])[]
                 ) => exports(valueOrSource, exp, meta);
                 return this._wrapWithCurrentPromise(() => {
-                    let result = func(null, importFunc, exportFunc);
+                    let result = func(null, null, null, importFunc, exportFunc);
                     this._scheduleJobQueueCheck();
                     return result;
                 });
