@@ -123,11 +123,9 @@ export class MapViewUtils {
         const centerTile = MapViewUtils.getCenterTile(mapView);
         const tileSize = MapViewUtils.getTileSize(mapView);
 
-        // Convert world coordinates back to tile coordinates
         const tileX = worldPosition.x / tileSize + centerTile.x;
         const tileY = worldPosition.z / tileSize + centerTile.y;
 
-        // Convert tile coordinates to geographic coordinates
         const [longitude, latitude] = MapView.tileToLonLat(zoom, tileX, tileY);
 
         return {
@@ -181,18 +179,15 @@ export class MapViewUtils {
         const centerTile = MapViewUtils.getCenterTile(mapView);
         const tileSize = MapViewUtils.getTileSize(mapView);
 
-        // Get the grid size to determine viewport extent
         const mapViewAny = mapView as any;
         const gridSize = mapViewAny._gridSize || 3;
         const halfGrid = Math.floor(gridSize / 2);
 
-        // Calculate corner tile coordinates
         const minTileX = centerTile.x - halfGrid;
         const maxTileX = centerTile.x + halfGrid;
         const minTileY = centerTile.y - halfGrid;
         const maxTileY = centerTile.y + halfGrid;
 
-        // Convert to geographic coordinates
         const [west, north] = MapView.tileToLonLat(zoom, minTileX, minTileY);
         const [east, south] = MapView.tileToLonLat(zoom, maxTileX, maxTileY);
 

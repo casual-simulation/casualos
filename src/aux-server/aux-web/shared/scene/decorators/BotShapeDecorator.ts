@@ -121,8 +121,9 @@ import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
 import { MapTilerProvider } from 'geo-three';
 import { CustomMapProvider } from '../map/CustomMapProvider';
-import { MapViewExtensions } from '../map/MapViewExtensions';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
+import type { GeoJSONData, GeoJSONStyle } from '../map/GeoJSONTypes';
+import { parseGeoJSON, isValidGeoJSON } from '../map/MapViewGeoJSONHelpers';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -176,9 +177,11 @@ export class BotShapeDecorator
     private _game: Game;
     private _shapeSubscription: SubscriptionLike;
     private _finder: AuxBotVisualizerFinder;
+
     private _mapView: MapView;
     private _mapProviderName: string;
     private _mapProviderApiKey: string;
+    private _currentGeoJSONData: string | null = null;
 
     container: Group;
     mesh: Mesh | FrustumHelper;
@@ -309,171 +312,7 @@ export class BotShapeDecorator
             this._updateMapTags(calc);
             this._updateMapProvider(calc);
             this._updateCustomMapProviderURL(calc);
-
-            const geojsonRaw = calculateBotValue(
-                calc,
-                this.bot3D.bot,
-                'formMapGeoJSON'
-            );
-            console.log('Processing GeoJSON update, raw data:', geojsonRaw);
-
-            const geojsonLayerId = 'formMapGeoJSON';
-            const extendedMapView = MapViewExtensions.extendMapView(
-                this._mapView
-            );
-
-            // Parse GeoJSON data
-            let parsedGeoJSON: any = null;
-            if (geojsonRaw) {
-                try {
-                    parsedGeoJSON =
-                        typeof geojsonRaw === 'string'
-                            ? JSON.parse(geojsonRaw)
-                            : geojsonRaw;
-                    console.log('Successfully parsed GeoJSON:', parsedGeoJSON);
-                } catch (err) {
-                    console.warn('Invalid formMapGeoJSON data:', err);
-                    return;
-                }
-            }
-
-            // Check if we already have a layer with the same data
-            const existingLayer =
-                extendedMapView.getGeoJSONLayer(geojsonLayerId);
-            if (existingLayer && parsedGeoJSON) {
-                // Only update if data has actually changed
-                const currentData = (existingLayer as any)._geoJsonData;
-                const dataChanged =
-                    JSON.stringify(currentData) !==
-                    JSON.stringify(parsedGeoJSON);
-
-                if (!dataChanged) {
-                    console.log('GeoJSON data unchanged, skipping update');
-                    return; // Skip update if data hasn't changed
-                }
-                console.log('GeoJSON data changed, updating layer');
-            }
-
-            // Remove existing layer only if we're going to replace it
-            if (existingLayer) {
-                console.log('Removing existing GeoJSON layer');
-                extendedMapView.removeGeoJSONLayer(geojsonLayerId);
-            }
-            if (extendedMapView.getGeoJSONLayer(geojsonLayerId)) {
-                extendedMapView.removeGeoJSONLayer(geojsonLayerId);
-            }
-            if (parsedGeoJSON) {
-                console.log('Creating new GeoJSON layer');
-
-                const options = {
-                    defaultStyle: {
-                        pointColor: calculateStringTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoPointColor',
-                            '#ff0000'
-                        ),
-                        pointSize: calculateNumericalTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoPointSize',
-                            5
-                        ),
-                        lineColor: calculateStringTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoLineColor',
-                            '#0000ff'
-                        ),
-                        lineWidth: calculateNumericalTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoLineWidth',
-                            2
-                        ),
-                        lineOpacity: calculateNumericalTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoLineOpacity',
-                            1.0
-                        ),
-                        fillColor: calculateStringTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoFillColor',
-                            '#00ff00'
-                        ),
-                        fillOpacity: calculateNumericalTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoFillOpacity',
-                            0.7
-                        ),
-                        strokeColor: calculateStringTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoStrokeColor',
-                            '#000000'
-                        ),
-                        strokeWidth: calculateNumericalTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoStrokeWidth',
-                            1
-                        ),
-                        extrudeHeight: calculateNumericalTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoExtrudeHeight',
-                            0
-                        ),
-                        useModernLines: calculateBooleanTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoUseModernLines',
-                            false
-                        ),
-                        forceBasicLines: calculateBooleanTagValue(
-                            calc,
-                            this.bot3D.bot,
-                            'geoForceBasicLines',
-                            true
-                        ),
-                    },
-                };
-
-                const layer = extendedMapView.addGeoJSONLayer(
-                    geojsonLayerId,
-                    options
-                );
-                console.log('GeoJSON layer created, setting data');
-
-                layer.setData(parsedGeoJSON);
-
-                // Set initial renderer resolution
-                const renderer = this._game?.getRenderer();
-                if (renderer) {
-                    const size = renderer.getSize(new Vector2());
-                    console.log('Raw renderer size:', size.x, size.y);
-
-                    // Use fallback resolution if renderer reports 0x0
-                    const finalWidth = size.x > 0 ? size.x : 1920;
-                    const finalHeight = size.y > 0 ? size.y : 1080;
-
-                    layer.setRendererResolution(finalWidth, finalHeight);
-                    console.log(
-                        'Renderer resolution set:',
-                        finalWidth,
-                        finalHeight
-                    );
-                } else {
-                    // Fallback if no renderer available
-                    layer.setRendererResolution(1920, 1080);
-                    console.log(
-                        'Using fallback renderer resolution: 1920 1080'
-                    );
-                }
-            }
+            this._updateMapGeoJSON(calc);
         }
 
         if (this._iframe) {
@@ -885,6 +724,7 @@ export class BotShapeDecorator
         }
 
         if (this._mapView) {
+            this._mapView.setGeoJSONData(null);
             this._mapView.dispose();
             this.container.remove(this._mapView);
             this._mapView = null;
@@ -1051,6 +891,123 @@ export class BotShapeDecorator
         );
 
         this._mapView.setHeightOffset(heightOffset);
+    }
+
+    private async _updateMapGeoJSON(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        const geojsonRaw = calculateBotValue(
+            calc,
+            this.bot3D.bot,
+            'formMapGeoJSON'
+        );
+
+        const geojsonString = geojsonRaw ? JSON.stringify(geojsonRaw) : null;
+
+        if (this._currentGeoJSONData === geojsonString) {
+            return;
+        }
+
+        this._currentGeoJSONData = geojsonString;
+
+        if (geojsonRaw) {
+            try {
+                // Parse GeoJSON data
+                let geoJsonData: GeoJSONData;
+
+                if (typeof geojsonRaw === 'string') {
+                    geoJsonData = await parseGeoJSON(geojsonRaw);
+                } else if (typeof geojsonRaw === 'object') {
+                    geoJsonData = geojsonRaw as GeoJSONData;
+                } else {
+                    console.warn(
+                        'Invalid GeoJSON data type:',
+                        typeof geojsonRaw
+                    );
+                    return;
+                }
+
+                // Validate GeoJSON
+                if (!isValidGeoJSON(geoJsonData)) {
+                    console.warn('Invalid GeoJSON structure:', geoJsonData);
+                    return;
+                }
+                // CHANGE: Have geoJSON styling customizition happen in geoJSON object (not through tags)
+                // Build style from bot tags
+                const style: GeoJSONStyle = {
+                    pointColor: calculateStringTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoPointColor',
+                        '#ff0000'
+                    ),
+                    pointSize: calculateNumericalTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoPointSize',
+                        5
+                    ),
+                    lineColor: calculateStringTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoLineColor',
+                        '#0000ff'
+                    ),
+                    lineWidth: calculateNumericalTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoLineWidth',
+                        2
+                    ),
+                    lineOpacity: calculateNumericalTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoLineOpacity',
+                        1.0
+                    ),
+                    fillColor: calculateStringTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoFillColor',
+                        '#00ff00'
+                    ),
+                    fillOpacity: calculateNumericalTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoFillOpacity',
+                        0.7
+                    ),
+                    extrudeHeight: calculateNumericalTagValue(
+                        calc,
+                        this.bot3D.bot,
+                        'geoExtrudeHeight',
+                        0
+                    ),
+                };
+
+                // Update MapView with GeoJSON data
+                this._mapView.setGeoJSONData(geoJsonData, style);
+
+                // Update renderer resolution if needed
+                if (this._game) {
+                    const renderer = this._game.getRenderer();
+                    if (renderer) {
+                        const size = renderer.getSize(new Vector2());
+                        this._mapView.updateRendererResolution(size.x, size.y);
+                    }
+                }
+
+                console.log('GeoJSON rendered successfully');
+            } catch (error) {
+                console.error('Failed to process GeoJSON:', error);
+            }
+        } else {
+            // Clear GeoJSON if tag is removed
+            console.log('Clearing GeoJSON data');
+            this._mapView.setGeoJSONData(null);
+        }
     }
 
     private _updateOpacity(calc: BotCalculationContext) {
@@ -1945,6 +1902,8 @@ export class BotShapeDecorator
             coords.x, // lon
             coords.y // lat
         );
+
+        this._currentGeoJSONData = null;
     }
 
     private _updateCustomMapProviderURL(calc: BotCalculationContext) {
