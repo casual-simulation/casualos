@@ -566,18 +566,6 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
         recursive: true,
     });
 
-    // const { directory, files } = await requestFiles({
-    //     allowedExtensions: new Set(['.aux']),
-    // });
-    // if (files.length < 1) {
-    //     console.error(`No aux file found at/in the provided path.`);
-    //     return;
-    // }
-    // const outDir = await requestOutputDirectory();
-    // if (!outDir) {
-    //     console.error(`Invalid output directory provided.`);
-    //     return;
-    // }
     const flag = options.overwrite ? 'w' : 'wx';
 
     for (const file of files) {
