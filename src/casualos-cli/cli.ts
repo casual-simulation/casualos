@@ -292,7 +292,7 @@ program
     });
 
 program
-    .command('aux-gen-fs')
+    .command('unpack-aux')
     .argument('[input]', 'The aux file/directory to convert to a file system.')
     .argument('[dir]', 'The directory to write the file system to.')
     .option('-o, --overwrite', 'Overwrite existing files.')
@@ -302,7 +302,7 @@ program
         "Write bots that don't have a system tag. By default, these bots are written to the extra.aux file."
     )
     .option('--omit-extra-bots', 'Prevent writing extra.aux files.')
-    .description('Generate a file system from an AUX file.')
+    .description('Generate a folder from an AUX file.')
     .action(async (input, dir, options) => {
         if (options.overwrite) {
             console.log('Overwriting existing files.');
@@ -324,7 +324,7 @@ program
     });
 
 program
-    .command('aux-read-fs')
+    .command('pack-aux')
     .argument(
         '[dir]',
         'The directory to read the file system from. If the directory does not contain an extra.aux file, then each directory will be read as a separate aux file.'
@@ -339,7 +339,7 @@ program
         '--allow-duplicates',
         'Whether to allow duplicate bots. If a duplicate is encoutered, then a new bot ID will be generated for the duplicate.'
     )
-    .description('Read a file system and generate an AUX file.')
+    .description('Generate an AUX file from a folder.')
     .action(async (dir, output, options) => {
         if (options.overwrite) {
             console.log('Overwriting existing files.');
