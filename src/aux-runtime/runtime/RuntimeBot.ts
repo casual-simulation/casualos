@@ -406,7 +406,7 @@ export function createRuntimeBot(
             // Keep the bot listener keys and the listener override keys in sync.
             if (key in bot.listenerOverrides && !(key in bot.listeners)) {
                 bot.listeners[key] = undefined;
-            } else if (!bot.listeners[key]) {
+            } else if (!hasValue(bot.listeners[key])) {
                 delete bot.listeners[key];
             }
             return true;

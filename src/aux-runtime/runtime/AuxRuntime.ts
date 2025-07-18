@@ -3685,6 +3685,9 @@ export class AuxRuntime
                     exp: (string | [string, string])[]
                 ) => exports(valueOrSource, exp, meta);
                 return this._wrapWithCurrentPromise(() => {
+                    // Pass null for the argument, bot, and tag
+                    // because module functions do not accept arguments
+                    // and have the bot and tag injected automatically
                     let result = func(null, null, null, importFunc, exportFunc);
                     this._scheduleJobQueueCheck();
                     return result;
