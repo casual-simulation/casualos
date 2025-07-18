@@ -72,6 +72,13 @@
     -   Functions set on the `listeners` property will override listen tags set by tags and tag masks.
         -   It will only override the listener, not the tag data. In the example above, `bot.tags.onClick` will continue to return `@os.toast("default")`.
 
+-   Improved the CLI to support packing and unpacking AUX files into a file and folder structure.
+    -   See [#605](https://github.com/casual-simulation/casualos/issues/605)
+    -   The following commands are now available:
+        -   `pack-aux` - Takes a folder and builds an `.aux` file from it.
+        -   `unpack-aux` - Takes a `.aux` file and builds a folder from it.
+    -   See the CLI documentation for more information.
+
 ### :bug: Bug Fixes
 
 -   Improved error handling for `ai.stream.chat()` and `ai.generateImage()`.
