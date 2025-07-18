@@ -61,7 +61,6 @@ import type { AIController } from './AIController';
 import type { AIChatMessage } from './AIChatInterface';
 import { AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 import type { WebsocketController } from './websockets/WebsocketController';
-import type GitSourceController from 'GitSourceController';
 import type {
     AddUpdatesMessage,
     LoginMessage,
@@ -402,12 +401,6 @@ export interface RecordsServerOptions {
      * If null, then package versions are not supported.
      */
     packageVersionController?: PackageVersionRecordsController | null;
-
-    /**
-     * The controller that should be used for handling git source control requests.
-     * If null, then git source control is not supported.
-     */
-    gitSourceController?: GitSourceController | null;
 }
 
 /**
@@ -430,7 +423,6 @@ export class RecordsServer {
     private _notificationsController: NotificationRecordsController | null;
     private _packagesController: PackageRecordsController | null;
     private _packageVersionController: PackageVersionRecordsController | null;
-    private _gitSourceController: GitSourceController;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -500,7 +492,6 @@ export class RecordsServer {
         notificationsController,
         packagesController,
         packageVersionController,
-        gitSourceController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -524,7 +515,6 @@ export class RecordsServer {
         this._notificationsController = notificationsController;
         this._packagesController = packagesController;
         this._packageVersionController = packageVersionController;
-        this._gitSourceController = gitSourceController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
