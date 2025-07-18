@@ -29,7 +29,11 @@ import repl from 'node:repl';
 // @ts-ignore
 import Conf from 'conf';
 
-import type { Bot, BotsState } from '@casual-simulation/aux-common';
+import type {
+    Bot,
+    BotsState,
+    StoredAuxVersion1,
+} from '@casual-simulation/aux-common';
 import {
     calculateStringTagValue,
     DATE_TAG_PREFIX,
@@ -276,9 +280,6 @@ program
             case 'convert':
                 return await auxConvert();
                 break;
-            case 'genfs':
-                return await auxGenFs();
-                break;
             default:
                 break;
         }
@@ -289,9 +290,31 @@ program
     .argument('[input]', 'The aux file/directory to convert to a file system.')
     .argument('[dir]', 'The directory to write the file system to.')
     .option('-o, --overwrite', 'Overwrite existing files.')
+    .option('-r, --recursive', 'Recursively convert aux files in a directory.')
+    .option(
+        '--write-systemless-bots',
+        "Write bots that don't have a system tag. By default, these bots are written to the extra.aux file."
+    )
+    .option('--omit-extra-bots', 'Prevent writing extra.aux files.')
     .description('Generate a file system from an AUX file.')
     .action(async (input, dir, options) => {
-        await auxGenFs(input, dir, options.overwrite ?? false);
+        if (options.overwrite) {
+            console.log('Overwriting existing files.');
+        }
+        if (options.recursive) {
+            console.log('Recursively converting aux files in input directory.');
+        }
+        if (options.writeSystemlessBots) {
+            console.log(
+                'Writing systemless bots. All bots will be written to the file system.'
+            );
+        }
+        if (options.omitExtraBots) {
+            console.log(
+                'Omitting extra bots. No extra.aux file(s) will be written.'
+            );
+        }
+        await auxGenFs(input, dir, options);
     });
 
 program
@@ -360,75 +383,20 @@ async function loadAuxFile(filePath: string) {
         const contents = JSON.parse(
             await readFile(filePath, { encoding: 'utf-8' })
         );
-        const botState = getBotsStateFromStoredAux(contents);
-        if (!botState) {
+        const botsState = getBotsStateFromStoredAux(contents);
+        if (!botsState) {
             return {
                 success: false,
                 error: `Aux file at ${filePath} is not a valid (or supported) aux file.`,
             };
         }
-        return { success: true, botState };
+        return { success: true, botsState };
     } catch (err) {
         return {
             success: false,
             error: `Could not read or parse aux file at ${filePath}.\n\n${err}`,
         };
     }
-}
-
-/**
- * Allows usage of instanceof DirectoryMarker to quickly check if a property is meant to represent a directory.
- */
-class DirectoryMarker {
-    constructor() {}
-}
-
-// const prefixes = new Set(['@', '📖', '🧬', '📝', '🔢', '📅', '➡️', '🔁']);
-
-function botStateToFileSystem(botState: BotsState) {
-    const directory: Record<string, any> = new DirectoryMarker();
-    const paths = new Set<string>();
-    for (const botId of Object.keys(botState)) {
-        const tags = botState[botId].tags;
-        const system = tags.system ?? botId;
-        paths.add(system.replace(/\./g, '/'));
-        const subDirs = system.split('.');
-        let curDir = directory;
-        for (const subDirI in subDirs) {
-            const subDir = subDirs[subDirI];
-            if (!curDir[subDir]) {
-                curDir[subDir] = new DirectoryMarker();
-            }
-            curDir = curDir[subDir];
-        }
-        curDir['bot.json'] = {
-            tags: {},
-            ...(curDir['bot.json'] ?? {}),
-            id: botId,
-        };
-        for (const tag of Object.keys(tags)) {
-            const tVal = tags[tag];
-            if (typeof tVal !== 'string' || !tVal.includes('\n')) {
-                curDir['bot.json'].tags[tag] = tVal;
-            } else {
-                curDir[
-                    `${tag}.${
-                        {
-                            '@': 'tsx',
-                            '📖': 'tsm',
-                            '🧬': 'json',
-                            '📝': 'text',
-                            '🔢': 'number.text',
-                            '📅': 'date.text',
-                            '➡️': 'vector.text',
-                            '🔁': 'rotation.text',
-                        }[tVal[0]] ?? 'text'
-                    }`
-                ] = prefixes.has(tVal[0]) ? tVal.slice(1) : tVal; // Remove prefix if it exists
-            }
-        }
-    }
-    return { directory, paths };
 }
 
 async function requestFiles(opts: {
@@ -492,11 +460,15 @@ const fileTagPrefixes = [
     [ROTATION_TAG_PREFIX, '.rotation.text'],
 ];
 
-async function auxGenFs(
-    input: string,
-    output: string,
-    overwrite: boolean
-): Promise<number> {
+interface GenFsOptions {
+    overwrite?: boolean;
+    recursive?: boolean;
+
+    writeSystemlessBots?: boolean;
+    omitExtraBots?: boolean;
+}
+
+async function auxGenFs(input: string, output: string, options: GenFsOptions) {
     if (!input) {
         input = await askForInputs(
             getSchemaMetadata(z.string().min(1)),
@@ -510,11 +482,26 @@ async function auxGenFs(
     }
 
     let files: string[] = [];
+    let extraDirectories: { input: string; output: string }[] = [];
     const inputStat = await stat(input);
     if (inputStat.isDirectory()) {
-        files = readdirSync(input)
-            .filter((file) => file.endsWith('.aux'))
-            .map((file) => path.join(input, file));
+        const paths = readdirSync(input);
+        for (let fileOrFolder of paths) {
+            const fileOrFolderPath = path.resolve(input, fileOrFolder);
+            const stats = await stat(fileOrFolderPath);
+            if (stats.isFile() && fileOrFolder.endsWith('.aux')) {
+                files.push(fileOrFolderPath);
+            } else if (
+                options.recursive &&
+                !fileOrFolder.startsWith('.') &&
+                stats.isDirectory()
+            ) {
+                extraDirectories.push({
+                    input: fileOrFolderPath,
+                    output: path.resolve(output, fileOrFolder),
+                });
+            }
+        }
     } else {
         files.push(input);
     }
@@ -526,10 +513,11 @@ async function auxGenFs(
         );
     }
     output = path.resolve(output);
-    const dirStat = await stat(output);
-    if (!dirStat.isDirectory()) {
-        throw new Error(`The provided path is not a directory: ${output}`);
-    }
+
+    // make the directory if it doesn't exist
+    await mkdir(output, {
+        recursive: true,
+    });
 
     // const { directory, files } = await requestFiles({
     //     allowedExtensions: new Set(['.aux']),
@@ -543,7 +531,7 @@ async function auxGenFs(
     //     console.error(`Invalid output directory provided.`);
     //     return;
     // }
-    const flag = overwrite ? 'w' : 'wx';
+    const flag = options.overwrite ? 'w' : 'wx';
 
     for (const file of files) {
         const fileData = await loadAuxFile(file);
@@ -552,8 +540,15 @@ async function auxGenFs(
         }
 
         const botsState = fileData.botsState;
+        const extraBotsState: BotsState = {};
         for (let id in botsState) {
             const bot = botsState[id];
+
+            if (!options.writeSystemlessBots && !hasValue(bot.tags.system)) {
+                console.warn(`Adding ${id} to extra.aux.`);
+                extraBotsState[id] = bot;
+                continue;
+            }
 
             const system = bot.tags.system ?? id;
             const dirName = system.replace(/\./g, path.sep);
@@ -566,6 +561,10 @@ async function auxGenFs(
 
             if (hasValue(bot.space)) {
                 botJson.tags.space = bot.space;
+            }
+
+            if (hasValue(bot.tags.system)) {
+                botJson.tags.system = bot.tags.system;
             }
 
             // make the directory if it doesn't exist
@@ -605,13 +604,50 @@ async function auxGenFs(
             }
 
             //  write the bot.json file
-            const botJsonPath = path.resolve(dir, 'bot.json');
-            await writeFile(botJsonPath, JSON.stringify(botJson, null, 2), {
-                encoding: 'utf-8',
-                flag,
-            });
+            const botAuxName = `${system}.bot.aux`;
+            const botJsonPath = path.resolve(dir, botAuxName);
+            try {
+                const botAux: StoredAuxVersion1 = {
+                    version: 1,
+                    state: {
+                        [id]: botJson,
+                    },
+                };
+                await writeFile(botJsonPath, JSON.stringify(botAux, null, 2), {
+                    encoding: 'utf-8',
+                    flag,
+                });
+            } catch (err) {
+                console.error(
+                    `Could not write ${botAuxName} file: ${botJsonPath}.\n\n${err}\n`
+                );
+            }
 
             console.log(`Created: ${system}`);
+        }
+
+        if (!options.omitExtraBots && Object.keys(extraBotsState).length > 0) {
+            // write a aux file for the extra bots to the output directory
+            const extraBotsFilePath = path.resolve(output, 'extra.aux');
+
+            try {
+                const aux: StoredAuxVersion1 = {
+                    version: 1,
+                    state: extraBotsState,
+                };
+                await writeFile(
+                    extraBotsFilePath,
+                    JSON.stringify(aux, null, 2),
+                    {
+                        encoding: 'utf-8',
+                        flag,
+                    }
+                );
+            } catch (err) {
+                console.error(
+                    `Could not write extra.aux file: ${extraBotsFilePath}.\n\n${err}\n`
+                );
+            }
         }
 
         // const fileSystem = botStateToFileSystem(fileData.botState);
@@ -653,6 +689,10 @@ async function auxGenFs(
         //         );
         //     }
         // });
+    }
+
+    for (let extraDir of extraDirectories) {
+        await auxGenFs(extraDir.input, extraDir.output, options);
     }
 }
 
