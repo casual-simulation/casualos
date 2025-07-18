@@ -29,12 +29,21 @@ import repl from 'node:repl';
 // @ts-ignore
 import Conf from 'conf';
 
-import type { BotsState } from '@casual-simulation/aux-common';
+import type { Bot, BotsState } from '@casual-simulation/aux-common';
 import {
+    calculateStringTagValue,
+    DATE_TAG_PREFIX,
+    DNA_TAG_PREFIX,
     getBotsStateFromStoredAux,
     getSessionKeyExpiration,
+    hasValue,
     isExpired,
+    LIBRARY_SCRIPT_PREFIX,
+    NUMBER_TAG_PREFIX,
     parseSessionKey,
+    ROTATION_TAG_PREFIX,
+    STRING_TAG_PREFIX,
+    VECTOR_TAG_PREFIX,
     willExpire,
 } from '@casual-simulation/aux-common';
 import type {
@@ -50,14 +59,8 @@ import { readFile } from 'fs/promises';
 import { setupInfraCommands } from 'infra';
 import type { CliConfig } from './config';
 import { z } from 'zod';
-import {
-    existsSync,
-    mkdirSync,
-    readdirSync,
-    statSync,
-    writeFileSync,
-} from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { mkdir, stat, writeFile } from 'node:fs/promises';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -282,6 +285,16 @@ program
     });
 
 program
+    .command('aux-gen-fs')
+    .argument('[input]', 'The aux file/directory to convert to a file system.')
+    .argument('[dir]', 'The directory to write the file system to.')
+    .option('-o, --overwrite', 'Overwrite existing files.')
+    .description('Generate a file system from an AUX file.')
+    .action(async (input, dir, options) => {
+        await auxGenFs(input, dir, options.overwrite ?? false);
+    });
+
+program
     .command('generate-server-config')
     .option('-p, --pretty', 'Pretty print the output.')
     .description('Generate a server config for CasualOS.')
@@ -337,36 +350,23 @@ setupInfraCommands(program.command('infra'), config);
  * @param filePath The path to the file whose to be validated.
  * @param opts Optional options to skip parsing or contents validation.
  */
-async function validateAuxFile(
-    filePath: string,
-    opts?: { skipParse?: true; skipContents?: true }
-) {
-    const targetStat = statSync(filePath);
-    if (!targetStat.isFile())
+async function loadAuxFile(filePath: string) {
+    const targetStat = await stat(filePath);
+    if (!targetStat.isFile()) {
         return { success: false, error: 'Path is not a file.' };
-    if (filePath.slice(-4) !== '.aux')
-        return {
-            success: false,
-            error: 'Invalid file type provided. Expected ".aux"',
-        };
-
-    if (opts?.skipParse) return { success: true, botState: null };
+    }
 
     try {
         const contents = JSON.parse(
             await readFile(filePath, { encoding: 'utf-8' })
         );
-        if (opts?.skipContents)
-            return {
-                success: contents !== null,
-                botState: null,
-            };
         const botState = getBotsStateFromStoredAux(contents);
-        if (!botState)
+        if (!botState) {
             return {
                 success: false,
                 error: `Aux file at ${filePath} is not a valid (or supported) aux file.`,
             };
+        }
         return { success: true, botState };
     } catch (err) {
         return {
@@ -383,7 +383,7 @@ class DirectoryMarker {
     constructor() {}
 }
 
-const prefixes = new Set(['@', '📖', '🧬', '📝', '🔢', '📅', '➡️', '🔁']);
+// const prefixes = new Set(['@', '📖', '🧬', '📝', '🔢', '📅', '➡️', '🔁']);
 
 function botStateToFileSystem(botState: BotsState) {
     const directory: Record<string, any> = new DirectoryMarker();
@@ -481,63 +481,178 @@ async function requestOutputDirectory(
     return null;
 }
 
-async function auxGenFs() {
-    const { directory, files } = await requestFiles({
-        allowedExtensions: new Set(['.aux']),
-    });
-    if (files.length < 1) {
-        console.error(`No aux file found at/in the provided path.`);
-        return;
+const fileTagPrefixes = [
+    ['@', '.tsx'],
+    [LIBRARY_SCRIPT_PREFIX, '.tsm'],
+    [DNA_TAG_PREFIX, '.json'],
+    [DATE_TAG_PREFIX, '.date.text'],
+    [STRING_TAG_PREFIX, '.text'],
+    [NUMBER_TAG_PREFIX, '.number.text'],
+    [VECTOR_TAG_PREFIX, '.vector.text'],
+    [ROTATION_TAG_PREFIX, '.rotation.text'],
+];
+
+async function auxGenFs(
+    input: string,
+    output: string,
+    overwrite: boolean
+): Promise<number> {
+    if (!input) {
+        input = await askForInputs(
+            getSchemaMetadata(z.string().min(1)),
+            'The path to the AUX file to convert to a file system'
+        );
     }
-    const outDir = await requestOutputDirectory();
-    if (!outDir) {
-        console.error(`Invalid output directory provided.`);
-        return;
+    input = path.resolve(input);
+
+    if (!existsSync(input)) {
+        throw new Error(`The provided path does not exist: ${input}`);
     }
 
-    for (const file of files) {
-        const fileSystem = botStateToFileSystem(
-            (await validateAuxFile(replaceWithBasename(directory, file)))
-                .botState
+    let files: string[] = [];
+    const inputStat = await stat(input);
+    if (inputStat.isDirectory()) {
+        files = readdirSync(input)
+            .filter((file) => file.endsWith('.aux'))
+            .map((file) => path.join(input, file));
+    } else {
+        files.push(input);
+    }
+
+    if (!output) {
+        output = await askForInputs(
+            getSchemaMetadata(z.string().min(1)),
+            'The directory to write the file system to'
         );
-        fileSystem.paths.forEach((p) => {
-            const fullPath = path.join(outDir, p);
-            mkdirSync(fullPath, {
+    }
+    output = path.resolve(output);
+    const dirStat = await stat(output);
+    if (!dirStat.isDirectory()) {
+        throw new Error(`The provided path is not a directory: ${output}`);
+    }
+
+    // const { directory, files } = await requestFiles({
+    //     allowedExtensions: new Set(['.aux']),
+    // });
+    // if (files.length < 1) {
+    //     console.error(`No aux file found at/in the provided path.`);
+    //     return;
+    // }
+    // const outDir = await requestOutputDirectory();
+    // if (!outDir) {
+    //     console.error(`Invalid output directory provided.`);
+    //     return;
+    // }
+    const flag = overwrite ? 'w' : 'wx';
+
+    for (const file of files) {
+        const fileData = await loadAuxFile(file);
+        if (!fileData.success) {
+            throw new Error(`Invalid aux file: ${file}.\n\n${fileData.error}`);
+        }
+
+        const botsState = fileData.botsState;
+        for (let id in botsState) {
+            const bot = botsState[id];
+
+            const system = bot.tags.system ?? id;
+            const dirName = system.replace(/\./g, path.sep);
+            const dir = path.resolve(output, dirName);
+
+            const botJson: Bot = {
+                id,
+                tags: {},
+            };
+
+            if (hasValue(bot.space)) {
+                botJson.tags.space = bot.space;
+            }
+
+            // make the directory if it doesn't exist
+            await mkdir(dir, {
                 recursive: true,
             });
-            const targetFSDir = p
-                .split('/')
-                .reduce(
-                    (curDir, subDir) => curDir[subDir],
-                    fileSystem.directory
-                );
-            const subFiles = Object.keys(targetFSDir).filter(
-                (f) => f !== 'bot.json' && !f.endsWith('.json')
-            );
-            for (const subFile of subFiles) {
-                const writeFilePath = path.join(fullPath, subFile);
-                try {
-                    writeFileSync(writeFilePath, targetFSDir[subFile]);
-                } catch (err) {
-                    console.error(
-                        `Could not write file: ${writeFilePath}.\n\n${err}\n`
-                    );
+
+            // Don't track tag masks
+            for (const tag of Object.keys(bot.tags)) {
+                const value = calculateStringTagValue(null, bot, tag, null);
+                let written = false;
+                if (hasValue(value)) {
+                    for (let [prefix, ext] of fileTagPrefixes) {
+                        if (value.startsWith(prefix)) {
+                            // write the tag value to its own file
+                            const filePath = path.resolve(dir, `${tag}${ext}`);
+                            const fileContent = value.slice(prefix.length);
+
+                            try {
+                                await writeFile(filePath, fileContent, {
+                                    encoding: 'utf-8',
+                                    flag,
+                                });
+                                written = true;
+                            } catch (err) {
+                                console.error(
+                                    `Could not write file: ${filePath}.\n\n${err}\n`
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if (!written) {
+                    botJson.tags[tag] = bot.tags[tag];
                 }
             }
-            try {
-                writeFileSync(
-                    path.join(fullPath, 'bot.json'),
-                    JSON.stringify(targetFSDir['bot.json'], null, 2)
-                );
-            } catch (err) {
-                console.error(
-                    `Could not write bot.json file: ${path.join(
-                        fullPath,
-                        'bot.json'
-                    )}.\n\n${err}\n`
-                );
-            }
-        });
+
+            //  write the bot.json file
+            const botJsonPath = path.resolve(dir, 'bot.json');
+            await writeFile(botJsonPath, JSON.stringify(botJson, null, 2), {
+                encoding: 'utf-8',
+                flag,
+            });
+
+            console.log(`Created: ${system}`);
+        }
+
+        // const fileSystem = botStateToFileSystem(fileData.botState);
+        // fileSystem.paths.forEach((p) => {
+        //     const fullPath = path.join(outDir, p);
+        //     mkdirSync(fullPath, {
+        //         recursive: true,
+        //     });
+        //     const targetFSDir = p
+        //         .split('/')
+        //         .reduce(
+        //             (curDir, subDir) => curDir[subDir],
+        //             fileSystem.directory
+        //         );
+        //     const subFiles = Object.keys(targetFSDir).filter(
+        //         (f) => f !== 'bot.json' && !f.endsWith('.json')
+        //     );
+        //     for (const subFile of subFiles) {
+        //         const writeFilePath = path.join(fullPath, subFile);
+        //         try {
+        //             writeFileSync(writeFilePath, targetFSDir[subFile]);
+        //         } catch (err) {
+        //             console.error(
+        //                 `Could not write file: ${writeFilePath}.\n\n${err}\n`
+        //             );
+        //         }
+        //     }
+        //     try {
+        //         writeFileSync(
+        //             path.join(fullPath, 'bot.json'),
+        //             JSON.stringify(targetFSDir['bot.json'], null, 2)
+        //         );
+        //     } catch (err) {
+        //         console.error(
+        //             `Could not write bot.json file: ${path.join(
+        //                 fullPath,
+        //                 'bot.json'
+        //             )}.\n\n${err}\n`
+        //         );
+        //     }
+        // });
     }
 }
 
