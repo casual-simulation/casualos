@@ -588,6 +588,7 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
             throw new Error(`Invalid aux file: ${file}.\n\n${fileData.error}`);
         }
 
+        const auxName = path.parse(file).name;
         const botsState = fileData.botsState;
         const extraBotsState: BotsState = {};
         for (let id in botsState) {
@@ -601,7 +602,7 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
 
             const system = bot.tags.system ?? id;
             const dirName = system.replace(/\./g, path.sep);
-            const dir = path.resolve(output, dirName);
+            const dir = path.resolve(output, auxName, dirName);
 
             const botJson: Bot = {
                 id,
@@ -685,10 +686,10 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
         // and produce the original aux file.
         if (!options.omitExtraBots) {
             // write a aux file for the extra bots to the output directory
-            const auxName = path.parse(file).name;
             const extraBotsFilePath = path.resolve(
                 output,
-                `${auxName}.extra.aux`
+                auxName,
+                `extra.aux`
             );
 
             try {
