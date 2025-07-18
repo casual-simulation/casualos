@@ -1158,9 +1158,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
 
             if (bot.listeners) {
                 for (let key in bot.listeners) {
-                    if (typeof bot.listeners[key] === 'function') {
-                        this.recordListenerPresense(bot.id, key, false);
-                    }
+                    this.recordListenerPresense(bot.id, key, false);
                 }
             }
         }

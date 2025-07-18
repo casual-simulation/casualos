@@ -113,6 +113,7 @@ import type {
     UnloadServerConfigAction,
     Point3D,
     MapLayer,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -273,6 +274,9 @@ import {
     calculateScreenCoordinatesFromPosition as calcCalculateScreenCoordinatesFromPosition,
     addMapLayer as calcAddMapLayer,
     removeMapLayer as calcRemoveMapLayer,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
+    ADD_BOT_LISTENER_SYMBOL,
+    REMOVE_BOT_LISTENER_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3136,6 +3140,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             os: {
                 [UNCOPIABLE]: true,
+
+                addBotListener,
+                removeBotListener,
 
                 sleep,
                 toast,
@@ -16892,6 +16899,54 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Adds the given listener to the given bot for the given tag.
+     *
+     * @param bot The bot that the listener should be added to.
+     * @param tagName The name of the tag that the listener should be added to.
+     * @param listener The listener that should be added to the bot.
+     *
+     * @example Add a listener to the bot for the "onClick" tag
+     * const listener = (that) => {
+     *   os.toast("Clicked on " + that.face);
+     * };
+     * os.addBotListener(thisBot, "onClick", listener);
+     *
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.addBotListener
+     * @docid os.addBotListener
+     */
+    function addBotListener(
+        bot: RuntimeBot,
+        tagName: string,
+        listener: DynamicListener
+    ): void {
+        bot[ADD_BOT_LISTENER_SYMBOL](tagName, listener);
+    }
+
+    /**
+     * Removes the given listener from a bot for a specific tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tagName The name of the tag that the listener should be removed from.
+     * @param listener The listener that should be removed from the bot.
+     *
+     * @example Remove a listener from the bot for the "onClick" tag
+     * os.removeBotListener(thisBot, "onClick", listener);
+     *
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.removeBotListener
+     * @docid os.removeBotListener
+     */
+    function removeBotListener(
+        bot: RuntimeBot,
+        tagName: string,
+        listener: DynamicListener
+    ): void {
+        bot[REMOVE_BOT_LISTENER_SYMBOL](tagName, listener);
+    }
+
+    /**
      * Gets whether the player is viewing the sheetPortal
      *
      * @example Show a toast if the player is viewing the sheet.
@@ -17541,6 +17596,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 continue;
             }
 
+            let addedListener = false;
             let listener = bot.listeners[tag];
             if (listener) {
                 if (!checkedEnergy) {
@@ -17554,7 +17610,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                             INTERPRETABLE_FUNCTION
                         ](arg);
                     } else {
-                        result = listener(arg);
+                        result = listener(arg, bot, tag);
                     }
 
                     if (isGenerator(result)) {
@@ -17575,7 +17631,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     context.enqueueError(ex);
                     results.push(undefined);
                 }
-                listeners.push(bot);
+                if (!addedListener) {
+                    listeners.push(bot);
+                    addedListener = true;
+                }
+            }
+
+            const dynamicListeners = bot[GET_DYNAMIC_LISTENERS_SYMBOL](tag);
+            if (dynamicListeners) {
+                for (let listener of dynamicListeners) {
+                    if (!checkedEnergy) {
+                        checkedEnergy = true;
+                        __energyCheck();
+                    }
+                    try {
+                        let result: any;
+                        if (INTERPRETABLE_FUNCTION in listener) {
+                            result = yield* (listener as any)[
+                                INTERPRETABLE_FUNCTION
+                            ](arg, bot, tag);
+                        } else {
+                            result = listener(arg, bot, tag);
+                        }
+
+                        if (isGenerator(result)) {
+                            result = yield* result;
+                        }
+
+                        if (result instanceof Promise) {
+                            result.catch((ex) => {
+                                context.enqueueError(ex);
+                            });
+                        }
+                    } catch (ex) {
+                        context.enqueueError(ex);
+                    }
+                    if (!addedListener) {
+                        listeners.push(bot);
+                        addedListener = true;
+                    }
+                }
             }
         }
 

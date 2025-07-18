@@ -19,6 +19,7 @@ import type {
     PrecalculatedBot,
     BotTagMasks,
     RuntimeBot,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     BOT_SPACE_TAG,
@@ -36,6 +37,9 @@ import {
     hasValue,
     GET_TAG_MASKS_SYMBOL,
     REPLACE_BOT_SYMBOL,
+    ADD_BOT_LISTENER_SYMBOL,
+    REMOVE_BOT_LISTENER_SYMBOL,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type { AuxGlobalContext } from './AuxGlobalContext';
 import { MemoryGlobalContext } from './AuxGlobalContext';
@@ -84,7 +88,11 @@ describe('RuntimeBot', () => {
         RealtimeEditConfig,
         [CompiledBot, string, any]
     >;
-    let getListenerMock: jest.Mock;
+    let getListenerMock: jest.Mock<DynamicListener, [CompiledBot, string]>;
+    let setListenerMock: jest.Mock<
+        void,
+        [CompiledBot, string, DynamicListener]
+    >;
     let getRawValueMock: jest.Mock;
     let getSignatureMock: jest.Mock;
     let notifyChangeMock: jest.Mock;
@@ -94,6 +102,18 @@ describe('RuntimeBot', () => {
     >;
     let getTagMaskMock: jest.Mock;
     let getTagLinkMock: jest.Mock;
+    let addListenerMock: jest.Mock<
+        void,
+        [CompiledBot, string, DynamicListener]
+    >;
+    let removeListenerMock: jest.Mock<
+        void,
+        [CompiledBot, string, DynamicListener]
+    >;
+    let getDynamicListenersMock: jest.Mock<
+        DynamicListener[] | null,
+        [CompiledBot, string]
+    >;
     let realtimeEditMode: RealtimeEditMode;
     let changedValue: any;
     let processor: RuntimeInterpreterGeneratorProcessor;
@@ -182,7 +202,17 @@ describe('RuntimeBot', () => {
         });
 
         getListenerMock = jest.fn(
-            (bot: CompiledBot, tag: string) => bot.listeners[tag]
+            (bot: CompiledBot, tag: string) =>
+                bot.listenerOverrides[tag] ?? bot.listeners[tag]
+        );
+        setListenerMock = jest.fn(
+            (bot: CompiledBot, tag: string, listener: DynamicListener) => {
+                if (!hasValue(listener)) {
+                    delete bot.listenerOverrides[tag];
+                } else {
+                    bot.listenerOverrides[tag] = listener;
+                }
+            }
         );
 
         getRawValueMock = jest.fn((bot: PrecalculatedBot, tag: string) => {
@@ -194,6 +224,41 @@ describe('RuntimeBot', () => {
         });
         notifyChangeMock = jest.fn();
         getTagLinkMock = jest.fn();
+
+        addListenerMock = jest.fn(
+            (bot: CompiledBot, tag: string, listener: DynamicListener) => {
+                if (!bot.dynamicListeners) {
+                    bot.dynamicListeners = {};
+                }
+                if (!bot.dynamicListeners[tag]) {
+                    bot.dynamicListeners[tag] = [];
+                }
+                bot.dynamicListeners[tag].push(listener);
+            }
+        );
+
+        removeListenerMock = jest.fn(
+            (bot: CompiledBot, tag: string, listener: DynamicListener) => {
+                if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+                    const listeners = bot.dynamicListeners[tag];
+                    const index = listeners.indexOf(listener);
+                    if (index !== -1) {
+                        listeners.splice(index, 1);
+                        if (listeners.length <= 0) {
+                            delete bot.dynamicListeners[tag];
+                        }
+                    }
+                }
+            }
+        );
+
+        getDynamicListenersMock = jest.fn((bot: CompiledBot, tag: string) => {
+            if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+                return bot.dynamicListeners[tag];
+            }
+            return null;
+        });
+
         manager = {
             updateTag: updateTagMock,
             getValue(bot: PrecalculatedBot, tag: string) {
@@ -201,12 +266,16 @@ describe('RuntimeBot', () => {
             },
             getRawValue: getRawValueMock,
             getListener: getListenerMock,
+            setListener: setListenerMock,
             getSignature: getSignatureMock,
             notifyChange: notifyChangeMock,
             notifyActionEnqueued: jest.fn(),
             updateTagMask: updateTagMaskMock,
             getTagMask: getTagMaskMock,
             getTagLink: getTagLinkMock,
+            addDynamicListener: addListenerMock,
+            removeDynamicListener: removeListenerMock,
+            getDynamicListeners: getDynamicListenersMock,
             currentVersion: {
                 localSites: {},
                 vector: {
@@ -1008,6 +1077,60 @@ describe('RuntimeBot', () => {
             getListenerMock.mockReturnValueOnce(func);
             const listener = script.listeners.abc;
             expect(listener).toBe(func);
+        });
+
+        it('should support setting a listener', () => {
+            let func = () => {};
+            script.listeners.abc = func;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func);
+
+            const listener = script.listeners.abc;
+            expect(listener === func).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
+        it('should override the existing listener', () => {
+            let func1 = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func1;
+
+            script.listeners.abc = func2;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func2);
+
+            const listener = script.listeners.abc;
+            expect(listener === func2).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
+        it('should revert back to the existing listener when set to null', () => {
+            let func1 = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func1;
+
+            script.listeners.abc = func2;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func2);
+
+            script.listeners.abc = null;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', null);
+
+            const listener = script.listeners.abc;
+            expect(listener === func1).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
+        it('should be able to enumerate the listeners on the bot', () => {
+            let func = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func;
+            script.listeners.def = func2;
+
+            const keys = Object.keys(script.listeners);
+            expect(keys).toEqual(['abc', 'def']);
+
+            script.listeners.def = null;
+
+            const keys2 = Object.keys(script.listeners);
+            expect(keys2).toEqual(['abc']);
         });
 
         describe('listener shortcut', () => {
@@ -2716,6 +2839,54 @@ describe('RuntimeBot', () => {
                     test: true,
                 });
             });
+        });
+    });
+
+    describe('add_bot_listener', () => {
+        it('should add a listener to the dynamic listeners', () => {
+            const listener: DynamicListener = jest.fn();
+            script[ADD_BOT_LISTENER_SYMBOL]('testListener', listener);
+
+            expect(precalc.dynamicListeners).toHaveProperty('testListener');
+
+            const listeners = precalc.dynamicListeners.testListener;
+            expect(listeners).toBeInstanceOf(Array);
+            expect(listeners.length).toBe(1);
+            expect(listeners[0] === listener).toBe(true);
+        });
+    });
+
+    describe('remove_bot_listener', () => {
+        it('should remove a listener from the dynamic listeners', () => {
+            const listener: DynamicListener = jest.fn();
+            precalc.dynamicListeners.testListener = [listener];
+
+            script[REMOVE_BOT_LISTENER_SYMBOL]('testListener', listener);
+
+            expect(precalc.dynamicListeners).not.toHaveProperty('testListener');
+        });
+    });
+
+    describe('get_dynamic_listeners', () => {
+        it('should retrieve the list of dynamic listeners', () => {
+            const listener1: DynamicListener = jest.fn();
+            const listener2: DynamicListener = jest.fn();
+            const listener3: DynamicListener = jest.fn();
+            script[ADD_BOT_LISTENER_SYMBOL]('testListener', listener1);
+            script[ADD_BOT_LISTENER_SYMBOL]('testListener', listener2);
+            script[ADD_BOT_LISTENER_SYMBOL]('other', listener3);
+
+            const listeners =
+                script[GET_DYNAMIC_LISTENERS_SYMBOL]('testListener');
+            expect(listeners).not.toBeNull();
+            expect(listeners).toBeInstanceOf(Array);
+            expect(listeners!.length).toBe(2);
+            expect(listeners![0] === listener1).toBe(true);
+            expect(listeners![1] === listener2).toBe(true);
+        });
+
+        it('should return null if there are no dynamic listeners', () => {
+            expect(script[GET_DYNAMIC_LISTENERS_SYMBOL]('tag')).toBeNull();
         });
     });
 

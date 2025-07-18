@@ -12294,6 +12294,22 @@ export interface GeoJSONMapLayer extends MapLayerBase {
     data?: object;
 }
 
+/**
+ * The function signature of a dynamic bot listener.
+ *
+ * That is, a listener that is registered at runtime by a user script instead of parsed from a tag.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listener
+ * @docid DynamicListener
+ */
+export type DynamicListener = (
+    that: any,
+    bot: Bot,
+    tagName: string
+) => any;
+
 interface Ai {
     /**
      * Sends a chat message to the AI.
@@ -12801,6 +12817,34 @@ interface Ai {
 }
 
 interface Os {
+
+    /**
+     * Adds the given listener to the given bot for the given tag.
+     * 
+     * @param bot The bot that the listener should be added to.
+     * @param tagName The name of the tag that the listener should be added to.
+     * @param listener The listener that should be added to the bot.
+     * 
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.addBotListener
+     * @docid os.addBotListener
+     */
+    addBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
+    
+    /**
+     * Removes the given listener from a bot for a specific tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tagName The name of the tag that the listener should be removed from.
+     * @param listener The listener that should be removed from the bot.
+     * 
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.removeBotListener
+     * @docid os.removeBotListener
+     */
+    removeBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
+
     /**
          * Sleeps for time in ms.
          * @param time Time in ms. 1 second is 1000ms.
