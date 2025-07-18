@@ -1008,6 +1008,15 @@ function printStatus(endpoint: string) {
             console.log('The current session has expired.');
         } else {
             console.log('You are logged in.');
+
+            // Get and display the user ID from the session key
+            const parseResult = parseSessionKey(key);
+            if (parseResult) {
+                const [userId, sessionId] = parseResult;
+                console.log('User ID:', userId);
+                console.log('Session ID:', sessionId);
+            }
+
             console.log('Session expires at:', new Date(expire).toString());
         }
     } else {
