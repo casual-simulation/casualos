@@ -809,11 +809,6 @@ async function auxReadFs(
     }
 }
 
-/**
- * Reads the entire contents of a folder and writes it to an aux file.
- */
-async function readBotsState(input: string): Promise<void> {}
-
 async function readAuxFile(filePath: string): Promise<BotsState> {
     const targetStat = await stat(filePath);
     if (!targetStat.isFile()) {
