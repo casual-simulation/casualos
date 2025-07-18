@@ -40,6 +40,37 @@
             -   `data` - (Optional) The GeoJSON data that is contained in the layer. Required if `url` is not specified.
     -   `os.removeMapLayer(layerId)` - Removes a map layer from the portal it is in. Returns a promise that resolves once the layer has been removed.
         -   `layerId` - The ID of the layer that should be removed. You can get this from the resolved value from `os.addMapLayer()`.
+-   Added the `os.addBotListener(bot, tag, listener)` and `os.removeBotListener(bot, tag, listener)` functions.
+    -   `os.addBotListener(bot, tag, listener)` Adds the given listener to the given bot for the given tag.
+        -   It can be used to add arbitrary functions to be triggered when a listener would be triggered on a bot.
+        -   This function only adds listeners, it cannot override existing listeners.
+        -   Listeners added by this function will not be called if the bot is not listening.
+        -   `bot` is the bot that the lister should be added to.
+        -   `tag` is the [listen tag](https://docs.casualos.com/tags/listen/).
+        -   `listener` is the function that should be called when the listen tag is triggered. It should be a function that accepts the following arguments:
+            -   `that` - the `that` argument of the listener.
+            -   `bot` - The bot that the listener was triggered on. (Same as `bot` above)
+            -   `tag` - The name of the tag. (Same as `tag` above)
+    -   `os.removeBotListener(bot, tag, listener)` Removes the given listener from the given bot and tag.
+        -   This function can only be used to remove listeners which have been added by `os.addBotListener()`.
+        -   `bot` is the bot that the listener should be removed from.
+        -   `tag` is the [listen tag](https://docs.casualos.com/tags/listen/).
+        -   `listener` is the function that should be removed.
+-   Added the ability to add/override bot listen tags by setting `bot.listeners.tag`.
+
+    -   For example, the following code will override the `onClick` listen tag to toast "overridden" when the bot is clicked:
+
+        ```typescript
+        bot.tags.onClick = `@os.toast("default")`;
+        bot.listeners.onClick = () => os.toast('overridden');
+
+        // when bot is clicked, "overridden" will be toasted instead of "default".
+        ```
+
+    -   Just like the `masks` property, the `listeners` property allows you to override the default tags.
+    -   The difference is that `listeners` is all about listen tags and functions. You can only set functions, and `listeners` are always `tempLocal`.
+    -   Functions set on the `listeners` property will override listen tags set by tags and tag masks.
+        -   It will only override the listener, not the tag data. In the example above, `bot.tags.onClick` will continue to return `@os.toast("default")`.
 
 ### :bug: Bug Fixes
 
