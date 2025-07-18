@@ -504,6 +504,7 @@ const fileExtensions = [
     ['.tsm', LIBRARY_SCRIPT_PREFIX],
     ['.json', DNA_TAG_PREFIX],
     ['.date.text', DATE_TAG_PREFIX],
+    ['.txt', ''],
     ['.text', STRING_TAG_PREFIX],
     ['.number.text', NUMBER_TAG_PREFIX],
     ['.vector.text', VECTOR_TAG_PREFIX],
@@ -630,6 +631,22 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
                                     `Could not write file: ${filePath}.\n\n${err}\n`
                                 );
                             }
+                        }
+                    }
+
+                    if (!written && value.indexOf('\n') >= 0) {
+                        // string has a newline, so write it to a text file
+                        const filePath = path.resolve(dir, `${tag}.txt`);
+                        try {
+                            await writeFile(filePath, value, {
+                                encoding: 'utf-8',
+                                flag,
+                            });
+                            written = true;
+                        } catch (err) {
+                            console.error(
+                                `Could not write file: ${filePath}.\n\n${err}\n`
+                            );
                         }
                     }
                 }
