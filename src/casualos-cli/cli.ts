@@ -59,10 +59,7 @@ import type {
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
 } from '@casual-simulation/aux-records';
-import {
-    serverConfigSchema,
-    STORED_AUX_SCHEMA,
-} from '@casual-simulation/aux-records';
+import { serverConfigSchema } from '@casual-simulation/aux-records';
 import { PassThrough } from 'node:stream';
 import { getSchemaMetadata } from '@casual-simulation/aux-common';
 import path from 'path';
@@ -328,14 +325,15 @@ program
 
 program
     .command('aux-read-fs')
-    .argument('[dir]', 'The directory to read the file system from.')
-    .argument('[output]', 'The output file to write the aux file to.')
-    .option('-o, --overwrite', 'Overwrite existing files.')
-    .option(
-        '-m, --merge',
-        'Merge the output AUX file instead of overwriting it.'
+    .argument(
+        '[dir]',
+        'The directory to read the file system from. If the directory does not contain an extra.aux file, then each directory will be read as a separate aux file.'
     )
-    .option('-r, --recursive', 'Recursively read aux files in a directory.')
+    .argument(
+        '[output]',
+        'The output file to write the aux file to. This should be the folder that each aux should be written to if the input directory contains multiple aux filesystems.'
+    )
+    .option('-o, --overwrite', 'Overwrite existing files.')
     .option('-f, --filter', 'The bot filter to apply to the bots being read.')
     .option(
         '--allow-duplicates',
@@ -714,14 +712,16 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
     }
 
     for (let extraDir of extraDirectories) {
-        await auxGenFs(extraDir, output, options);
+        // Only allow one level of recursion
+        await auxGenFs(extraDir, output, {
+            ...options,
+            recursive: false,
+        });
     }
 }
 
 interface ReadFsOptions {
     overwrite?: boolean;
-    recursive?: boolean;
-    merge?: boolean;
     filter?: string;
 
     allowDuplicates?: boolean;
@@ -732,7 +732,7 @@ async function auxReadFs(
     output: string,
     options: ReadFsOptions
 ) {
-    const { overwrite, recursive, merge } = options;
+    const { overwrite } = options;
 
     const failOnDuplicate = !options.allowDuplicates;
     if (!input) {
@@ -756,59 +756,58 @@ async function auxReadFs(
     }
     output = path.resolve(output);
 
-    const botsState: BotsState = {};
-    if (existsSync(output)) {
-        if (!merge && !overwrite) {
-            throw new Error(
-                `The output file already exists: ${output}. Use --overwrite to overwrite it or --merge to merge it.`
-            );
-        }
-
-        if (merge) {
-            const existingAux = JSON.parse(
-                await readFile(output, { encoding: 'utf-8' })
-            );
-            const parseResult = STORED_AUX_SCHEMA.safeParse(existingAux);
-
-            if (parseResult.success === false) {
-                console.error(`Failed to parse existing aux file: ${output}`);
-                console.error(parseResult.error.toString());
-                throw new Error(
-                    'Unable to parse existing aux file. Use --overwrite to overwrite it.'
-                );
-            }
-
-            const existingState = getUploadState(parseResult.data as any);
-            assignBots(botsState, existingState, failOnDuplicate);
-        }
-    }
-
     let filterFunc: FilterFunc | null = null;
     if (options.filter) {
         filterFunc = Function('$', options.filter) as any;
     }
 
-    const readBotsState = await auxReadFsCore(
-        input,
-        recursive,
-        filterFunc,
-        failOnDuplicate
-    );
-    assignBots(botsState, readBotsState, failOnDuplicate);
+    const inputFiles = await readdir(input);
 
-    const storedAux: StoredAuxVersion1 = {
-        version: 1,
-        state: botsState,
-    };
+    const hasExtra = inputFiles.includes('extra.aux');
 
-    await writeFile(
-        output,
-        fastJsonStableStringify(storedAux, {
-            space: 2,
-        }),
-        { encoding: 'utf-8', flag: overwrite ? 'w' : 'wx' }
-    );
+    if (!hasExtra) {
+        await mkdir(output, {
+            recursive: true,
+        });
+
+        for (let file of inputFiles) {
+            const filePath = path.resolve(input, file);
+            const outputPath = path.resolve(output, `${file}.aux`);
+            const stats = await stat(filePath);
+            if (stats.isDirectory()) {
+                await auxReadFs(filePath, outputPath, options);
+            }
+        }
+    } else {
+        console.log('Reading aux files from directory:', input);
+        console.log('Output will be written to:', output);
+        // folder represents a single aux
+
+        const botsState = await auxReadFsCore(
+            input,
+            filterFunc,
+            failOnDuplicate
+        );
+
+        const storedAux: StoredAuxVersion1 = {
+            version: 1,
+            state: botsState,
+        };
+
+        await writeFile(
+            output,
+            fastJsonStableStringify(storedAux, {
+                space: 2,
+            }),
+            { encoding: 'utf-8', flag: overwrite ? 'w' : 'wx' }
+        );
+    }
 }
+
+/**
+ * Reads the entire contents of a folder and writes it to an aux file.
+ */
+async function readBotsState(input: string): Promise<void> {}
 
 async function readAuxFile(filePath: string): Promise<BotsState> {
     const targetStat = await stat(filePath);
@@ -858,7 +857,6 @@ type FilterFunc = (bot: Bot) => boolean;
 
 async function auxReadFsCore(
     input: string,
-    recursive: boolean,
     filter: FilterFunc | null,
     failOnDuplicate: boolean
 ): Promise<BotsState> {
@@ -876,18 +874,15 @@ async function auxReadFsCore(
     for (let file of inputFiles) {
         const filePath = path.join(input, file);
         const fileStat = await stat(filePath);
-        if (fileStat.isDirectory() && !file.startsWith('.')) {
-            if (recursive) {
-                // If the file is a directory, we need to read its contents recursively
-                const subState = await auxReadFsCore(
-                    filePath,
-                    recursive,
-                    filter,
-                    failOnDuplicate
-                );
+        if (fileStat.isDirectory()) {
+            // If the file is a directory, we need to read its contents recursively
+            const subState = await auxReadFsCore(
+                filePath,
+                filter,
+                failOnDuplicate
+            );
 
-                assignBots(botsState, subState, failOnDuplicate);
-            }
+            assignBots(botsState, subState, failOnDuplicate);
         } else {
             if (file.endsWith('.aux')) {
                 console.log(`Reading aux: ${file}`);
