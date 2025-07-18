@@ -610,7 +610,7 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
             };
 
             if (hasValue(bot.space)) {
-                botJson.tags.space = bot.space;
+                botJson.space = bot.space;
             }
 
             if (hasValue(bot.tags.system)) {
