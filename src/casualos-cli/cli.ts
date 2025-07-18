@@ -261,7 +261,7 @@ program
         });
     });
 
-const auxActions = new Set(['convert', 'genfs']);
+const auxActions = new Set(['convert']);
 
 program
     .command('aux')
