@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records",
-    "version": "3.5.1",
+    "version": "3.5.3",
     "description": "Helpers and managers used by the CasualOS records system.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -38,7 +38,7 @@
     },
     "dependencies": {
         "@anthropic-ai/sdk": "0.24.3",
-        "@casual-simulation/aux-common": "^3.5.1",
+        "@casual-simulation/aux-common": "^3.5.3",
         "@casual-simulation/crypto": "^3.5.0",
         "@casual-simulation/fast-json-stable-stringify": "^3.5.0",
         "@casual-simulation/rate-limit-redis": "^3.4.0",
