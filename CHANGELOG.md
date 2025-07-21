@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.5.4
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to set listeners on bots immediately after they were created.
+
 ## V3.5.3
 
 #### Date: 7/21/2025
