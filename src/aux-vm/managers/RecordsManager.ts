@@ -86,6 +86,7 @@ import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { Observable } from 'rxjs';
+import { mergeWith } from 'rxjs';
 import {
     ReplaySubject,
     Subject,
@@ -196,6 +197,8 @@ export type GetEndpointInfoFunction = (
     endpoint: string,
     authenticateIfNotLoggedIn: boolean
 ) => Promise<RecordsEndpointInfo | null>;
+
+export const RECORDS_WS_PROTOCOL = 'casualos.records';
 
 /**
  * Defines a class that provides capabilities for storing and retrieving records.
@@ -2467,16 +2470,18 @@ export class RecordsManager {
                     instances,
                 };
 
-                if (typeof event.key === 'string') {
-                    input.key = event.key;
-                } else if (typeof event.key === 'object') {
-                    if (event.key.sha256) {
-                        input.sha256 = event.key.sha256;
-                    } else {
-                        input.major = event.key.major;
-                        input.minor = event.key.minor;
-                        input.patch = event.key.patch;
-                        input.tag = event.key.tag;
+                if (event.key) {
+                    if (typeof event.key === 'string') {
+                        input.key = event.key;
+                    } else if (typeof event.key === 'object') {
+                        if (event.key.sha256) {
+                            input.sha256 = event.key.sha256;
+                        } else {
+                            input.major = event.key.major;
+                            input.minor = event.key.minor;
+                            input.patch = event.key.patch;
+                            input.tag = event.key.tag;
+                        }
                     }
                 }
 
@@ -2692,11 +2697,19 @@ export class RecordsManager {
                 client.connectionState.pipe(filter((c) => c.connected))
             );
 
+            const disconnected = client.connectionState.pipe(
+                filter((c) => !c.connected),
+                map(() => {
+                    throw new Error('The request encountered an error.');
+                })
+            );
+
             const id = this._httpRequestId++;
             const promise = firstValueFrom(
-                client
-                    .event('http_response')
-                    .pipe(filter((response) => response.id === id))
+                client.event('http_response').pipe(
+                    mergeWith(disconnected),
+                    filter((response) => response.id === id)
+                )
             );
 
             client.send({
@@ -2745,7 +2758,16 @@ export class RecordsManager {
         );
 
         const id = this._httpRequestId++;
+
+        const disconnected = client.connectionState.pipe(
+            filter((c) => !c.connected),
+            map(() => {
+                throw new Error('The request encountered an error.');
+            })
+        );
+
         const responses = client.event('http_partial_response').pipe(
+            mergeWith(disconnected),
             filter((response) => response.id === id),
             takeWhile((response) => !response.final),
             map((response) => {

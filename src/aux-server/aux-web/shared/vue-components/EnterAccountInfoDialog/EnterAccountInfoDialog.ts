@@ -37,10 +37,12 @@ import {
     getFormErrors,
 } from '@casual-simulation/aux-common';
 import FieldErrors from '../FieldErrors/FieldErrors';
+import DateOfBirthInput from '../DateOfBirthInput/DateOfBirthInput';
 
 @Component({
     components: {
         'field-errors': FieldErrors,
+        'date-of-birth-input': DateOfBirthInput,
     },
 })
 export default class EnterAccountInfoDialog extends Vue {
@@ -281,13 +283,29 @@ export default class EnterAccountInfoDialog extends Vue {
 
     async provideDateOfBirth() {
         if (!this.dateOfBirth) {
-            this.errors = [
-                {
-                    for: DATE_OF_BIRTH_FIELD,
-                    errorCode: 'invalid_date_of_birth',
-                    errorMessage: 'Please enter a valid date of birth.',
-                },
-            ];
+            if (
+                this.$refs.dateOfBirth &&
+                this.$refs.dateOfBirth instanceof DateOfBirthInput &&
+                this.$refs.dateOfBirth.error
+            ) {
+                this.errors = [
+                    {
+                        for: DATE_OF_BIRTH_FIELD,
+                        errorCode: 'invalid_date_of_birth',
+                        errorMessage: this.$refs.dateOfBirth.error,
+                    },
+                ];
+            } else {
+                this.errors = [
+                    {
+                        for: DATE_OF_BIRTH_FIELD,
+                        errorCode: 'invalid_date_of_birth',
+                        errorMessage: 'Please enter a valid date of birth.',
+                    },
+                ];
+                return;
+            }
+
             return;
         }
 

@@ -38,6 +38,7 @@ import {
     remote as calcRemote,
     DEFAULT_BRANCH_NAME,
     action,
+    iterableThrow,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -7737,6 +7738,126 @@ describe('RecordsManager', () => {
 
                 expect(vm.events.slice(2)).toEqual([iterableComplete(1)]);
             });
+
+            it('should return an error if the connection closes during the request', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses =
+                    new Subject<WebsocketHttpPartialResponseMessage>();
+                client.events.set('http_partial_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    getEndpointInfo,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiChatStream(
+                        [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(client.sentMessages).toEqual([
+                    {
+                        type: 'http_request',
+                        id: 0,
+                        request: {
+                            path: '/api/v2/ai/chat/stream',
+                            method: 'POST',
+                            body: expect.any(String),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                            query: {},
+                            pathParams: {},
+                        },
+                    },
+                ]);
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body as string
+                );
+                expect(body).toEqual({
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                });
+
+                responses.next({
+                    type: 'http_partial_response',
+                    id: 0,
+                    index: 0,
+                    response: {
+                        statusCode: 200,
+                        body:
+                            JSON.stringify({
+                                choices: [
+                                    {
+                                        role: 'assistant',
+                                        content: 'Hello!',
+                                    },
+                                ],
+                            }) + '\n',
+                        headers: {
+                            'content-type': 'application/x-ndjson',
+                        },
+                    },
+                });
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                    iterableNext(1, {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello!',
+                            },
+                        ],
+                    }),
+                ]);
+
+                client.disconnect();
+
+                await waitAsync();
+
+                expect(vm.events.slice(2)).toEqual([
+                    iterableThrow(
+                        1,
+                        new Error('The request encountered an error.')
+                    ),
+                ]);
+            });
         });
 
         describe('ai_generate_skybox', () => {
@@ -8671,6 +8792,79 @@ describe('RecordsManager', () => {
                             },
                         ],
                     }),
+                ]);
+            });
+
+            it('should return websocket errors', async () => {
+                const client = new MemoryConnectionClient();
+
+                let responses = new Subject<WebsocketHttpResponseMessage>();
+                client.events.set('http_response', responses);
+
+                connectionClientFactory = () => {
+                    return client;
+                };
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3002',
+                    },
+                    helper,
+                    getEndpointInfo,
+                    true,
+                    connectionClientFactory
+                );
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(client.sentMessages).toEqual([
+                    {
+                        type: 'http_request',
+                        id: 0,
+                        request: {
+                            path: '/api/v2/ai/image',
+                            method: 'POST',
+                            body: expect.any(String),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                            query: {},
+                            pathParams: {},
+                        },
+                    },
+                ]);
+
+                const body = JSON.parse(
+                    (client.sentMessages[0] as WebsocketHttpRequestMessage)
+                        .request.body
+                );
+                expect(body).toEqual({
+                    prompt: 'a blue bridge',
+                });
+
+                client.disconnect();
+
+                await waitAsync();
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncError(1, 'Error: The request encountered an error.'),
                 ]);
             });
         });
@@ -9970,6 +10164,114 @@ describe('RecordsManager', () => {
                 ]);
             });
 
+            it('should support installing packages without specifying a version key', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    installPackage('test', 'address', null as any, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'installPackage',
+                    input: {
+                        recordName: null,
+                        inst: 'myInst',
+                        package: {
+                            recordName: 'test',
+                            address: 'address',
+                            key: null,
+                        },
+                        instances: ['/myInst'],
+                    },
+                });
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                    action('onPackageInstalled', null, null, {
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                ]);
+            });
+
             it('should fetch the package file to install packages in static insts', async () => {
                 fetch.mockResolvedValueOnce({
                     status: 200,
@@ -10049,6 +10351,162 @@ describe('RecordsManager', () => {
                         recordName: 'test',
                         address: 'address',
                         key: 'v1.0.0',
+                        instances: ['/test'],
+                    },
+                });
+
+                expect(getRequests()).toEqual([
+                    [
+                        'GET',
+                        'https://example.com/aux-file',
+                        undefined,
+                        {
+                            headers: {
+                                test: 'abc',
+                            },
+                            validateStatus: expect.any(Function),
+                        },
+                    ],
+                ]);
+
+                expect(vm.events).toEqual([
+                    calcRemote(
+                        installAuxFile(
+                            {
+                                version: 1,
+                                state: {
+                                    test: createBot('test', {
+                                        abc: 'def',
+                                    }),
+                                },
+                            },
+                            'default'
+                        )
+                    ),
+                    asyncResult(1, {
+                        success: true,
+                        packageLoadId: null,
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                    action('onPackageInstalled', null, null, {
+                        packageLoadId: null,
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should support installing packages in static insts without specifying a version key', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () =>
+                        ({
+                            success: true,
+                            item: {
+                                id: 'packageId',
+                                packageId: 'public',
+                                address: 'address',
+                                key: version(1),
+                                entitlements: [],
+                                description: '',
+                                markers: [PUBLIC_READ_MARKER],
+                                createdAtMs: 123,
+                                sha256: 'sha256',
+                                auxSha256: 'auxSha256',
+                                auxFileName: 'fileName',
+                                createdFile: true,
+                                requiresReview: false,
+                                sizeInBytes: 123,
+                                approved: true,
+                                approvalType: 'normal',
+                            },
+                            auxFile: {
+                                success: true,
+                                requestMethod: 'GET',
+                                requestUrl: 'https://example.com/aux-file',
+                                requestHeaders: {
+                                    test: 'abc',
+                                },
+                            },
+                        } as GetPackageVersionResult),
+                });
+
+                setNextResponse({
+                    status: 200,
+                    data: {
+                        version: 1,
+                        state: {
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        },
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.origin = {
+                    recordName: null,
+                    inst: 'test',
+                    isStatic: true,
+                };
+
+                records.handleEvents([
+                    installPackage('test', 'address', null, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer authToken',
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'getPackageVersion',
+                    input: {
+                        recordName: 'test',
+                        address: 'address',
                         instances: ['/test'],
                     },
                 });

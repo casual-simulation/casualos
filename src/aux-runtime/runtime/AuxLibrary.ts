@@ -111,6 +111,9 @@ import type {
     LoadServerConfigAction,
     InstConfig,
     UnloadServerConfigAction,
+    Point3D,
+    MapLayer,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -268,6 +271,12 @@ import {
     loadSharedDocument,
     installAuxFile as calcInstallAuxFile,
     calculateStringListTagValue,
+    calculateScreenCoordinatesFromPosition as calcCalculateScreenCoordinatesFromPosition,
+    addMapLayer as calcAddMapLayer,
+    removeMapLayer as calcRemoveMapLayer,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
+    ADD_BOT_LISTENER_SYMBOL,
+    REMOVE_BOT_LISTENER_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3132,6 +3141,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             os: {
                 [UNCOPIABLE]: true,
 
+                addBotListener,
+                removeBotListener,
+
                 sleep,
                 toast,
                 getScriptIssues,
@@ -3438,6 +3450,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 calculateRayFromCamera,
                 calculateViewportCoordinatesFromPosition,
                 calculateScreenCoordinatesFromViewportCoordinates,
+                calculateScreenCoordinatesFromPosition,
                 calculateViewportCoordinatesFromScreenCoordinates,
                 bufferFormAddressGLTF,
                 startFormAnimation,
@@ -3447,6 +3460,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 ldrawCountTextBuildSteps,
                 attachDebugger,
                 detachDebugger,
+
+                addMapLayer,
+                removeMapLayer,
 
                 remotes,
                 listInstUpdates,
@@ -11593,6 +11609,89 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinate the 3D position that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition
+     * @docgroup 10-raycast
+     */
+    function calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinate: Point3D
+    ): Promise<Vector2>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     *
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition-array
+     * @docgroup 10-raycast
+     */
+    function calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D[]
+    ): Promise<Vector2[]>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     *
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     *
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     */
+    function calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D | Point3D[]
+    ): Promise<Vector2[] | Vector2> {
+        const task = context.createTask();
+        const event = calcCalculateScreenCoordinatesFromPosition(
+            portal,
+            Array.isArray(coordinates) ? coordinates : [coordinates],
+            task.taskId
+        );
+        const promise = addAsyncAction(task, event);
+
+        if (Array.isArray(coordinates)) {
+            return promise;
+        } else {
+            const final = promise.then((r) => {
+                if (Array.isArray(r) && r.length === 1) {
+                    return r[0];
+                }
+                return r;
+            });
+            (final as any)[ORIGINAL_OBJECT] = event;
+            return final;
+        }
+    }
+
+    /**
      * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
      * Returns a promise that resolves with the calculated viewport coordinates.
      *
@@ -11869,6 +11968,93 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = detachRuntime(runtime, task.taskId);
         return addAsyncAction(task, event as any);
+    }
+
+    /**
+     * Adds a map layer to the map or miniMap portal.
+     *
+     * Returns a promise that resolves with the ID of the layer that was added.
+     *
+     * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
+     * @param layer The layer that should be added.
+     *
+     * @example Add a GeoJSON layer to the map portal
+     * const layerId = await os.addMapLayer('map', {
+     *    type: 'geojson',
+     *    data: {
+     *       type: "FeatureCollection",
+     *       features: [
+     *           {
+     *               type: "Feature",
+     *               geometry: { type: "Point", coordinates: [102.0, 0.5] },
+     *               properties: { prop0: "value0" }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "LineString",
+     *                   coordinates: [
+     *                       [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: 0.0
+     *               }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "Polygon",
+     *                   coordinates: [
+     *                       [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+     *                       [100.0, 1.0], [100.0, 0.0]]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: { "this": "that" }
+     *               }
+     *           }
+     *       ]
+     *   }
+     * });
+     *
+     * @dochash actions/os/maps
+     * @doctitle Map Actions
+     * @docsidebar Maps
+     * @docdescription Actions for working with maps and map layers.
+     * @docid os.addMapLayer
+     * @docname os.addMapLayer
+     */
+    function addMapLayer(
+        portal: 'map' | 'miniMap',
+        layer: MapLayer
+    ): Promise<string> {
+        const task = context.createTask();
+        const event = calcAddMapLayer(portal, layer, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Removes a layer from the map or miniMap portal.
+     *
+     * Returns a promise that resolves when the layer has been removed.
+     *
+     * @param layerId The ID of the layer to remove.
+     * @returns A promise that resolves when the layer has been removed.
+     *
+     * @example Remove a layer from the map portal
+     * await os.removeMapLayer('my-layer-id');
+     *
+     * @dochash actions/os/maps
+     * @docid os.removeMapLayer
+     * @docname os.removeMapLayer
+     */
+    function removeMapLayer(layerId: string): Promise<void> {
+        const task = context.createTask();
+        const event = calcRemoveMapLayer(layerId, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -15433,6 +15619,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Decrypt the given data and toast it.
      * const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
      * os.toast(decrypted);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.decrypt
      */
     function decrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
@@ -16710,6 +16899,54 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Adds the given listener to the given bot for the given tag.
+     *
+     * @param bot The bot that the listener should be added to.
+     * @param tagName The name of the tag that the listener should be added to.
+     * @param listener The listener that should be added to the bot.
+     *
+     * @example Add a listener to the bot for the "onClick" tag
+     * const listener = (that) => {
+     *   os.toast("Clicked on " + that.face);
+     * };
+     * os.addBotListener(thisBot, "onClick", listener);
+     *
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.addBotListener
+     * @docid os.addBotListener
+     */
+    function addBotListener(
+        bot: RuntimeBot,
+        tagName: string,
+        listener: DynamicListener
+    ): void {
+        bot[ADD_BOT_LISTENER_SYMBOL](tagName, listener);
+    }
+
+    /**
+     * Removes the given listener from a bot for a specific tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tagName The name of the tag that the listener should be removed from.
+     * @param listener The listener that should be removed from the bot.
+     *
+     * @example Remove a listener from the bot for the "onClick" tag
+     * os.removeBotListener(thisBot, "onClick", listener);
+     *
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.removeBotListener
+     * @docid os.removeBotListener
+     */
+    function removeBotListener(
+        bot: RuntimeBot,
+        tagName: string,
+        listener: DynamicListener
+    ): void {
+        bot[REMOVE_BOT_LISTENER_SYMBOL](tagName, listener);
+    }
+
+    /**
      * Gets whether the player is viewing the sheetPortal
      *
      * @example Show a toast if the player is viewing the sheet.
@@ -17359,6 +17596,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 continue;
             }
 
+            let addedListener = false;
             let listener = bot.listeners[tag];
             if (listener) {
                 if (!checkedEnergy) {
@@ -17372,7 +17610,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                             INTERPRETABLE_FUNCTION
                         ](arg);
                     } else {
-                        result = listener(arg);
+                        result = listener(arg, bot, tag);
                     }
 
                     if (isGenerator(result)) {
@@ -17393,7 +17631,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     context.enqueueError(ex);
                     results.push(undefined);
                 }
-                listeners.push(bot);
+                if (!addedListener) {
+                    listeners.push(bot);
+                    addedListener = true;
+                }
+            }
+
+            const dynamicListeners = bot[GET_DYNAMIC_LISTENERS_SYMBOL](tag);
+            if (dynamicListeners) {
+                for (let listener of dynamicListeners) {
+                    if (!checkedEnergy) {
+                        checkedEnergy = true;
+                        __energyCheck();
+                    }
+                    try {
+                        let result: any;
+                        if (INTERPRETABLE_FUNCTION in listener) {
+                            result = yield* (listener as any)[
+                                INTERPRETABLE_FUNCTION
+                            ](arg, bot, tag);
+                        } else {
+                            result = listener(arg, bot, tag);
+                        }
+
+                        if (isGenerator(result)) {
+                            result = yield* result;
+                        }
+
+                        if (result instanceof Promise) {
+                            result.catch((ex) => {
+                                context.enqueueError(ex);
+                            });
+                        }
+                    } catch (ex) {
+                        context.enqueueError(ex);
+                    }
+                    if (!addedListener) {
+                        listeners.push(bot);
+                        addedListener = true;
+                    }
+                }
             }
         }
 
