@@ -198,6 +198,16 @@ export interface WebConfig {
      * Whether to enable debug mode for the VM.
      */
     debug?: boolean;
+
+    /**
+     * The URL of the logo to display in the loading screen.
+     */
+    logoUrl?: string | null;
+
+    /**
+     * The title of the logo to display in the loading screen.
+     */
+    logoTitle?: string | null;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
