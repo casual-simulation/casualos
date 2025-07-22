@@ -17,8 +17,8 @@
  */
 import Axios from 'axios';
 import type { Observable, Subject, SubscriptionLike } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
-import { filter, first, map, scan, tap } from 'rxjs/operators';
+import { BehaviorSubject, merge as rxMerge } from 'rxjs';
+import { filter, first, map, scan, takeWhile, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import type {
     BotsState,
@@ -26,6 +26,7 @@ import type {
     ProgressMessage,
 } from '@casual-simulation/aux-common';
 import {
+    calculateBotValue,
     getUploadState,
     remapProgressPercent,
 } from '@casual-simulation/aux-common';
@@ -833,21 +834,41 @@ export class AppManager {
 
         const sim = this.simulationManager.primary;
 
-        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe({
-            next: (m: ProgressMessage) => {
-                this._progress.next(m);
-                if (m.error) {
-                    this._progress.complete();
-                }
-            },
-            error: (err) => console.error(err),
-            complete: () => {
-                this._progress.next({
+        const portalProgress: Observable<ProgressMessage> = sim.watcher
+            .botChanged(sim.helper.userId)
+            .pipe(
+                first((b) =>
+                    KNOWN_PORTALS.some((p) =>
+                        hasValue(calculateBotValue(null, b, p))
+                    )
+                ),
+                map(() => ({
                     type: 'progress',
                     message: 'Done.',
                     progress: 1,
                     done: true,
-                });
+                }))
+            );
+
+        // TODO: also complete when user calls os.hideSplashScreen()
+
+        const simProgress = sim.progress.updates.pipe(
+            map(remapProgressPercent(0.1, 1)),
+            map((m) => ({
+                ...m,
+                done: false,
+            })),
+            takeWhile((m) => m.progress !== 1)
+        );
+
+        const allProgress = rxMerge(simProgress, portalProgress).pipe(
+            first((m) => m.done || m.error)
+        );
+
+        allProgress.subscribe({
+            next: (m: ProgressMessage) => this._progress.next(m),
+            error: (err) => console.error(err),
+            complete: () => {
                 console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
             },
