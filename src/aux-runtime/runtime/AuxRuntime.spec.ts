@@ -406,6 +406,35 @@ describe('AuxRuntime', () => {
                     expect(listeners![0] === listener).toBe(true);
                 });
 
+                it('should preserve the listeners overrides that a bot has if it is overwritten', () => {
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: '@os.toast("Hello World")',
+                            }),
+                        })
+                    );
+
+                    const test = runtime.currentState['test'];
+                    const listener = jest.fn();
+                    runtime.setListener(test, 'abc', listener);
+
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: '@os.toast("Hello World 123")',
+                            }),
+                        })
+                    );
+
+                    const result = runtime.getListener(
+                        runtime.currentState['test'],
+                        'abc'
+                    );
+                    expect(result).toBeTruthy();
+                    expect(result === listener).toBe(true);
+                });
+
                 it('should include the space the bot was in', () => {
                     const update = runtime.stateUpdated(
                         stateUpdatedEvent({

@@ -799,6 +799,13 @@ async function auxReadFs(
             state: botsState,
         };
 
+        const outputFolder = path.dirname(output);
+        if (outputFolder) {
+            await mkdir(path.resolve(outputFolder), {
+                recursive: true,
+            });
+        }
+
         await writeFile(
             output,
             fastJsonStableStringify(storedAux, {

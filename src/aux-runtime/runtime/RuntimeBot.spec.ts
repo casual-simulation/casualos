@@ -1118,6 +1118,38 @@ describe('RuntimeBot', () => {
             expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
         });
 
+        it('should revert back to the existing listener when set to undefined', () => {
+            let func1 = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func1;
+
+            script.listeners.abc = func2;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func2);
+
+            script.listeners.abc = undefined as any;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', null);
+
+            const listener = script.listeners.abc;
+            expect(listener === func1).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
+        it('should revert back to the existing listener when deleted', () => {
+            let func1 = () => {};
+            let func2 = () => {};
+            precalc.listeners.abc = func1;
+
+            script.listeners.abc = func2;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', func2);
+
+            delete script.listeners.abc;
+            expect(setListenerMock).toHaveBeenCalledWith(precalc, 'abc', null);
+
+            const listener = script.listeners.abc;
+            expect(listener === func1).toBe(true);
+            expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
+        });
+
         it('should be able to enumerate the listeners on the bot', () => {
             let func = () => {};
             let func2 = () => {};

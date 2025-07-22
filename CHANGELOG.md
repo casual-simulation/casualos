@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.5.4
+
+#### Date: 7/22/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to set listeners on bots immediately after they were created.
+-   Fixed an issue where it was impossible to delete listener overrides using the `delete` keyword.
+
 ## V3.5.3
 
 #### Date: 7/21/2025
