@@ -16,21 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Material } from '@casual-simulation/three';
-import {
-    Vector3,
-    Vector2,
-    Float32BufferAttribute,
-    BufferGeometry as ThreeBufferGeometry,
-    PointsMaterial as ThreePointsMaterial,
-    LineBasicMaterial as ThreeLineBasicMaterial,
-    MeshBasicMaterial as ThreeMeshBasicMaterial,
-    Points as ThreePoints,
-    Line as ThreeLine,
-    Mesh as ThreeMesh,
-    Group as ThreeGroup,
-    Shape,
-    ShapeGeometry,
-} from '@casual-simulation/three';
+import { Vector3 } from '@casual-simulation/three';
 import type { MapProvider } from 'geo-three';
 import { TextureUtils } from 'geo-three';
 import {
@@ -43,9 +29,6 @@ import {
     RGBAFormat,
     Texture,
 } from '@casual-simulation/three';
-import type { BBox } from 'geojson';
-import { buildSRGBColor } from '../SceneUtils';
-import type { GeoJSONFeature, GeoJSONStyle } from './GeoJSONTypes';
 
 /**
  * Map of zoom levels to scale values.
@@ -91,35 +74,6 @@ export class MapTile extends Object3D {
     private _currentTileRequestId: number = 0;
     private _currentHeightTileRequestId: number = 0;
 
-    // GeoJSON feature rendering containers
-    private _featuresContainer: ThreeGroup;
-    private _pointsContainer: ThreeGroup;
-    private _linesContainer: ThreeGroup;
-    private _polygonsContainer: ThreeGroup;
-
-    // Current features and bounds
-    private _features: GeoJSONFeature[] = [];
-    private _tileBounds: BBox | null = null;
-    private _defaultStyle: GeoJSONStyle = {
-        pointColor: '#ff0000',
-        pointSize: 5,
-        lineColor: '#0000ff',
-        lineWidth: 2,
-        lineOpacity: 1.0,
-        fillColor: '#00ff00',
-        fillOpacity: 0.7,
-        strokeColor: '#000000',
-        strokeWidth: 1,
-    };
-
-    // Clipping state
-    private _clipWidth: number = 1;
-    private _clipHeight: number = 1;
-    private _clipAnchor: Vector3 = new Vector3(0, 0, 0);
-
-    // Renderer resolution for line rendering
-    private _rendererResolution: Vector2 = new Vector2(1920, 1080);
-
     private static _GRID_WIDTH = 256;
     private static _GRID_HEIGHT = 256;
     private static _SEA_LEVEL_TEXTURE =
@@ -127,51 +81,6 @@ export class MapTile extends Object3D {
 
     private get _material(): THREE.MeshBasicMaterial {
         return this._plane.material as THREE.MeshBasicMaterial;
-    }
-
-    constructor(
-        provider: MapProvider,
-        heightProvider: MapProvider | null = null
-    ) {
-        super();
-        this._provider = provider;
-        this._heightProvider = heightProvider;
-        this._plane = new Mesh(
-            new PlaneGeometry(1, 1, MapTile._GRID_WIDTH, MapTile._GRID_HEIGHT),
-            new MeshBasicMaterial({ wireframe: false, side: FrontSide })
-        );
-        this._plane.setRotationFromAxisAngle(
-            new Vector3(1, 0, 0),
-            -Math.PI / 2
-        );
-        this._container = new Object3D();
-        this._container.add(this._plane);
-
-        // Initialize GeoJSON containers
-        this._featuresContainer = new ThreeGroup();
-        this._featuresContainer.name = 'TileFeatures';
-
-        this._pointsContainer = new ThreeGroup();
-        this._pointsContainer.name = 'TilePoints';
-
-        this._linesContainer = new ThreeGroup();
-        this._linesContainer.name = 'TileLines';
-
-        this._polygonsContainer = new ThreeGroup();
-        this._polygonsContainer.name = 'TilePolygons';
-
-        this._featuresContainer.add(this._pointsContainer);
-        this._featuresContainer.add(this._linesContainer);
-        this._featuresContainer.add(this._polygonsContainer);
-
-        // Add features container to the main container so it gets same transforms
-        this._container.add(this._featuresContainer);
-
-        this._scaleContainer = new Object3D();
-        this._scaleContainer.add(this._container);
-        this.add(this._scaleContainer);
-
-        this._setupMaterial();
     }
 
     /**
@@ -227,6 +136,31 @@ export class MapTile extends Object3D {
         this._loadTexture();
     }
 
+    constructor(
+        provider: MapProvider,
+        heightProvider: MapProvider | null = null
+    ) {
+        super();
+        this._provider = provider;
+        this._heightProvider = heightProvider;
+        this._plane = new Mesh(
+            new PlaneGeometry(1, 1, MapTile._GRID_WIDTH, MapTile._GRID_HEIGHT),
+            new MeshBasicMaterial({ wireframe: false, side: FrontSide })
+        );
+        this._plane.setRotationFromAxisAngle(
+            new Vector3(1, 0, 0),
+            -Math.PI / 2
+        );
+        this._container = new Object3D();
+        this._container.add(this._plane);
+
+        this._scaleContainer = new Object3D();
+        this._scaleContainer.add(this._container);
+        this.add(this._scaleContainer);
+
+        this._setupMaterial();
+    }
+
     /**
      * Sets the tile that should be displayed.
      * @param zoom The zoom level of the tile.
@@ -238,308 +172,7 @@ export class MapTile extends Object3D {
         this._y = y;
         this._x = x;
 
-        // Calculate tile bounds in geographic coordinates
-        this._tileBounds = this._calculateTileBounds(zoom, x, y);
-
         this._loadTexture();
-        // Features will be set by MapView after setTile
-    }
-
-    /**
-     * Calculate geographic bounds for this tile
-     */
-    private _calculateTileBounds(zoom: number, x: number, y: number): BBox {
-        const n = Math.pow(2, zoom);
-
-        // Calculate bounds
-        const west = (x / n) * 360 - 180;
-        const east = ((x + 1) / n) * 360 - 180;
-        const north =
-            (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180) / Math.PI;
-        const south =
-            (Math.atan(Math.sinh(Math.PI * (1 - (2 * (y + 1)) / n))) * 180) /
-            Math.PI;
-
-        return [west, south, east, north];
-    }
-
-    /**
-     * Set GeoJSON features for this tile
-     * Features should already be clipped to tile bounds by MapView
-     */
-    setFeatures(features: GeoJSONFeature[], defaultStyle?: GeoJSONStyle) {
-        // Clear existing features
-        this._clearFeatures();
-
-        if (defaultStyle) {
-            this._defaultStyle = { ...this._defaultStyle, ...defaultStyle };
-        }
-
-        this._features = features;
-        this._renderFeatures();
-    }
-
-    /**
-     * Set renderer resolution for proper line width rendering
-     */
-    setRendererResolution(width: number, height: number) {
-        this._rendererResolution.set(width, height);
-
-        // Update any existing wide lines
-        // Note: In this simplified version, we're using basic lines
-        // If you implement wide lines later, update their resolution here
-    }
-
-    /**
-     * Clear all rendered features
-     */
-    private _clearFeatures() {
-        // Clear points
-        while (this._pointsContainer.children.length > 0) {
-            const child = this._pointsContainer.children[0];
-            this._pointsContainer.remove(child);
-            if ('geometry' in child) (child as any).geometry.dispose();
-            if ('material' in child) (child as any).material.dispose();
-        }
-
-        // Clear lines
-        while (this._linesContainer.children.length > 0) {
-            const child = this._linesContainer.children[0];
-            this._linesContainer.remove(child);
-            if ('geometry' in child) (child as any).geometry.dispose();
-            if ('material' in child) (child as any).material.dispose();
-        }
-
-        // Clear polygons
-        while (this._polygonsContainer.children.length > 0) {
-            const child = this._polygonsContainer.children[0];
-            this._polygonsContainer.remove(child);
-            if ('geometry' in child) (child as any).geometry.dispose();
-            if ('material' in child) (child as any).material.dispose();
-        }
-    }
-
-    /**
-     * Render all features for this tile
-     */
-    private _renderFeatures() {
-        if (!this._tileBounds) return;
-
-        for (const feature of this._features) {
-            this._renderFeature(feature);
-        }
-    }
-
-    /**
-     * Render a single feature
-     */
-    private _renderFeature(feature: GeoJSONFeature) {
-        if (!feature.geometry) return;
-
-        const style = this._getFeatureStyle(feature);
-
-        switch (feature.geometry.type) {
-            case 'Point':
-                this._renderPoint(feature.geometry.coordinates, style);
-                break;
-            case 'LineString':
-                this._renderLineString(feature.geometry.coordinates, style);
-                break;
-            case 'Polygon':
-                this._renderPolygon(feature.geometry.coordinates, style);
-                break;
-            case 'MultiPoint':
-                this._renderMultiPoint(feature.geometry.coordinates, style);
-                break;
-            case 'MultiLineString':
-                this._renderMultiLineString(
-                    feature.geometry.coordinates,
-                    style
-                );
-                break;
-            case 'MultiPolygon':
-                this._renderMultiPolygon(feature.geometry.coordinates, style);
-                break;
-        }
-    }
-
-    /**
-     * Convert geographic coordinates to tile-local coordinates
-     * This accounts for the tile's position and the clip transforms
-     */
-    private _geoToTileLocal(lon: number, lat: number): Vector3 {
-        if (!this._tileBounds) return new Vector3();
-
-        const [west, south, east, north] = this._tileBounds;
-
-        // Convert to normalized tile coordinates (0-1)
-        const x = (lon - west) / (east - west);
-        const y = (lat - south) / (north - south);
-
-        // Convert to tile-local coordinates (-0.5 to 0.5)
-        // Note: we flip Y because geographic coordinates have Y increasing northward
-        // but our 3D coordinates have Z increasing southward
-        return new Vector3(x - 0.5, 0, 0.5 - y);
-    }
-
-    /**
-     * Get style for a feature
-     */
-    private _getFeatureStyle(feature: GeoJSONFeature): GeoJSONStyle {
-        const style = { ...this._defaultStyle };
-
-        // Override with feature properties
-        if (feature.properties) {
-            Object.keys(style).forEach((key) => {
-                if (feature.properties![key] !== undefined) {
-                    (style as any)[key] = feature.properties![key];
-                }
-            });
-        }
-
-        return style;
-    }
-
-    /**
-     * Render point geometry
-     */
-    private _renderPoint(coordinates: number[], style: GeoJSONStyle) {
-        const [lon, lat] = coordinates;
-        const localPos = this._geoToTileLocal(lon, lat);
-
-        const geometry = new ThreeBufferGeometry();
-        geometry.setAttribute(
-            'position',
-            new Float32BufferAttribute([localPos.x, localPos.y, localPos.z], 3)
-        );
-
-        const material = new ThreePointsMaterial({
-            color: buildSRGBColor(style.pointColor!),
-            size: style.pointSize!,
-            sizeAttenuation: false,
-        });
-
-        const points = new ThreePoints(geometry, material);
-        this._pointsContainer.add(points);
-    }
-
-    /**
-     * Render LineString geometry
-     */
-    private _renderLineString(coordinates: number[][], style: GeoJSONStyle) {
-        const positions: number[] = [];
-
-        for (const coord of coordinates) {
-            const [lon, lat] = coord;
-            const localPos = this._geoToTileLocal(lon, lat);
-            positions.push(localPos.x, localPos.y, localPos.z);
-        }
-
-        const geometry = new ThreeBufferGeometry();
-        geometry.setAttribute(
-            'position',
-            new Float32BufferAttribute(positions, 3)
-        );
-
-        const material = new ThreeLineBasicMaterial({
-            color: buildSRGBColor(style.lineColor!),
-            transparent: style.lineOpacity! < 1,
-            opacity: style.lineOpacity!,
-        });
-
-        const line = new ThreeLine(geometry, material);
-        this._linesContainer.add(line);
-    }
-
-    /**
-     * Render Polygon geometry
-     */
-    private _renderPolygon(coordinates: number[][][], style: GeoJSONStyle) {
-        if (!coordinates || coordinates.length === 0) return;
-
-        const exteriorRing = coordinates[0];
-        const holes = coordinates.slice(1);
-
-        // Create shape
-        const shape = new Shape();
-        let firstPoint = true;
-
-        for (const coord of exteriorRing) {
-            const [lon, lat] = coord;
-            const localPos = this._geoToTileLocal(lon, lat);
-
-            if (firstPoint) {
-                shape.moveTo(localPos.x, localPos.z);
-                firstPoint = false;
-            } else {
-                shape.lineTo(localPos.x, localPos.z);
-            }
-        }
-
-        // Add holes
-        for (const hole of holes) {
-            const holePath = new Shape();
-            let firstHolePoint = true;
-
-            for (const coord of hole) {
-                const [lon, lat] = coord;
-                const localPos = this._geoToTileLocal(lon, lat);
-
-                if (firstHolePoint) {
-                    holePath.moveTo(localPos.x, localPos.z);
-                    firstHolePoint = false;
-                } else {
-                    holePath.lineTo(localPos.x, localPos.z);
-                }
-            }
-
-            shape.holes.push(holePath);
-        }
-
-        const geometry = new ShapeGeometry(shape);
-        const material = new ThreeMeshBasicMaterial({
-            color: buildSRGBColor(style.fillColor!),
-            transparent: style.fillOpacity! < 1,
-            opacity: style.fillOpacity!,
-            side: 2, // DoubleSide
-        });
-
-        const mesh = new ThreeMesh(geometry, material);
-        mesh.rotateX(-Math.PI / 2); // Rotate to lie flat
-        this._polygonsContainer.add(mesh);
-    }
-
-    /**
-     * Render MultiPoint geometry
-     */
-    private _renderMultiPoint(coordinates: number[][], style: GeoJSONStyle) {
-        for (const coord of coordinates) {
-            this._renderPoint(coord, style);
-        }
-    }
-
-    /**
-     * Render MultiLineString geometry
-     */
-    private _renderMultiLineString(
-        coordinates: number[][][],
-        style: GeoJSONStyle
-    ) {
-        for (const lineCoords of coordinates) {
-            this._renderLineString(lineCoords, style);
-        }
-    }
-
-    /**
-     * Render MultiPolygon geometry
-     */
-    private _renderMultiPolygon(
-        coordinates: number[][][][],
-        style: GeoJSONStyle
-    ) {
-        for (const polygonCoords of coordinates) {
-            this._renderPolygon(polygonCoords, style);
-        }
     }
 
     /**
@@ -550,15 +183,8 @@ export class MapTile extends Object3D {
      * @param anchor The point that the tile is anchored to.
      */
     setClip(width: number, height: number, anchor: Vector3) {
-        this._clipWidth = width;
-        this._clipHeight = height;
-        this._clipAnchor = anchor;
-
         this._scaleContainer.position.set(anchor.x, anchor.y, anchor.z);
         this._plane.position.set(-anchor.x, -anchor.y, -anchor.z);
-
-        // Also update features container position to match
-        this._featuresContainer.position.set(-anchor.x, -anchor.y, -anchor.z);
 
         this._scaleContainer.scale.set(width, 1, height);
         this._scaleContainer.updateMatrixWorld(true);
@@ -755,9 +381,6 @@ export class MapTile extends Object3D {
     }
 
     dispose() {
-        // Clear features first
-        this._clearFeatures();
-
         if (this._material.map) {
             this._material.map.dispose();
         }
@@ -772,7 +395,6 @@ export class MapTile extends Object3D {
         this._material.dispose();
         this._plane.geometry.dispose();
         this._container.remove(this._plane);
-        this._container.remove(this._featuresContainer);
         this.remove(this._scaleContainer);
         this._scaleContainer.remove(this._container);
         this._provider = null;
