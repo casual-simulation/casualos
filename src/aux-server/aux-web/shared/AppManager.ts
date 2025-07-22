@@ -28,6 +28,7 @@ import type {
 import {
     calculateBotValue,
     getUploadState,
+    LOAD_PORTALS,
     remapProgressPercent,
 } from '@casual-simulation/aux-common';
 import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
@@ -838,7 +839,7 @@ export class AppManager {
             .botChanged(sim.helper.userId)
             .pipe(
                 first((b) =>
-                    KNOWN_PORTALS.some((p) =>
+                    LOAD_PORTALS.some((p) =>
                         hasValue(calculateBotValue(null, b, p))
                     )
                 ),
@@ -862,7 +863,7 @@ export class AppManager {
         );
 
         const allProgress = rxMerge(simProgress, portalProgress).pipe(
-            first((m) => m.done || m.error)
+            takeWhile((m) => !m.done && !m.error)
         );
 
         allProgress.subscribe({
