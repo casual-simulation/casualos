@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the CLI would add `.txt` to tag names that already have an extension when unpacking an `.aux` file.
+-   Fixed an issue where duplicate bots could make the CLI try to write a tag to both the tag file and an additional `.txt` file.
 
 ## V3.5.4
 
