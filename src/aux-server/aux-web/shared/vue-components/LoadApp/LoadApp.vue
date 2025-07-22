@@ -6,9 +6,10 @@
             :logoTitle="logoTitle"
             :title="title"
             :version="version"
+            :backgroundColor="backgroundColor"
         ></splash-screen>
         <loading
-            v-if="loadingState && (!logoUrl || loadingState.error)``"
+            v-if="loadingState && (!logoUrl || loadingState.error)"
             :status="loadingState.message"
             :progress="loadingState.progress * 100"
             :error="loadingState.error ? loadingState.message : null"

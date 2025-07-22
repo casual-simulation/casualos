@@ -208,6 +208,12 @@ export interface WebConfig {
      * The title of the logo to display in the loading screen.
      */
     logoTitle?: string | null;
+
+    /**
+     * The background color of the logo to display in the loading screen.
+     * This is used to set the background color of the splash screen.
+     */
+    logoBackgroundColor?: string | null;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({

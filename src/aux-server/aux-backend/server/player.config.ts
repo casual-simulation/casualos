@@ -69,6 +69,7 @@ const config: ClientConfig = {
 
         logoUrl: process.env.LOGO_URL || null,
         logoTitle: process.env.LOGO_TITLE || null,
+        logoBackgroundColor: process.env.LOGO_BACKGROUND_COLOR || null,
     },
 };
 

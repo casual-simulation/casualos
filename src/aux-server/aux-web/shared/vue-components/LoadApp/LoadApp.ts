@@ -39,6 +39,7 @@ export default class LoadApp extends Vue {
 
     logoUrl: string = null;
     logoTitle: string = null;
+    backgroundColor: string = null;
     title: string = null;
 
     get version() {
@@ -60,6 +61,7 @@ export default class LoadApp extends Vue {
 
     created() {
         this.loading = true;
+        this.backgroundColor = null;
         this.loadingState = {
             type: 'progress',
             message: 'Starting...',
@@ -89,6 +91,10 @@ export default class LoadApp extends Vue {
                     appManager.comIdConfig?.displayName ??
                     appManager.comIdConfig?.comId ??
                     appManager.config?.logoTitle ??
+                    null;
+                this.backgroundColor =
+                    appManager.comIdConfig?.logoBackgroundColor ??
+                    appManager.config?.logoBackgroundColor ??
                     null;
             },
             (err) => {
