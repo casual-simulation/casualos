@@ -399,10 +399,34 @@ export function createRuntimeBot(
             if (key in constantTags) {
                 return true;
             }
-            if (typeof value !== 'function' && value !== null) {
+            if (
+                typeof value !== 'function' &&
+                value !== null &&
+                value !== undefined
+            ) {
                 return false;
             }
-            manager.setListener(bot, key, value);
+            manager.setListener(bot, key, value ?? null);
+            // Keep the bot listener keys and the listener override keys in sync.
+            if (key in bot.listenerOverrides && !(key in bot.listeners)) {
+                bot.listeners[key] = undefined;
+            } else if (!hasValue(bot.listeners[key])) {
+                delete bot.listeners[key];
+            }
+            return true;
+        },
+        deleteProperty(target, key: string) {
+            if (replacement) {
+                return Reflect.deleteProperty(replacement.listeners, key);
+            }
+            if (typeof key === 'symbol') {
+                return Reflect.deleteProperty(target, key);
+            }
+            if (key in constantTags) {
+                return true;
+            }
+
+            manager.setListener(bot, key, null);
             // Keep the bot listener keys and the listener override keys in sync.
             if (key in bot.listenerOverrides && !(key in bot.listeners)) {
                 bot.listeners[key] = undefined;
