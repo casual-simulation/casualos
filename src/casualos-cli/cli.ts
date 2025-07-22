@@ -620,17 +620,18 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
                             const filePath = path.resolve(dir, `${tag}${ext}`);
                             const fileContent = value.slice(prefix.length);
 
+                            written = true;
                             try {
                                 await writeFile(filePath, fileContent, {
                                     encoding: 'utf-8',
                                     flag,
                                 });
-                                written = true;
                             } catch (err) {
                                 console.error(
                                     `Could not write file: ${filePath}.\n\n${err}\n`
                                 );
                             }
+                            break;
                         }
                     }
 
