@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.5.5
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the CLI would add `.txt` to tag names that already have an extension when unpacking an `.aux` file.
+
 ## V3.5.4
 
 #### Date: 7/22/2025
