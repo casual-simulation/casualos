@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where it was impossible to set listeners on bots immediately after they were created.
+-   Fixed an issue where it was impossible to delete listener overrides using the `delete` keyword.
 
 ## V3.5.3
 
