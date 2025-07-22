@@ -636,7 +636,11 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
 
                     if (!written && value.indexOf('\n') >= 0) {
                         // string has a newline, so write it to a text file
-                        const filePath = path.resolve(dir, `${tag}.txt`);
+
+                        // if the tag does not have a file extension, add .txt
+                        const fileName =
+                            tag.indexOf('.') >= 0 ? tag : `${tag}.txt`;
+                        const filePath = path.resolve(dir, fileName);
                         try {
                             await writeFile(filePath, value, {
                                 encoding: 'utf-8',
