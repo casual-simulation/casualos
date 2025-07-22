@@ -542,9 +542,7 @@ export default class PlayerHome extends Vue {
         update.staticInst = inst;
         update.bios = null;
 
-        if (!hasValue(this.query['gridPortal'])) {
-            update.gridPortal = 'home';
-        }
+        this._addGridPortalToQuery(update);
 
         if (Object.keys(update).length > 0) {
             this._updateQuery(update);
@@ -573,9 +571,7 @@ export default class PlayerHome extends Vue {
         update.joinCode = joinCode;
         update.bios = null;
 
-        if (!hasValue(this.query['gridPortal'])) {
-            update.gridPortal = 'home';
-        }
+        this._addGridPortalToQuery(update);
 
         if (Object.keys(update).length > 0) {
             this._updateQuery(update);
@@ -596,9 +592,7 @@ export default class PlayerHome extends Vue {
             update.inst = inst;
             update.bios = null;
 
-            if (!hasValue(this.query['gridPortal'])) {
-                update.gridPortal = 'home';
-            }
+            this._addGridPortalToQuery(update);
 
             if (Object.keys(update).length > 0) {
                 this._updateQuery(update);
@@ -616,15 +610,22 @@ export default class PlayerHome extends Vue {
         update.inst = inst;
         update.bios = null;
 
-        if (!hasValue(this.query['gridPortal'])) {
-            update.gridPortal = 'home';
-        }
+        this._addGridPortalToQuery(update);
 
         if (Object.keys(update).length > 0) {
             this._updateQuery(update);
         }
 
         this._setServer(PUBLIC_OWNER, inst, false);
+    }
+
+    private _addGridPortalToQuery(update: Dictionary<string | string[]>) {
+        if (
+            !hasValue(this.query['gridPortal']) &&
+            !('noGridPortal' in this.query)
+        ) {
+            update.gridPortal = 'home';
+        }
     }
 
     private async _getBiosOptions(): Promise<BiosOption[]> {
