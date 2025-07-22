@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-runtime",
-    "version": "3.5.3",
+    "version": "3.5.4",
     "description": "Runtime for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
