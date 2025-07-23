@@ -160,6 +160,8 @@ export type AsyncActions =
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
+    | AddBotMapOverlayAction
+    | RemoveBotMapOverlayAction
     | GetVoicesAction
     | GetGeolocationAction
     | RegisterCustomAppAction
@@ -2967,6 +2969,46 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
     text: string;
 }
 
+/** Extensible overlay type — bot map form */
+type OverlayType = 'geojson';
+
+export interface AddBotMapOverlayAction extends AsyncAction {
+    type: 'add_bot_map_overlay';
+    /**
+     * The ID of the bot that should be drawn on.
+     */
+    botId: string;
+    /**
+     * Layer configuration
+     */
+    overlay: {
+        /**
+         * The type of overlay to add to the bot map form
+         */
+        overlayType: OverlayType;
+        /**
+         * Data specific to the overlay type for layer creation
+         */
+        data: any;
+        /**
+         * An optional user defined ID of the overlay that should be added.
+         * Will be generated and returned if ommited.
+         */
+        overlayId?: string;
+    };
+}
+export interface RemoveBotMapOverlayAction extends AsyncAction {
+    type: 'remove_bot_map_overlay';
+    /**
+     * The ID of the bot that the overlay is on.
+     */
+    botId: string;
+    /**
+     * The ID of the overlay that should be removed.
+     */
+    overlayId: string;
+}
+
 /**
  * An event that is used to retrieve the synthetic voices that are supported by the current system.
  *
@@ -5522,6 +5564,39 @@ export function speakText(
 export function getVoices(taskId?: string | number): GetVoicesAction {
     return {
         type: 'get_voices',
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that adds a map overlay to the given bot.
+ * @param bot
+ * @param overlayId
+ * @param options
+ * @param taskId
+ */
+export function addBotMapOverlay(
+    bot: Bot,
+    overlayConfig: AddBotMapOverlayAction['overlay'],
+    taskId?: string | number
+): AddBotMapOverlayAction {
+    return {
+        type: 'add_bot_map_overlay',
+        botId: bot?.id,
+        overlay: overlayConfig,
+        taskId,
+    };
+}
+
+export function removeBotMapOverlay(
+    bot: Bot,
+    overlayId: string,
+    taskId?: string | number
+): RemoveBotMapOverlayAction {
+    return {
+        type: 'remove_bot_map_overlay',
+        botId: bot?.id,
+        overlayId,
         taskId,
     };
 }

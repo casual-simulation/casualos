@@ -25,6 +25,7 @@ import type {
     StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import {
+    asyncResult,
     calculateBooleanTagValue,
     calculateBotIds,
     calculateBotValue,
@@ -211,6 +212,12 @@ export class BotShapeDecorator
         this._finder = finder;
     }
 
+    private _asyncResult(...args: Parameters<typeof asyncResult>) {
+        return this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+            asyncResult(...args)
+        );
+    }
+
     frameUpdate() {
         if (this._game && this._animationMixer && this._animationEnabled) {
             this._animationMixer.update(this._game.getTime().deltaTime);
@@ -329,6 +336,20 @@ export class BotShapeDecorator
     localEvent(event: LocalActions, calc: BotCalculationContext) {
         if (event.type === 'local_form_animation') {
             this._playLocalAnimation(event.animation);
+        }
+        if (
+            event.type === 'add_bot_map_overlay' ||
+            event.type === 'remove_bot_map_overlay'
+        ) {
+            this._asyncResult(
+                event.taskId,
+                this._mapView
+                    ? this._mapView.localEvent(event, calc)
+                    : {
+                          success: false,
+                          message: 'Map view not available for bot.',
+                      }
+            );
         }
     }
 

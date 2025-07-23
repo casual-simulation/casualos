@@ -206,6 +206,8 @@ import {
     endRecording as calcEndRecording,
     speakText as calcSpeakText,
     getVoices as calcGetVoices,
+    addBotMapOverlay as calcAddBotMapOverlay,
+    removeBotMapOverlay as calcRemoveBotMapOverlay,
     getGeolocation as calcGetGeolocation,
     cancelAnimation,
     disablePOV,
@@ -3511,6 +3513,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endRecording,
                 speakText,
                 getVoices,
+                addBotMapOverlay,
+                removeBotMapOverlay,
             },
 
             loom: {
@@ -14011,6 +14015,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getVoices(): Promise<SyntheticVoice[]> {
         const task = context.createTask();
         const action = calcGetVoices(task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Adds a map overlay layer to the given bot's map.
+     * @param bot The bot that the overlay layer should be added to.
+     * @param overlayLayer Configuration for the overlay layer to add.
+     */
+    function addBotMapOverlay(
+        bot: Bot,
+        overlay: {
+            overlayType: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<void> {
+        const task = context.createTask();
+        const action = calcAddBotMapOverlay(bot, overlay, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Removes a map overlay layer from the given bot's map.
+     * @param bot The bot that the overlay layer should be removed from.
+     * @param overlayId Idempotent ID of the overlay layer to remove.
+     */
+    function removeBotMapOverlay(bot: Bot, overlayId: string): Promise<void> {
+        const task = context.createTask();
+        const action = calcRemoveBotMapOverlay(bot, overlayId, task.taskId);
         return addAsyncAction(task, action);
     }
 
