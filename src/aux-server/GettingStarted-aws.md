@@ -60,6 +60,14 @@ To deploy this project to AWS Lambda, follow these steps:
 
 The build can be configured using the following environment variables. All the options and defaults are handled in `prerender-web-config.mjs`.
 
+#### Branding
+
+CasualOS supports the following environment variables to customize branding.
+
+-   `LOGO_URL` - The URL of the logo that should be displayed in the loading splash screen.
+-   `LOGO_TITLE` - The alternate text that should provided for the logo. If specified alone, then this text will be displayed in the loading dialog.
+-   `LOGO_BACKGROUND_COLOR` - The background color of the splash screen. Only has an effect if `LOGO_URL` is specified.
+
 #### ab-1
 
 Use the following environment variables to configure ab-1.
