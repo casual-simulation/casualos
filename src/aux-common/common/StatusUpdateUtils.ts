@@ -17,12 +17,12 @@
  */
 import type { StatusUpdate } from './StatusUpdate';
 
-export function remapProgressPercent(
+export function remapProgressPercent<T extends StatusUpdate>(
     start: number,
     end: number
-): (message: StatusUpdate) => StatusUpdate {
+): (message: T) => T {
     let ratio = end - start;
-    return (msg: StatusUpdate) => {
+    return (msg: T) => {
         if (msg.type !== 'progress') {
             return msg;
         }

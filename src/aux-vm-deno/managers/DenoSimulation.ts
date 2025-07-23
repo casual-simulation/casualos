@@ -135,12 +135,15 @@ export class DenoSimulationImpl
         this.helper.userId = getConnectionId(indicator);
 
         this._login = new LoginManager(this._vm);
-        this._progress = new ProgressManager(this._vm);
+        this._portals = new PortalManager(this._vm);
+        this._progress = new ProgressManager(
+            this._vm,
+            this._portals.portalLoaded
+        );
     }
 
     protected _beforeVmInit() {
         super._beforeVmInit();
-        this._portals = new PortalManager(this._vm);
         this._subscriptions.push(this._portals);
     }
 }

@@ -207,7 +207,8 @@ export type AsyncActions =
     | LoadSharedDocumentAction
     | CalculateScreenCoordinatesFromPositionAction
     | AddMapLayerAction
-    | RemoveMapLayerAction;
+    | RemoveMapLayerAction
+    | HideLoadingScreenAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -4102,6 +4103,13 @@ export interface AnalyticsRecordEventAction extends AsyncAction {
      * The metadata for the event.
      */
     metadata: any;
+}
+
+/**
+ * An action that hides the loading screen.
+ */
+export interface HideLoadingScreenAction extends AsyncAction {
+    type: 'hide_loading_screen';
 }
 
 /**
