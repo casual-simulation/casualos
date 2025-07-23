@@ -136,6 +136,15 @@ Resources:
                                 - 'execute-api:ManageConnections'
                             Resource:
                                 - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/Prod/*/@connections/*'
+                - PolicyName: !Sub '${AWS::StackName}-records-ses-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'ses:SendEmail'
+                                - 'ses:SendRawEmail'
+                            Resource: '*'
 
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
