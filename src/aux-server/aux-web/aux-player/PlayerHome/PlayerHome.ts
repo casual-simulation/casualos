@@ -792,6 +792,12 @@ export default class PlayerHome extends Vue {
         for (let portal of KNOWN_PORTALS) {
             if (update.tags.has(portal)) {
                 const value = calculateBotValue(calc, update.bot, portal);
+
+                if (hasValue(value)) {
+                    // send portal load event
+                    sim.portals.notifyPortalLoaded(portal);
+                }
+
                 actions.push(
                     ...sim.helper.actions([
                         {
