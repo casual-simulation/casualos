@@ -236,4 +236,8 @@ export const WEB_CONFIG_SCHEMA = z.object({
     allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable(),
     defaultBiosOption: BIOS_OPTION_SCHEMA.nullable(),
     automaticBiosOption: BIOS_OPTION_SCHEMA.nullable(),
+
+    logoUrl: z.string().min(1).max(512).nullable().optional(),
+    logoBackgroundColor: z.string().min(1).max(32).nullable().optional(),
+    logoTitle: z.string().min(1).max(128).nullable().optional(),
 });
