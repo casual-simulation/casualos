@@ -63,7 +63,6 @@ export abstract class MapOverlay extends Object3D {
         this._plane = new Mesh(
             new PlaneGeometry(width, height, 1, 1),
             new MeshBasicMaterial({
-                // wireframe: true,
                 transparent: true,
                 side: DoubleSide,
             })

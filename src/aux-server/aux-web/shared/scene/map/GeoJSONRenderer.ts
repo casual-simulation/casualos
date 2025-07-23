@@ -19,6 +19,7 @@ import { destination, point } from '@turf/turf';
 import type { AllGeoJSON, Units } from '@turf/turf';
 import type { Feature, Geometry, LineString, Point, Polygon } from 'geojson';
 import { MercatorMath } from './MercatorMath';
+import { shortUuid } from '@casual-simulation/aux-common';
 
 /**
  * Renderer Class:
@@ -80,7 +81,7 @@ export class GeoJSONRenderer {
         private _tileSize: number
     ) {
         this.canvas = document.createElement('canvas');
-        this.canvas.id = `geojson-canvas-${Date.now()}`;
+        this.canvas.id = `geojson-canvas-${Date.now()}-${shortUuid()}`;
         this.canvas.height = this.canvas.width = _tileSize;
         this.ctx = this.canvas.getContext('2d');
     }
@@ -135,9 +136,11 @@ export class GeoJSONRenderer {
 
     _drawRoutine(draw: (ctx: CanvasRenderingContext2D) => void) {
         if (!this.ctx) throw new Error('Canvas context is not available');
+        this.ctx.save();
         this.ctx.beginPath();
         draw(this.ctx);
         this.ctx.closePath();
+        this.ctx.restore();
     }
 
     drawRectangle(
@@ -208,9 +211,9 @@ export class GeoJSONRenderer {
         this._drawRoutine((ctx) => {
             ctx.lineWidth = attr?.lineWidth ?? 2;
             ctx.strokeStyle = attr?.strokeStyle ?? 'red';
-            ctx.moveTo(...this.coordToViewPixel(coordinates.splice(0, 1)[0]));
-            for (let coord of coordinates) {
-                ctx.lineTo(...this.coordToViewPixel(coord));
+            ctx.moveTo(...this.coordToViewPixel(coordinates[0]));
+            for (let i = 1; i < coordinates.length; i++) {
+                ctx.lineTo(...this.coordToViewPixel(coordinates[i]));
             }
             ctx.stroke();
         });

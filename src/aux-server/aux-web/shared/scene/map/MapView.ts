@@ -21,9 +21,10 @@ import { Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
 import type { MapOverlay } from './MapOverlay';
 import { GeoJSONMapOverlay } from './MapOverlay';
-import type {
-    BotCalculationContext,
-    LocalActions,
+import {
+    shortUuid,
+    type BotCalculationContext,
+    type LocalActions,
 } from '@casual-simulation/aux-common';
 
 const TILE_SIZE = 256;
@@ -61,7 +62,7 @@ export class MapView extends Object3D {
     addOverlay(
         type: string,
         data: any,
-        id: string = `${Date.now()}_overlay`
+        id: string = `${Date.now()}_${shortUuid()}_overlay`
     ): string {
         this.removeOverlay(id);
         let newOverlay: MapOverlay;
@@ -78,7 +79,7 @@ export class MapView extends Object3D {
             throw new Error(`Unknown overlay type: ${type}`);
         }
         this._overlays.set(id, newOverlay);
-        newOverlay.position.setY(this._overlays.size / 4000);
+        newOverlay.position.setY(this._overlays.size / 2000);
         this.add(newOverlay);
         newOverlay.render();
         return id;
