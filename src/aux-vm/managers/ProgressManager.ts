@@ -138,45 +138,6 @@ export class ProgressManager implements SubscriptionLike {
         ).pipe(takeWhile((m) => !m.done && !m.error, true));
 
         this._sub = allProgress.subscribe(this._progress);
-
-        // this._sub = this._vm.connectionStateChanged
-        //     .pipe(
-        //         takeWhile((m) => m.type !== 'init'),
-        //         tap((message) => {
-        //             if (message.type === 'progress') {
-        //                 this._progress.next(message);
-        //             } else if (message.type === 'authorization') {
-        //                 if (message.authorized === false) {
-        //                     this._progress.next({
-        //                         type: 'progress',
-        //                         progress: 1,
-        //                         message: 'You are not authorized.',
-        //                         error: true,
-        //                     });
-        //                 }
-        //             } else if (message.type === 'authentication') {
-        //                 if (message.authenticated === false) {
-        //                     this._progress.next({
-        //                         type: 'progress',
-        //                         progress: 1,
-        //                         message: 'You are not authenticated.',
-        //                         done: true,
-        //                     });
-        //                 }
-        //             }
-        //         })
-        //     )
-        //     .subscribe({
-        //         error: (err) => console.error(err),
-        //         complete: () => {
-        //             this._progress.next({
-        //                 type: 'progress',
-        //                 message: 'Done.',
-        //                 progress: 1,
-        //                 done: true,
-        //             });
-        //         },
-        //     });
     }
 
     unsubscribe() {
