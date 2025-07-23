@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.5.6
+
+#### Date: 7/23/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+
 ## V3.5.5
 
 #### Date: 7/22/2025
