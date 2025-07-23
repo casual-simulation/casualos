@@ -19,6 +19,12 @@ import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
 import { Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
+import type { MapOverlay } from './MapOverlay';
+import { GeoJSONMapOverlay } from './MapOverlay';
+import type {
+    BotCalculationContext,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 
 const TILE_SIZE = 256;
 
@@ -35,10 +41,13 @@ export class MapView extends Object3D {
     private _heightProvider: MapProvider | null = null;
 
     private _tiles: MapTile[][] = [];
+    //* We can change this to a more complex clipping box to suit custom aspect ratios
     private _clippingBox: Box3 = new Box3(
         new Vector3(-0.5, -0.5, -0.5),
         new Vector3(0.5, 0.5, 0.5)
     );
+
+    private _overlays: Map<string, MapOverlay> = new Map();
 
     get heightProvider() {
         return this._heightProvider;
@@ -47,6 +56,76 @@ export class MapView extends Object3D {
     setZoom(zoom: number) {
         this._zoom = zoom;
         this.setCenter(zoom, this._longitude, this._latitude);
+    }
+
+    addOverlay(
+        type: string,
+        data: any,
+        id: string = `${Date.now()}_overlay`
+    ): string {
+        this.removeOverlay(id);
+        let newOverlay: MapOverlay;
+        if (type === 'geojson') {
+            newOverlay = new GeoJSONMapOverlay(
+                this._clippingBox,
+                TILE_SIZE,
+                this._longitude,
+                this._latitude,
+                this._zoom,
+                data
+            );
+        } else {
+            throw new Error(`Unknown overlay type: ${type}`);
+        }
+        this._overlays.set(id, newOverlay);
+        newOverlay.position.setY(this._overlays.size / 4000);
+        this.add(newOverlay);
+        newOverlay.render();
+        return id;
+    }
+
+    removeOverlay(id: string): string {
+        if (!this._overlays.has(id)) return;
+        const existingOverlay = this._overlays.get(id);
+        this.remove(existingOverlay);
+        existingOverlay.dispose();
+        this._overlays.delete(id);
+        return id;
+    }
+
+    localEvent(
+        event: LocalActions,
+        calc: BotCalculationContext
+    ): { success: boolean; data?: any; message?: string } {
+        if (event.type === 'add_bot_map_overlay') {
+            let id: string;
+            try {
+                id = this.addOverlay(
+                    event.overlay.overlayType,
+                    event.overlay.data,
+                    event.overlay.overlayId
+                );
+            } catch (e) {
+                return {
+                    success: false,
+                    message: `Failed to add map overlay ${event.overlay.overlayId}: ${e}`,
+                };
+            }
+            return { success: true, data: { overlayId: id } };
+        } else if (event.type === 'remove_bot_map_overlay') {
+            const res = this.removeOverlay(event.overlayId);
+            return typeof res === 'string'
+                ? {
+                      success: true,
+                      data: { overlayId: res },
+                  }
+                : {
+                      success: false,
+                      data: { overlayId: null },
+                      message: `No overlay exists with id: ${event.overlayId}`,
+                  };
+        }
+        return { success: false, message: 'Unknown local event type' };
     }
 
     setProvider(provider: MapProvider) {
@@ -144,6 +223,11 @@ export class MapView extends Object3D {
         this._zoom = zoom;
         this._longitude = longitude;
         this._latitude = latitude;
+        if (this._overlays.size) {
+            this._overlays.forEach((overlay) =>
+                overlay.updateCenter(zoom, longitude, latitude)
+            );
+        }
         const [pixelX, pixelY] = MapView.calculatePixel(
             zoom,
             longitude,
@@ -281,7 +365,6 @@ export class MapView extends Object3D {
         this._heightProvider = heightProvider;
         this._tileSize = tileSize;
         this._gridSize = gridSize;
-
         this._createGrid();
     }
 
@@ -325,7 +408,12 @@ export class MapView extends Object3D {
                 this.remove(tile);
             }
         }
-        this._tiles = [];
+        this._tiles.length = 0;
+        for (let [_, overlay] of this._overlays) {
+            overlay.dispose();
+            this.remove(overlay);
+        }
+        this._overlays.clear();
     }
 
     private _createGrid() {
