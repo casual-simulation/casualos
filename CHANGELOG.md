@@ -2,7 +2,7 @@
 
 ## V3.5.6
 
-#### Date: TBD
+#### Date: 7/23/2025
 
 ### :bug: Bug Fixes
 
