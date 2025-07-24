@@ -20,7 +20,7 @@ import { MapTile } from './MapTile';
 import { Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
 import type { MapOverlay } from './MapOverlay';
-import { GeoJSONMapOverlay } from './MapOverlay';
+import { GeoJSONCanvasMapOverlay } from './MapOverlay';
 import {
     shortUuid,
     type BotCalculationContext,
@@ -66,8 +66,8 @@ export class MapView extends Object3D {
     ): string {
         this.removeOverlay(id);
         let newOverlay: MapOverlay;
-        if (type === 'geojson') {
-            newOverlay = new GeoJSONMapOverlay(
+        if (type === 'geojson_canvas') {
+            newOverlay = new GeoJSONCanvasMapOverlay(
                 this._clippingBox,
                 TILE_SIZE,
                 this._longitude,

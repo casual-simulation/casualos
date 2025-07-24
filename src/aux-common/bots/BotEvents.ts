@@ -2973,7 +2973,7 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
 }
 
 /** Extensible overlay type — bot map form */
-type OverlayType = 'geojson';
+type OverlayType = 'geojson_canvas';
 
 export interface AddBotMapOverlayAction extends AsyncAction {
     type: 'add_bot_map_overlay';

@@ -14212,7 +14212,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function addBotMapOverlay(
         bot: Bot,
         overlay: {
-            overlayType: 'geojson';
+            overlayType: 'geojson_canvas';
             data: any;
             overlayId?: string;
         }

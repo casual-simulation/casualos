@@ -61,7 +61,7 @@ type PointPosition<a extends boolean = false> = a extends true
  */
 type WorldPixel = [number, number];
 
-export class GeoJSONRenderer {
+export class GeoJSONCanvasRenderer {
     canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
 

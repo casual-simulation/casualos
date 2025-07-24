@@ -26,7 +26,7 @@ import {
 } from '@casual-simulation/three';
 import type { Box2, Box3, Texture } from '@casual-simulation/three';
 import type { AllGeoJSON } from '@turf/turf';
-import { GeoJSONRenderer } from './GeoJSONRenderer';
+import { GeoJSONCanvasRenderer } from './GeoJSONRenderer';
 
 // Convert to interface, This abrstaction extends as 2D.
 
@@ -103,8 +103,8 @@ export abstract class MapOverlay extends Object3D {
     abstract dispose(): void;
 }
 
-export class GeoJSONMapOverlay extends MapOverlay {
-    private _renderer: GeoJSONRenderer;
+export class GeoJSONCanvasMapOverlay extends MapOverlay {
+    private _renderer: GeoJSONCanvasRenderer;
     constructor(
         dimensions: Box2 | Box3,
         tileSize: number,
@@ -114,7 +114,7 @@ export class GeoJSONMapOverlay extends MapOverlay {
         private _geojson: AllGeoJSON
     ) {
         super(dimensions, tileSize, longitude, latitude, zoom);
-        this._renderer = new GeoJSONRenderer(
+        this._renderer = new GeoJSONCanvasRenderer(
             zoom,
             longitude,
             latitude,
