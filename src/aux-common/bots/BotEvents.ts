@@ -206,7 +206,10 @@ export type AsyncActions =
     | WatchLoomAction
     | GetLoomMetadataAction
     | GetScriptIssuesAction
-    | LoadSharedDocumentAction;
+    | LoadSharedDocumentAction
+    | CalculateScreenCoordinatesFromPositionAction
+    | AddMapLayerAction
+    | RemoveMapLayerAction;
 
 export type RemoteBotActions =
     | GetRemoteCountAction
@@ -3530,6 +3533,27 @@ export interface CalculateScreenCoordinatesFromViewportCoordinatesAction
 }
 
 /**
+ * Defines an event that calculates the 2D screen coordinates from the given 3D positions.
+ *
+ * @dochash types/os/portals
+ * @docname CalculateScreenCoordinatesFromPositionAction
+ */
+export interface CalculateScreenCoordinatesFromPositionAction
+    extends AsyncAction {
+    type: 'calculate_screen_coordinates_from_position';
+
+    /**
+     * The portal that the ray should be calculated for.
+     */
+    portal: CameraPortal;
+
+    /**
+     * The 3D positions that the screen coordinates should be calculated for.
+     */
+    coordinates: Point3D[];
+}
+
+/**
  * Defines an event that calculates the 2D viewport coordinates from the given 2D screen coordinates.
  *
  * @dochash types/os/portals
@@ -3949,6 +3973,88 @@ export interface LDrawCountBuildStepsAction extends AsyncAction {
      * The text that contains the LDraw model.
      */
     text?: string;
+}
+
+/**
+ * An event that adds a map layer to the map or miniMap portal.
+ * This is used to add custom layers to the map, such as heatmaps or other visualizations.
+ *
+ * @dochash types/os/maps
+ * @doctitle Map Types
+ * @docsidebar Maps
+ * @docdescription Types that are used in actions that relate to maps.
+ * @docid AddMapLayerAction
+ */
+export interface AddMapLayerAction extends AsyncAction {
+    type: 'add_map_layer';
+
+    /**
+     * The portal that the layer should be added to.
+     */
+    portal: 'map' | 'miniMap';
+
+    /**
+     * The layer that should be added to the portal.
+     */
+    layer: MapLayer;
+}
+
+/**
+ * An event that is used to remove a map layer from the map or miniMapPortal.
+ *
+ * @dochash types/os/maps
+ * @docid RemoveMapLayerAction
+ */
+export interface RemoveMapLayerAction extends AsyncAction {
+    type: 'remove_map_layer';
+
+    /**
+     * The ID of the layer that should be removed.
+     */
+    layerId: string;
+}
+
+/**
+ * The kinds of map layers that can be added to the map or miniMapPortal.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayer
+ */
+export type MapLayer = GeoJSONMapLayer;
+
+/**
+ * Defines a base interface for map layers.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayerBase
+ */
+export interface MapLayerBase {
+    /**
+     * Copyright information for the layer.
+     */
+    copyright?: string;
+}
+
+/**
+ * A map layer that contains GeoJSON data.
+ *
+ * @dochash types/os/maps
+ * @docid GeoJSONMapLayer
+ */
+export interface GeoJSONMapLayer extends MapLayerBase {
+    type: 'geojson';
+
+    /**
+     * The URL that contains the GeoJSON data.
+     *
+     * Can be a blob url, a data url, or a regular URL.
+     */
+    url?: string;
+
+    /**
+     * The GeoJSON data for the layer.
+     */
+    data?: object;
 }
 
 /**
@@ -5992,6 +6098,19 @@ export function calculateViewportCoordinatesFromScreenCoordinates(
     };
 }
 
+export function calculateScreenCoordinatesFromPosition(
+    portal: CameraPortal,
+    coordinates: Point3D[],
+    taskId?: number | string
+): CalculateScreenCoordinatesFromPositionAction {
+    return {
+        type: 'calculate_screen_coordinates_from_position',
+        portal,
+        coordinates,
+        taskId,
+    };
+}
+
 /**
  * Creates a new BufferFormAddressGLTFAction.
  * @param address The address that should be cached.
@@ -6250,5 +6369,42 @@ export function installAuxFile(
         type: 'install_aux_file',
         aux,
         mode,
+    };
+}
+
+/**
+ * Creates a new AddMapLayerAction.
+ * @param portal The portal that the layer should be added to.
+ * @param layer The layer that should be added.
+ * @param index The index that the layer should be added at.
+ * @param taskId The ID of the async task.
+ */
+export function addMapLayer(
+    portal: 'map' | 'miniMap',
+    layer: MapLayer,
+    taskId?: number | string
+): AddMapLayerAction {
+    return {
+        type: 'add_map_layer',
+        portal,
+        layer,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RemoveMapLayerAction.
+ * @param layerId The ID of the layer that should be removed.
+ * @param taskId The ID of the async task.
+ * @returns The RemoveMapLayerAction.
+ */
+export function removeMapLayer(
+    layerId: string,
+    taskId?: number | string
+): RemoveMapLayerAction {
+    return {
+        type: 'remove_map_layer',
+        layerId,
+        taskId,
     };
 }

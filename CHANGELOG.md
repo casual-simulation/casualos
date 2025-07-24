@@ -1,13 +1,114 @@
 # CasualOS Changelog
 
-## V3.5.3
+## V3.5.6
 
 #### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+
+## V3.5.5
+
+#### Date: 7/22/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the CLI would add `.txt` to tag names that already have an extension when unpacking an `.aux` file.
+-   Fixed an issue where duplicate bots could make the CLI try to write a tag to both the tag file and an additional `.txt` file.
+
+## V3.5.4
+
+#### Date: 7/22/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to set listeners on bots immediately after they were created.
+-   Fixed an issue where it was impossible to delete listener overrides using the `delete` keyword.
+
+## V3.5.3
+
+#### Date: 7/21/2025
+
+### :boom: Breaking Changes
+
+-   Changed the default mapPortal and miniMapPortal basemap to `dark-gray-vector` from `dark-gray`
+    -   This may cause some things like labels and street markings to appear different.
 
 ### :rocket: Features
 
 -   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
     -   This can help load balancers differentiate between records requests and inst requests.
+-   Added a better date of birth input to the "Sign Up" page.
+-   Added the `os.calculateScreenCoordinatesFromPosition()` function.
+-   Added batching for events sent from the main thread to the worker thread.
+-   Added the `mapPortalKind` and `mapPortalGridKind` tags for the `mapPortalBot` and `miniMapPortalBot`.
+    -   `mapPortalKind` can be used to cause the mapPortal or miniMapPortal to display the map as a flat plane instead of a sphere.
+        -   `globe` - The Earth is displayed as a globe. (Default)
+        -   `plane` - The Earth is displayed as a flat plane by using the Mercator projection.
+    -   `mapPortalGridKind` can be used to cause the mapPortal or miniMapPortal use a grid that matches the globe or plane settings from `mapPortalKind`.
+        -   `null` - The grid matches the `mapPortalKind`. (Default)
+        -   `globe` - The grid aligns best with the `globe` `mapPortalKind`.
+        -   `plane` - The grid aligns best with the `plane` `mapPortalKind`.
+-   Improved `mapPortalBasemap` to support [web tile URLs](https://developers.arcgis.com/javascript/latest/api-reference/esri-layers-WebTileLayer.html#urlTemplate).
+    -   This allows you to set a custom basemap in the mapPortal or miniMapPortal.
+    -   The URL should follow one of the following templates:
+        -   `https://some.domain.com/{level}/{col}/{row}.png`
+        -   `https://some.domain.com/{z}/{x}/{y}.png`
+        -   Where anything in curly braces `{}` represents a template parameter that the mapPortal/miniMapPortal will fill with the corresponding coordinate information for the requested tile.
+-   Added the `os.addMapLayer(portal, layer)` and `os.removeMapLayer(layerId)` functions.
+    -   These functions allow you to visualize and render [GeoJSON](https://geojson.org/) data in the mapPortal or miniMapPortal.
+    -   `os.addMapLayer(portal, layer)` - Adds a map layer to the given portal. Returns a promise that resolves with string with the ID of the layer that was added. It accepts the following arguments:
+        -   `portal` - The portal that the layer should be rendered in. Can either be `map` or `miniMap`.
+        -   `layer` - The layer that should be displayed. Should be an object with the following structure:
+            -   `type` - The type of the layer. Currently only `geojson` is supported.
+            -   `url` - (Optional) The URL that the GeoJSON data can be downloaded from.
+            -   `data` - (Optional) The GeoJSON data that is contained in the layer. Required if `url` is not specified.
+    -   `os.removeMapLayer(layerId)` - Removes a map layer from the portal it is in. Returns a promise that resolves once the layer has been removed.
+        -   `layerId` - The ID of the layer that should be removed. You can get this from the resolved value from `os.addMapLayer()`.
+-   Added the `os.addBotListener(bot, tag, listener)` and `os.removeBotListener(bot, tag, listener)` functions.
+    -   `os.addBotListener(bot, tag, listener)` Adds the given listener to the given bot for the given tag.
+        -   It can be used to add arbitrary functions to be triggered when a listener would be triggered on a bot.
+        -   This function only adds listeners, it cannot override existing listeners.
+        -   Listeners added by this function will not be called if the bot is not listening.
+        -   `bot` is the bot that the lister should be added to.
+        -   `tag` is the [listen tag](https://docs.casualos.com/tags/listen/).
+        -   `listener` is the function that should be called when the listen tag is triggered. It should be a function that accepts the following arguments:
+            -   `that` - the `that` argument of the listener.
+            -   `bot` - The bot that the listener was triggered on. (Same as `bot` above)
+            -   `tag` - The name of the tag. (Same as `tag` above)
+    -   `os.removeBotListener(bot, tag, listener)` Removes the given listener from the given bot and tag.
+        -   This function can only be used to remove listeners which have been added by `os.addBotListener()`.
+        -   `bot` is the bot that the listener should be removed from.
+        -   `tag` is the [listen tag](https://docs.casualos.com/tags/listen/).
+        -   `listener` is the function that should be removed.
+-   Added the ability to add/override bot listen tags by setting `bot.listeners.tag`.
+
+    -   For example, the following code will override the `onClick` listen tag to toast "overridden" when the bot is clicked:
+
+        ```typescript
+        bot.tags.onClick = `@os.toast("default")`;
+        bot.listeners.onClick = () => os.toast('overridden');
+
+        // when bot is clicked, "overridden" will be toasted instead of "default".
+        ```
+
+    -   Just like the `masks` property, the `listeners` property allows you to override the default tags.
+    -   The difference is that `listeners` is all about listen tags and functions. You can only set functions, and `listeners` are always `tempLocal`.
+    -   Functions set on the `listeners` property will override listen tags set by tags and tag masks.
+        -   It will only override the listener, not the tag data. In the example above, `bot.tags.onClick` will continue to return `@os.toast("default")`.
+
+-   Improved the CLI to support packing and unpacking AUX files into a file and folder structure.
+    -   See [#605](https://github.com/casual-simulation/casualos/issues/605)
+    -   The following commands are now available:
+        -   `pack-aux` - Takes a folder and builds an `.aux` file from it.
+        -   `unpack-aux` - Takes a `.aux` file and builds a folder from it.
+    -   See the CLI documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Improved error handling for `ai.stream.chat()` and `ai.generateImage()`.
+-   Added documentation for `crypto.decrypt()`.
 
 ## V3.5.2
 

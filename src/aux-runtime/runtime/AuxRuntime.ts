@@ -25,7 +25,6 @@ import type {
     PartialBot,
     BotTagMasks,
     RuntimeBot,
-    CompiledBotListener,
     UpdateBotAction,
     BotModule,
     IdentifiedBotModule,
@@ -35,6 +34,7 @@ import type {
     SourceModule,
     ResolvedBotModule,
     ImportMetadata,
+    DynamicListener,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -338,6 +338,10 @@ export class AuxRuntime
      * The number of times that the runtime can call onError for an error from the same script.
      */
     repeatedErrorLimit: number = 1000;
+
+    get library() {
+        return this._library;
+    }
 
     get context() {
         return this._globalContext;
@@ -2405,6 +2409,8 @@ export class AuxRuntime
                     }
                 }
 
+                newBot.dynamicListeners = existing.dynamicListeners;
+                newBot.listenerOverrides = existing.listenerOverrides;
                 existing.script[REPLACE_BOT_SYMBOL](newBot.script);
             }
 
@@ -2968,6 +2974,8 @@ export class AuxRuntime
             precalculated: true,
             tags: fromFactory ? bot.tags : { ...bot.tags },
             listeners: {},
+            listenerOverrides: {},
+            dynamicListeners: {},
             modules: {},
             exports: {},
             values: {},
@@ -3188,13 +3196,69 @@ export class AuxRuntime
         return undefined;
     }
 
-    getListener(bot: CompiledBot, tag: string): CompiledBotListener {
-        const listener = bot.listeners[tag];
-        if (listener) {
-            return listener;
+    getListener(bot: CompiledBot, tag: string): DynamicListener | null {
+        return bot.listenerOverrides[tag] || bot.listeners[tag] || null;
+    }
+
+    setListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener | null
+    ): void {
+        if (hasValue(listener)) {
+            bot.listenerOverrides[tag] = listener;
+        } else {
+            delete bot.listenerOverrides[tag];
         }
-        this.getValue(bot, tag);
-        return bot.listeners[tag] || null;
+        this._updateListenerPresense(bot, tag);
+    }
+
+    getDynamicListeners(
+        bot: CompiledBot,
+        tag: string
+    ): DynamicListener[] | null {
+        if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+            return bot.dynamicListeners[tag];
+        }
+        return null;
+    }
+
+    addDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void {
+        if (!bot.dynamicListeners) {
+            bot.dynamicListeners = {};
+        }
+        if (!bot.dynamicListeners[tag]) {
+            bot.dynamicListeners[tag] = [];
+        }
+        const listeners = bot.dynamicListeners[tag];
+        if (listeners.includes(listener)) {
+            // If the listener already exists, do not add it again.
+            return;
+        }
+        listeners.push(listener);
+        this._updateListenerPresense(bot, tag);
+    }
+
+    removeDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void {
+        if (bot.dynamicListeners && bot.dynamicListeners[tag]) {
+            const listeners = bot.dynamicListeners[tag];
+            const index = listeners.indexOf(listener);
+            if (index >= 0) {
+                listeners.splice(index, 1);
+                if (listeners.length <= 0) {
+                    delete bot.dynamicListeners[tag];
+                }
+                this._updateListenerPresense(bot, tag);
+            }
+        }
     }
 
     getTagLink(bot: CompiledBot, tag: string): RuntimeBot | RuntimeBot[] {
@@ -3292,6 +3356,16 @@ export class AuxRuntime
         this._compileTagValue(bot, tag, tagValue);
     }
 
+    private _updateListenerPresense(bot: CompiledBot, tag: string) {
+        this._globalContext.recordListenerPresense(
+            bot.id,
+            tag,
+            !!bot.listenerOverrides[tag] ||
+                !!bot.listeners[tag] ||
+                !!bot.dynamicListeners[tag]
+        );
+    }
+
     private _compileTagValue(bot: CompiledBot, tag: string, tagValue: any) {
         let { value, listener, module } = this._compileValue(
             bot,
@@ -3300,10 +3374,10 @@ export class AuxRuntime
         );
         if (listener) {
             bot.listeners[tag] = listener;
-            this._globalContext.recordListenerPresense(bot.id, tag, true);
+            this._updateListenerPresense(bot, tag);
         } else if (!!bot.listeners[tag]) {
             delete bot.listeners[tag];
-            this._globalContext.recordListenerPresense(bot.id, tag, false);
+            this._updateListenerPresense(bot, tag);
         }
 
         if (module) {
@@ -3478,7 +3552,7 @@ export class AuxRuntime
     }
 
     private _compile(
-        bot: CompiledBot,
+        bot: CompiledBot | null,
         tag: string,
         script: string,
         options: CompileOptions
@@ -3587,7 +3661,13 @@ export class AuxRuntime
                     () => (module: string, meta: ImportMetadata) =>
                         this._importModule(module, meta),
             },
-            arguments: [['that', 'data'], IMPORT_FACTORY, EXPORT_FACTORY],
+            arguments: [
+                ['that', 'data'],
+                '$__bot',
+                '$__tag',
+                IMPORT_FACTORY,
+                EXPORT_FACTORY,
+            ],
         }) as CompiledBotModule;
 
         if (hasValue(bot)) {
@@ -3606,7 +3686,10 @@ export class AuxRuntime
                     exp: (string | [string, string])[]
                 ) => exports(valueOrSource, exp, meta);
                 return this._wrapWithCurrentPromise(() => {
-                    let result = func(null, importFunc, exportFunc);
+                    // Pass null for the argument, bot, and tag
+                    // because module functions do not accept arguments
+                    // and have the bot and tag injected automatically
+                    let result = func(null, null, null, importFunc, exportFunc);
                     this._scheduleJobQueueCheck();
                     return result;
                 });

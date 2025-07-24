@@ -29,11 +29,29 @@ import repl from 'node:repl';
 // @ts-ignore
 import Conf from 'conf';
 
+import type {
+    Bot,
+    BotsState,
+    BotTags,
+    StoredAuxVersion1,
+} from '@casual-simulation/aux-common';
 import {
+    calculateStringTagValue,
+    createBot,
+    DATE_TAG_PREFIX,
+    DNA_TAG_PREFIX,
     getBotsStateFromStoredAux,
     getSessionKeyExpiration,
+    getUploadState,
+    hasValue,
     isExpired,
+    LIBRARY_SCRIPT_PREFIX,
+    merge,
+    NUMBER_TAG_PREFIX,
     parseSessionKey,
+    ROTATION_TAG_PREFIX,
+    STRING_TAG_PREFIX,
+    VECTOR_TAG_PREFIX,
     willExpire,
 } from '@casual-simulation/aux-common';
 import type {
@@ -49,8 +67,10 @@ import { readFile } from 'fs/promises';
 import { setupInfraCommands } from 'infra';
 import type { CliConfig } from './config';
 import { z } from 'zod';
-import { existsSync, readdirSync, statSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { existsSync, statSync } from 'node:fs';
+import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { v4 as uuid } from 'uuid';
+import fastJsonStableStringify from '../fast-json-stable-stringify';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -272,6 +292,71 @@ program
     });
 
 program
+    .command('unpack-aux')
+    .argument('[input]', 'The aux file/directory to convert to a file system.')
+    .argument('[dir]', 'The directory to write the file system to.')
+    .option('-o, --overwrite', 'Overwrite existing files.')
+    .option('-r, --recursive', 'Recursively convert aux files in a directory.')
+    .option(
+        '--write-systemless-bots',
+        "Write bots that don't have a system tag. By default, these bots are written to the extra.aux file."
+    )
+    .option('--omit-extra-bots', 'Prevent writing extra.aux files.')
+    .description('Generate a folder from an AUX file.')
+    .action(async (input, dir, options) => {
+        if (options.overwrite) {
+            console.log('Overwriting existing files.');
+        }
+        if (options.recursive) {
+            console.log('Recursively converting aux files in input directory.');
+        }
+        if (options.writeSystemlessBots) {
+            console.log(
+                'Writing systemless bots. All bots will be written to the file system.'
+            );
+        }
+        if (options.omitExtraBots) {
+            console.log(
+                'Omitting extra bots. No extra.aux file(s) will be written.'
+            );
+        }
+        await auxGenFs(input, dir, options);
+    });
+
+program
+    .command('pack-aux')
+    .argument(
+        '[dir]',
+        'The directory to read the file system from. If the directory does not contain an extra.aux file, then each directory will be read as a separate aux file.'
+    )
+    .argument(
+        '[output]',
+        'The output file to write the aux file to. This should be the folder that each aux should be written to if the input directory contains multiple aux filesystems.'
+    )
+    .option('-o, --overwrite', 'Overwrite existing files.')
+    .option('-f, --filter', 'The bot filter to apply to the bots being read.')
+    .option(
+        '--allow-duplicates',
+        'Whether to allow duplicate bots. If a duplicate is encoutered, then a new bot ID will be generated for the duplicate.'
+    )
+    .description('Generate an AUX file from a folder.')
+    .action(async (dir, output, options) => {
+        if (options.overwrite) {
+            console.log('Overwriting existing files.');
+        }
+        if (options.merge) {
+            console.log('Merging output AUX file.');
+        }
+        if (options.recursive) {
+            console.log('Recursively reading aux files in directory.');
+        }
+        if (options.allowDuplicates) {
+            console.log('Allowing duplicate bots.');
+        }
+        await auxReadFs(dir, output, options);
+    });
+
+program
     .command('generate-server-config')
     .option('-p, --pretty', 'Pretty print the output.')
     .description('Generate a server config for CasualOS.')
@@ -320,78 +405,608 @@ program
 
 setupInfraCommands(program.command('infra'), config);
 
-async function auxConvert() {
-    const targetFD = sanitizePath(
-        await askForInputs(
-            getSchemaMetadata(z.string().min(1)),
-            'target file or directory containing files (path)'
-        )
-    );
-    if (existsSync(targetFD)) {
-        const targetStat = statSync(targetFD);
-        const auxFiles = [];
-        if (targetStat.isDirectory()) {
-            for (let file of readdirSync(targetFD)) {
-                if (file.slice(-4) === '.aux') {
-                    auxFiles.push(file);
-                }
-            }
-        } else if (targetStat.isFile()) {
-            if (targetFD.slice(-4) === '.aux') {
-                auxFiles.push(path.basename(targetFD));
-            } else {
-                console.warn(`Invalid file type provided.\nExpected ".aux"`);
-                return;
-            }
-        } else {
-            console.error('Unknown item at path.');
-            return;
-        }
-        if (auxFiles.length < 1) return;
-        const outDir = sanitizePath(
-            await askForInputs(
-                getSchemaMetadata(z.string().min(1)),
-                'output directory to write files to'
-            )
+/**
+ * Validates the given file is a proper aux file.
+ * This function checks if the file exists, is a file, and has the correct extension.
+ * If the file is valid, it returns the parsed bot state from the aux file.
+ * @param filePath The path to the file whose to be validated.
+ * @param opts Optional options to skip parsing or contents validation.
+ */
+async function loadAuxFile(filePath: string) {
+    const targetStat = await stat(filePath);
+    if (!targetStat.isFile()) {
+        return { success: false, error: 'Path is not a file.' };
+    }
+
+    try {
+        const contents = JSON.parse(
+            await readFile(filePath, { encoding: 'utf-8' })
         );
-        if (existsSync(outDir) && statSync(outDir).isDirectory()) {
-            let converted = 0;
-            const prefix = outDir === getDir(targetFD) ? '_' : '';
-            for (let file of auxFiles) {
-                try {
-                    await writeFile(
-                        path.join(outDir, `${prefix}${file}`),
-                        JSON.stringify(
-                            getBotsStateFromStoredAux(
-                                JSON.parse(
-                                    await readFile(
-                                        replaceWithBasename(targetFD, file),
-                                        { encoding: 'utf-8' }
-                                    )
-                                )
-                            )
-                        )
-                    );
-                    converted++;
-                } catch (err) {
-                    console.error(`Could not convert: ${file}.\n\n${err}\n`);
-                }
+        const botsState = getBotsStateFromStoredAux(contents);
+        if (!botsState) {
+            return {
+                success: false,
+                error: `Aux file at ${filePath} is not a valid (or supported) aux file.`,
+            };
+        }
+        return { success: true, botsState };
+    } catch (err) {
+        return {
+            success: false,
+            error: `Could not read or parse aux file at ${filePath}.\n\n${err}`,
+        };
+    }
+}
+
+async function requestFiles(opts: {
+    query?: string;
+    allowedExtensions?: Set<string>;
+}) {
+    opts = {
+        query: 'target file or directory containing files (path)',
+        allowedExtensions: new Set(['.aux']),
+        ...opts,
+    };
+    const targetFD = sanitizePath(
+        await askForInputs(getSchemaMetadata(z.string().min(1)), opts.query)
+    );
+    if (!existsSync(targetFD)) return { directory: null, files: [] };
+    const targetStat = statSync(targetFD);
+    const files = [];
+    if (targetStat.isDirectory()) {
+        for (let file of await readdir(targetFD)) {
+            if (opts.allowedExtensions.has(path.extname(file).toLowerCase())) {
+                files.push(file);
             }
-            console.log(
-                `\n🍵 Converted ${converted}/${
-                    auxFiles.length
-                } Files.\n--------------------------\n${auxFiles
-                    .map((f) => `|✔️ | ${f}`)
-                    .join('\n')}\n`
-            );
+        }
+    } else if (targetStat.isFile()) {
+        if (opts.allowedExtensions.has(path.extname(targetFD).toLowerCase())) {
+            files.push(path.basename(targetFD));
         } else {
-            console.error(`Invalid path provided for output directory.`);
+            console.warn(
+                `Invalid file type provided.\nExpected one of ${Array.from(
+                    opts.allowedExtensions
+                ).join(' | ')}.\nGot: ${path.extname(targetFD).toLowerCase()}`
+            );
             return;
         }
     } else {
-        console.warn(`Invalid directory or file at path: ${targetFD}`);
+        console.error('Unknown item at path.');
         return;
     }
+    return { directory: getDir(targetFD), files };
+}
+
+async function requestOutputDirectory(
+    query: string = 'output directory to write files to'
+) {
+    const outDir = sanitizePath(
+        await askForInputs(getSchemaMetadata(z.string().min(1)), query)
+    );
+    if (existsSync(outDir) && statSync(outDir).isDirectory()) return outDir;
+    console.error(`Directory does not exist or is not a directory.`);
+    return null;
+}
+
+const fileTagPrefixes = [
+    ['@', '.tsx'],
+    [LIBRARY_SCRIPT_PREFIX, '.tsm'],
+    [DNA_TAG_PREFIX, '.json'],
+    [DATE_TAG_PREFIX, '.date.text'],
+    [STRING_TAG_PREFIX, '.text'],
+    [NUMBER_TAG_PREFIX, '.number.text'],
+    [VECTOR_TAG_PREFIX, '.vector.text'],
+    [ROTATION_TAG_PREFIX, '.rotation.text'],
+];
+
+const fileExtensions = [
+    ['.tsx', '@'],
+    ['.tsm', LIBRARY_SCRIPT_PREFIX],
+    ['.json', DNA_TAG_PREFIX],
+    ['.date.text', DATE_TAG_PREFIX],
+    ['.txt', ''],
+    ['.text', STRING_TAG_PREFIX],
+    ['.number.text', NUMBER_TAG_PREFIX],
+    ['.vector.text', VECTOR_TAG_PREFIX],
+    ['.rotation.text', ROTATION_TAG_PREFIX],
+];
+
+interface GenFsOptions {
+    overwrite?: boolean;
+    recursive?: boolean;
+
+    writeSystemlessBots?: boolean;
+    omitExtraBots?: boolean;
+}
+
+async function auxGenFs(input: string, output: string, options: GenFsOptions) {
+    if (!input) {
+        input = await askForInputs(
+            getSchemaMetadata(z.string().min(1)),
+            'The path to the AUX file to convert to a file system'
+        );
+    }
+    input = path.resolve(input);
+
+    if (!existsSync(input)) {
+        throw new Error(`The provided path does not exist: ${input}`);
+    }
+
+    let files: string[] = [];
+    let extraDirectories: string[] = [];
+    const inputStat = await stat(input);
+    if (inputStat.isDirectory()) {
+        const paths = await readdir(input);
+        for (let fileOrFolder of paths) {
+            const fileOrFolderPath = path.resolve(input, fileOrFolder);
+            const stats = await stat(fileOrFolderPath);
+            if (stats.isFile() && fileOrFolder.endsWith('.aux')) {
+                files.push(fileOrFolderPath);
+            } else if (
+                options.recursive &&
+                !fileOrFolder.startsWith('.') &&
+                stats.isDirectory()
+            ) {
+                extraDirectories.push(fileOrFolderPath);
+            }
+        }
+    } else {
+        files.push(input);
+    }
+
+    if (!output) {
+        output = await askForInputs(
+            getSchemaMetadata(z.string().min(1)),
+            'The directory to write the file system to'
+        );
+    }
+    output = path.resolve(output);
+
+    // make the directory if it doesn't exist
+    await mkdir(output, {
+        recursive: true,
+    });
+
+    const flag = options.overwrite ? 'w' : 'wx';
+
+    for (const file of files) {
+        const fileData = await loadAuxFile(file);
+        if (!fileData.success) {
+            throw new Error(`Invalid aux file: ${file}.\n\n${fileData.error}`);
+        }
+
+        const auxName = path.parse(file).name;
+        const botsState = fileData.botsState;
+        const extraBotsState: BotsState = {};
+        for (let id in botsState) {
+            const bot = botsState[id];
+
+            if (!options.writeSystemlessBots && !hasValue(bot.tags.system)) {
+                console.warn(`Adding ${id} to extra.aux.`);
+                extraBotsState[id] = bot;
+                continue;
+            }
+
+            const system = bot.tags.system ?? id;
+            const dirName = system.replace(/\./g, path.sep);
+            const dir = path.resolve(output, auxName, dirName);
+
+            const botJson: Bot = {
+                id,
+                tags: {},
+            };
+
+            if (hasValue(bot.space)) {
+                botJson.space = bot.space;
+            }
+
+            if (hasValue(bot.tags.system)) {
+                botJson.tags.system = bot.tags.system;
+            }
+
+            // make the directory if it doesn't exist
+            await mkdir(dir, {
+                recursive: true,
+            });
+
+            // Don't track tag masks
+            for (const tag of Object.keys(bot.tags)) {
+                const value = calculateStringTagValue(null, bot, tag, null);
+                let written = false;
+                if (hasValue(value)) {
+                    for (let [prefix, ext] of fileTagPrefixes) {
+                        if (value.startsWith(prefix)) {
+                            // write the tag value to its own file
+                            const filePath = path.resolve(dir, `${tag}${ext}`);
+                            const fileContent = value.slice(prefix.length);
+
+                            written = true;
+                            try {
+                                await writeFile(filePath, fileContent, {
+                                    encoding: 'utf-8',
+                                    flag,
+                                });
+                            } catch (err) {
+                                console.error(
+                                    `Could not write file: ${filePath}.\n\n${err}\n`
+                                );
+                            }
+                            break;
+                        }
+                    }
+
+                    if (!written && value.indexOf('\n') >= 0) {
+                        // string has a newline, so write it to a text file
+
+                        // if the tag does not have a file extension, add .txt
+                        const fileName =
+                            tag.indexOf('.') >= 0 ? tag : `${tag}.txt`;
+                        const filePath = path.resolve(dir, fileName);
+                        try {
+                            await writeFile(filePath, value, {
+                                encoding: 'utf-8',
+                                flag,
+                            });
+                            written = true;
+                        } catch (err) {
+                            console.error(
+                                `Could not write file: ${filePath}.\n\n${err}\n`
+                            );
+                        }
+                    }
+                }
+
+                if (!written) {
+                    botJson.tags[tag] = bot.tags[tag];
+                }
+            }
+
+            //  write the bot.json file
+            const botAuxName = `${system}.bot.aux`;
+            const botJsonPath = path.resolve(dir, botAuxName);
+            try {
+                const botAux: StoredAuxVersion1 = {
+                    version: 1,
+                    state: {
+                        [id]: botJson,
+                    },
+                };
+                await writeFile(
+                    botJsonPath,
+                    fastJsonStableStringify(botAux, {
+                        space: 2,
+                    }),
+                    {
+                        encoding: 'utf-8',
+                        flag,
+                    }
+                );
+            } catch (err) {
+                console.error(
+                    `Could not write ${botAuxName} file: ${botJsonPath}.\n\n${err}\n`
+                );
+            }
+
+            console.log(`Created: ${system}`);
+        }
+
+        // Always write the extra bots file so that we can do the reverse operation
+        // and produce the original aux file.
+        if (!options.omitExtraBots) {
+            // write a aux file for the extra bots to the output directory
+            const extraBotsFilePath = path.resolve(
+                output,
+                auxName,
+                `extra.aux`
+            );
+
+            try {
+                const aux: StoredAuxVersion1 = {
+                    version: 1,
+                    state: extraBotsState,
+                };
+                await writeFile(
+                    extraBotsFilePath,
+                    JSON.stringify(aux, null, 2),
+                    {
+                        encoding: 'utf-8',
+                        flag,
+                    }
+                );
+            } catch (err) {
+                console.error(
+                    `Could not write extra.aux file: ${extraBotsFilePath}.\n\n${err}\n`
+                );
+            }
+        }
+    }
+
+    for (let extraDir of extraDirectories) {
+        // Only allow one level of recursion
+        await auxGenFs(extraDir, output, {
+            ...options,
+            recursive: false,
+        });
+    }
+}
+
+interface ReadFsOptions {
+    overwrite?: boolean;
+    filter?: string;
+
+    allowDuplicates?: boolean;
+}
+
+async function auxReadFs(
+    input: string,
+    output: string,
+    options: ReadFsOptions
+) {
+    const { overwrite } = options;
+
+    const failOnDuplicate = !options.allowDuplicates;
+    if (!input) {
+        input = await askForInputs(
+            getSchemaMetadata(z.string().min(1)),
+            'The path to the directory to read into an AUX file.'
+        );
+    }
+    input = path.resolve(input);
+
+    if (!existsSync(input)) {
+        console.error(`The provided path does not exist: ${input}`);
+        return;
+    }
+
+    if (!output) {
+        output = await askForInputs(
+            getSchemaMetadata(z.string().min(1)),
+            'The path to the output AUX file.'
+        );
+    }
+    output = path.resolve(output);
+
+    let filterFunc: FilterFunc | null = null;
+    if (options.filter) {
+        filterFunc = Function('$', options.filter) as any;
+    }
+
+    const inputFiles = await readdir(input);
+
+    const hasExtra = inputFiles.includes('extra.aux');
+
+    if (!hasExtra) {
+        await mkdir(output, {
+            recursive: true,
+        });
+
+        for (let file of inputFiles) {
+            const filePath = path.resolve(input, file);
+            const outputPath = path.resolve(output, `${file}.aux`);
+            const stats = await stat(filePath);
+            if (stats.isDirectory()) {
+                await auxReadFs(filePath, outputPath, options);
+            }
+        }
+    } else {
+        console.log('Reading aux files from directory:', input);
+        console.log('Output will be written to:', output);
+        // folder represents a single aux
+
+        const botsState = await auxReadFsCore(
+            input,
+            filterFunc,
+            failOnDuplicate
+        );
+
+        const storedAux: StoredAuxVersion1 = {
+            version: 1,
+            state: botsState,
+        };
+
+        const outputFolder = path.dirname(output);
+        if (outputFolder) {
+            await mkdir(path.resolve(outputFolder), {
+                recursive: true,
+            });
+        }
+
+        await writeFile(
+            output,
+            fastJsonStableStringify(storedAux, {
+                space: 2,
+            }),
+            { encoding: 'utf-8', flag: overwrite ? 'w' : 'wx' }
+        );
+    }
+}
+
+async function readAuxFile(filePath: string): Promise<BotsState> {
+    const targetStat = await stat(filePath);
+    if (!targetStat.isFile()) {
+        throw new Error(`Path is not a file: ${filePath}`);
+    }
+
+    const contents = JSON.parse(
+        await readFile(filePath, { encoding: 'utf-8' })
+    );
+    const botsState = getBotsStateFromStoredAux(contents);
+    if (!botsState) {
+        throw new Error(
+            `Aux file at ${filePath} is not a valid (or supported) aux file.`
+        );
+    }
+
+    return getUploadState(botsState);
+}
+
+async function assignBots(
+    state: BotsState,
+    added: BotsState,
+    failOnDuplicate: boolean
+) {
+    for (let id in added) {
+        const b = added[id];
+        if (!hasValue(b)) {
+            continue;
+        }
+        if (id in state && hasValue(state[id])) {
+            if (failOnDuplicate) {
+                throw new Error(`Bot ${id} already exists in the bots state.`);
+            } else {
+                console.warn(
+                    `Bot ${id} already exists in the bots state. Generating new ID.`
+                );
+                id = uuid();
+                b.id = id;
+            }
+        }
+        state[id] = b;
+    }
+}
+
+type FilterFunc = (bot: Bot) => boolean;
+
+async function auxReadFsCore(
+    input: string,
+    filter: FilterFunc | null,
+    failOnDuplicate: boolean
+): Promise<BotsState> {
+    const botsState: BotsState = {};
+
+    console.log('Reading directory:', input);
+
+    const inputFiles = await readdir(input);
+
+    let tags: BotTags = {};
+    let hasBot = false;
+    let botId: string | null = null;
+    let botState: BotsState = {};
+
+    for (let file of inputFiles) {
+        const filePath = path.join(input, file);
+        const fileStat = await stat(filePath);
+        if (fileStat.isDirectory()) {
+            // If the file is a directory, we need to read its contents recursively
+            const subState = await auxReadFsCore(
+                filePath,
+                filter,
+                failOnDuplicate
+            );
+
+            assignBots(botsState, subState, failOnDuplicate);
+        } else {
+            if (file.endsWith('.aux')) {
+                console.log(`Reading aux: ${file}`);
+                const isSystemBotFile = file.endsWith('.bot.aux');
+                const auxBotsState = await readAuxFile(filePath);
+
+                // Get the first bot Id from the aux file
+                if (isSystemBotFile && !botId) {
+                    for (let id in auxBotsState) {
+                        if (hasValue(id)) {
+                            console.log(`Found bot ID: ${id}`);
+                            botId = id;
+                            hasBot = true;
+                            break;
+                        }
+                    }
+                } else if (!isSystemBotFile) {
+                    console.log('Reading extra aux file.\n\n');
+                }
+
+                assignBots(botState, auxBotsState, failOnDuplicate);
+            } else {
+                for (let [ext, prefix] of fileExtensions) {
+                    if (file.endsWith(ext)) {
+                        const tagName = file.slice(0, -ext.length);
+                        console.log(`Reading tag: ${tagName}`);
+
+                        // If the file has a known extension, we can read it and add its contents to the bots state
+                        const fileContents =
+                            prefix +
+                            (await readFile(filePath, { encoding: 'utf-8' }));
+                        tags[tagName] = fileContents;
+                        hasBot = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!botId && hasBot) {
+        console.warn('No bot ID found for folder:', input);
+        console.warn('Generating a random bot ID.');
+        botId = uuid();
+    }
+
+    if (botId) {
+        const existingBot = botState[botId];
+        if (existingBot) {
+            existingBot.tags = merge(existingBot.tags, tags);
+        } else {
+            // If the bot does not exist, we create a new bot with the tags
+            botState[botId] = createBot(botId, tags);
+        }
+    }
+
+    if (filter) {
+        for (let id in botState) {
+            const b = botState[id];
+            if (!filter(b)) {
+                console.log(`Bot ${id} does not match filter, skipping.`);
+                delete botState[id];
+            }
+        }
+    }
+
+    assignBots(botsState, botState, failOnDuplicate);
+
+    return botsState;
+}
+
+async function auxConvert() {
+    const { directory: targetFD, files: auxFiles } = await requestFiles({
+        allowedExtensions: new Set(['.aux']),
+    });
+    if (auxFiles.length < 1) {
+        console.error(`No aux file found at/in the provided path.`);
+        return;
+    }
+    const outDir = await requestOutputDirectory();
+    if (!outDir) {
+        console.error(`Invalid output directory provided.`);
+        return;
+    }
+    let converted = 0;
+    const prefix = outDir === targetFD ? '_' : '';
+    for (let file of auxFiles) {
+        try {
+            await writeFile(
+                path.join(outDir, `${prefix}${file}`),
+                JSON.stringify(
+                    getBotsStateFromStoredAux(
+                        JSON.parse(
+                            await readFile(
+                                replaceWithBasename(targetFD, file),
+                                { encoding: 'utf-8' }
+                            )
+                        )
+                    )
+                )
+            );
+            converted++;
+        } catch (err) {
+            console.error(`Could not convert: ${file}.\n\n${err}\n`);
+        }
+    }
+    console.log(
+        `\n🍵 Converted ${converted}/${
+            auxFiles.length
+        } Files.\n--------------------------\n${auxFiles
+            .map((f) => `|✔️ | ${f}`)
+            .join('\n')}\n`
+    );
 }
 
 async function query(

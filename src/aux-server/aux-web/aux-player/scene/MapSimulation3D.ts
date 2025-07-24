@@ -176,6 +176,10 @@ export abstract class MapSimulation3D extends PlayerSimulation3D {
         return this.mapConfig.basemap;
     }
 
+    get kind() {
+        return this.mapConfig.kind;
+    }
+
     constructor(portal: string, game: Game, simulation: BrowserSimulation) {
         super(portal, game, simulation);
         this._portalTag = portal;

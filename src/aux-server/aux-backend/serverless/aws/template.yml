@@ -24,7 +24,7 @@ Parameters:
         Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
     SESIdentityNameParameter:
         Type: String
-        Description: The Simple Email Service (SES) Identity that the lambda function should be allowed to send emails from.
+        Description: The ARN of the policy that should be used to grant permissions for sending Simple Email Service (SES) emails.
         Default: ''
     ModerationProjectVersionParameter:
         Type: String
@@ -60,6 +60,87 @@ Resources:
     # Each Lambda function is defined by properties:
     # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
+    HandleRecordsRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-records-execute-api-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - PolicyName: !Sub '${AWS::StackName}-records-logs-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'logs:CreateLogStream'
+                                - 'logs:CreateLogGroup'
+                                - 'logs:PutLogEvents'
+                            Resource:
+                                - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:*
+                                - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:*:*
+                - PolicyName: !Sub '${AWS::StackName}-records-s3-crud-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 's3:GetObject'
+                                - 's3:ListBucket'
+                                - 's3:GetBucketLocation'
+                                - 's3:GetObjectVersion'
+                                - 's3:PutObject'
+                                - 's3:PutObjectAcl'
+                                - 's3:GetLifecycleConfiguration'
+                                - 's3:PutLifecycleConfiguration'
+                                - 's3:DeleteObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}/*'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${AWS::StackName}-filesbucket-${AWS::AccountId}/*'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${ModerationJobReportBucket}/*'
+                - PolicyName: !Sub '${AWS::StackName}-records-rekognition-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'rekognition:DetectLabels'
+                                - 'rekognition:DetectModerationLabels'
+                            Resource: '*'
+                - PolicyName: !Sub '${AWS::StackName}-records-lambda-invoke-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'lambda:InvokeFunction'
+                            Resource: !GetAtt
+                                - HandleWebhookFunction
+                                - Arn
+                - PolicyName: !Sub '${AWS::StackName}-records-execute-api-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'execute-api:ManageConnections'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/Prod/*/@connections/*'
+            ManagedPolicyArns: !If
+                - UseSESCrud
+                - [!Ref SESIdentityNameParameter]
+                - !Ref AWS::NoValue
+
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
         Type: AWS::Serverless::Function
@@ -70,24 +151,9 @@ Resources:
             MemorySize: 1024
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
-            Policies:
-                # Give Create/Read/Update/Delete Permissions to the Bucket
-                - S3CrudPolicy:
-                      BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
-                - S3CrudPolicy:
-                      BucketName: !Sub '${ModerationJobReportBucket}'
-                - !If [
-                      UseSESCrud,
-                      !Ref SESIdentityNameParameter,
-                      !Ref 'AWS::NoValue',
-                  ]
-
-                  # Give the ability to detect moderation labels using Rekognition
-                - RekognitionLabelsPolicy: {}
-
-                # Give the ability to invoke the handle webhook function
-                - LambdaInvokePolicy:
-                      FunctionName: !Ref HandleWebhookFunction
+            Role: !GetAtt
+                - HandleRecordsRole
+                - Arn
             Environment:
                 Variables:
                     REGION: !Ref 'AWS::Region'

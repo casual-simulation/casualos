@@ -12251,6 +12251,65 @@ export interface RecordPackageVersionSuccess extends CrudRecordItemSuccess {
     auxFileResult: RecordFileResult;
 }
 
+/**
+ * The kinds of map layers that can be added to the map or miniMapPortal.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayer
+ */
+export type MapLayer = GeoJSONMapLayer;
+
+/**
+ * Defines a base interface for map layers.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayerBase
+ */
+export interface MapLayerBase {
+    /**
+     * Copyright information for the layer.
+     */
+    copyright?: string;
+}
+
+/**
+ * A map layer that contains GeoJSON data.
+ *
+ * @dochash types/os/maps
+ * @docid GeoJSONMapLayer
+ */
+export interface GeoJSONMapLayer extends MapLayerBase {
+    type: 'geojson';
+
+    /**
+     * The URL that contains the GeoJSON data.
+     *
+     * Can be a blob url, a data url, or a regular URL.
+     */
+    url?: string;
+
+    /**
+     * The GeoJSON data for the layer.
+     */
+    data?: object;
+}
+
+/**
+ * The function signature of a dynamic bot listener.
+ *
+ * That is, a listener that is registered at runtime by a user script instead of parsed from a tag.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listener
+ * @docid DynamicListener
+ */
+export type DynamicListener = (
+    that: any,
+    bot: Bot,
+    tagName: string
+) => any;
+
 interface Ai {
     /**
      * Sends a chat message to the AI.
@@ -12758,6 +12817,34 @@ interface Ai {
 }
 
 interface Os {
+
+    /**
+     * Adds the given listener to the given bot for the given tag.
+     * 
+     * @param bot The bot that the listener should be added to.
+     * @param tagName The name of the tag that the listener should be added to.
+     * @param listener The listener that should be added to the bot.
+     * 
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.addBotListener
+     * @docid os.addBotListener
+     */
+    addBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
+    
+    /**
+     * Removes the given listener from a bot for a specific tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tagName The name of the tag that the listener should be removed from.
+     * @param listener The listener that should be removed from the bot.
+     * 
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.removeBotListener
+     * @docid os.removeBotListener
+     */
+    removeBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
+
     /**
          * Sleeps for time in ms.
          * @param time Time in ms. 1 second is 1000ms.
@@ -15214,6 +15301,68 @@ interface Os {
     calculateScreenCoordinatesFromViewportCoordinates(portal: 'grid' | 'miniGrid' | 'map' | 'miniMap', coordinates: Vector2): Promise<Vector2>;
 
     /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinate the 3D position that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition
+     * @docgroup 10-raycast
+     */
+    calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinate: Point3D
+    ): Promise<Vector2>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition-array
+     * @docgroup 10-raycast
+     */
+    calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D[]
+    ): Promise<Vector2[]>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     */
+    calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D | Point3D[]
+    ): Promise<Vector2[] | Vector2>;
+
+    /**
      * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
      * Returns a promise that resolves with the calculated viewport coordinates.
      * 
@@ -15450,6 +15599,80 @@ interface Os {
      * @param debug The debugger that should be detached.
      */
     detachDebugger(debug: Debugger): Promise<void>;
+
+    /**
+     * Adds a map layer to the map or miniMap portal.
+     * 
+     * Returns a promise that resolves with the ID of the layer that was added.
+     * 
+     * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
+     * @param layer The layer that should be added.
+     * 
+     * @example Add a GeoJSON layer to the map portal
+     * const layerId = await os.addMapLayer('map', {
+     *    type: 'geojson',
+     *    data: {
+     *       type: "FeatureCollection",
+     *       features: [
+     *           {
+     *               type: "Feature",
+     *               geometry: { type: "Point", coordinates: [102.0, 0.5] },
+     *               properties: { prop0: "value0" }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "LineString",
+     *                   coordinates: [
+     *                       [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: 0.0
+     *               }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "Polygon",
+     *                   coordinates: [
+     *                       [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+     *                       [100.0, 1.0], [100.0, 0.0]]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: { "this": "that" }
+     *               }
+     *           }
+     *       ]
+     *   }
+     * });
+     * 
+     * @dochash action/os/maps
+     * @doctitle Map Actions
+     * @docsidebar Maps
+     * @docdescription Actions for working with maps and map layers.
+     * @docid os.addMapLayer
+     */
+    addMapLayer(portal: 'map' | 'miniMap', layer: MapLayer): Promise<string>;
+    
+    /**
+     * Removes a layer from the map or miniMap portal.
+     * 
+     * Returns a promise that resolves when the layer has been removed.
+     * 
+     * @param layerId The ID of the layer to remove.
+     * @returns A promise that resolves when the layer has been removed.
+     * 
+     * @example Remove a layer from the map portal
+     * await os.removeMapLayer('my-layer-id');
+     * 
+     * @dochash action/os/maps
+     * @docid os.removeMapLayer
+     */
+    removeMapLayer(layerId: string): Promise<void>;
 
     /**
      * The global variables that are stored in the OS.

@@ -25,12 +25,18 @@ import {
     UNCOPIABLE,
     INTERPRETER_OBJECT,
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
-import type { TagEditOp } from '@casual-simulation/aux-common/bots';
+import type {
+    DynamicListener,
+    TagEditOp,
+} from '@casual-simulation/aux-common/bots';
 import {
+    ADD_BOT_LISTENER_SYMBOL,
     applyTagEdit,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
     isTagEdit,
     mergeEdits,
     remoteEdit,
+    REMOVE_BOT_LISTENER_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import type {
     BotTags,
@@ -38,7 +44,6 @@ import type {
     ScriptTags,
     BotTagMasks,
     RuntimeBot,
-    CompiledBotListener,
     RuntimeBotLinks,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -379,6 +384,57 @@ export function createRuntimeBot(
             }
             return manager.getListener(bot, key);
         },
+        set(target, key, value, proxy) {
+            if (replacement) {
+                return Reflect.set(
+                    replacement.listeners,
+                    key,
+                    value,
+                    replacement.listeners
+                );
+            }
+            if (typeof key === 'symbol') {
+                return Reflect.set(target, key, value, proxy);
+            }
+            if (key in constantTags) {
+                return true;
+            }
+            if (
+                typeof value !== 'function' &&
+                value !== null &&
+                value !== undefined
+            ) {
+                return false;
+            }
+            manager.setListener(bot, key, value ?? null);
+            // Keep the bot listener keys and the listener override keys in sync.
+            if (key in bot.listenerOverrides && !(key in bot.listeners)) {
+                bot.listeners[key] = undefined;
+            } else if (!hasValue(bot.listeners[key])) {
+                delete bot.listeners[key];
+            }
+            return true;
+        },
+        deleteProperty(target, key: string) {
+            if (replacement) {
+                return Reflect.deleteProperty(replacement.listeners, key);
+            }
+            if (typeof key === 'symbol') {
+                return Reflect.deleteProperty(target, key);
+            }
+            if (key in constantTags) {
+                return true;
+            }
+
+            manager.setListener(bot, key, null);
+            // Keep the bot listener keys and the listener override keys in sync.
+            if (key in bot.listenerOverrides && !(key in bot.listeners)) {
+                bot.listeners[key] = undefined;
+            } else if (!hasValue(bot.listeners[key])) {
+                delete bot.listeners[key];
+            }
+            return true;
+        },
     });
 
     const signatures = bot.signatures || {};
@@ -636,6 +692,9 @@ export function createRuntimeBot(
         [EDIT_TAG_SYMBOL]: null,
         [EDIT_TAG_MASK_SYMBOL]: null,
         [REPLACE_BOT_SYMBOL]: null,
+        [ADD_BOT_LISTENER_SYMBOL]: null,
+        [REMOVE_BOT_LISTENER_SYMBOL]: null,
+        [GET_DYNAMIC_LISTENERS_SYMBOL]: null,
     };
 
     Object.defineProperty(script, CLEAR_CHANGES_SYMBOL, {
@@ -770,6 +829,33 @@ export function createRuntimeBot(
             } else {
                 replacement[REPLACE_BOT_SYMBOL](bot);
             }
+        },
+        configurable: true,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, ADD_BOT_LISTENER_SYMBOL, {
+        value: (tag: string, listener: DynamicListener) => {
+            manager.addDynamicListener(bot, tag, listener);
+        },
+        configurable: true,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, REMOVE_BOT_LISTENER_SYMBOL, {
+        value: (tag: string, listener: DynamicListener) => {
+            manager.removeDynamicListener(bot, tag, listener);
+        },
+        configurable: true,
+        enumerable: false,
+        writable: false,
+    });
+
+    Object.defineProperty(script, GET_DYNAMIC_LISTENERS_SYMBOL, {
+        value: (tag: string) => {
+            return manager.getDynamicListeners(bot, tag);
         },
         configurable: true,
         enumerable: false,
@@ -940,7 +1026,20 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param bot The bot.
      * @param tag The tag.
      */
-    getListener(bot: CompiledBot, tag: string): CompiledBotListener;
+    getListener(bot: CompiledBot, tag: string): DynamicListener | null;
+
+    /**
+     * Sets the listener for the given bot and tag.
+     * If the listener is null, then the listener will be removed.
+     * @param bot The bot.
+     * @param tag The tag.
+     * @param listener The listener.
+     */
+    setListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener | null
+    ): void;
 
     /**
      * Gets whether the given signature on the bot is valid.
@@ -948,6 +1047,41 @@ export interface RuntimeBotInterface extends RuntimeBatcher {
      * @param signature The tag.
      */
     getSignature(bot: CompiledBot, signature: string): string;
+
+    /**
+     * Adds the given listener to the bot for the given tag.
+     * @param bot The bot that the listener should be added to.
+     * @param tag The tag that the listener should be added for.
+     * @param listener The listener that should be added.
+     */
+    addDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void;
+
+    /**
+     * Removes the given listener from the bot for the given tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tag The tag that the listener should be removed for.
+     * @param listener The listener that should be removed.
+     */
+    removeDynamicListener(
+        bot: CompiledBot,
+        tag: string,
+        listener: DynamicListener
+    ): void;
+
+    /**
+     * Gets the dynamic listeners for the given bot and tag.
+     * @param bot The bot that the listeners should be retrieved for.
+     * @param tag The tag that the listeners should be retrieved for.
+     * @returns The list of dynamic listeners for the tag, or null if none are registered.
+     */
+    getDynamicListeners(
+        bot: CompiledBot,
+        tag: string
+    ): DynamicListener[] | null;
 
     /**
      * Gets the current version that the interface is at.
