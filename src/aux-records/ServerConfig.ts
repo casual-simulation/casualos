@@ -174,6 +174,23 @@ const minioSchema = z.object({
         .optional(),
 });
 
+const typesenseSchema = z.object({
+    nodes: z
+        .array(
+            z.object({
+                host: z
+                    .string()
+                    .describe('The host of the Typesense node.')
+                    .min(1),
+                port: z.number().int().min(1).optional(),
+                protocol: z.enum(['http', 'https']).optional(),
+            })
+        )
+        .min(1),
+    apiKey: z.string().min(1).describe('The API Key for Typesense.'),
+    connectionTimeoutSeconds: z.number(),
+});
+
 const livekitSchema = z.object({
     apiKey: z
         .string()
@@ -1037,6 +1054,12 @@ export const serverConfigSchema = z.object({
     minio: minioSchema
         .describe(
             'Minio Configuration Options. If omitted, then Minio cannot be used for file storage.'
+        )
+        .optional(),
+
+    typesense: typesenseSchema
+        .describe(
+            'Typesense configuration options. If omitted, then Typesense cannot be used for search.'
         )
         .optional(),
 
