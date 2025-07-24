@@ -15,22 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { StatusUpdate } from './StatusUpdate';
+import Component from 'vue-class-component';
+import Vue from 'vue';
+import { Prop } from 'vue-property-decorator';
 
-export function remapProgressPercent<T extends StatusUpdate>(
-    start: number,
-    end: number
-): (message: T) => T {
-    let ratio = end - start;
-    return (msg: T) => {
-        if (msg.type !== 'progress') {
-            return msg;
-        }
-
-        let realProgress = start + ratio * msg.progress;
-        return {
-            ...msg,
-            progress: realProgress,
-        };
-    };
+@Component({
+    components: {},
+})
+export default class SplashScreen extends Vue {
+    @Prop({}) version: string;
+    @Prop({ default: null }) backgroundColor: string;
+    @Prop({ default: null }) logoUrl: string;
+    @Prop({ default: null }) logoTitle: string;
+    @Prop({ default: null }) title: string;
 }

@@ -66,6 +66,10 @@ const config: ClientConfig = {
             null) as BiosOption,
         enableDom: process.env.ENABLE_DOM === 'true',
         debug: process.env.NODE_ENV === 'development',
+
+        logoUrl: process.env.LOGO_URL || null,
+        logoTitle: process.env.LOGO_TITLE || null,
+        logoBackgroundColor: process.env.LOGO_BACKGROUND_COLOR || null,
     },
 };
 

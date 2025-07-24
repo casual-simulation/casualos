@@ -4,6 +4,34 @@
 
 #### Date: TBD
 
+### :boom: Breaking Changes
+
+-   Prevented the loading screen from being hidden until one of two things happens:
+    1. One of the following portals is displayed:
+        - `gridPortal`
+        - `sheetPortal`
+        - `systemPortal`
+        - `miniGridPortal`
+        - `mapPortal`
+        - `miniMapPortal`
+        - `meetPortal`
+        - `tagPortal`
+    2. `os.hideLoadingScreen()` is called.
+    -   This change makes the loading experience able to be more deeply customized on a per-experience basis.
+-   comId's which have a configured `logoUrl` will now display the logo in fullscreen like a "splash screen".
+    -   This gives more prominence to their branding and simplifies our white-labeling story moving forward.
+
+### :rocket: Features
+
+-   Added the ability to prevent the `gridPortal` from loading automatically by setting the `noGridPortal` query parameter.
+-   Added the ability to display a fullscreen "splash screen"
+    -   Can be controlled by the following environment variables:
+        -   `LOGO_URL` - The URL to the logo that should be displayed. If set, then the logo will be displayed full screen.
+        -   `LOGO_TITLE` - The descriptive title for the logo. Used as alt text for the logo. Additionally can be specified on its own to display a title in the regular loading dialog.
+        -   `LOGO_BACKGROUND_COLOR` - The [color](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) that should be displayed for the splash screen background.
+-   Added the `os.hideLoadingScreen()` function.
+    -   This function can be used to trigger hiding the loading screen by a script.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).

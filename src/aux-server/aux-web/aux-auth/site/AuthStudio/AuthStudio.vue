@@ -95,6 +95,14 @@
                     <md-table-cell>comID.logoURL</md-table-cell>
                     <md-table-cell>{{ originalLogoUrl || '(null)' }}</md-table-cell>
                 </md-table-row>
+                <md-table-row v-if="allowComId" @click="updateComIdConfig()">
+                    <md-tooltip
+                        >The background color that should be used when displaying the logo. Click to
+                        change.</md-tooltip
+                    >
+                    <md-table-cell>comID.logoBackgroundColor</md-table-cell>
+                    <md-table-cell>{{ originalLogoBackgroundColor || '(null)' }}</md-table-cell>
+                </md-table-row>
                 <md-table-row v-if="allowComId">
                     <md-tooltip>The maximum number of studios allowed for this comID.</md-tooltip>
                     <md-table-cell>comID.maxStudios</md-table-cell>
@@ -355,6 +363,16 @@
                     <label for="logoUrl">Logo URL</label>
                     <md-input id="logoUrl" v-model="logoUrl" type="text"></md-input>
                     <field-errors field="logoUrl" :errors="errors" />
+                </md-field>
+                <md-field :class="logoBackgroundColorFieldClass">
+                    <label for="logoBackgroundColor">Logo Background Color</label>
+                    <md-input
+                        id="logoBackgroundColor"
+                        v-model="logoBackgroundColor"
+                        type="text"
+                    ></md-input>
+                    <!-- <md-input id="logoBackgroundColor" v-model="logoBackgroundColor" type="text"></md-input> -->
+                    <field-errors field="logoBackgroundColor" :errors="errors" />
                 </md-field>
                 <!-- TODO: Support uploading logos -->
                 <!-- <file-pond :allow-multiple="false" @addFile="onLogoFileAdded" @removeFile="onLogoFileRemoved" accepted-file-types="image/jpeg, image/png, image/gif, image/webp"/> -->

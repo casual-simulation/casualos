@@ -4268,6 +4268,11 @@ Object {
           "id": Object {
             "type": "string",
           },
+          "logoBackgroundColor": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "logoUrl": Object {
             "nullable": true,
             "optional": true,
@@ -4372,6 +4377,11 @@ Object {
                 ],
               },
               "jitsiAppName": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "logoBackgroundColor": Object {
                 "nullable": true,
                 "optional": true,
                 "type": "string",
@@ -9068,6 +9078,11 @@ Object {
           "id": Object {
             "type": "string",
           },
+          "logoBackgroundColor": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
           "logoUrl": Object {
             "nullable": true,
             "optional": true,
@@ -9172,6 +9187,11 @@ Object {
                 ],
               },
               "jitsiAppName": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "logoBackgroundColor": Object {
                 "nullable": true,
                 "optional": true,
                 "type": "string",
