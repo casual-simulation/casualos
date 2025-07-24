@@ -136,10 +136,11 @@ Resources:
                                 - 'execute-api:ManageConnections'
                             Resource:
                                 - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/Prod/*/@connections/*'
-            ManagedPolicyArns:
+            Fn::If:
                 - UseSESCrud
-                - !Ref SESIdentityNameParameter
-                - !Ref 'AWS::NoValue'
+                - ManagedPolicyArns:
+                      - !Ref SESIdentityNameParameter
+                - Ref: AWS::NoValue
 
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
