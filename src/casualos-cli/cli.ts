@@ -917,6 +917,7 @@ async function auxReadFsCore(
 
                 assignBots(botState, auxBotsState, failOnDuplicate);
             } else {
+                let readTag = false;
                 for (let [ext, prefix] of fileExtensions) {
                     if (file.endsWith(ext)) {
                         const tagName = file.slice(0, -ext.length);
@@ -928,7 +929,20 @@ async function auxReadFsCore(
                             (await readFile(filePath, { encoding: 'utf-8' }));
                         tags[tagName] = fileContents;
                         hasBot = true;
+                        readTag = true;
+                        break;
                     }
+                }
+
+                if (!readTag) {
+                    // If the file does not have a known extension, we can just read it as a string tag
+                    console.log(`Reading tag: ${file}`);
+                    const fileContents = await readFile(filePath, {
+                        encoding: 'utf-8',
+                    });
+                    tags[file] = fileContents;
+                    hasBot = true;
+                    readTag = true;
                 }
             }
         }
