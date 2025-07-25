@@ -1,8 +1,8 @@
 # CasualOS Changelog
 
-## V3.5.6
+## V3.6.0
 
-#### Date: 7/23/2025
+#### Date: TBD
 
 ### :boom: Breaking Changes
 
@@ -31,6 +31,14 @@
         -   `LOGO_BACKGROUND_COLOR` - The [color](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) that should be displayed for the splash screen background.
 -   Added the `os.hideLoadingScreen()` function.
     -   This function can be used to trigger hiding the loading screen by a script.
+
+### :bug: Bug Fixes
+
+-   Actually fixed the issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+
+## V3.5.6
+
+#### Date: 7/23/2025
 
 ### :bug: Bug Fixes
 
