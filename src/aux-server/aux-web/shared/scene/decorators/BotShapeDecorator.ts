@@ -940,8 +940,6 @@ export class BotShapeDecorator
      * Update GeoJSON overlay
      */
     private _updateGeoJSONOverlay(calc: BotCalculationContext): void {
-        console.log('[GeoJSON] _updateGeoJSONOverlay called');
-
         const geojsonRaw = calculateBotValue(
             calc,
             this.bot3D.bot,
@@ -950,29 +948,13 @@ export class BotShapeDecorator
 
         console.log('[GeoJSON] Raw data:', geojsonRaw);
 
-        // Quick check: if raw data is the same reference or string, skip
         const geojsonString = geojsonRaw
             ? typeof geojsonRaw === 'string'
                 ? geojsonRaw
                 : JSON.stringify(geojsonRaw)
             : null;
 
-        console.log(
-            '[GeoJSON] String data length:',
-            geojsonString?.length || 0
-        );
-        console.log(
-            '[GeoJSON] Previous data length:',
-            this._lastGeoJSONData?.length || 0
-        );
-        console.log(
-            '[GeoJSON] Data changed:',
-            geojsonString !== this._lastGeoJSONData
-        );
-
-        // Only update if data has actually changed
         if (geojsonString === this._lastGeoJSONData) {
-            console.log('[GeoJSON] Data unchanged, skipping update');
             return;
         }
 
@@ -981,7 +963,6 @@ export class BotShapeDecorator
             console.log('[GeoJSON] Scheduling update');
             this._geoJSONUpdateScheduled = true;
 
-            // Use requestAnimationFrame to batch updates
             requestAnimationFrame(() => {
                 console.log('[GeoJSON] Performing scheduled update');
                 this._performGeoJSONUpdate(calc, geojsonString);
@@ -999,11 +980,6 @@ export class BotShapeDecorator
         calc: BotCalculationContext,
         geojsonString: string | null
     ): void {
-        console.log(
-            '[GeoJSON] _performGeoJSONUpdate called with data:',
-            geojsonString?.substring(0, 100) + '...'
-        );
-
         // Remove existing overlay if data is null or empty
         if (!geojsonString) {
             if (this._geoJSONOverlay) {
@@ -1055,13 +1031,11 @@ export class BotShapeDecorator
             new Vector2(0.5, 0.5)
         );
 
-        console.log('[GeoJSON] Overlay dimensions:', dimensions);
-
         // Create or update overlay
         if (!this._geoJSONOverlay) {
             console.log('[GeoJSON] Creating new GeoJSON overlay');
 
-            const canvasPixelSize = 512; // Default canvas size in pixels
+            const canvasPixelSize = 512;
 
             this._geoJSONOverlay = new GeoJSONMapOverlay(
                 dimensions,
@@ -1078,14 +1052,8 @@ export class BotShapeDecorator
             this._configureGeoJSONRenderer(calc);
 
             // Add to map view
-            console.log('[GeoJSON] Adding overlay to map view');
             this._mapView.add(this._geoJSONOverlay);
-            console.log(
-                '[GeoJSON] MapView children count:',
-                this._mapView.children.length
-            );
         } else {
-            console.log('[GeoJSON] Updating existing GeoJSON overlay');
             // Update existing overlay with new data
             const renderer = (this._geoJSONOverlay as any)._renderer;
             if (renderer) {
@@ -1103,7 +1071,6 @@ export class BotShapeDecorator
         }
 
         // Render the overlay
-        console.log('[GeoJSON] Calling overlay.render()');
         this._geoJSONOverlay.render();
 
         // Update renderer resolution
@@ -1117,6 +1084,7 @@ export class BotShapeDecorator
     /**
      * Configure GeoJSON renderer with style options from bot tags
      */
+    //TODO: Move to GeoJSONRenderer.ts - also change so that geoJSON style is set through geoJSON object not through tag
     private _configureGeoJSONRenderer(calc: BotCalculationContext): void {
         console.log('[GeoJSON] Configuring renderer styles');
 
@@ -1202,6 +1170,7 @@ export class BotShapeDecorator
     /**
      * Update overlay renderer resolution
      */
+    //TODO: Would like to move this to GeoJSONRenderer.ts
     private _updateOverlayRendererResolution(): void {
         console.log('[GeoJSON] Updating overlay renderer resolution');
 
