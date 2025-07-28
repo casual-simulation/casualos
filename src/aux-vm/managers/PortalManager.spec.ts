@@ -225,4 +225,33 @@ describe('PortalManager', () => {
             );
         });
     });
+
+    describe('notifyPortalLoaded()', () => {
+        it('should trigger the portalLoaded observable', async () => {
+            const onPortalLoaded = jest.fn();
+            manager.portalLoaded.subscribe(onPortalLoaded);
+
+            manager.notifyPortalLoaded('test-portal');
+
+            await waitAsync();
+
+            expect(onPortalLoaded).toHaveBeenCalledWith('test-portal');
+        });
+
+        it('should start with all the already loaded portals', async () => {
+            const onPortalLoaded = jest.fn();
+
+            manager.notifyPortalLoaded('test-portal');
+            manager.notifyPortalLoaded('test-portal2');
+            manager.notifyPortalLoaded('test-portal3');
+
+            manager.portalLoaded.subscribe(onPortalLoaded);
+
+            await waitAsync();
+
+            expect(onPortalLoaded).toHaveBeenCalledWith('test-portal');
+            expect(onPortalLoaded).toHaveBeenCalledWith('test-portal2');
+            expect(onPortalLoaded).toHaveBeenCalledWith('test-portal3');
+        });
+    });
 });

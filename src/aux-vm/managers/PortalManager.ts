@@ -93,13 +93,22 @@ export const DEFAULT_SCRIPT_PREFIXES: ScriptPrefix[] = [
  */
 export class PortalManager implements SubscriptionLike {
     private _prefixes: Map<string, ScriptPrefix>;
+    private _portals: string[] = [];
 
+    private _portalLoaded: Subject<string>;
     private _prefixesDiscovered: Subject<ScriptPrefix[]>;
     private _prefixesRemoved: Subject<string[]>;
     private _globalBotsDiscovered: Subject<DefineGlobalBotAction[]>;
     private _globalBots: Map<string, DefineGlobalBotAction> = new Map();
     private _vm: AuxVM;
     private _sub: Subscription;
+
+    /**
+     * Gets an observable that resolves whenever a portal has been loaded.
+     */
+    get portalLoaded(): Observable<string> {
+        return this._portalLoaded.pipe(startWith(...this._portals));
+    }
 
     /**
      * Gets an observable that resolves when a script prefix has been discovered.
@@ -166,6 +175,7 @@ export class PortalManager implements SubscriptionLike {
         this._prefixesDiscovered = new Subject();
         this._prefixesRemoved = new Subject();
         this._globalBotsDiscovered = new Subject();
+        this._portalLoaded = new Subject();
         this._sub = new Subscription();
 
         for (let p of DEFAULT_SCRIPT_PREFIXES) {
@@ -175,6 +185,17 @@ export class PortalManager implements SubscriptionLike {
         this._sub.add(
             vm.localEvents.pipe(tap((e) => this._onLocalEvents(e))).subscribe()
         );
+    }
+
+    /**
+     * Notifies that the given portal has been loaded.
+     * @param portal The name of the portal that has been loaded.
+     */
+    notifyPortalLoaded(portal: string): void {
+        if (!this._portals.includes(portal)) {
+            this._portals.push(portal);
+            this._portalLoaded.next(portal);
+        }
     }
 
     getScriptPrefix(value: string): string {
