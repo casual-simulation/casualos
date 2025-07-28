@@ -43,4 +43,23 @@ export class MercatorMath {
 
         return [pixelX, pixelY];
     }
+
+    static xToLongitude(
+        x: number,
+        zoom: number,
+        tileSize: number = 256
+    ): number {
+        const mapSize = Math.pow(2, zoom) * tileSize;
+        return (x / mapSize) * 360 - 180;
+    }
+
+    static yToLatitude(
+        y: number,
+        zoom: number,
+        tileSize: number = 256
+    ): number {
+        const mapSize = Math.pow(2, zoom) * tileSize;
+        const n = Math.PI - (2 * Math.PI * y) / mapSize;
+        return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+    }
 }
