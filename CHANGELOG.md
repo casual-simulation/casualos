@@ -35,6 +35,7 @@
 ### :bug: Bug Fixes
 
 -   Actually fixed the issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+-   Fixed an issue with the CLI where `pack-aux` would not read files with non-standard extensions.
 
 ## V3.5.6
 
