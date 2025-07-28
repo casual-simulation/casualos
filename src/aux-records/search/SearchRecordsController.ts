@@ -15,7 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { ActionKinds } from '@casual-simulation/aux-common';
+import {
+    failure,
+    PUBLIC_READ_MARKER,
+    success,
+    type ActionKinds,
+    type Result,
+    type SimpleError,
+} from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
@@ -31,14 +38,17 @@ import type {
     NotificationFeaturesConfiguration,
     SubscriptionConfiguration,
 } from '../SubscriptionConfiguration';
-import { getNotificationFeatures } from '../SubscriptionConfiguration';
+import { getSearchFeatures } from '../SubscriptionConfiguration';
 import type {
     SearchRecord,
     SearchRecordsStore,
     SearchSubscriptionMetrics,
 } from './SearchRecordsStore';
+import { z } from 'zod';
+import type { SearchCollectionField, SearchInterface } from './SearchInterface';
+import { v4 as uuid } from 'uuid';
 
-const TRACE_NAME = 'NotificationRecordsController';
+const TRACE_NAME = 'SearchRecordsController';
 
 /**
  * Defines the configuration for a webhook records controller.
@@ -48,24 +58,105 @@ export interface SearchRecordsConfiguration
         CrudRecordsConfiguration<SearchRecord, SearchRecordsStore>,
         'resourceKind' | 'allowRecordKeys' | 'name'
     > {
-    // /**
-    //  * The interface that should be used to send push notifications.
-    //  */
-    // pushInterface: WebPushInterface;
+    /**
+     * The interface to the search engine that should be used.
+     */
+    searchInterface: SearchInterface;
 }
 
 /**
- * Defines a controller that can be used to interact with NotificationRecords.
+ * Defines a controller that can be used to interact with SearchRecords.
  */
 export class SearchRecordsController extends CrudRecordsController<
+    SearchRecordInput,
     SearchRecord,
     SearchRecordsStore
 > {
+    private _searchInterface: SearchInterface;
+
     constructor(config: SearchRecordsConfiguration) {
         super({
             ...config,
             name: 'SearchRecordsController',
             resourceKind: 'search',
+        });
+        this._searchInterface = config.searchInterface;
+    }
+
+    protected async _transformInputItem(
+        item: SearchRecordInput,
+        existingItem: SearchRecord,
+        action: ActionKinds,
+        context: AuthorizationContext,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<SearchRecord, SimpleError>> {
+        if (action !== 'create') {
+            return failure({
+                errorCode: 'action_not_supported',
+                errorMessage: `The action '${action}' is not supported for search records.`,
+            });
+        }
+
+        const isPublic = item.markers.includes(PUBLIC_READ_MARKER);
+
+        // Generate a unique collection name
+        // This is to ensure that users cannot choose their own collection names
+        // and potentially create insecurities in how collections are handled.
+        // e.g. a collection name with a "*" in it could potentially match all collections.
+        const collectionName = isPublic ? `pub_.${uuid()}` : `prv_.${uuid()}`;
+
+        const fields: SearchCollectionField[] = [
+            {
+                name: 'recordName',
+                type: 'string',
+                optional: true,
+            },
+            {
+                name: 'address',
+                type: 'string',
+                optional: true,
+                sort: true,
+            },
+            {
+                name: 'resourceKind',
+                type: 'string',
+                optional: true,
+            },
+        ];
+
+        for (let key in item.schema) {
+            const field = item.schema[key];
+            fields.push({
+                name: key,
+                type: field.type,
+                optional: field.optional ?? undefined,
+                index: field.index ?? undefined,
+                store: field.store ?? undefined,
+                sort: field.sort ?? undefined,
+                infix: field.infix ?? undefined,
+                locale: field.locale ?? undefined,
+                stem: field.stem ?? undefined,
+            });
+        }
+
+        const collection = await this._searchInterface.createCollection({
+            name: collectionName,
+            fields,
+            defaultSortingField: 'address',
+        });
+
+        const apiKey = await this._searchInterface.createApiKey({
+            description: `API Key for \`${collectionName}\``,
+            actions: ['documents:search'],
+            collections: [collectionName],
+        });
+
+        return success({
+            ...item,
+            collectionName: collection.name,
+            searchApiKey: apiKey.value,
         });
     }
 
@@ -83,7 +174,7 @@ export class SearchRecordsController extends CrudRecordsController<
             studioId: context.recordStudioId,
         });
 
-        const features = getNotificationFeatures(
+        const features = getSearchFeatures(
             config,
             metrics.subscriptionStatus,
             metrics.subscriptionId,
@@ -130,4 +221,96 @@ export interface SearchRecordsSubscriptionMetricsSuccess
     config: SubscriptionConfiguration;
     metrics: SearchSubscriptionMetrics;
     features: NotificationFeaturesConfiguration;
+}
+
+export const SEARCH_COLLECTION_FIELD = z.object({
+    type: z.enum([
+        'string',
+        'string[]',
+        'int32',
+        'int32[]',
+        'int64',
+        'int64[]',
+        'float',
+        'float[]',
+        'bool',
+        'bool[]',
+        'geopoint',
+        'geopoint[]',
+        'geopolygon',
+        'object',
+        'object[]',
+        'string*',
+        'image',
+        'auto',
+    ]),
+    // facet: z.boolean()
+    //     .describe('Enables faceting on the field. Defaults to `false`.')
+    //     .optional()
+    //     .nullable(),
+    optional: z
+        .boolean()
+        .describe(
+            'When set to `true`, the field can have empty, null or missing values. Default: `false`.'
+        )
+        .optional()
+        .nullable(),
+    index: z
+        .boolean()
+        .describe(
+            'When set to `false`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: `true`.'
+        )
+        .optional()
+        .nullable(),
+    store: z
+        .boolean()
+        .describe(
+            'When set to `false`, the field value will not be stored on disk. Default: `true`.'
+        )
+        .optional()
+        .nullable(),
+    sort: z
+        .boolean()
+        .describe(
+            'When set to true, the field will be sortable. Default: `true` for numbers, `false` otherwise.'
+        )
+        .optional()
+        .nullable(),
+    infix: z
+        .boolean()
+        .describe(
+            'When set to `true`, the field value can be infix-searched. Incurs significant memory overhead. Default: `false`.'
+        )
+        .optional()
+        .nullable(),
+    locale: z
+        .string()
+        .describe(
+            'For configuring language specific tokenization, e.g. `jp` for Japanese. Default: `en` which also broadly supports most European languages.'
+        )
+        .max(10)
+        .optional()
+        .nullable(),
+
+    stem: z
+        .boolean()
+        .describe(
+            'When set to `true`, the field value will be stemmed. Default: `false`.'
+        )
+        .optional()
+        .nullable(),
+});
+
+export const SEARCH_COLLECTION_SCHEMA = z
+    .object({})
+    .catchall(SEARCH_COLLECTION_FIELD);
+
+export interface SearchRecordInput
+    extends Omit<SearchRecord, 'collectionName' | 'searchApiKey'> {
+    /**
+     * The schema that should be used for the documents into the search record collection.
+     *
+     * This is also used to validate the documents that are added to the collection.
+     */
+    schema: z.infer<typeof SEARCH_COLLECTION_SCHEMA>;
 }

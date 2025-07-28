@@ -22,6 +22,7 @@ import {
 } from '../crud/CrudRecordsControllerTests';
 import { MemorySearchRecordsStore } from './MemorySearchRecordsStore';
 import type { SearchRecord, SearchRecordsStore } from './SearchRecordsStore';
+import type { SearchRecordInput } from './SearchRecordsController';
 import { SearchRecordsController } from './SearchRecordsController';
 import {
     buildSubscriptionConfig,
@@ -31,13 +32,18 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import type { WebPushInterface } from './WebPushInterface';
+// import { v4 as uuid } from 'uuid';
+import { MemorySearchInterface } from './MemorySearchInterface';
+
+// const uuidMock: jest.Mock = <any>uuid;
+// jest.mock('uuid');
 
 console.log = jest.fn();
 console.error = jest.fn();
 
 describe('SearchRecordsController', () => {
     testCrudRecordsController<
+        SearchRecordInput,
         SearchRecord,
         SearchRecordsStore,
         SearchRecordsController
@@ -48,15 +54,22 @@ describe('SearchRecordsController', () => {
         (config, services) =>
             new SearchRecordsController({
                 ...config,
-                // pushInterface: {
-                //     getServerApplicationKey: jest.fn(),
-                //     sendSearch: jest.fn(),
-                // },
+                searchInterface: new MemorySearchInterface(),
             }),
         (item) => ({
             address: item.address,
             markers: item.markers,
-            description: 'Search description',
+            collectionName: `collection(${item.address})`,
+            searchApiKey: `apiKey(${item.address})`,
+        }),
+        (item) => ({
+            address: item.address,
+            markers: item.markers,
+            schema: {
+                '.*': {
+                    type: 'auto',
+                },
+            },
         }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
@@ -77,7 +90,7 @@ describe('SearchRecordsController', () => {
     let realDateNow: any;
     let dateNowMock: jest.Mock<number>;
     let services: TestControllers;
-    let pushInterface: jest.Mocked<WebPushInterface>;
+    let searchInterface: MemorySearchInterface;
 
     let userId: string;
     let sessionKey: string;
@@ -92,24 +105,26 @@ describe('SearchRecordsController', () => {
 
         dateNowMock.mockReturnValue(999);
 
+        // let num = 0;
+        // uuidMock.mockImplementation(() => {
+        //     return `uuid-${num++}`;
+        // });
         // environment = {
         //     handleHttpRequest: jest.fn(),
         // };
 
         const context = await setupTestContext<
+            SearchRecordInput,
             SearchRecord,
             SearchRecordsStore,
             SearchRecordsController
         >(
             (services) => new MemorySearchRecordsStore(services.store),
             (config, services) => {
-                pushInterface = {
-                    getServerApplicationKey: jest.fn(),
-                    sendSearch: jest.fn(),
-                };
+                searchInterface = new MemorySearchInterface();
                 return new SearchRecordsController({
                     ...config,
-                    pushInterface,
+                    searchInterface,
                 });
             }
         );
@@ -129,7 +144,7 @@ describe('SearchRecordsController', () => {
         recordName = context.recordName;
 
         const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
-            (features) => features.withAllDefaultFeatures().withSearchs()
+            (features) => features.withAllDefaultFeatures().withSearch()
         );
 
         store.subscriptionConfiguration = builder.config;
@@ -165,6 +180,64 @@ describe('SearchRecordsController', () => {
 
     describe('recordItem()', () => {
         describe('create', () => {
+            it('should create a collection and an API key', async () => {
+                const result = await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: {
+                        address: 'item1',
+                        markers: [PUBLIC_READ_MARKER],
+                        schema: {
+                            '.*': {
+                                type: 'auto',
+                            },
+                        },
+                    },
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName,
+                    address: 'item1',
+                });
+
+                expect(searchInterface.collections).toEqual([
+                    {
+                        name: expect.stringMatching(/^pub_\./),
+                        fields: [
+                            {
+                                name: 'recordName',
+                                type: 'string',
+                            },
+                            {
+                                name: 'address',
+                                type: 'string',
+                            },
+                            {
+                                name: 'resourceKind',
+                                type: 'string',
+                            },
+                            {
+                                name: '.*',
+                                type: 'auto',
+                            },
+                        ],
+                        defaultSortingField: 'address',
+                    },
+                ]);
+
+                const [collection] = searchInterface.collections;
+
+                expect(searchInterface.apiKeys).toEqual({
+                    description: `API Key for \`${collection.name}\``,
+                    actions: ['documents:search'],
+                    collections: [collection.name],
+                    value: 'api_key_2',
+                    expiresAt: expect.any(Number),
+                });
+            });
+
             it('should return subscription_limit_reached when the user has reached limit of Searchs', async () => {
                 store.subscriptionConfiguration = buildSubscriptionConfig(
                     (config) =>
@@ -187,7 +260,8 @@ describe('SearchRecordsController', () => {
                 await itemsStore.createItem(recordName, {
                     address: 'item1',
                     markers: [PUBLIC_READ_MARKER],
-                    description: 'item1',
+                    collectionName: 'collection1',
+                    searchApiKey: 'apiKey1',
                 });
 
                 const result = await manager.recordItem({
@@ -195,7 +269,11 @@ describe('SearchRecordsController', () => {
                     item: {
                         address: 'item2',
                         markers: [PUBLIC_READ_MARKER],
-                        description: 'item2',
+                        schema: {
+                            '.*': {
+                                type: 'auto',
+                            },
+                        },
                     },
                     userId,
                     instances: [],
@@ -205,7 +283,7 @@ describe('SearchRecordsController', () => {
                     success: false,
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
-                        'The maximum number of Search items has been reached for your subscription.',
+                        'The maximum number of search record items has been reached for your subscription.',
                 });
             });
         });

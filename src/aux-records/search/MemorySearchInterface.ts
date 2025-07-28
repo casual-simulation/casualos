@@ -30,11 +30,21 @@ import type {
 export class MemorySearchInterface implements SearchInterface {
     private _collections: Map<string, SearchCollectionInfo> = new Map();
     private _documents: Map<string, SearchDocumentInfo[]> = new Map();
+    private _apiKeys: SearchApiKey[] = [];
+    // Using a simple counter for generating unique IDs.
 
     private _idCounter: number = 0;
 
     private _generateId(): string {
         return (this._idCounter++).toString();
+    }
+
+    get collections() {
+        return [...this._collections.values()];
+    }
+
+    get apiKeys() {
+        return this._apiKeys;
     }
 
     async createCollection(
@@ -167,6 +177,8 @@ export class MemorySearchInterface implements SearchInterface {
                 Date.now() + 100 * 365 * 24 * 60 * 60 * 1000, // Default to 100 year expiration
             value: 'api_key_' + this._idCounter,
         };
+        this._apiKeys.push(newApiKey);
+
         return newApiKey;
     }
 }
