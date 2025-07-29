@@ -142,6 +142,22 @@ describe('Result', () => {
         });
     });
 
+    it('should be able to get a failure from a generic result', () => {
+        const generic = {
+            success: false as const,
+            errorCode: 'error_code',
+            errorMessage: 'error_message',
+        };
+        const result = failure(generic);
+
+        expect(result).toEqual(
+            failure({
+                errorCode: 'error_code',
+                errorMessage: 'error_message',
+            })
+        );
+    });
+
     it('should be able to get a generic result from a failure', () => {
         const result = failure({
             errorCode: 'error_code',

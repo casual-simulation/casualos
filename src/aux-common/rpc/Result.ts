@@ -257,6 +257,10 @@ export class R<T, E extends ErrorType> implements SuccessOrError<T, E> {
     protected constructor(success: boolean, _data: T | E) {
         this.success = success;
         this._data = _data;
+        if (!success && typeof _data === 'object' && 'success' in _data) {
+            const { success: _, ...error } = _data as E;
+            this._data = error as E;
+        }
     }
 
     static success<T>(value: T): Success<T> {
