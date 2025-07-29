@@ -182,6 +182,9 @@ import { v5 as uuidv5 } from 'uuid';
 import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
 import type { PackageRecordVersionKey } from './packages/version/PackageVersionRecordsStore';
 import { version } from './packages/version/PackageVersionRecordsStore';
+import { SearchRecordsController } from './search/SearchRecordsController';
+import { MemorySearchRecordsStore } from './search/MemorySearchRecordsStore';
+import { MemorySearchInterface } from './search/MemorySearchInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -357,6 +360,10 @@ describe('RecordsServer', () => {
     let packageController: PackageRecordsController;
     let packageVersionsStore: MemoryPackageVersionRecordsStore;
     let packageVersionController: PackageVersionRecordsController;
+
+    let searchRecordsStore: MemorySearchRecordsStore;
+    let searchInterface: MemorySearchInterface;
+    let searchRecordsController: SearchRecordsController;
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
@@ -612,6 +619,15 @@ describe('RecordsServer', () => {
             packages: packageController,
         });
 
+        searchInterface = new MemorySearchInterface();
+        searchRecordsStore = new MemorySearchRecordsStore(store);
+        searchRecordsController = new SearchRecordsController({
+            config: store,
+            policies: policyController,
+            searchInterface,
+            store: searchRecordsStore,
+        });
+
         websocketController = new WebsocketController(
             websocketConnectionStore,
             websocketMessenger,
@@ -816,6 +832,7 @@ describe('RecordsServer', () => {
             notificationsController: notificationController,
             packagesController: packageController,
             packageVersionController: packageVersionController,
+            searchRecordsController: searchRecordsController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -14333,6 +14350,191 @@ describe('RecordsServer', () => {
             `/api/v2/records/package/install/list?recordName=${recordName}&inst=${inst}`,
             () => null,
             () => apiHeaders
+        );
+    });
+
+    describe.only('POST /api/v2/records/search/collection', () => {
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/search/collection`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                            schema: {
+                                '.*': {
+                                    type: 'auto',
+                                },
+                            },
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should create a search record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/search/collection`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                            schema: {
+                                '.*': {
+                                    type: 'auto',
+                                },
+                            },
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'address',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/search/collection',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                        schema: {
+                            '.*': {
+                                type: 'auto',
+                            },
+                        },
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe.only('GET /api/v2/records/search/collection', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should return the info about the search collection', async () => {
+            const item = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'address'
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/search/collection?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'address',
+                        collectionName: item?.collectionName,
+                        searchApiKey: item?.searchApiKey,
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/search/collection?recordName=${recordName}&address=${'address'}`,
+                apiHeaders
+            )
+        );
+
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/search/collection?recordName=${recordName}&address=${'address2'}`,
+                apiHeaders
+            )
         );
     });
 

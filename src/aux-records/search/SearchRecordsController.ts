@@ -228,7 +228,8 @@ export class SearchRecordsController extends CrudRecordsController<
             });
 
             return success({
-                ...item,
+                address: item.address,
+                markers: item.markers,
                 collectionName: collection.name,
                 searchApiKey: apiKey.value,
             });
@@ -284,7 +285,8 @@ export class SearchRecordsController extends CrudRecordsController<
             }
 
             return success({
-                ...item,
+                address: item.address,
+                markers: item.markers,
                 collectionName: existingItem.collectionName,
                 searchApiKey: existingItem.searchApiKey,
             });
@@ -443,6 +445,32 @@ export const SEARCH_COLLECTION_FIELD = z.object({
 export const SEARCH_COLLECTION_SCHEMA = z
     .object({})
     .catchall(SEARCH_COLLECTION_FIELD);
+
+export const SEARCH_DOCUMENT_SCHEMA = z
+    .object({
+        recordName: z.string().optional().nullable(),
+        address: z.string().optional().nullable(),
+        resourceKind: z.string().optional().nullable(),
+    })
+    .catchall(
+        z.union([
+            z.string(),
+            z.number(),
+            z.boolean(),
+            z.array(z.string()),
+            z.array(z.number()),
+            z.array(z.boolean()),
+            z
+                .object({})
+                .catchall(z.union([z.string(), z.number(), z.boolean()]))
+                .refine((val) => Object.keys(val).length < 15, {
+                    message: 'Nested objects cannot have more than 15 keys.',
+                }),
+        ])
+    )
+    .refine((val) => Object.keys(val).length < 100, {
+        message: 'Search documents cannot have more than 100 keys.',
+    });
 
 export interface SearchRecordInput
     extends Omit<SearchRecord, 'collectionName' | 'searchApiKey'> {
