@@ -209,14 +209,18 @@ describe('SearchRecordsController', () => {
                             {
                                 name: 'recordName',
                                 type: 'string',
+                                optional: true,
                             },
                             {
                                 name: 'address',
                                 type: 'string',
+                                optional: true,
+                                sort: true,
                             },
                             {
                                 name: 'resourceKind',
                                 type: 'string',
+                                optional: true,
                             },
                             {
                                 name: '.*',
@@ -224,18 +228,22 @@ describe('SearchRecordsController', () => {
                             },
                         ],
                         defaultSortingField: 'address',
+                        numDocuments: 0,
                     },
                 ]);
 
                 const [collection] = searchInterface.collections;
 
-                expect(searchInterface.apiKeys).toEqual({
-                    description: `API Key for \`${collection.name}\``,
-                    actions: ['documents:search'],
-                    collections: [collection.name],
-                    value: 'api_key_2',
-                    expiresAt: expect.any(Number),
-                });
+                expect(searchInterface.apiKeys).toEqual([
+                    {
+                        id: 0,
+                        description: `API Key for \`${collection.name}\``,
+                        actions: ['documents:search'],
+                        collections: [collection.name],
+                        value: 'api_key_1',
+                        expiresAt: expect.any(Number),
+                    },
+                ]);
             });
 
             it('should return subscription_limit_reached when the user has reached limit of Searchs', async () => {
