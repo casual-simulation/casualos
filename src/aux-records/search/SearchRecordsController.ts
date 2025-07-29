@@ -45,7 +45,7 @@ import type {
     SearchSubscriptionMetrics,
 } from './SearchRecordsStore';
 import { z } from 'zod';
-import type { SearchCollectionField, SearchInterface } from './SearchInterface';
+import type { SearchCollectionField, SearchInterface, UpdatedSearchCollectionField } from './SearchInterface';
 import { v4 as uuid } from 'uuid';
 
 const TRACE_NAME = 'SearchRecordsController';
@@ -92,72 +92,130 @@ export class SearchRecordsController extends CrudRecordsController<
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess
     ): Promise<Result<SearchRecord, SimpleError>> {
-        if (action !== 'create') {
+        if (action !== 'create' && action !== 'update') {
             return failure({
                 errorCode: 'action_not_supported',
                 errorMessage: `The action '${action}' is not supported for search records.`,
             });
         }
 
-        const isPublic = item.markers.includes(PUBLIC_READ_MARKER);
+        if (action === 'create') {
+            const isPublic = item.markers.includes(PUBLIC_READ_MARKER);
 
-        // Generate a unique collection name
-        // This is to ensure that users cannot choose their own collection names
-        // and potentially create insecurities in how collections are handled.
-        // e.g. a collection name with a "*" in it could potentially match all collections.
-        const collectionName = isPublic ? `pub_.${uuid()}` : `prv_.${uuid()}`;
+            // Generate a unique collection name
+            // This is to ensure that users cannot choose their own collection names
+            // and potentially create insecurities in how collections are handled.
+            // e.g. a collection name with a "*" in it could potentially match all collections.
+            const collectionName = isPublic ? `pub_.${uuid()}` : `prv_.${uuid()}`;
 
-        const fields: SearchCollectionField[] = [
-            {
-                name: 'recordName',
-                type: 'string',
-                optional: true,
-            },
-            {
-                name: 'address',
-                type: 'string',
-                optional: true,
-                sort: true,
-            },
-            {
-                name: 'resourceKind',
-                type: 'string',
-                optional: true,
-            },
-        ];
+            const fields: SearchCollectionField[] = [
+                {
+                    name: 'recordName',
+                    type: 'string',
+                    optional: true,
+                },
+                {
+                    name: 'address',
+                    type: 'string',
+                    optional: true,
+                    sort: true,
+                },
+                {
+                    name: 'resourceKind',
+                    type: 'string',
+                    optional: true,
+                },
+            ];
 
-        for (let key in item.schema) {
-            const field = item.schema[key];
-            fields.push({
-                name: key,
-                type: field.type,
-                optional: field.optional ?? undefined,
-                index: field.index ?? undefined,
-                store: field.store ?? undefined,
-                sort: field.sort ?? undefined,
-                infix: field.infix ?? undefined,
-                locale: field.locale ?? undefined,
-                stem: field.stem ?? undefined,
+            for (let key in item.schema) {
+                if (key === 'recordName' || key === 'address' || key === 'resourceKind') {
+                    continue;
+                }
+                const field = item.schema[key];
+                if (field.drop) {
+                    continue;
+                }
+                fields.push({
+                    name: key,
+                    type: field.type,
+                    optional: field.optional ?? undefined,
+                    index: field.index ?? undefined,
+                    store: field.store ?? undefined,
+                    sort: field.sort ?? undefined,
+                    infix: field.infix ?? undefined,
+                    locale: field.locale ?? undefined,
+                    stem: field.stem ?? undefined,
+                });
+            }
+
+            const collection = await this._searchInterface.createCollection({
+                name: collectionName,
+                fields,
+                defaultSortingField: 'address',
+            });
+
+            const apiKey = await this._searchInterface.createApiKey({
+                description: `API Key for \`${collectionName}\``,
+                actions: ['documents:search'],
+                collections: [collectionName],
+            });
+
+            return success({
+                ...item,
+                collectionName: collection.name,
+                searchApiKey: apiKey.value,
+            });
+        } else if (action === 'update') {
+            // For updates, we need to update the existing collection's schema
+            if (!existingItem) {
+                return failure({
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Cannot update a search record that does not exist.',
+                });
+            }
+
+            // Build the updated fields array
+            const fields: UpdatedSearchCollectionField[] = [];
+
+            for (let key in item.schema) {
+                if (key === 'recordName' || key === 'address' || key === 'resourceKind') {
+                    continue;
+                }
+                const field = item.schema[key];
+                fields.push({
+                    name: key,
+                    type: field.type,
+                    optional: field.optional ?? undefined,
+                    index: field.index ?? undefined,
+                    store: field.store ?? undefined,
+                    sort: field.sort ?? undefined,
+                    infix: field.infix ?? undefined,
+                    locale: field.locale ?? undefined,
+                    stem: field.stem ?? undefined,
+                    drop: field.drop ?? undefined
+                });
+            }
+
+            // Update the collection schema
+            const updateResult = await this._searchInterface.updateCollection({
+                name: existingItem.collectionName,
+                fields,
+                defaultSortingField: 'address',
+            });
+
+            if (!updateResult) {
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Failed to update the search collection schema.',
+                });
+            }
+
+            return success({
+                ...item,
+                collectionName: existingItem.collectionName,
+                searchApiKey: existingItem.searchApiKey,
             });
         }
-
-        const collection = await this._searchInterface.createCollection({
-            name: collectionName,
-            fields,
-            defaultSortingField: 'address',
-        });
-
-        const apiKey = await this._searchInterface.createApiKey({
-            description: `API Key for \`${collectionName}\``,
-            actions: ['documents:search'],
-            collections: [collectionName],
-        });
-
-        return success({
-            ...item,
-            collectionName: collection.name,
-            searchApiKey: apiKey.value,
-        });
     }
 
     protected async _checkSubscriptionMetrics(
@@ -297,6 +355,11 @@ export const SEARCH_COLLECTION_FIELD = z.object({
         .describe(
             'When set to `true`, the field value will be stemmed. Default: `false`.'
         )
+        .optional()
+        .nullable(),
+
+    drop: z.boolean()
+        .describe('When set to `true`, the field will be dropped from the collection if it is not present in the input. Default: `false`.')
         .optional()
         .nullable(),
 });

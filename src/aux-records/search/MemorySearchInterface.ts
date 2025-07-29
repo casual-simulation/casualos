@@ -65,8 +65,27 @@ export class MemorySearchInterface implements SearchInterface {
 
         const updatedInfo: SearchCollectionInfo = {
             ...existing,
-            ...collection,
+            fields: [...existing.fields],
         };
+
+        for (let field of collection.fields) {
+            const index = updatedInfo.fields.findIndex(
+                (f) => f.name === field.name
+            );
+            if (field.drop) {
+                if (index !== -1) {
+                    updatedInfo.fields.splice(index, 1);
+                }
+            } else {
+                if (index === -1) {
+                    updatedInfo.fields.push(field);
+                } else {
+                    updatedInfo.fields[index] = {
+                        ...field,
+                    };
+                }
+            }
+        }
 
         this._collections.set(collection.name, updatedInfo);
         return updatedInfo;

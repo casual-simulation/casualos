@@ -368,13 +368,15 @@ export function testCrudRecordsController<
 
         describe('update', () => {
             beforeEach(async () => {
-                await itemsStore.createItem(
-                    recordName,
-                    createStoreItem({
+                await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    item: createInputItem({
                         address: 'address',
                         markers: [PUBLIC_READ_MARKER],
-                    })
-                );
+                    }),
+                    instances: [],
+                });
             });
 
             it('should update the markers in the store', async () => {

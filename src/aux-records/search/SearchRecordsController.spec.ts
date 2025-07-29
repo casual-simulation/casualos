@@ -59,8 +59,8 @@ describe('SearchRecordsController', () => {
         (item) => ({
             address: item.address,
             markers: item.markers,
-            collectionName: `collection(${item.address})`,
-            searchApiKey: `apiKey(${item.address})`,
+            collectionName: expect.any(String),
+            searchApiKey: expect.stringMatching(/^api_key_/),
         }),
         (item) => ({
             address: item.address,
