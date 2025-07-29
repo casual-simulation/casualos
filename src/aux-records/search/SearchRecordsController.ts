@@ -93,7 +93,7 @@ export class SearchRecordsController extends CrudRecordsController<
     @traced(TRACE_NAME)
     async storeDocument(
         request: StoreDocumentRequest
-    ): Promise<Result<SearchDocumentInfo, SimpleError>> {
+    ): Promise<StoreDocumentResult> {
         const contextResult = await this.policies.constructAuthorizationContext(
             {
                 recordKeyOrRecordName: request.recordName,
@@ -508,3 +508,5 @@ export interface StoreDocumentRequest {
      */
     instances: string[];
 }
+
+export type StoreDocumentResult = Result<SearchDocumentInfo, SimpleError>;

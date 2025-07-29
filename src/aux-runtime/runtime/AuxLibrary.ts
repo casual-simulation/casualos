@@ -364,6 +364,7 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    recordsCallProcedure,
 } from './RecordsEvents';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import type {
@@ -517,6 +518,12 @@ import type {
     PackageRecordVersionKeySpecifier,
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
+import type {
+    SEARCH_COLLECTION_SCHEMA,
+    SEARCH_DOCUMENT_SCHEMA,
+    SearchRecord,
+    StoreDocumentResult,
+} from '@casual-simulation/aux-records/search';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -837,6 +844,34 @@ export interface RecordPackageVersionApiRequest {
      * The markers that should be applied to the package version.
      */
     markers?: string[];
+}
+
+export interface RecordSearchCollectionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The schema that should be used for the collection.
+     */
+    schema: Zod.infer<typeof SEARCH_COLLECTION_SCHEMA>;
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
+}
+
+export interface RecordSearchDocumentApiRequest {
+    recordName: string;
+    address: string;
+    document: Zod.infer<typeof SEARCH_DOCUMENT_SCHEMA>;
 }
 
 /**
@@ -3442,6 +3477,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPackageContainer,
                 installPackage,
                 listInstalledPackages,
+
+                recordSearchCollection,
+                getSearchCollection,
+                recordSearchDocument,
 
                 listUserStudios,
 
@@ -11365,6 +11404,74 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<ListInstalledPackagesResult> {
         const task = context.createTask();
         const event = calcListInstalledPackages(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    function recordSearchCollection(
+        request: RecordSearchCollectionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordSearchCollection: {
+                    input: {
+                        recordName: request.recordName,
+                        item: {
+                            address: request.address,
+                            schema: request.schema,
+                            markers: request.markers as [string, ...string[]],
+                        },
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    function getSearchCollection(
+        recordName: string,
+        address: string
+    ): Promise<CrudGetItemResult<SearchRecord>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getSearchCollection: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            {},
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    function recordSearchDocument(
+        request: RecordSearchDocumentApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<StoreDocumentResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordSearchDocument: {
+                    input: {
+                        recordName: request.recordName,
+                        address: request.address,
+                        document: request.document,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
         return addAsyncAction(task, event);
     }
 
