@@ -31,7 +31,11 @@ import {
 import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    failure,
+    PUBLIC_READ_MARKER,
+    success,
+} from '@casual-simulation/aux-common';
 // import { v4 as uuid } from 'uuid';
 import { MemorySearchInterface } from './MemorySearchInterface';
 
@@ -39,7 +43,7 @@ import { MemorySearchInterface } from './MemorySearchInterface';
 // jest.mock('uuid');
 
 console.log = jest.fn();
-console.error = jest.fn();
+// console.error = jest.fn();
 
 describe('SearchRecordsController', () => {
     testCrudRecordsController<
@@ -104,14 +108,6 @@ describe('SearchRecordsController', () => {
         dateNowMock = Date.now = jest.fn();
 
         dateNowMock.mockReturnValue(999);
-
-        // let num = 0;
-        // uuidMock.mockImplementation(() => {
-        //     return `uuid-${num++}`;
-        // });
-        // environment = {
-        //     handleHttpRequest: jest.fn(),
-        // };
 
         const context = await setupTestContext<
             SearchRecordInput,
@@ -294,6 +290,109 @@ describe('SearchRecordsController', () => {
                         'The maximum number of search record items has been reached for your subscription.',
                 });
             });
+        });
+    });
+
+    describe('storeDocument()', () => {
+        let collectionName: string;
+
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(
+                    `Failed to get item: ${result.errorMessage} (${result.errorCode})`
+                );
+            }
+
+            collectionName = result.item.collectionName;
+        });
+
+        it('should be able to store a document in a collection', async () => {
+            const result = await manager.storeDocument({
+                recordName,
+                address: 'item1',
+                document: {
+                    test: 'abc',
+                    number: 123,
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    id: expect.any(String),
+                    test: 'abc',
+                    number: 123,
+                })
+            );
+
+            expect(searchInterface.documents).toEqual([
+                [
+                    collectionName,
+                    [
+                        {
+                            id: expect.any(String),
+                            test: 'abc',
+                            number: 123,
+                        },
+                    ],
+                ],
+            ]);
+        });
+
+        it('should return not_authorized if the user doesnt have permission', async () => {
+            const result = await manager.storeDocument({
+                recordName,
+                address: 'item1',
+                document: {
+                    test: 'abc',
+                    number: 123,
+                },
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'update',
+                        resourceKind: 'search',
+                        resourceId: 'item1',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                    recommendedEntitlement: undefined,
+                })
+            );
+
+            expect(searchInterface.documents).toEqual([]);
         });
     });
 });

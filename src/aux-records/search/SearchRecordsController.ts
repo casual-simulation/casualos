@@ -45,8 +45,15 @@ import type {
     SearchSubscriptionMetrics,
 } from './SearchRecordsStore';
 import { z } from 'zod';
-import type { SearchCollectionField, SearchInterface, UpdatedSearchCollectionField } from './SearchInterface';
+import type {
+    SearchCollectionField,
+    SearchDocument,
+    SearchDocumentInfo,
+    SearchInterface,
+    UpdatedSearchCollectionField,
+} from './SearchInterface';
 import { v4 as uuid } from 'uuid';
+import { traced } from '../tracing/TracingDecorators';
 
 const TRACE_NAME = 'SearchRecordsController';
 
@@ -83,6 +90,60 @@ export class SearchRecordsController extends CrudRecordsController<
         this._searchInterface = config.searchInterface;
     }
 
+    @traced(TRACE_NAME)
+    async storeDocument(
+        request: StoreDocumentRequest
+    ): Promise<Result<SearchDocumentInfo, SimpleError>> {
+        const contextResult = await this.policies.constructAuthorizationContext(
+            {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            }
+        );
+
+        if (contextResult.success === false) {
+            return failure(contextResult);
+        }
+
+        const recordName = contextResult.context.recordName;
+        const record = await this.store.getItemByAddress(
+            recordName,
+            request.address
+        );
+
+        if (!record) {
+            return failure({
+                errorCode: 'record_not_found',
+                errorMessage: `Record not found.`,
+            });
+        }
+
+        const authorizationResult =
+            await this.policies.authorizeUserAndInstances(
+                contextResult.context,
+                {
+                    resourceKind: 'search',
+                    resourceId: record.address,
+                    action: 'update',
+                    instances: request.instances,
+                    userId: request.userId,
+                    markers: record.markers,
+                }
+            );
+
+        if (authorizationResult.success === false) {
+            return failure(authorizationResult);
+        }
+
+        const result = await this._searchInterface.createDocument(
+            record.collectionName,
+            request.document,
+            'upsert'
+        );
+
+        return success(result);
+    }
+
     protected async _transformInputItem(
         item: SearchRecordInput,
         existingItem: SearchRecord,
@@ -106,7 +167,9 @@ export class SearchRecordsController extends CrudRecordsController<
             // This is to ensure that users cannot choose their own collection names
             // and potentially create insecurities in how collections are handled.
             // e.g. a collection name with a "*" in it could potentially match all collections.
-            const collectionName = isPublic ? `pub_.${uuid()}` : `prv_.${uuid()}`;
+            const collectionName = isPublic
+                ? `pub_.${uuid()}`
+                : `prv_.${uuid()}`;
 
             const fields: SearchCollectionField[] = [
                 {
@@ -128,7 +191,11 @@ export class SearchRecordsController extends CrudRecordsController<
             ];
 
             for (let key in item.schema) {
-                if (key === 'recordName' || key === 'address' || key === 'resourceKind') {
+                if (
+                    key === 'recordName' ||
+                    key === 'address' ||
+                    key === 'resourceKind'
+                ) {
                     continue;
                 }
                 const field = item.schema[key];
@@ -170,7 +237,8 @@ export class SearchRecordsController extends CrudRecordsController<
             if (!existingItem) {
                 return failure({
                     errorCode: 'record_not_found',
-                    errorMessage: 'Cannot update a search record that does not exist.',
+                    errorMessage:
+                        'Cannot update a search record that does not exist.',
                 });
             }
 
@@ -178,7 +246,11 @@ export class SearchRecordsController extends CrudRecordsController<
             const fields: UpdatedSearchCollectionField[] = [];
 
             for (let key in item.schema) {
-                if (key === 'recordName' || key === 'address' || key === 'resourceKind') {
+                if (
+                    key === 'recordName' ||
+                    key === 'address' ||
+                    key === 'resourceKind'
+                ) {
                     continue;
                 }
                 const field = item.schema[key];
@@ -192,7 +264,7 @@ export class SearchRecordsController extends CrudRecordsController<
                     infix: field.infix ?? undefined,
                     locale: field.locale ?? undefined,
                     stem: field.stem ?? undefined,
-                    drop: field.drop ?? undefined
+                    drop: field.drop ?? undefined,
                 });
             }
 
@@ -206,7 +278,8 @@ export class SearchRecordsController extends CrudRecordsController<
             if (!updateResult) {
                 return failure({
                     errorCode: 'server_error',
-                    errorMessage: 'Failed to update the search collection schema.',
+                    errorMessage:
+                        'Failed to update the search collection schema.',
                 });
             }
 
@@ -358,8 +431,11 @@ export const SEARCH_COLLECTION_FIELD = z.object({
         .optional()
         .nullable(),
 
-    drop: z.boolean()
-        .describe('When set to `true`, the field will be dropped from the collection if it is not present in the input. Default: `false`.')
+    drop: z
+        .boolean()
+        .describe(
+            'When set to `true`, the field will be dropped from the collection if it is not present in the input. Default: `false`.'
+        )
         .optional()
         .nullable(),
 });
@@ -376,4 +452,31 @@ export interface SearchRecordInput
      * This is also used to validate the documents that are added to the collection.
      */
     schema: z.infer<typeof SEARCH_COLLECTION_SCHEMA>;
+}
+
+export interface StoreDocumentRequest {
+    /**
+     * The name of the record that the document should be stored in.
+     */
+    recordName: string;
+
+    /**
+     * The address of the search record that the document should be stored in.
+     */
+    address: string;
+
+    /**
+     * The document to store in the search record.
+     */
+    document: SearchDocument;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The instance(s) that are making the request.
+     */
+    instances: string[];
 }
