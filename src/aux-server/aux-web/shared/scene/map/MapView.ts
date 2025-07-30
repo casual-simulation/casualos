@@ -17,8 +17,11 @@
  */
 import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
-import { Object3D, Vector3 } from '@casual-simulation/three';
+import { Object3D, Vector3, Vector2, Box2 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
+import type { MapOverlay } from './MapOverlay';
+import { GeoJSONMapOverlay } from './MapOverlay';
+import type { AllGeoJSON } from '@turf/turf';
 
 const TILE_SIZE = 256;
 
@@ -40,13 +43,29 @@ export class MapView extends Object3D {
         new Vector3(0.5, 0.5, 0.5)
     );
 
+    private _overlays: Map<string, MapOverlay> = new Map();
+    private _geoJSONOverlay: GeoJSONMapOverlay | null = null;
+
     get heightProvider() {
         return this._heightProvider;
+    }
+
+    get zoom() {
+        return this._zoom;
+    }
+
+    get longitude() {
+        return this._longitude;
+    }
+
+    get latitude() {
+        return this._latitude;
     }
 
     setZoom(zoom: number) {
         this._zoom = zoom;
         this.setCenter(zoom, this._longitude, this._latitude);
+        this._updateOverlays();
     }
 
     setProvider(provider: MapProvider) {
@@ -55,6 +74,121 @@ export class MapView extends Object3D {
             array.forEach((tile) => {
                 tile.setProvider(provider);
             });
+        });
+    }
+
+    /**
+     * Adds an overlay to the map
+     */
+    addOverlay(id: string, overlay: MapOverlay): void {
+        this._overlays.set(id, overlay);
+        this.add(overlay);
+
+        // Update overlay position
+        overlay.updateCenter(this._zoom, this._longitude, this._latitude);
+    }
+
+    /**
+     * Removes an overlay from the map
+     */
+    removeOverlay(id: string): MapOverlay | null {
+        const overlay = this._overlays.get(id);
+        if (overlay) {
+            this.remove(overlay);
+            this._overlays.delete(id);
+            return overlay;
+        }
+        return null;
+    }
+
+    /**
+     * Gets an overlay by id
+     */
+    getOverlay(id: string): MapOverlay | undefined {
+        return this._overlays.get(id);
+    }
+
+    /**
+     * Updates the GeoJSON overlay
+     */
+    updateGeoJSONOverlay(
+        geoJSON: AllGeoJSON | null,
+        rendererWidth?: number,
+        rendererHeight?: number
+    ): void {
+        if (!geoJSON) {
+            return;
+        }
+
+        // Calculate dimensions for the overlay
+        const dimensions = new Box2(
+            new Vector2(-0.5, -0.5),
+            new Vector2(0.5, 0.5)
+        );
+
+        // Create or update overlay
+        if (!this._geoJSONOverlay) {
+            const canvasPixelSize = 512;
+
+            this._geoJSONOverlay = new GeoJSONMapOverlay(
+                dimensions,
+                canvasPixelSize,
+                this._longitude,
+                this._latitude,
+                this._zoom,
+                geoJSON
+            );
+
+            this.addOverlay('geojson', this._geoJSONOverlay);
+        } else {
+            // Update existing overlay
+            const renderer = (this._geoJSONOverlay as any)._renderer;
+            if (renderer) {
+                // Clear the renderer cache
+                renderer._transformCache.clear();
+                renderer._cacheGeneration++;
+            }
+
+            // Update overlay data
+            this._geoJSONOverlay['_geojson'] = geoJSON;
+            this._geoJSONOverlay.updateCenter(
+                this._zoom,
+                this._longitude,
+                this._latitude
+            );
+        }
+
+        // Update renderer resolution if provided
+        if (rendererWidth && rendererHeight && this._geoJSONOverlay) {
+            const renderer = (this._geoJSONOverlay as any)._renderer;
+            if (renderer && renderer.updateRendererResolution) {
+                renderer.updateRendererResolution(
+                    rendererWidth,
+                    rendererHeight
+                );
+            }
+        }
+
+        // Render the overlay
+        this._geoJSONOverlay.render();
+
+        // Force texture update
+        const overlayAny = this._geoJSONOverlay as any;
+        if (overlayAny._overlayTexture) {
+            overlayAny._overlayTexture.needsUpdate = true;
+        }
+        if (overlayAny._material) {
+            overlayAny._material.needsUpdate = true;
+        }
+    }
+
+    /**
+     * Updates all overlays when map position changes
+     */
+    private _updateOverlays(): void {
+        this._overlays.forEach((overlay, id) => {
+            overlay.updateCenter(this._zoom, this._longitude, this._latitude);
+            overlay.render();
         });
     }
 
@@ -141,6 +275,10 @@ export class MapView extends Object3D {
      * @param latitude The latitude of the center of the map.
      */
     setCenter(zoom: number, longitude: number, latitude: number) {
+        const previousZoom = this._zoom;
+        const previousLon = this._longitude;
+        const previousLat = this._latitude;
+
         this._zoom = zoom;
         this._longitude = longitude;
         this._latitude = latitude;
@@ -240,6 +378,15 @@ export class MapView extends Object3D {
                 }
             }
         }
+
+        // Update overlays if position changed
+        if (
+            previousZoom !== zoom ||
+            previousLon !== longitude ||
+            previousLat !== latitude
+        ) {
+            this._updateOverlays();
+        }
     }
 
     /**
@@ -318,6 +465,12 @@ export class MapView extends Object3D {
     }
 
     dispose() {
+        this._overlays.forEach((overlay, id) => {
+            overlay.dispose();
+        });
+        this._overlays.clear();
+        this._geoJSONOverlay = null;
+
         for (let row of this._tiles) {
             for (let tile of row) {
                 tile.dispose();

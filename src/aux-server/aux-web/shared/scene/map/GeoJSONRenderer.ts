@@ -120,6 +120,18 @@ export class GeoJSONRenderer {
 
     // Style configuration
     private _style: GeoJSONStyle;
+    private _defaultStyle: GeoJSONStyle = {
+        pointColor: '#ff0000',
+        pointSize: 5,
+        lineColor: '#0000ff',
+        lineWidth: 2,
+        lineOpacity: 1.0,
+        fillColor: '#00ff00',
+        fillOpacity: 0.7,
+        strokeColor: '#000000',
+        strokeWidth: 1,
+        extrudeHeight: 0,
+    };
 
     // Cache for coordinate transformations
     private _transformCache: Map<string, [number, number]> = new Map();
@@ -168,16 +180,7 @@ export class GeoJSONRenderer {
 
         // Set default style
         this._style = {
-            pointColor: '#ff0000',
-            pointSize: 5,
-            lineColor: '#0000ff',
-            lineWidth: 2,
-            lineOpacity: 1.0,
-            fillColor: '#00ff00',
-            fillOpacity: 0.7,
-            strokeColor: '#000000',
-            strokeWidth: 1,
-            extrudeHeight: 0,
+            ...this._defaultStyle,
             ...initialStyle,
         };
     }
@@ -213,6 +216,74 @@ export class GeoJSONRenderer {
         }
     }
 
+    /**
+     * Update renderer resolution based on the game renderer size
+     */
+    updateRendererResolution(
+        rendererWidth: number,
+        rendererHeight: number
+    ): void {
+        const finalWidth = rendererWidth > 0 ? rendererWidth : 1920;
+        const finalHeight = rendererHeight > 0 ? rendererHeight : 1080;
+
+        this.setCanvasSize(finalWidth, finalHeight);
+    }
+
+    /**
+     * Configure renderer from GeoJSON properties
+     * Extracts style information from feature properties
+     */
+    configureFromGeoJSON(geoJSON: AllGeoJSON): void {
+        // Extract style from the first feature if it's a FeatureCollection
+        let styleProperties: Record<string, any> = {};
+
+        if (
+            geoJSON.type === 'FeatureCollection' &&
+            geoJSON.features.length > 0
+        ) {
+            // Look for style properties in features
+            for (const feature of geoJSON.features) {
+                if (feature.properties && feature.properties.style) {
+                    styleProperties = {
+                        ...styleProperties,
+                        ...feature.properties.style,
+                    };
+                }
+            }
+        } else if (geoJSON.type === 'Feature' && geoJSON.properties?.style) {
+            styleProperties = geoJSON.properties.style;
+        }
+
+        // Apply style properties if found
+        if (Object.keys(styleProperties).length > 0) {
+            const newStyle: GeoJSONStyle = {};
+
+            // Map style properties
+            if (styleProperties.pointColor)
+                newStyle.pointColor = styleProperties.pointColor;
+            if (styleProperties.pointSize)
+                newStyle.pointSize = styleProperties.pointSize;
+            if (styleProperties.lineColor)
+                newStyle.lineColor = styleProperties.lineColor;
+            if (styleProperties.lineWidth)
+                newStyle.lineWidth = styleProperties.lineWidth;
+            if (styleProperties.lineOpacity)
+                newStyle.lineOpacity = styleProperties.lineOpacity;
+            if (styleProperties.fillColor)
+                newStyle.fillColor = styleProperties.fillColor;
+            if (styleProperties.fillOpacity)
+                newStyle.fillOpacity = styleProperties.fillOpacity;
+            if (styleProperties.strokeColor)
+                newStyle.strokeColor = styleProperties.strokeColor;
+            if (styleProperties.strokeWidth)
+                newStyle.strokeWidth = styleProperties.strokeWidth;
+            if (styleProperties.extrudeHeight)
+                newStyle.extrudeHeight = styleProperties.extrudeHeight;
+
+            this.setStyle(newStyle);
+        }
+    }
+
     setZoom(zoom: number) {
         if (this._viewZoom !== zoom) {
             this._viewZoom = zoom;
@@ -240,7 +311,6 @@ export class GeoJSONRenderer {
 
         // Log the geographic bounds for debugging
         const bounds = this.getGeographicBounds();
-        console.log('[GeoJSONRenderer] New geographic bounds:', bounds);
     }
 
     clearCanvas() {
@@ -316,17 +386,6 @@ export class GeoJSONRenderer {
 
             // Cache the result
             this._transformCache.set(cacheKey, result);
-
-            console.log(
-                '[GeoJSONRenderer.coordToViewPixel] Transform result:',
-                {
-                    input: coordinates,
-                    worldDelta: [deltaWorldPixelX, deltaWorldPixelY],
-                    scale: [scaleX, scaleY],
-                    result,
-                    canvasSize: [this.canvas.width, this.canvas.height],
-                }
-            );
 
             return result;
         } catch (error) {
@@ -644,32 +703,22 @@ export class GeoJSONRenderer {
         let geometryCount = 0;
 
         try {
+            // Configure from GeoJSON properties
+            this.configureFromGeoJSON(geoJSON);
+
             if (geoJSON.type == 'FeatureCollection') {
-                console.log('[GeoJSONRenderer] Drawing FeatureCollection');
                 if (!geoJSON?.features?.length) {
-                    console.log('[GeoJSONRenderer] No features to draw');
                     return;
                 }
-                console.log(
-                    '[GeoJSONRenderer] Feature count:',
-                    geoJSON.features.length
-                );
                 geoJSON.features.forEach((feature, index) => {
-                    console.log(
-                        `[GeoJSONRenderer] Drawing feature ${index}:`,
-                        feature.geometry.type
-                    );
                     this.drawFeature(feature);
                     featureCount++;
                 });
             } else if (geoJSON.type === 'Feature') {
-                console.log('[GeoJSONRenderer] Drawing single Feature');
                 this.drawFeature(geoJSON);
                 featureCount = 1;
             } else if (geoJSON.type === 'GeometryCollection') {
-                console.log('[GeoJSONRenderer] Drawing GeometryCollection');
                 if (!geoJSON?.geometries?.length) {
-                    console.log('[GeoJSONRenderer] No geometries to draw');
                     return;
                 }
                 geoJSON.geometries.forEach((geometry) => {
@@ -677,19 +726,12 @@ export class GeoJSONRenderer {
                     geometryCount++;
                 });
             } else {
-                console.log(
-                    '[GeoJSONRenderer] Drawing direct geometry:',
-                    geoJSON.type
-                );
                 this.drawGeometry(geoJSON, {});
                 geometryCount = 1;
             }
         } finally {
             // Restore context state
             this.ctx.restore();
-            console.log(
-                `[GeoJSONRenderer] Drawing complete. Features: ${featureCount}, Geometries: ${geometryCount}`
-            );
         }
     }
 
@@ -736,15 +778,6 @@ export class GeoJSONRenderer {
             this._viewZoom,
             256
         );
-
-        console.log('[GeoJSONRenderer] Geographic bounds:', {
-            center: [this._longitude, this._latitude],
-            bounds: { minLon, minLat, maxLon, maxLat },
-            canvasSpan: {
-                widthDegrees: canvasWidthInDegrees,
-                heightDegrees: canvasHeightInDegrees,
-            },
-        });
 
         return { minLon, minLat, maxLon, maxLat };
     }

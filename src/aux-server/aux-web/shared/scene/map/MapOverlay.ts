@@ -28,7 +28,7 @@ import type { Box2, Box3, Texture } from '@casual-simulation/three';
 import type { AllGeoJSON } from '@turf/turf';
 import { GeoJSONRenderer } from './GeoJSONRenderer';
 
-// Convert to interface, This abrstaction extends as 2D.
+// Convert to interface, This abstraction extends as 2D.
 
 export abstract class MapOverlay extends Object3D {
     /* The height of the overlay in world units. */
@@ -115,6 +115,7 @@ export abstract class MapOverlay extends Object3D {
 export class GeoJSONMapOverlay extends MapOverlay {
     private _renderer: GeoJSONRenderer;
     private _canvasSize: number;
+    private _geojson: AllGeoJSON;
 
     constructor(
         dimensions: Box2 | Box3,
@@ -122,91 +123,108 @@ export class GeoJSONMapOverlay extends MapOverlay {
         longitude: number,
         latitude: number,
         zoom: number,
-        private _geojson: AllGeoJSON
+        geojson: AllGeoJSON
     ) {
         super(dimensions, 1, longitude, latitude, zoom);
 
         this._canvasSize = canvasSize;
+        this._geojson = geojson;
 
-        this._renderer = new GeoJSONRenderer(
-            zoom,
-            longitude,
-            latitude,
-            canvasSize
-        );
+        try {
+            this._renderer = new GeoJSONRenderer(
+                zoom,
+                longitude,
+                latitude,
+                canvasSize
+            );
 
-        console.log('[GeoJSONMapOverlay] Created renderer, canvas size:', {
-            width: this._renderer.canvas.width,
-            height: this._renderer.canvas.height,
-        });
-
-        const texture = new CanvasTexture(this._renderer.canvas);
-
-        this.setTexture(texture);
+            const texture = new CanvasTexture(this._renderer.canvas);
+            this.setTexture(texture);
+        } catch (error) {
+            console.error(
+                '[GeoJSONMapOverlay.constructor] Error creating renderer:',
+                error
+            );
+            throw error;
+        }
     }
 
+    /**
+     * Updates the center coordinates and zoom level of the overlay
+     * @param zoom - The new zoom level
+     * @param longitude - The new longitude in degrees
+     * @param latitude - The new latitude in degrees
+     */
     updateCenter(zoom: number, longitude: number, latitude: number): void {
-        console.log('[GeoJSONMapOverlay] updateCenter called:', {
-            oldZoom: this._zoom,
-            newZoom: zoom,
-            oldLon: this._longitude,
-            newLon: longitude,
-            oldLat: this._latitude,
-            newLat: latitude,
-        });
-
         if (
-            this._zoom == zoom &&
+            this._zoom === zoom &&
             this._longitude === longitude &&
             this._latitude === latitude
         ) {
-            console.log(
-                '[GeoJSONMapOverlay] No change in position, skipping update'
-            );
             return;
         }
 
         this._zoom = zoom;
         this._longitude = longitude;
         this._latitude = latitude;
-        this._renderer.setCenter(longitude, latitude, zoom);
-        this.render();
+
+        try {
+            this._renderer.setCenter(longitude, latitude, zoom);
+            this.render();
+        } catch (error) {
+            console.error(
+                '[GeoJSONMapOverlay.updateCenter] Error updating center:',
+                error
+            );
+        }
     }
 
+    /**
+     * Renders the GeoJSON overlay
+     */
     render(): void {
-        this._renderer.clearCanvas();
-        this._renderer.drawGeoJSON(this._geojson);
-        this._material.needsUpdate = true;
-        this._overlayTexture.needsUpdate = true;
-
-        // Canvas content check for debugging
-        const ctx = this._renderer.canvas.getContext('2d');
-        const imageData = ctx?.getImageData(0, 0, 100, 100);
-        let hasContent = false;
-        if (imageData) {
-            for (let i = 3; i < imageData.data.length; i += 4) {
-                if (imageData.data[i] > 0) {
-                    hasContent = true;
-                    break;
-                }
-            }
+        try {
+            this._renderer.clearCanvas();
+            this._renderer.drawGeoJSON(this._geojson);
+            this._material.needsUpdate = true;
+            this._overlayTexture.needsUpdate = true;
+        } catch (error) {
+            console.error(
+                '[GeoJSONMapOverlay.render] Error rendering GeoJSON:',
+                error
+            );
         }
     }
 
+    /**
+     * Disposes of the overlay and cleans up resources
+     */
     dispose(): void {
-        this._renderer.dispose();
-        if (this._plane) {
-            this._plane.geometry.dispose();
-            if (Array.isArray(this._plane.material))
-                this._plane.material.forEach((m) => m.dispose());
-            else if (this._plane.material) this._plane.material.dispose();
-            this._plane.removeFromParent();
-            this._plane = null;
+        try {
+            this._renderer.dispose();
+
+            if (this._plane) {
+                this._plane.geometry.dispose();
+                if (Array.isArray(this._plane.material)) {
+                    this._plane.material.forEach((m) => m.dispose());
+                } else if (this._plane.material) {
+                    this._plane.material.dispose();
+                }
+                this._plane.removeFromParent();
+                this._plane = null;
+            }
+
+            if (this._overlayTexture) {
+                this._overlayTexture.dispose();
+                this._overlayTexture = null;
+            }
+
+            this.removeFromParent();
+        } catch (error) {
+            console.error(
+                '[GeoJSONMapOverlay.dispose] Error during disposal:',
+                error
+            );
         }
-        if (this._overlayTexture) {
-            this._overlayTexture.dispose();
-            this._overlayTexture = null;
-        }
-        this.removeFromParent();
     }
 }

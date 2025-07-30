@@ -58,7 +58,6 @@ import {
     Light,
     ObjectLoader,
     Vector2,
-    Box2,
 } from '@casual-simulation/three';
 import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
@@ -122,8 +121,8 @@ import { LDrawLoader } from '../../public/ldraw-loader/LDrawLoader';
 import { MapView } from '../map/MapView';
 import { MapTilerProvider } from 'geo-three';
 import { CustomMapProvider } from '../map/CustomMapProvider';
+import type { AllGeoJSON } from '@turf/turf';
 // import { LODConstant } from '../../public/geo-three/LODConstant';
-import { GeoJSONMapOverlay } from '../map/MapOverlay';
 
 export const gltfPool = getGLTFPool('main');
 
@@ -168,11 +167,6 @@ export class BotShapeDecorator
     private _meshCancellationToken: CancellationToken;
     private _mapLODLevel: number = 1;
     // private _lodConstant: LODConstant | null = null;
-
-    // GeoJSON overlay management
-    private _geoJSONOverlay: GeoJSONMapOverlay | null = null;
-    private _lastGeoJSONData: string | null = null;
-    private _geoJSONUpdateScheduled: boolean = false;
 
     /**
      * The 3d plane object used to display an iframe.
@@ -315,7 +309,7 @@ export class BotShapeDecorator
             this._updateMapTags(calc);
             this._updateMapProvider(calc);
             this._updateCustomMapProviderURL(calc);
-            this._updateGeoJSONOverlay(calc);
+            this._updateMapGeoJSON(calc);
         }
 
         if (this._iframe) {
@@ -452,14 +446,6 @@ export class BotShapeDecorator
                     coords.x, // lon
                     coords.y // lat
                 );
-
-                // Force update of overlay position after map moves
-                if (this._geoJSONOverlay) {
-                    console.log(
-                        '[GeoJSON] Updating overlay after address change'
-                    );
-                    this._updateGeoJSONOverlayPosition();
-                }
             }
         }
     }
@@ -684,16 +670,6 @@ export class BotShapeDecorator
         this.bot3D.display.remove(this.container);
         this.light = null;
 
-        if (this._geoJSONOverlay) {
-            if (this._mapView) {
-                this._mapView.remove(this._geoJSONOverlay);
-            }
-            this._geoJSONOverlay.dispose();
-            this._geoJSONOverlay = null;
-        }
-        this._lastGeoJSONData = null;
-        this._geoJSONUpdateScheduled = false;
-
         disposeMesh(this.mesh, true, true, true);
         if (this.stroke) {
             this.stroke.dispose();
@@ -864,19 +840,6 @@ export class BotShapeDecorator
             }
             this._mapLODLevel = lodLimit;
             this._setMapLOD(this._mapLODLevel);
-
-            // Update GeoJSON overlay zoom if it exists
-            if (this._geoJSONOverlay) {
-                const mapViewAny = this._mapView as any;
-                const longitude = mapViewAny._longitude || 0;
-                const latitude = mapViewAny._latitude || 0;
-                this._geoJSONOverlay.updateCenter(
-                    lodLimit,
-                    longitude,
-                    latitude
-                );
-                this._geoJSONOverlay.render();
-            }
         }
     }
 
@@ -937,271 +900,58 @@ export class BotShapeDecorator
     }
 
     /**
-     * Update GeoJSON overlay
+     * Update map GeoJSON from regular tag (populated by listener system)
      */
-    private _updateGeoJSONOverlay(calc: BotCalculationContext): void {
-        const geojsonRaw = calculateBotValue(
-            calc,
-            this.bot3D.bot,
-            'formMapGeoJSON'
-        );
-
-        console.log('[GeoJSON] Raw data:', geojsonRaw);
-
-        const geojsonString = geojsonRaw
-            ? typeof geojsonRaw === 'string'
-                ? geojsonRaw
-                : JSON.stringify(geojsonRaw)
-            : null;
-
-        if (geojsonString === this._lastGeoJSONData) {
+    private _updateMapGeoJSON(calc: BotCalculationContext): void {
+        if (!this._mapView) {
             return;
         }
 
-        // Schedule update to batch multiple rapid changes
-        if (!this._geoJSONUpdateScheduled) {
-            console.log('[GeoJSON] Scheduling update');
-            this._geoJSONUpdateScheduled = true;
+        // Check multiple possible tag names where GeoJSON data might be stored
+        // These tags would be populated by the listener system
+        const possibleTags = ['activeGeoJson', 'geojsonData', 'geoJsonLayer'];
+        let geoJSON: AllGeoJSON | null = null;
 
-            requestAnimationFrame(() => {
-                console.log('[GeoJSON] Performing scheduled update');
-                this._performGeoJSONUpdate(calc, geojsonString);
-                this._geoJSONUpdateScheduled = false;
-            });
-        } else {
-            console.log('[GeoJSON] Update already scheduled');
-        }
-    }
+        for (const tagName of possibleTags) {
+            const tagValue = calculateBotValue(calc, this.bot3D.bot, tagName);
 
-    /**
-     * Perform the actual GeoJSON update
-     */
-    private _performGeoJSONUpdate(
-        calc: BotCalculationContext,
-        geojsonString: string | null
-    ): void {
-        // Remove existing overlay if data is null or empty
-        if (!geojsonString) {
-            if (this._geoJSONOverlay) {
-                console.log('[GeoJSON] Removing existing overlay');
-                this._mapView.remove(this._geoJSONOverlay);
-                this._geoJSONOverlay.dispose();
-                this._geoJSONOverlay = null;
+            if (tagValue) {
+                // The data should already be a parsed object
+                if (typeof tagValue === 'object') {
+                    geoJSON = tagValue as AllGeoJSON;
+                    break;
+                } else if (typeof tagValue === 'string') {
+                    // Fallback: try to parse if it's a string
+                    try {
+                        geoJSON = JSON.parse(tagValue) as AllGeoJSON;
+                        break;
+                    } catch (err) {
+                        console.error(
+                            `[BotShapeDecorator] Failed to parse GeoJSON from tag '${tagName}':`,
+                            err
+                        );
+                    }
+                }
             }
-            this._lastGeoJSONData = null;
-            return;
         }
 
-        // Parse GeoJSON data
-        let parsedGeoJSON: any = null;
-        try {
-            parsedGeoJSON = JSON.parse(geojsonString);
-            console.log(
-                '[GeoJSON] Successfully parsed GeoJSON:',
-                parsedGeoJSON
-            );
-            console.log('[GeoJSON] GeoJSON type:', parsedGeoJSON.type);
-            if (parsedGeoJSON.type === 'FeatureCollection') {
-                console.log(
-                    '[GeoJSON] Feature count:',
-                    parsedGeoJSON.features?.length
-                );
-            }
-        } catch (err) {
-            console.error('[GeoJSON] Failed to parse GeoJSON:', err);
-            return;
-        }
+        // Get renderer dimensions
+        let rendererWidth: number | undefined;
+        let rendererHeight: number | undefined;
 
-        // Get map view properties
-        const mapViewAny = this._mapView as any;
-        const zoom = mapViewAny._zoom || 1;
-        const longitude = mapViewAny._longitude || 0;
-        const latitude = mapViewAny._latitude || 0;
-
-        console.log('[GeoJSON] Map view state:', {
-            zoom,
-            longitude,
-            latitude,
-            mapViewExists: !!this._mapView,
-        });
-
-        // Calculate dimensions for the overlay
-        const dimensions = new Box2(
-            new Vector2(-0.5, -0.5),
-            new Vector2(0.5, 0.5)
-        );
-
-        // Create or update overlay
-        if (!this._geoJSONOverlay) {
-            console.log('[GeoJSON] Creating new GeoJSON overlay');
-
-            const canvasPixelSize = 512;
-
-            this._geoJSONOverlay = new GeoJSONMapOverlay(
-                dimensions,
-                canvasPixelSize,
-                longitude,
-                latitude,
-                zoom,
-                parsedGeoJSON
-            );
-
-            console.log('[GeoJSON] Overlay created:', this._geoJSONOverlay);
-
-            // Configure renderer with style options
-            this._configureGeoJSONRenderer(calc);
-
-            // Add to map view
-            this._mapView.add(this._geoJSONOverlay);
-        } else {
-            // Update existing overlay with new data
-            const renderer = (this._geoJSONOverlay as any)._renderer;
+        if (this._game) {
+            const renderer = this._game.getRenderer();
             if (renderer) {
-                // Clear the renderer cache
-                renderer._transformCache.clear();
-                renderer._cacheGeneration++;
-            }
-
-            // Update existing overlay with new data
-            this._geoJSONOverlay['_geojson'] = parsedGeoJSON;
-            this._geoJSONOverlay.updateCenter(zoom, longitude, latitude);
-
-            // Reconfigure renderer in case style properties changed
-            this._configureGeoJSONRenderer(calc);
-        }
-
-        // Render the overlay
-        this._geoJSONOverlay.render();
-
-        // Update renderer resolution
-        this._updateOverlayRendererResolution();
-
-        // Store the current data for comparison
-        this._lastGeoJSONData = geojsonString;
-        console.log('[GeoJSON] Update complete');
-    }
-
-    /**
-     * Configure GeoJSON renderer with style options from bot tags
-     */
-    //TODO: Move to GeoJSONRenderer.ts - also change so that geoJSON style is set through geoJSON object not through tag
-    private _configureGeoJSONRenderer(calc: BotCalculationContext): void {
-        console.log('[GeoJSON] Configuring renderer styles');
-
-        if (!this._geoJSONOverlay) {
-            console.log('[GeoJSON] No overlay to configure');
-            return;
-        }
-
-        const renderer = (this._geoJSONOverlay as any)._renderer;
-        if (!renderer) {
-            console.log('[GeoJSON] No renderer found in overlay');
-            return;
-        }
-
-        // Configure style options
-        const style = {
-            pointColor: calculateStringTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoPointColor',
-                '#ff0000'
-            ),
-            pointSize: calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoPointSize',
-                5
-            ),
-            lineColor: calculateStringTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoLineColor',
-                '#0000ff'
-            ),
-            lineWidth: calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoLineWidth',
-                2
-            ),
-            lineOpacity: calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoLineOpacity',
-                1.0
-            ),
-            fillColor: calculateStringTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoFillColor',
-                '#00ff00'
-            ),
-            fillOpacity: calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoFillOpacity',
-                0.7
-            ),
-            strokeColor: calculateStringTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoStrokeColor',
-                '#000000'
-            ),
-            strokeWidth: calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoStrokeWidth',
-                1
-            ),
-            extrudeHeight: calculateNumericalTagValue(
-                calc,
-                this.bot3D.bot,
-                'geoExtrudeHeight',
-                0
-            ),
-        };
-
-        console.log('[GeoJSON] Applying style:', style);
-        renderer.setStyle(style);
-    }
-
-    /**
-     * Update overlay renderer resolution
-     */
-    //TODO: Would like to move this to GeoJSONRenderer.ts
-    private _updateOverlayRendererResolution(): void {
-        console.log('[GeoJSON] Updating overlay renderer resolution');
-
-        if (!this._geoJSONOverlay || !this._game) {
-            console.log('[GeoJSON] Missing overlay or game reference');
-            return;
-        }
-
-        const renderer = this._game.getRenderer();
-        if (renderer) {
-            const size = renderer.getSize(new Vector2());
-            const finalWidth = size.x > 0 ? size.x : 1920;
-            const finalHeight = size.y > 0 ? size.y : 1080;
-
-            console.log('[GeoJSON] Renderer size:', {
-                finalWidth,
-                finalHeight,
-            });
-
-            // Update canvas size on the renderer
-            const geoRenderer = (this._geoJSONOverlay as any)._renderer;
-            if (geoRenderer && geoRenderer.setCanvasSize) {
-                console.log('[GeoJSON] Setting canvas size and re-rendering');
-
-                // Update canvas size
-                geoRenderer.setCanvasSize(finalWidth, finalHeight);
-
-                // Re-render the GeoJSON data with the new canvas size
-                this._geoJSONOverlay.render();
+                const size = renderer.getSize(new Vector2());
+                rendererWidth = size.x > 0 ? size.x : 1920;
+                rendererHeight = size.y > 0 ? size.y : 1080;
             }
         }
+        this._mapView.updateGeoJSONOverlay(
+            geoJSON,
+            rendererWidth,
+            rendererHeight
+        );
     }
 
     private _setColor(color: any) {
@@ -1449,7 +1199,8 @@ export class BotShapeDecorator
             this.scene ||
             this._shapeSubscription ||
             this._keyboard ||
-            this.light
+            this.light ||
+            this._mapView
         ) {
             this.dispose();
         }
@@ -2046,8 +1797,6 @@ export class BotShapeDecorator
     }
 
     private _createMapPlane() {
-        console.log('[GeoJSON] _createMapPlane called');
-
         // Get the provider name from the tag
         const providerName = calculateStringTagValue(
             null,
@@ -2063,16 +1812,12 @@ export class BotShapeDecorator
             null
         );
 
-        console.log('[GeoJSON] Creating map with provider:', providerName);
-
         this._mapView = createMapPlane(
             new Vector3(0, 0, 0),
             1,
             providerName,
             apiKey
         );
-
-        console.log('[GeoJSON] MapView created:', this._mapView);
 
         this.mesh = null;
         const colliderPlane = (this.collider = createPlane(1));
@@ -2087,126 +1832,10 @@ export class BotShapeDecorator
 
         const coords = parseBotVector(this._address) ?? new Vector2(0, 0);
 
-        console.log('[GeoJSON] Setting initial center:', coords);
-
         this._mapView.setCenter(
             this._mapLODLevel,
             coords.x, // lon
             coords.y // lat
-        );
-
-        // Listen for map changes to update overlay
-        console.log('[GeoJSON] Setting up map view listeners');
-        this._setupMapViewListeners();
-    }
-
-    private _setupMapViewListeners(): void {
-        console.log('[GeoJSON] Setting up map view listeners');
-
-        if (!this._mapView) {
-            console.log('[GeoJSON] No map view to set up listeners');
-            return;
-        }
-
-        const mapViewAny = this._mapView as any;
-
-        // Only patch if not already patched
-        if (mapViewAny._geoJsonListenersPatched) {
-            console.log('[GeoJSON] Listeners already patched');
-            return;
-        }
-
-        // Store original methods
-        const origSetZoom = mapViewAny.setZoom?.bind(mapViewAny);
-        const origSetCenter = mapViewAny.setCenter?.bind(mapViewAny);
-
-        console.log('[GeoJSON] Original methods found:', {
-            hasSetZoom: !!origSetZoom,
-            hasSetCenter: !!origSetCenter,
-        });
-
-        // Override setZoom to update overlay
-        if (origSetZoom) {
-            mapViewAny.setZoom = (zoom: number) => {
-                console.log('[GeoJSON] MapView.setZoom called:', zoom);
-                const result = origSetZoom(zoom);
-                // Update zoom level
-                this._mapLODLevel = zoom;
-                // Defer update to next frame
-                requestAnimationFrame(() => {
-                    this._updateGeoJSONOverlayPosition();
-                });
-                return result;
-            };
-        }
-
-        // Override setCenter to update overlay
-        if (origSetCenter) {
-            mapViewAny.setCenter = (zoom: number, lon: number, lat: number) => {
-                console.log('[GeoJSON] MapView.setCenter called:', {
-                    zoom,
-                    lon,
-                    lat,
-                });
-                const result = origSetCenter(zoom, lon, lat);
-                // Update zoom level
-                this._mapLODLevel = zoom;
-                // Defer update to next frame
-                requestAnimationFrame(() => {
-                    this._updateGeoJSONOverlayPosition();
-                });
-                return result;
-            };
-        }
-
-        // Mark as patched
-        mapViewAny._geoJsonListenersPatched = true;
-    }
-
-    private _updateGeoJSONOverlayPosition(): void {
-        console.log('[GeoJSON] Updating overlay position');
-
-        if (!this._geoJSONOverlay || !this._mapView) {
-            console.log('[GeoJSON] Missing overlay or map view');
-            return;
-        }
-
-        const mapViewAny = this._mapView as any;
-        const zoom = mapViewAny._zoom || this._mapLODLevel || 1;
-        const longitude = mapViewAny._longitude || 0;
-        const latitude = mapViewAny._latitude || 0;
-
-        console.log('[GeoJSON] Updating overlay to:', {
-            zoom,
-            longitude,
-            latitude,
-        });
-
-        // Update overlay position and re-render
-        this._geoJSONOverlay.updateCenter(zoom, longitude, latitude);
-        this._geoJSONOverlay.render();
-
-        // Force texture update
-        const overlayAny = this._geoJSONOverlay as any;
-        if (overlayAny._overlayTexture) {
-            overlayAny._overlayTexture.needsUpdate = true;
-        }
-        if (overlayAny._material) {
-            overlayAny._material.needsUpdate = true;
-        }
-    }
-
-    private _updateCustomMapProviderURL(calc: BotCalculationContext) {
-        if (!this._mapView) {
-            return;
-        }
-
-        // Get custom URL template for tile provider (if any)
-        const customURL = calculateStringTagValue(
-            calc,
-            this.bot3D.bot,
-            'mapProviderURL',
-            null
         );
     }
 
@@ -2487,6 +2116,20 @@ export class BotShapeDecorator
                 'formAddress'
             );
         }
+    }
+
+    private _updateCustomMapProviderURL(calc: BotCalculationContext) {
+        if (!this._mapView) {
+            return;
+        }
+
+        // Get custom URL template for tile provider (if any)
+        const customURL = calculateStringTagValue(
+            calc,
+            this.bot3D.bot,
+            'mapProviderURL',
+            null
+        );
     }
 }
 
