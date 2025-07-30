@@ -621,47 +621,65 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
 
             // Don't track tag masks
             for (const tag of Object.keys(bot.tags)) {
-                const value = calculateStringTagValue(null, bot, tag, null);
+
+                let value = bot.tags[tag];
+
                 let written = false;
                 if (hasValue(value)) {
-                    for (let [prefix, ext] of fileTagPrefixes) {
-                        if (value.startsWith(prefix)) {
-                            // write the tag value to its own file
-                            const filePath = path.resolve(dir, `${tag}${ext}`);
-                            const fileContent = value.slice(prefix.length);
+                    let defaultExtension = 'txt';
+                    if (typeof value === 'object') {
+                        let json = JSON.stringify(value, null, 2);
+                        if (json.indexOf('\n') >= 0) {
+                            value = json;
+                            defaultExtension = 'json';
+                        }
+                    }
 
-                            written = true;
+                    if (typeof value === 'string') {
+                        for (let [prefix, ext] of fileTagPrefixes) {
+                            if (value.startsWith(prefix)) {
+                                // write the tag value to its own file
+                                const filePath = path.resolve(
+                                    dir,
+                                    `${tag}${ext}`
+                                );
+                                const fileContent = value.slice(prefix.length);
+
+                                try {
+                                    await writeFile(filePath, fileContent, {
+                                        encoding: 'utf-8',
+                                        flag,
+                                    });
+                                    written = true;
+                                } catch (err) {
+                                    console.error(
+                                        `Could not write file: ${filePath}.\n\n${err}\n`
+                                    );
+                                }
+                                break;
+                            }
+                        }
+
+                        if (!written && value.indexOf('\n') >= 0) {
+                            // string has a newline, so write it to a text file
+
+                            // if the tag does not have a file extension, add .txt
+                            const fileName =
+                                tag.indexOf('.') >= 0
+                                    ? tag
+                                    : `${tag}.${defaultExtension}`;
+                            const filePath = path.resolve(dir, fileName);
                             try {
-                                await writeFile(filePath, fileContent, {
+                                await writeFile(filePath, value, {
                                     encoding: 'utf-8',
                                     flag,
                                 });
+                                written = true;
                             } catch (err) {
                                 console.error(
                                     `Could not write file: ${filePath}.\n\n${err}\n`
                                 );
                             }
-                            break;
-                        }
-                    }
-
-                    if (!written && value.indexOf('\n') >= 0) {
-                        // string has a newline, so write it to a text file
-
-                        // if the tag does not have a file extension, add .txt
-                        const fileName =
-                            tag.indexOf('.') >= 0 ? tag : `${tag}.txt`;
-                        const filePath = path.resolve(dir, fileName);
-                        try {
-                            await writeFile(filePath, value, {
-                                encoding: 'utf-8',
-                                flag,
-                            });
-                            written = true;
-                        } catch (err) {
-                            console.error(
-                                `Could not write file: ${filePath}.\n\n${err}\n`
-                            );
                         }
                     }
                 }
