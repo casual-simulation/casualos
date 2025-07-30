@@ -36,7 +36,6 @@ import type {
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
 import {
-    calculateStringTagValue,
     createBot,
     DATE_TAG_PREFIX,
     DNA_TAG_PREFIX,
@@ -302,6 +301,10 @@ program
         "Write bots that don't have a system tag. By default, these bots are written to the extra.aux file."
     )
     .option('--omit-extra-bots', 'Prevent writing extra.aux files.')
+    .option(
+        '--preserve-bot-ids',
+        'Whether to not replace bot IDs with a placeholder. By default, bot IDs are replaced with a placeholder. This prevents bot IDs from being written to the file system and also causes pack-aux to generate new bot IDs. Use this flag to prevent this behavior.'
+    )
     .description('Generate a folder from an AUX file.')
     .action(async (input, dir, options) => {
         if (options.overwrite) {
@@ -318,6 +321,11 @@ program
         if (options.omitExtraBots) {
             console.log(
                 'Omitting extra bots. No extra.aux file(s) will be written.'
+            );
+        }
+        if (options.omitBotIds) {
+            console.log(
+                'Omitting bot IDs. Bot IDs will be replaced with placeholders.'
             );
         }
         await auxGenFs(input, dir, options);
@@ -517,6 +525,7 @@ interface GenFsOptions {
 
     writeSystemlessBots?: boolean;
     omitExtraBots?: boolean;
+    preserveBotIds?: boolean;
 }
 
 async function auxGenFs(input: string, output: string, options: GenFsOptions) {
@@ -591,8 +600,9 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
             const dirName = system.replace(/\./g, path.sep);
             const dir = path.resolve(output, auxName, dirName);
 
+            const finalId = options.preserveBotIds ? id : '{id}';
             const botJson: Bot = {
-                id,
+                id: finalId,
                 tags: {},
             };
 
@@ -668,7 +678,7 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
                 const botAux: StoredAuxVersion1 = {
                     version: 1,
                     state: {
-                        [id]: botJson,
+                        [finalId]: botJson,
                     },
                 };
                 await writeFile(
@@ -903,9 +913,19 @@ async function auxReadFsCore(
 
                 // Get the first bot Id from the aux file
                 if (isSystemBotFile && !botId) {
-                    for (let id in auxBotsState) {
+                    for (let id of Object.keys(auxBotsState)) {
                         if (hasValue(id)) {
-                            console.log(`Found bot ID: ${id}`);
+                            if (id === '{id}') {
+                                const newId = uuid();
+                                const b = auxBotsState[id];
+                                b.id = newId;
+                                auxBotsState[newId] = b;
+                                delete auxBotsState[id];
+                                id = newId;
+                                console.log(`Generated bot ID: ${id}`);
+                            } else {
+                                console.log(`Found bot ID: ${id}`);
+                            }
                             botId = id;
                             hasBot = true;
                             break;
