@@ -621,11 +621,17 @@ async function auxGenFs(input: string, output: string, options: GenFsOptions) {
 
             // Don't track tag masks
             for (const tag of Object.keys(bot.tags)) {
+                const writable = !/[\\/]/.test(tag);
+                if (!writable) {
+                    console.warn(
+                        `Skipping tag with invalid characters: ${tag}`
+                    );
+                }
 
                 let value = bot.tags[tag];
 
                 let written = false;
-                if (hasValue(value)) {
+                if (writable && hasValue(value)) {
                     let defaultExtension = 'txt';
                     if (typeof value === 'object') {
                         let json = JSON.stringify(value, null, 2);
