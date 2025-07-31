@@ -19,3 +19,4 @@ export * from './SearchRecordsStore';
 export * from './SearchRecordsController';
 export * from './MemorySearchRecordsStore';
 export * from './SearchInterface';
+export * from './TypesenseSearchInterface';

@@ -1,0 +1,285 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import type {
+    SearchRecord,
+    SearchRecordsStore,
+    SearchSubscriptionMetrics,
+    SubscriptionFilter,
+} from '@casual-simulation/aux-records';
+import { cleanupObject } from '@casual-simulation/aux-records';
+import type {
+    ListCrudStoreSuccess,
+    ListCrudStoreByMarkerRequest,
+} from '@casual-simulation/aux-records/crud/CrudRecordsStore';
+import type {
+    Prisma,
+    PrismaClient,
+    SearchRecord as PrismaSearchRecord,
+} from './generated';
+import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
+import type { PrismaMetricsStore } from './PrismaMetricsStore';
+import { z } from 'zod';
+
+const ERROR_RESULT_SCHEMA = z
+    .object({
+        success: z.literal(false),
+        errorCode: z.string(),
+        errorMessage: z.string(),
+    })
+    .passthrough()
+    .optional()
+    .nullable();
+
+const TRACE_NAME = 'PrismaSearchRecordsStore';
+
+export class PrismaSearchRecordsStore implements SearchRecordsStore {
+    private _client: PrismaClient;
+    private _metrics: PrismaMetricsStore;
+
+    constructor(client: PrismaClient, metrics: PrismaMetricsStore) {
+        this._client = client;
+        this._metrics = metrics;
+    }
+
+    @traced(TRACE_NAME)
+    async getSubscriptionMetrics(
+        filter: SubscriptionFilter
+    ): Promise<SearchSubscriptionMetrics> {
+        const metrics = await this._metrics.getSubscriptionRecordMetrics(
+            filter
+        );
+
+        const where: Prisma.SearchRecordWhereInput = {};
+
+        if (filter.ownerId) {
+            where.record = {
+                ownerId: filter.ownerId,
+            };
+        } else if (filter.studioId) {
+            where.record = {
+                studioId: filter.studioId,
+            };
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const [totalItems] = await Promise.all([
+            this._client.searchRecord.count({
+                where,
+            }),
+        ]);
+
+        return {
+            ...metrics,
+            totalItems,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async createItem(recordName: string, item: SearchRecord): Promise<void> {
+        await this._client.searchRecord.create({
+            data: {
+                recordName: recordName,
+                address: item.address,
+                markers: item.markers,
+                collectionName: item.collectionName,
+                searchApiKey: item.searchApiKey,
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async getItemByAddress(
+        recordName: string,
+        address: string
+    ): Promise<SearchRecord> {
+        const item = await this._client.searchRecord.findUnique({
+            where: {
+                recordName_address: {
+                    recordName: recordName,
+                    address: address,
+                },
+            },
+        });
+
+        if (item) {
+            return this._convertRecord(item);
+        }
+
+        return null;
+    }
+
+    @traced(TRACE_NAME)
+    async updateItem(
+        recordName: string,
+        item: Partial<SearchRecord>
+    ): Promise<void> {
+        await this._client.searchRecord.update({
+            where: {
+                recordName_address: {
+                    recordName: recordName,
+                    address: item.address,
+                },
+            },
+            data: cleanupObject({
+                markers: item.markers,
+                collectionName: item.collectionName,
+                searchApiKey: item.searchApiKey,
+            }),
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async putItem(
+        recordName: string,
+        item: Partial<SearchRecord>
+    ): Promise<void> {
+        await this._client.searchRecord.upsert({
+            where: {
+                recordName_address: {
+                    recordName: recordName,
+                    address: item.address,
+                },
+            },
+            create: {
+                recordName: recordName,
+                address: item.address,
+                markers: item.markers,
+                collectionName: item.collectionName,
+                searchApiKey: item.searchApiKey,
+            },
+            update: cleanupObject({
+                markers: item.markers,
+                collectionName: item.collectionName,
+                searchApiKey: item.searchApiKey,
+            }),
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async deleteItem(recordName: string, address: string): Promise<void> {
+        await this._client.searchRecord.delete({
+            where: {
+                recordName_address: {
+                    recordName: recordName,
+                    address: address,
+                },
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async listItems(
+        recordName: string,
+        address: string | null
+    ): Promise<ListCrudStoreSuccess<SearchRecord>> {
+        const filter: Prisma.SearchRecordWhereInput = {
+            recordName: recordName,
+        };
+
+        if (address) {
+            filter.address = {
+                gt: address,
+            };
+        }
+
+        const [count, records] = await Promise.all([
+            this._client.searchRecord.count({
+                where: {
+                    recordName: recordName,
+                },
+            }),
+            this._client.searchRecord.findMany({
+                where: filter,
+                orderBy: {
+                    address: 'asc',
+                },
+                select: {
+                    address: true,
+                    markers: true,
+                    collectionName: true,
+                    searchApiKey: true,
+                },
+                take: 10,
+            }),
+        ]);
+
+        return {
+            success: true,
+            totalCount: count,
+            items: records.map((r) => this._convertRecord(r)),
+            marker: null,
+        };
+    }
+
+    @traced(TRACE_NAME)
+    async listItemsByMarker(
+        request: ListCrudStoreByMarkerRequest
+    ): Promise<ListCrudStoreSuccess<SearchRecord>> {
+        let query: Prisma.SearchRecordWhereInput = {
+            recordName: request.recordName,
+            markers: { has: request.marker },
+        };
+        if (!!request.startingAddress) {
+            query.address = { gt: request.startingAddress };
+        }
+
+        const [count, records] = await Promise.all([
+            this._client.searchRecord.count({
+                where: {
+                    recordName: request.recordName,
+                    markers: { has: request.marker },
+                },
+            }),
+            this._client.searchRecord.findMany({
+                where: query,
+                orderBy: {
+                    address: request.sort === 'descending' ? 'desc' : 'asc',
+                },
+                select: {
+                    address: true,
+                    markers: true,
+                    collectionName: true,
+                    searchApiKey: true,
+                },
+                take: 10,
+            }),
+        ]);
+
+        return {
+            success: true,
+            items: records.map((r) => this._convertRecord(r)),
+            totalCount: count,
+            marker: null,
+        };
+    }
+
+    private _convertRecord(
+        record: Omit<
+            PrismaSearchRecord,
+            'recordName' | 'createdAt' | 'updatedAt'
+        >
+    ): SearchRecord {
+        return {
+            address: record.address,
+            markers: record.markers,
+            collectionName: record.collectionName,
+            searchApiKey: record.searchApiKey,
+        };
+    }
+}
