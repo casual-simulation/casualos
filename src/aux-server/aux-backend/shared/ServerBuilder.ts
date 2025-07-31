@@ -141,6 +141,7 @@ import { TelegramNotificationMessenger } from '../notifications/TelegramNotifica
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
+import { Client as TypesenseClient } from 'typesense';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -184,6 +185,11 @@ import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
 import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
 import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
+import type { SearchRecordsStore } from '@casual-simulation/aux-records/search';
+import { SearchRecordsController } from '@casual-simulation/aux-records/search';
+import { TypesenseSearchInterface } from '@casual-simulation/aux-records/search';
+import type { NodeConfiguration } from 'typesense/lib/Typesense/Configuration';
+import { PrismaSearchRecordsStore } from 'aux-backend/prisma/PrismaSearchRecordsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -206,6 +212,7 @@ export interface BuildReturn {
     websocketController: WebsocketController;
     packagesController: PackageRecordsController;
     packageVersionController: PackageVersionRecordsController;
+    searchRecordsController: SearchRecordsController | null;
     dynamodbClient: DocumentClient;
     mongoClient: MongoClient;
     mongoDatabase: Db;
@@ -354,6 +361,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _packageVersionsStore: PrismaPackageVersionRecordsStore;
     private _packagesController: PackageRecordsController;
     private _packageVersionController: PackageVersionRecordsController;
+
+    private _searchInterface: TypesenseSearchInterface | null = null;
+    private _searchStore: SearchRecordsStore | null = null;
+    private _searchController: SearchRecordsController | null = null;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -688,6 +699,10 @@ export class ServerBuilder implements SubscriptionLike {
             metricsStore
         );
         this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._searchStore = new PrismaSearchRecordsStore(
             prismaClient,
             metricsStore
         );
@@ -1168,6 +1183,25 @@ export class ServerBuilder implements SubscriptionLike {
                 );
             },
         });
+        return this;
+    }
+
+    useTypesense(
+        options: Pick<ServerConfig, 'typesense'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Typesense.');
+        if (!options.typesense) {
+            throw new Error('Typesense options must be provided.');
+        }
+
+        const typesense = options.typesense;
+        const client = new TypesenseClient({
+            nodes: typesense.nodes as NodeConfiguration[],
+            apiKey: typesense.apiKey,
+            connectionTimeoutSeconds: typesense.connectionTimeoutSeconds,
+        });
+        this._searchInterface = new TypesenseSearchInterface(client);
+
         return this;
     }
 
@@ -1806,6 +1840,16 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._searchStore && this._searchInterface) {
+            console.log('[ServerBuilder] Using Search Records.');
+            this._searchController = new SearchRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._searchStore,
+                searchInterface: this._searchInterface,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1828,6 +1872,7 @@ export class ServerBuilder implements SubscriptionLike {
             notificationsController: this._notificationsController,
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
+            searchRecordsController: this._searchController,
         });
 
         const buildReturn: BuildReturn = {
@@ -1846,6 +1891,7 @@ export class ServerBuilder implements SubscriptionLike {
             websocketController: this._websocketController,
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
+            searchRecordsController: this._searchController,
 
             moderationController: this._moderationController,
             moderationJobProvider: this._moderationJobProvider,

@@ -220,6 +220,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useSystemNotifications();
     }
 
+    if (config.typesense) {
+        builder.useTypesense();
+    }
+
     if (config.webauthn) {
         builder.useWebAuthn();
     }
