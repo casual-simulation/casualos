@@ -307,7 +307,8 @@ export type AvailablePermissions =
     | WebhookPermission
     | NotificationPermission
     | PackagePermission
-    | PackageVersionPermission;
+    | PackageVersionPermission
+    | SearchPermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
