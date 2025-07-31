@@ -707,6 +707,11 @@ export class AuxRuntime
                 id: 'casualos',
                 exports,
             };
+        } else if (moduleName === 'typesense') {
+            return {
+                id: 'typesense',
+                exports: await import('typesense'),
+            };
         }
 
         if (allowCustomResolution) {
