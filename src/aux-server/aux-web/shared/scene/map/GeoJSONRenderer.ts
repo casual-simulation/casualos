@@ -463,21 +463,59 @@ export class GeoJSONRenderer {
     }
 
     drawPoint(coordinates: number[], attr?: PointAttributes) {
-        if (coordinates.length !== 2) {
+        // Debug 3D info
+        if (coordinates.length === 3) {
+            console.log('[GeoJSONRenderer.3D] Drawing 3D Point:', {
+                lon: coordinates[0],
+                lat: coordinates[1],
+                altitude: coordinates[2],
+                attributes: attr,
+                viewPixel: this.coordToViewPixel(
+                    coordinates.slice(0, 2) as PointPosition
+                ),
+            });
+        }
+
+        // Accept both 2D and 3D coordinates
+        if (coordinates.length < 2 || coordinates.length > 3) {
             throw new Error('Invalid coordinates for PointPosition');
         }
-        const [x, y] = this.coordToViewPixel(coordinates as PointPosition);
+
+        // Use only the first two coordinates (lon, lat) for 2D rendering
+        const [x, y] = this.coordToViewPixel(
+            coordinates.slice(0, 2) as PointPosition
+        );
+
+        // The altitude (if present) could be used for visual effects
+        const altitude = coordinates.length === 3 ? coordinates[2] : 0;
 
         // Check if point is within canvas bounds
         if (x < 0 || x > this.canvas.width || y < 0 || y > this.canvas.height) {
-            console.log(
-                '[GeoJSONRenderer] Point outside canvas bounds, skipping'
-            );
+            console.log('[GeoJSONRenderer.3D] Point outside canvas bounds:', {
+                x,
+                y,
+                canvasSize: { w: this.canvas.width, h: this.canvas.height },
+            });
             return;
         }
-
         this._drawRoutine((ctx) => {
-            const radius = attr?.size ? 5 : (this._style.pointSize || 5) / 2;
+            // Scale radius based on altitude if extrudeHeight is set
+            const baseRadius = attr?.size
+                ? 5
+                : (this._style.pointSize || 5) / 2;
+            let radius = baseRadius;
+
+            // If there's an extrude height, we could visualize it
+            const extrudeHeight = this._style.extrudeHeight || 0;
+            if (extrudeHeight > 0 && altitude > 0) {
+                // Scale radius based on altitude
+                radius = baseRadius * (1 + altitude / 10000); // Adjust scale factor as needed
+                console.log(
+                    '[GeoJSONRenderer.3D] Scaled point radius by altitude:',
+                    { baseRadius, scaledRadius: radius, altitude }
+                );
+            }
+
             const fillStyle =
                 attr?.fillStyle ??
                 this._style.pointColor ??
@@ -491,7 +529,7 @@ export class GeoJSONRenderer {
     }
 
     drawLineString(
-        coordinates: Array<[number, number]>,
+        coordinates: Array<[number, number] | [number, number, number]>,
         attr?: LineStringAttributes
     ) {
         if (coordinates.length < 2) {
@@ -499,6 +537,23 @@ export class GeoJSONRenderer {
                 '[GeoJSONRenderer] Not enough coordinates for LineString'
             );
             return;
+        }
+
+        // Debug 3D line info
+        const altitudes = coordinates
+            .filter((coord) => coord.length === 3)
+            .map((coord) => coord[2]);
+
+        if (altitudes.length > 0) {
+            console.log('[GeoJSONRenderer.3D] Drawing 3D LineString:', {
+                pointCount: coordinates.length,
+                altitudeRange: {
+                    min: Math.min(...altitudes),
+                    max: Math.max(...altitudes),
+                    points: altitudes,
+                },
+                attributes: attr,
+            });
         }
 
         coordinates = [...coordinates];
@@ -510,9 +565,30 @@ export class GeoJSONRenderer {
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            ctx.moveTo(...this.coordToViewPixel(coordinates[0]));
+            // Handle 2D or 3D coordinates
+            const firstCoord = coordinates[0].slice(0, 2) as PointPosition;
+            ctx.moveTo(...this.coordToViewPixel(firstCoord));
+
+            // For 3D lines, we could vary the line width or color based on altitude
             for (let i = 1; i < coordinates.length; i++) {
-                ctx.lineTo(...this.coordToViewPixel(coordinates[i]));
+                const coord = coordinates[i].slice(0, 2) as PointPosition;
+
+                // If 3D, we could modify appearance based on altitude change
+                if (
+                    coordinates[i].length === 3 &&
+                    coordinates[i - 1].length === 3
+                ) {
+                    const altChange = coordinates[i][2] - coordinates[i - 1][2];
+                    if (Math.abs(altChange) > 1000) {
+                        // Significant altitude change
+                        console.log(
+                            `[GeoJSONRenderer.3D] Altitude change at segment ${i}:`,
+                            altChange
+                        );
+                    }
+                }
+
+                ctx.lineTo(...this.coordToViewPixel(coord));
             }
             ctx.stroke();
             ctx.globalAlpha = 1.0;
@@ -520,7 +596,7 @@ export class GeoJSONRenderer {
     }
 
     drawPolygon(
-        coordinates: Array<Array<[number, number]>>,
+        coordinates: Array<Array<[number, number] | [number, number, number]>>,
         attr?: PolygonAttributes
     ) {
         if (coordinates.length === 0) {
@@ -541,7 +617,9 @@ export class GeoJSONRenderer {
 
             // Draw exterior ring
             if (base.length >= 3) {
-                const firstPoint = this.coordToViewPixel(base[0]);
+                const firstPoint = this.coordToViewPixel(
+                    base[0].slice(0, 2) as PointPosition
+                );
                 console.log(
                     '[GeoJSONRenderer] First polygon point pixel:',
                     firstPoint
@@ -549,7 +627,11 @@ export class GeoJSONRenderer {
 
                 ctx.moveTo(...firstPoint);
                 for (let i = 1; i < base.length; i++) {
-                    ctx.lineTo(...this.coordToViewPixel(base[i]));
+                    ctx.lineTo(
+                        ...this.coordToViewPixel(
+                            base[i].slice(0, 2) as PointPosition
+                        )
+                    );
                 }
                 ctx.closePath();
             }
@@ -557,15 +639,23 @@ export class GeoJSONRenderer {
             // Draw holes
             for (const hole of holes) {
                 if (hole.length >= 3) {
-                    ctx.moveTo(...this.coordToViewPixel(hole[0]));
+                    ctx.moveTo(
+                        ...this.coordToViewPixel(
+                            hole[0].slice(0, 2) as PointPosition
+                        )
+                    );
                     for (let i = 1; i < hole.length; i++) {
-                        ctx.lineTo(...this.coordToViewPixel(hole[i]));
+                        ctx.lineTo(
+                            ...this.coordToViewPixel(
+                                hole[i].slice(0, 2) as PointPosition
+                            )
+                        );
                     }
                     ctx.closePath();
                 }
             }
 
-            // Fill with style
+            // Fill and stroke with style
             if (this._style.fillOpacity! > 0) {
                 ctx.fillStyle =
                     attr?.fillStyle ??
@@ -594,6 +684,21 @@ export class GeoJSONRenderer {
         geometry: G,
         geometryAttributes: GeometryAttributes<G> | Record<string, any>
     ) {
+        // Debug geometry type and 3D status
+        if ('coordinates' in geometry) {
+            this._debug3DCoordinates(
+                geometry.type,
+                geometry.coordinates,
+                geometryAttributes
+            );
+        } else if ('geometries' in geometry) {
+            this._debug3DCoordinates(
+                geometry.type,
+                geometry.geometries,
+                geometryAttributes
+            );
+        }
+
         // Merge with style properties from feature properties
         const mergedAttributes = this._mergeWithStyle(geometryAttributes);
 
@@ -607,13 +712,17 @@ export class GeoJSONRenderer {
                 break;
             case 'LineString':
                 this.drawLineString(
-                    geometry.coordinates as Array<[number, number]>,
+                    geometry.coordinates as Array<
+                        [number, number] | [number, number, number]
+                    >,
                     mergedAttributes as LineStringAttributes
                 );
                 break;
             case 'Polygon':
                 this.drawPolygon(
-                    geometry.coordinates as Array<Array<[number, number]>>,
+                    geometry.coordinates as Array<
+                        Array<[number, number] | [number, number, number]>
+                    >,
                     mergedAttributes as PolygonAttributes
                 );
                 break;
@@ -794,5 +903,32 @@ export class GeoJSONRenderer {
             this.canvas = null;
         }
         this.ctx = null;
+    }
+
+    private _debug3DCoordinates(
+        type: string,
+        coordinates: any,
+        properties?: any
+    ): void {
+        const has3D = this._checkHas3D(coordinates);
+        console.log(`[GeoJSONRenderer.3D] ${type}:`, {
+            has3D,
+            coordinates: coordinates,
+            properties: properties || {},
+            extrudeHeight:
+                properties?.style?.extrudeHeight ||
+                properties?.extrudeHeight ||
+                0,
+        });
+    }
+
+    private _checkHas3D(coords: any): boolean {
+        if (Array.isArray(coords)) {
+            if (coords.length === 3 && typeof coords[0] === 'number') {
+                return true;
+            }
+            return coords.some((c) => this._checkHas3D(c));
+        }
+        return false;
     }
 }
