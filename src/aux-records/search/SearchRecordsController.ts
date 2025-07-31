@@ -218,7 +218,6 @@ export class SearchRecordsController extends CrudRecordsController<
             const collection = await this._searchInterface.createCollection({
                 name: collectionName,
                 fields,
-                defaultSortingField: 'address',
             });
 
             const apiKey = await this._searchInterface.createApiKey({
