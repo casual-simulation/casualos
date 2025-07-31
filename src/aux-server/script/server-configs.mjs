@@ -43,8 +43,6 @@ const auxWebDist = path.resolve(auxWeb, 'dist');
 const auxAuth = path.resolve(auxWeb, 'aux-auth');
 const auxAuthDist = path.resolve(auxAuth, 'dist');
 
-const auxPlayer = path.resolve(auxWeb, 'aux-player');
-
 const auxVmDeno = path.resolve(src, 'aux-vm-deno');
 const denoEntry = path.resolve(auxVmDeno, 'vm', 'DenoAuxChannel.worker.js');
 
@@ -59,9 +57,6 @@ const denoBootstrapScripts = path.resolve(denoVm, 'deno');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
-
-const importPath = path.resolve(auxPlayer, 'import');
-const typesensePath = path.resolve(importPath, 'typesense.ts');
 
 let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
@@ -234,16 +229,6 @@ export function createConfigs(dev, version) {
                 },
                 minify: !dev,
                 plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
-            },
-        ],
-        [
-            'Typesense',
-            {
-                entryPoints: [typesensePath],
-                outdir: path.resolve(auxWebDist, 'lib'),
-                platform: 'browser',
-                format: 'esm',
-                minify: !dev,
             },
         ],
     ];
