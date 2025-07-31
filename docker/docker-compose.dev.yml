@@ -55,7 +55,7 @@ services:
         command: --config /etc/livekit.yaml
     typesense:
         image: typesense/typesense:29.0
-        restart: on-failure
+        restart: always
         ports:
             - '8108:8108'
         networks:
