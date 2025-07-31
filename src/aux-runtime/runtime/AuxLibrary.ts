@@ -3480,6 +3480,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordSearchCollection,
                 getSearchCollection,
+                eraseSearchCollection,
+                listSearchCollections,
+                listSearchCollectionsByMarker,
                 recordSearchDocument,
 
                 listUserStudios,
@@ -11407,6 +11410,47 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Creates or updates a search collection in the given record.
+     * 
+     * Returns a promise that resolves with the result of the operation.
+     * 
+     * @param request The request to create or update the search collection.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     * 
+     * @example Record a search collection with an automatic schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * @example Record a search collection with a custom schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               title: {
+                  type: 'string',
+               },
+               description: {
+                  type: 'string',
+               },
+               price: {
+                  type: 'int32',
+               }
+     *      }
+     * });
+     * 
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.recordSearchCollection
+     */
     function recordSearchCollection(
         request: RecordSearchCollectionApiRequest,
         options: RecordActionOptions = {}
@@ -11432,6 +11476,139 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Deletes a search collection along with all the documents in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param address The address of the search collection to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search collection
+     * const result = await os.eraseSearchCollection('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.eraseSearchCollection
+     */
+    function eraseSearchCollection(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseSearchCollection: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the search collections in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List search collections
+     * const result = await os.listSearchCollections('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.listSearchCollections
+     */
+    function listSearchCollections(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listSearchCollections: {
+                    input: {
+                        recordName,
+                        address: startingAddress,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the search collections in a record by a specific marker.
+     * @param recordName The name of the record to list the search collections from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'publicRead');
+     *
+     * @example List private search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.listSearchCollectionsByMarker
+     */
+    function listSearchCollectionsByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<SearchRecord>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listSearchCollections: {
+                    input: {
+                        recordName,
+                        marker,
+                        address: startingAddress,
+                        sort: options?.sort,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a search collection from the specified record.
+     * @param recordName The name of the record to retrieve the search collection from.
+     * @param address The address of the search collection to retrieve.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a search collection
+     * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.getSearchCollection
+     */
     function getSearchCollection(
         recordName: string,
         address: string
@@ -11453,6 +11630,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Records a search document to the specified search collection in the given record.
+     * @param request The request to record the search document.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a search document
+     * const result = await os.recordSearchDocument({
+     *    recordName: 'myRecord',
+     *    address: 'mySearchCollection',
+     *    document: {
+     *      // ensure that the document matches the schema of the search collection
+     *      title: 'My Document',
+     *      description: 'This is the content of my document.'
+     *      price: 10,
+     *    }
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.recordSearchDocument
+     */
     function recordSearchDocument(
         request: RecordSearchDocumentApiRequest,
         options: RecordActionOptions = {}
