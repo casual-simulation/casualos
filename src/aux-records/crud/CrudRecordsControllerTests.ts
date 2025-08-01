@@ -226,7 +226,12 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toMatchObject(item);
+                ).resolves.toMatchObject(
+                    createStoreItem({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    })
+                );
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -399,7 +404,12 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toMatchObject(item);
+                ).resolves.toMatchObject(
+                    createStoreItem({
+                        address: 'address',
+                        markers: [PRIVATE_MARKER],
+                    })
+                );
             });
 
             it('should reject the request if given an invalid key', async () => {
@@ -422,7 +432,12 @@ export function testCrudRecordsController<
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toMatchObject(item);
+                ).resolves.toMatchObject(
+                    createStoreItem({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    })
+                );
             });
 
             if (allowRecordKeys) {
@@ -502,7 +517,7 @@ export function testCrudRecordsController<
                     await expect(
                         itemsStore.getItemByAddress(recordName, 'address')
                     ).resolves.toMatchObject(
-                        createInputItem({
+                        createStoreItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
                         })

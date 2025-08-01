@@ -223,7 +223,6 @@ describe('SearchRecordsController', () => {
                                 type: 'auto',
                             },
                         ],
-                        defaultSortingField: 'address',
                         numDocuments: 0,
                     },
                 ]);
