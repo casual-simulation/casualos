@@ -2199,6 +2199,7 @@ Object {
                         "permissions",
                         "webhook",
                         "ai",
+                        "search",
                       ],
                     },
                     "scope": Object {
@@ -2496,6 +2497,341 @@ Object {
         "type": "object",
       },
       "name": "listInstalledPackages",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/search/collection",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "schema": Object {
+                "catchall": Object {
+                  "schema": Object {
+                    "drop": Object {
+                      "description": "When set to \`true\`, the field will be dropped from the collection if it is not present in the input. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "index": Object {
+                      "description": "When set to \`false\`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: \`true\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "infix": Object {
+                      "description": "When set to \`true\`, the field value can be infix-searched. Incurs significant memory overhead. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "locale": Object {
+                      "description": "For configuring language specific tokenization, e.g. \`jp\` for Japanese. Default: \`en\` which also broadly supports most European languages.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "optional": Object {
+                      "description": "When set to \`true\`, the field can have empty, null or missing values. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "sort": Object {
+                      "description": "When set to true, the field will be sortable. Default: \`true\` for numbers, \`false\` otherwise.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "stem": Object {
+                      "description": "When set to \`true\`, the field value will be stemmed. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "store": Object {
+                      "description": "When set to \`false\`, the field value will not be stored on disk. Default: \`true\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "type": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "string",
+                        "string[]",
+                        "int32",
+                        "int32[]",
+                        "int64",
+                        "int64[]",
+                        "float",
+                        "float[]",
+                        "bool",
+                        "bool[]",
+                        "geopoint",
+                        "geopoint[]",
+                        "geopolygon",
+                        "object",
+                        "object[]",
+                        "string*",
+                        "image",
+                        "auto",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "schema": Object {},
+                "type": "object",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordSearchCollection",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/search/collection",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getSearchCollection",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/search/collection",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseSearchCollection",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/search/collection/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSearchCollections",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/search/document",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "document": Object {
+            "catchall": Object {
+              "options": Array [
+                Object {
+                  "type": "string",
+                },
+                Object {
+                  "type": "number",
+                },
+                Object {
+                  "type": "boolean",
+                },
+                Object {
+                  "maxLength": 100,
+                  "schema": Object {
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                Object {
+                  "schema": Object {
+                    "type": "number",
+                  },
+                  "type": "array",
+                },
+                Object {
+                  "schema": Object {
+                    "type": "boolean",
+                  },
+                  "type": "array",
+                },
+                Object {
+                  "catchall": Object {
+                    "options": Array [
+                      Object {
+                        "type": "string",
+                      },
+                      Object {
+                        "type": "number",
+                      },
+                      Object {
+                        "type": "boolean",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "schema": Object {},
+                  "type": "object",
+                },
+              ],
+              "type": "union",
+            },
+            "schema": Object {
+              "address": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "recordName": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "resourceKind": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "data",
+                  "file",
+                  "event",
+                  "marker",
+                  "role",
+                  "inst",
+                  "loom",
+                  "ai.sloyd",
+                  "ai.hume",
+                  "ai.openai.realtime",
+                  "webhook",
+                  "notification",
+                  "package",
+                  "package.version",
+                  "search",
+                ],
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordSearchDocument",
       "origins": "api",
     },
     Object {
@@ -3198,6 +3534,50 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "search",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -3271,6 +3651,7 @@ Object {
               "notification",
               "package",
               "package.version",
+              "search",
             ],
           },
         },
@@ -3466,6 +3847,7 @@ Object {
               "permissions",
               "webhook",
               "ai",
+              "search",
             ],
           },
           "packageId": Object {
@@ -7009,6 +7391,7 @@ Object {
                         "permissions",
                         "webhook",
                         "ai",
+                        "search",
                       ],
                     },
                     "scope": Object {
@@ -7306,6 +7689,341 @@ Object {
         "type": "object",
       },
       "name": "listInstalledPackages",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/search/collection",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "item": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "markers": Object {
+                "maxLength": 10,
+                "minLength": 1,
+                "schema": Object {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+              "schema": Object {
+                "catchall": Object {
+                  "schema": Object {
+                    "drop": Object {
+                      "description": "When set to \`true\`, the field will be dropped from the collection if it is not present in the input. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "index": Object {
+                      "description": "When set to \`false\`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: \`true\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "infix": Object {
+                      "description": "When set to \`true\`, the field value can be infix-searched. Incurs significant memory overhead. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "locale": Object {
+                      "description": "For configuring language specific tokenization, e.g. \`jp\` for Japanese. Default: \`en\` which also broadly supports most European languages.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "string",
+                    },
+                    "optional": Object {
+                      "description": "When set to \`true\`, the field can have empty, null or missing values. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "sort": Object {
+                      "description": "When set to true, the field will be sortable. Default: \`true\` for numbers, \`false\` otherwise.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "stem": Object {
+                      "description": "When set to \`true\`, the field value will be stemmed. Default: \`false\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "store": Object {
+                      "description": "When set to \`false\`, the field value will not be stored on disk. Default: \`true\`.",
+                      "nullable": true,
+                      "optional": true,
+                      "type": "boolean",
+                    },
+                    "type": Object {
+                      "type": "enum",
+                      "values": Array [
+                        "string",
+                        "string[]",
+                        "int32",
+                        "int32[]",
+                        "int64",
+                        "int64[]",
+                        "float",
+                        "float[]",
+                        "bool",
+                        "bool[]",
+                        "geopoint",
+                        "geopoint[]",
+                        "geopolygon",
+                        "object",
+                        "object[]",
+                        "string*",
+                        "image",
+                        "auto",
+                      ],
+                    },
+                  },
+                  "type": "object",
+                },
+                "schema": Object {},
+                "type": "object",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordSearchCollection",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/search/collection",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getSearchCollection",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/search/collection",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseSearchCollection",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/search/collection/list",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "nullable": true,
+            "optional": true,
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "sort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "ascending",
+              "descending",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "listSearchCollections",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/search/document",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "document": Object {
+            "catchall": Object {
+              "options": Array [
+                Object {
+                  "type": "string",
+                },
+                Object {
+                  "type": "number",
+                },
+                Object {
+                  "type": "boolean",
+                },
+                Object {
+                  "maxLength": 100,
+                  "schema": Object {
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                Object {
+                  "schema": Object {
+                    "type": "number",
+                  },
+                  "type": "array",
+                },
+                Object {
+                  "schema": Object {
+                    "type": "boolean",
+                  },
+                  "type": "array",
+                },
+                Object {
+                  "catchall": Object {
+                    "options": Array [
+                      Object {
+                        "type": "string",
+                      },
+                      Object {
+                        "type": "number",
+                      },
+                      Object {
+                        "type": "boolean",
+                      },
+                    ],
+                    "type": "union",
+                  },
+                  "schema": Object {},
+                  "type": "object",
+                },
+              ],
+              "type": "union",
+            },
+            "schema": Object {
+              "address": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "recordName": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "resourceKind": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "enum",
+                "values": Array [
+                  "data",
+                  "file",
+                  "event",
+                  "marker",
+                  "role",
+                  "inst",
+                  "loom",
+                  "ai.sloyd",
+                  "ai.hume",
+                  "ai.openai.realtime",
+                  "webhook",
+                  "notification",
+                  "package",
+                  "package.version",
+                  "search",
+                ],
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "recordSearchDocument",
       "origins": "api",
     },
     Object {
@@ -8008,6 +8726,50 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "search",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -8081,6 +8843,7 @@ Object {
               "notification",
               "package",
               "package.version",
+              "search",
             ],
           },
         },
@@ -8276,6 +9039,7 @@ Object {
               "permissions",
               "webhook",
               "ai",
+              "search",
             ],
           },
           "packageId": Object {
