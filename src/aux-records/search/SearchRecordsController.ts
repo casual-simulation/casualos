@@ -18,6 +18,7 @@
 import {
     failure,
     PUBLIC_READ_MARKER,
+    RESOURCE_KIND_VALIDATION,
     success,
     type ActionKinds,
     type Result,
@@ -54,6 +55,7 @@ import type {
 } from './SearchInterface';
 import { v4 as uuid } from 'uuid';
 import { traced } from '../tracing/TracingDecorators';
+import { ADDRESS_VALIDATION, RECORD_NAME_VALIDATION } from 'Validations';
 
 const TRACE_NAME = 'SearchRecordsController';
 
@@ -447,21 +449,35 @@ export const SEARCH_COLLECTION_SCHEMA = z
 
 export const SEARCH_DOCUMENT_SCHEMA = z
     .object({
-        recordName: z.string().optional().nullable(),
-        address: z.string().optional().nullable(),
-        resourceKind: z.string().optional().nullable(),
+        recordName: RECORD_NAME_VALIDATION.optional().nullable(),
+        address: ADDRESS_VALIDATION.nullable(),
+        resourceKind: RESOURCE_KIND_VALIDATION.optional().nullable(),
     })
     .catchall(
         z.union([
-            z.string(),
+            // Limit top level strings to 10 * 1024 characters (10KB)
+            z.string().max(10 * 1024),
             z.number(),
             z.boolean(),
-            z.array(z.string()),
+
+            // Limit arrays to 100 items, with each item being a string of max 1024 characters (1KB)
+            z
+                .array(
+                    z.string().max(1024) // (1KB)
+                )
+                .max(100),
             z.array(z.number()),
             z.array(z.boolean()),
             z
                 .object({})
-                .catchall(z.union([z.string(), z.number(), z.boolean()]))
+                .catchall(
+                    z.union([
+                        // Limit strings in nested objects to 1024 characters (1KB)
+                        z.string().max(1024),
+                        z.number(),
+                        z.boolean(),
+                    ])
+                )
                 .refine((val) => Object.keys(val).length < 15, {
                     message: 'Nested objects cannot have more than 15 keys.',
                 }),
