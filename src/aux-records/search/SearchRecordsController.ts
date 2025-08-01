@@ -17,6 +17,7 @@
  */
 import {
     failure,
+    isFailure,
     PUBLIC_READ_MARKER,
     RESOURCE_KIND_VALIDATION,
     success,
@@ -90,6 +91,29 @@ export class SearchRecordsController extends CrudRecordsController<
             resourceKind: 'search',
         });
         this._searchInterface = config.searchInterface;
+    }
+
+    protected async _eraseItemCore(
+        recordName: string,
+        address: string,
+        item: SearchRecord,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<void, SimpleError>> {
+        const result = await super._eraseItemCore(
+            recordName,
+            address,
+            item,
+            authorization
+        );
+        if (isFailure(result)) {
+            return result;
+        }
+
+        await this._searchInterface.dropCollection(item.collectionName);
+
+        return success();
     }
 
     @traced(TRACE_NAME)

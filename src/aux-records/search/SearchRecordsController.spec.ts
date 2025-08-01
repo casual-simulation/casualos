@@ -292,6 +292,40 @@ describe('SearchRecordsController', () => {
         });
     });
 
+    describe('eraseItem()', () => {
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+        });
+
+        it('should erase the collection', async () => {
+            const result = await manager.eraseItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(searchInterface.collections).toEqual([]);
+        });
+    });
+
     describe('storeDocument()', () => {
         let collectionName: string;
 

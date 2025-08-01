@@ -684,29 +684,35 @@ export function testCrudRecordsController<
 
     describe('eraseItem()', () => {
         beforeEach(async () => {
-            await itemsStore.createItem(
-                recordName,
-                createStoreItem({
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: createInputItem({
                     address: 'address',
                     markers: [PUBLIC_READ_MARKER],
-                })
-            );
+                }),
+                userId,
+                instances: [],
+            });
 
-            await itemsStore.createItem(
-                recordName,
-                createStoreItem({
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: createInputItem({
                     address: 'address2',
-                    markers: [PRIVATE_MARKER],
-                })
-            );
+                    markers: [PUBLIC_READ_MARKER],
+                }),
+                userId,
+                instances: [],
+            });
 
-            await itemsStore.createItem(
-                recordName,
-                createStoreItem({
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: createInputItem({
                     address: 'address3',
                     markers: [PUBLIC_READ_MARKER],
-                })
-            );
+                }),
+                userId,
+                instances: [],
+            });
         });
 
         it('should erase the item if the user has access', async () => {

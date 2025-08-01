@@ -416,7 +416,16 @@ export abstract class CrudRecordsController<
                 return subscriptionResult;
             }
 
-            await this._store.deleteItem(recordName, request.address);
+            const eraseResult = await this._eraseItemCore(
+                recordName,
+                request.address,
+                result,
+                authorization
+            );
+
+            if (isFailure(eraseResult)) {
+                return genericResult(eraseResult);
+            }
 
             return {
                 success: true,
@@ -618,6 +627,18 @@ export abstract class CrudRecordsController<
             | AuthorizeUserAndInstancesForResourcesSuccess
     ): Promise<Result<TStoreType, SimpleError>> {
         return success(item as unknown as TStoreType);
+    }
+
+    protected async _eraseItemCore(
+        recordName: string,
+        address: string,
+        item: TStoreType,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<void, SimpleError>> {
+        await this._store.deleteItem(recordName, address);
+        return success();
     }
 }
 
