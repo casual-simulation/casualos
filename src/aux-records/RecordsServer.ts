@@ -2688,6 +2688,51 @@ export class RecordsServer {
                     }
                 ),
 
+            eraseSearchDocument: procedure()
+                .origins('api')
+                .http('DELETE', '/api/v2/records/search/document')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        documentId: z.string().min(1).max(256),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, documentId, instances },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._searchRecordsController.eraseDocument({
+                                recordName,
+                                address,
+                                documentId,
+                                userId: validation.userId,
+                                instances,
+                            });
+                        return genericResult(result);
+                    }
+                ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')

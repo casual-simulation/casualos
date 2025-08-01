@@ -35,6 +35,7 @@ import {
     formatV1SessionKey,
     generateV1ConnectionToken,
     getStateFromUpdates,
+    isFailure,
     isRecordKey,
     parseSessionKey,
     SUBSCRIPTION_ID_NAMESPACE,
@@ -15158,6 +15159,227 @@ describe('RecordsServer', () => {
                         content: 'This is a test document',
                         tags: ['test', 'example'],
                     },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe.only('DELETE /api/v2/records/search/document', () => {
+        let collectionName: string;
+        let documentId: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            // Create a search collection first
+            const collectionResult = await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'test-collection',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            if (collectionResult.success === false) {
+                throw new Error(
+                    'Failed to create item: ' + collectionResult.errorMessage
+                );
+            }
+
+            const itemResult = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'test-collection'
+            );
+            collectionName = itemResult!.collectionName;
+
+            const result = await searchRecordsController.storeDocument({
+                recordName,
+                address: 'test-collection',
+                document: {
+                    title: 'Test Document',
+                    content: 'This is a test document',
+                    tags: ['test', 'example'],
+                    score: 95,
+                },
+                userId,
+                instances: [],
+            });
+
+            if (isFailure(result)) {
+                throw new Error(
+                    `Failed to create document: ${result.error.errorMessage}`
+                );
+            }
+
+            documentId = result.value.id;
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/document`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        documentId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should delete a document in a search collection', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/document`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        documentId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(searchInterface.documents).toEqual([[collectionName, []]]);
+        });
+
+        it('should return not_authorized if the user does not have permission', async () => {
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/document`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        documentId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'update',
+                        resourceKind: 'search',
+                        resourceId: 'test-collection',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return data_not_found if the search collection does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/document`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'nonexistent-collection',
+                        documentId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/document`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        documentId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/search/document',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'test-collection',
+                    documentId,
                 }),
             () => apiHeaders
         );
