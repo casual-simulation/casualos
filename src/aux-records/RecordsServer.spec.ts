@@ -14538,6 +14538,184 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe.only('DELETE /api/v2/records/search/collection', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/collection`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 if the user is not authorized', async () => {
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/collection`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'search',
+                        resourceId: 'address',
+                        subjectKind: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the search record was deleted
+            const item = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'address'
+            );
+            expect(item).toBeNull();
+        });
+
+        it('should delete a search record', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/collection`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the search record was deleted
+            const item = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'address'
+            );
+            expect(item).toBeNull();
+        });
+
+        it('should return not_found if the search record does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/search/collection`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'nonexistent',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/search/collection',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
