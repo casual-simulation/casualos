@@ -115,8 +115,8 @@ export class SearchRecordsController extends CrudRecordsController<
 
         if (!record) {
             return failure({
-                errorCode: 'record_not_found',
-                errorMessage: `Record not found.`,
+                errorCode: 'not_found',
+                errorMessage: `The Search record was not found.`,
             });
         }
 

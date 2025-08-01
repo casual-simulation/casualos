@@ -393,6 +393,28 @@ describe('SearchRecordsController', () => {
 
             expect(searchInterface.documents).toEqual([]);
         });
+
+        it('should return not_found if the search record does not exist', async () => {
+            const result = await manager.storeDocument({
+                recordName,
+                address: 'nonexistent',
+                document: {
+                    test: 'abc',
+                    number: 123,
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                })
+            );
+
+            expect(searchInterface.documents).toEqual([]);
+        });
     });
 
     describe('eraseDocument()', () => {
