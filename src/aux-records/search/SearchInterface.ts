@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type { Result, SimpleError } from '@casual-simulation/aux-common';
+
 /**
  * Defines a basic interface that is able to interact with a search engine.
  */
@@ -68,7 +70,7 @@ export interface SearchInterface {
     deleteDocument(
         collectionName: string,
         documentId: string
-    ): Promise<SearchDocumentInfo>;
+    ): Promise<Result<SearchDocumentInfo, SimpleError>>;
 
     /**
      * Creates a new API key for use with the search engine.

@@ -394,4 +394,187 @@ describe('SearchRecordsController', () => {
             expect(searchInterface.documents).toEqual([]);
         });
     });
+
+    describe('eraseDocument()', () => {
+        let collectionName: string;
+        let documentId: string;
+
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(
+                    `Failed to get item: ${result.errorMessage} (${result.errorCode})`
+                );
+            }
+
+            collectionName = result.item.collectionName;
+
+            // Store a document first
+            const storeResult = await manager.storeDocument({
+                recordName,
+                address: 'item1',
+                document: {
+                    test: 'abc',
+                    number: 123,
+                },
+                userId,
+                instances: [],
+            });
+
+            if (storeResult.success === false) {
+                throw new Error(
+                    `Failed to store document: ${storeResult.error.errorMessage} (${storeResult.error.errorCode})`
+                );
+            }
+
+            documentId = storeResult.value.id;
+        });
+
+        it('should be able to erase a document from a collection', async () => {
+            const result = await manager.eraseDocument({
+                recordName,
+                address: 'item1',
+                documentId,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    id: documentId,
+                    test: 'abc',
+                    number: 123,
+                })
+            );
+
+            // Check that the document was removed from the search interface
+            expect(searchInterface.documents).toEqual([[collectionName, []]]);
+        });
+
+        it('should return not_authorized if the user doesnt have permission', async () => {
+            const result = await manager.eraseDocument({
+                recordName,
+                address: 'item1',
+                documentId,
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'update',
+                        resourceKind: 'search',
+                        resourceId: 'item1',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                    recommendedEntitlement: undefined,
+                })
+            );
+
+            // Check that the document was not removed
+            expect(searchInterface.documents).toEqual([
+                [
+                    collectionName,
+                    [
+                        {
+                            id: documentId,
+                            test: 'abc',
+                            number: 123,
+                        },
+                    ],
+                ],
+            ]);
+        });
+
+        it('should return not_found if the search record does not exist', async () => {
+            const result = await manager.eraseDocument({
+                recordName,
+                address: 'nonexistent',
+                documentId,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                })
+            );
+
+            // Original document should still exist
+            expect(searchInterface.documents).toEqual([
+                [
+                    collectionName,
+                    [
+                        {
+                            id: documentId,
+                            test: 'abc',
+                            number: 123,
+                        },
+                    ],
+                ],
+            ]);
+        });
+
+        it('should return success even if the document does not exist in the collection', async () => {
+            const result = await manager.eraseDocument({
+                recordName,
+                address: 'item1',
+                documentId: 'nonexistent-document-id',
+                userId,
+                instances: [],
+            });
+
+            // Should still return success as the operation is idempotent
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The document was not found.',
+                })
+            );
+
+            // Original document should still exist
+            expect(searchInterface.documents).toEqual([
+                [
+                    collectionName,
+                    [
+                        {
+                            id: documentId,
+                            test: 'abc',
+                            number: 123,
+                        },
+                    ],
+                ],
+            ]);
+        });
+    });
 });

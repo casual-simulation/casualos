@@ -16,6 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {
+    failure,
+    success,
+    type Result,
+    type SimpleError,
+} from '@casual-simulation/aux-common';
 import type {
     SearchApiKey,
     SearchApiKeyData,
@@ -163,7 +169,7 @@ export class MemorySearchInterface implements SearchInterface {
     async deleteDocument(
         collectionName: string,
         documentId: string
-    ): Promise<SearchDocumentInfo> {
+    ): Promise<Result<SearchDocumentInfo, SimpleError>> {
         const collection = this._collections.get(collectionName);
         if (!collection) {
             throw new Error(`Collection ${collectionName} does not exist.`);
@@ -180,15 +186,16 @@ export class MemorySearchInterface implements SearchInterface {
             (doc) => doc.id === documentId
         );
         if (documentIndex === -1) {
-            throw new Error(
-                `Document with id ${documentId} does not exist in collection ${collectionName}.`
-            );
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The document was not found.`,
+            });
         }
 
         const [deletedDocument] = documents.splice(documentIndex, 1);
         collection.numDocuments--;
 
-        return deletedDocument;
+        return success(deletedDocument);
     }
 
     async createApiKey(apiKey: SearchApiKeyData): Promise<SearchApiKey> {

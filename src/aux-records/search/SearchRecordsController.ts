@@ -55,7 +55,7 @@ import type {
 } from './SearchInterface';
 import { v4 as uuid } from 'uuid';
 import { traced } from '../tracing/TracingDecorators';
-import { ADDRESS_VALIDATION, RECORD_NAME_VALIDATION } from 'Validations';
+import { ADDRESS_VALIDATION, RECORD_NAME_VALIDATION } from '../Validations';
 
 const TRACE_NAME = 'SearchRecordsController';
 
@@ -144,6 +144,59 @@ export class SearchRecordsController extends CrudRecordsController<
         );
 
         return success(result);
+    }
+
+    @traced(TRACE_NAME)
+    async eraseDocument(
+        request: EraseDocumentRequest
+    ): Promise<EraseDocumentResult> {
+        const contextResult = await this.policies.constructAuthorizationContext(
+            {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            }
+        );
+
+        if (contextResult.success === false) {
+            return failure(contextResult);
+        }
+
+        const recordName = contextResult.context.recordName;
+        const record = await this.store.getItemByAddress(
+            recordName,
+            request.address
+        );
+
+        if (!record) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The Search record was not found.`,
+            });
+        }
+
+        const authorizationResult =
+            await this.policies.authorizeUserAndInstances(
+                contextResult.context,
+                {
+                    resourceKind: 'search',
+                    resourceId: record.address,
+                    action: 'update',
+                    instances: request.instances,
+                    userId: request.userId,
+                    markers: record.markers,
+                }
+            );
+
+        if (authorizationResult.success === false) {
+            return failure(authorizationResult);
+        }
+
+        const result = await this._searchInterface.deleteDocument(
+            record.collectionName,
+            request.documentId
+        );
+
+        return result;
     }
 
     protected async _transformInputItem(
@@ -525,3 +578,32 @@ export interface StoreDocumentRequest {
 }
 
 export type StoreDocumentResult = Result<SearchDocumentInfo, SimpleError>;
+
+export interface EraseDocumentRequest {
+    /**
+     * The name of the record that the document should be erased from.
+     */
+    recordName: string;
+
+    /**
+     * The address of the search record that the document should be erased from.
+     */
+    address: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the document to erase.
+     */
+    documentId: string;
+
+    /**
+     * The instance(s) that are making the request.
+     */
+    instances: string[];
+}
+
+export type EraseDocumentResult = Result<SearchDocumentInfo, SimpleError>;
