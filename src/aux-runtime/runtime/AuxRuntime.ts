@@ -707,11 +707,6 @@ export class AuxRuntime
                 id: 'casualos',
                 exports,
             };
-        } else if (moduleName === 'typesense') {
-            return {
-                id: 'typesense',
-                exports: await import('typesense'),
-            };
         }
 
         if (allowCustomResolution) {
@@ -833,14 +828,10 @@ export class AuxRuntime
             }
         }
 
-        if (isUrl(moduleName)) {
-            return {
-                id: moduleName,
-                url: moduleName,
-            };
-        }
-
-        return null;
+        return {
+            id: moduleName,
+            url: moduleName,
+        };
     }
 
     getShoutTimers(): { [shout: string]: number } {
