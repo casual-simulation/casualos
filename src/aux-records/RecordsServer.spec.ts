@@ -14353,7 +14353,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('POST /api/v2/records/search/collection', () => {
+    describe('POST /api/v2/records/search/collection', () => {
         it('should return not_supported if the search controller is null', async () => {
             server = new RecordsServer({
                 allowedAccountOrigins,
@@ -14458,7 +14458,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('GET /api/v2/records/search/collection', () => {
+    describe('GET /api/v2/records/search/collection', () => {
         beforeEach(async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -14538,7 +14538,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('DELETE /api/v2/records/search/collection', () => {
+    describe('DELETE /api/v2/records/search/collection', () => {
         beforeEach(async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -14717,7 +14717,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('GET /api/v2/records/search/collection/list', () => {
+    describe('GET /api/v2/records/search/collection/list', () => {
         beforeEach(async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -14938,7 +14938,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('POST /api/v2/records/search/document', () => {
+    describe('POST /api/v2/records/search/document', () => {
         beforeEach(async () => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
