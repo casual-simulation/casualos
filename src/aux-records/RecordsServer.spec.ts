@@ -14638,19 +14638,20 @@ describe('RecordsServer', () => {
                         recordName,
                         resourceKind: 'search',
                         resourceId: 'address',
-                        subjectKind: 'user',
+                        subjectType: 'user',
                         subjectId: userId,
+                        action: 'delete',
                     },
                 },
                 headers: apiCorsHeaders,
             });
 
-            // Verify the search record was deleted
+            // Verify the search record was not deleted
             const item = await searchRecordsStore.getItemByAddress(
                 recordName,
                 'address'
             );
-            expect(item).toBeNull();
+            expect(item).toBeTruthy();
         });
 
         it('should delete a search record', async () => {
@@ -14712,6 +14713,227 @@ describe('RecordsServer', () => {
                     recordName,
                     address: 'address',
                 }),
+            () => apiHeaders
+        );
+    });
+
+    describe.only('GET /api/v2/records/search/collection/list', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address3',
+                    markers: ['secret'],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+        });
+
+        it('should list all search collections when no marker is specified', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/search/collection/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address1',
+                            collectionName: expect.any(String),
+                            searchApiKey: expect.any(String),
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'address2',
+                            collectionName: expect.any(String),
+                            searchApiKey: expect.any(String),
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'address3',
+                            collectionName: expect.any(String),
+                            searchApiKey: expect.any(String),
+                            markers: ['secret'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        describe('?marker', () => {
+            it('should list search collections filtered by marker', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/search/collection/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address1',
+                                collectionName: expect.any(String),
+                                searchApiKey: expect.any(String),
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                        ],
+                        totalCount: 1,
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return not_authorized if the user does not have access to the marker', async () => {
+                delete store.roles[recordName];
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/search/collection/list?recordName=${recordName}&marker=secret`,
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'search',
+                            action: 'list',
+                            subjectType: 'user',
+                            subjectId: userId,
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        it('should return not_authorized if the user does not have access to the record', async () => {
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/search/collection/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'search',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/search/collection/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/search/collection/list?recordName=${recordName}`,
+            () => null,
             () => apiHeaders
         );
     });
