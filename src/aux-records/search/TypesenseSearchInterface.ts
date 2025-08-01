@@ -28,6 +28,8 @@ import type {
     UpdatedSearchCollection,
 } from './SearchInterface';
 import type { Client } from 'typesense';
+import type { Result, SimpleError } from '@casual-simulation/aux-common';
+import { success } from '@casual-simulation/aux-common';
 
 export class TypesenseSearchInterface implements SearchInterface {
     private _client: Client;
@@ -114,12 +116,12 @@ export class TypesenseSearchInterface implements SearchInterface {
     async deleteDocument(
         collectionName: string,
         documentId: string
-    ): Promise<SearchDocumentInfo> {
+    ): Promise<Result<SearchDocumentInfo, SimpleError>> {
         const response = await this._client
             .collections<SearchDocumentInfo>(collectionName)
             .documents(documentId)
             .delete();
-        return response;
+        return success(response);
     }
 
     async createApiKey(apiKey: SearchApiKeyData): Promise<SearchApiKey> {
