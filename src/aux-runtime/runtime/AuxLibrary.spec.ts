@@ -309,6 +309,7 @@ import {
     formatV1RecordKey,
     formatV2RecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import type { HideLoadingScreenAction } from '@casual-simulation/aux-common/bots/BotEvents';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -3795,6 +3796,18 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.exitFullscreenMode();
                 expect(action).toEqual(exitFullscreen());
                 expect(context.actions).toEqual([exitFullscreen()]);
+            });
+        });
+
+        describe('os.hideLoadingScreen()', () => {
+            it('should issue a hide_loading_screen action', () => {
+                const promise: any = library.api.os.hideLoadingScreen();
+                const expected: HideLoadingScreenAction = {
+                    type: 'hide_loading_screen',
+                    taskId: context.tasks.size,
+                };
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

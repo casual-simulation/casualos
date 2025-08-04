@@ -76,6 +76,10 @@ export default class AuthStudio extends Vue {
 
     originalLogoUrl: string = null;
     logoUrl: string = null;
+
+    logoBackgroundColor: string = '';
+    originalLogoBackgroundColor: string = null;
+
     comIdFeatures: StudioComIdFeaturesConfiguration = {
         allowed: false,
     };
@@ -149,6 +153,12 @@ export default class AuthStudio extends Vue {
 
     get logoUrlFieldClass() {
         return this.errors.some((e) => e.for === 'logoUrl') ? 'md-invalid' : '';
+    }
+
+    get logoBackgroundColorFieldClass() {
+        return this.errors.some((e) => e.for === 'logoBackgroundColor')
+            ? 'md-invalid'
+            : '';
     }
 
     get comIdFieldClass() {
@@ -253,6 +263,7 @@ export default class AuthStudio extends Vue {
         return (
             this.displayName !== this.originalDisplayName ||
             this.logoUrl !== this.originalLogoUrl ||
+            this.logoBackgroundColor !== this.originalLogoBackgroundColor ||
             this.allowedStudioCreators !== this.originalAllowedStudioCreators ||
             this.ab1BootstrapUrl !== this.originalAb1BootstrapUrl
         );
@@ -294,6 +305,14 @@ export default class AuthStudio extends Vue {
 
             if (this.logoUrl !== this.originalLogoUrl) {
                 update.logoUrl = this.logoUrl || null;
+                hasUpdate = true;
+            }
+
+            if (this.logoBackgroundColor !== this.originalLogoBackgroundColor) {
+                update.playerConfig = {
+                    ...(update.playerConfig || {}),
+                    logoBackgroundColor: this.logoBackgroundColor || null,
+                };
                 hasUpdate = true;
             }
 
@@ -402,6 +421,7 @@ export default class AuthStudio extends Vue {
             if (result.success) {
                 this.originalDisplayName = this.displayName;
                 this.originalLogoUrl = this.logoUrl;
+                this.originalLogoBackgroundColor = this.logoBackgroundColor;
                 this.originalAllowedStudioCreators = this.allowedStudioCreators;
                 this.originalAb1BootstrapUrl = this.ab1BootstrapUrl;
                 this.originalArcGisApiKey = this.arcGisApiKey;
@@ -437,6 +457,7 @@ export default class AuthStudio extends Vue {
     async cancelUpdateStudio() {
         this.displayName = this.originalDisplayName;
         this.logoUrl = this.originalLogoUrl;
+        this.logoBackgroundColor = this.originalLogoBackgroundColor;
         this.allowedStudioCreators = this.originalAllowedStudioCreators;
         this.ab1BootstrapUrl = this.originalAb1BootstrapUrl;
         this.showUpdateComIdConfig = false;
@@ -462,6 +483,8 @@ export default class AuthStudio extends Vue {
                 this.originalDisplayName = this.displayName =
                     result.studio.displayName;
                 this.originalLogoUrl = this.logoUrl = result.studio.logoUrl;
+                this.originalLogoBackgroundColor = this.logoBackgroundColor =
+                    result.studio.playerConfig?.logoBackgroundColor ?? '';
                 this.requestedComId = this.comId = result.studio.comId;
                 this.ownerStudioComId = result.studio.ownerStudioComId;
                 this.comIdFeatures = result.studio.comIdFeatures;

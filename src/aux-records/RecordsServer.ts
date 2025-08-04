@@ -3854,6 +3854,17 @@ export class RecordsServer {
                             .max(512)
                             .nullable()
                             .optional(),
+                        logoBackgroundColor: z
+                            .string({
+                                invalid_type_error:
+                                    'logoBackgroundColor must be a string.',
+                                required_error:
+                                    'logoBackgroundColor is required.',
+                            })
+                            .min(1)
+                            .max(32)
+                            .nullable()
+                            .optional(),
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
                         playerConfig: COM_ID_PLAYER_CONFIG.optional(),
                         loomConfig: LOOM_CONFIG.optional(),

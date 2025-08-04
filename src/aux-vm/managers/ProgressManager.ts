@@ -15,11 +15,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { ProgressMessage } from '@casual-simulation/aux-common';
+import type { HideLoadingScreenAction } from '@casual-simulation/aux-common';
+import {
+    asyncResult,
+    hasValue,
+    LOAD_PORTALS,
+    type ProgressMessage,
+} from '@casual-simulation/aux-common';
 import type { AuxVM } from '../vm/AuxVM';
 import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
-import { tap, takeWhile } from 'rxjs/operators';
+import { BehaviorSubject, merge } from 'rxjs';
+import {
+    tap,
+    takeWhile,
+    map,
+    filter,
+    first,
+    mergeMap,
+    skipWhile,
+    take,
+} from 'rxjs/operators';
 
 /**
  * Defines a class that can manage the current loading progress state of a simulation.
@@ -27,58 +42,102 @@ import { tap, takeWhile } from 'rxjs/operators';
 export class ProgressManager implements SubscriptionLike {
     private _progress: BehaviorSubject<ProgressMessage>;
     private _vm: AuxVM;
+    private _onPortalLoaded: Observable<string>;
     private _sub: Subscription;
 
     get updates(): Observable<ProgressMessage> {
         return this._progress;
     }
 
-    constructor(vm: AuxVM) {
+    constructor(vm: AuxVM, onPortalLoaded: Observable<string>) {
         this._vm = vm;
+        this._onPortalLoaded = onPortalLoaded;
 
         this._progress = new BehaviorSubject<ProgressMessage>({
             type: 'progress',
             progress: 0,
             message: 'Starting...',
         });
-        this._sub = this._vm.connectionStateChanged
-            .pipe(
+
+        // loading is only done when a portal is opened
+        const vmProgress: Observable<ProgressMessage> =
+            this._vm.connectionStateChanged.pipe(
                 takeWhile((m) => m.type !== 'init'),
-                tap((message) => {
-                    if (message.type === 'progress') {
-                        this._progress.next(message);
-                    } else if (message.type === 'authorization') {
-                        if (message.authorized === false) {
-                            this._progress.next({
+                filter(
+                    (m) =>
+                        m.type === 'progress' ||
+                        m.type === 'authorization' ||
+                        m.type === 'authentication'
+                ),
+                map((m) => {
+                    if (m.type === 'progress') {
+                        return {
+                            ...m,
+                            done: false,
+                        };
+                    } else if (m.type === 'authorization') {
+                        if (!m.authorized) {
+                            return {
                                 type: 'progress',
                                 progress: 1,
                                 message: 'You are not authorized.',
                                 error: true,
-                            });
+                            } as ProgressMessage;
                         }
-                    } else if (message.type === 'authentication') {
-                        if (message.authenticated === false) {
-                            this._progress.next({
+                    } else if (m.type === 'authentication') {
+                        if (!m.authenticated) {
+                            return {
                                 type: 'progress',
                                 progress: 1,
                                 message: 'You are not authenticated.',
                                 done: true,
-                            });
+                            } as ProgressMessage;
                         }
                     }
+                    return null;
+                }),
+                filter((m) => !!m),
+                tap({
+                    error: (err) => console.error(err),
                 })
-            )
-            .subscribe({
-                error: (err) => console.error(err),
-                complete: () => {
-                    this._progress.next({
-                        type: 'progress',
-                        message: 'Done.',
-                        progress: 1,
-                        done: true,
-                    });
-                },
-            });
+            );
+
+        const portalProgress: Observable<ProgressMessage> =
+            this._onPortalLoaded.pipe(
+                first((b) => LOAD_PORTALS.includes(b)),
+                map(() => ({
+                    type: 'progress',
+                    message: 'Done.',
+                    progress: 1,
+                    done: true,
+                }))
+            );
+
+        const hideProgress: Observable<ProgressMessage> =
+            this._vm.localEvents.pipe(
+                mergeMap((e) => e),
+                skipWhile((e) => e.type !== 'hide_loading_screen'),
+                take(1),
+                tap((e: HideLoadingScreenAction) => {
+                    if (hasValue(e.taskId)) {
+                        this._vm.sendEvents([asyncResult(e.taskId, null)]);
+                    }
+                }),
+                map(() => ({
+                    type: 'progress',
+                    message: 'Done.',
+                    progress: 1,
+                    done: true,
+                }))
+            );
+
+        const allProgress = merge(
+            vmProgress,
+            portalProgress,
+            hideProgress
+        ).pipe(takeWhile((m) => !m.done && !m.error, true));
+
+        this._sub = allProgress.subscribe(this._progress);
     }
 
     unsubscribe() {

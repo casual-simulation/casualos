@@ -13244,6 +13244,20 @@ interface Os {
      * Exits fullscreen mode.
      */
     exitFullscreenMode(): ExitFullscreenAction;
+    
+    /**
+     * Hides the loading screen.
+     * 
+     * Returns a promise that resolves when the loading screen has been hidden.
+     * 
+     * @example Hide the loading screen.
+     * await os.hideLoadingScreen();
+     * 
+     * @dochash actions/os/portals
+     * @docname os.hideLoadingScreen
+     * @docgroup 11-loading
+     */
+    hideLoadingScreen(): Promise<void>;
 
     /**
      * Shares some information via the device's social sharing functionality.

@@ -198,6 +198,22 @@ export interface WebConfig {
      * Whether to enable debug mode for the VM.
      */
     debug?: boolean;
+
+    /**
+     * The URL of the logo to display in the loading screen.
+     */
+    logoUrl?: string | null;
+
+    /**
+     * The title of the logo to display in the loading screen.
+     */
+    logoTitle?: string | null;
+
+    /**
+     * The background color of the logo to display in the loading screen.
+     * This is used to set the background color of the splash screen.
+     */
+    logoBackgroundColor?: string | null;
 }
 
 export const WEB_CONFIG_SCHEMA = z.object({
@@ -220,4 +236,8 @@ export const WEB_CONFIG_SCHEMA = z.object({
     allowedBiosOptions: z.array(BIOS_OPTION_SCHEMA).nullable(),
     defaultBiosOption: BIOS_OPTION_SCHEMA.nullable(),
     automaticBiosOption: BIOS_OPTION_SCHEMA.nullable(),
+
+    logoUrl: z.string().min(1).max(512).nullable().optional(),
+    logoBackgroundColor: z.string().min(1).max(32).nullable().optional(),
+    logoTitle: z.string().min(1).max(128).nullable().optional(),
 });
