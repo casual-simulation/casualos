@@ -6799,6 +6799,22 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'eraseSearchDocument',
+                    recordsCallProcedure(
+                        {
+                            eraseSearchDocument: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    documentId: '1',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

@@ -519,6 +519,7 @@ import type {
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
 import type {
+    EraseDocumentResult,
     SEARCH_COLLECTION_SCHEMA,
     SEARCH_DOCUMENT_SCHEMA,
     SearchRecord,
@@ -3484,6 +3485,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listSearchCollections,
                 listSearchCollectionsByMarker,
                 recordSearchDocument,
+                eraseSearchDocument,
 
                 listUserStudios,
 
@@ -11664,6 +11666,45 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         recordName: request.recordName,
                         address: request.address,
                         document: request.document,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases a search document from the specified search collection in the given record.
+     * @param recordName The name of the record that the search document is in.
+     * @param address The address of the search collection that the document is in.
+     * @param documentId The ID of the document that should be erased.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search document
+     * const result = await os.eraseSearchDocument('myRecord', 'mySearchCollection', 'documentId');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.eraseSearchDocument
+     */
+    function eraseSearchDocument(
+        recordName: string,
+        address: string,
+        documentId: string,
+        options: RecordActionOptions = {}
+    ): Promise<EraseDocumentResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseSearchDocument: {
+                    input: {
+                        recordName: recordName,
+                        address: address,
+                        documentId: documentId,
                     },
                 },
             },

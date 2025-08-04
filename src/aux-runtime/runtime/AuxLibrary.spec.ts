@@ -9396,6 +9396,32 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.eraseSearchDocument()', () => {
+            it('should emit a RecordSearchDocumentAction', async () => {
+                const action: any = library.api.os.eraseSearchDocument(
+                    'test',
+                    'address',
+                    '1'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        eraseSearchDocument: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                documentId: '1',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.listUserStudios()', () => {
             it('should emit a GetEventCountAction', async () => {
                 const action: any = library.api.os.listUserStudios();
