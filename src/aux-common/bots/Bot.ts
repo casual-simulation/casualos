@@ -2426,6 +2426,11 @@ export const SYSTEM_PORTAL_TAG_SPACE: string = 'systemPortalTagSpace';
 export const SYSTEM_PORTAL_DIFF: string = 'systemPortalDiff';
 
 /**
+ * The name of the source portal.
+ */
+export const SYSTEM_PORTAL_SOURCE: string = 'systemPortalSource';
+
+/**
  * The bot that is currently selected in the diff portal.
  */
 export const SYSTEM_PORTAL_DIFF_BOT: string = 'systemPortalDiffBot';
@@ -2448,7 +2453,7 @@ export const SYSTEM_PORTAL_PANE: string = 'systemPortalPane';
 /**
  * The list of possible system portal panes.
  */
-export type SystemPortalPane = 'bots' | 'search' | 'sheet' | 'diff';
+export type SystemPortalPane = 'bots' | 'search' | 'sheet' | 'diff' | 'source';
 
 /**
  * The name of the tag that is used to indicate which bot the player is currently editing.

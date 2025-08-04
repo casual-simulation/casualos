@@ -51,6 +51,15 @@
                                 <md-icon class="pane-icon">history</md-icon>
                             </md-button>
                         </div>
+                        <div
+                            class="pane-selection"
+                            :class="{ selected: selectedPane === 'source' }"
+                        >
+                            <md-button class="md-icon-button" @click="showSource()">
+                                <md-tooltip md-direction="right">Source Control</md-tooltip>
+                                <md-icon class="pane-icon">device_hub</md-icon>
+                            </md-button>
+                        </div>
 
                         <div class="pane-spacing"></div>
 
@@ -226,6 +235,9 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="areas" v-else-if="selectedPane === 'source'" ref="areas">
+                        <div><label>Source</label></div>
                     </div>
                     <div class="areas" v-else ref="areas">
                         <div class="filter">

@@ -146,7 +146,7 @@ export default class SystemPortal extends Vue {
     pinnedTagsVisible: boolean = true;
     isFocusingTagsSearch: boolean = false;
     searchTagsValue: string = '';
-    selectedPane: 'bots' | 'search' | 'diff' | 'sheet' = 'bots';
+    selectedPane: 'bots' | 'search' | 'diff' | 'sheet' | 'source' = 'bots';
     searchResults: SystemPortalSearchItem[] = [];
     numBotsInSearchResults: number = 0;
     numMatchesInSearchResults: number = 0;
@@ -619,6 +619,11 @@ export default class SystemPortal extends Vue {
 
     showDiff() {
         this._selectPane('diff');
+        this._closeSheetPortal();
+    }
+
+    showSource() {
+        this._selectPane('source');
         this._closeSheetPortal();
     }
 

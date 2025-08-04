@@ -87,6 +87,7 @@ import {
     SHEET_PORTAL,
     DEFAULT_MESH_POSITIONING_MODE,
     DEFAULT_MAP_PORTAL_KIND,
+    SYSTEM_PORTAL_SOURCE,
 } from './Bot';
 import type { Easing as TweenEasing } from '@tweenjs/tween.js';
 import TWEEN from '@tweenjs/tween.js';
@@ -2309,7 +2310,8 @@ export function getSystemPortalPane(
         pane === 'bots' ||
         pane === 'diff' ||
         pane === 'search' ||
-        pane === 'sheet'
+        pane === 'sheet' ||
+        pane === 'source'
     ) {
         return pane;
     }
@@ -2360,6 +2362,12 @@ export function getOpenSystemPortalPane(
 
     if (hasValue(diffPortal)) {
         return 'diff';
+    }
+
+    const sourcePortal = calculateBotValue(calc, bot, SYSTEM_PORTAL_SOURCE);
+
+    if (hasValue(sourcePortal)) {
+        return 'source';
     }
 
     const sheetPortal = calculateBotValue(calc, bot, SHEET_PORTAL);
