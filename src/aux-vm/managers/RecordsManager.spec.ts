@@ -6800,6 +6800,93 @@ describe('RecordsManager', () => {
                     ),
                 ] as const,
                 [
+                    'recordSearchCollection',
+                    recordsCallProcedure(
+                        {
+                            recordSearchCollection: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'test',
+                                        markers: ['marker'],
+                                        schema: {
+                                            '.*': {
+                                                type: 'auto',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getSearchCollection',
+                    recordsCallProcedure(
+                        {
+                            getSearchCollection: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'eraseSearchCollection',
+                    recordsCallProcedure(
+                        {
+                            eraseSearchCollection: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listSearchCollections',
+                    recordsCallProcedure(
+                        {
+                            listSearchCollections: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    marker: 'publicRead',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'recordSearchDocument',
+                    recordsCallProcedure(
+                        {
+                            recordSearchDocument: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'test',
+                                    document: {
+                                        test: 'abc',
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
                     'eraseSearchDocument',
                     recordsCallProcedure(
                         {
