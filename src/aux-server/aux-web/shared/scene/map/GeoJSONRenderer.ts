@@ -17,7 +17,7 @@
  */
 import { destination, point } from '@turf/turf';
 import type { AllGeoJSON, Units } from '@turf/turf';
-import type { Feature, Geometry, LineString, Point, Polygon } from 'geojson';
+import type { Feature, Geometry } from 'geojson';
 import { MercatorMath } from './MercatorMath';
 import { shortUuid } from '@casual-simulation/aux-common';
 
@@ -60,6 +60,34 @@ type PointPosition<a extends boolean = false> = a extends true
  * The x-coordinate increases to the right, and the y-coordinate increases downwards.
  */
 type WorldPixel = [number, number];
+
+const ctxAllowList: Set<string> = new Set([
+    'font',
+    'textAlign',
+    'textBaseline',
+    'direction',
+    'fontKerning',
+    'fontStretch',
+    'fontVariantCaps',
+    'letterSpacing',
+    'textRendering',
+    'wordSpacing',
+    'globalCompositeOperation',
+    'filter',
+    'imageSmoothingQuality',
+    'strokeStyle',
+    'fillStyle',
+    'shadowColor',
+    'lineCap',
+    'lineJoin',
+    'shadowOffsetX',
+    'shadowOffsetY',
+    'shadowBlur',
+    'lineWidth',
+    'miterLimit',
+    'lineDashOffset',
+    'lang',
+]);
 
 export class GeoJSONCanvasRenderer {
     canvas: HTMLCanvasElement;
@@ -134,9 +162,23 @@ export class GeoJSONCanvasRenderer {
         ];
     }
 
-    _drawRoutine(draw: (ctx: CanvasRenderingContext2D) => void) {
+    private _applyAttributes(attributes: Partial<GeometryAttributes>) {
+        //TODO: handle custom attributes like size and sizeType.
+        if (!attributes) return;
+        for (const [attr, val] of Object.entries(attributes)) {
+            if (!ctxAllowList.has(attr)) continue;
+            if (!val) continue;
+            (this.ctx as any)[attr] = val;
+        }
+    }
+
+    private _drawRoutine(
+        draw: (ctx: CanvasRenderingContext2D) => void,
+        attributes?: Partial<GeometryAttributes>
+    ) {
         if (!this.ctx) throw new Error('Canvas context is not available');
         this.ctx.save();
+        this._applyAttributes(attributes);
         this.ctx.beginPath();
         draw(this.ctx);
         this.ctx.closePath();
@@ -190,7 +232,7 @@ export class GeoJSONCanvasRenderer {
         });
     }
 
-    drawPoint(coordinates: number[], attr?: PointAttributes) {
+    drawPoint(coordinates: number[], attr?: Partial<GeometryAttributes>) {
         if (coordinates.length !== 2) {
             throw new Error('Invalid coordinates for PointPosition');
         }
@@ -205,12 +247,10 @@ export class GeoJSONCanvasRenderer {
 
     drawLineString(
         coordinates: Array<[number, number]>,
-        attr?: LineStringAttributes
+        attr?: Partial<GeometryAttributes>
     ) {
         coordinates = [...coordinates];
-        this._drawRoutine((ctx) => {
-            ctx.lineWidth = attr?.lineWidth ?? 2;
-            ctx.strokeStyle = attr?.strokeStyle ?? 'red';
+        this._drawRoutine((ctx, attr) => {
             ctx.moveTo(...this.coordToViewPixel(coordinates[0]));
             for (let i = 1; i < coordinates.length; i++) {
                 ctx.lineTo(...this.coordToViewPixel(coordinates[i]));
@@ -221,10 +261,10 @@ export class GeoJSONCanvasRenderer {
 
     drawPolygon(
         coordinates: Array<Array<[number, number]>>,
-        attr?: PolygonAttributes
+        attr?: Partial<GeometryAttributes>
     ) {
         const [base, ...holes] = coordinates;
-        this._drawRoutine((ctx) => {
+        this._drawRoutine((ctx, attr) => {
             ctx.beginPath();
             ctx.moveTo(...this.coordToViewPixel(base[0]));
             for (let i = 1; i < base.length; i++) {
@@ -244,26 +284,23 @@ export class GeoJSONCanvasRenderer {
 
     drawGeometry<G extends Geometry>(
         geometry: G,
-        geometryAttributes: GeometryAttributes<G>
+        geometryAttributes: Partial<GeometryAttributes>
     ) {
         // Draw the geometry based on its type
         switch (geometry.type) {
             case 'Point':
-                this.drawPoint(
-                    geometry.coordinates,
-                    geometryAttributes as PointAttributes
-                );
+                this.drawPoint(geometry.coordinates, geometryAttributes);
                 break;
             case 'LineString':
                 this.drawLineString(
                     geometry.coordinates as Array<[number, number]>,
-                    geometryAttributes as LineStringAttributes
+                    geometryAttributes
                 );
                 break;
             case 'Polygon':
                 this.drawPolygon(
                     geometry.coordinates as Array<Array<[number, number]>>,
-                    geometryAttributes as PolygonAttributes
+                    geometryAttributes
                 );
                 break;
             case 'MultiLineString':
@@ -345,33 +382,24 @@ interface GeometryStaticSize {
     unit: Units;
 }
 
-interface BaseGeometryAttributes {
+/** Dynamic allowlist to keep up to date with new styling properties on CanvasRenderingContext2D */
+type CRC2DAllowlist<
+    K extends keyof CanvasRenderingContext2D = keyof CanvasRenderingContext2D
+> = K extends string | number
+    ? CanvasRenderingContext2D[K] extends string
+        ? K
+        : never
+    : never;
+
+/** Canvas Rendering Context 2D Attributes */
+type CRC2DAttributes = Pick<CanvasRenderingContext2D, CRC2DAllowlist>;
+
+interface GeometryAttributes extends CRC2DAttributes {
     /** Whether or not the size of the drawn Geometry is relative to the view scale or static to X units*/
     sizeType?: 'static' | 'relative';
     /** The size value for the geometry */
     size?: GeometryRelativeSize | GeometryStaticSize;
 }
-
-interface LineStringAttributes extends BaseGeometryAttributes {
-    lineWidth?: number;
-    strokeStyle?: string;
-}
-
-interface PointAttributes extends BaseGeometryAttributes {
-    fillStyle?: string;
-}
-
-interface PolygonAttributes extends BaseGeometryAttributes {
-    fillStyle?: string;
-}
-
-type GeometryAttributes<B extends Geometry> = B extends LineString
-    ? LineStringAttributes
-    : B extends Point
-    ? PointAttributes
-    : B extends Polygon
-    ? PolygonAttributes
-    : never;
 
 // latLonToWorldPixel(
 //     lat: number,
