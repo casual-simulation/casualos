@@ -524,6 +524,31 @@ export const SEARCH_COLLECTION_SCHEMA = z
     .object({})
     .catchall(SEARCH_COLLECTION_FIELD);
 
+/**
+ * Defines the schema for a search collection.
+ *
+ * @doctitle Search Types
+ * @docsidebar Search
+ * @docdescription Search types define the structure of data that can be stored in search collections.
+ * @dochash types/records/search
+ * @docName SearchCollectionSchema
+ */
+export interface SearchCollectionSchema {
+    /**
+     * The schema that defines the fields in the search collection.
+     */
+    [key: string]: SearchCollectionSchemaField;
+}
+
+/**
+ * Defines a field for a search collection schema.
+ *
+ * @dochash types/records/search
+ * @docname SearchCollectionField
+ */
+export interface SearchCollectionSchemaField
+    extends Omit<SearchCollectionField, 'name'> {}
+
 export const SEARCH_DOCUMENT_SCHEMA = z
     .object({
         recordName: RECORD_NAME_VALIDATION.optional().nullable(),
@@ -601,6 +626,12 @@ export interface StoreDocumentRequest {
     instances: string[];
 }
 
+/**
+ * Defines the result of an store document operation.
+ *
+ * @dochash types/records/search
+ * @docname StoreDocumentResult
+ */
 export type StoreDocumentResult = Result<SearchDocumentInfo, SimpleError>;
 
 export interface EraseDocumentRequest {
@@ -630,4 +661,10 @@ export interface EraseDocumentRequest {
     instances: string[];
 }
 
+/**
+ * Defines the result of an erase document operation.
+ *
+ * @dochash types/records/search
+ * @docname EraseDocumentResult
+ */
 export type EraseDocumentResult = Result<SearchDocumentInfo, SimpleError>;

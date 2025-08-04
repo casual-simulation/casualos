@@ -157,48 +157,59 @@ export interface SearchCollectionField {
     locale?: string;
 
     /**
-     * Not currently supported.
-     *
-     * Set this to a non-zero value to treat a field of type `float[]` as a vector field.
-     */
-    num_dim?: number;
-
-    /**
-     * Not currently supported.
-     *
-     * The distance metric to be used for vector search. Default: `cosine`. You can also use `ip` for inner product.
-     */
-    vec_dist?: boolean;
-
-    /**
-     * Not currently supported.
-     * Reserved for when/if references are supported.
-     * Name of a field in another collection that should be linked to this collection so that it can be joined during query.
-     */
-    reference?: string;
-
-    /**
-     * Not currently supported.
-     *
-     * Enables an index optimized for range filtering on numerical fields (e.g. rating:>3.5). Default: `false`.
-     */
-    range_index?: boolean;
-
-    /**
-     * Not currently supported.
-     *
      * Values are stemmed before indexing in-memory. Default: `false`.
      */
     stem?: boolean;
+
+    // /**
+    //  * Not currently supported.
+    //  *
+    //  * Set this to a non-zero value to treat a field of type `float[]` as a vector field.
+    //  */
+    // num_dim?: number;
+
+    // /**
+    //  * Not currently supported.
+    //  *
+    //  * The distance metric to be used for vector search. Default: `cosine`. You can also use `ip` for inner product.
+    //  */
+    // vec_dist?: boolean;
+
+    // /**
+    //  * Not currently supported.
+    //  * Reserved for when/if references are supported.
+    //  * Name of a field in another collection that should be linked to this collection so that it can be joined during query.
+    //  */
+    // reference?: string;
+
+    // /**
+    //  * Not currently supported.
+    //  *
+    //  * Enables an index optimized for range filtering on numerical fields (e.g. rating:>3.5). Default: `false`.
+    //  */
+    // range_index?: boolean;
 }
 
 export interface UpdatedSearchCollectionField extends SearchCollectionField {
     drop?: boolean;
 }
 
+/**
+ * Defines a document that can be stored in a search collection.
+ *
+ * @dochash types/records/search
+ * @docname SearchDocument
+ */
 export interface SearchDocument {
+    /**
+     * The ID of the document.
+     * If not provided, a new ID will be generated.
+     */
     id?: string;
 
+    /**
+     * The properties of the document.
+     */
     [key: string]: any;
 }
 

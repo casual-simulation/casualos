@@ -520,8 +520,8 @@ import type {
 } from '@casual-simulation/aux-records/packages/version';
 import type {
     EraseDocumentResult,
-    SEARCH_COLLECTION_SCHEMA,
-    SEARCH_DOCUMENT_SCHEMA,
+    SearchCollectionSchema,
+    SearchDocument,
     SearchRecord,
     StoreDocumentResult,
 } from '@casual-simulation/aux-records/search';
@@ -847,6 +847,12 @@ export interface RecordPackageVersionApiRequest {
     markers?: string[];
 }
 
+/**
+ * Defines an interface that represents a request for {@link recordSearchCollection}.
+ *
+ * @dochash types/records/search
+ * @docname RecordSearchCollectionRequest
+ */
 export interface RecordSearchCollectionApiRequest {
     /**
      * The name of the record that the package version should be recorded to.
@@ -861,7 +867,7 @@ export interface RecordSearchCollectionApiRequest {
     /**
      * The schema that should be used for the collection.
      */
-    schema: Zod.infer<typeof SEARCH_COLLECTION_SCHEMA>;
+    schema: SearchCollectionSchema;
 
     /**
      * The markers that should be applied to the package version.
@@ -869,10 +875,16 @@ export interface RecordSearchCollectionApiRequest {
     markers?: string[];
 }
 
+/**
+ * Defines an interface that represents a request for {@link recordSearchDocument}.
+ *
+ * @dochash types/records/search
+ * @docname RecordSearchDocumentRequest
+ */
 export interface RecordSearchDocumentApiRequest {
     recordName: string;
     address: string;
-    document: Zod.infer<typeof SEARCH_DOCUMENT_SCHEMA>;
+    document: SearchDocument;
 }
 
 /**
@@ -11449,7 +11461,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *      }
      * });
      * 
-     * @dochash actions/os/records
+     * @doctitle Search Actions
+     * @docsidebar Search
+     * @docdescription Search actions allow you to create and manage search collections in your records. Search collections enable efficient searching and indexing of data within your records, making it easier to retrieve relevant information quickly.
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.recordSearchCollection
      */
@@ -11491,7 +11506,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Erase a search collection
      * const result = await os.eraseSearchCollection('recordName', 'mySearchCollection');
      *
-     * @dochash actions/os/records
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.eraseSearchCollection
      */
@@ -11530,7 +11545,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example List search collections
      * const result = await os.listSearchCollections('recordName', 'mySearchCollection');
      *
-     * @dochash actions/os/records
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.listSearchCollections
      */
@@ -11570,7 +11585,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example List private search collections
      * const result = await os.listSearchCollectionsByMarker('recordName', 'private');
      *
-     * @dochash actions/os/records
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.listSearchCollectionsByMarker
      */
@@ -11602,18 +11617,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a search collection from the specified record.
      * @param recordName The name of the record to retrieve the search collection from.
      * @param address The address of the search collection to retrieve.
+     * @param options The options for the request.
      * @returns A promise that resolves with the result of the operation.
      *
      * @example Get a search collection
      * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
      *
-     * @dochash actions/os/records
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.getSearchCollection
      */
     function getSearchCollection(
         recordName: string,
-        address: string
+        address: string,
+        options: RecordActionOptions = {}
     ): Promise<CrudGetItemResult<SearchRecord>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
@@ -11625,7 +11642,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                     },
                 },
             },
-            {},
+            options,
             task.taskId
         );
 
@@ -11650,7 +11667,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *    }
      * });
      *
-     * @dochash actions/os/records
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.recordSearchDocument
      */
@@ -11687,7 +11704,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Erase a search document
      * const result = await os.eraseSearchDocument('myRecord', 'mySearchCollection', 'documentId');
      *
-     * @dochash actions/os/records
+     * @dochash actions/os/records/search
      * @docgroup 02-search
      * @docname os.eraseSearchDocument
      */
