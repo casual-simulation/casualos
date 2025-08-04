@@ -15164,7 +15164,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe.only('DELETE /api/v2/records/search/document', () => {
+    describe('DELETE /api/v2/records/search/document', () => {
         let collectionName: string;
         let documentId: string;
 
@@ -15278,6 +15278,11 @@ describe('RecordsServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
+                    id: '1',
+                    score: 95,
+                    title: 'Test Document',
+                    content: 'This is a test document',
+                    tags: ['test', 'example'],
                 },
                 headers: apiCorsHeaders,
             });

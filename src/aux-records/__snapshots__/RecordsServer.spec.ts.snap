@@ -2836,6 +2836,37 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/search/document",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "documentId": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseSearchDocument",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -8024,6 +8055,37 @@ Object {
         "type": "object",
       },
       "name": "recordSearchDocument",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "DELETE",
+        "path": "/api/v2/records/search/document",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "documentId": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "eraseSearchDocument",
       "origins": "api",
     },
     Object {
