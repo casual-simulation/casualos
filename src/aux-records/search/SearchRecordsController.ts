@@ -225,14 +225,37 @@ export class SearchRecordsController extends CrudRecordsController<
         return result;
     }
 
-    protected _convertItemToResult(
+    protected async _convertItemToResult(
         item: SearchRecord,
         context: AuthorizationContext,
         action: ActionKinds
-    ): SearchRecordOutput {
+    ): Promise<SearchRecordOutput> {
         if (action === 'read') {
+            const schema: SearchCollectionSchema = {};
+            if (item.collectionName) {
+                const collection = await this._searchInterface.getCollection(
+                    item.collectionName
+                );
+                if (collection) {
+                    for (let field of collection.fields) {
+                        schema[field.name] = {
+                            type: field.type,
+                            optional: field.optional,
+                            index: field.index,
+                            store: field.store,
+                            sort: field.sort,
+                            infix: field.infix,
+                            locale: field.locale,
+                            stem: field.stem,
+                            facet: field.facet,
+                        };
+                    }
+                }
+            }
+
             return {
                 ...item,
+                schema,
                 nodes: this._searchInterface.nodes,
             };
         }
@@ -628,7 +651,7 @@ export interface SearchRecordOutput extends SearchRecord {
     nodes?: SearchNode[];
 
     /**
-     * The fields that are defined in the search collection.
+     * The schema that is defined in the schema.
      */
     schema?: SearchCollectionSchema;
 }

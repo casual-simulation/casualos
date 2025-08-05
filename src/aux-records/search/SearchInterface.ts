@@ -100,7 +100,11 @@ export interface SearchCollectionInfo
 }
 
 export interface SearchCollectionField {
+    /**
+     * The name of the field.
+     */
     name: string;
+
     /**
      * The type of the field.
      */

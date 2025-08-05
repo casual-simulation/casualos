@@ -331,6 +331,24 @@ describe('SearchRecordsController', () => {
                     markers: [PUBLIC_READ_MARKER],
                     collectionName: expect.any(String),
                     searchApiKey: expect.stringMatching(/^api_key_/),
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                        address: {
+                            type: 'string',
+                            optional: true,
+                            sort: true,
+                        },
+                        recordName: {
+                            type: 'string',
+                            optional: true,
+                        },
+                        resourceKind: {
+                            type: 'string',
+                            optional: true,
+                        },
+                    },
                     nodes: [
                         {
                             host: 'search1.example.com',

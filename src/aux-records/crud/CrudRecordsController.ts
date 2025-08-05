@@ -337,7 +337,7 @@ export abstract class CrudRecordsController<
 
             return {
                 success: true,
-                item: this._convertItemToResult(
+                item: await this._convertItemToResult(
                     result,
                     context.context,
                     'read'
@@ -496,8 +496,10 @@ export abstract class CrudRecordsController<
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context, 'list')
+                items: await this._convertItemsToResults(
+                    result2.items,
+                    context.context,
+                    'list'
                 ),
                 totalCount: result2.totalCount,
             };
@@ -565,8 +567,10 @@ export abstract class CrudRecordsController<
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context, 'list')
+                items: await this._convertItemsToResults(
+                    result2.items,
+                    context.context,
+                    'list'
                 ),
                 totalCount: result2.totalCount,
             };
@@ -610,12 +614,20 @@ export abstract class CrudRecordsController<
      * @param action The action that is being performed.
      * @returns The converted item.
      */
-    protected _convertItemToResult(
+    protected async _convertItemToResult(
         item: TStoreType,
         context: AuthorizationContext,
         action: ActionKinds
-    ): TResult {
+    ): Promise<TResult> {
         return item as unknown as TResult;
+    }
+
+    protected async _convertItemsToResults(
+        items: TStoreType[],
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): Promise<TResult[]> {
+        return items as unknown as TResult[];
     }
 
     /**
