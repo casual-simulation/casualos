@@ -3705,6 +3705,29 @@ export interface ListDataOptions extends RecordActionOptions {
 }
 
 /**
+ * Defines a node that search clients can use to connect to the search engine.
+ *
+ * @dochash types/records/search
+ * @docname SearchNode
+ */
+export interface SearchNode {
+    /**
+     * The host of the node.
+     */
+    host: string;
+
+    /**
+     * The port number of the node.
+     */
+    port: number;
+
+    /**
+     * The protocol to use when connecting to the node.
+     */
+    protocol?: 'http' | 'https';
+}
+
+/**
  * Defines a record that represents a collection of documents that can be searched.
  *
  * @dochash types/records/search
@@ -3720,6 +3743,11 @@ export interface SearchRecord extends CrudRecord {
      * The API key that is used to query the collection.
      */
     searchApiKey: string;
+
+    /**
+     * The search nodes that should be used by clients to connect to the search engine.
+     */
+    nodes?: SearchNode[];
 }
 
 

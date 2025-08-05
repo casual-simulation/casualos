@@ -523,6 +523,7 @@ import type {
     SearchCollectionSchema,
     SearchDocument,
     SearchRecord,
+    SearchRecordOutput,
     StoreDocumentResult,
 } from '@casual-simulation/aux-records/search';
 
@@ -11498,10 +11499,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * }
      * 
      * const client = new Typesense.Client({
-     *   nodes: collection.nodes,
+     *   nodes: collection.item.nodes,
+     *   apiKey: collection.item.searchApiKey,
      * });
-     * 
-     * const searchResults = await client.collections(collection.collectionName).documents().search({
+     *
+     * const searchResults = await client.collections(collection.item.collectionName).documents().search({
      *   q: 'search term',
      *   query_by: 'title,description',
      *   sort_by: 'price:asc',
@@ -11682,10 +11684,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * }
      *
      * const client = new Typesense.Client({
-     *   nodes: collection.nodes,
+     *   nodes: collection.item.nodes,
+     *   apiKey: collection.item.searchApiKey,
      * });
      *
-     * const searchResults = await client.collections(collection.collectionName).documents().search({
+     * const searchResults = await client.collections(collection.item.collectionName).documents().search({
      *   q: 'search term',
      *   query_by: 'title,description',
      *   sort_by: 'price:asc',
@@ -11701,7 +11704,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string,
         options: RecordActionOptions = {}
-    ): Promise<CrudGetItemResult<SearchRecord>> {
+    ): Promise<CrudGetItemResult<SearchRecordOutput>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {

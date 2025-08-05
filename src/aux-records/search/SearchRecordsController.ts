@@ -615,11 +615,22 @@ export interface SearchRecordInput
     schema: z.infer<typeof SEARCH_COLLECTION_SCHEMA>;
 }
 
+/**
+ * Defines a record that represents a collection of documents that can be searched.
+ *
+ * @dochash types/records/search
+ * @docName SearchRecord
+ */
 export interface SearchRecordOutput extends SearchRecord {
     /**
      * The search nodes that should be used by clients to connect to the search engine.
      */
     nodes?: SearchNode[];
+
+    /**
+     * The fields that are defined in the search collection.
+     */
+    schema?: SearchCollectionSchema;
 }
 
 export interface StoreDocumentRequest {

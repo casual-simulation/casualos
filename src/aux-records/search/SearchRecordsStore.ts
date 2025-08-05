@@ -37,9 +37,6 @@ export interface SearchRecordsStore extends CrudRecordsStore<SearchRecord> {
 
 /**
  * Defines a record that represents a collection of documents that can be searched.
- *
- * @dochash types/records/search
- * @docName SearchRecord
  */
 export interface SearchRecord extends CrudRecord {
     /**
