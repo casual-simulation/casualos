@@ -20,6 +20,16 @@
     -   This change makes the loading experience able to be more deeply customized on a per-experience basis.
 -   comId's which have a configured `logoUrl` will now display the logo in fullscreen like a "splash screen".
     -   This gives more prominence to their branding and simplifies our white-labeling story moving forward.
+-   Added search records.
+    -   Search records allow you to utilize [Typesense](https://typesense.org/) to easily search over a large number of documents. Each "Search record" maps to a Typesense [collection](https://typesense.org/docs/29.0/api/collections.html), which can store many documents. Documents are just JSON (kinda like data records).
+    -   `os.recordSearchCollection(request)` - Creates or updates a Search collection. Each collection exists at an address and is assigned its own unique collection name.
+    -   `os.getSearchCollection(recordName, address)` - Gets information about a search collection.
+    -   `os.eraseSearchCollection(recordName, address)` - Deletes a search collection.
+    -   `os.listSearchCollections(recordName, startingAddress?)` - Lists search collections in a record.
+    -   `os.listSearchCollectionsByMarker(recordName, marker, startingAddress?)` - Lists search collections by marker.
+    -   `os.recordSearchDocument(request)` - Creates a document inside a search collection.
+    -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
+    -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
 
 ### :rocket: Features
 
