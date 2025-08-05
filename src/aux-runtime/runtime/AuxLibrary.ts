@@ -11461,6 +11461,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *      }
      * });
      * 
+     * @example Record a private search collection
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               '.*': {
+     *             type: 'auto'
+     *          }
+     *      },
+     *      markers: ['private']
+     * });
+     * 
+     * @example Record and search through a search collection
+     * import Typesense from 'typesense';
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * if (!result.success) {
+     *   os.toast('Failed to record search collection: ' + result.errorMessage);
+     *   return;
+     * }
+     * 
+     * const collection = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     * 
+     * if (!collection.success) {
+     *    os.toast('Failed to get search collection: ' + collection.errorMessage);
+     *    return;
+     * }
+     * 
+     * const client = new Typesense.Client({
+     *   nodes: collection.nodes,
+     * });
+     * 
+     * const searchResults = await client.collections(collection.collectionName).documents().search({
+     *   q: 'search term',
+     *   query_by: 'title,description',
+     *   sort_by: 'price:asc',
+     * });
+     * 
+     * console.log('search results', searchResults);
+     * 
+     * 
      * @doctitle Search Actions
      * @docsidebar Search
      * @docdescription Search actions allow you to create and manage search collections in your records. Search collections enable efficient searching and indexing of data within your records, making it easier to retrieve relevant information quickly.
@@ -11622,6 +11671,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example Get a search collection
      * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * @example Search through a search collection
+     * import Typesense from 'typesense';
+     * const collection = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * if (!collection.success) {
+     *    os.toast('Failed to get search collection: ' + collection.errorMessage);
+     *    return;
+     * }
+     *
+     * const client = new Typesense.Client({
+     *   nodes: collection.nodes,
+     * });
+     *
+     * const searchResults = await client.collections(collection.collectionName).documents().search({
+     *   q: 'search term',
+     *   query_by: 'title,description',
+     *   sort_by: 'price:asc',
+     * });
+     *
+     * console.log('search results', searchResults);
      *
      * @dochash actions/os/records/search
      * @docgroup 02-search
