@@ -23,6 +23,11 @@ import type { Result, SimpleError } from '@casual-simulation/aux-common';
  */
 export interface SearchInterface {
     /**
+     * The nodes that should be used by clients to connect to the search engine.
+     */
+    readonly nodes: SearchNode[];
+
+    /**
      * Creates a new collection in the search engine.
      * @param collection The collection to create.
      */
@@ -229,4 +234,27 @@ export interface SearchApiKey extends SearchApiKeyData {
     id: number;
     value: string;
     expiresAt: number;
+}
+
+/**
+ * Defines a node that search clients can use to connect to the search engine.
+ *
+ * @dochash types/records/search
+ * @docname SearchNode
+ */
+export interface SearchNode {
+    /**
+     * The host of the node.
+     */
+    host: string;
+
+    /**
+     * The port number of the node.
+     */
+    port: number;
+
+    /**
+     * The protocol to use when connecting to the node.
+     */
+    protocol?: 'http' | 'https';
 }

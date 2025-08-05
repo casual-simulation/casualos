@@ -30,10 +30,12 @@ import type {
     SearchDocument,
     SearchDocumentInfo,
     SearchInterface,
+    SearchNode,
     UpdatedSearchCollection,
 } from './SearchInterface';
 
 export class MemorySearchInterface implements SearchInterface {
+    private _nodes: SearchNode[] = [];
     private _collections: Map<string, SearchCollectionInfo> = new Map();
     private _documents: Map<string, SearchDocumentInfo[]> = new Map();
     private _apiKeys: SearchApiKey[] = [];
@@ -43,6 +45,14 @@ export class MemorySearchInterface implements SearchInterface {
 
     private _generateId(): string {
         return (this._idCounter++).toString();
+    }
+
+    get mutableNodes() {
+        return this._nodes;
+    }
+
+    get nodes() {
+        return this._nodes.slice();
     }
 
     get collections() {

@@ -25,6 +25,7 @@ import type {
     SearchDocument,
     SearchDocumentInfo,
     SearchInterface,
+    SearchNode,
     UpdatedSearchCollection,
 } from './SearchInterface';
 import type { Client } from 'typesense';
@@ -36,6 +37,10 @@ export class TypesenseSearchInterface implements SearchInterface {
 
     constructor(client: Client) {
         this._client = client;
+    }
+
+    get nodes() {
+        return this._client.configuration.nodes.slice() as SearchNode[];
     }
 
     async createCollection(

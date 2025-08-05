@@ -52,6 +52,7 @@ import type {
     SearchDocument,
     SearchDocumentInfo,
     SearchInterface,
+    SearchNode,
     UpdatedSearchCollectionField,
 } from './SearchInterface';
 import { v4 as uuid } from 'uuid';
@@ -80,7 +81,8 @@ export interface SearchRecordsConfiguration
 export class SearchRecordsController extends CrudRecordsController<
     SearchRecordInput,
     SearchRecord,
-    SearchRecordsStore
+    SearchRecordsStore,
+    SearchRecordOutput
 > {
     private _searchInterface: SearchInterface;
 
@@ -221,6 +223,20 @@ export class SearchRecordsController extends CrudRecordsController<
         );
 
         return result;
+    }
+
+    protected _convertItemToResult(
+        item: SearchRecord,
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): SearchRecordOutput {
+        if (action === 'read') {
+            return {
+                ...item,
+                nodes: this._searchInterface.nodes,
+            };
+        }
+        return item;
     }
 
     protected async _transformInputItem(
@@ -597,6 +613,13 @@ export interface SearchRecordInput
      * This is also used to validate the documents that are added to the collection.
      */
     schema: z.infer<typeof SEARCH_COLLECTION_SCHEMA>;
+}
+
+export interface SearchRecordOutput extends SearchRecord {
+    /**
+     * The search nodes that should be used by clients to connect to the search engine.
+     */
+    nodes?: SearchNode[];
 }
 
 export interface StoreDocumentRequest {

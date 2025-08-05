@@ -337,7 +337,11 @@ export abstract class CrudRecordsController<
 
             return {
                 success: true,
-                item: this._convertItemToResult(result, context.context),
+                item: this._convertItemToResult(
+                    result,
+                    context.context,
+                    'read'
+                ),
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -493,7 +497,7 @@ export abstract class CrudRecordsController<
                 success: true,
                 recordName: context.context.recordName,
                 items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context)
+                    this._convertItemToResult(item, context.context, 'list')
                 ),
                 totalCount: result2.totalCount,
             };
@@ -562,7 +566,7 @@ export abstract class CrudRecordsController<
                 success: true,
                 recordName: context.context.recordName,
                 items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context)
+                    this._convertItemToResult(item, context.context, 'list')
                 ),
                 totalCount: result2.totalCount,
             };
@@ -603,11 +607,13 @@ export abstract class CrudRecordsController<
      * Can be overriden to ensure that some fields are not returned.
      * @param item The item that should be converted.
      * @param context The authorization context.
+     * @param action The action that is being performed.
      * @returns The converted item.
      */
     protected _convertItemToResult(
         item: TStoreType,
-        context: AuthorizationContext
+        context: AuthorizationContext,
+        action: ActionKinds
     ): TResult {
         return item as unknown as TResult;
     }

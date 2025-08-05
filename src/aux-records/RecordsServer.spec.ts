@@ -14518,6 +14518,7 @@ describe('RecordsServer', () => {
                         collectionName: item?.collectionName,
                         searchApiKey: item?.searchApiKey,
                         markers: [PUBLIC_READ_MARKER],
+                        nodes: [],
                     },
                 },
                 headers: apiCorsHeaders,

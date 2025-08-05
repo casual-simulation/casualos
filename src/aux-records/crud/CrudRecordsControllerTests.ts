@@ -19,6 +19,7 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import type {
+    CrudListItemsSuccess,
     CrudRecordItemSuccess,
     CrudRecordsConfiguration,
     CrudRecordsController,
@@ -599,7 +600,7 @@ export function testCrudRecordsController<
                 instances: [],
             });
 
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 success: true,
                 item: createStoreItem({
                     address: 'address2',
@@ -829,36 +830,48 @@ export function testCrudRecordsController<
         });
 
         it('should return a list of items', async () => {
-            const result = await manager.listItems({
+            const result = (await manager.listItems({
                 recordName: recordName,
                 userId,
                 startingAddress: null,
                 instances: [],
-            });
+            })) as CrudListItemsSuccess<any>;
 
             expect(result).toEqual({
                 success: true,
                 recordName: recordName,
-                items: items.slice(0, 10),
+                items: expect.any(Array),
                 totalCount: 20,
             });
+
+            const expectedItems = items.slice(0, 10);
+            expect(result.items.length).toBe(expectedItems.length);
+            for (let i = 0; i < expectedItems.length; i++) {
+                expect(result.items[i]).toMatchObject(expectedItems[i]);
+            }
         });
 
         if (allowRecordKeys) {
             it('should be able to use a record key', async () => {
-                const result = await manager.listItems({
+                const result = (await manager.listItems({
                     recordName: key,
                     userId: otherUserId,
                     startingAddress: null,
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items.slice(0, 10),
+                    items: expect.any(Array),
                     totalCount: 20,
                 });
+
+                const expectedItems = items.slice(0, 10);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
             });
         } else {
             it('should return not_authorized if record keys are not allowed', async () => {
@@ -886,19 +899,25 @@ export function testCrudRecordsController<
         }
 
         it('should return items after the given starting address', async () => {
-            const result = await manager.listItems({
+            const result = (await manager.listItems({
                 recordName: recordName,
                 userId,
                 startingAddress: 'address3',
                 instances: [],
-            });
+            })) as CrudListItemsSuccess<any>;
 
             expect(result).toEqual({
                 success: true,
                 recordName: recordName,
-                items: items.slice(4, 10),
+                items: expect.any(Array),
                 totalCount: 20,
             });
+
+            const expectedItems = items.slice(4, 10);
+            expect(result.items.length).toBe(expectedItems.length);
+            for (let i = 0; i < expectedItems.length; i++) {
+                expect(result.items[i]).toMatchObject(expectedItems[i]);
+            }
         });
 
         it('should return not_authorized if the user does not have access to the account marker', async () => {
@@ -943,71 +962,89 @@ export function testCrudRecordsController<
         });
 
         it('should return a list of items that have the given marker', async () => {
-            const result = await manager.listItemsByMarker({
+            const result = (await manager.listItemsByMarker({
                 recordName: recordName,
                 userId,
                 marker: PRIVATE_MARKER,
                 startingAddress: null,
                 instances: [],
-            });
+            })) as CrudListItemsSuccess<any>;
 
             expect(result).toEqual({
                 success: true,
                 recordName: recordName,
-                items: items
-                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                    .slice(0, 10),
+                items: expect.any(Array),
                 totalCount: 20,
             });
+
+            const expectedItems = items
+                .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                .slice(0, 10);
+            expect(result.items.length).toBe(expectedItems.length);
+            for (let i = 0; i < expectedItems.length; i++) {
+                expect(result.items[i]).toMatchObject(expectedItems[i]);
+            }
         });
 
         it('should return a list of items that are after the starting address', async () => {
-            const result = await manager.listItemsByMarker({
+            const result = (await manager.listItemsByMarker({
                 recordName: recordName,
                 userId,
                 marker: PRIVATE_MARKER,
                 startingAddress: 'address1',
                 instances: [],
-            });
+            })) as CrudListItemsSuccess<any>;
 
             expect(result).toEqual({
                 success: true,
                 recordName: recordName,
-                items: items
-                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                    .slice(1, 11),
+                items: expect.any(Array),
                 totalCount: 20,
             });
+
+            const expectedItems = items
+                .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                .slice(1, 11);
+            expect(result.items.length).toBe(expectedItems.length);
+            for (let i = 0; i < expectedItems.length; i++) {
+                expect(result.items[i]).toMatchObject(expectedItems[i]);
+            }
         });
 
         if (allowRecordKeys) {
             it('should be able to use a record key', async () => {
-                const result = await manager.listItemsByMarker({
+                const result = (await manager.listItemsByMarker({
                     recordName: key,
                     userId: otherUserId,
                     marker: PRIVATE_MARKER,
                     startingAddress: null,
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items
-                        .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                        .slice(0, 10),
+                    items: expect.any(Array),
                     totalCount: 20,
                 });
+
+                const expectedItems = items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(0, 10);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
             });
         } else {
             it('should return not_authorized if record keys are not allowed', async () => {
-                const result = await manager.listItemsByMarker({
+                const result = (await manager.listItemsByMarker({
                     recordName: key,
                     userId: otherUserId,
                     marker: PRIVATE_MARKER,
                     startingAddress: null,
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: false,

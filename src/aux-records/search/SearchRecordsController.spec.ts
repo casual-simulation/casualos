@@ -292,6 +292,57 @@ describe('SearchRecordsController', () => {
         });
     });
 
+    describe('getItem()', () => {
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+        });
+
+        it('should return the nodes that the search interface returns', async () => {
+            searchInterface.mutableNodes.push({
+                host: 'search1.example.com',
+                port: 443,
+                protocol: 'https',
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    collectionName: expect.any(String),
+                    searchApiKey: expect.stringMatching(/^api_key_/),
+                    nodes: [
+                        {
+                            host: 'search1.example.com',
+                            port: 443,
+                            protocol: 'https',
+                        },
+                    ],
+                },
+            });
+        });
+    });
+
     describe('eraseItem()', () => {
         beforeEach(async () => {
             await manager.recordItem({
