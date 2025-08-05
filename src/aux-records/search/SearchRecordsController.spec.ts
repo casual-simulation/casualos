@@ -203,22 +203,6 @@ describe('SearchRecordsController', () => {
                         name: expect.stringMatching(/^pub_\./),
                         fields: [
                             {
-                                name: 'recordName',
-                                type: 'string',
-                                optional: true,
-                            },
-                            {
-                                name: 'address',
-                                type: 'string',
-                                optional: true,
-                                sort: true,
-                            },
-                            {
-                                name: 'resourceKind',
-                                type: 'string',
-                                optional: true,
-                            },
-                            {
                                 name: '.*',
                                 type: 'auto',
                             },
@@ -334,19 +318,6 @@ describe('SearchRecordsController', () => {
                     schema: {
                         '.*': {
                             type: 'auto',
-                        },
-                        address: {
-                            type: 'string',
-                            optional: true,
-                            sort: true,
-                        },
-                        recordName: {
-                            type: 'string',
-                            optional: true,
-                        },
-                        resourceKind: {
-                            type: 'string',
-                            optional: true,
                         },
                     },
                     nodes: [

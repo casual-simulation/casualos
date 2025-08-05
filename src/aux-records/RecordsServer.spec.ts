@@ -14522,19 +14522,6 @@ describe('RecordsServer', () => {
                             '.*': {
                                 type: 'auto',
                             },
-                            address: {
-                                type: 'string',
-                                optional: true,
-                                sort: true,
-                            },
-                            recordName: {
-                                type: 'string',
-                                optional: true,
-                            },
-                            resourceKind: {
-                                type: 'string',
-                                optional: true,
-                            },
                         },
                         nodes: [],
                     },

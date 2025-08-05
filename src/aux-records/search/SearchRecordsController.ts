@@ -289,24 +289,7 @@ export class SearchRecordsController extends CrudRecordsController<
                 ? `pub_.${uuid()}`
                 : `prv_.${uuid()}`;
 
-            const fields: SearchCollectionField[] = [
-                {
-                    name: 'recordName',
-                    type: 'string',
-                    optional: true,
-                },
-                {
-                    name: 'address',
-                    type: 'string',
-                    optional: true,
-                    sort: true,
-                },
-                {
-                    name: 'resourceKind',
-                    type: 'string',
-                    optional: true,
-                },
-            ];
+            const fields: SearchCollectionField[] = [];
 
             for (let key in item.schema) {
                 if (
@@ -364,13 +347,6 @@ export class SearchRecordsController extends CrudRecordsController<
             const fields: UpdatedSearchCollectionField[] = [];
 
             for (let key in item.schema) {
-                if (
-                    key === 'recordName' ||
-                    key === 'address' ||
-                    key === 'resourceKind'
-                ) {
-                    continue;
-                }
                 const field = item.schema[key];
                 fields.push({
                     name: key,
