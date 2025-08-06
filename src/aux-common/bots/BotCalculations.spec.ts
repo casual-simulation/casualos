@@ -625,6 +625,7 @@ describe('BotCalculations', () => {
             [true, 'Infinity'] as const,
             [true, 'InFIniTy'] as const,
             [true, '-InFIniTy'] as const,
+            [false, 'e3455'] as const,
             [false, '$123'] as const,
             [false, 'abc'] as const,
             [false, '.'] as const,

@@ -772,7 +772,7 @@ export function isNumber(value: string): boolean {
     return (
         typeof value === 'string' &&
         value.length > 0 &&
-        ((/^-?\d*(?:\.?\d+)?(?:[eE]-?\d+)?$/.test(value) && value !== '-') ||
+        ((/^-?\d*(?:\.?\d+)?(?:\d[eE]-?\d+)?$/.test(value) && value !== '-') ||
             (typeof value === 'string' && INFINITIES.has(value.toLowerCase())))
     );
 }
