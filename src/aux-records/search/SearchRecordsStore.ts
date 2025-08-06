@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type { ResourceKinds } from '@casual-simulation/aux-common';
 import type {
     CrudRecord,
     CrudRecordsStore,
@@ -33,6 +34,34 @@ export interface SearchRecordsStore extends CrudRecordsStore<SearchRecord> {
     getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<SearchSubscriptionMetrics>;
+
+    /**
+     * Creates or saves a search record sync.
+     * @param sync The search record sync to create or save.
+     */
+    saveSync(sync: SearchRecordSync): Promise<void>;
+
+    /**
+     * Deletes the search record sync with the given ID.
+     * @param syncId The ID of the sync to delete.
+     */
+    deleteSync(syncId: string): Promise<void>;
+
+    /**
+     * Gets the list of search record syncs for the given search record.
+     * @param recordName The name of the record.
+     * @param address The address of the search record.
+     */
+    listSyncsBySearchRecord(
+        recordName: string,
+        address: string
+    ): Promise<SearchRecordSync[]>;
+
+    /**
+     * Creates a new sync history entry.
+     * @param history The sync history entry to create.
+     */
+    createSyncHistory(history: SearchRecordSyncHistory): Promise<void>;
 }
 
 /**
@@ -55,4 +84,126 @@ export interface SearchSubscriptionMetrics extends CrudSubscriptionMetrics {
      * The total number of search records that are stored in the subscription.
      */
     totalItems: number;
+}
+
+/**
+ * Defines a record that represents syncing data to a search collection.
+ * This is used to sync data from data records to a search collection.
+ */
+export interface SearchRecordSync {
+    /**
+     * The ID of the search record sync.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the search record is in.
+     */
+    searchRecordName: string;
+
+    /**
+     * The address of the search record.
+     */
+    searchRecordAddress: string;
+
+    /**
+     * The name of the record that the data should be synced from.
+     */
+    targetRecordName: string;
+
+    /**
+     * The marker that the data should be synced from.
+     */
+    targetMarker: string;
+
+    /**
+     * The kind of resource that should be synced.
+     */
+    targetResourceKind: ResourceKinds;
+
+    /**
+     * The mapping of the target properties to the search document properties.
+     *
+     * Each entry in the array is a tuple where the first element is the source property
+     * and the second element is the target property in the search document.
+     */
+    targetMapping: [string, string][];
+}
+
+/**
+ * Defines an interface that represents the history of a search record sync.
+ */
+export interface SearchRecordSyncHistory {
+    /**
+     * The ID of the search record sync history.
+     */
+    id: string;
+
+    /**
+     * The name of the record that the search collection is in.
+     */
+    searchRecordName: string;
+
+    /**
+     * The address of the search record.
+     */
+    searchRecordAddress: string;
+
+    /**
+     * The ID of the sync that this history is for.
+     */
+    syncId: string;
+
+    /**
+     * The ID of the sync run that this history is for.
+     * Syncs may trigger multiple history entries, so this ID is used to group runs together.
+     */
+    runId: string;
+
+    /**
+     * The time of the sync.
+     *
+     * Miliseconds since the unix epoch in UTC.
+     */
+    timeMs: number;
+
+    /**
+     * The status of the sync.
+     */
+    status: 'success' | 'failure';
+
+    /**
+     * Whether the sync was successful.
+     */
+    success: boolean;
+
+    /**
+     * The error message if the sync failed.
+     */
+    errorMessage: string | null;
+
+    /**
+     * The number of documents that were successfully added during the sync.
+     */
+    numAdded: number;
+
+    /**
+     * The number of documents that were successfully updated during the sync.
+     */
+    numUpdated: number;
+
+    /**
+     * The number of documents that were successfully deleted during the sync.
+     */
+    numDeleted: number;
+
+    /**
+     * The number of documents that errored during the sync.
+     */
+    numErrored: number;
+
+    /**
+     * The total number of documents that were processed during the sync.
+     */
+    numTotal: number;
 }
