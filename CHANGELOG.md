@@ -12,6 +12,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue in the `unpack-aux` CLI command where tags that failed to be written would be omitted from the bot AUX file.
+-   Fixed an issue where strings like `e123` would be recognized as numbers.
 
 ## V3.6.0
 
