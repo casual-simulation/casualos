@@ -481,6 +481,26 @@ export function calculateBotValue(
     return value;
 }
 
+export function calculateRawBotValue(
+    context: BotObjectsContext | null,
+    object: Bot | PrecalculatedBot,
+    tag: keyof BotTags
+) {
+    const value = object.tags[tag];
+    if (
+        typeof value === 'undefined' &&
+        typeof tag === 'string' &&
+        tag.startsWith('aux') &&
+        tag.length >= 4
+    ) {
+        const firstChar = tag.substring(3, 4);
+        const rest = tag.substring(4);
+        const newTag = firstChar.toLowerCase() + rest;
+        return object.tags[newTag];
+    }
+    return value;
+}
+
 /**
  * Calculates the list of bot IDs that are stored in the given tag in the given bot.
  * @param bot The bot.
@@ -535,6 +555,12 @@ export function calculateFormattedBotValue(
     tag: string
 ): string {
     const value = calculateBotValue(context, bot, tag);
+    if (typeof value === 'number') {
+        const rawValue = calculateRawBotValue(context, bot, tag);
+        if (typeof rawValue === 'string') {
+            return rawValue;
+        }
+    }
     return formatValue(value);
 }
 

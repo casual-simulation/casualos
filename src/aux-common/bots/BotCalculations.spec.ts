@@ -78,6 +78,7 @@ import {
     calculateDimensions,
     isModule,
     parseModule,
+    calculateFormattedBotValue,
 } from './BotCalculations';
 import type { Bot, BotsState } from './Bot';
 import { DNA_TAG_PREFIX, KNOWN_TAG_PREFIXES } from './Bot';
@@ -941,6 +942,56 @@ describe('BotCalculations', () => {
 
             expect(isBot(null)).toBe(false);
             expect(isBot({})).toBe(false);
+        });
+    });
+
+    describe('calculateFormattedBotValue()', () => {
+        const cases = [
+            ['abc', 'abc'] as const,
+            [123, '123'] as const,
+            [false, 'false'] as const,
+            [true, 'true'] as const,
+            [
+                '🔁1,0,0,0',
+                'Rotation(axis: Vector3(1, 0, 0), angle: Math.PI * 1)',
+            ] as const,
+            [null as any, null as any] as const,
+            [undefined as any, undefined as any] as const,
+            [createBot('test123456'), 'test1'] as const,
+            [[123, 'abc'], '[123,abc]'] as const,
+        ];
+
+        it.each(cases)(
+            'should return the value %s as %s',
+            (value: any, expected: string) => {
+                const bot = createPrecalculatedBot('test', {
+                    tag: value,
+                });
+                const calc = createPrecalculatedContext([bot]);
+                const result = calculateFormattedBotValue(calc, bot, 'tag');
+
+                expect(result).toBe(expected);
+            }
+        );
+
+        it('should return the string value if it parses to a string', () => {
+            const bot = createBot('test', {
+                tag: '123e4567890',
+            });
+            const calc = createPrecalculatedContext([bot]);
+            const result = calculateFormattedBotValue(calc, bot, 'tag');
+
+            expect(result).toBe('123e4567890');
+        });
+
+        it('should return the string value if it is a tagged number', () => {
+            const bot = createBot('test', {
+                tag: '🔢123e4567890',
+            });
+            const calc = createPrecalculatedContext([bot]);
+            const result = calculateFormattedBotValue(calc, bot, 'tag');
+
+            expect(result).toBe('🔢123e4567890');
         });
     });
 
