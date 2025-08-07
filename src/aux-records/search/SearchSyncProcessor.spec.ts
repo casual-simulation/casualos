@@ -386,6 +386,225 @@ describe('SearchSyncProcessor', () => {
                 });
             });
 
+            it('should skip data that is not an object', async () => {
+                // Arrange: Set up test data with missing fields
+                const marker = 'test-marker';
+                const testData: DataRecord[] = [
+                    {
+                        address: 'record1',
+                        data: { name: 'John', email: 'john@example.com' },
+                        publisherId: 'pub1',
+                        subjectId: 'sub1',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record2',
+                        data: 2,
+                        publisherId: 'pub2',
+                        subjectId: 'sub2',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record3',
+                        data: 'hello',
+                        publisherId: 'pub3',
+                        subjectId: 'sub3',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record4',
+                        data: true,
+                        publisherId: 'pub4',
+                        subjectId: 'sub4',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record5',
+                        data: [0, 1, 2],
+                        publisherId: 'pub5',
+                        subjectId: 'sub5',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record6',
+                        data: null,
+                        publisherId: 'pub6',
+                        subjectId: 'sub6',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                ];
+
+                await setData(targetRecordName, testData);
+
+                const event: SearchSyncQueueEvent = {
+                    type: 'sync_search_record',
+                    sync: {
+                        id: 'sync',
+                        searchRecordName,
+                        searchRecordAddress,
+                        targetRecordName,
+                        targetMarker: marker,
+                        targetResourceKind: 'data',
+                        targetMapping: [
+                            ['$.name', 'userName'], // Required field
+                            ['$.email', 'userEmail'], // Required field
+                        ],
+                    },
+                };
+
+                // Act: Process the sync event
+                await processor.process(event);
+
+                // Assert: Verify process completed (continues despite mapping failures)
+                expect(searchRecordsStore.syncHistory).toEqual([
+                    {
+                        id: expect.any(String),
+                        runId: expect.any(String),
+                        syncId: 'sync',
+                        searchRecordAddress: searchRecordAddress,
+                        searchRecordName: searchRecordName,
+                        timeMs: expect.any(Number),
+                        errorMessage: null,
+                        status: 'success',
+                        success: true,
+                        numSynced: 1, // Only valid record synced
+                        numErrored: 5, // Five records failed mapping
+                        numTotal: 6,
+                    },
+                ]);
+
+                // Verify only valid records were synced
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(1);
+
+                // Verify correct document was synced
+                const documents =
+                    searchInterface.getCollectionDocuments(collectionName);
+                expect(documents[0]).toMatchObject({
+                    userName: 'John',
+                    userEmail: 'john@example.com',
+                });
+            });
+
+            it('should mark the result as failed if all mappings fail', async () => {
+                // Arrange: Set up test data with missing fields
+                const marker = 'test-marker';
+                const testData: DataRecord[] = [
+                    {
+                        address: 'record2',
+                        data: 2,
+                        publisherId: 'pub2',
+                        subjectId: 'sub2',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record3',
+                        data: 'hello',
+                        publisherId: 'pub3',
+                        subjectId: 'sub3',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record4',
+                        data: true,
+                        publisherId: 'pub4',
+                        subjectId: 'sub4',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record5',
+                        data: [0, 1, 2],
+                        publisherId: 'pub5',
+                        subjectId: 'sub5',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                    {
+                        address: 'record6',
+                        data: null,
+                        publisherId: 'pub6',
+                        subjectId: 'sub6',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                ];
+
+                await setData(targetRecordName, testData);
+
+                const event: SearchSyncQueueEvent = {
+                    type: 'sync_search_record',
+                    sync: {
+                        id: 'sync',
+                        searchRecordName,
+                        searchRecordAddress,
+                        targetRecordName,
+                        targetMarker: marker,
+                        targetResourceKind: 'data',
+                        targetMapping: [
+                            ['$.name', 'userName'], // Required field
+                            ['$.email', 'userEmail'], // Required field
+                        ],
+                    },
+                };
+
+                // Act: Process the sync event
+                await processor.process(event);
+
+                // Assert: Verify process completed (continues despite mapping failures)
+                expect(searchRecordsStore.syncHistory).toEqual([
+                    {
+                        id: expect.any(String),
+                        runId: expect.any(String),
+                        syncId: 'sync',
+                        searchRecordAddress: searchRecordAddress,
+                        searchRecordName: searchRecordName,
+                        timeMs: expect.any(Number),
+                        errorMessage:
+                            'All mappings failed for all records (5).',
+                        status: 'failure',
+                        success: false,
+                        numSynced: 0,
+                        numErrored: 0,
+                        numTotal: 0,
+                    },
+                ]);
+
+                // Verify only valid records were synced
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(0);
+
+                // Verify correct document was synced
+                const documents =
+                    searchInterface.getCollectionDocuments(collectionName);
+                expect(documents.length).toBe(0);
+            });
+
             it('should handle optional mapping fields with ? suffix', async () => {
                 // Arrange: Set up test data with optional fields
                 const marker = 'test-marker';

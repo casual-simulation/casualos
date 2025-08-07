@@ -178,6 +178,13 @@ export class SearchSyncProcessor {
             });
         }
 
+        if (numSynced === 0 && numErrored > 0) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: `All mappings failed for all records (${numErrored}).`,
+            });
+        }
+
         return success({
             numSynced,
             numErrored,
@@ -197,6 +204,13 @@ export function mapItem(
     item: object,
     mapping: [string, string][]
 ): Result<any, SimpleError> {
+    if (typeof item !== 'object' || item === null) {
+        return failure({
+            errorCode: 'invalid_request',
+            errorMessage: `Item must be an object, but got ${typeof item}.`,
+        });
+    }
+
     const result: any = {};
 
     for (let i = 0; i < mapping.length; i++) {
