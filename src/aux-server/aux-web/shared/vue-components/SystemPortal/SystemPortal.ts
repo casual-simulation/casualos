@@ -96,6 +96,7 @@ import { getActiveTheme } from '../utils';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
+import SourceControl from '../SourceControl/SourceControl';
 
 @Component({
     components: {
@@ -111,6 +112,7 @@ import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
         'svg-icon': SvgIcon,
         'diff-status': DiffStatus,
         'highlighted-text': HighlightedText,
+        'source-control-panel': SourceControl,
     },
 })
 export default class SystemPortal extends Vue {

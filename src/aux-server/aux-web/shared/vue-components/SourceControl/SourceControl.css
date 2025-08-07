@@ -1,0 +1,10 @@
+.title-container {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.25rem;
+    background-color: var(--disabled-cell-color);
+}
+
+.title-container > .md-icon {
+    margin: auto 0.25rem auto 0;
+}
