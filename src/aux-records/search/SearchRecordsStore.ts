@@ -183,19 +183,9 @@ export interface SearchRecordSyncHistory {
     errorMessage: string | null;
 
     /**
-     * The number of documents that were successfully added during the sync.
+     * The number of documents that were successfully synced.
      */
-    numAdded: number;
-
-    /**
-     * The number of documents that were successfully updated during the sync.
-     */
-    numUpdated: number;
-
-    /**
-     * The number of documents that were successfully deleted during the sync.
-     */
-    numDeleted: number;
+    numSynced: number;
 
     /**
      * The number of documents that errored during the sync.

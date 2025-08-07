@@ -19,6 +19,8 @@ import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import type {
     SearchRecord,
     SearchRecordsStore,
+    SearchRecordSync,
+    SearchRecordSyncHistory,
     SearchSubscriptionMetrics,
 } from './SearchRecordsStore';
 import type { SubscriptionFilter } from '../MetricsStore';
@@ -30,6 +32,45 @@ export class MemorySearchRecordsStore
     extends MemoryCrudRecordsStore<SearchRecord>
     implements SearchRecordsStore
 {
+    private _syncs: Map<string, SearchRecordSync> = new Map();
+    private _syncHistory: Map<string, SearchRecordSyncHistory> = new Map();
+
+    get syncs() {
+        return [...this._syncs.values()];
+    }
+
+    get syncHistory() {
+        return [...this._syncHistory.values()];
+    }
+
+    async saveSync(sync: SearchRecordSync): Promise<void> {
+        this._syncs.set(sync.id, sync);
+    }
+
+    async deleteSync(syncId: string): Promise<void> {
+        this._syncs.delete(syncId);
+    }
+
+    async listSyncsBySearchRecord(
+        recordName: string,
+        address: string
+    ): Promise<SearchRecordSync[]> {
+        let syncs: SearchRecordSync[] = [];
+        for (let sync of this._syncs.values()) {
+            if (
+                sync.searchRecordName === recordName &&
+                sync.searchRecordAddress === address
+            ) {
+                syncs.push(sync);
+            }
+        }
+        return syncs;
+    }
+
+    async createSyncHistory(history: SearchRecordSyncHistory): Promise<void> {
+        this._syncHistory.set(history.id, history);
+    }
+
     async getSubscriptionMetrics(
         filter: SubscriptionFilter
     ): Promise<SearchSubscriptionMetrics> {

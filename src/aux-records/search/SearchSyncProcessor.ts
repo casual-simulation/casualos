@@ -17,7 +17,6 @@
  */
 
 import type { DataRecordsStore } from '../DataRecordsStore';
-import type { IQueue } from '../queue/Queue';
 import type {
     SearchRecord,
     SearchRecordsStore,
@@ -36,25 +35,6 @@ import {
 } from '@casual-simulation/aux-common';
 import type { SearchInterface } from './SearchInterface';
 
-/**
- * Defines a queue that is able to sync search records.
- */
-export class SearchSyncQueue {
-    private _queue: IQueue<SearchSyncQueueEvent>;
-
-    constructor(queue: IQueue<SearchSyncQueueEvent>) {
-        this._queue = queue;
-    }
-
-    /**
-     *
-     * @param event
-     */
-    async queueEvent(name: string, event: SearchSyncQueueEvent): Promise<void> {
-        await this._queue.add(name, event);
-    }
-}
-
 const DOCUMENT_NAMESPACE = '36e15e17-0f44-4c07-ab84-22eafecc2614';
 
 const TRACE_NAME = 'SearchSyncProcessor';
@@ -64,20 +44,17 @@ export interface SearchSyncProcessorConfig {
     search: SearchRecordsStore;
     searchInterface: SearchInterface;
     data: DataRecordsStore;
-    queue: IQueue<SearchSyncQueueEvent>;
 }
 
 export class SearchSyncProcessor {
     private _store: SearchRecordsStore;
     private _searchInterface: SearchInterface;
     private _data: DataRecordsStore;
-    private _queue: IQueue<SearchSyncQueueEvent>;
 
     constructor(config: SearchSyncProcessorConfig) {
         this._store = config.search;
         this._searchInterface = config.searchInterface;
         this._data = config.data;
-        this._queue = config.queue;
     }
 
     @traced(TRACE_NAME)
@@ -103,7 +80,7 @@ export class SearchSyncProcessor {
 
         const result =
             event.sync.targetResourceKind === 'data'
-                ? await this._syncDataRecord(event, searchRecord)
+                ? await this.syncDataRecord(event, searchRecord)
                 : failure({
                       errorCode: 'not_supported',
                       errorMessage: `Unsupported target resource kind: ${event.sync.targetResourceKind}`,
@@ -119,36 +96,30 @@ export class SearchSyncProcessor {
             searchRecordName: event.sync.searchRecordName,
             timeMs: Date.now(),
             errorMessage: isFailure(result) ? result.error.errorMessage : null,
-            status: 'success',
+            status: isFailure(result) ? 'failure' : 'success',
             success: result.success,
-            numAdded: 0,
-            numUpdated: 0,
+            numSynced: 0,
             numTotal: 0,
-            numDeleted: 0,
             numErrored: 0,
         };
 
         if (isSuccess(result)) {
-            history.numAdded = result.value.numAdded;
-            history.numUpdated = result.value.numUpdated;
-            history.numDeleted = result.value.numDeleted;
-            history.numTotal = result.value.numTotal;
+            history.numSynced = result.value.numSynced;
             history.numErrored = result.value.numErrored;
+            history.numTotal = result.value.numTotal;
         }
 
         await this._store.createSyncHistory(history);
     }
 
-    private async _syncDataRecord(
+    async syncDataRecord(
         event: SyncSearchRecordEvent,
         searchRecord: SearchRecord
     ): Promise<Result<SyncInfo, SimpleError>> {
         let startingAddress: string | null = null;
 
         let done = false;
-        let numAdded = 0;
-        let numUpdated = 0;
-        let numDeleted = 0;
+        let numSynced = 0;
         let numErrored = 0;
         const count = 100;
         for (let iteration = 0; iteration < 1000; iteration++) {
@@ -187,7 +158,7 @@ export class SearchSyncProcessor {
                     mapped.value,
                     'emplace'
                 );
-                numAdded++;
+                numSynced++;
                 if (i === data.items.length - 1) {
                     startingAddress = item.address;
                 }
@@ -208,11 +179,9 @@ export class SearchSyncProcessor {
         }
 
         return success({
-            numAdded,
-            numUpdated,
-            numDeleted,
+            numSynced,
             numErrored,
-            numTotal: numAdded + numUpdated + numDeleted + numErrored,
+            numTotal: numSynced + numErrored,
         });
     }
 }
@@ -276,9 +245,7 @@ export function mapItem(
 }
 
 interface SyncInfo {
-    numAdded: number;
-    numUpdated: number;
-    numDeleted: number;
+    numSynced: number;
     numTotal: number;
     numErrored: number;
 }

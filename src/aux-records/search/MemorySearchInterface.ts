@@ -63,6 +63,10 @@ export class MemorySearchInterface implements SearchInterface {
         return [...this._documents.entries()];
     }
 
+    getCollectionDocuments(collectionName: string) {
+        return this._documents.get(collectionName)?.slice() || [];
+    }
+
     get apiKeys() {
         return this._apiKeys;
     }
