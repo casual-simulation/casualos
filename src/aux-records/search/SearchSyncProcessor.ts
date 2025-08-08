@@ -80,7 +80,7 @@ export class SearchSyncProcessor {
 
         const result =
             event.sync.targetResourceKind === 'data'
-                ? await this.syncDataRecord(event, searchRecord)
+                ? await this._syncDataRecord(event, searchRecord)
                 : failure({
                       errorCode: 'not_supported',
                       errorMessage: `Unsupported target resource kind: ${event.sync.targetResourceKind}`,
@@ -112,7 +112,7 @@ export class SearchSyncProcessor {
         await this._store.createSyncHistory(history);
     }
 
-    async syncDataRecord(
+    private async _syncDataRecord(
         event: SyncSearchRecordEvent,
         searchRecord: SearchRecord
     ): Promise<Result<SyncInfo, SimpleError>> {
