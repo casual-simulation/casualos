@@ -1115,15 +1115,15 @@ export default class SystemPortal extends Vue {
         if (focused) {
             this.selectTag(tag);
 
-            if (this.selectedBot && this.selectedTag) {
+            if (this.selectedBot && tag.name) {
                 const sim =
                     appManager.simulationManager.simulations.get(
                         selectedBotSimId
                     );
                 sim.helper.setEditingBot(
                     this.selectedBot,
-                    this.selectedTag,
-                    this.selectedTagSpace
+                    tag.name,
+                    tag.space
                 );
             }
         }
