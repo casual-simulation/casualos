@@ -224,6 +224,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useTypesense();
     }
 
+    if (config.jobs) {
+        builder.useBackgroundJobs();
+    }
+
     if (config.webauthn) {
         builder.useWebAuthn();
     }

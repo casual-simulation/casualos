@@ -40,7 +40,6 @@ const DOCUMENT_NAMESPACE = '36e15e17-0f44-4c07-ab84-22eafecc2614';
 const TRACE_NAME = 'SearchSyncProcessor';
 
 export interface SearchSyncProcessorConfig {
-    batchSize: number;
     search: SearchRecordsStore;
     searchInterface: SearchInterface;
     data: DataRecordsStore;

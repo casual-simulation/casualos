@@ -185,11 +185,20 @@ import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
 import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
 import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
-import type { SearchRecordsStore } from '@casual-simulation/aux-records/search';
+import type {
+    SearchRecordsStore,
+    SearchSyncQueueEvent,
+} from '@casual-simulation/aux-records/search';
+import { SearchSyncProcessor } from '@casual-simulation/aux-records/search';
 import { SearchRecordsController } from '@casual-simulation/aux-records/search';
 import { TypesenseSearchInterface } from '@casual-simulation/aux-records/search';
 import type { NodeConfiguration } from 'typesense/lib/Typesense/Configuration';
 import { PrismaSearchRecordsStore } from 'aux-backend/prisma/PrismaSearchRecordsStore';
+import type { IQueue } from '@casual-simulation/aux-records/queue';
+import { Worker as BullWorker, Queue } from 'bullmq';
+import { BullQueue } from '../queue/BullQueue';
+import { SNSClient } from '@aws-sdk/client-sns';
+import { SNSQueue } from '../queue/SNSQueue';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -365,6 +374,10 @@ export class ServerBuilder implements SubscriptionLike {
     private _searchInterface: TypesenseSearchInterface | null = null;
     private _searchStore: SearchRecordsStore | null = null;
     private _searchController: SearchRecordsController | null = null;
+
+    private _searchSyncProcessor: SearchSyncProcessor | null = null;
+    private _searchQueue: IQueue<SearchSyncQueueEvent> | null = null;
+    private _searchWorker: BullWorker | null = null;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -1637,6 +1650,112 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Invalid webhook environment type.');
         }
         return this;
+    }
+
+    useBackgroundJobs(
+        options: Pick<ServerConfig, 'jobs' | 'redis'> = this._options
+    ): this {
+        if (!options.jobs) {
+            throw new Error('Background jobs options must be provided.');
+        }
+
+        if (options.jobs.search) {
+            if (!this._dataStore) {
+                throw new Error(
+                    'Data store must be configured before using background search jobs.'
+                );
+            }
+            if (!this._searchStore) {
+                throw new Error(
+                    'Search store must be configured before using background search jobs.'
+                );
+            }
+            if (!this._searchInterface) {
+                throw new Error(
+                    'Search interface must be configured before using background search jobs.'
+                );
+            }
+
+            this._searchSyncProcessor = new SearchSyncProcessor({
+                searchInterface: this._searchInterface,
+                data: this._dataStore,
+                search: this._searchStore,
+            });
+
+            if (options.jobs.search.type === 'sns') {
+                console.log('[ServerBuilder] Publishing search jobs to SNS.');
+
+                const client = new SNSClient({});
+                const queue = (this._searchQueue = new SNSQueue(
+                    client,
+                    options.jobs.search.topicArn
+                ));
+
+                this._subscription.add(queue);
+                this._subscription.add(() => {
+                    this._searchQueue = null;
+                });
+            } else {
+                if (!options.redis) {
+                    throw new Error(
+                        'Redis options must be provided when using BullMQ.'
+                    );
+                }
+                // console.log('[ServerBuilder] Using BullMQ for Search jobs.');
+
+                const serverOptions =
+                    options.redis.servers?.bullmq ?? options.redis;
+
+                const connection = {
+                    url: serverOptions.url,
+                    host: serverOptions.host,
+                    port: serverOptions.port,
+                    password: serverOptions.password,
+                    tls: serverOptions.tls ? {} : undefined,
+                };
+
+                if (options.jobs.search.queue) {
+                    console.log(
+                        '[ServerBuilder] Using BullMQ for search jobs on:',
+                        options.jobs.search.queueName
+                    );
+
+                    const queue = (this._searchQueue = new BullQueue(
+                        new Queue(options.jobs.search.queueName, {
+                            connection,
+                        })
+                    ));
+
+                    this._subscription.add(queue);
+                    this._subscription.add(() => {
+                        this._searchQueue = null;
+                    });
+                }
+
+                if (options.jobs.search.process) {
+                    console.log(
+                        '[ServerBuilder] Processing search jobs with BullMQ on:',
+                        options.jobs.search.queueName
+                    );
+                    this._searchWorker = new BullWorker(
+                        options.jobs.search.queueName,
+                        async (job) => {
+                            await this._searchSyncProcessor.process(
+                                job.data as SearchSyncQueueEvent
+                            );
+                        },
+                        {
+                            connection,
+                        }
+                    );
+
+                    this._subscription.add(() => {
+                        this._searchWorker?.close();
+                        this._searchWorker = null;
+                    });
+                }
+            }
+        }
     }
 
     async buildAsync(): Promise<BuildReturn> {
