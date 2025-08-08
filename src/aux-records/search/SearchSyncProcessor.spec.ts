@@ -928,6 +928,56 @@ describe('SearchSyncProcessor', () => {
                     primaryTag: 'admin',
                 });
             });
+
+            it('should fail if the resource kind is unsupported', async () => {
+                // Arrange: Set up test data with nested objects
+                const marker = 'nested-marker';
+                const event: SearchSyncQueueEvent = {
+                    type: 'sync_search_record',
+                    sync: {
+                        id: 'sync',
+                        searchRecordName,
+                        searchRecordAddress,
+                        targetRecordName,
+                        targetMarker: marker,
+                        targetResourceKind: 'file',
+                        targetMapping: [
+                            ['$.user.profile.name', 'fullName'],
+                            ['$.user.profile.contact.email', 'email'],
+                            ['$.user.metadata.tags.0', 'primaryTag'],
+                        ],
+                    },
+                };
+
+                // Act: Process the sync event
+                await processor.process(event);
+
+                // Assert: Verify success
+                expect(searchRecordsStore.syncHistory).toEqual([
+                    {
+                        id: expect.any(String),
+                        runId: expect.any(String),
+                        syncId: 'sync',
+                        searchRecordAddress: searchRecordAddress,
+                        searchRecordName: searchRecordName,
+                        timeMs: expect.any(Number),
+                        errorMessage: 'Unsupported target resource kind: file',
+                        status: 'failure',
+                        success: false,
+                        numSynced: 0,
+                        numErrored: 0,
+                        numTotal: 0,
+                    },
+                ]);
+
+                // Verify document was synced correctly
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(0);
+            });
+        });
         });
     });
 });
