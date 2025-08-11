@@ -75,6 +75,14 @@ The CasualOS Docker image can be configured using the following environment vari
 
 The following environment variables are optional:
 
+#### Branding
+
+CasualOS supports the following environment variables to customize branding.
+
+-   `LOGO_URL` - The URL of the logo that should be displayed in the loading splash screen.
+-   `LOGO_TITLE` - The alternate text that should provided for the logo. If specified alone, then this text will be displayed in the loading dialog.
+-   `LOGO_BACKGROUND_COLOR` - The background color of the splash screen. Only has an effect if `LOGO_URL` is specified.
+
 #### CockroachDB Support
 
 CockroachDB support can be enabled by providing the following environment variables:

@@ -114,6 +114,7 @@ import type {
     Point3D,
     MapLayer,
     DynamicListener,
+    HideLoadingScreenAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -3154,6 +3155,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 showJoinCode,
                 requestFullscreenMode,
                 exitFullscreenMode,
+
+                hideLoadingScreen,
+
                 showHtml,
                 hideHtml,
                 setClipboard,
@@ -5884,6 +5888,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function exitFullscreenMode(): ExitFullscreenAction {
         return addAction(exitFullscreen());
+    }
+
+    /**
+     * Hides the loading screen.
+     *
+     * Returns a promise that resolves when the loading screen has been hidden.
+     *
+     * @example Hide the loading screen.
+     * await os.hideLoadingScreen();
+     *
+     * @dochash actions/os/portals
+     * @docname os.hideLoadingScreen
+     * @docgroup 11-loading
+     */
+    function hideLoadingScreen(): Promise<void> {
+        const task = context.createTask();
+        const action: HideLoadingScreenAction = {
+            type: 'hide_loading_screen',
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
     }
 
     /**

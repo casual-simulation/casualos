@@ -18,17 +18,14 @@
 import Axios from 'axios';
 import type { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
-import { filter, first, map, scan, tap } from 'rxjs/operators';
+import { filter, first, scan, tap } from 'rxjs/operators';
 import { downloadAuxState, readFileText } from './DownloadHelpers';
 import type {
     BotsState,
     ConnectionIndicator,
     ProgressMessage,
 } from '@casual-simulation/aux-common';
-import {
-    getUploadState,
-    remapProgressPercent,
-} from '@casual-simulation/aux-common';
+import { getUploadState } from '@casual-simulation/aux-common';
 import type { StoredAux, PrivacyFeatures } from '@casual-simulation/aux-common';
 import {
     hasValue,
@@ -833,21 +830,10 @@ export class AppManager {
 
         const sim = this.simulationManager.primary;
 
-        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe({
-            next: (m: ProgressMessage) => {
-                this._progress.next(m);
-                if (m.error) {
-                    this._progress.complete();
-                }
-            },
+        sim.progress.updates.subscribe({
+            next: (m) => this._progress.next(m),
             error: (err) => console.error(err),
             complete: () => {
-                this._progress.next({
-                    type: 'progress',
-                    message: 'Done.',
-                    progress: 1,
-                    done: true,
-                });
                 console.log('[AppManager] Primary simulation is done.');
                 this._progress.complete();
             },

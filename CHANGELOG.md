@@ -1,8 +1,61 @@
 # CasualOS Changelog
 
-## V3.5.6
+## V3.6.1
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
+    -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue in the `unpack-aux` CLI command where tags that failed to be written would be omitted from the bot AUX file.
+-   Fixed an issue where strings like `e123` would be recognized as numbers.
+-   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
+-   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+
+## V3.6.0
+
+#### Date: 7/28/2025
+
+### :boom: Breaking Changes
+
+-   Prevented the loading screen from being hidden until one of two things happens:
+    1. One of the following portals is displayed:
+        - `gridPortal`
+        - `sheetPortal`
+        - `systemPortal`
+        - `miniGridPortal`
+        - `mapPortal`
+        - `miniMapPortal`
+        - `meetPortal`
+        - `tagPortal`
+    2. `os.hideLoadingScreen()` is called.
+    -   This change makes the loading experience able to be more deeply customized on a per-experience basis.
+-   comId's which have a configured `logoUrl` will now display the logo in fullscreen like a "splash screen".
+    -   This gives more prominence to their branding and simplifies our white-labeling story moving forward.
+
+### :rocket: Features
+
+-   Added the ability to prevent the `gridPortal` from loading automatically by setting the `noGridPortal` query parameter.
+-   Added the ability to display a fullscreen "splash screen"
+    -   Can be controlled by the following environment variables:
+        -   `LOGO_URL` - The URL to the logo that should be displayed. If set, then the logo will be displayed full screen.
+        -   `LOGO_TITLE` - The descriptive title for the logo. Used as alt text for the logo. Additionally can be specified on its own to display a title in the regular loading dialog.
+        -   `LOGO_BACKGROUND_COLOR` - The [color](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) that should be displayed for the splash screen background.
+-   Added the `os.hideLoadingScreen()` function.
+    -   This function can be used to trigger hiding the loading screen by a script.
+
+### :bug: Bug Fixes
+
+-   Actually fixed the issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+-   Fixed an issue with the CLI where `pack-aux` would not read files with non-standard extensions.
+
+## V3.5.6
+
+#### Date: 7/23/2025
 
 ### :bug: Bug Fixes
 

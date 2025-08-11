@@ -18,7 +18,7 @@
 import Vue from 'vue';
 import { appManager } from '../../AppManager';
 import Component from 'vue-class-component';
-import { Loading } from '@casual-simulation/aux-components';
+import { Loading, SplashScreen } from '@casual-simulation/aux-components';
 import type { ProgressMessage } from '@casual-simulation/aux-common';
 import { tap } from 'rxjs/operators';
 
@@ -30,6 +30,7 @@ const LOADING_TIMEOUT_MS = 25_000; // 25 seconds
 @Component({
     components: {
         loading: Loading,
+        'splash-screen': SplashScreen,
     },
 })
 export default class LoadApp extends Vue {
@@ -38,10 +39,19 @@ export default class LoadApp extends Vue {
 
     logoUrl: string = null;
     logoTitle: string = null;
+    backgroundColor: string = null;
     title: string = null;
 
     get version() {
         return appManager.version.latestTaggedVersion;
+    }
+
+    get showSplashScreen(): boolean {
+        return !!this.logoUrl && this.loadingState && !this.loadingState.done;
+    }
+
+    get showLoadingDialog(): boolean {
+        return this.loadingState && (!this.logoUrl || this.loadingState.error);
     }
 
     constructor() {
@@ -51,6 +61,7 @@ export default class LoadApp extends Vue {
 
     created() {
         this.loading = true;
+        this.backgroundColor = null;
         this.loadingState = {
             type: 'progress',
             message: 'Starting...',
@@ -72,10 +83,18 @@ export default class LoadApp extends Vue {
         appManager.init().then(
             () => {
                 this.loading = false;
-                this.logoUrl = appManager.comIdConfig?.logoUrl ?? null;
+                this.logoUrl =
+                    appManager.comIdConfig?.logoUrl ??
+                    appManager.config?.logoUrl ??
+                    null;
                 this.title = this.logoTitle =
                     appManager.comIdConfig?.displayName ??
                     appManager.comIdConfig?.comId ??
+                    appManager.config?.logoTitle ??
+                    null;
+                this.backgroundColor =
+                    appManager.comIdConfig?.logoBackgroundColor ??
+                    appManager.config?.logoBackgroundColor ??
                     null;
             },
             (err) => {
@@ -101,9 +120,13 @@ export default class LoadApp extends Vue {
             appManager.getStoredComId(comId).then((config) => {
                 console.log('has stored id', config);
                 if (this.loading) {
-                    this.logoUrl = config?.logoUrl ?? null;
+                    this.logoUrl =
+                        config?.logoUrl ?? appManager.config?.logoUrl ?? null;
                     this.title = this.logoTitle =
-                        config.displayName ?? config.comId ?? null;
+                        config.displayName ??
+                        config.comId ??
+                        appManager.config?.logoTitle ??
+                        null;
                 }
             });
         }

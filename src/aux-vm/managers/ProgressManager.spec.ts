@@ -17,15 +17,25 @@
  */
 import { ProgressManager } from './ProgressManager';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import type { ProgressMessage } from '@casual-simulation/aux-common';
+import {
+    GRID_PORTAL,
+    type BotAction,
+    type ProgressMessage,
+} from '@casual-simulation/aux-common';
+import { Subject } from 'rxjs';
+import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 
 describe('ProgressManager', () => {
     let subject: ProgressManager;
     let vm: TestAuxVM;
+    let onPortalLoaded: Subject<string>;
+    let localEvents: Subject<BotAction[]>;
 
     beforeEach(() => {
         vm = new TestAuxVM('sim', 'user');
-        subject = new ProgressManager(vm);
+        onPortalLoaded = new Subject<string>();
+        localEvents = vm.localEvents = new Subject<BotAction[]>();
+        subject = new ProgressManager(vm, onPortalLoaded);
     });
 
     it('should return the most recent progress message', () => {
@@ -43,11 +53,116 @@ describe('ProgressManager', () => {
                 type: 'progress',
                 progress: 0.5,
                 message: 'def',
+                done: false,
             },
         ]);
     });
 
-    it('should emit a done progress event when initialized', () => {
+    it('should emit a done progress event when the gridPortal is loaded', async () => {
+        let messages: ProgressMessage[] = [];
+        subject.updates.subscribe((m) => messages.push(m));
+
+        vm.connectionStateChanged.next({
+            type: 'progress',
+            progress: 0.5,
+            message: 'def',
+        });
+
+        onPortalLoaded.next(GRID_PORTAL);
+
+        await waitAsync();
+
+        expect(messages).toEqual([
+            {
+                type: 'progress',
+                progress: 0,
+                message: 'Starting...',
+            },
+            {
+                type: 'progress',
+                progress: 0.5,
+                message: 'def',
+                done: false,
+            },
+            {
+                type: 'progress',
+                progress: 1,
+                message: 'Done.',
+                done: true,
+            },
+        ]);
+    });
+
+    it('should not emit a done progress event when the menuPortal portal is loaded', async () => {
+        let messages: ProgressMessage[] = [];
+        subject.updates.subscribe((m) => messages.push(m));
+
+        vm.connectionStateChanged.next({
+            type: 'progress',
+            progress: 0.5,
+            message: 'def',
+        });
+
+        onPortalLoaded.next('menuPortal');
+
+        await waitAsync();
+
+        expect(messages).toEqual([
+            {
+                type: 'progress',
+                progress: 0,
+                message: 'Starting...',
+            },
+            {
+                type: 'progress',
+                progress: 0.5,
+                message: 'def',
+                done: false,
+            },
+        ]);
+    });
+
+    it('should emit a done progress event when a hide_loading_screen event is received', async () => {
+        let messages: ProgressMessage[] = [];
+        subject.updates.subscribe((m) => messages.push(m));
+
+        vm.connectionStateChanged.next({
+            type: 'progress',
+            progress: 0.5,
+            message: 'def',
+        });
+
+        vm.localEvents.next([
+            {
+                type: 'hide_loading_screen',
+                taskId: 'task1',
+            },
+        ]);
+
+        await waitAsync();
+
+        expect(messages).toEqual([
+            {
+                type: 'progress',
+                progress: 0,
+                message: 'Starting...',
+            },
+            {
+                type: 'progress',
+                progress: 0.5,
+                message: 'def',
+                done: false,
+            },
+            {
+                type: 'progress',
+                progress: 1,
+                message: 'Done.',
+                done: true,
+            },
+        ]);
+    });
+
+    it('should not emit a done progress event when initialized', () => {
         let messages: ProgressMessage[] = [];
         subject.updates.subscribe((m) => messages.push(m));
 
@@ -60,12 +175,6 @@ describe('ProgressManager', () => {
                 type: 'progress',
                 progress: 0,
                 message: 'Starting...',
-            },
-            {
-                type: 'progress',
-                progress: 1,
-                message: 'Done.',
-                done: true,
             },
         ]);
     });
@@ -95,7 +204,7 @@ describe('ProgressManager', () => {
         ]);
     });
 
-    it('should emit an error progress event when not authorized', () => {
+    it('should emit an error progress event when not authorized', async () => {
         let messages: ProgressMessage[] = [];
         let completed: boolean = false;
         subject.updates.subscribe({
@@ -107,6 +216,8 @@ describe('ProgressManager', () => {
             type: 'authorization',
             authorized: false,
         });
+
+        await waitAsync();
 
         expect(messages).toEqual([
             {
@@ -121,6 +232,6 @@ describe('ProgressManager', () => {
                 error: true,
             },
         ]);
-        expect(completed).toBe(false);
+        expect(completed).toBe(true);
     });
 });

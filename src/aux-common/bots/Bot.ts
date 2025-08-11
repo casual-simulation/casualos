@@ -2336,6 +2336,11 @@ export const EDITOR_CODE_BUTTON_DIMENSION = 'true';
 export const EDITOR_CODE_TOOL_PORTAL = 'codeToolsPortal';
 
 /**
+ * The name of the grid portal.
+ */
+export const GRID_PORTAL: string = 'gridPortal';
+
+/**
  * The name of the miniGridPortal.
  */
 export const MINI_PORTAL: string = 'miniGridPortal';
@@ -2535,7 +2540,7 @@ export const KNOWN_TAG_PREFIXES: string[] = [
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
@@ -2552,10 +2557,26 @@ export const KNOWN_PORTALS: string[] = [
 ];
 
 /**
+ * The list of portal tags that trigger closing the loading screen.
+ */
+export const LOAD_PORTALS: string[] = [
+    GRID_PORTAL,
+    SHEET_PORTAL,
+    IDE_PORTAL,
+    SYSTEM_PORTAL,
+    MINI_PORTAL,
+    MAP_PORTAL,
+    MINI_MAP_PORTAL,
+    MEET_PORTAL,
+    TAG_PORTAL,
+    BOT_PORTAL,
+];
+
+/**
  * The list of portal tags that should always be represented in the query string.
  */
 export const QUERY_PORTALS: string[] = [
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -2576,7 +2597,7 @@ export const QUERY_PORTALS: string[] = [
  * when it is updated.
  */
 export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -2601,7 +2622,7 @@ export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([
  */
 export const KNOWN_TAGS: string[] = [
     'playerActive',
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     SYSTEM_PORTAL,

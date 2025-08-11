@@ -20,5 +20,6 @@ export * from './EventBus';
 import Loading from './components/Loading/Loading';
 import Tagline from './components/Tagline/Tagline';
 import SvgIcon from './components/SvgIcon/SvgIcon';
+import SplashScreen from './components/SpashScreen/SplashScreen';
 
-export { Loading, Tagline, SvgIcon };
+export { Loading, Tagline, SvgIcon, SplashScreen };
