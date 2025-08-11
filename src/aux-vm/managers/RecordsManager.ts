@@ -2445,7 +2445,7 @@ export class RecordsManager {
 
     private async _installPackage(event: InstallPackageAction) {
         try {
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(event, false);
 
             if (info.error) {
                 return;
@@ -2607,7 +2607,7 @@ export class RecordsManager {
 
     private async _listInstalledPackages(event: ListInstalledPackagesAction) {
         try {
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(event, false);
 
             if (info.error) {
                 return;
