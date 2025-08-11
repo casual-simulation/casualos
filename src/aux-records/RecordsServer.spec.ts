@@ -186,6 +186,8 @@ import { version } from './packages/version/PackageVersionRecordsStore';
 import { SearchRecordsController } from './search/SearchRecordsController';
 import { MemorySearchRecordsStore } from './search/MemorySearchRecordsStore';
 import { MemorySearchInterface } from './search/MemorySearchInterface';
+import type { SearchSyncQueueEvent } from './search/SearchSyncProcessor';
+import { MemoryQueue } from './queue/MemoryQueue';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -364,6 +366,7 @@ describe('RecordsServer', () => {
 
     let searchRecordsStore: MemorySearchRecordsStore;
     let searchInterface: MemorySearchInterface;
+    let searchQueue: MemoryQueue<SearchSyncQueueEvent>;
     let searchRecordsController: SearchRecordsController;
 
     let rateLimiter: RateLimiter;
@@ -622,11 +625,13 @@ describe('RecordsServer', () => {
 
         searchInterface = new MemorySearchInterface();
         searchRecordsStore = new MemorySearchRecordsStore(store);
+        searchQueue = new MemoryQueue(async () => {});
         searchRecordsController = new SearchRecordsController({
             config: store,
             policies: policyController,
             searchInterface,
             store: searchRecordsStore,
+            queue: searchQueue,
         });
 
         websocketController = new WebsocketController(
@@ -15394,6 +15399,115 @@ describe('RecordsServer', () => {
                 }),
             () => apiHeaders
         );
+    });
+
+    describe('POST /api/v2/records/search/sync', () => {
+        let collectionName: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            // Create a search collection first
+            const collectionResult = await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'test-collection',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            if (collectionResult.success === false) {
+                throw new Error(
+                    'Failed to create item: ' + collectionResult.errorMessage
+                );
+            }
+
+            const itemResult = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'test-collection'
+            );
+            collectionName = itemResult!.collectionName;
+
+            await store.addRecord({
+                name: 'targetRecord',
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should create a new search record sync', async () => {
+            store.roles['targetRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            const { syncId } = await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    syncId: expect.any(String),
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(searchRecordsStore.syncs).toEqual([
+                {
+                    id: syncId,
+                    searchRecordName: recordName,
+                    searchRecordAddress: 'test-collection',
+                    targetRecordName: 'targetRecord',
+                    targetMarker: 'targetMarker',
+                    targetResourceKind: 'data',
+                    targetMapping: [['abc', 'abc']],
+                },
+            ]);
+
+            expect(searchQueue.items).toEqual([
+                {
+                    name: 'syncSearchRecord',
+                    data: {
+                        type: 'sync_search_record',
+                        sync: {
+                            id: syncId,
+                            searchRecordName: recordName,
+                            searchRecordAddress: 'test-collection',
+                            targetRecordName: 'targetRecord',
+                            targetMarker: 'targetMarker',
+                            targetResourceKind: 'data',
+                            targetMapping: [['abc', 'abc']],
+                        },
+                    },
+                },
+            ]);
+        });
     });
 
     describe('POST /api/v2/records/key', () => {

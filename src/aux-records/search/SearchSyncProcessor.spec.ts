@@ -53,7 +53,6 @@ describe('SearchSyncProcessor', () => {
         searchRecordsStore = new MemorySearchRecordsStore(dataStore);
         searchInterface = new MemorySearchInterface();
         processor = new SearchSyncProcessor({
-            batchSize: 10,
             search: searchRecordsStore,
             searchInterface: searchInterface,
             data: dataStore,
@@ -978,7 +977,8 @@ describe('SearchSyncProcessor', () => {
                 expect(collection!.numDocuments).toBe(0);
             });
         });
-        });
+
+        describe('sync_item', () => {});
     });
 });
 

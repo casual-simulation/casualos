@@ -2733,6 +2733,76 @@ export class RecordsServer {
                     }
                 ),
 
+            syncSearchRecord: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/search/sync')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        targetRecordName: RECORD_NAME_VALIDATION,
+                        targetResourceKind: z.enum(['data']),
+                        targetMarker: MARKER_VALIDATION,
+                        targetMapping: z
+                            .array(
+                                z.tuple([
+                                    z.string().max(100),
+                                    z.string().max(100),
+                                ])
+                            )
+                            .max(100),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            targetRecordName,
+                            targetResourceKind,
+                            targetMarker,
+                            targetMapping,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result = await this._searchRecordsController.sync(
+                            {
+                                recordName,
+                                address,
+                                targetRecordName,
+                                targetResourceKind,
+                                targetMarker,
+                                targetMapping: targetMapping as [
+                                    string,
+                                    string
+                                ][],
+                                userId: validation.userId,
+                                instances: instances ?? [],
+                            }
+                        );
+                        return genericResult(result);
+                    }
+                ),
+
             listRecords: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/list')
