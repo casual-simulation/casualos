@@ -1103,6 +1103,7 @@ model SearchRecordSync {
     targetRecordName String @db.String(128)
     targetResourceKind String @db.String(32)
     targetMarker String @db.String(128)
+    targetMapping Json
 
     history SearchRecordSyncHistory[]
 
@@ -1119,13 +1120,14 @@ model SearchRecordSyncHistory {
     syncId String @db.Uuid
     sync SearchRecordSync @relation(fields: [syncId], references: [id], onDelete: Cascade, map: "SearchRecordSyncHistory_sync_fkey1")
 
+    runId String @db.Uuid
+
     time DateTime
     status String @db.String(32)
     success Boolean
 
-    numAdded Int
-    numUpdated Int
-    numDeleted Int
+    numSynced Int
+    numErrored Int
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

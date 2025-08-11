@@ -18,6 +18,8 @@
 import type {
     SearchRecord,
     SearchRecordsStore,
+    SearchRecordSync,
+    SearchRecordSyncHistory,
     SearchSubscriptionMetrics,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
@@ -34,6 +36,7 @@ import type {
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { PrismaMetricsStore } from './PrismaMetricsStore';
 import { z } from 'zod';
+import { convertToDate } from './Utils';
 
 const ERROR_RESULT_SCHEMA = z
     .object({
@@ -54,6 +57,91 @@ export class PrismaSearchRecordsStore implements SearchRecordsStore {
     constructor(client: PrismaClient, metrics: PrismaMetricsStore) {
         this._client = client;
         this._metrics = metrics;
+    }
+
+    /**
+     * Saves a search record sync.
+     * @param sync The search record sync to save.
+     */
+    @traced(TRACE_NAME)
+    async saveSync(sync: SearchRecordSync): Promise<void> {
+        await this._client.searchRecordSync.upsert({
+            where: {
+                id: sync.id,
+            },
+            create: {
+                id: sync.id,
+                searchRecordName: sync.searchRecordName,
+                searchRecordAddress: sync.searchRecordAddress,
+                targetRecordName: sync.targetRecordName,
+                targetResourceKind: sync.targetResourceKind,
+                targetMarker: sync.targetMarker,
+                targetMapping: sync.targetMapping,
+            },
+            update: {
+                searchRecordName: sync.searchRecordName,
+                searchRecordAddress: sync.searchRecordAddress,
+                targetRecordName: sync.targetRecordName,
+                targetResourceKind: sync.targetResourceKind,
+                targetMarker: sync.targetMarker,
+                targetMapping: sync.targetMapping,
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async deleteSync(syncId: string): Promise<void> {
+        await this._client.searchRecordSync.delete({
+            where: {
+                id: syncId,
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async listSyncsBySearchRecord(
+        recordName: string,
+        address: string
+    ): Promise<SearchRecordSync[]> {
+        const syncs = await this._client.searchRecordSync.findMany({
+            where: {
+                searchRecordName: recordName,
+                searchRecordAddress: address,
+            },
+        });
+
+        return syncs.map((sync) => {
+            const s: SearchRecordSync = {
+                id: sync.id,
+                searchRecordName: sync.searchRecordName,
+                searchRecordAddress: sync.searchRecordAddress,
+                targetRecordName: sync.targetRecordName,
+                targetResourceKind:
+                    sync.targetResourceKind as SearchRecordSync['targetResourceKind'],
+                targetMarker: sync.targetMarker,
+                targetMapping:
+                    sync.targetMapping as SearchRecordSync['targetMapping'],
+            };
+            return s;
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async createSyncHistory(history: SearchRecordSyncHistory): Promise<void> {
+        await this._client.searchRecordSyncHistory.create({
+            data: {
+                id: history.id,
+                syncId: history.syncId,
+                runId: history.runId,
+                searchRecordName: history.searchRecordName,
+                searchRecordAddress: history.searchRecordAddress,
+                time: convertToDate(history.timeMs),
+                status: history.status,
+                success: history.success,
+                numSynced: history.numSynced,
+                numErrored: history.numErrored,
+            },
+        });
     }
 
     @traced(TRACE_NAME)
