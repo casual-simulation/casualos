@@ -37,6 +37,10 @@ export class MemoryQueue<T> implements IQueue<T> {
         this._process = process;
     }
 
+    get items(): MemoryJob<T>[] {
+        return this._items.slice();
+    }
+
     /**
      * Processes the queue by executing jobs in the order they were added.
      * @param maxItems The maximum number of items to process in one go. If not specified, all items will be processed.

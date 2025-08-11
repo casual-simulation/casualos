@@ -38,6 +38,8 @@ import {
 } from '@casual-simulation/aux-common';
 // import { v4 as uuid } from 'uuid';
 import { MemorySearchInterface } from './MemorySearchInterface';
+import type { SearchSyncQueueEvent } from './SearchSyncProcessor';
+import { MemoryQueue } from '../queue/MemoryQueue';
 
 // const uuidMock: jest.Mock = <any>uuid;
 // jest.mock('uuid');
@@ -59,6 +61,7 @@ describe('SearchRecordsController', () => {
             new SearchRecordsController({
                 ...config,
                 searchInterface: new MemorySearchInterface(),
+                queue: new MemoryQueue<SearchSyncQueueEvent>(async () => {}),
             }),
         (item) => ({
             address: item.address,
@@ -95,6 +98,7 @@ describe('SearchRecordsController', () => {
     let dateNowMock: jest.Mock<number>;
     let services: TestControllers;
     let searchInterface: MemorySearchInterface;
+    let queue: MemoryQueue<SearchSyncQueueEvent>;
 
     let userId: string;
     let sessionKey: string;
@@ -118,9 +122,11 @@ describe('SearchRecordsController', () => {
             (services) => new MemorySearchRecordsStore(services.store),
             (config, services) => {
                 searchInterface = new MemorySearchInterface();
+                queue = new MemoryQueue<SearchSyncQueueEvent>(async () => {});
                 return new SearchRecordsController({
                     ...config,
                     searchInterface,
+                    queue,
                 });
             }
         );
@@ -670,6 +676,82 @@ describe('SearchRecordsController', () => {
                         },
                     ],
                 ],
+            ]);
+        });
+    });
+
+    describe('sync()', () => {
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+
+            await store.addRecord({
+                name: 'targetRecord',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+        });
+
+        it('should create a data sync for the search records', async () => {
+            const result = await manager.sync({
+                recordName,
+                address: 'item1',
+                targetRecordName: 'targetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    syncId: expect.any(String),
+                })
+            );
+
+            expect(itemsStore.syncs).toEqual([
+                {
+                    id: expect.any(String),
+                    searchRecordName: recordName,
+                    searchRecordAddress: 'item1',
+                    targetRecordName: 'targetRecord',
+                    targetMarker: 'targetMarker',
+                    targetResourceKind: 'data',
+                    targetMapping: [['abc', 'abc']],
+                },
+            ]);
+
+            expect(queue.items).toEqual([
+                {
+                    name: 'syncSearchRecord',
+                    data: {
+                        type: 'sync_search_record',
+                        sync: {
+                            id: expect.any(String),
+                            searchRecordName: recordName,
+                            searchRecordAddress: 'item1',
+                            targetRecordName: 'targetRecord',
+                            targetMarker: 'targetMarker',
+                            targetResourceKind: 'data',
+                            targetMapping: [['abc', 'abc']],
+                        },
+                    },
+                },
             ]);
         });
     });

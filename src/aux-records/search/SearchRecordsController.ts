@@ -15,15 +15,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import type {
+    ResourceKinds,
+    ActionKinds,
+    Result,
+    SimpleError,
+} from '@casual-simulation/aux-common';
 import {
     failure,
     isFailure,
     PUBLIC_READ_MARKER,
     RESOURCE_KIND_VALIDATION,
     success,
-    type ActionKinds,
-    type Result,
-    type SimpleError,
 } from '@casual-simulation/aux-common';
 import type {
     AuthorizationContext,
@@ -44,6 +47,7 @@ import { getSearchFeatures } from '../SubscriptionConfiguration';
 import type {
     SearchRecord,
     SearchRecordsStore,
+    SearchRecordSync,
     SearchSubscriptionMetrics,
 } from './SearchRecordsStore';
 import { z } from 'zod';
@@ -58,6 +62,8 @@ import type {
 import { v4 as uuid } from 'uuid';
 import { traced } from '../tracing/TracingDecorators';
 import { ADDRESS_VALIDATION, RECORD_NAME_VALIDATION } from '../Validations';
+import type { IQueue } from '../queue';
+import type { SearchSyncQueueEvent } from './SearchSyncProcessor';
 
 const TRACE_NAME = 'SearchRecordsController';
 
@@ -73,6 +79,13 @@ export interface SearchRecordsConfiguration
      * The interface to the search engine that should be used.
      */
     searchInterface: SearchInterface;
+
+    /**
+     * The queue that should be used to schedule search sync events.
+     *
+     * If null, then the controller will not be able to schedule search sync events.
+     */
+    queue: IQueue<SearchSyncQueueEvent> | null;
 }
 
 /**
@@ -85,6 +98,7 @@ export class SearchRecordsController extends CrudRecordsController<
     SearchRecordOutput
 > {
     private _searchInterface: SearchInterface;
+    private _queue: IQueue<SearchSyncQueueEvent>;
 
     constructor(config: SearchRecordsConfiguration) {
         super({
@@ -93,6 +107,7 @@ export class SearchRecordsController extends CrudRecordsController<
             resourceKind: 'search',
         });
         this._searchInterface = config.searchInterface;
+        this._queue = config.queue;
     }
 
     protected async _eraseItemCore(
@@ -223,6 +238,109 @@ export class SearchRecordsController extends CrudRecordsController<
         );
 
         return result;
+    }
+
+    @traced(TRACE_NAME)
+    async sync(
+        request: SyncSearchRecordRequest
+    ): Promise<SyncSearchRecordResult> {
+        if (!this._queue) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage:
+                    'Syncing data to a search record is not supported.',
+            });
+        }
+
+        const searchContext = await this.policies.constructAuthorizationContext(
+            {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            }
+        );
+
+        if (searchContext.success === false) {
+            return failure(searchContext);
+        }
+
+        const searchRecordName = searchContext.context.recordName;
+        const searchRecordAddress = request.address;
+
+        const searchRecord = await this.store.getItemByAddress(
+            searchRecordName,
+            searchRecordAddress
+        );
+
+        if (!searchRecord) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The Search record was not found.`,
+            });
+        }
+
+        const searchAuthorization =
+            await this.policies.authorizeUserAndInstances(
+                searchContext.context,
+                {
+                    resourceKind: 'search',
+                    resourceId: request.address,
+                    action: 'update',
+                    markers: searchRecord.markers,
+                    instances: request.instances,
+                    userId: request.userId,
+                }
+            );
+
+        if (searchAuthorization.success === false) {
+            return failure(searchAuthorization);
+        }
+
+        const dataContext = await this.policies.constructAuthorizationContext({
+            recordKeyOrRecordName: request.targetRecordName,
+            userId: request.userId,
+        });
+
+        if (dataContext.success === false) {
+            return failure(dataContext);
+        }
+
+        const targetRecordName = dataContext.context.recordName;
+
+        const dataAuthorization = await this.policies.authorizeUserAndInstances(
+            dataContext.context,
+            {
+                resourceKind: request.targetResourceKind,
+                action: 'read',
+                markers: [request.targetMarker],
+                instances: request.instances,
+                userId: request.userId,
+            }
+        );
+
+        if (dataAuthorization.success === false) {
+            return failure(dataAuthorization);
+        }
+
+        const id = uuid();
+        const sync: SearchRecordSync = {
+            id,
+            searchRecordName,
+            searchRecordAddress,
+            targetRecordName,
+            targetResourceKind: request.targetResourceKind,
+            targetMarker: request.targetMarker,
+            targetMapping: request.targetMapping,
+        };
+        await this.store.saveSync(sync);
+
+        await this._queue.add('syncSearchRecord', {
+            type: 'sync_search_record',
+            sync,
+        });
+
+        return success({
+            syncId: id,
+        });
     }
 
     protected async _convertItemToResult(
@@ -701,3 +819,47 @@ export interface EraseDocumentRequest {
  * @docname EraseDocumentResult
  */
 export type EraseDocumentResult = Result<SearchDocumentInfo, SimpleError>;
+
+export interface SyncSearchRecordRequest {
+    /**
+     * The name of the record that should be synced.
+     */
+    recordName: string;
+
+    /**
+     * The address of the search record that should be synced.
+     */
+    address: string;
+
+    /**
+     * The name of the record that the data should be synced from.
+     */
+    targetRecordName: string;
+
+    /**
+     * The kind of resources that should be synced.
+     */
+    targetResourceKind: ResourceKinds;
+
+    /**
+     * The marker of the resources that should be synced.
+     */
+    targetMarker: string;
+
+    /**
+     * The mapping of the target properties to the search document properties.
+     */
+    targetMapping: [string, string][];
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instance(s) that are making the request.
+     */
+    instances: string[];
+}
+
+export type SyncSearchRecordResult = Result<{ syncId: string }, SimpleError>;
