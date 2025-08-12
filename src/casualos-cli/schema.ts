@@ -201,10 +201,40 @@ async function askForObjectInputs(
     }
 
     const result: any = {};
+    let hasExistingKey = false;
     for (let key in inputs.schema) {
         const prop = inputs.schema[key];
         const value = await askForInputs(prop, `${name}.${key}`, repl);
         result[key] = value;
+        hasExistingKey = true;
+    }
+
+    if (inputs.catchall) {
+        let addMore = true;
+        if (hasExistingKey) {
+            addMore = (
+                await prompts({
+                    type: 'confirm',
+                    name: 'continue',
+                    message: `Do you want to add more properties to ${name}?`,
+                    onState,
+                })
+            ).continue;
+        }
+
+        if (addMore) {
+            const catchall = await askForRecordInputs(
+                {
+                    type: 'record',
+                    valueSchema: inputs.catchall,
+                },
+                name,
+                repl
+            );
+            for (let key in catchall) {
+                result[key] = catchall[key];
+            }
+        }
     }
     return result;
 }
