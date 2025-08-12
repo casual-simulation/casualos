@@ -716,7 +716,13 @@ export const SEARCH_COLLECTION_FIELD = z.object({
 
 export const SEARCH_COLLECTION_SCHEMA = z
     .object({})
-    .catchall(SEARCH_COLLECTION_FIELD);
+    .catchall(SEARCH_COLLECTION_FIELD)
+    .refine((val) => Object.keys(val).length < 100, {
+        message: 'Search collections cannot have more than 100 fields.',
+    })
+    .refine((val) => Object.keys(val).length <= 0, {
+        message: 'Search collections must have at least 1 field.',
+    });
 
 /**
  * Defines the schema for a search collection.
