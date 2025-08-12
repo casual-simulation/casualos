@@ -754,6 +754,151 @@ describe('SearchRecordsController', () => {
                 },
             ]);
         });
+
+        it('should return not_authorized if the user does not have permission to update the search record', async () => {
+            const result = await manager.sync({
+                recordName,
+                address: 'item1',
+                targetRecordName: 'targetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'update',
+                        resourceKind: 'search',
+                        resourceId: 'item1',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                    recommendedEntitlement: undefined,
+                })
+            );
+
+            expect(itemsStore.syncs).toEqual([]);
+            expect(queue.items).toEqual([]);
+        });
+
+        it('should return not_authorized if the user does not have permission to read from the target record', async () => {
+            // Create a target record owned by another user
+            await store.addRecord({
+                name: 'restrictedTargetRecord',
+                ownerId: otherUserId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            const result = await manager.sync({
+                recordName,
+                address: 'item1',
+                targetRecordName: 'restrictedTargetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: 'restrictedTargetRecord',
+                        action: 'read',
+                        resourceKind: 'data',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                    recommendedEntitlement: undefined,
+                })
+            );
+
+            expect(itemsStore.syncs).toEqual([]);
+            expect(queue.items).toEqual([]);
+        });
+
+        it('should return not_found if the search record does not exist', async () => {
+            const result = await manager.sync({
+                recordName,
+                address: 'nonexistent-address',
+                targetRecordName: 'targetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                })
+            );
+
+            expect(itemsStore.syncs).toEqual([]);
+            expect(queue.items).toEqual([]);
+        });
+
+        it('should return record_not_found if the search record name does not exist', async () => {
+            const result = await manager.sync({
+                recordName: 'nonexistent-record',
+                address: 'item1',
+                targetRecordName: 'targetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                })
+            );
+
+            expect(itemsStore.syncs).toEqual([]);
+            expect(queue.items).toEqual([]);
+        });
+
+        it('should return record_not_found if the target record does not exist', async () => {
+            const result = await manager.sync({
+                recordName,
+                address: 'item1',
+                targetRecordName: 'nonexistent-target-record',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                })
+            );
+
+            expect(itemsStore.syncs).toEqual([]);
+            expect(queue.items).toEqual([]);
+        });
     });
 
     describe('unsync()', () => {
