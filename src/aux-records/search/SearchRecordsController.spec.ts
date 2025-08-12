@@ -755,4 +755,139 @@ describe('SearchRecordsController', () => {
             ]);
         });
     });
+
+    describe('unsync()', () => {
+        let syncId: string;
+
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+
+            await store.addRecord({
+                name: 'targetRecord',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            // Create a sync first
+            const syncResult = await manager.sync({
+                recordName,
+                address: 'item1',
+                targetRecordName: 'targetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            if (syncResult.success === false) {
+                throw new Error(
+                    `Failed to create sync: ${syncResult.error.errorMessage} (${syncResult.error.errorCode})`
+                );
+            }
+
+            syncId = syncResult.value.syncId;
+        });
+
+        it('should delete a sync when the user has permission', async () => {
+            const result = await manager.unsync({
+                syncId,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(success());
+
+            // Verify the sync was deleted from the store
+            expect(itemsStore.syncs).toEqual([]);
+        });
+
+        it('should return not_authorized if the user does not have permission to the search record', async () => {
+            const result = await manager.unsync({
+                syncId,
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'update',
+                        resourceKind: 'search',
+                        resourceId: 'item1',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                    recommendedEntitlement: undefined,
+                })
+            );
+
+            // Verify the sync was not deleted
+            expect(itemsStore.syncs).toHaveLength(1);
+        });
+
+        it('should return not_found if the sync does not exist', async () => {
+            const result = await manager.unsync({
+                syncId: 'nonexistent-sync-id',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The search record sync was not found.',
+                })
+            );
+
+            // Verify the original sync still exists
+            expect(itemsStore.syncs).toHaveLength(1);
+        });
+
+        it('should return not_found if the search record no longer exists', async () => {
+            // Delete the search record
+            await manager.eraseItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.unsync({
+                syncId,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The search record was not found.',
+                })
+            );
+
+            // Verify the sync still exists in the store (since the search record deletion doesn't cascade)
+            expect(itemsStore.syncs).toHaveLength(1);
+        });
+    });
 });

@@ -51,6 +51,10 @@ export class MemorySearchRecordsStore
         this._syncs.delete(syncId);
     }
 
+    async getSync(syncId: string): Promise<SearchRecordSync | null> {
+        return this._syncs.get(syncId) || null;
+    }
+
     async listSyncsBySearchRecord(
         recordName: string,
         address: string

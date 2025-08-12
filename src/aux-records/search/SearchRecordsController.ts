@@ -343,6 +343,67 @@ export class SearchRecordsController extends CrudRecordsController<
         });
     }
 
+    @traced(TRACE_NAME)
+    async unsync(
+        request: UnsyncSearchRecordRequest
+    ): Promise<UnsyncSearchRecordResult> {
+        // First, retrieve the sync from the store
+        const sync = await this.store.getSync(request.syncId);
+
+        if (!sync) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The search record sync was not found.',
+            });
+        }
+
+        // Check permissions for the search record
+        const searchContext = await this.policies.constructAuthorizationContext(
+            {
+                recordKeyOrRecordName: sync.searchRecordName,
+                userId: request.userId,
+            }
+        );
+
+        if (searchContext.success === false) {
+            return failure(searchContext);
+        }
+
+        const searchRecord = await this.store.getItemByAddress(
+            sync.searchRecordName,
+            sync.searchRecordAddress
+        );
+
+        if (!searchRecord) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The search record was not found.',
+            });
+        }
+
+        const searchAuthorization =
+            await this.policies.authorizeUserAndInstances(
+                searchContext.context,
+                {
+                    resourceKind: 'search',
+                    resourceId: sync.searchRecordAddress,
+                    action: 'update',
+                    markers: searchRecord.markers,
+                    instances: request.instances,
+                    userId: request.userId,
+                }
+            );
+
+        if (searchAuthorization.success === false) {
+            return failure(searchAuthorization);
+        }
+
+        // Delete the sync if permissions are valid
+        await this.store.deleteSync(request.syncId);
+
+        return success();
+    }
+
     protected async _convertItemToResult(
         item: SearchRecord,
         context: AuthorizationContext,
@@ -863,3 +924,22 @@ export interface SyncSearchRecordRequest {
 }
 
 export type SyncSearchRecordResult = Result<{ syncId: string }, SimpleError>;
+
+export interface UnsyncSearchRecordRequest {
+    /**
+     * The ID of the sync that should be deleted.
+     */
+    syncId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instance(s) that are making the request.
+     */
+    instances: string[];
+}
+
+export type UnsyncSearchRecordResult = Result<void, SimpleError>;

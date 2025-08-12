@@ -42,6 +42,12 @@ export interface SearchRecordsStore extends CrudRecordsStore<SearchRecord> {
     saveSync(sync: SearchRecordSync): Promise<void>;
 
     /**
+     * Gets the search record sync with the given ID.
+     * @param syncId The ID of the sync to get.
+     */
+    getSync(syncId: string): Promise<SearchRecordSync | null>;
+
+    /**
      * Deletes the search record sync with the given ID.
      * @param syncId The ID of the sync to delete.
      */
