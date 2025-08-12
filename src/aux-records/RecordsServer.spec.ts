@@ -15439,10 +15439,51 @@ describe('RecordsServer', () => {
 
             await store.addRecord({
                 name: 'targetRecord',
-                ownerId: userId,
+                ownerId,
                 studioId: null,
                 secretHashes: [],
                 secretSalt: '',
+            });
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
             });
         });
 
@@ -15508,6 +15549,289 @@ describe('RecordsServer', () => {
                 },
             ]);
         });
+
+        it('should return not_authorized if the user does not have permission to the search record', async () => {
+            delete store.roles[recordName];
+            store.roles['targetRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'search',
+                        resourceId: 'test-collection',
+                        subjectType: 'user',
+                        subjectId: userId,
+                        action: 'update',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user does not have permission to the target record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            delete store.roles['targetRecord'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: 'targetRecord',
+                        resourceKind: 'data',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_found if the search collection does not exist', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            store.roles['targetRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'nonexistent-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_found if the target record does not exist', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'nonexistentRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: [['abc', 'abc']],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if required fields are missing', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        // Missing required fields
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['targetRecordName'],
+                        }),
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['targetResourceKind'],
+                        }),
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['targetMarker'],
+                        }),
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['targetMapping'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if targetMapping is not valid', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            store.roles['targetRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/sync',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        targetRecordName: 'targetRecord',
+                        targetResourceKind: 'data',
+                        targetMarker: 'targetMarker',
+                        targetMapping: 'invalid', // Should be an array
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            expected: 'array',
+                            received: 'string',
+                            path: ['targetMapping'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/search/sync',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'test-collection',
+                    targetRecordName: 'targetRecord',
+                    targetResourceKind: 'data',
+                    targetMarker: 'targetMarker',
+                    targetMapping: [['abc', 'abc']],
+                }),
+            () => apiHeaders
+        );
     });
 
     describe('POST /api/v2/records/key', () => {
