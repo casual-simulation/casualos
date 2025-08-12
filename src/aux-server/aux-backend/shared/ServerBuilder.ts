@@ -1968,6 +1968,7 @@ export class ServerBuilder implements SubscriptionLike {
                 policies: this._policyController,
                 store: this._searchStore,
                 searchInterface: this._searchInterface,
+                queue: this._searchQueue,
             });
         }
 
