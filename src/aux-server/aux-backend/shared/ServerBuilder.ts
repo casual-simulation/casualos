@@ -1691,7 +1691,7 @@ export class ServerBuilder implements SubscriptionLike {
                     options.jobs.search.topicArn
                 ));
 
-                this._subscription.add(queue);
+                this._subscription.add(() => queue.unsubscribe());
                 this._subscription.add(() => {
                     this._searchQueue = null;
                 });
@@ -1726,7 +1726,7 @@ export class ServerBuilder implements SubscriptionLike {
                         })
                     ));
 
-                    this._subscription.add(queue);
+                    this._subscription.add(() => queue.unsubscribe());
                     this._subscription.add(() => {
                         this._searchQueue = null;
                     });
