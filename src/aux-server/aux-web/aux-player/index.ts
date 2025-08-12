@@ -126,6 +126,8 @@ const router = new VueRouter({
     routes,
 });
 
+let app: Vue = null;
+
 async function start() {
     // const loading = new Vue({
     //     render: (createEle) => createEle(Loading),
@@ -133,7 +135,15 @@ async function start() {
 
     // await appManager.initPromise;
 
-    const app = new Vue({
+    if (app) {
+        app.$destroy();
+        const appElement = document.getElementById('app');
+        if (appElement) {
+            appElement.innerHTML = '';
+        }
+        app = null;
+    }
+    app = new Vue({
         router,
         render: (createEle) => createEle(PlayerApp),
     }).$mount('#app');
