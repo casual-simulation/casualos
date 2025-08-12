@@ -58,6 +58,7 @@ export class SearchSyncProcessor {
 
     @traced(TRACE_NAME)
     async process(event: SearchSyncQueueEvent): Promise<void> {
+        console.log(`[${TRACE_NAME}] Processing event:`, event);
         if (event.type === 'sync_search_record') {
             await this._syncSearchRecord(event);
         } else if (event.type === 'sync_item') {
@@ -103,6 +104,10 @@ export class SearchSyncProcessor {
         };
 
         if (isSuccess(result)) {
+            console.log(
+                `[${TRACE_NAME}] Successfully synced search record:`,
+                result.value
+            );
             history.numSynced = result.value.numSynced;
             history.numErrored = result.value.numErrored;
             history.numTotal = result.value.numTotal;
