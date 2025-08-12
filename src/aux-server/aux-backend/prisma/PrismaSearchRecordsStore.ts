@@ -32,6 +32,7 @@ import type {
     Prisma,
     PrismaClient,
     SearchRecord as PrismaSearchRecord,
+    SearchRecordSync as PrismaSearchRecordSync,
 } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { PrismaMetricsStore } from './PrismaMetricsStore';
@@ -57,6 +58,16 @@ export class PrismaSearchRecordsStore implements SearchRecordsStore {
     constructor(client: PrismaClient, metrics: PrismaMetricsStore) {
         this._client = client;
         this._metrics = metrics;
+    }
+
+    async getSync(syncId: string): Promise<SearchRecordSync | null> {
+        const sync = await this._client.searchRecordSync.findUnique({
+            where: {
+                id: syncId,
+            },
+        });
+
+        return this._mapSearchSync(sync);
     }
 
     /**
@@ -110,20 +121,24 @@ export class PrismaSearchRecordsStore implements SearchRecordsStore {
             },
         });
 
-        return syncs.map((sync) => {
-            const s: SearchRecordSync = {
-                id: sync.id,
-                searchRecordName: sync.searchRecordName,
-                searchRecordAddress: sync.searchRecordAddress,
-                targetRecordName: sync.targetRecordName,
-                targetResourceKind:
-                    sync.targetResourceKind as SearchRecordSync['targetResourceKind'],
-                targetMarker: sync.targetMarker,
-                targetMapping:
-                    sync.targetMapping as SearchRecordSync['targetMapping'],
-            };
-            return s;
-        });
+        return syncs.map((sync) => this._mapSearchSync(sync));
+    }
+
+    private _mapSearchSync(sync: PrismaSearchRecordSync): SearchRecordSync {
+        if (!sync) {
+            return null;
+        }
+        return {
+            id: sync.id,
+            searchRecordName: sync.searchRecordName,
+            searchRecordAddress: sync.searchRecordAddress,
+            targetRecordName: sync.targetRecordName,
+            targetResourceKind:
+                sync.targetResourceKind as SearchRecordSync['targetResourceKind'],
+            targetMarker: sync.targetMarker,
+            targetMapping:
+                sync.targetMapping as SearchRecordSync['targetMapping'],
+        };
     }
 
     @traced(TRACE_NAME)
