@@ -236,8 +236,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="areas" v-else-if="selectedPane === 'source'" ref="areas">
-                        <source-control-panel />
+                    <div class="areas" v-else-if="selectedPane === 'source'">
+                        <source-control />
                     </div>
                     <div class="areas" v-else ref="areas">
                         <div class="filter">

@@ -16,12 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import Vue from 'vue';
+import Component from 'vue-class-component';
 
+@Component({
+    name: 'default-panel',
+})
 export default class DefaultPanel extends Vue {
-    get currentPanel(): string {
-        return 'default-panel';
-    }
-
     constructor() {
         super();
     }

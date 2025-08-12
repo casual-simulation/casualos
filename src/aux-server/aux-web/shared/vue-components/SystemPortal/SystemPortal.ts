@@ -112,7 +112,7 @@ import SourceControl from '../SourceControl/SourceControl';
         'svg-icon': SvgIcon,
         'diff-status': DiffStatus,
         'highlighted-text': HighlightedText,
-        'source-control-panel': SourceControl,
+        'source-control': SourceControl,
     },
 })
 export default class SystemPortal extends Vue {

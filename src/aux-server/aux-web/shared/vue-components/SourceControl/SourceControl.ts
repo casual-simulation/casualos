@@ -22,15 +22,13 @@ import Component from 'vue-class-component';
 import DefaultPanel from './components/DefaultPanel/DefaultPanel.vue';
 
 @Component({
+    name: 'source-control',
     components: {
         'default-panel': DefaultPanel,
     },
 })
 export default class SourceControl extends Vue {
-    get currentPanel(): string {
-        return 'default-panel';
-    }
-
+    currentPanel: string = 'default-panel';
     constructor() {
         super();
     }
