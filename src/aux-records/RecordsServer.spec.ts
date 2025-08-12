@@ -15834,6 +15834,354 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/search/unsync', () => {
+        let collectionName: string;
+        let syncId: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            // Create a search collection first
+            const collectionResult = await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'test-collection',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+            });
+
+            if (collectionResult.success === false) {
+                throw new Error(
+                    'Failed to create item: ' + collectionResult.errorMessage
+                );
+            }
+
+            const itemResult = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'test-collection'
+            );
+            collectionName = itemResult!.collectionName;
+
+            await store.addRecord({
+                name: 'targetRecord',
+                ownerId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            store.roles['targetRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            // Create a sync first
+            const syncResult = await searchRecordsController.sync({
+                recordName,
+                address: 'test-collection',
+                targetRecordName: 'targetRecord',
+                targetResourceKind: 'data',
+                targetMarker: 'targetMarker',
+                targetMapping: [['abc', 'abc']],
+                userId,
+                instances: [],
+            });
+
+            if (syncResult.success === false) {
+                throw new Error(
+                    'Failed to create sync: ' + syncResult.error.errorMessage
+                );
+            }
+
+            syncId = syncResult.value.syncId;
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should delete an existing search record sync', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the sync was deleted from the store
+            expect(searchRecordsStore.syncs).toEqual([]);
+        });
+
+        it('should return not_authorized if the user does not have permission to the search record', async () => {
+            // Remove user's permissions to the search record
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'update',
+                        resourceKind: 'search',
+                        resourceId: 'test-collection',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the sync was not deleted
+            expect(searchRecordsStore.syncs).toHaveLength(1);
+        });
+
+        it('should return not_found if the sync does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId: 'nonexistent-sync-id',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The search record sync was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the original sync still exists
+            expect(searchRecordsStore.syncs).toHaveLength(1);
+        });
+
+        it('should return not_found if the search record no longer exists', async () => {
+            // Delete the search record first
+            await searchRecordsController.eraseItem({
+                recordName,
+                address: 'test-collection',
+                userId,
+                instances: [],
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The search record was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the sync still exists in the store (since the search record deletion doesn't cascade)
+            expect(searchRecordsStore.syncs).toHaveLength(1);
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if syncId is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({}),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['syncId'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if syncId is not a string', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId: 123, // Should be a string
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            expected: 'string',
+                            received: 'number',
+                            path: ['syncId'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if syncId is empty', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search/unsync',
+                    JSON.stringify({
+                        syncId: '', // Should be non-empty
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'too_small',
+                            path: ['syncId'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/search/unsync',
+            () =>
+                JSON.stringify({
+                    syncId,
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
