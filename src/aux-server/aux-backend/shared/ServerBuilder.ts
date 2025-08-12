@@ -1756,6 +1756,8 @@ export class ServerBuilder implements SubscriptionLike {
                 }
             }
         }
+
+        return this;
     }
 
     async buildAsync(): Promise<BuildReturn> {
