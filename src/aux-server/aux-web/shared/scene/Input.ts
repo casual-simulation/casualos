@@ -533,12 +533,15 @@ export class Input {
             Input.instance = null;
         }
 
-        let element = document.getElementById('app');
-        element.removeEventListener('mousedown', this._handleMouseDown);
-        element.removeEventListener('mousemove', this._handleMouseMove);
-        element.removeEventListener('mouseup', this._handleMouseUp);
-        element.removeEventListener('wheel', this._handleWheel);
-        element.removeEventListener('touchstart', this._handleTouchStart);
+        const element = document.getElementById('app');
+        // During development & hot reloading, the element may not exist.
+        if (element?.removeEventListener) {
+            element.removeEventListener('mousedown', this._handleMouseDown);
+            element.removeEventListener('mousemove', this._handleMouseMove);
+            element.removeEventListener('mouseup', this._handleMouseUp);
+            element.removeEventListener('wheel', this._handleWheel);
+            element.removeEventListener('touchstart', this._handleTouchStart);
+        }
         document.removeEventListener('keydown', this._handleKeyDown);
         document.removeEventListener('keyup', this._handleKeyUp);
         window.removeEventListener('focus', this._handleFocus);
