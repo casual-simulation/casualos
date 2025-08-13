@@ -33,7 +33,8 @@ import type {
 } from './SearchInterface';
 import type { Client } from 'typesense';
 import type { Result, SimpleError } from '@casual-simulation/aux-common';
-import { success } from '@casual-simulation/aux-common';
+import { failure, success } from '@casual-simulation/aux-common';
+import { TypesenseError } from 'typesense/lib/Typesense/Errors';
 
 export class TypesenseSearchInterface implements SearchInterface {
     private _client: Client;
@@ -154,30 +155,69 @@ export class TypesenseSearchInterface implements SearchInterface {
         collectionName: string,
         query: SearchQuery
     ): Promise<SearchResult> {
-        const result = await this._client
-            .collections(collectionName)
-            .documents()
-            .search({
-                ...query,
-                q: query.q,
-                query_by: query.queryBy,
-                filter_by: query.filterBy,
-            });
+        return this._handleErrors(async () => {
+            const result = await this._client
+                .collections(collectionName)
+                .documents()
+                .search({
+                    ...query,
+                    q: query.q,
+                    query_by: query.queryBy,
+                    filter_by: query.filterBy,
+                });
 
-        return success({
-            found: result.found,
-            outOf: result.out_of,
-            page: result.page,
-            searchTimeMs: result.search_time_ms,
-            hits: result.hits.map((hit) => ({
-                document: hit.document,
-                highlights: hit.highlights?.map(mapHighlight),
-                highlight: hit.highlight
-                    ? mapHighlight(hit.highlight as any)
-                    : undefined,
-                textMatch: hit.text_match,
-            })),
+            return success({
+                found: result.found,
+                outOf: result.out_of,
+                page: result.page,
+                searchTimeMs: result.search_time_ms,
+                hits: result.hits.map((hit) => ({
+                    document: hit.document,
+                    highlights: hit.highlights?.map(mapHighlight),
+                    highlight: hit.highlight
+                        ? mapHighlight(hit.highlight as any)
+                        : undefined,
+                    textMatch: hit.text_match,
+                })),
+            });
         });
+    }
+
+    private async _handleErrors<T>(
+        func: () => Promise<Result<T, SimpleError>>
+    ): Promise<Result<T, SimpleError>> {
+        try {
+            return await func();
+        } catch (err) {
+            if (err instanceof TypesenseError) {
+                console.error(
+                    '[TypesenseSearchInterface] Typesense error during search:',
+                    err,
+                    err.cause,
+                    err.httpStatus,
+                    err.httpBody,
+                    err.message,
+                    err.name
+                );
+                if (
+                    err.httpStatus === 400 ||
+                    err.httpStatus === 404 ||
+                    err.httpStatus === 422
+                ) {
+                    return failure({
+                        errorCode: 'invalid_request',
+                        errorMessage: err.message,
+                    });
+                } else if (err.httpStatus === 503) {
+                    return failure({
+                        errorCode: 'service_unavailable',
+                        errorMessage:
+                            'The search service is currently unavailable. Please try again later.',
+                    });
+                }
+            }
+            throw err;
+        }
     }
 }
 
