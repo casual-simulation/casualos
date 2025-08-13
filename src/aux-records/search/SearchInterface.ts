@@ -273,6 +273,12 @@ export interface SearchNode {
     protocol?: 'http' | 'https';
 }
 
+/**
+ * Defines a search query that can be used to search through documents in a collection.
+ *
+ * @dochash types/records/search
+ * @docname SearchQuery
+ */
 export interface SearchQuery {
     /**
      * The query text to search for in the collection.
@@ -416,6 +422,12 @@ export type SearchResult = Result<
     SimpleError
 >;
 
+/**
+ * Defines the interface for a search hit returned by the search engine.
+ *
+ * @dochash types/records/search
+ * @docname SearchHit
+ */
 export interface SearchHit {
     document: SearchDocument;
     highlights?: SearchHighlight[];
@@ -423,6 +435,12 @@ export interface SearchHit {
     textMatch?: number;
 }
 
+/**
+ * Defines the interface for a search highlight returned by the search engine.
+ *
+ * @dochash types/records/search
+ * @docname SearchHighlight
+ */
 export interface SearchHighlight {
     field: string;
     indices: [number, number];
