@@ -1852,6 +1852,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            searchSyncQueue: this._searchQueue,
         });
         this._manualDataController = new DataRecordsController({
             store: this._manualDataStore,
