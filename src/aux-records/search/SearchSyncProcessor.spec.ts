@@ -22,7 +22,11 @@ import {
     success,
 } from '@casual-simulation/aux-common';
 import type { SearchSyncQueueEvent } from './SearchSyncProcessor';
-import { SearchSyncProcessor, mapItem } from './SearchSyncProcessor';
+import {
+    SearchSyncProcessor,
+    getDocumentId,
+    mapItem,
+} from './SearchSyncProcessor';
 import { MemoryStore } from '../MemoryStore';
 import { MemorySearchRecordsStore } from './MemorySearchRecordsStore';
 import { MemorySearchInterface } from './MemorySearchInterface';
@@ -39,6 +43,7 @@ interface DataRecord {
 }
 
 console.warn = jest.fn();
+console.log = jest.fn();
 
 describe('SearchSyncProcessor', () => {
     let processor: SearchSyncProcessor;
@@ -978,7 +983,190 @@ describe('SearchSyncProcessor', () => {
             });
         });
 
-        describe('sync_item', () => {});
+        describe('sync_item', () => {
+            const marker = 'test-marker';
+
+            beforeEach(async () => {
+                await searchRecordsStore.saveSync({
+                    id: 'sync',
+                    searchRecordName: searchRecordName,
+                    searchRecordAddress: searchRecordAddress,
+                    targetRecordName: targetRecordName,
+                    targetResourceKind: 'data',
+                    targetMarker: marker,
+                    targetMapping: [
+                        ['$.name', 'userName'],
+                        ['$.email', 'userEmail'],
+                    ],
+                });
+            });
+
+            it('should add the given item to the search interface', async () => {
+                const testData: DataRecord[] = [
+                    {
+                        address: 'newItem',
+                        data: {
+                            name: 'John',
+                            age: 30,
+                            email: 'john@example.com',
+                        },
+                        publisherId: 'pub1',
+                        subjectId: 'sub1',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                ];
+
+                await setData(targetRecordName, testData);
+
+                await processor.process({
+                    type: 'sync_item',
+                    action: 'create',
+                    itemRecordName: targetRecordName,
+                    itemAddress: 'newItem',
+                    itemResourceKind: 'data',
+                    itemMarkers: [marker],
+                });
+
+                // Verify documents were added to search interface
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(1);
+
+                // Verify document content
+                const documents =
+                    searchInterface.getCollectionDocuments(collectionName);
+                expect(documents).toHaveLength(1);
+
+                expect(documents[0]).toMatchObject({
+                    userName: 'John',
+                    userEmail: 'john@example.com',
+                });
+            });
+
+            it('should update the given item in the search interface', async () => {
+                const testData: DataRecord[] = [
+                    {
+                        address: 'updatedItem',
+                        data: {
+                            name: 'John',
+                            age: 30,
+                            email: 'john@example.com',
+                        },
+                        publisherId: 'pub1',
+                        subjectId: 'sub1',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                ];
+
+                await setData(targetRecordName, testData);
+
+                await searchInterface.createDocument(
+                    collectionName,
+                    {
+                        id: getDocumentId(targetRecordName, 'updatedItem'),
+                        userName: 'Old',
+                        userEmail: 'old@example.com',
+                    },
+                    'create'
+                );
+
+                await processor.process({
+                    type: 'sync_item',
+                    action: 'update',
+                    itemRecordName: targetRecordName,
+                    itemAddress: 'updatedItem',
+                    itemResourceKind: 'data',
+                    itemMarkers: [marker],
+                });
+
+                // Verify documents were added to search interface
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(1);
+
+                // Verify document content
+                const documents =
+                    searchInterface.getCollectionDocuments(collectionName);
+                expect(documents).toHaveLength(1);
+
+                expect(documents[0]).toMatchObject({
+                    userName: 'John',
+                    userEmail: 'john@example.com',
+                });
+            });
+
+            it('should delete the given item in the search interface', async () => {
+                await searchInterface.createDocument(
+                    collectionName,
+                    {
+                        id: getDocumentId(targetRecordName, 'deletedItem'),
+                        userName: 'Old',
+                        userEmail: 'old@example.com',
+                    },
+                    'create'
+                );
+
+                await processor.process({
+                    type: 'sync_item',
+                    action: 'delete',
+                    itemRecordName: targetRecordName,
+                    itemAddress: 'deletedItem',
+                    itemResourceKind: 'data',
+                    itemMarkers: [marker],
+                });
+
+                // Verify documents were added to search interface
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(0);
+            });
+
+            it('should do nothing if the marker doesnt match the sync', async () => {
+                const testData: DataRecord[] = [
+                    {
+                        address: 'newItem',
+                        data: {
+                            name: 'John',
+                            age: 30,
+                            email: 'john@example.com',
+                        },
+                        publisherId: 'pub1',
+                        subjectId: 'sub1',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: ['otherMarker'],
+                    },
+                ];
+
+                await setData(targetRecordName, testData);
+
+                await processor.process({
+                    type: 'sync_item',
+                    action: 'create',
+                    itemRecordName: targetRecordName,
+                    itemAddress: 'newItem',
+                    itemResourceKind: 'data',
+                    itemMarkers: ['otherMarker'],
+                });
+
+                // Verify documents were added to search interface
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(0);
+            });
+        });
     });
 });
 

@@ -68,6 +68,21 @@ export interface SearchRecordsStore extends CrudRecordsStore<SearchRecord> {
      * @param history The sync history entry to create.
      */
     createSyncHistory(history: SearchRecordSyncHistory): Promise<void>;
+
+    /**
+     * Finds the sync that matches the given target record name, resource kind, and markers.
+     *
+     * Always returns an object, but the sync and search record may be null if no sync was found.
+     *
+     * @param targetRecordName The name of the target record.
+     * @param targetResourceKind The kind of resource that the sync is for.
+     * @param markers The markers to use for the sync.
+     */
+    getSyncByTarget(
+        targetRecordName: string,
+        targetResourceKind: ResourceKinds,
+        markers: string[]
+    ): Promise<GetSearchRecordSyncByTargetResult>;
 }
 
 /**
@@ -202,4 +217,20 @@ export interface SearchRecordSyncHistory {
      * The total number of documents that were processed during the sync.
      */
     numTotal: number;
+}
+
+export interface GetSearchRecordSyncByTargetResult {
+    /**
+     * The sync that matches the target record name, resource kind, and markers.
+     *
+     * Null if no sync was found.
+     */
+    sync: SearchRecordSync | null;
+
+    /**
+     * The search record that the sync is for.
+     *
+     * Null if no search record was found.
+     */
+    searchRecord: SearchRecord | null;
 }

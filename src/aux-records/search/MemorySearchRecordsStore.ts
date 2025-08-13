@@ -17,6 +17,7 @@
  */
 import { MemoryCrudRecordsStore } from '../crud/MemoryCrudRecordsStore';
 import type {
+    GetSearchRecordSyncByTargetResult,
     SearchRecord,
     SearchRecordsStore,
     SearchRecordSync,
@@ -24,6 +25,7 @@ import type {
     SearchSubscriptionMetrics,
 } from './SearchRecordsStore';
 import type { SubscriptionFilter } from '../MetricsStore';
+import type { ResourceKinds } from '@casual-simulation/aux-common';
 
 /**
  * A Memory-based implementation of the SearchRecordsStore.
@@ -53,6 +55,32 @@ export class MemorySearchRecordsStore
 
     async getSync(syncId: string): Promise<SearchRecordSync | null> {
         return this._syncs.get(syncId) || null;
+    }
+
+    async getSyncByTarget(
+        targetRecordName: string,
+        targetResourceKind: ResourceKinds,
+        markers: string[]
+    ): Promise<GetSearchRecordSyncByTargetResult> {
+        const sync =
+            this.syncs.find(
+                (sync) =>
+                    sync.targetRecordName === targetRecordName &&
+                    sync.targetResourceKind === targetResourceKind &&
+                    markers.includes(sync.targetMarker)
+            ) || null;
+
+        const searchRecord = sync
+            ? await this.getItemByAddress(
+                  sync.searchRecordName,
+                  sync.searchRecordAddress
+              )
+            : null;
+
+        return {
+            sync,
+            searchRecord,
+        };
     }
 
     async listSyncsBySearchRecord(

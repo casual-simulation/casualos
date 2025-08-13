@@ -150,8 +150,8 @@ export class MemorySearchInterface implements SearchInterface {
         }
 
         const documentInfo: SearchDocumentInfo = {
-            ...document,
             id: this._generateId(),
+            ...document,
         };
 
         if (!this._documents.has(collectionName)) {

@@ -28,13 +28,13 @@ import { v7 as uuid, v5 as uuidv5 } from 'uuid';
 import type { Result, SimpleError } from '@casual-simulation/aux-common';
 import {
     failure,
-    hasValue,
     isFailure,
     isSuccess,
     success,
 } from '@casual-simulation/aux-common';
 import type { SearchInterface } from './SearchInterface';
 import { z } from 'zod';
+import { getMarkersOrDefault } from '../Utils';
 
 const DOCUMENT_NAMESPACE = '36e15e17-0f44-4c07-ab84-22eafecc2614';
 
@@ -68,8 +68,86 @@ export class SearchSyncProcessor {
     }
 
     @traced(TRACE_NAME)
-    private _syncItem(event: SyncItemEvent) {
-        throw new Error('Method not implemented.');
+    private async _syncItem(event: SyncItemEvent) {
+        if (event.itemResourceKind !== 'data') {
+            console.warn(
+                `[${TRACE_NAME}] Unsupported resource kind: ${event.itemResourceKind}. Only 'data' is supported.`
+            );
+            return;
+        }
+
+        const { sync, searchRecord } = await this._store.getSyncByTarget(
+            event.itemRecordName,
+            event.itemResourceKind,
+            getMarkersOrDefault(event.itemMarkers)
+        );
+
+        if (!sync) {
+            console.warn(
+                `[${TRACE_NAME}] No sync found for item: ${event.itemRecordName}, ${event.itemAddress}`
+            );
+            return;
+        }
+
+        console.log(
+            `[${TRACE_NAME}] Syncing item: ${event.itemRecordName}, ${event.itemAddress} with sync:`,
+            sync
+        );
+
+        if (event.action === 'delete') {
+            const documentId = uuidv5(
+                `${event.itemRecordName}:${event.itemAddress}`,
+                DOCUMENT_NAMESPACE
+            );
+
+            const deletionResult = await this._searchInterface.deleteDocument(
+                searchRecord.collectionName,
+                documentId
+            );
+
+            if (deletionResult.success === true) {
+                console.log(
+                    `[${TRACE_NAME}] Successfully deleted document: ${documentId}`
+                );
+            } else {
+                console.error(
+                    `[${TRACE_NAME}] Failed to delete document: ${documentId}`,
+                    deletionResult.error
+                );
+            }
+        } else {
+            const item = await this._data.getData(
+                event.itemRecordName,
+                event.itemAddress
+            );
+
+            if (item.success === false) {
+                console.error(
+                    `[${TRACE_NAME}] Failed to get item: ${event.itemRecordName}, ${event.itemAddress}`,
+                    item.errorCode,
+                    item.errorMessage
+                );
+                return;
+            }
+            const mapped = this._mapData(event.itemAddress, item.data, sync);
+
+            if (isFailure(mapped)) {
+                console.error(
+                    `[${TRACE_NAME}] Failed to map item: ${mapped.error.errorMessage}`
+                );
+                return;
+            }
+
+            await this._searchInterface.createDocument(
+                searchRecord.collectionName,
+                mapped.value,
+                'emplace'
+            );
+
+            console.log(
+                `[${TRACE_NAME}] Successfully synced item: ${event.itemRecordName}, ${event.itemAddress}`
+            );
+        }
     }
 
     @traced(TRACE_NAME)
@@ -142,7 +220,11 @@ export class SearchSyncProcessor {
             for (let i = 0; i < data.items.length; i++) {
                 const item = data.items[i];
 
-                const mapped = mapItem(item.data, event.sync.targetMapping);
+                const mapped = this._mapData(
+                    item.address,
+                    item.data,
+                    event.sync
+                );
                 if (isFailure(mapped)) {
                     numErrored++;
                     console.warn(
@@ -151,13 +233,6 @@ export class SearchSyncProcessor {
                     continue;
                 }
 
-                if (!hasValue(mapped.value.id)) {
-                    const documentId = uuidv5(
-                        `${event.sync.targetRecordName}:${item.address}`,
-                        DOCUMENT_NAMESPACE
-                    );
-                    mapped.value.id = documentId;
-                }
                 await this._searchInterface.createDocument(
                     searchRecord.collectionName,
                     mapped.value,
@@ -196,6 +271,26 @@ export class SearchSyncProcessor {
             numTotal: numSynced + numErrored,
         });
     }
+
+    private _mapData(
+        address: string,
+        data: any,
+        sync: SearchRecordSync
+    ): Result<any, SimpleError> {
+        const mapped = mapItem(data, sync.targetMapping);
+        if (isFailure(mapped)) {
+            return mapped;
+        }
+
+        const documentId = getDocumentId(sync.targetRecordName, address);
+        mapped.value.id = documentId;
+
+        return success(mapped.value);
+    }
+}
+
+export function getDocumentId(recordName: string, address: string): string {
+    return uuidv5(`${recordName}:${address}`, DOCUMENT_NAMESPACE);
 }
 
 /**
@@ -344,4 +439,9 @@ export interface SyncItemEvent {
      * The address of the item.
      */
     itemAddress: string;
+
+    /**
+     * The markers of the item.
+     */
+    itemMarkers: string[];
 }
