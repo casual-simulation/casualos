@@ -1166,6 +1166,103 @@ describe('SearchSyncProcessor', () => {
                 expect(collection).toBeDefined();
                 expect(collection!.numDocuments).toBe(0);
             });
+
+            it('should be able to sync to multiple collections', async () => {
+                const otherCollectionName = 'otherCollection';
+                await searchRecordsStore.createItem(searchRecordName, {
+                    address: 'other',
+                    collectionName: otherCollectionName,
+                    searchApiKey: 'searchApiKey',
+                    markers: [PUBLIC_READ_MARKER],
+                });
+
+                await searchInterface.createCollection({
+                    name: otherCollectionName,
+                    fields: [
+                        {
+                            name: 'userName',
+                            type: 'string',
+                        },
+                        {
+                            name: 'userEmail',
+                            type: 'string',
+                        },
+                    ],
+                });
+                await searchRecordsStore.saveSync({
+                    id: 'otherSync',
+                    searchRecordName: searchRecordName,
+                    searchRecordAddress: 'other',
+                    targetRecordName: targetRecordName,
+                    targetResourceKind: 'data',
+                    targetMarker: marker,
+                    targetMapping: [
+                        ['$.name', 'userName'],
+                        ['$.email', 'userEmail'],
+                    ],
+                });
+
+                const testData: DataRecord[] = [
+                    {
+                        address: 'newItem',
+                        data: {
+                            name: 'John',
+                            age: 30,
+                            email: 'john@example.com',
+                        },
+                        publisherId: 'pub1',
+                        subjectId: 'sub1',
+                        updatePolicy: true,
+                        deletePolicy: true,
+                        markers: [marker],
+                    },
+                ];
+
+                await setData(targetRecordName, testData);
+
+                await processor.process({
+                    type: 'sync_item',
+                    action: 'create',
+                    itemRecordName: targetRecordName,
+                    itemAddress: 'newItem',
+                    itemResourceKind: 'data',
+                    itemMarkers: [marker],
+                });
+
+                // Verify documents were added to search interface
+                const collection = await searchInterface.getCollection(
+                    collectionName
+                );
+                expect(collection).toBeDefined();
+                expect(collection!.numDocuments).toBe(1);
+
+                // Verify documents were added to search interface
+                const otherCollection = await searchInterface.getCollection(
+                    otherCollectionName
+                );
+                expect(otherCollection).toBeDefined();
+                expect(otherCollection!.numDocuments).toBe(1);
+
+                // Verify document content
+                const documents =
+                    searchInterface.getCollectionDocuments(collectionName);
+                expect(documents).toHaveLength(1);
+
+                expect(documents[0]).toMatchObject({
+                    userName: 'John',
+                    userEmail: 'john@example.com',
+                });
+
+                // Verify document content
+                const otherDocuments =
+                    searchInterface.getCollectionDocuments(otherCollectionName);
+                expect(otherDocuments).toHaveLength(1);
+
+                expect(otherDocuments[0]).toMatchObject({
+                    userName: 'John',
+                    userEmail: 'john@example.com',
+                });
+            });
         });
     });
 });

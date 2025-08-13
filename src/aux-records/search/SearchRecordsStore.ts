@@ -78,11 +78,11 @@ export interface SearchRecordsStore extends CrudRecordsStore<SearchRecord> {
      * @param targetResourceKind The kind of resource that the sync is for.
      * @param markers The markers to use for the sync.
      */
-    getSyncByTarget(
+    getSyncsByTarget(
         targetRecordName: string,
         targetResourceKind: ResourceKinds,
         markers: string[]
-    ): Promise<GetSearchRecordSyncByTargetResult>;
+    ): Promise<GetSearchRecordSyncByTargetResult[]>;
 }
 
 /**

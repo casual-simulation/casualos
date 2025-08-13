@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    GetSearchRecordSyncByTargetResult,
     SearchRecord,
     SearchRecordsStore,
     SearchRecordSync,
@@ -38,6 +39,7 @@ import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators
 import type { PrismaMetricsStore } from './PrismaMetricsStore';
 import { z } from 'zod';
 import { convertToDate } from './Utils';
+import type { ResourceKinds } from '@casual-simulation/aux-common';
 
 const ERROR_RESULT_SCHEMA = z
     .object({
@@ -68,6 +70,32 @@ export class PrismaSearchRecordsStore implements SearchRecordsStore {
         });
 
         return this._mapSearchSync(sync);
+    }
+
+    async getSyncsByTarget(
+        targetRecordName: string,
+        targetResourceKind: ResourceKinds,
+        markers: string[]
+    ): Promise<GetSearchRecordSyncByTargetResult[]> {
+        const syncs = await this._client.searchRecordSync.findMany({
+            where: {
+                targetRecordName: targetRecordName,
+                targetResourceKind: targetResourceKind as any,
+                targetMarker: {
+                    in: markers,
+                },
+            },
+            include: {
+                searchRecord: true,
+            },
+        });
+
+        return syncs.map((s) => ({
+            sync: this._mapSearchSync(s),
+            searchRecord: s.searchRecord
+                ? this._convertRecord(s.searchRecord)
+                : null,
+        }));
     }
 
     /**

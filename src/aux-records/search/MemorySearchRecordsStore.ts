@@ -57,30 +57,28 @@ export class MemorySearchRecordsStore
         return this._syncs.get(syncId) || null;
     }
 
-    async getSyncByTarget(
+    async getSyncsByTarget(
         targetRecordName: string,
         targetResourceKind: ResourceKinds,
         markers: string[]
-    ): Promise<GetSearchRecordSyncByTargetResult> {
-        const sync =
-            this.syncs.find(
+    ): Promise<GetSearchRecordSyncByTargetResult[]> {
+        const syncs =
+            this.syncs.filter(
                 (sync) =>
                     sync.targetRecordName === targetRecordName &&
                     sync.targetResourceKind === targetResourceKind &&
                     markers.includes(sync.targetMarker)
             ) || null;
 
-        const searchRecord = sync
-            ? await this.getItemByAddress(
-                  sync.searchRecordName,
-                  sync.searchRecordAddress
-              )
-            : null;
-
-        return {
-            sync,
-            searchRecord,
-        };
+        return await Promise.all(
+            syncs.map(async (s) => ({
+                sync: s,
+                searchRecord: await this.getItemByAddress(
+                    s.searchRecordName,
+                    s.searchRecordAddress
+                ),
+            }))
+        );
     }
 
     async listSyncsBySearchRecord(

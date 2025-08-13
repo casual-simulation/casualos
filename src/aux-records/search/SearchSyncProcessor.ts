@@ -76,77 +76,84 @@ export class SearchSyncProcessor {
             return;
         }
 
-        const { sync, searchRecord } = await this._store.getSyncByTarget(
+        const syncs = await this._store.getSyncsByTarget(
             event.itemRecordName,
             event.itemResourceKind,
             getMarkersOrDefault(event.itemMarkers)
         );
 
-        if (!sync) {
+        if (syncs.length <= 0) {
             console.warn(
                 `[${TRACE_NAME}] No sync found for item: ${event.itemRecordName}, ${event.itemAddress}`
             );
             return;
         }
 
-        console.log(
-            `[${TRACE_NAME}] Syncing item: ${event.itemRecordName}, ${event.itemAddress} with sync:`,
-            sync
-        );
-
-        if (event.action === 'delete') {
-            const documentId = uuidv5(
-                `${event.itemRecordName}:${event.itemAddress}`,
-                DOCUMENT_NAMESPACE
-            );
-
-            const deletionResult = await this._searchInterface.deleteDocument(
-                searchRecord.collectionName,
-                documentId
-            );
-
-            if (deletionResult.success === true) {
-                console.log(
-                    `[${TRACE_NAME}] Successfully deleted document: ${documentId}`
-                );
-            } else {
-                console.error(
-                    `[${TRACE_NAME}] Failed to delete document: ${documentId}`,
-                    deletionResult.error
-                );
-            }
-        } else {
-            const item = await this._data.getData(
-                event.itemRecordName,
-                event.itemAddress
-            );
-
-            if (item.success === false) {
-                console.error(
-                    `[${TRACE_NAME}] Failed to get item: ${event.itemRecordName}, ${event.itemAddress}`,
-                    item.errorCode,
-                    item.errorMessage
-                );
-                return;
-            }
-            const mapped = this._mapData(event.itemAddress, item.data, sync);
-
-            if (isFailure(mapped)) {
-                console.error(
-                    `[${TRACE_NAME}] Failed to map item: ${mapped.error.errorMessage}`
-                );
-                return;
-            }
-
-            await this._searchInterface.createDocument(
-                searchRecord.collectionName,
-                mapped.value,
-                'emplace'
-            );
-
+        for (let { sync, searchRecord } of syncs) {
             console.log(
-                `[${TRACE_NAME}] Successfully synced item: ${event.itemRecordName}, ${event.itemAddress}`
+                `[${TRACE_NAME}] Syncing item: ${event.itemRecordName}, ${event.itemAddress} with sync:`,
+                sync
             );
+
+            if (event.action === 'delete') {
+                const documentId = uuidv5(
+                    `${event.itemRecordName}:${event.itemAddress}`,
+                    DOCUMENT_NAMESPACE
+                );
+
+                const deletionResult =
+                    await this._searchInterface.deleteDocument(
+                        searchRecord.collectionName,
+                        documentId
+                    );
+
+                if (deletionResult.success === true) {
+                    console.log(
+                        `[${TRACE_NAME}] Successfully deleted document: ${documentId}`
+                    );
+                } else {
+                    console.error(
+                        `[${TRACE_NAME}] Failed to delete document: ${documentId}`,
+                        deletionResult.error
+                    );
+                }
+            } else {
+                const item = await this._data.getData(
+                    event.itemRecordName,
+                    event.itemAddress
+                );
+
+                if (item.success === false) {
+                    console.error(
+                        `[${TRACE_NAME}] Failed to get item: ${event.itemRecordName}, ${event.itemAddress}`,
+                        item.errorCode,
+                        item.errorMessage
+                    );
+                    return;
+                }
+                const mapped = this._mapData(
+                    event.itemAddress,
+                    item.data,
+                    sync
+                );
+
+                if (isFailure(mapped)) {
+                    console.error(
+                        `[${TRACE_NAME}] Failed to map item: ${mapped.error.errorMessage}`
+                    );
+                    return;
+                }
+
+                await this._searchInterface.createDocument(
+                    searchRecord.collectionName,
+                    mapped.value,
+                    'emplace'
+                );
+
+                console.log(
+                    `[${TRACE_NAME}] Successfully synced item: ${event.itemRecordName}, ${event.itemAddress}`
+                );
+            }
         }
     }
 
