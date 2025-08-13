@@ -30,6 +30,7 @@
     -   `os.recordSearchDocument(request)` - Creates a document inside a search collection.
     -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
     -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
+    -   Search records have the ability to be automatically synced from data records, but there is currently no API for this and needs to be setup on a case-by-case basis (for now).
 
 ### :rocket: Features
 
