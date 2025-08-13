@@ -165,6 +165,7 @@ Resources:
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
                     WEBHOOK_LAMBDA_FUNCTION_NAME: !Ref HandleWebhookFunction
+                    SNS_TOPIC_ARN: !Ref SnsTopic
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
             Events:
@@ -218,6 +219,10 @@ Resources:
                     Properties:
                         Path: /instData
                         Method: GET
+                HandleSns:
+                    Type: SNS
+                    Properties:
+                        Topic: !Ref SnsTopic
     HandleRecordsLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
@@ -734,6 +739,10 @@ Resources:
                       Effect: Allow
                       Resource: !Sub arn:${AWS::Partition}:s3:::${MessagesBucket}/*
                       Principal: '*'
+
+    SnsTopic:
+        Type: AWS::SNS::Topic
+        Properties:
 
 Outputs:
     WebEndpoint:

@@ -230,6 +230,8 @@ export interface BuildReturn {
 
     moderationController: ModerationController;
     moderationJobProvider: ModerationJobProvider;
+
+    searchSyncProcessor: SearchSyncProcessor | null;
 }
 
 export interface ServerPlugin {
@@ -2023,6 +2025,8 @@ export class ServerBuilder implements SubscriptionLike {
             mongoDatabase: this._mongoDb,
             websocketMessenger: this._websocketMessenger,
             redisClient: this._redis,
+
+            searchSyncProcessor: this._searchSyncProcessor,
         };
 
         for (let plugin of this._plugins) {

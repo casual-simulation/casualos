@@ -64,3 +64,12 @@ export class SNSQueue<T> implements IQueue<T>, SubscriptionLike {
         );
     }
 }
+
+/**
+ * Parses a SNS
+ * @param message
+ * @returns
+ */
+export function parseSnsMessage(message: string): { name: string; data: any } {
+    return JSON.parse(message);
+}

@@ -34,6 +34,7 @@ import {
     success,
 } from '@casual-simulation/aux-common';
 import type { SearchInterface } from './SearchInterface';
+import { z } from 'zod';
 
 const DOCUMENT_NAMESPACE = '36e15e17-0f44-4c07-ab84-22eafecc2614';
 
@@ -267,6 +268,23 @@ interface SyncInfo {
     numTotal: number;
     numErrored: number;
 }
+
+export const SYNC_SEARCH_RECORD_EVENT_SCHEMA = z.object({
+    type: z.literal('sync_search_record'),
+    sync: z.object({
+        id: z.string(),
+        searchRecordName: z.string().min(1),
+        searchRecordAddress: z.string().min(1),
+        targetResourceKind: z.literal('data'),
+        targetRecordName: z.string().min(1),
+        targetMarker: z.string().min(1),
+        targetMapping: z.array(z.tuple([z.string().min(1), z.string().min(1)])),
+    }),
+});
+
+export const SEARCH_SYNC_QUEUE_EVENT_SCHEMA = z.discriminatedUnion('type', [
+    SYNC_SEARCH_RECORD_EVENT_SCHEMA,
+]);
 
 export type SearchSyncQueueEvent = SyncSearchRecordEvent | SyncItemEvent;
 

@@ -41,6 +41,8 @@ export const MODERATION_JOB_PRIORITY = process.env.MODERATION_JOB_PRIORITY;
 export const MODERATION_PROJECT_VERSION =
     process.env.MODERATION_PROJECT_VERSION;
 
+export const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+
 /**
  * Creates a new server builder that uses environment variables that are specific to the serverless environment.
  * See GettingStarted-aws.md for more information.
@@ -100,6 +102,15 @@ export function constructServerlessAwsServerBuilder() {
                             MODERATION_PROJECT_VERSION || undefined,
                     },
                 },
+            },
+        });
+    }
+
+    if (SNS_TOPIC_ARN) {
+        dynamicConfig.jobs = merge(dynamicConfig.jobs || {}, {
+            search: {
+                type: 'sns',
+                topicArn: SNS_TOPIC_ARN,
             },
         });
     }
