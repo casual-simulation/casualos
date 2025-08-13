@@ -18,6 +18,7 @@
 
 import {
     failure,
+    hasValue,
     success,
     type Result,
     type SimpleError,
@@ -29,8 +30,11 @@ import type {
     SearchCollectionInfo,
     SearchDocument,
     SearchDocumentInfo,
+    SearchHighlight,
     SearchInterface,
     SearchNode,
+    SearchQuery,
+    SearchResult,
     UpdatedSearchCollection,
 } from './SearchInterface';
 
@@ -224,5 +228,46 @@ export class MemorySearchInterface implements SearchInterface {
         this._apiKeys.push(newApiKey);
 
         return newApiKey;
+    }
+
+    async searchCollection(
+        collectionName: string,
+        query: SearchQuery
+    ): Promise<SearchResult> {
+        const documents = this._documents.get(collectionName);
+
+        if (!documents) {
+            return success({
+                found: 0,
+                outOf: 0,
+                hits: [],
+                page: 0,
+                searchTimeMs: 0,
+            });
+        }
+
+        const hits = documents.filter((doc) => {
+            let filter = doc[query.queryBy];
+            if (!hasValue(filter)) {
+                return false;
+            }
+
+            if (typeof filter !== 'string') {
+                filter = JSON.stringify(filter);
+            }
+
+            return filter.includes(query.q);
+        });
+
+        return success({
+            found: hits.length,
+            outOf: documents.length,
+            hits: hits.map((hit) => ({
+                document: hit,
+                highlight: {} as SearchHighlight,
+            })),
+            page: 0,
+            searchTimeMs: 0,
+        });
     }
 }

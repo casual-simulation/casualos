@@ -24,8 +24,11 @@ import type {
     SearchCollectionInfo,
     SearchDocument,
     SearchDocumentInfo,
+    SearchHighlight,
     SearchInterface,
     SearchNode,
+    SearchQuery,
+    SearchResult,
     UpdatedSearchCollection,
 } from './SearchInterface';
 import type { Client } from 'typesense';
@@ -146,4 +149,52 @@ export class TypesenseSearchInterface implements SearchInterface {
             expiresAt: response.expires_at,
         };
     }
+
+    async searchCollection(
+        collectionName: string,
+        query: SearchQuery
+    ): Promise<SearchResult> {
+        const result = await this._client
+            .collections(collectionName)
+            .documents()
+            .search({
+                ...query,
+                q: query.q,
+                query_by: query.queryBy,
+                filter_by: query.filterBy,
+            });
+
+        return success({
+            found: result.found,
+            outOf: result.out_of,
+            page: result.page,
+            searchTimeMs: result.search_time_ms,
+            hits: result.hits.map((hit) => ({
+                document: hit.document,
+                highlights: hit.highlights?.map(mapHighlight),
+                highlight: hit.highlight
+                    ? mapHighlight(hit.highlight as any)
+                    : undefined,
+                textMatch: hit.text_match,
+            })),
+        });
+    }
+}
+
+function mapHighlight(highlight: {
+    field: never;
+    snippet?: string;
+    value?: string;
+    snippets?: string[];
+    indices?: number[];
+    matched_tokens: string[][] | string[];
+}): SearchHighlight {
+    return {
+        field: highlight.field,
+        indices: highlight.indices as [number, number],
+        snippet: highlight.snippet,
+        snippets: highlight.snippets,
+        matchedTokens: highlight.matched_tokens,
+        value: highlight.value,
+    };
 }

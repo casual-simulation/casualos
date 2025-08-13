@@ -57,6 +57,8 @@ import type {
     SearchDocumentInfo,
     SearchInterface,
     SearchNode,
+    SearchQuery,
+    SearchResult,
     UpdatedSearchCollectionField,
 } from './SearchInterface';
 import { v4 as uuid } from 'uuid';
@@ -402,6 +404,57 @@ export class SearchRecordsController extends CrudRecordsController<
         await this.store.deleteSync(request.syncId);
 
         return success();
+    }
+
+    @traced(TRACE_NAME)
+    async search(request: SearchRequest): Promise<SearchResult> {
+        const contextResult = await this.policies.constructAuthorizationContext(
+            {
+                recordKeyOrRecordName: request.recordName,
+                userId: request.userId,
+            }
+        );
+
+        if (contextResult.success === false) {
+            return failure(contextResult);
+        }
+
+        const recordName = contextResult.context.recordName;
+        const record = await this.store.getItemByAddress(
+            recordName,
+            request.address
+        );
+
+        if (!record) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The Search record was not found.`,
+            });
+        }
+
+        const authorizationResult =
+            await this.policies.authorizeUserAndInstances(
+                contextResult.context,
+                {
+                    resourceKind: 'search',
+                    resourceId: record.address,
+                    action: 'read',
+                    instances: request.instances,
+                    userId: request.userId,
+                    markers: record.markers,
+                }
+            );
+
+        if (authorizationResult.success === false) {
+            return failure(authorizationResult);
+        }
+
+        const result = await this._searchInterface.searchCollection(
+            record.collectionName,
+            request.query
+        );
+
+        return result;
     }
 
     protected async _convertItemToResult(
@@ -949,3 +1002,30 @@ export interface UnsyncSearchRecordRequest {
 }
 
 export type UnsyncSearchRecordResult = Result<void, SimpleError>;
+
+export interface SearchRequest {
+    /**
+     * The name of the record that the search should be performed on.
+     */
+    recordName: string;
+
+    /**
+     * The address of the search record that the search should be performed on.
+     */
+    address: string;
+
+    /**
+     * The search query.
+     */
+    query: SearchQuery;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instance(s) that are making the request.
+     */
+    instances: string[];
+}

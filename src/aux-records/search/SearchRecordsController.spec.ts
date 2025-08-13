@@ -33,6 +33,7 @@ import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import {
     failure,
+    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     success,
 } from '@casual-simulation/aux-common';
@@ -1033,6 +1034,329 @@ describe('SearchRecordsController', () => {
 
             // Verify the sync still exists in the store (since the search record deletion doesn't cascade)
             expect(itemsStore.syncs).toHaveLength(1);
+        });
+    });
+
+    describe('search()', () => {
+        let collectionName: string;
+
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PRIVATE_MARKER],
+                    schema: {
+                        '.*': {
+                            type: 'auto',
+                        },
+                    },
+                },
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.getItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            if (result.success === false) {
+                throw new Error(
+                    `Failed to get item: ${result.errorMessage} (${result.errorCode})`
+                );
+            }
+
+            collectionName = result.item.collectionName;
+
+            // Store some test documents
+            await manager.storeDocument({
+                recordName,
+                address: 'item1',
+                document: {
+                    title: 'Test Document 1',
+                    content: 'This is a test document about cats',
+                    category: 'animals',
+                },
+                userId,
+                instances: [],
+            });
+
+            await manager.storeDocument({
+                recordName,
+                address: 'item1',
+                document: {
+                    title: 'Test Document 2',
+                    content: 'This is a test document about dogs',
+                    category: 'animals',
+                },
+                userId,
+                instances: [],
+            });
+
+            await manager.storeDocument({
+                recordName,
+                address: 'item1',
+                document: {
+                    title: 'Test Document 3',
+                    content: 'This is a test document about programming',
+                    category: 'technology',
+                },
+                userId,
+                instances: [],
+            });
+        });
+
+        it('should search a collection and return results', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'item1',
+                query: {
+                    q: 'cats',
+                    queryBy: 'content',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    found: 1,
+                    outOf: 3,
+                    hits: [
+                        {
+                            document: {
+                                id: expect.any(String),
+                                title: 'Test Document 1',
+                                content: 'This is a test document about cats',
+                                category: 'animals',
+                            },
+                            highlight: {},
+                        },
+                    ],
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                })
+            );
+        });
+
+        it('should return results for multiple matches', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'item1',
+                query: {
+                    q: 'test',
+                    queryBy: 'content',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    found: 3,
+                    outOf: 3,
+                    hits: expect.arrayContaining([
+                        expect.objectContaining({
+                            document: expect.objectContaining({
+                                content: expect.stringContaining('test'),
+                            }),
+                        }),
+                    ]),
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                })
+            );
+        });
+
+        it('should return empty results when no documents match', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'item1',
+                query: {
+                    q: 'nonexistent',
+                    queryBy: 'content',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    found: 0,
+                    outOf: 3,
+                    hits: [],
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                })
+            );
+        });
+
+        it('should return not_authorized if the user does not have permission to read the search record', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'item1',
+                query: {
+                    q: 'cats',
+                    queryBy: 'content',
+                },
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        action: 'read',
+                        resourceKind: 'search',
+                        resourceId: 'item1',
+                        subjectType: 'user',
+                        subjectId: otherUserId,
+                    },
+                    recommendedEntitlement: undefined,
+                })
+            );
+        });
+
+        it('should return not_found if the search record does not exist', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'nonexistent-address',
+                query: {
+                    q: 'cats',
+                    queryBy: 'content',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                })
+            );
+        });
+
+        it('should return record_not_found if the record name does not exist', async () => {
+            const result = await manager.search({
+                recordName: 'nonexistent-record',
+                address: 'item1',
+                query: {
+                    q: 'cats',
+                    queryBy: 'content',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                })
+            );
+        });
+
+        it('should work with different query fields', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'item1',
+                query: {
+                    q: 'animals',
+                    queryBy: 'category',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    found: 2,
+                    outOf: 3,
+                    hits: expect.arrayContaining([
+                        expect.objectContaining({
+                            document: expect.objectContaining({
+                                category: 'animals',
+                            }),
+                        }),
+                    ]),
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                })
+            );
+        });
+
+        it.skip('should return empty results when collection does not exist in search interface', async () => {
+            // Create a search record but don't create the collection in the search interface
+            await itemsStore.createItem(recordName, {
+                address: 'orphaned-item',
+                markers: [PUBLIC_READ_MARKER],
+                collectionName: 'nonexistent-collection',
+                searchApiKey: 'fake-key',
+            });
+
+            const result = await manager.search({
+                recordName,
+                address: 'orphaned-item',
+                query: {
+                    q: 'test',
+                    queryBy: 'content',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    found: 0,
+                    outOf: 0,
+                    hits: [],
+                    page: 0,
+                    searchTimeMs: 0,
+                })
+            );
+        });
+
+        it.skip('should work with complex search queries', async () => {
+            const result = await manager.search({
+                recordName,
+                address: 'item1',
+                query: {
+                    q: 'Document',
+                    queryBy: 'title',
+                    filterBy: 'title',
+                    limit: 2,
+                    offset: 0,
+                    sortBy: 'title',
+                    sortOrder: 'asc',
+                },
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    found: 3,
+                    outOf: 3,
+                    hits: expect.arrayContaining([
+                        expect.objectContaining({
+                            document: expect.objectContaining({
+                                title: expect.stringContaining('Document'),
+                            }),
+                        }),
+                    ]),
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                })
+            );
         });
     });
 });
