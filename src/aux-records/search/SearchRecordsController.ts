@@ -773,7 +773,7 @@ export const SEARCH_COLLECTION_SCHEMA = z
     .refine((val) => Object.keys(val).length < 100, {
         message: 'Search collections cannot have more than 100 fields.',
     })
-    .refine((val) => Object.keys(val).length <= 0, {
+    .refine((val) => Object.keys(val).length >= 1, {
         message: 'Search collections must have at least 1 field.',
     });
 

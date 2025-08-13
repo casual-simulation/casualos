@@ -2947,6 +2947,64 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/search",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "query": Object {
+            "catchall": Object {
+              "options": Array [
+                Object {
+                  "type": "string",
+                },
+                Object {
+                  "type": "boolean",
+                },
+                Object {
+                  "type": "number",
+                },
+              ],
+              "type": "union",
+            },
+            "schema": Object {
+              "filterBy": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "q": Object {
+                "type": "string",
+              },
+              "queryBy": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "search",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "GET",
         "path": "/api/v2/records/list",
       },
@@ -8246,6 +8304,64 @@ Object {
         "type": "object",
       },
       "name": "unsyncSearchRecord",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/search",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "query": Object {
+            "catchall": Object {
+              "options": Array [
+                Object {
+                  "type": "string",
+                },
+                Object {
+                  "type": "boolean",
+                },
+                Object {
+                  "type": "number",
+                },
+              ],
+              "type": "union",
+            },
+            "schema": Object {
+              "filterBy": Object {
+                "nullable": true,
+                "optional": true,
+                "type": "string",
+              },
+              "q": Object {
+                "type": "string",
+              },
+              "queryBy": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "search",
       "origins": "api",
     },
     Object {

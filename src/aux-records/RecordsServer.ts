@@ -153,7 +153,7 @@ import type {
 } from './packages/version/PackageVersionRecordsStore';
 import { getPackageVersionSpecifier } from './packages/version/PackageVersionRecordsStore';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
-import type { SearchRecordsController } from './search';
+import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
 
@@ -2837,6 +2837,68 @@ export class RecordsServer {
                     });
                     return genericResult(result);
                 }),
+
+            search: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/search')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        query: z
+                            .object({
+                                q: z.string().min(1).max(1024),
+                                queryBy: z.string().min(1).max(1024),
+                                filterBy: z
+                                    .string()
+                                    .min(1)
+                                    .max(1024)
+                                    .optional()
+                                    .nullable(),
+                            })
+                            .catchall(
+                                z.union([
+                                    z.string().max(1024),
+                                    z.boolean(),
+                                    z.number(),
+                                ])
+                            ),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, query, instances },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._searchRecordsController.search({
+                                recordName,
+                                address,
+                                query: query as SearchQuery,
+                                userId: validation.userId,
+                                instances: instances ?? [],
+                            });
+                        return genericResult(result);
+                    }
+                ),
 
             listRecords: procedure()
                 .origins('api')

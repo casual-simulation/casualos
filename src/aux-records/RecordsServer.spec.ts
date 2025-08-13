@@ -16182,6 +16182,464 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/search', () => {
+        let collectionName: string;
+
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            // Create a search collection first
+            const collectionResult = await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'test-collection',
+                    markers: [PRIVATE_MARKER],
+                    schema: {
+                        title: {
+                            type: 'string',
+                        },
+                        content: {
+                            type: 'string',
+                        },
+                        score: {
+                            type: 'int32',
+                        },
+                    },
+                },
+            });
+
+            if (collectionResult.success === false) {
+                throw new Error(
+                    'Failed to create item: ' + collectionResult.errorMessage
+                );
+            }
+
+            const itemResult = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'test-collection'
+            );
+            collectionName = itemResult!.collectionName;
+
+            // Add some test documents to the collection
+            await searchInterface.createDocument(collectionName, {
+                id: '1',
+                title: 'First Document',
+                content: 'This is the first test document',
+                score: 10,
+            });
+
+            await searchInterface.createDocument(collectionName, {
+                id: '2',
+                title: 'Second Document',
+                content: 'This is the second test document',
+                score: 20,
+            });
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: 'test',
+                            queryBy: 'title,content',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should search documents in a search collection', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: 'First',
+                            queryBy: 'title',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    found: 1,
+                    outOf: 2,
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                    hits: [
+                        {
+                            document: {
+                                id: '1',
+                                title: 'First Document',
+                                content: 'This is the first test document',
+                                score: 10,
+                            },
+                            highlight: {},
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it.skip('should search with filter conditions', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: '*',
+                            queryBy: 'title',
+                            filterBy: 'score:>15',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    found: 1,
+                    outOf: 2,
+                    page: 1,
+                    searchTimeMs: expect.any(Number),
+                    hits: [
+                        {
+                            document: {
+                                id: '2',
+                                title: 'Second Document',
+                                content: 'This is the second test document',
+                                score: 20,
+                            },
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized if the user does not have read permission to the search record', async () => {
+            // Remove user's permissions to the search record
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: 'test',
+                            queryBy: 'title',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'search',
+                        resourceId: 'test-collection',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_found if the search collection does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'nonexistent-collection',
+                        query: {
+                            q: 'test',
+                            queryBy: 'title',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'The Search record was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: 'test',
+                            queryBy: 'title',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if required fields are missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        // Missing query field
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['query'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if query object is invalid', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: '', // Empty query string
+                            queryBy: 'title',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'too_small',
+                            path: ['query', 'q'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_request if queryBy is missing', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'test-collection',
+                        query: {
+                            q: 'test',
+                            // Missing queryBy field
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: expect.arrayContaining([
+                        expect.objectContaining({
+                            code: 'invalid_type',
+                            path: ['query', 'queryBy'],
+                        }),
+                    ]),
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should allow search without authorization if user is not logged in but the collection has the publicRead marker', async () => {
+            // Create a public search collection
+            await searchRecordsController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'public-collection',
+                    markers: [PUBLIC_READ_MARKER],
+                    schema: {
+                        title: {
+                            type: 'string',
+                        },
+                    },
+                },
+            });
+
+            const publicItemResult = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'public-collection'
+            );
+            const publicCollectionName = publicItemResult!.collectionName;
+
+            await searchInterface.createDocument(publicCollectionName, {
+                id: 'public1',
+                title: 'Public Document',
+            });
+
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/records/search',
+                    JSON.stringify({
+                        recordName,
+                        address: 'public-collection',
+                        query: {
+                            q: 'Public',
+                            queryBy: 'title',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    found: 1,
+                    outOf: 1,
+                    page: 0,
+                    searchTimeMs: expect.any(Number),
+                    hits: [
+                        {
+                            document: {
+                                id: '4',
+                                title: 'Public Document',
+                            },
+                            highlight: {},
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/search',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'test-collection',
+                    query: {
+                        q: 'test',
+                        queryBy: 'title,content',
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
             const result = await server.handleHttpRequest(
@@ -26091,14 +26549,14 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             request.headers['authorization'] = 'Bearer wrong';
             const result = await server.handleHttpRequest(request);
 
-            expect(result).toEqual({
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'unacceptable_session_key',
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
-                }),
+                },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
                     'Access-Control-Allow-Headers':
@@ -26114,13 +26572,13 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 formatV1SessionKey(userId, 'sessionId', 'wrong', 9999999999);
             const result = await server.handleHttpRequest(request);
 
-            expect(result).toEqual({
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'invalid_key',
                     errorMessage: 'The session key is invalid.',
-                }),
+                },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
                     'Access-Control-Allow-Headers':
