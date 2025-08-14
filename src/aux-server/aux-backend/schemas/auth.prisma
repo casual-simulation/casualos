@@ -1109,6 +1109,8 @@ model SearchRecordSync {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@unique([searchRecordName, searchRecordAddress, targetRecordName, targetResourceKind, targetMarker])
 }
 
 model SearchRecordSyncHistory {
