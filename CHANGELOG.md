@@ -15,6 +15,7 @@
 -   Fixed an issue where strings like `e123` would be recognized as numbers.
 -   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
 -   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+-   Fixed an issue where calling `os.getSharedDocument()` with a record key would sometimes fail.
 
 ## V3.6.0
 
