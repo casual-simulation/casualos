@@ -1,8 +1,24 @@
 # CasualOS Changelog
 
-## V3.6.0
+## V3.6.1
 
 #### Date: TBD
+
+### :rocket: Features
+
+-   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
+    -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue in the `unpack-aux` CLI command where tags that failed to be written would be omitted from the bot AUX file.
+-   Fixed an issue where strings like `e123` would be recognized as numbers.
+-   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
+-   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+
+## V3.6.0
+
+#### Date: 7/28/2025
 
 ### :boom: Breaking Changes
 

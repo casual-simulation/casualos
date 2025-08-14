@@ -10267,6 +10267,117 @@ describe('RecordsManager', () => {
                 ]);
             });
 
+            it('should not attempt to authenticate', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    installPackage('test', 'address', 'v1.0.0', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.not.objectContaining({
+                            Authorization: expect.any(String),
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'installPackage',
+                    input: {
+                        recordName: null,
+                        inst: 'myInst',
+                        package: {
+                            recordName: 'test',
+                            address: 'address',
+                            key: 'v1.0.0',
+                        },
+                        instances: ['/myInst'],
+                    },
+                });
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                    action('onPackageInstalled', null, null, {
+                        packageLoadId: 'packageLoadId',
+                        package: {
+                            id: 'packageId',
+                            packageId: 'public',
+                            address: 'address',
+                            key: version(1),
+                            entitlements: [],
+                            description: '',
+                            markers: [PUBLIC_READ_MARKER],
+                            createdAtMs: 123,
+                            sha256: 'sha256',
+                            auxSha256: 'auxSha256',
+                            auxFileName: 'fileName',
+                            createdFile: true,
+                            requiresReview: false,
+                            sizeInBytes: 123,
+                            approved: true,
+                            approvalType: 'normal',
+                        },
+                    }),
+                ]);
+
+                expect(authMock.getAuthToken).toHaveBeenCalledTimes(1);
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
+            });
+
             it('should support installing packages without specifying a version key', async () => {
                 fetch.mockResolvedValueOnce({
                     status: 200,
@@ -10895,6 +11006,92 @@ describe('RecordsManager', () => {
                         ],
                     }),
                 ]);
+            });
+
+            it('should not attempt to authenticate', async () => {
+                fetch.mockResolvedValueOnce({
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        packages: [
+                            {
+                                id: 'loadedPackageId',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.0',
+                                userId: userId,
+                            },
+                            {
+                                id: 'loadedPackageId2',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.1',
+                                userId: userId,
+                            },
+                        ],
+                    }),
+                });
+
+                // authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([listInstalledPackages({}, 1)]);
+
+                await waitAsync();
+
+                expect(fetch).toHaveBeenCalledWith(
+                    'http://localhost:3002/api/v3/callProcedure',
+                    {
+                        method: 'POST',
+                        body: expect.any(String),
+                        headers: expect.not.objectContaining({
+                            Authorization: expect.any(String),
+                        }),
+                    }
+                );
+
+                expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+                    procedure: 'listInstalledPackages',
+                    input: {
+                        recordName: null,
+                        inst: 'myInst',
+                        instances: ['/myInst'],
+                    },
+                });
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        packages: [
+                            {
+                                id: 'loadedPackageId',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.0',
+                                userId: userId,
+                            },
+                            {
+                                id: 'loadedPackageId2',
+                                recordName: null,
+                                inst: 'myInst',
+                                branch: DEFAULT_BRANCH_NAME,
+                                packageId: 'public',
+                                packageVersionId: 'public@1.0.1',
+                                userId: userId,
+                            },
+                        ],
+                    }),
+                ]);
+
+                expect(authMock.getAuthToken).toHaveBeenCalledTimes(1);
+                expect(authMock.isAuthenticated).not.toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('should return an error if the inst is a static inst', async () => {
