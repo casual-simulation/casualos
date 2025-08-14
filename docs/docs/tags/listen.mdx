@@ -126,6 +126,27 @@ let that: {
    * For "mouse" modalities, which button was used to click the bot.
    */
   buttonId: 'left' | 'middle' | 'right';
+
+  /**
+   * The bot that is currently displayed in the code editor.
+   * 
+   * Only available if the clicked bot is a code tool.
+  */
+  codeBot?: Bot;
+
+  /**
+   * The tag that is currently displayed in the code editor.
+   * 
+   * Only available if the clicked bot is a code tool.
+  */
+  codeTag?: string;
+
+  /**
+   * The space of the tag that the code editor is currently displaying.
+   * 
+   * Only available if the clicked bot is a code tool.
+  */
+  codeTagSpace?: string;
 };
 ```
 
@@ -783,6 +804,27 @@ let that: {
    * For "mouse" modalities, which button was used to click the bot.
    */
   buttonId: 'left' | 'middle' | 'right';
+
+  /**
+   * The bot that is currently displayed in the code editor.
+   * 
+   * Only available if the clicked bot is a code tool.
+  */
+  codeBot?: Bot;
+
+  /**
+   * The tag that is currently displayed in the code editor.
+   * 
+   * Only available if the clicked bot is a code tool.
+  */
+  codeTag?: string;
+
+  /**
+   * The space of the tag that the code editor is currently displaying.
+   * 
+   * Only available if the clicked bot is a code tool.
+  */
+  codeTagSpace?: string;
 };
 ```
 

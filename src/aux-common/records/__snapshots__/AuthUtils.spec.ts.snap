@@ -3,3 +3,5 @@
 exports[`generateV1ConnectionToken() should generate a connection token from the given connection key 1`] = `"OTkxMWY3NDllNmE4NzEzMzMyZjIzNDgzYmJmZGFjYjg2YzU3OWM4YjA0YjMyMWYyNGY0YWMyMzlhYzY0Y2NiYw=="`;
 
 exports[`generateV1ConnectionToken() should generate a connection token with a null recordName 1`] = `"MzZhZjkwMDc2MTYxOGNiMzIwOWQ2ODVjNjI3NTEzZGMxMWUyMjAwYjM1ZGIxMTgyYTFiNmYwN2YyZDU5N2Y5NQ=="`;
+
+exports[`generateV1ConnectionToken() should parse record keys before using the record name 1`] = `"OTkxMWY3NDllNmE4NzEzMzMyZjIzNDgzYmJmZGFjYjg2YzU3OWM4YjA0YjMyMWYyNGY0YWMyMzlhYzY0Y2NiYw=="`;

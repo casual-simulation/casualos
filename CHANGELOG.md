@@ -8,6 +8,10 @@
 
 -   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
     -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+-   Added additional properties to `@onClick` and `@onAnyBotClicked` for code tool bots:
+    -   `codeBot` - The bot that is currently being displayed in the code editor.
+    -   `codeTag` - The tag that is currently being displayed in the code editor.
+    -   `codeTagSpace` - The space of the tag that is currently being displayed in the code editor.
 -   Added search records.
     -   Search records allow you to utilize [Typesense](https://typesense.org/) to easily search over a large number of documents. Each "Search record" maps to a Typesense [collection](https://typesense.org/docs/29.0/api/collections.html), which can store many documents. Documents are just JSON (kinda like data records).
     -   `os.recordSearchCollection(request)` - Creates or updates a Search collection. Each collection exists at an address and is assigned its own unique collection name.
@@ -26,6 +30,7 @@
 -   Fixed an issue where strings like `e123` would be recognized as numbers.
 -   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
 -   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+-   Fixed an issue where calling `os.getSharedDocument()` with a record key would sometimes fail.
 
 ## V3.6.0
 
