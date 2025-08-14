@@ -34,6 +34,16 @@ services:
             - '7882:7882/udp'
         volumes:
             - ./conf/livekit.yaml:/etc/livekit.yaml
+    typesense:
+        image: typesense/typesense:29.0
+        restart: always
+        ports:
+            - '8108:8108'
+        networks:
+            - enable_ipv6
+        volumes:
+            - typesense-data:/data
+        command: '--data-dir /data --api-key=xyz --enable-cors'
 
     # And put them in an OTEL collector pipeline...
     otel-collector:

@@ -45,5 +45,8 @@ Object {
   "records": Object {
     "allowed": true,
   },
+  "search": Object {
+    "allowed": true,
+  },
 }
 `;

@@ -65,7 +65,8 @@
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",
         "uuid": "10.0.0",
-        "yjs": "13.6.8"
+        "yjs": "13.6.8",
+        "typesense": "2.0.3"
     },
     "devDependencies": {
         "@types/jsdom": "21.1.6",

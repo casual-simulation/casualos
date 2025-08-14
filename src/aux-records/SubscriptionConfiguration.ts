@@ -551,6 +551,30 @@ export const subscriptionFeaturesSchema = z.object({
         .default({
             allowed: true,
         }),
+
+    search: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether search records are allowed for the subscription.'
+                ),
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of search records that can be created for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for search records features. Defaults to allowed.'
+        )
+        .optional()
+        .default({
+            allowed: true,
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -997,6 +1021,11 @@ export interface FeaturesConfiguration {
      * The configuration for package features.
      */
     packages?: PackageFeaturesConfiguration;
+
+    /**
+     * The configuration for search features.
+     */
+    search?: SearchFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1251,6 +1280,10 @@ export type PackageFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['packages'];
 
+export type SearchFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['search'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -1294,6 +1327,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         packages: {
+            allowed: true,
+        },
+        search: {
             allowed: true,
         },
     };
@@ -1344,7 +1380,38 @@ export function denyAllFeatures(): FeaturesConfiguration {
         packages: {
             allowed: false,
         },
+        search: {
+            allowed: false,
+        },
     };
+}
+
+/**
+ * Gets the search features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getSearchFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): SearchFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.search ?? { allowed: true };
 }
 
 /**

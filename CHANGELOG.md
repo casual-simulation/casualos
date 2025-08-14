@@ -12,6 +12,17 @@
     -   `codeBot` - The bot that is currently being displayed in the code editor.
     -   `codeTag` - The tag that is currently being displayed in the code editor.
     -   `codeTagSpace` - The space of the tag that is currently being displayed in the code editor.
+-   Added search records.
+    -   Search records allow you to utilize [Typesense](https://typesense.org/) to easily search over a large number of documents. Each "Search record" maps to a Typesense [collection](https://typesense.org/docs/29.0/api/collections.html), which can store many documents. Documents are just JSON (kinda like data records).
+    -   `os.recordSearchCollection(request)` - Creates or updates a Search collection. Each collection exists at an address and is assigned its own unique collection name.
+    -   `os.getSearchCollection(recordName, address)` - Gets information about a search collection.
+    -   `os.eraseSearchCollection(recordName, address)` - Deletes a search collection.
+    -   `os.listSearchCollections(recordName, startingAddress?)` - Lists search collections in a record.
+    -   `os.listSearchCollectionsByMarker(recordName, marker, startingAddress?)` - Lists search collections by marker.
+    -   `os.recordSearchDocument(request)` - Creates a document inside a search collection.
+    -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
+    -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
+    -   Search records have the ability to be automatically synced from data records, but there is currently no API for this and needs to be setup on a case-by-case basis (for now).
 
 ### :bug: Bug Fixes
 

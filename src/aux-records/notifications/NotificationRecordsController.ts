@@ -80,6 +80,7 @@ export interface NotificationRecordsConfiguration
  */
 export class NotificationRecordsController extends CrudRecordsController<
     NotificationRecord,
+    NotificationRecord,
     NotificationRecordsStore
 > {
     private _pushInterface: WebPushInterface;

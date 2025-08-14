@@ -24,6 +24,7 @@ import type {
     ObjectSchemaMetadata,
     RecordSchemaMetadata,
     SchemaMetadata,
+    TupleSchemaMetadata,
     UnionSchemaMetadata,
 } from '../aux-common';
 
@@ -146,6 +147,8 @@ export async function askForInputs(
             return await askForUnionInputs(inputs, name, repl);
         } else if (inputs.type === 'record') {
             return await askForRecordInputs(inputs, name, repl);
+        } else if (inputs.type === 'tuple') {
+            return await askForTupleInputs(inputs, name, repl);
         } else if (inputs.type === 'any') {
             return await askForAnyInputs(name, repl);
         }
@@ -198,10 +201,40 @@ async function askForObjectInputs(
     }
 
     const result: any = {};
+    let hasExistingKey = false;
     for (let key in inputs.schema) {
         const prop = inputs.schema[key];
         const value = await askForInputs(prop, `${name}.${key}`, repl);
         result[key] = value;
+        hasExistingKey = true;
+    }
+
+    if (inputs.catchall) {
+        let addMore = true;
+        if (hasExistingKey) {
+            addMore = (
+                await prompts({
+                    type: 'confirm',
+                    name: 'continue',
+                    message: `Do you want to add more properties to ${name}?`,
+                    onState,
+                })
+            ).continue;
+        }
+
+        if (addMore) {
+            const catchall = await askForRecordInputs(
+                {
+                    type: 'record',
+                    valueSchema: inputs.catchall,
+                },
+                name,
+                repl
+            );
+            for (let key in catchall) {
+                result[key] = catchall[key];
+            }
+        }
     }
     return result;
 }
@@ -372,6 +405,27 @@ async function askForRecordInputs(
         const prop = inputs.valueSchema;
         const value = await askForInputs(prop, `${name}.${key.key}`, repl);
         result[key.key] = value;
+    }
+
+    return result;
+}
+
+async function askForTupleInputs(
+    inputs: TupleSchemaMetadata,
+    name: string,
+    repl: repl.REPLServer
+): Promise<any[]> {
+    const allowed = await askForOptionalInputs(inputs, name, repl);
+    if (!allowed) {
+        return inputs.defaultValue;
+    }
+
+    const result: any[] = [];
+
+    for (let i = 0; i < inputs.items.length; i++) {
+        const prop = inputs.items[i];
+        const value = await askForInputs(prop, `${name}[${i}]`, repl);
+        result.push(value);
     }
 
     return result;

@@ -480,6 +480,15 @@ export interface RecordSchemaMetadata extends BaseSchemaMetadata {
     valueSchema: SchemaMetadata;
 }
 
+export interface TupleSchemaMetadata extends BaseSchemaMetadata {
+    type: 'tuple';
+
+    /**
+     * The schema of the items in the tuple.
+     */
+    items: SchemaMetadata[];
+}
+
 export type SchemaMetadata =
     | StringSchemaMetadata
     | BooleanSchemaMetadata
@@ -493,7 +502,8 @@ export type SchemaMetadata =
     | NullSchemaMetadata
     | UnionSchemaMetadata
     | DiscriminatedUnionSchemaMetadata
-    | RecordSchemaMetadata;
+    | RecordSchemaMetadata
+    | TupleSchemaMetadata;
 
 /**
  * Gets a serializable version of the schema metdata.
@@ -577,6 +587,11 @@ export function getSchemaMetadata(schema: z.ZodType): SchemaMetadata {
         return {
             type: 'record',
             valueSchema: getSchemaMetadata(schema._def.valueType),
+        };
+    } else if (schema instanceof z.ZodTuple) {
+        return {
+            type: 'tuple',
+            items: schema._def.items.map((o: any) => getSchemaMetadata(o)),
         };
     } else {
         console.error('Unsupported schema type', schema);

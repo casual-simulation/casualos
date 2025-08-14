@@ -364,6 +364,7 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    recordsCallProcedure,
 } from './RecordsEvents';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import type {
@@ -517,6 +518,14 @@ import type {
     PackageRecordVersionKeySpecifier,
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
+import type {
+    EraseDocumentResult,
+    SearchCollectionSchema,
+    SearchDocument,
+    SearchRecord,
+    SearchRecordOutput,
+    StoreDocumentResult,
+} from '@casual-simulation/aux-records/search';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -837,6 +846,46 @@ export interface RecordPackageVersionApiRequest {
      * The markers that should be applied to the package version.
      */
     markers?: string[];
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordSearchCollection}.
+ *
+ * @dochash types/records/search
+ * @docname RecordSearchCollectionRequest
+ */
+export interface RecordSearchCollectionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The schema that should be used for the collection.
+     */
+    schema: SearchCollectionSchema;
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordSearchDocument}.
+ *
+ * @dochash types/records/search
+ * @docname RecordSearchDocumentRequest
+ */
+export interface RecordSearchDocumentApiRequest {
+    recordName: string;
+    address: string;
+    document: SearchDocument;
 }
 
 /**
@@ -3442,6 +3491,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPackageContainer,
                 installPackage,
                 listInstalledPackages,
+
+                recordSearchCollection,
+                getSearchCollection,
+                eraseSearchCollection,
+                listSearchCollections,
+                listSearchCollectionsByMarker,
+                recordSearchDocument,
+                eraseSearchDocument,
 
                 listUserStudios,
 
@@ -11365,6 +11422,386 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<ListInstalledPackagesResult> {
         const task = context.createTask();
         const event = calcListInstalledPackages(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates or updates a search collection in the given record.
+     * 
+     * Returns a promise that resolves with the result of the operation.
+     * 
+     * @param request The request to create or update the search collection.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     * 
+     * @example Record a search collection with an automatic schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * @example Record a search collection with a custom schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               title: {
+                  type: 'string',
+               },
+               description: {
+                  type: 'string',
+               },
+               price: {
+                  type: 'int32',
+               }
+     *      }
+     * });
+     * 
+     * @example Record a private search collection
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               '.*': {
+     *             type: 'auto'
+     *          }
+     *      },
+     *      markers: ['private']
+     * });
+     * 
+     * @example Record and search through a search collection
+     * import Typesense from 'typesense';
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * if (!result.success) {
+     *   os.toast('Failed to record search collection: ' + result.errorMessage);
+     *   return;
+     * }
+     * 
+     * const collection = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     * 
+     * if (!collection.success) {
+     *    os.toast('Failed to get search collection: ' + collection.errorMessage);
+     *    return;
+     * }
+     * 
+     * const client = new Typesense.Client({
+     *   nodes: collection.item.nodes,
+     *   apiKey: collection.item.searchApiKey,
+     * });
+     *
+     * const searchResults = await client.collections(collection.item.collectionName).documents().search({
+     *   q: 'search term',
+     *   query_by: 'title,description',
+     *   sort_by: 'price:asc',
+     * });
+     * 
+     * console.log('search results', searchResults);
+     * 
+     * 
+     * @doctitle Search Actions
+     * @docsidebar Search
+     * @docdescription Search actions allow you to create and manage search collections in your records. Search collections enable efficient searching and indexing of data within your records, making it easier to retrieve relevant information quickly.
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.recordSearchCollection
+     */
+    function recordSearchCollection(
+        request: RecordSearchCollectionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordSearchCollection: {
+                    input: {
+                        recordName: request.recordName,
+                        item: {
+                            address: request.address,
+                            schema: request.schema,
+                            markers: request.markers as [string, ...string[]],
+                        },
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Deletes a search collection along with all the documents in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param address The address of the search collection to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search collection
+     * const result = await os.eraseSearchCollection('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.eraseSearchCollection
+     */
+    function eraseSearchCollection(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseSearchCollection: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the search collections in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List search collections
+     * const result = await os.listSearchCollections('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.listSearchCollections
+     */
+    function listSearchCollections(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listSearchCollections: {
+                    input: {
+                        recordName,
+                        address: startingAddress,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the search collections in a record by a specific marker.
+     * @param recordName The name of the record to list the search collections from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'publicRead');
+     *
+     * @example List private search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.listSearchCollectionsByMarker
+     */
+    function listSearchCollectionsByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<SearchRecord>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listSearchCollections: {
+                    input: {
+                        recordName,
+                        marker,
+                        address: startingAddress,
+                        sort: options?.sort,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a search collection from the specified record.
+     * @param recordName The name of the record to retrieve the search collection from.
+     * @param address The address of the search collection to retrieve.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a search collection
+     * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * @example Search through a search collection
+     * import Typesense from 'typesense';
+     * const collection = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * if (!collection.success) {
+     *    os.toast('Failed to get search collection: ' + collection.errorMessage);
+     *    return;
+     * }
+     *
+     * const client = new Typesense.Client({
+     *   nodes: collection.item.nodes,
+     *   apiKey: collection.item.searchApiKey,
+     * });
+     *
+     * const searchResults = await client.collections(collection.item.collectionName).documents().search({
+     *   q: 'search term',
+     *   query_by: 'title,description',
+     *   sort_by: 'price:asc',
+     * });
+     *
+     * console.log('search results', searchResults);
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.getSearchCollection
+     */
+    function getSearchCollection(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudGetItemResult<SearchRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getSearchCollection: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records a search document to the specified search collection in the given record.
+     * @param request The request to record the search document.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a search document
+     * const result = await os.recordSearchDocument({
+     *    recordName: 'myRecord',
+     *    address: 'mySearchCollection',
+     *    document: {
+     *      // ensure that the document matches the schema of the search collection
+     *      title: 'My Document',
+     *      description: 'This is the content of my document.'
+     *      price: 10,
+     *    }
+     * });
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.recordSearchDocument
+     */
+    function recordSearchDocument(
+        request: RecordSearchDocumentApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<StoreDocumentResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordSearchDocument: {
+                    input: {
+                        recordName: request.recordName,
+                        address: request.address,
+                        document: request.document,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases a search document from the specified search collection in the given record.
+     * @param recordName The name of the record that the search document is in.
+     * @param address The address of the search collection that the document is in.
+     * @param documentId The ID of the document that should be erased.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search document
+     * const result = await os.eraseSearchDocument('myRecord', 'mySearchCollection', 'documentId');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.eraseSearchDocument
+     */
+    function eraseSearchDocument(
+        recordName: string,
+        address: string,
+        documentId: string,
+        options: RecordActionOptions = {}
+    ): Promise<EraseDocumentResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseSearchDocument: {
+                    input: {
+                        recordName: recordName,
+                        address: address,
+                        documentId: documentId,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
         return addAsyncAction(task, event);
     }
 

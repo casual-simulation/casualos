@@ -9396,6 +9396,192 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.recordSearchCollection()', () => {
+            it('should emit a RecordSearchCollectionAction', async () => {
+                const action: any = library.api.os.recordSearchCollection({
+                    recordName: 'test',
+                    address: 'test',
+                    schema: {
+                        test: {
+                            type: 'auto',
+                        },
+                    },
+                });
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordSearchCollection: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'test',
+                                    schema: {
+                                        test: {
+                                            type: 'auto',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseSearchCollection()', () => {
+            it('should emit a RecordSearchCollectionAction', async () => {
+                const action: any = library.api.os.eraseSearchCollection(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        eraseSearchCollection: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listSearchCollections()', () => {
+            it('should emit a ListSearchCollectionsAction', async () => {
+                const action: any =
+                    library.api.os.listSearchCollections('test');
+
+                const expected = recordsCallProcedure(
+                    {
+                        listSearchCollections: {
+                            input: {
+                                recordName: 'test',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listSearchCollectionsByMarker()', () => {
+            it('should emit a ListSearchCollectionsAction', async () => {
+                const action: any =
+                    library.api.os.listSearchCollectionsByMarker(
+                        'test',
+                        'marker'
+                    );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listSearchCollections: {
+                            input: {
+                                recordName: 'test',
+                                marker: 'marker',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getSearchCollection()', () => {
+            it('should emit a GetSearchCollectionAction', async () => {
+                const action: any = library.api.os.getSearchCollection(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getSearchCollection: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordSearchDocument()', () => {
+            it('should emit a RecordSearchDocumentAction', async () => {
+                const action: any = library.api.os.recordSearchDocument({
+                    recordName: 'test',
+                    address: 'address',
+                    document: {
+                        title: 'Test Document',
+                    },
+                });
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordSearchDocument: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                document: {
+                                    title: 'Test Document',
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseSearchDocument()', () => {
+            it('should emit a RecordSearchDocumentAction', async () => {
+                const action: any = library.api.os.eraseSearchDocument(
+                    'test',
+                    'address',
+                    '1'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        eraseSearchDocument: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                documentId: '1',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.listUserStudios()', () => {
             it('should emit a GetEventCountAction', async () => {
                 const action: any = library.api.os.listUserStudios();

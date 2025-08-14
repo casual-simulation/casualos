@@ -58,6 +58,7 @@ export type PackageRecordInput = Omit<PackageRecord, 'id'>;
  */
 export class PackageRecordsController extends CrudRecordsController<
     PackageRecordInput,
+    PackageRecord,
     PackageRecordsStore
 > {
     constructor(config: PackageRecordsConfiguration) {

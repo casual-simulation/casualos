@@ -10109,7 +10109,10 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(m === null).toBe(true);
+                    expect(m).toEqual({
+                        id: 'module.library',
+                        url: 'module.library',
+                    });
                     expect(events).toEqual([]);
                 });
 

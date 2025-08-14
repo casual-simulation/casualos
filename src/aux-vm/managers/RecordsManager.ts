@@ -245,6 +245,12 @@ export class RecordsManager {
         'erasePackage',
         'listPackages',
         'getPackage',
+        'recordSearchCollection',
+        'getSearchCollection',
+        'eraseSearchCollection',
+        'listSearchCollections',
+        'recordSearchDocument',
+        'eraseSearchDocument',
     ]);
 
     /**

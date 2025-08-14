@@ -58,6 +58,14 @@ const denoBootstrapScripts = path.resolve(denoVm, 'deno');
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
 
+const typesensePath = path.resolve(
+    auxServerNodeModules,
+    'typesense',
+    'src',
+    'Typesense.ts'
+);
+const typesenseOutput = path.resolve(auxWeb, 'shared', 'static', 'lib');
+
 let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
     SERVER_CONFIG = JSON.parse(process.env.SERVER_CONFIG);
@@ -229,6 +237,17 @@ export function createConfigs(dev, version) {
                 },
                 minify: !dev,
                 plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
+            },
+        ],
+        [
+            'Typesense',
+            {
+                entryPoints: [path.resolve(typesensePath)],
+                outdir: typesenseOutput,
+                platform: 'browser',
+                target: ['es2020'],
+                format: 'esm',
+                minify: !dev,
             },
         ],
     ];
