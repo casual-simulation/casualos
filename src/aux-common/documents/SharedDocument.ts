@@ -63,6 +63,11 @@ export interface SharedDocument extends SubscriptionLike {
     onEvents: Observable<Action[]>;
 
     /**
+     * Gets the observable list of updates from the partition.
+     */
+    onUpdates: Observable<string[]>;
+
+    /**
      * Gets the observable list of status updates from the partition.
      */
     onStatusUpdated: Observable<StatusUpdate>;
@@ -119,10 +124,16 @@ export interface SharedDocument extends SubscriptionLike {
     getStateUpdate(): InstUpdate;
 
     /**
-     * Applies the given updates to the document.
+     * Applies the given inst updates to the document.
      * @param updates The updates to apply.
      */
     applyStateUpdates(updates: InstUpdate[]): void;
+
+    /**
+     * Applies the given raw updates to the document.
+     * @param updates The updates to apply.
+     */
+    applyUpdates(updates: string[]): void;
 }
 
 export type SharedType = SharedMap | SharedArray | SharedText;
