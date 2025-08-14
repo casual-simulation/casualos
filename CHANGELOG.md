@@ -1,8 +1,19 @@
 # CasualOS Changelog
 
-## V3.6.1
+## V3.7.0
 
 #### Date: TBD
+
+### :boom: Breaking Changes
+
+-   Changed local insts (`?staticInst` in the URL query) to no longer require separate permission for performing records actions.
+    -   Previously, public (sometimes called free) insts and local insts had to be granted separate permission for actions that manipulated data.
+    -   This led to a large number of uses of `os.grantInstAdminPermission()`, which was a workaround to allow people to grant an inst permissions.
+    -   The goal was to replace this mechanism by encouraging switching to packages and entitlements which are able to automatically grant insts permissions based on the entitlement grants that users have given indiviaual packages.
+    -   Unfortunately, packages aren't a good solution for scenarios when actively developing AUXes and (as a result) developers are forced to continue using `os.grantInstAdminPermission()` in development.
+    -   Additionally, many developers prefer to use local insts instead of studio insts (which automatically get some permissions), seeing them as temporary and disposable unlike private insts.
+    -   Now, local insts no longer need to be granted special permissions for records actions.
+    -   The downside to this change is that local insts now pose a greater risk and attack vector for cross site scripting (XSS). In such a scenario, an attacker would give a user a malicious AUX that steals their data. If the user decides to run it in an inst, then their data might get stolen by the attacker.
 
 ### :rocket: Features
 
