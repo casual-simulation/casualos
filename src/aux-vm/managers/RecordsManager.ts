@@ -480,12 +480,7 @@ export class RecordsManager {
         }
 
         if (hasValue(this._helper.origin)) {
-            const instances = [
-                formatInstId(
-                    this._helper.origin.recordName,
-                    this._helper.origin.inst
-                ),
-            ];
+            const instances = this._getInstancesForRequest();
             if (query) {
                 query.instances = instances;
             } else {
@@ -590,14 +585,7 @@ export class RecordsManager {
                 data: event.data,
             };
 
-            if (hasValue(this._helper.origin)) {
-                requestData.instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            requestData.instances = this._getInstancesForRequest();
 
             if (hasValue(event.options.markers)) {
                 requestData.markers = event.options.markers;
@@ -653,16 +641,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
@@ -723,15 +702,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (hasValue(event.taskId)) {
                 let query: any = {
@@ -783,15 +754,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting data...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
@@ -856,15 +819,7 @@ export class RecordsManager {
 
             const { byteLength, hash, mimeType, data } = fileInfo;
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
                 await this._publishUrl(
@@ -1087,15 +1042,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<ReadFileResult> = await axios.get(
                 await this._publishUrl(
@@ -1194,15 +1141,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting file...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 ...this._axiosOptions,
@@ -1246,15 +1185,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording event...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 await this._publishUrl(
@@ -1299,15 +1230,7 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
-                let instances: string[] = undefined;
-                if (hasValue(this._helper.origin)) {
-                    instances = [
-                        formatInstId(
-                            this._helper.origin.recordName,
-                            this._helper.origin.inst
-                        ),
-                    ];
-                }
+                const instances = this._getInstancesForRequest();
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
                         info.recordsOrigin,
@@ -1537,15 +1460,7 @@ export class RecordsManager {
                 '[RecordsManager] Granting policy permission...',
                 event
             );
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             let requestData: any = {
                 recordName: event.recordName,
@@ -1600,15 +1515,7 @@ export class RecordsManager {
                 '[RecordsManager] Revoking policy permission...',
                 event
             );
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             let requestData: any = {
                 recordName: event.recordName,
@@ -1657,12 +1564,6 @@ export class RecordsManager {
             return;
         }
         try {
-            const info = await this._resolveInfoForEvent(event);
-
-            if (info.error) {
-                return;
-            }
-
             if (!hasValue(this._helper.origin)) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
@@ -1672,6 +1573,24 @@ export class RecordsManager {
                         )
                     );
                 }
+                return;
+            }
+
+            if (this._helper.origin.isStatic) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncError(
+                            event.taskId,
+                            'Unable to grant inst admin permission to static insts.'
+                        )
+                    );
+                }
+                return;
+            }
+
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
                 return;
             }
 
@@ -1738,15 +1657,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Granting role...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             let requestData: any = {
                 recordName: event.recordName,
@@ -1795,15 +1706,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             console.log('[RecordsManager] Revoking role...', event);
             let requestData: any = {
@@ -1872,14 +1775,7 @@ export class RecordsManager {
                 messages: event.messages,
             };
 
-            if (hasValue(this._helper.origin)) {
-                requestData.instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            requestData.instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<AIChatResponse> = await axios.post(
                 await this._publishUrl(info.recordsOrigin, '/api/v2/ai/chat'),
@@ -1932,14 +1828,7 @@ export class RecordsManager {
                 messages: event.messages,
             };
 
-            if (hasValue(this._helper.origin)) {
-                requestData.instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            requestData.instances = this._getInstancesForRequest();
 
             if (USE_HTTP_STREAMING) {
                 const result = await this._client.aiChatStream(requestData, {
@@ -2070,15 +1959,7 @@ export class RecordsManager {
                 blockadeLabs: blockadeLabs,
             };
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<AIGenerateSkyboxResponse> =
                 await axios.post(
@@ -2199,15 +2080,7 @@ export class RecordsManager {
                 ...rest,
             };
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result =
                 await this._sendWebsocketSupportedRequest<AIGenerateImageResponse>(
@@ -2357,15 +2230,7 @@ export class RecordsManager {
 
             const { byteLength, hash, mimeType, data } = fileInfo;
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result = await this._client.recordPackageVersion(
                 {
@@ -2451,15 +2316,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (this._helper.origin?.isStatic) {
                 // static origins need to install packages via fetching the package
@@ -2613,15 +2470,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (
                 !hasValue(this._helper.origin) ||
@@ -2665,6 +2514,19 @@ export class RecordsManager {
                 );
             }
         }
+    }
+
+    private _getInstancesForRequest() {
+        let instances: string[] = undefined;
+        if (hasValue(this._helper.origin) && !this._helper.origin.isStatic) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+        return instances;
     }
 
     private async _sendWebsocketSupportedRequest<TResponse>(
