@@ -39,6 +39,7 @@ import {
 } from './AuthUtils';
 import { toBase64String } from '../utils';
 import { formatV1ConnectionToken, parseConnectionToken } from '../common';
+import { formatV2RecordKey } from './RecordKeys';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -514,6 +515,45 @@ describe('generateV1ConnectionToken()', () => {
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(connectionId).toBe(toBase64String('connectionId'));
         expect(recordName).toBe('');
+        expect(inst).toBe(toBase64String('inst'));
+        expect(password).toMatchSnapshot();
+    });
+
+    it('should parse record keys before using the record name', () => {
+        const recordKey = formatV2RecordKey(
+            'recordName',
+            'password',
+            'subjectfull'
+        );
+
+        const key = formatV1ConnectionKey(
+            'userId',
+            'sessionId',
+            'password',
+            123
+        );
+
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            recordKey,
+            'inst'
+        );
+
+        const [
+            version,
+            userId,
+            sessionId,
+            connectionId,
+            recordName,
+            inst,
+            password,
+        ] = result.split('.');
+
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(recordName).toBe(toBase64String('recordName'));
         expect(inst).toBe(toBase64String('inst'));
         expect(password).toMatchSnapshot();
     });
