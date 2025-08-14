@@ -8,6 +8,10 @@
 
 -   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
     -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+-   Added additional properties to `@onClick` and `@onAnyBotClicked` for code tool bots:
+    -   `codeBot` - The bot that is currently being displayed in the code editor.
+    -   `codeTag` - The tag that is currently being displayed in the code editor.
+    -   `codeTagSpace` - The space of the tag that is currently being displayed in the code editor.
 
 ### :bug: Bug Fixes
 
