@@ -16613,7 +16613,7 @@ describe('RecordsServer', () => {
                     hits: [
                         {
                             document: {
-                                id: '4',
+                                id: 'public1',
                                 title: 'Public Document',
                             },
                             highlight: {},
