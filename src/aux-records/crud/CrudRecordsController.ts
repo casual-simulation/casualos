@@ -36,16 +36,23 @@ import type {
     NotAuthorizedError,
     NotLoggedInError,
     ResourceKinds,
+    Result,
     ServerError,
+    SimpleError,
 } from '@casual-simulation/aux-common';
-import { ACCOUNT_MARKER } from '@casual-simulation/aux-common';
+import {
+    ACCOUNT_MARKER,
+    genericResult,
+    isFailure,
+    success,
+} from '@casual-simulation/aux-common';
 import type { ZodIssue } from 'zod';
 import { traced } from '../tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 
 export interface CrudRecordsConfiguration<
-    T extends CrudRecord,
-    TStore extends CrudRecordsStore<T> = CrudRecordsStore<T>
+    TInput extends CrudRecord,
+    TStore extends CrudRecordsStore<CrudRecord> = CrudRecordsStore<TInput>
 > {
     /**
      * The name for the controller.
@@ -86,9 +93,10 @@ const TRACE_NAME = 'CrudRecordsController';
  * @param TResult The type of the result that the controller returns to clients. Must be a subset of T.
  */
 export abstract class CrudRecordsController<
-    T extends CrudRecord,
-    TStore extends CrudRecordsStore<T> = CrudRecordsStore<T>,
-    TResult extends Partial<T> = T
+    TInput extends CrudRecord,
+    TStoreType extends CrudRecord = TInput,
+    TStore extends CrudRecordsStore<TStoreType> = CrudRecordsStore<TStoreType>,
+    TResult extends Partial<TStoreType> = TStoreType
 > {
     private _store: TStore;
     private _policies: PolicyController;
@@ -122,7 +130,7 @@ export abstract class CrudRecordsController<
         return this._resourceKind;
     }
 
-    constructor(config: CrudRecordsConfiguration<T, TStore>) {
+    constructor(config: CrudRecordsConfiguration<TInput, TStore>) {
         this._name = config.name;
         this._store = config.store;
         this._policies = config.policies;
@@ -136,7 +144,7 @@ export abstract class CrudRecordsController<
      */
     @traced(TRACE_NAME)
     async recordItem(
-        request: CrudRecordItemRequest<T>
+        request: CrudRecordItemRequest<TInput>
     ): Promise<CrudRecordItemResult> {
         try {
             const contextResult =
@@ -224,23 +232,34 @@ export abstract class CrudRecordsController<
                 };
             }
 
-            const item = this._transformInputItem(request.item);
+            const item = await this._transformInputItem(
+                request.item,
+                existingItem,
+                action,
+                contextResult.context,
+                authorization
+            );
+
+            if (isFailure(item)) {
+                return genericResult(item);
+            }
+
             const subscriptionResult = await this._checkSubscriptionMetrics(
                 action,
                 contextResult.context,
                 authorization,
-                item
+                item.value
             );
 
             if (subscriptionResult.success === false) {
                 return subscriptionResult;
             }
 
-            await this._store.putItem(recordName, item);
+            await this._putItem(recordName, item.value);
             return {
                 success: true,
                 recordName,
-                address: item.address,
+                address: item.value.address,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -256,6 +275,10 @@ export abstract class CrudRecordsController<
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    protected async _putItem(recordName: string, item: TStoreType) {
+        await this._store.putItem(recordName, item);
     }
 
     /**
@@ -314,7 +337,11 @@ export abstract class CrudRecordsController<
 
             return {
                 success: true,
-                item: this._convertItemToResult(result, context.context),
+                item: await this._convertItemToResult(
+                    result,
+                    context.context,
+                    'read'
+                ),
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -393,7 +420,16 @@ export abstract class CrudRecordsController<
                 return subscriptionResult;
             }
 
-            await this._store.deleteItem(recordName, request.address);
+            const eraseResult = await this._eraseItemCore(
+                recordName,
+                request.address,
+                result,
+                authorization
+            );
+
+            if (isFailure(eraseResult)) {
+                return genericResult(eraseResult);
+            }
 
             return {
                 success: true,
@@ -460,8 +496,10 @@ export abstract class CrudRecordsController<
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context)
+                items: await this._convertItemsToResults(
+                    result2.items,
+                    context.context,
+                    'list'
                 ),
                 totalCount: result2.totalCount,
             };
@@ -529,8 +567,10 @@ export abstract class CrudRecordsController<
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context)
+                items: await this._convertItemsToResults(
+                    result2.items,
+                    context.context,
+                    'list'
                 ),
                 totalCount: result2.totalCount,
             };
@@ -563,7 +603,7 @@ export abstract class CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: T
+        item?: TStoreType
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
@@ -571,13 +611,23 @@ export abstract class CrudRecordsController<
      * Can be overriden to ensure that some fields are not returned.
      * @param item The item that should be converted.
      * @param context The authorization context.
+     * @param action The action that is being performed.
      * @returns The converted item.
      */
-    protected _convertItemToResult(
-        item: T,
-        context: AuthorizationContext
-    ): TResult {
+    protected async _convertItemToResult(
+        item: TStoreType,
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): Promise<TResult> {
         return item as unknown as TResult;
+    }
+
+    protected async _convertItemsToResults(
+        items: TStoreType[],
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): Promise<TResult[]> {
+        return items as unknown as TResult[];
     }
 
     /**
@@ -585,8 +635,28 @@ export abstract class CrudRecordsController<
      * Useful for transforming items before they are stored.
      * @param item The item that should be transformed.
      */
-    protected _transformInputItem(item: T): T {
-        return item;
+    protected async _transformInputItem(
+        item: TInput,
+        existingItem: TStoreType | null,
+        action: ActionKinds,
+        context: AuthorizationContext,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<TStoreType, SimpleError>> {
+        return success(item as unknown as TStoreType);
+    }
+
+    protected async _eraseItemCore(
+        recordName: string,
+        address: string,
+        item: TStoreType,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<void, SimpleError>> {
+        await this._store.deleteItem(recordName, address);
+        return success();
     }
 }
 

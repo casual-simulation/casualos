@@ -17,15 +17,19 @@
  */
 
 import '../Instrumentation';
-import type {
-    GenericHttpRequest,
-    GenericHttpHeaders,
+import {
+    type GenericHttpRequest,
+    type GenericHttpHeaders,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import type {
     APIGatewayProxyEvent,
     APIGatewayProxyResult,
     EventBridgeEvent,
     S3Event,
+    S3EventRecord,
+    SNSEvent,
+    SNSEventRecord,
 } from 'aws-lambda';
 import {
     constructServerlessAwsServerBuilder,
@@ -34,51 +38,84 @@ import {
 import { S3FileRecordsStore } from '@casual-simulation/aux-records-aws';
 import type { S3BatchEvent } from './S3Batch';
 import { z } from 'zod';
+import type { SearchSyncQueueEvent } from '@casual-simulation/aux-records';
+import { SEARCH_SYNC_QUEUE_EVENT_SCHEMA } from '@casual-simulation/aux-records';
 
 const builder = constructServerlessAwsServerBuilder();
 
-const { server, filesStore, websocketController, moderationController } =
-    builder.build();
+const {
+    server,
+    filesStore,
+    websocketController,
+    moderationController,
+    searchSyncProcessor,
+} = builder.build();
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
     console.log('[Records] Got EventBridge event:', event);
 }
 
-async function handleS3Event(event: S3Event) {
-    await Promise.all(
+async function handleSnsJob(record: SNSEventRecord) {
+    const job = record.Sns;
+    const json = tryParseJson(job.Message);
+
+    if (!json.success) {
+        throw new Error('Invalid job payload! It must be valid JSON.');
+    }
+
+    const data = json.value;
+
+    const parseResult = SEARCH_SYNC_QUEUE_EVENT_SCHEMA.safeParse(data);
+
+    if (!parseResult.success) {
+        console.error('[jobs] Invalid job payload:', parseResult);
+        throw new Error('Invalid job payload!');
+    }
+
+    await searchSyncProcessor.process(parseResult.data as SearchSyncQueueEvent);
+}
+
+async function handleS3Job(record: S3EventRecord) {
+    const bucketName = record.s3.bucket.name;
+
+    if (bucketName !== FILES_BUCKET) {
+        console.warn(`[Records1] Got event for wrong bucket: ${bucketName}`);
+        return;
+    }
+
+    const key = record.s3.object.key;
+
+    const firstSlash = key.indexOf('/');
+
+    if (firstSlash < 0) {
+        console.warn('[Records] Unable to process key:', key);
+        return;
+    }
+
+    const recordName = key.substring(0, firstSlash);
+    const fileName = key.substring(firstSlash + 1);
+
+    const result = await filesStore.setFileRecordAsUploaded(
+        recordName,
+        fileName
+    );
+
+    if (result.success === false) {
+        if (result.errorCode === 'file_not_found') {
+            console.error('[Records] File not found:', key);
+        }
+    } else {
+        console.log('[Records] File marked as uploaded:', key);
+    }
+}
+
+async function handleS3OrSNSEvent(event: S3Event | SNSEvent) {
+    await Promise.allSettled(
         event.Records.map(async (record) => {
-            const bucketName = record.s3.bucket.name;
-
-            if (bucketName !== FILES_BUCKET) {
-                console.warn(
-                    `[Records1] Got event for wrong bucket: ${bucketName}`
-                );
-                return;
-            }
-
-            const key = record.s3.object.key;
-
-            const firstSlash = key.indexOf('/');
-
-            if (firstSlash < 0) {
-                console.warn('[Records] Unable to process key:', key);
-                return;
-            }
-
-            const recordName = key.substring(0, firstSlash);
-            const fileName = key.substring(firstSlash + 1);
-
-            const result = await filesStore.setFileRecordAsUploaded(
-                recordName,
-                fileName
-            );
-
-            if (result.success === false) {
-                if (result.errorCode === 'file_not_found') {
-                    console.error('[Records] File not found:', key);
-                }
+            if ('s3' in record) {
+                return await handleS3Job(record);
             } else {
-                console.log('[Records] File marked as uploaded:', key);
+                return await handleSnsJob(record);
             }
         })
     );
@@ -211,6 +248,7 @@ export async function handleRecords(
         | APIGatewayProxyEvent
         | S3Event
         | S3BatchEvent
+        | SNSEvent
         | EventBridgeEvent<any, any>
 ) {
     await builder.ensureInitialized();
@@ -221,7 +259,7 @@ export async function handleRecords(
     } else if ('job' in event) {
         return handleS3BatchEvent(event);
     } else {
-        return handleS3Event(event);
+        return handleS3OrSNSEvent(event);
     }
 }
 

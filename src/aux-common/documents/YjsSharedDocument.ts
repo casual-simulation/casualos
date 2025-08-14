@@ -288,6 +288,10 @@ export class YjsSharedDocument implements SharedDocument {
         );
     }
 
+    applyUpdates(updates: string[]): void {
+        this._applyUpdates(updates, APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN);
+    }
+
     /**
      * Applies the given updates to the YJS document.
      * @param updates The updates to apply.

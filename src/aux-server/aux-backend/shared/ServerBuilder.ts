@@ -141,6 +141,7 @@ import { TelegramNotificationMessenger } from '../notifications/TelegramNotifica
 import { PrismaModerationStore } from '../prisma/PrismaModerationStore';
 import type { ModerationConfiguration } from '@casual-simulation/aux-records/ModerationConfiguration';
 import { Rekognition } from '@aws-sdk/client-rekognition';
+import { Client as TypesenseClient } from 'typesense';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -184,6 +185,20 @@ import { PrismaPackageRecordsStore } from '../prisma/PrismaPackageRecordsStore';
 import { PrismaPackageVersionRecordsStore } from '../prisma/PrismaPackageVersionRecordsStore';
 import { PackageVersionRecordsController } from '@casual-simulation/aux-records/packages/version';
 import { RedisWSWebsocketMessenger } from '../redis/RedisWSWebsocketMessenger';
+import type {
+    SearchRecordsStore,
+    SearchSyncQueueEvent,
+} from '@casual-simulation/aux-records/search';
+import { SearchSyncProcessor } from '@casual-simulation/aux-records/search';
+import { SearchRecordsController } from '@casual-simulation/aux-records/search';
+import { TypesenseSearchInterface } from '@casual-simulation/aux-records/search';
+import type { NodeConfiguration } from 'typesense/lib/Typesense/Configuration';
+import { PrismaSearchRecordsStore } from 'aux-backend/prisma/PrismaSearchRecordsStore';
+import type { IQueue } from '@casual-simulation/aux-records/queue';
+import { Worker as BullWorker, Queue } from 'bullmq';
+import { BullQueue } from '../queue/BullQueue';
+import { SNSClient } from '@aws-sdk/client-sns';
+import { SNSQueue } from '../queue/SNSQueue';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -206,6 +221,7 @@ export interface BuildReturn {
     websocketController: WebsocketController;
     packagesController: PackageRecordsController;
     packageVersionController: PackageVersionRecordsController;
+    searchRecordsController: SearchRecordsController | null;
     dynamodbClient: DocumentClient;
     mongoClient: MongoClient;
     mongoDatabase: Db;
@@ -214,6 +230,8 @@ export interface BuildReturn {
 
     moderationController: ModerationController;
     moderationJobProvider: ModerationJobProvider;
+
+    searchSyncProcessor: SearchSyncProcessor | null;
 }
 
 export interface ServerPlugin {
@@ -354,6 +372,14 @@ export class ServerBuilder implements SubscriptionLike {
     private _packageVersionsStore: PrismaPackageVersionRecordsStore;
     private _packagesController: PackageRecordsController;
     private _packageVersionController: PackageVersionRecordsController;
+
+    private _searchInterface: TypesenseSearchInterface | null = null;
+    private _searchStore: SearchRecordsStore | null = null;
+    private _searchController: SearchRecordsController | null = null;
+
+    private _searchSyncProcessor: SearchSyncProcessor | null = null;
+    private _searchQueue: IQueue<SearchSyncQueueEvent> | null = null;
+    private _searchWorker: BullWorker | null = null;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -688,6 +714,10 @@ export class ServerBuilder implements SubscriptionLike {
             metricsStore
         );
         this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
+            prismaClient,
+            metricsStore
+        );
+        this._searchStore = new PrismaSearchRecordsStore(
             prismaClient,
             metricsStore
         );
@@ -1171,6 +1201,25 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useTypesense(
+        options: Pick<ServerConfig, 'typesense'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Typesense.');
+        if (!options.typesense) {
+            throw new Error('Typesense options must be provided.');
+        }
+
+        const typesense = options.typesense;
+        const client = new TypesenseClient({
+            nodes: typesense.nodes as NodeConfiguration[],
+            apiKey: typesense.apiKey,
+            connectionTimeoutSeconds: typesense.connectionTimeoutSeconds,
+        });
+        this._searchInterface = new TypesenseSearchInterface(client);
+
+        return this;
+    }
+
     useStripeSubscriptions(
         options: Pick<ServerConfig, 'subscriptions' | 'stripe'> = this._options
     ): this {
@@ -1605,6 +1654,114 @@ export class ServerBuilder implements SubscriptionLike {
         return this;
     }
 
+    useBackgroundJobs(
+        options: Pick<ServerConfig, 'jobs' | 'redis'> = this._options
+    ): this {
+        if (!options.jobs) {
+            throw new Error('Background jobs options must be provided.');
+        }
+
+        if (options.jobs.search) {
+            if (!this._dataStore) {
+                throw new Error(
+                    'Data store must be configured before using background search jobs.'
+                );
+            }
+            if (!this._searchStore) {
+                throw new Error(
+                    'Search store must be configured before using background search jobs.'
+                );
+            }
+            if (!this._searchInterface) {
+                throw new Error(
+                    'Search interface must be configured before using background search jobs.'
+                );
+            }
+
+            this._searchSyncProcessor = new SearchSyncProcessor({
+                searchInterface: this._searchInterface,
+                data: this._dataStore,
+                search: this._searchStore,
+            });
+
+            if (options.jobs.search.type === 'sns') {
+                console.log('[ServerBuilder] Publishing search jobs to SNS.');
+
+                const client = new SNSClient({});
+                const queue = (this._searchQueue = new SNSQueue(
+                    client,
+                    options.jobs.search.topicArn
+                ));
+
+                this._subscription.add(() => queue.unsubscribe());
+                this._subscription.add(() => {
+                    this._searchQueue = null;
+                });
+            } else {
+                if (!options.redis) {
+                    throw new Error(
+                        'Redis options must be provided when using BullMQ.'
+                    );
+                }
+                // console.log('[ServerBuilder] Using BullMQ for Search jobs.');
+
+                const serverOptions =
+                    options.redis.servers?.bullmq ?? options.redis;
+
+                const connection = {
+                    url: serverOptions.url,
+                    host: serverOptions.host,
+                    port: serverOptions.port,
+                    password: serverOptions.password,
+                    tls: serverOptions.tls ? {} : undefined,
+                };
+
+                if (options.jobs.search.queue) {
+                    console.log(
+                        '[ServerBuilder] Using BullMQ for search jobs on:',
+                        options.jobs.search.queueName
+                    );
+
+                    const queue = (this._searchQueue = new BullQueue(
+                        new Queue(options.jobs.search.queueName, {
+                            connection,
+                        })
+                    ));
+
+                    this._subscription.add(() => queue.unsubscribe());
+                    this._subscription.add(() => {
+                        this._searchQueue = null;
+                    });
+                }
+
+                if (options.jobs.search.process) {
+                    console.log(
+                        '[ServerBuilder] Processing search jobs with BullMQ on:',
+                        options.jobs.search.queueName
+                    );
+                    this._searchWorker = new BullWorker(
+                        options.jobs.search.queueName,
+                        async (job) => {
+                            await this._searchSyncProcessor.process(
+                                job.data as SearchSyncQueueEvent
+                            );
+                        },
+                        {
+                            connection,
+                        }
+                    );
+
+                    this._subscription.add(() => {
+                        this._searchWorker?.close();
+                        this._searchWorker = null;
+                    });
+                }
+            }
+        }
+
+        return this;
+    }
+
     async buildAsync(): Promise<BuildReturn> {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -1695,6 +1852,7 @@ export class ServerBuilder implements SubscriptionLike {
             config: this._configStore,
             policies: this._policyController,
             metrics: this._metricsStore,
+            searchSyncQueue: this._searchQueue,
         });
         this._manualDataController = new DataRecordsController({
             store: this._manualDataStore,
@@ -1806,6 +1964,17 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._searchStore && this._searchInterface) {
+            console.log('[ServerBuilder] Using Search Records.');
+            this._searchController = new SearchRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._searchStore,
+                searchInterface: this._searchInterface,
+                queue: this._searchQueue,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -1828,6 +1997,7 @@ export class ServerBuilder implements SubscriptionLike {
             notificationsController: this._notificationsController,
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
+            searchRecordsController: this._searchController,
         });
 
         const buildReturn: BuildReturn = {
@@ -1846,6 +2016,7 @@ export class ServerBuilder implements SubscriptionLike {
             websocketController: this._websocketController,
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
+            searchRecordsController: this._searchController,
 
             moderationController: this._moderationController,
             moderationJobProvider: this._moderationJobProvider,
@@ -1855,6 +2026,8 @@ export class ServerBuilder implements SubscriptionLike {
             mongoDatabase: this._mongoDb,
             websocketMessenger: this._websocketMessenger,
             redisClient: this._redis,
+
+            searchSyncProcessor: this._searchSyncProcessor,
         };
 
         for (let plugin of this._plugins) {

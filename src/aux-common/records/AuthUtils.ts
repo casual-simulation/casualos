@@ -22,6 +22,7 @@ import {
     formatV1ConnectionToken,
     parseV1ConnectionToken,
 } from '../common/ConnectionToken';
+import { isRecordKey, parseRecordKey } from './RecordKeys';
 
 /**
  * Defines an interface that represents the role that a user can have.
@@ -320,6 +321,13 @@ export function generateV1ConnectionToken(
 
     if (!parsed) {
         return null;
+    }
+
+    if (isRecordKey(recordName)) {
+        const parsed = parseRecordKey(recordName);
+        if (parsed) {
+            recordName = parsed[0]; // Use the record name from the record key
+        }
     }
 
     recordName = recordName ?? '';

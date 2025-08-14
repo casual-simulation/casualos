@@ -174,6 +174,23 @@ const minioSchema = z.object({
         .optional(),
 });
 
+const typesenseSchema = z.object({
+    nodes: z
+        .array(
+            z.object({
+                host: z
+                    .string()
+                    .describe('The host of the Typesense node.')
+                    .min(1),
+                port: z.number().int().min(1).optional(),
+                protocol: z.enum(['http', 'https']).optional(),
+            })
+        )
+        .min(1),
+    apiKey: z.string().min(1).describe('The API Key for Typesense.'),
+    connectionTimeoutSeconds: z.number(),
+});
+
 const livekitSchema = z.object({
     apiKey: z
         .string()
@@ -343,6 +360,11 @@ const redisSchema = z.object({
             pubSub: redisServerSchema
                 .describe(
                     'The Redis server that should be used for pubsub. If omitted, then the default server will be used.'
+                )
+                .optional(),
+            bullmq: redisServerSchema
+                .describe(
+                    'The Redis server that should be used for BullMQ. If omitted, then the default server will be used.'
                 )
                 .optional(),
         })
@@ -1021,6 +1043,42 @@ const webhooksSchema = z.object({
     ]),
 });
 
+const snsSchema = z.object({
+    type: z.literal('sns'),
+    topicArn: z
+        .string()
+        .describe('The ARN of the SNS topic that should be used.')
+        .min(1),
+});
+
+const bullmqSchema = z.object({
+    type: z.literal('bullmq'),
+
+    process: z
+        .boolean()
+        .describe(
+            'Whether to process jobs from BullMQ on this node. Defaults to true.'
+        )
+        .default(true),
+
+    queue: z
+        .boolean()
+        .describe(
+            'Whether to allow this node to enqueue jobs in BullMQ. Defaults to true.'
+        )
+        .default(true),
+
+    queueName: z
+        .string()
+        .describe('The name of the BullMQ queue that should be used.')
+        .min(1),
+});
+
+const backgroundJobSchema = z.discriminatedUnion('type', [
+    snsSchema,
+    bullmqSchema,
+]);
+
 export const serverConfigSchema = z.object({
     s3: s3Schema
         .describe(
@@ -1037,6 +1095,12 @@ export const serverConfigSchema = z.object({
     minio: minioSchema
         .describe(
             'Minio Configuration Options. If omitted, then Minio cannot be used for file storage.'
+        )
+        .optional(),
+
+    typesense: typesenseSchema
+        .describe(
+            'Typesense configuration options. If omitted, then Typesense cannot be used for search.'
         )
         .optional(),
 
@@ -1226,6 +1290,19 @@ export const serverConfigSchema = z.object({
         })
         .describe(
             'The metadata about the server deployment. If omitted, then the server will not be able to provide information about itself. This would result in records features not being supported in webhook handlers.'
+        )
+        .optional(),
+
+    jobs: z
+        .object({
+            search: backgroundJobSchema
+                .describe(
+                    'Configuration options for search background jobs. If omitted, then search background jobs will not be supported.'
+                )
+                .optional(),
+        })
+        .describe(
+            'Configuration options for background jobs. If omitted, then background jobs will not be supported.'
         )
         .optional(),
 });

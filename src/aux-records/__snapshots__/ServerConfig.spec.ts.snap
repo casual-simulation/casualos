@@ -223,6 +223,9 @@ Object {
           "records": Object {
             "allowed": false,
           },
+          "search": Object {
+            "allowed": true,
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -285,6 +288,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -530,6 +536,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -612,6 +621,9 @@ Object {
               "allowed": true,
               "maxRecords": 30000,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -693,6 +705,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 300,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -778,6 +793,9 @@ Object {
               "allowed": true,
               "maxRecords": 1500,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -859,6 +877,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 150,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -944,6 +965,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1024,6 +1048,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -1101,6 +1128,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1000000000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -1184,6 +1214,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -1263,6 +1296,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 3000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -1519,6 +1555,9 @@ Object {
           "records": Object {
             "allowed": false,
           },
+          "search": Object {
+            "allowed": true,
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -1597,6 +1636,9 @@ Object {
           "records": Object {
             "allowed": true,
             "maxRecords": 30,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -1871,6 +1913,9 @@ Object {
           "records": Object {
             "allowed": false,
           },
+          "search": Object {
+            "allowed": true,
+          },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
             "allowed": false,
@@ -1933,6 +1978,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "webhooks": Object {
             "addStateTimeoutMs": 1000,
@@ -2178,6 +2226,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2260,6 +2311,9 @@ Object {
               "allowed": true,
               "maxRecords": 30000,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2341,6 +2395,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 300,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -2426,6 +2483,9 @@ Object {
               "allowed": true,
               "maxRecords": 1500,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2507,6 +2567,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 150,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -2592,6 +2655,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2672,6 +2738,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": false,
@@ -2749,6 +2818,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1000000000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
@@ -2832,6 +2904,9 @@ Object {
               "allowed": true,
               "maxRecords": 30,
             },
+            "search": Object {
+              "allowed": true,
+            },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,
               "allowed": true,
@@ -2911,6 +2986,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 3000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "webhooks": Object {
               "addStateTimeoutMs": 1000,

@@ -3,6 +3,7 @@ version: '3.7'
 volumes:
     mongodata:
     minio-data:
+    typesense-data:
 
 networks:
     # ensure additional services are added to this network if they are expected to communicate with each other
@@ -52,3 +53,13 @@ services:
         volumes:
             - ./conf/livekit.yaml:/etc/livekit.yaml
         command: --config /etc/livekit.yaml
+    typesense:
+        image: typesense/typesense:29.0
+        restart: always
+        ports:
+            - '8108:8108'
+        networks:
+            - enable_ipv6
+        volumes:
+            - typesense-data:/data
+        command: '--data-dir /data --api-key=xyz --enable-cors'

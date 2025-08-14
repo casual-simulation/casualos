@@ -1,5 +1,48 @@
 # CasualOS Changelog
 
+## V3.7.0
+
+#### Date: 8/14/2025
+
+### :boom: Breaking Changes
+
+-   Changed local insts (`?staticInst` in the URL query) to no longer require separate permission for performing records actions.
+    -   Previously, public (sometimes called free) insts and local insts had to be granted separate permission for actions that manipulated data.
+    -   This led to a large number of uses of `os.grantInstAdminPermission()`, which was a workaround to allow people to grant an inst permissions.
+    -   The goal was to replace this mechanism by encouraging switching to packages and entitlements which are able to automatically grant insts permissions based on the entitlement grants that users have given indiviaual packages.
+    -   Unfortunately, packages aren't a good solution for scenarios when actively developing AUXes and (as a result) developers are forced to continue using `os.grantInstAdminPermission()` in development.
+    -   Additionally, many developers prefer to use local insts instead of studio insts (which automatically get some permissions), seeing them as temporary and disposable unlike private insts.
+    -   Now, local insts no longer need to be granted special permissions for records actions.
+    -   The downside to this change is that local insts now pose a greater risk and attack vector for cross site scripting (XSS). In such a scenario, an attacker would give a user a malicious AUX that steals their data. If the user decides to run it in an inst, then their data might get stolen by the attacker.
+
+### :rocket: Features
+
+-   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
+    -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+-   Added additional properties to `@onClick` and `@onAnyBotClicked` for code tool bots:
+    -   `codeBot` - The bot that is currently being displayed in the code editor.
+    -   `codeTag` - The tag that is currently being displayed in the code editor.
+    -   `codeTagSpace` - The space of the tag that is currently being displayed in the code editor.
+-   Added search records.
+    -   Search records allow you to utilize [Typesense](https://typesense.org/) to easily search over a large number of documents. Each "Search record" maps to a Typesense [collection](https://typesense.org/docs/29.0/api/collections.html), which can store many documents. Documents are just JSON (kinda like data records).
+    -   `os.recordSearchCollection(request)` - Creates or updates a Search collection. Each collection exists at an address and is assigned its own unique collection name.
+    -   `os.getSearchCollection(recordName, address)` - Gets information about a search collection.
+    -   `os.eraseSearchCollection(recordName, address)` - Deletes a search collection.
+    -   `os.listSearchCollections(recordName, startingAddress?)` - Lists search collections in a record.
+    -   `os.listSearchCollectionsByMarker(recordName, marker, startingAddress?)` - Lists search collections by marker.
+    -   `os.recordSearchDocument(request)` - Creates a document inside a search collection.
+    -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
+    -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
+    -   Search records have the ability to be automatically synced from data records, but there is currently no API for this and needs to be setup on a case-by-case basis (for now).
+
+### :bug: Bug Fixes
+
+-   Fixed an issue in the `unpack-aux` CLI command where tags that failed to be written would be omitted from the bot AUX file.
+-   Fixed an issue where strings like `e123` would be recognized as numbers.
+-   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
+-   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+-   Fixed an issue where calling `os.getSharedDocument()` with a record key would sometimes fail.
+
 ## V3.6.0
 
 #### Date: 7/28/2025
