@@ -308,7 +308,7 @@ export class WebsocketController {
                                 connection.branch
                             ));
 
-                        if (branch.temporary) {
+                        if (branch?.temporary) {
                             console.log(
                                 '[WebsocketController] Deleting temporary branch',
                                 connection.recordName,
