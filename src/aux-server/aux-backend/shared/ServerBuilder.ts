@@ -1879,7 +1879,7 @@ export class ServerBuilder implements SubscriptionLike {
             policies: this._policyController,
         });
 
-        if (this._stripe && this._subscriptionConfig) {
+        if (this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
