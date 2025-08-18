@@ -1822,7 +1822,7 @@ export class ServerBuilder implements SubscriptionLike {
 
         if (this._forceAllowAllSubscriptionFeatures) {
             console.log(
-                '[ServerBuilder] Allowing all subscription features because Stripe is not configured.'
+                '[ServerBuilder] Granting all users active subscriptions since Stripe is not configured. The selected subscription will either be the users current subscription ID, the first default subscription, or the first subscription in the list.'
             );
         }
 
