@@ -45,7 +45,10 @@ import type { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import { randomCode } from './CryptoUtils';
-import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    getSubscription,
+    type SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type {
     PrivacyFeatures,
@@ -2707,38 +2710,17 @@ export class AuthController {
             isActiveSubscription(user.subscriptionStatus);
 
         let tier: string = null;
-        let sub: SubscriptionConfiguration['subscriptions'][0] = null;
         const subscriptionConfig: SubscriptionConfiguration =
             await this._config.getSubscriptionConfiguration();
-        if (hasActiveSubscription) {
-            if (user.subscriptionId) {
-                sub = subscriptionConfig?.subscriptions.find(
-                    (s) => s.id === user.subscriptionId
-                );
-            }
 
-            tier = 'beta';
-        }
-
-        if (!sub) {
-            sub = subscriptionConfig?.subscriptions.find(
-                (s) => s.defaultSubscription
-            );
-            if (sub) {
-                console.log(
-                    `[AuthController] [getUserInfo] Using default subscription (${sub.id}) for user.`
-                );
-            }
-        }
-
-        if (!sub && hasActiveSubscription) {
-            sub = subscriptionConfig?.subscriptions[0];
-            if (sub) {
-                console.log(
-                    `[AuthController] [getUserInfo] Using first subscription (${sub.id}) for user.`
-                );
-            }
-        }
+        const sub = getSubscription(
+            subscriptionConfig,
+            user.subscriptionStatus,
+            user.subscriptionId,
+            'user',
+            user.subscriptionPeriodStartMs,
+            user.subscriptionPeriodEndMs
+        );
 
         if (sub) {
             tier = sub.tier || 'beta';
