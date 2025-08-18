@@ -2717,15 +2717,6 @@ export class AuthController {
                 );
             }
 
-            if (!sub) {
-                sub = subscriptionConfig?.subscriptions[0];
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using first subscription for user.'
-                    );
-                }
-            }
-
             tier = 'beta';
         }
 
@@ -2735,7 +2726,16 @@ export class AuthController {
             );
             if (sub) {
                 console.log(
-                    '[AuthController] [getUserInfo] Using default subscription for user.'
+                    `[AuthController] [getUserInfo] Using default subscription (${sub.id}) for user.`
+                );
+            }
+        }
+
+        if (!sub && hasActiveSubscription) {
+            sub = subscriptionConfig?.subscriptions[0];
+            if (sub) {
+                console.log(
+                    `[AuthController] [getUserInfo] Using first subscription (${sub.id}) for user.`
                 );
             }
         }
