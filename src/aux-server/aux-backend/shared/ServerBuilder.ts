@@ -381,10 +381,6 @@ export class ServerBuilder implements SubscriptionLike {
     private _searchQueue: IQueue<SearchSyncQueueEvent> | null = null;
     private _searchWorker: BullWorker | null = null;
 
-    private get _forceAllowAllSubscriptionFeatures() {
-        return !this._stripe;
-    }
-
     constructor(options?: ServerConfig) {
         this._options = options ?? {};
         this._subscription = new Subscription();
@@ -1820,17 +1816,10 @@ export class ServerBuilder implements SubscriptionLike {
             console.log('[ServerBuilder] Not using Stripe.');
         }
 
-        if (this._forceAllowAllSubscriptionFeatures) {
-            console.log(
-                '[ServerBuilder] Granting all users active subscriptions since Stripe is not configured. The selected subscription will either be the users current subscription ID, the first default subscription, or the first subscription in the list.'
-            );
-        }
-
         this._authController = new AuthController(
             this._authStore,
             this._authMessenger,
             this._configStore,
-            this._forceAllowAllSubscriptionFeatures,
             this._privoClient,
             this._relyingParties ?? []
         );

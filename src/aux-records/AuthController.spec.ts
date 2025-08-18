@@ -203,14 +203,9 @@ describe('AuthController', () => {
             origin: 'https://example.com',
         };
 
-        controller = new AuthController(
-            store,
-            messenger,
-            store,
-            undefined,
-            privoClient,
-            [relyingParty]
-        );
+        controller = new AuthController(store, messenger, store, privoClient, [
+            relyingParty,
+        ]);
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -1799,7 +1794,6 @@ describe('AuthController', () => {
                 store,
                 messenger,
                 store,
-                undefined,
                 privoClient
             );
             store.privoConfiguration = null;

@@ -198,7 +198,6 @@ export interface RelyingParty {
 export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
-    private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
     private _webAuthNRelyingParties: RelyingParty[];
@@ -216,14 +215,12 @@ export class AuthController {
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
-        forceAllowSubscriptionFeatures: boolean = false,
         privoClient: PrivoClientInterface = null,
         relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
-        this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
         this._webAuthNRelyingParties = relyingParties;
         this._privoEnabled = this._privoClient !== null;
@@ -2705,10 +2702,6 @@ export class AuthController {
     }
 
     private async _getSubscriptionInfo(user: AuthUser) {
-        const hasActiveSubscription =
-            this._forceAllowSubscriptionFeatures ||
-            isActiveSubscription(user.subscriptionStatus);
-
         let tier: string = null;
         const subscriptionConfig: SubscriptionConfiguration =
             await this._config.getSubscriptionConfiguration();
@@ -2727,7 +2720,13 @@ export class AuthController {
         }
 
         return {
-            hasActiveSubscription,
+            hasActiveSubscription:
+                !!sub &&
+                isActiveSubscription(
+                    user.subscriptionStatus,
+                    user.subscriptionPeriodStartMs,
+                    user.subscriptionPeriodEndMs
+                ),
             subscriptionId: sub?.id,
             subscriptionTier: tier,
         };
