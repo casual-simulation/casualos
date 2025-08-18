@@ -42,6 +42,8 @@
 -   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
 -   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
 -   Fixed an issue where calling `os.getSharedDocument()` with a record key would sometimes fail.
+-   Fixed the "Document Actions" not being shown in the documentation sidebar.
+-   Fixed issues with inconsistent display of user subscriptions.
 
 ## V3.6.0
 
