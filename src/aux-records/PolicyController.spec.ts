@@ -5730,7 +5730,6 @@ describe('PolicyController', () => {
                         store,
                         services.authMessenger,
                         store,
-                        true,
                         privoClient
                     );
                     records = new RecordsController({

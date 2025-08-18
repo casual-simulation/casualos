@@ -2,7 +2,7 @@
 
 ## V3.7.0
 
-#### Date: 8/14/2025
+#### Date: 8/18/2025
 
 ### :boom: Breaking Changes
 

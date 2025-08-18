@@ -141,6 +141,11 @@ Resources:
                 - [!Ref SESIdentityNameParameter]
                 - !Ref AWS::NoValue
 
+    RecordsSnsTopic:
+        Type: AWS::SNS::Topic
+        Properties:
+            ContentBasedDeduplication: false
+
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
         Type: AWS::Serverless::Function
@@ -165,7 +170,7 @@ Resources:
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
                     MODERATION_PROJECT_VERSION: !Ref ModerationProjectVersionParameter
                     WEBHOOK_LAMBDA_FUNCTION_NAME: !Ref HandleWebhookFunction
-                    SNS_TOPIC_ARN: !Ref SnsTopic
+                    SNS_TOPIC_ARN: !Ref RecordsSnsTopic
             Layers:
                 - !Sub 'arn:aws:lambda:${AWS::Region}:184161586896:layer:opentelemetry-collector-amd64-0_8_0:1'
             Events:
@@ -222,7 +227,7 @@ Resources:
                 HandleSns:
                     Type: SNS
                     Properties:
-                        Topic: !Ref SnsTopic
+                        Topic: !Ref RecordsSnsTopic
     HandleRecordsLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
@@ -739,10 +744,6 @@ Resources:
                       Effect: Allow
                       Resource: !Sub arn:${AWS::Partition}:s3:::${MessagesBucket}/*
                       Principal: '*'
-
-    SnsTopic:
-        Type: AWS::SNS::Topic
-        Properties:
 
 Outputs:
     WebEndpoint:

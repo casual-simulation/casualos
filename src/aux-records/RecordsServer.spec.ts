@@ -523,7 +523,6 @@ describe('RecordsServer', () => {
             store,
             authMessenger,
             store,
-            undefined,
             privoClient,
             [relyingParty]
         );

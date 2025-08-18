@@ -1668,8 +1668,54 @@ export function getSubscriptionFeatures(
     periodEndMs?: number | null,
     nowMs: number = Date.now()
 ): FeaturesConfiguration {
-    if (!config) {
+    const sub = getSubscription(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    if (typeof sub === 'undefined') {
         return allowAllFeatures();
+    } else if (sub) {
+        const tier = sub?.tier;
+        const features = tier ? config?.tiers?.[tier]?.features : null;
+
+        if (features) {
+            return features;
+        }
+    }
+
+    return config.defaultFeatures?.[type] ?? allowAllFeatures();
+}
+
+/**
+ * Gets the subscription for the given configuration, subscription status, subscription ID, user type and period.
+ *
+ * If there is no subscription configuration, then undefined is returned.
+ * If no subscription could be found that matches the given parameters, then null is returned.
+ *
+ * @param config The configuration. If null, then all  features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ * @param periodStartMs The start of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param periodEndMs The end of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param nowMs The current time in milliseconds.
+ */
+export function getSubscription(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+) {
+    if (!config) {
+        return undefined;
     }
     if (config.tiers) {
         const roleSubscriptions = config.subscriptions.filter((s) =>
@@ -1684,40 +1730,34 @@ export function getSubscriptionFeatures(
             )
         ) {
             const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
-            const tier = sub?.tier;
-            const features = tier ? config.tiers[tier]?.features : null;
 
-            if (features) {
-                return features;
+            if (sub) {
+                return sub;
             }
-        } else {
-            const sub = roleSubscriptions.find((s) => s.defaultSubscription);
-            const tier = sub?.tier;
-            const features = tier ? config.tiers[tier]?.features : null;
+        }
 
-            if (features) {
-                return features;
-            }
+        const sub = roleSubscriptions.find((s) => s.defaultSubscription);
+
+        if (sub) {
+            return sub;
         }
     }
 
-    return config.defaultFeatures?.[type] ?? allowAllFeatures();
+    return null;
 }
 
 export function getSubscriptionTier(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
-    subId: string
+    subId: string,
+    type: 'user' | 'studio'
 ): string | null {
-    if (!config) {
+    const sub = getSubscription(config, subscriptionStatus, subId, type);
+
+    if (!sub) {
         return null;
     }
 
-    if (!isActiveSubscription(subscriptionStatus)) {
-        return null;
-    }
-
-    const sub = config.subscriptions.find((s) => s.id === subId);
     return sub?.tier ?? null;
 }
 
