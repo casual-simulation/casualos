@@ -59,6 +59,7 @@ export default {
                                 'actions/os/barcodes',
                                 'actions/os/camera',
                                 'actions/os/clipboard',
+                                'actions/os/documents',
                                 'actions/os/event',
                                 'actions/os/files',
                                 'actions/os/geolocation',
