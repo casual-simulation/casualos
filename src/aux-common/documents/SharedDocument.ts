@@ -22,6 +22,12 @@ import type { InstUpdate } from '../bots';
 
 /**
  * Defines an interface for objects that are able to synchronize data between multiple clients.
+ *
+ * @dochash types/documents
+ * @doctitle Shared Documents
+ * @docdescription Shared documents are used to synchronize data between multiple clients in real-time. They can be used to store maps, arrays, and text that can be shared and updated by multiple users.
+ * @docsidebar Documents
+ * @docname SharedDocument
  */
 export interface SharedDocument extends SubscriptionLike {
     /**
@@ -136,8 +142,23 @@ export interface SharedDocument extends SubscriptionLike {
     applyUpdates(updates: string[]): void;
 }
 
+/**
+ * Defienes a type that can be shared between multiple clients.
+ * This can be a map, array, or text.
+ *
+ * @dochash types/documents
+ * @docid SharedType
+ */
 export type SharedType = SharedMap | SharedArray | SharedText;
 
+/**
+ * Defines the type of changes that can occur in a shared document.
+ *
+ * This can be a change to a map, array, or text.
+ *
+ * @dochash types/documents
+ * @docid SharedTypeChanges
+ */
 export type SharedTypeChanges =
     | SharedMapChanges<any>
     | SharedArrayChanges<any>
@@ -156,7 +177,10 @@ export interface SharedTypeBase {
 }
 
 /**
- * Defines a map that can be shared between multiple clients.
+ * Defines a [map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) that can be shared between multiple clients.
+ *
+ * @dochash types/documents
+ * @docid SharedMap
  */
 export interface SharedMap<T = any> extends SharedTypeBase {
     /**
@@ -242,7 +266,10 @@ export interface SharedMap<T = any> extends SharedTypeBase {
 }
 
 /**
- * Defines an array that can be shared between multiple clients.
+ * Defines an [array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) that can be shared between multiple clients.
+ *
+ * @dochash types/documents
+ * @docid SharedArray
  */
 export interface SharedArray<T = any> extends SharedTypeBase {
     /**
@@ -273,7 +300,7 @@ export interface SharedArray<T = any> extends SharedTypeBase {
      * Applies the given delta to the array.
      * @param delta The delta to apply.
      */
-    applyDelta(delta: SharedArrayDelta<T>): void;
+    applyDelta(delta: SharedArrayOp<T>[]): void;
 
     /**
      * Append items to the end of the array.
@@ -375,6 +402,9 @@ export interface SharedArray<T = any> extends SharedTypeBase {
 
 /**
  * Defines an object that represents rich text that can be shared between multiple clients.
+ *
+ * @dochash types/documents
+ * @docid SharedText
  */
 export interface SharedText extends SharedTypeBase {
     /**
@@ -456,6 +486,12 @@ export interface SharedText extends SharedTypeBase {
     readonly deepChanges: Observable<SharedTextChanges[]>;
 }
 
+/**
+ * An object that represents changes that occurred in a shared map.
+ *
+ * @dochash types/documents
+ * @docid SharedMapChanges
+ */
 export interface SharedMapChanges<T> {
     type: 'map';
 
@@ -470,6 +506,12 @@ export interface SharedMapChanges<T> {
     changes: Map<string, SharedMapChange<T>>;
 }
 
+/**
+ * Defines an individual change that occurred in a shared map.
+ *
+ * @dochash types/documents
+ * @docid SharedMapChange
+ */
 export interface SharedMapChange<T> {
     /**
      * The action that caused this change.
@@ -482,6 +524,12 @@ export interface SharedMapChange<T> {
     oldValue: T | undefined;
 }
 
+/**
+ * An object that represents changes that occurred in a shared array.
+ *
+ * @dochash types/documents
+ * @docid SharedArrayChanges
+ */
 export interface SharedArrayChanges<T> {
     type: 'array';
 
@@ -491,18 +539,28 @@ export interface SharedArrayChanges<T> {
     target: SharedArray<T>;
 
     /**
-     * The changes that were made to the array.
+     * The array of changes that were made to the array.
      */
-    delta: SharedArrayDelta<T>;
+    delta: SharedArrayOp<T>[];
 }
 
-export type SharedArrayDelta<T> = SharedArrayOp<T>[];
-
+/**
+ * The possible individual changes that were made to a shared array.
+ *
+ * @dochash types/documents
+ * @docid SharedArrayOp
+ */
 export type SharedArrayOp<T> =
     | SharedArrayPreserveOp
     | SharedArrayInsertOp<T>
     | SharedArrayDeleteOp<T>;
 
+/**
+ * An object that represents no changes to one or more individual items in a shared array.
+ *
+ * @dochash types/documents
+ * @docid SharedArrayPreserveOp
+ */
 export interface SharedArrayPreserveOp {
     type: 'preserve';
 
@@ -512,6 +570,12 @@ export interface SharedArrayPreserveOp {
     count: number;
 }
 
+/**
+ * An object that represents one or more items that were inserted into a shared array.
+ *
+ * @dochash types/documents
+ * @docid SharedArrayInsertOp
+ */
 export interface SharedArrayInsertOp<T> {
     type: 'insert';
 
@@ -521,6 +585,12 @@ export interface SharedArrayInsertOp<T> {
     values: T[];
 }
 
+/**
+ * An object that represents one or more items that were deleted from a shared array.
+ *
+ * @dochash types/documents
+ * @docid SharedArrayDeleteOp
+ */
 export interface SharedArrayDeleteOp<T> {
     type: 'delete';
 
@@ -530,6 +600,12 @@ export interface SharedArrayDeleteOp<T> {
     count: number;
 }
 
+/**
+ * An object that represents changes that occurred in a shared text object.
+ *
+ * @dochash types/documents
+ * @docid SharedTextChanges
+ */
 export interface SharedTextChanges {
     type: 'text';
 
@@ -544,13 +620,31 @@ export interface SharedTextChanges {
     delta: SharedTextDelta;
 }
 
+/**
+ * The array of changes that were made to the text.
+ *
+ * @dochash types/documents
+ * @docid SharedTextDelta
+ */
 export type SharedTextDelta = SharedTextOp[];
 
+/**
+ * The possible individual changes that were made to the text.
+ *
+ * @dochash types/documents
+ * @docid SharedTextOp
+ */
 export type SharedTextOp =
     | SharedTextPreserveOp
     | SharedTextInsertOp
     | SharedTextDeleteOp;
 
+/**
+ * An object that represents no changes to one or more individual characters in a shared text object.
+ *
+ * @dochash types/documents
+ * @docid SharedTextPreserveOp
+ */
 export interface SharedTextPreserveOp {
     type: 'preserve';
 
@@ -560,6 +654,12 @@ export interface SharedTextPreserveOp {
     count: number;
 }
 
+/**
+ * An object that represents one or more characters that were inserted into a shared text object.
+ *
+ * @dochash types/documents
+ * @docid SharedTextInsertOp
+ */
 export interface SharedTextInsertOp {
     type: 'insert';
 
@@ -574,6 +674,12 @@ export interface SharedTextInsertOp {
     attributes: Record<string, any>;
 }
 
+/**
+ * An object that represents one or more characters that were deleted from a shared text object.
+ *
+ * @dochash types/documents
+ * @docid SharedTextDeleteOp
+ */
 export interface SharedTextDeleteOp {
     type: 'delete';
 
@@ -583,4 +689,12 @@ export interface SharedTextDeleteOp {
     count: number;
 }
 
+/**
+ * An object that represents a position in a shared text object that is relative to a specific character in the text.
+ *
+ * No properties are defined on this interface since the implementation is internal.
+ *
+ * @dochash types/documents
+ * @docid RelativePosition
+ */
 export interface RelativePosition {}

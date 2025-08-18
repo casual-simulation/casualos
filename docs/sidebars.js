@@ -104,6 +104,7 @@ export default {
                                 'types/debuggers/pausable-debugger',
                             ]
                         },
+                        'types/documents',
                         'types/error',
                         'types/experimental',
                         {

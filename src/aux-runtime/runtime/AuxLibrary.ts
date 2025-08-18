@@ -12595,6 +12595,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get a shared document from the current inst by name.
      * const sharedDocument = await os.getSharedDocument('myDocument');
      *
+     * @example Get a map from a shared document.
+     * const doc = await os.getSharedDocument('myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a shared document.
+     * const doc = await os.getSharedDocument('myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a shared document
+     * const doc = await os.getSharedDocument('myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getSharedDocument('myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
+     *
      * @dochash actions/os/documents
      * @doctitle Document Actions
      * @docsidebar Documents
@@ -12613,6 +12639,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param recordName The name of the record. If null, then a public inst will be used.
      * @param inst The name of the inst that the shared document is in.
      * @param branch The name of the branch that the shared document is in.
+     *
+     * @example Get a shared document from the given inst.
+     * const sharedDocument = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     *
+     * @example Get a map from a shared document.
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a shared document.
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a shared document
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
      *
      * @dochash actions/os/documents
      * @docname os.getSharedDocument
@@ -12656,7 +12711,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a shared document that is only stored locally on this device.
+     *
+     * Note that local documents are inst-specific. This means that they are only accessible within the inst they were created in.
+     *
      * @param name The name of the document.
+     *
+     * @example Get a local document.
+     * const doc = await os.getLocalDocument('myDocument');
+     *
+     * @example Get a map from a local document.
+     * const doc = await os.getLocalDocument('myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a local document.
+     * const doc = await os.getLocalDocument('myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a local document
+     * const doc = await os.getLocalDocument('myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getLocalDocument('myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
      *
      * @dochash actions/os/documents
      * @docname os.getLocalDocument
@@ -12674,6 +12761,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a document that is not shared or saved to the device.
+     *
+     * @example Get a memory document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     *
+     * @example Get a map from a memory document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a memory document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a memory document
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Get the serialized state of the document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const state = doc.getStateUpdate();
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getLocalDocument('myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
      *
      * @dochash actions/os/documents
      * @docname os.getMemoryDocument

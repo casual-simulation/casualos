@@ -11721,7 +11721,7 @@ export interface SharedArray<T = any> extends SharedTypeBase {
      * Applies the given delta to the array.
      * @param delta The delta to apply.
      */
-    applyDelta(delta: SharedArrayDelta<T>): void;
+    applyDelta(delta: SharedArrayOp<T>[]): void;
 
     /**
      * Append items to the end of the array.
@@ -11941,10 +11941,8 @@ export interface SharedArrayChanges<T> {
     /**
      * The changes that were made to the array.
      */
-    delta: SharedArrayDelta<T>;
+    delta: SharedArrayOp<T>[];
 }
-
-export type SharedArrayDelta<T> = SharedArrayOp<T>[];
 
 export type SharedArrayOp<T> =
     | SharedArrayPreserveOp
@@ -15888,30 +15886,66 @@ interface Os {
 
     /**
      * Gets a shared document record from this inst by its name.
-     * 
+     *
      * Shared documents are a way to share data across insts in a easy and secure manner.
-     * 
+     *
      * Returns a promise that resolves with the shared document.
-     * 
+     *
      * @param name The name of the shared document.
-     * 
+     *
      * @example Get a shared document from the current inst by name.
      * const sharedDocument = await os.getSharedDocument('myDocument');
+     *
+     * @dochash actions/os/documents
+     * @doctitle Document Actions
+     * @docsidebar Documents
+     * @docdescription Actions for working with shared documents.
+     * @docname os.getSharedDocument
+     * @docid os.getShareDocument-name
      */
     getSharedDocument(name: string): Promise<SharedDocument>;
 
     /**
      * Gets a shared document record from the given inst by its name.
-     * 
+     *
      * Shared documents are a way to share data across insts in a easy and secure manner.
-     * 
+     *
      * Returns a promise that resolves with the shared document.
      * @param recordName The name of the record. If null, then a public inst will be used.
      * @param inst The name of the inst that the shared document is in.
      * @param branch The name of the branch that the shared document is in.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-recordName-inst-name
      */
-    getSharedDocument(recordName: string | null, inst: string, name: string): Promise<SharedDocument>;
-    getSharedDocument(recordOrName: string, inst?: string, name?: string): Promise<SharedDocument>;
+    getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string
+    ): Promise<SharedDocument>;
+    getSharedDocument(
+        recordOrName: string,
+        inst?: string,
+        name?: string
+    ): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document that is only stored locally on this device.
+     * @param name The name of the document.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getLocalDocument
+     */
+    getLocalDocument(name: string): Promise<SharedDocument>;
+
+    /**
+     * Gets a document that is not shared or saved to the device.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getMemoryDocument
+     */
+    getMemoryDocument(): Promise<SharedDocument>;
 
     /**
     * Gets the list of remote IDs that are connected to the inst.
