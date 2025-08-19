@@ -101,8 +101,8 @@
         "@opentelemetry/sdk-node": "~0.52.1",
         "@opentelemetry/sdk-trace-node": "~1.25.1",
         "@opentelemetry/semantic-conventions": "~1.25.1",
-        "@prisma/client": "^5.7.0",
-        "@prisma/instrumentation": "^5.16.1",
+        "@prisma/client": "^6.14.0",
+        "@prisma/instrumentation": "^6.14.0",
         "@simplewebauthn/browser": "9.0.1",
         "@simplewebauthn/types": "9.0.1",
         "@teachablemachine/image": "0.8.5",
@@ -149,7 +149,7 @@
         "minio": "8.0.1",
         "mongodb": "3.6.2",
         "pify": "5.0.0",
-        "prisma": "^5.7.0",
+        "prisma": "^6.14.0",
         "redis": "4.6.10",
         "rxjs": "8.0.0-alpha.14",
         "seedrandom": "3.0.5",
@@ -204,8 +204,5 @@
         "workbox-routing": "^7.0.0",
         "workbox-strategies": "^7.0.0",
         "workbox-window": "^7.0.0"
-    },
-    "prisma": {
-        "schema": "./aux-backend/schemas/auth.prisma"
     }
 }
