@@ -1,0 +1,1405 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+  output   = "../../prisma/generated-sqlite"
+  previewFeatures = ["tracing", "driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Auth
+model User {
+    id String @id
+    name String?
+    email String? @unique
+    phoneNumber String? @unique
+    avatarPortraitUrl String?
+    avatarUrl String?
+    allSessionRevokeTime DateTime?
+    currentLoginRequestId String? @unique
+    currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
+    currentWebAuthnChallenge String?
+    banTime DateTime?
+    banReason String?
+
+    privoServiceId String? @unique
+    privoParentServiceId String?
+    privoConsentUrl String?
+
+    subscriptionInfoId String? @unique
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
+
+    allowPublishData Boolean?
+    allowPublicData Boolean?
+    allowAI Boolean?
+    allowPublicInsts Boolean?
+
+    role String?
+
+    loginRequests LoginRequest[]
+    webauthnLoginRequests WebAuthnLoginRequest[]
+    sessions AuthSession[]
+    records Record[]
+    recordKeys RecordKey[]
+    roleAssignments RoleAssignment[]
+    // TODO: Support global permissions
+    // globalPermissionAssignments GlobalPermissionAssignment[]
+    resourcePermissionAssignments ResourcePermissionAssignment[]
+    markerPermissionAssignments MarkerPermissionAssignment[]
+
+    publishedDataRecords DataRecord[] @relation("PublishedDataRecords")
+    subjectDataRecords DataRecord[] @relation("SubjectDataRecords")
+
+    publishedManualDataRecords ManualDataRecord[] @relation("PublishedManualDataRecords")
+    subjectManualDataRecords ManualDataRecord[] @relation("SubjectManualDataRecords")
+
+    publishedFileRecords FileRecord[] @relation("PublishedFileRecords")
+    subjectFileRecords FileRecord[] @relation("SubjectFileRecords")
+
+    studios StudioAssignment[]
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
+    aiSloydMetrics AiSloydMetrics[]
+    aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
+
+    instReports UserInstReport[]
+    comIdRequests StudioComIdRequest[]
+    authenticators UserAuthenticator[]
+
+    webhookRecords WebhookRecord[]
+    pushSubscriptions PushSubscriptionUser[]
+    notificationSubscriptions NotificationSubscription[]
+    sentNotifications SentPushNotification[]
+
+    packageReviews PackageRecordVersionReview[]
+    grantedPackageEntitlements GrantedPackageEntitlement[]
+    loadedPackages LoadedPackage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model UserAuthenticator {
+    id String @id
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    credentialId String @unique
+    credentialPublicKey Bytes
+
+    counter Int
+    credentialDeviceType String
+    credentialBackedUp Boolean
+
+    aaguid String
+    registeringUserAgent String?
+
+    transports Json
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model LoginRequest {
+    requestId String @id
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
+    secretHash String?
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    
+    attemptCount Int
+    address String
+    addressType String
+    ipAddress String
+
+    // oidCodeVerifier String?
+    // oidCodeMethod String?
+    // oidProvider String?
+    // oidRedirectUrl String?
+    // oidScope String?
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sessions AuthSession[]
+    activeUser User? @relation("CurrentLoginRequest")
+}
+
+model AuthSession {
+    sessionId String @id
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    secretHash String
+    connectionSecret String?
+
+    oidProvider String?
+    oidAccessToken String?
+    oidTokenType String?
+    oidIdToken String?
+    oidRefreshToken String?
+    oidScope String?
+    oidExpiresAtMs BigInt?
+
+    grantedTime DateTime
+    expireTime DateTime?
+    revokeTime DateTime?
+
+    revocable  Boolean?
+
+    requestId String?
+    request LoginRequest? @relation(fields: [requestId], references: [requestId])
+
+    oidRequestId String?
+    oidRequest OpenIDLoginRequest? @relation(fields: [oidRequestId], references: [requestId])
+
+    webauthnRequestId String?
+    webauthnRequest WebAuthnLoginRequest? @relation(fields: [webauthnRequestId], references: [requestId])
+
+    previousSessionId String? @unique
+    previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [sessionId])
+    previousSession1 AuthSession? @relation("PreviousSession")
+
+    nextSessionId String? @unique
+    nextSession AuthSession? @relation("NextSession", fields: [nextSessionId], references: [sessionId])
+    nextSession1 AuthSession? @relation("NextSession")
+
+    ipAddress String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model OpenIDLoginRequest {
+    requestId String @id
+    state String? @unique
+
+    provider String
+    codeVerifier String
+    codeMethod String
+    authorizationUrl String
+    redirectUrl String
+    scope String
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
+
+    authorizationCode String?
+    authorizationTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
+}
+
+model WebAuthnLoginRequest {
+    requestId String @id
+    challenge String
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
+    ipAddress String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    authSessions AuthSession[]
+}
+
+model EmailRule {
+    id BigInt @id @default(autoincrement())
+    type String
+    pattern String
+}
+
+model SmsRule {
+    id BigInt @id @default(autoincrement())
+    type String
+    pattern String
+}
+
+// Records
+model Studio {
+    id String @id
+    displayName String
+
+    // The comId for this studio. (i.e. a name/uuid that can be used to access this studio as a comId)
+    comId String? @unique
+
+    logoUrl String?
+
+    // The comId that this studio belongs to. (i.e. The comId of the studio that this studio belongs to)
+    ownerStudioComId String?
+    ownerStudio Studio? @relation(fields: [ownerStudioComId], references: [comId], onUpdate: Cascade, onDelete: SetNull, name: "OwnerStudio")
+
+    // The player web config for this studio.
+    playerConfig Json?
+
+    // The comId config for this studio.
+    comIdConfig Json?
+
+    // The loom app id and private key for this studio.
+    loomConfig Json?
+
+    // The hume apiKey and secretKey for this studio.
+    humeConfig Json?
+
+    records Record[]
+    assignments StudioAssignment[]
+
+    subscriptionInfoId String? @unique
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
+
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
+    aiSloydMetrics AiSloydMetrics[]
+    aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
+
+    childStudios Studio[] @relation("OwnerStudio")
+    comIdRequests StudioComIdRequest[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model StudioAssignment {
+    @@id([studioId, userId])
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id])
+
+    userId String
+    user User @relation(fields: [userId], references: [id])
+
+    isPrimaryContact Boolean
+    role String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Record {
+    name String @id
+    ownerId String?
+    owner User? @relation(fields: [ownerId], references: [id])
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
+
+    secretHashes Json
+    secretSalt String
+
+    recordKeys RecordKey[]
+    policies Policy[]
+    roles Role[]
+    roleAssignments RoleAssignment[]
+
+    dataRecords DataRecord[]
+    manualDataRecords ManualDataRecord[]
+    fileRecords FileRecord[]
+    eventRecords EventRecord[]
+    instRecords InstRecord[]
+    instBranches InstBranch[]
+    branchUpdates BranchUpdate[]
+    webhookRecords WebhookRecord[] @relation("WebhookRecord")
+    targetWebhookRecords WebhookRecord[] @relation("TargetWebookRecord")
+    webhookRuns WebhookRun[]
+
+    packageRecords PackageRecord[]
+    packageRecordVersions PackageRecordVersion[]
+
+    searchRecords SearchRecord[]
+
+    notificationRecords NotificationRecord[]
+    notificationSubscriptions NotificationSubscription[]
+    sentNotifications SentNotification[]
+
+    resourceAssignments ResourcePermissionAssignment[]
+    markerAssignments MarkerPermissionAssignment[]
+
+    grantedEntitlements GrantedPackageEntitlement[]
+
+    userInstReports UserInstReport[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model RecordKey {
+    @@id([recordName, secretHash])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    secretHash String
+    policy String
+    creatorId String
+    creator User @relation(fields: [creatorId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Policies
+model Policy {
+    @@id([recordName, marker])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    marker String
+    document Json
+    markers Json
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Role {
+    @@id([recordName, name])
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    name String
+    markers Json
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model RoleAssignment {
+    @@id([recordName, roleId, subjectId])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    roleId String
+
+    subjectId String
+    type String
+    expireTime DateTime?
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([recordName, subjectId])
+    @@index([recordName, roleId])
+}
+
+// TODO: Support global permissions
+// model GlobalPermissionAssignment {
+//     // The ID of the assignment
+//     id String @id
+
+//     // The kind of the resource.
+//     // If null, then permission for all resource kinds is granted.
+//     resourceKind String?
+
+//     // The action that the assignment grants.
+//     // If null, then the assignment grants every action to the resource.
+//     action String?
+
+//     // The options that the assignment grants.
+//     options Json?
+
+//     // The ID of the subject that the assignment grants permission to.
+//     // This can be the ID of the user or the ID of the inst that permission is granted to.
+//     subjectId String
+
+//     // The type of the subject that the assignment grants permission to.
+//     // This can be "user", "inst" or "role"
+//     // If "role", then all users/insts that have the role in the record are granted permission.
+//     // If "inst" or "user", then the given user/inst is granted permission across all records.
+//     subjectType String
+
+//     // The ID of the user that the assignment grants permission to.
+//     // Null if the subjectType is "role" or "inst"
+//     userId String?
+//     user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GlobalPermissionAssignment_userId_fkey1")
+
+//     // The time that the assignment expires.
+//     // Null means that the assignment never expires.
+//     expireTime DateTime?
+
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     @@index([subjectType, subjectId])
+//     @@index([resourceKind, action, subjectType, subjectId])
+// }
+
+model ResourcePermissionAssignment {
+    // The ID of the assignment
+    id String @id
+
+    // The name of the record.
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    // The kind of the resource.
+    resourceKind String
+
+    // The ID of the resource.
+    resourceId String
+
+    // The action that the assignment grants.
+    // If null, then the assignment grants every action to the resource.
+    action String?
+
+    // The options that the assignment grants.
+    options Json?
+
+    // The ID of the subject that the assignment grants permission to.
+    // This can be the ID of the user or the ID of the inst that permission is granted to.
+    subjectId String
+
+    // The type of the subject that the assignment grants permission to.
+    // This can be "user", "inst" or "role"
+    subjectType String
+
+    // The ID of the user that the assignment grants permission to.
+    // Null if the subjectType is "role" or "inst"
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // The time that the assignment expires.
+    // Null means that the assignment never expires.
+    expireTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([subjectType, subjectId, recordName])
+    @@index([recordName, resourceKind, resourceId, action, subjectType, subjectId])
+}
+
+// Example query:
+// SELECT * FROM "ResourcePermissionAssignment"
+// WHERE "recordName" = recordName AND "resourceKind" = resourceKind
+// AND "resourceId" = resourceId AND "action" = action
+// AND (
+//    ("subjectId" = subjectId AND "subjectType" = subjectType) OR 
+//    ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = recordName AND "subjectId" = subjectId AND "subjectType" = subjectType)))
+
+model MarkerPermissionAssignment {
+    // The ID of the assignment
+    id String @id
+
+    // The name of the record.
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    // The marker of the resources that the assignment grants.
+    // If null, then the assignment grants permission for a resource instead.
+    marker String
+
+    // The resource kind that this assignment is for.
+    // If null, then the assignment is for all resource kinds.
+    resourceKind String?
+
+    // The action that the assignment grants.
+    // If null, then the assignment grants every action to the resource.
+    action String?
+
+    // The options that the assignment grants.
+    options Json?
+
+    // The ID of the subject that the assignment grants permission to.
+    // This can be the ID of the user or the ID of the inst that permission is granted to.
+    subjectId String
+
+    // The type of the subject that the assignment grants permission to.
+    // This can be "user", "inst" or "role"
+    subjectType String
+
+    // The ID of the user that the assignment grants permission to.
+    // Null if the subjectType is "role" or "inst"
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // The time that the assignment expires.
+    // Null means that the assignment never expires.
+    expireTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([subjectType, subjectId, recordName])
+    @@index([recordName, marker, action, subjectType, subjectId])
+}
+
+model GrantedPackageEntitlement {
+    id String @id
+
+    // The ID of the user that granted the entitlement
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // The ID of the package that the entitlement is granted for
+    packageId String
+    package PackageRecord @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+    // The feature that the entitlement covers
+    feature String
+
+    // The scope of the entitlement
+    scope String
+
+    // The record that was designated by the entitlement
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    // The time that the entitlement grant expires
+    expireTime DateTime
+
+    // The time that the entitlement was revoked
+    revokeTime DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// Example query:
+// SELECT * FROM "ResourcePermissionAssignment"
+// WHERE "recordName" = recordName AND "marker" = marker AND "action" = action
+// AND (
+//    ("subjectId" = subjectId AND "subjectType" = subjectType) OR 
+//    ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = recordName AND "subjectId" = subjectId AND "subjectType" = subjectType)))
+
+// Data
+model DataRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    
+    address String
+    data Json
+    
+    publisherId String
+    publisher User @relation("PublishedDataRecords", fields: [publisherId], references: [id])
+
+    subjectId String?
+    subject User? @relation("SubjectDataRecords", fields: [subjectId], references: [id])
+
+    updatePolicy Json
+    deletePolicy Json
+
+    markers Json
+
+    targetWebhookRecords WebhookRecord[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// ManualData
+model ManualDataRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    
+    address String
+    data Json
+    
+    publisherId String
+    publisher User @relation("PublishedManualDataRecords", fields: [publisherId], references: [id])
+
+    subjectId String?
+    subject User? @relation("SubjectManualDataRecords", fields: [subjectId], references: [id])
+
+    updatePolicy Json
+    deletePolicy Json
+
+    markers Json
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model FileRecord {
+    @@id([recordName, fileName])
+
+    recordName String
+
+    // Don't cascade FileRecord deletes because they have storage in other places besides the database
+    record Record @relation(fields: [recordName], references: [name])
+    fileName String
+
+    publisherId String
+    publisher User @relation("PublishedFileRecords", fields: [publisherId], references: [id])
+
+    subjectId String?
+    subject User? @relation("SubjectFileRecords", fields: [subjectId], references: [id])
+
+    sizeInBytes BigInt
+    description String?
+
+    bucket String?
+
+    uploadedAt DateTime?
+
+    markers Json
+
+    targetWebhookRecords WebhookRecord[]
+
+    webhookRuns WebhookRun[]
+    packageVersions PackageRecordVersion[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model EventRecord {
+    @@id([recordName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    name String
+
+    count BigInt
+    markers Json
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InstRecord {
+    @@id([recordName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    name String
+
+    markers Json
+
+    branches InstBranch[]
+    updates BranchUpdate[]
+    userInstReports UserInstReport[]
+    webhookRecords WebhookRecord[]
+    loadedPackages LoadedPackage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InstBranch {
+    @@id([recordName, instName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    instName String
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade)
+
+    name String
+    temporary Boolean
+
+    updates BranchUpdate[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model BranchUpdate {
+    id String @id()
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    instName String
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name], onDelete: Cascade)
+
+    branchName String
+    branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name], onDelete: Cascade)
+
+    sizeInBytes Int
+    updateData String
+
+    createdAt DateTime @default(now())
+    updated DateTime @updatedAt
+
+    @@index([recordName, instName, branchName, id])
+}
+
+// A package that has been loaded into an inst
+model LoadedPackage {
+    id String @id
+
+    // The ID of the user that loaded the package
+    // Null if the user was deleted or if the package was loaded by the system
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    packageId String
+    package PackageRecord @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+    packageVersionId String
+    packageVersion PackageRecordVersion @relation(fields: [packageVersionId], references: [id], onDelete: Cascade)
+
+    // The inst that the package was loaded into
+    instRecordName String
+    instName String
+    branch String
+    inst InstRecord @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model WebhookRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation("WebhookRecord", fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+
+    markers Json
+
+    targetRecordName String?
+    targetRecord Record? @relation("TargetWebookRecord", fields: [targetRecordName], references: [name], onDelete: SetNull)
+
+    targetDataRecordAddress String?
+    targetDataRecord DataRecord? @relation(fields: [targetRecordName, targetDataRecordAddress], references: [recordName, address], onDelete: SetNull)
+
+    targetFileRecordFileName String?
+    targetFileRecord FileRecord? @relation(fields: [targetRecordName, targetFileRecordFileName], references: [recordName, fileName], onDelete: SetNull)
+
+    targetInstRecordName String?
+    targetInstRecord InstRecord? @relation(fields: [targetRecordName, targetInstRecordName], references: [recordName, name], onDelete: SetNull)
+
+    targetPublicInstRecordName String?
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    runs WebhookRun[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model WebhookRun {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    webhookAddress String
+    webhook WebhookRecord @relation(fields: [recordName, webhookAddress], references: [recordName, address], onDelete: Cascade)
+
+    statusCode Int?
+    stateSha256 String
+
+    requestTime DateTime
+    responseTime DateTime
+
+    errorResult Json?
+
+    infoFileRecordName String?
+    infoFileName String?
+    infoFile FileRecord? @relation(fields: [infoFileRecordName, infoFileName], references: [recordName, fileName], onDelete: SetNull)
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model NotificationRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+
+    description String?
+
+    markers Json
+
+    subscriptions NotificationSubscription[]
+    sentNotifications SentNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PushSubscription {
+    id String @id
+
+    endpoint String
+    keys Json
+
+    active Boolean
+
+    users PushSubscriptionUser[]
+    sentNotifications SentPushNotification[]
+    subscriptions NotificationSubscription[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([active])
+}
+
+model PushSubscriptionUser {
+    @@id([pushSubscriptionId, userId])
+
+    pushSubscriptionId String
+    pushSubscription PushSubscription @relation(fields: [pushSubscriptionId], references: [id], onDelete: Cascade)
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model NotificationSubscription {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    notificationAddress String
+    notification NotificationRecord @relation(fields: [recordName, notificationAddress], references: [recordName, address], onDelete: Cascade)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    pushSubscriptionId String?
+    pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id])
+
+    sentNotifications SentPushNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([recordName, notificationAddress, userId])
+    @@unique([recordName, notificationAddress, pushSubscriptionId])
+}
+
+model SentNotification {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    notificationAddress String
+    notification NotificationRecord @relation(fields: [recordName, notificationAddress], references: [recordName, address], onDelete: Cascade)
+
+    title String
+    body String
+    icon String?
+    badge String?
+    silent Boolean?
+
+    tag String?
+    topic String?
+
+    defaultAction Json
+    actions Json
+    sentTime DateTime
+
+    sentToDevices SentPushNotification[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SentPushNotification {
+    id String @id
+
+    sentNotificationId String
+    sentNotification SentNotification @relation(fields: [sentNotificationId], references: [id], onDelete: Cascade)
+
+    subscriptionId String?
+    subscription NotificationSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    pushSubscriptionId String?
+    pushSubscription PushSubscription? @relation(fields: [pushSubscriptionId], references: [id], onDelete: SetNull)
+
+    success Boolean
+    errorCode String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model PackageRecord {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+
+    markers Json
+
+    versions PackageRecordVersion[]
+    grantedEntitlements GrantedPackageEntitlement[]
+    loadedPackages LoadedPackage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([recordName, address])
+}
+
+model PackageRecordVersion {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+    package PackageRecord @relation(fields: [recordName, address], references: [recordName, address], onDelete: Cascade)
+
+    // The major version of the package
+    major Int
+
+    // The minor version of the package
+    minor Int
+
+    // The patch version of the package
+    patch Int
+
+    // The tag of the package
+    tag String?
+
+    // The SHA256 hash of the package
+    sha256 String
+
+    // The SHA256 hash of the package aux data
+    auxSha256 String
+
+    // The aux data of the package
+    auxFileName String
+    fileRecord FileRecord @relation(fields: [recordName, auxFileName], references: [recordName, fileName], onDelete: Restrict)
+
+    // The list of entitlements that this package version requires
+    entitlements Json
+
+    // Whether the package version requires review
+    requiresReview Boolean
+
+    // The README of the package
+    description String
+
+    // The markers that the package version has
+    markers Json
+
+    // The size of the package version in bytes
+    sizeInBytes Int
+
+    // Whether the file was created by this version being uploaded
+    createdFile Boolean
+
+    // The list of reviews for the package version
+    reviews PackageRecordVersionReview[]
+    loadedPackages LoadedPackage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([recordName, address, major, minor, patch, tag])
+}
+
+model PackageRecordVersionReview {
+    id String @id
+
+    packageVersionId String
+    package PackageRecordVersion @relation(fields: [packageVersionId], references: [id], onDelete: Cascade)
+
+    // Whether the package version was approved for use
+    approved Boolean
+
+    // The type of approval
+    approvalType String?
+
+    // The status of the review
+    // can be "pending", "approved", "rejected"
+    reviewStatus String
+
+    // Any additional comments by the reviewer
+    reviewComments String
+
+    // The ID of the user that reviewed the package version
+    reviewingUserId String
+    reviewingUser User @relation(fields: [reviewingUserId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SearchRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    
+    address String
+
+    // The name of the collection that this record is associated with in Typesense.
+    collectionName String
+
+    // The API key that can be used to search inside this record.
+    searchApiKey String
+
+    markers Json
+
+    syncs SearchRecordSync[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SearchRecordSync {
+    id String @id
+
+    searchRecordName String
+    searchRecordAddress String
+
+    searchRecord SearchRecord @relation(fields: [searchRecordName, searchRecordAddress], references: [recordName, address], onDelete: Cascade)
+
+    targetRecordName String
+    targetResourceKind String
+    targetMarker String
+    targetMapping Json
+
+    history SearchRecordSyncHistory[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([searchRecordName, searchRecordAddress, targetRecordName, targetResourceKind, targetMarker])
+}
+
+model SearchRecordSyncHistory {
+    id String @id
+
+    searchRecordName String
+    searchRecordAddress String
+
+    syncId String
+    sync SearchRecordSync @relation(fields: [syncId], references: [id], onDelete: Cascade)
+
+    runId String
+
+    time DateTime
+    status String
+    success Boolean
+
+    numSynced Int
+    numErrored Int
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Configuration {
+    key String @id
+    data Json
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+    id String @id
+    stripeSubscriptionId String @unique
+
+    userId String? @unique
+    user User? @relation()
+
+    studioId String? @unique
+    studio Studio? @relation()
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+
+    currentPeriodStart DateTime?
+    currentPeriodEnd DateTime?
+
+    periods SubscriptionPeriod[]
+    invoices Invoice[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SubscriptionPeriod {
+    id String @id
+
+    subscriptionId String
+    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+    invoiceId String @unique
+    invoice Invoice?
+
+    periodStart DateTime
+    periodEnd DateTime
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+    id String @id
+    stripeInvoiceId String @unique
+
+    subscriptionId String
+    subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+    periodId String @unique
+    period SubscriptionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+    description String?
+    status String
+    paid Boolean
+    currency String
+    total Int
+    subtotal Int
+    tax Int?
+
+    stripeHostedInvoiceUrl String
+    stripeInvoicePdfUrl String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model AiChatMetrics {
+    id String @id
+    createdAt DateTime @default(now())
+
+    tokens Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade)
+}
+
+model AiImageMetrics {
+    id String @id
+    createdAt DateTime @default(now())
+    squarePixelsGenerated Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade)
+}
+
+model AiSkyboxMetrics {
+    id String @id
+    createdAt DateTime @default(now())
+    skyboxesGenerated Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade)
+}
+
+model AiSloydMetrics {
+    id String @id
+
+    modelsCreated Int
+    name String?
+    confidence Float?
+    mimeType String
+    modelData String
+    thumbnailBase64 String?
+    baseModelId String?
+
+    createdAt DateTime @default(now())
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade)
+}
+
+model AiOpenAIRealtimeMetrics {
+    sessionId String @id
+
+    request Json
+
+    createdAt DateTime @default(now())
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Cascade)
+}
+
+model PrivoClientCredentials {
+    id String @id
+    createdAt DateTime @default(now())
+    expiresAt DateTime
+
+    accessToken String
+    refreshToken String
+    expiresAtSeconds Int
+    scope String
+
+    @@index([expiresAt])
+}
+
+model UserInstReport {
+    id String @id
+
+    recordName String?
+    record Record? @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    inst String
+    instRecord InstRecord? @relation(fields: [recordName, inst], references: [recordName, name], onDelete: Cascade)
+    
+    reportingUserId String?
+    reportingUser User? @relation(fields: [reportingUserId], references: [id], onDelete: Cascade)
+
+    reportingIpAddress String?
+    automaticReport Boolean
+    reportReasonText String
+    reportReason String
+    reportedUrl String
+    reportedPermalink String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([automaticReport, createdAt(sort: Desc), recordName, inst])
+    @@index([reportReason, createdAt(sort: Desc), recordName, inst])
+}
+
+model ModerationJob {
+    id String @id
+
+    // The ID of the s3 batch job
+    s3Id String? @unique
+
+    // The type of the moderation job.
+    // Usually for files, but there could be other types of moderation jobs.
+    type String
+
+    results FileModerationResult[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([type, createdAt(sort: Desc)])
+}
+
+model FileModerationResult {
+    // The ID of the moderation result.
+    id String @id
+
+    // The job that this moderation result is associated with
+    jobId String?
+    job ModerationJob? @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+    // The name of the record that was moderated
+    recordName String
+
+    // The name of the file that was moderated
+    fileName String
+
+    // Whether the file contains content that has been
+    // algorithmically determined to be banned.
+    appearsToMatchBannedContent Boolean
+
+    // The labels that were detected in the file
+    labels FileModerationLabel[]
+
+    // The version of the model that was used to produce this result
+    modelVersion String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Search by banned content status
+    @@index([appearsToMatchBannedContent, fileName, createdAt(sort: Desc)])
+}
+
+model FileModerationLabel {
+    // The ID of the moderation label
+    id String @id
+
+    // The name of the label
+    name String
+
+    // The category of the label
+    category String?
+
+    // The confidence of the label
+    confidence Float
+
+    // The ID of the moderation result that this label is associated with
+    fileModerationId String
+    fileModeration FileModerationResult @relation(fields: [fileModerationId], references: [id], onDelete: Cascade)
+
+    @@index([fileModerationId, name, confidence])
+}
+
+model StudioComIdRequest {
+    id String @id
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+    requestedComId String
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    requestingIpAddress String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
