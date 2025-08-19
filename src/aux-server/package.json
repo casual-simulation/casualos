@@ -29,7 +29,9 @@
         "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
         "clean": "echo \"Nothing to clean\"",
         "serverless": "npm run build:server:dev && npm run merge:secrets && cd aux-backend/serverless/aws && sam local start-api -p 2998 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json --log-file ./debug_logs.txt",
-        "postinstall": "prisma generate",
+        "postinstall": "npm run prisma:generate && npm run prisma:generate:sqlite",
+        "prisma:generate": "prisma generate",
+        "prisma:generate:sqlite": "prisma --config ./prisma.sqlite.config.ts generate",
         "docker:start": "prisma migrate deploy && npm start"
     },
     "repository": {
