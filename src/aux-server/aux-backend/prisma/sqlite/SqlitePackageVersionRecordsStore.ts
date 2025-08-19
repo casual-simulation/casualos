@@ -41,12 +41,12 @@ import { convertToDate, convertToMillis } from '../Utils';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
 import type { JsonObject } from '../generated-sqlite/runtime/library';
 
-const TRACE_NAME = 'PrismaPackageVersionRecordsStore';
+const TRACE_NAME = 'SqlitePackageVersionRecordsStore';
 
 /**
  * A Prisma-based implementation of the PackageVersionRecordsStore.
  */
-export class PrismaPackageVersionRecordsStore
+export class SqlitePackageVersionRecordsStore
     implements PackageVersionRecordsStore
 {
     private _client: PrismaClient;

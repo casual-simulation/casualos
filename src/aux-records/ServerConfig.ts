@@ -546,6 +546,13 @@ const prismaSchema = z.object({
         .passthrough()
         .optional(),
 
+    db: z
+        .enum(['cockroachdb', 'sqlite'])
+        .describe(
+            'The database type to use with Prisma. Defaults to "cockroachdb".'
+        )
+        .default('cockroachdb'),
+
     policiesCacheSeconds: z
         .number()
         .describe(
