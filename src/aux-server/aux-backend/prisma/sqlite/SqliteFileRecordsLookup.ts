@@ -68,7 +68,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                 fileName: result.fileName,
                 description: result.description,
                 sizeInBytes: Number(result.sizeInBytes),
-                markers: convertMarkers(result.markers),
+                markers: convertMarkers(result.markers as string[]),
                 publisherId: result.publisherId,
                 subjectId: result.subjectId,
                 uploaded: !result.uploadedAt
@@ -122,7 +122,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
             files: result.map((r) => ({
                 fileName: r.fileName,
                 sizeInBytes: Number(r.sizeInBytes),
-                markers: convertMarkers(r.markers),
+                markers: convertMarkers(r.markers as string[]),
                 description: r.description,
                 uploaded: r.uploadedAt < now,
                 bucket: r.bucket,

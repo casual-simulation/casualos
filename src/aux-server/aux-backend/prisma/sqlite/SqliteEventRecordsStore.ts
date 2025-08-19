@@ -54,6 +54,7 @@ export class SqliteEventRecordsStore implements EventRecordsStore {
                 name: eventName,
                 recordName: recordName,
                 count: count,
+                markers: null,
             },
             update: {
                 count: {
@@ -162,7 +163,7 @@ export class SqliteEventRecordsStore implements EventRecordsStore {
             events: events.map((e) => ({
                 eventName: e.name,
                 count: Number(e.count),
-                markers: convertMarkers(e.markers),
+                markers: convertMarkers(e.markers as string[]),
             })),
             totalCount: totalCount,
         };

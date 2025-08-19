@@ -26,7 +26,11 @@ import type {
     ListCrudStoreSuccess,
     ListCrudStoreByMarkerRequest,
 } from '@casual-simulation/aux-records/crud';
-import type { Prisma, PrismaClient } from '../generated-sqlite';
+import type {
+    Prisma,
+    PrismaClient,
+    PackageRecord as PrismaPackageRecord,
+} from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { convertMarkers } from '../Utils';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
@@ -119,7 +123,7 @@ export class SqlitePackageRecordsStore implements PackageRecordsStore {
         return {
             id: packageRecord.id,
             address: packageRecord.address,
-            markers: packageRecord.markers,
+            markers: packageRecord.markers as string[],
         };
     }
 
@@ -231,7 +235,7 @@ export class SqlitePackageRecordsStore implements PackageRecordsStore {
             items: items.map((item) => ({
                 id: item.id,
                 address: item.address,
-                markers: convertMarkers(item.markers),
+                markers: convertMarkers(item.markers as string[]),
             })),
             totalCount: count,
             marker: null,
@@ -242,54 +246,29 @@ export class SqlitePackageRecordsStore implements PackageRecordsStore {
     async listItemsByMarker(
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<PackageRecord>> {
-        const query: Prisma.PackageRecordWhereInput = {
-            recordName: request.recordName,
-            markers: {
-                has: request.marker,
-            },
-        };
+        const countPromise = this._client.$queryRaw<
+            { count: number }[]
+        >`SELECT COUNT(*) FROM "PackageRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
+        const itemsPromise: Promise<PrismaPackageRecord[]> =
+            !!request.startingAddress
+                ? request.sort === 'descending'
+                    ? this._client
+                          .$queryRaw`SELECT "id", "address", "markers" FROM "PackageRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" < ${request.startingAddress} ORDER BY "address" DESC LIMIT 10`
+                    : this._client
+                          .$queryRaw`SELECT "id", "address", "markers" FROM "PackageRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC LIMIT 10`
+                : this._client
+                      .$queryRaw`SELECT "id", "address", "markers" FROM "PackageRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC LIMIT 10`;
 
-        if (request.startingAddress) {
-            if (request.sort === 'descending') {
-                query.address = {
-                    lt: request.startingAddress,
-                };
-            } else {
-                query.address = {
-                    gt: request.startingAddress,
-                };
-            }
-        }
-
-        const [count, items] = await Promise.all([
-            this._client.packageRecord.count({
-                where: {
-                    recordName: request.recordName,
-                    markers: { has: request.marker },
-                },
-            }),
-            this._client.packageRecord.findMany({
-                where: query,
-                orderBy: {
-                    address: request.sort === 'descending' ? 'desc' : 'asc',
-                },
-                select: {
-                    id: true,
-                    address: true,
-                    markers: true,
-                },
-                take: 10,
-            }),
-        ]);
+        const [count, items] = await Promise.all([countPromise, itemsPromise]);
 
         return {
             success: true,
             items: items.map((item) => ({
                 id: item.id,
                 address: item.address,
-                markers: convertMarkers(item.markers),
+                markers: convertMarkers(item.markers as string[]),
             })),
-            totalCount: count,
+            totalCount: count[0].count,
             marker: request.marker,
         };
     }

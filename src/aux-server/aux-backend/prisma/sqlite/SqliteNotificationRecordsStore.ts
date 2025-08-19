@@ -36,6 +36,7 @@ import type {
     Prisma,
     PrismaClient,
     NotificationSubscription as PrismaNotificationSubscription,
+    NotificationRecord as PrismaNotificationRecord,
 } from '../generated-sqlite';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
 import { convertToDate } from '../Utils';
@@ -488,7 +489,7 @@ export class SqliteNotificationRecordsStore
         return {
             address: item.address,
             description: item.description,
-            markers: item.markers,
+            markers: item.markers as string[],
         };
     }
 
@@ -584,7 +585,7 @@ export class SqliteNotificationRecordsStore
             items: records.map((r) => ({
                 address: r.address,
                 description: r.description,
-                markers: r.markers,
+                markers: r.markers as string[],
             })),
             marker: null,
         };
@@ -594,42 +595,33 @@ export class SqliteNotificationRecordsStore
     async listItemsByMarker(
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<NotificationRecord>> {
-        const filter: Prisma.NotificationRecordWhereInput = {
-            recordName: request.recordName,
-            markers: { has: request.marker },
-        };
-
-        if (request.startingAddress) {
-            filter.address = {
-                gt: request.startingAddress,
-            };
-        }
+        const countPromise = this._client.$queryRaw<
+            { count: number }[]
+        >`SELECT COUNT(*) FROM "NotificationRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
+        const itemsPromise: Promise<PrismaNotificationRecord[]> =
+            !!request.startingAddress
+                ? request.sort === 'descending'
+                    ? this._client
+                          .$queryRaw`SELECT "address", "description", "markers" FROM "NotificationRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" < ${request.startingAddress} ORDER BY "address" DESC LIMIT 25`
+                    : this._client
+                          .$queryRaw`SELECT "address", "description", "markers" FROM "NotificationRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC LIMIT 25`
+                : this._client
+                      .$queryRaw`SELECT "address", "description", "markers" FROM "NotificationRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC LIMIT 25`;
 
         const [count, records] = await Promise.all([
-            this._client.notificationRecord.count({
-                where: {
-                    recordName: request.recordName,
-                    markers: { has: request.marker },
-                },
-            }),
-            this._client.notificationRecord.findMany({
-                where: filter,
-                orderBy: {
-                    address: request.sort === 'descending' ? 'desc' : 'asc',
-                },
-                take: 25,
-            }),
+            countPromise,
+            itemsPromise,
         ]);
 
         return {
             success: true,
-            totalCount: count,
+            totalCount: count[0].count,
             items: records.map((r) => ({
                 address: r.address,
                 description: r.description,
-                markers: r.markers,
+                markers: r.markers as string[],
             })),
-            marker: null,
+            marker: request.marker,
         };
     }
 

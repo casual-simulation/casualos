@@ -163,7 +163,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
             insts: insts.map((i) => ({
                 recordName: recordName,
                 inst: i.name,
-                markers: i.markers,
+                markers: i.markers as string[],
             })),
             totalCount,
         };
@@ -216,7 +216,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
 
         return {
             inst: record.name,
-            markers: record.markers,
+            markers: record.markers as string[],
             recordName: record.recordName,
             subscriptionId:
                 record.record.owner?.subscriptionId ??
@@ -304,7 +304,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
             linkedInst: {
                 recordName: b.inst.recordName,
                 inst: b.inst.name,
-                markers: b.inst.markers,
+                markers: b.inst.markers as string[],
                 subscriptionId:
                     record.owner?.subscriptionId ??
                     record.studio?.subscriptionId,

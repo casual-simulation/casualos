@@ -25,7 +25,10 @@ import type {
     ListDataStoreByMarkerRequest,
 } from '@casual-simulation/aux-records';
 
-import type { PrismaClient } from '../generated-sqlite';
+import type {
+    PrismaClient,
+    DataRecord as PrismaDataRecord,
+} from '../generated-sqlite';
 import { Prisma } from '../generated-sqlite';
 import z from 'zod';
 import { convertMarkers } from '../Utils';
@@ -118,7 +121,7 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
                 subjectId: record.subjectId,
                 updatePolicy: updatePolicy.success ? updatePolicy.data : null,
                 deletePolicy: deletePolicy.success ? deletePolicy.data : null,
-                markers: convertMarkers(record.markers),
+                markers: convertMarkers(record.markers as string[]),
             };
         }
 
@@ -169,7 +172,7 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
             items: records.map((r) => ({
                 address: r.address,
                 data: r.data,
-                markers: convertMarkers(r.markers),
+                markers: convertMarkers(r.markers as string[]),
             })),
             totalCount: count,
             marker: null,
@@ -180,36 +183,56 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
     async listDataByMarker(
         request: ListDataStoreByMarkerRequest
     ): Promise<ListDataStoreResult> {
-        let query: Prisma.DataRecordWhereInput = {
-            recordName: request.recordName,
-            markers: { has: request.marker },
-        };
-        if (!!request.startingAddress) {
-            query.address = { gt: request.startingAddress };
-        }
+        // let query: Prisma.DataRecordWhereInput = {
+        //     recordName: request.recordName,
+        //     markers: { has: request.marker },
+        // };
+        // if (!!request.startingAddress) {
+        //     query.address = { gt: request.startingAddress };
+        // }
+
+        // const [count, records] = await Promise.all([
+        //     (this._collection.count as PrismaClient['dataRecord']['count'])({
+        //         where: {
+        //             recordName: request.recordName,
+        //             markers: { has: request.marker },
+        //         },
+        //     }),
+        //     (
+        //         this._collection
+        //             .findMany as PrismaClient['dataRecord']['findMany']
+        //     )({
+        //         where: query,
+        //         orderBy: {
+        //             address: 'asc',
+        //         },
+        //         select: {
+        //             address: true,
+        //             data: true,
+        //             markers: true,
+        //         },
+        //         take: request.count || 10,
+        //     }),
+        // ]);
+
+        const countPromise = this._client.$queryRaw<
+            { count: number }[]
+        >`SELECT COUNT(*) as count FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
+
+        const limit = request.count || 10;
+        const recordsPromise: Prisma.PrismaPromise<PrismaDataRecord[]> =
+            !!request.startingAddress
+                ? request.sort === 'descending'
+                    ? this._client
+                          .$queryRaw`SELECT "address", "data", "markers" FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" < ${request.startingAddress} ORDER BY "address" DESC LIMIT ${limit}`
+                    : this._client
+                          .$queryRaw`SELECT "address", "data", "markers" FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC LIMIT ${limit}`
+                : this._client
+                      .$queryRaw`SELECT "address", "data", "markers" FROM "DataRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC LIMIT ${limit}`;
 
         const [count, records] = await Promise.all([
-            (this._collection.count as PrismaClient['dataRecord']['count'])({
-                where: {
-                    recordName: request.recordName,
-                    markers: { has: request.marker },
-                },
-            }),
-            (
-                this._collection
-                    .findMany as PrismaClient['dataRecord']['findMany']
-            )({
-                where: query,
-                orderBy: {
-                    address: 'asc',
-                },
-                select: {
-                    address: true,
-                    data: true,
-                    markers: true,
-                },
-                take: request.count || 10,
-            }),
+            countPromise,
+            recordsPromise,
         ]);
 
         return {
@@ -217,9 +240,9 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
             items: records.map((r) => ({
                 address: r.address,
                 data: r.data,
-                markers: convertMarkers(r.markers),
+                markers: convertMarkers(r.markers as string[]),
             })),
-            totalCount: count,
+            totalCount: count[0].count,
             marker: null,
         };
     }

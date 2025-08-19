@@ -172,14 +172,15 @@ export class SqliteAuthStore implements AuthStore {
 
         // If no exact match was found for email, then try to find a case-insensitive match.
         if (!user && addressType === 'email') {
-            user = await this._client.user.findFirst({
-                where: {
-                    email: {
-                        equals: address,
-                        mode: 'insensitive',
-                    },
-                },
-            });
+            const queryResult = await this._client.$queryRaw<
+                User[]
+            >`SELECT * FROM "User" WHERE "email" COLLATE NOCASE = ${address} LIMIT 1;`;
+
+            if (queryResult.length > 0) {
+                user = queryResult[0];
+            } else {
+                user = null;
+            }
         }
 
         return this._convertToAuthUser(user);

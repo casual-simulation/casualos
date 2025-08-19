@@ -362,40 +362,30 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
     async listItemsByMarker(
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<SearchRecord>> {
-        let query: Prisma.SearchRecordWhereInput = {
-            recordName: request.recordName,
-            markers: { has: request.marker },
-        };
-        if (!!request.startingAddress) {
-            query.address = { gt: request.startingAddress };
-        }
+        const countPromise = this._client.$queryRaw<
+            { count: number }[]
+        >`SELECT COUNT(*) as count FROM "SearchRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
+
+        const limit = 10;
+        const recordsPromise: Prisma.PrismaPromise<PrismaSearchRecord[]> =
+            !!request.startingAddress
+                ? request.sort === 'descending'
+                    ? this._client
+                          .$queryRaw`SELECT "address", "markers", "collectionName", "searchApiKey" FROM "SearchRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" < ${request.startingAddress} ORDER BY "address" DESC LIMIT ${limit}`
+                    : this._client
+                          .$queryRaw`SELECT "address", "markers", "collectionName", "searchApiKey" FROM "SearchRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC LIMIT ${limit}`
+                : this._client
+                      .$queryRaw`SELECT "address", "markers", "collectionName", "searchApiKey" FROM "SearchRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC LIMIT ${limit}`;
 
         const [count, records] = await Promise.all([
-            this._client.searchRecord.count({
-                where: {
-                    recordName: request.recordName,
-                    markers: { has: request.marker },
-                },
-            }),
-            this._client.searchRecord.findMany({
-                where: query,
-                orderBy: {
-                    address: request.sort === 'descending' ? 'desc' : 'asc',
-                },
-                select: {
-                    address: true,
-                    markers: true,
-                    collectionName: true,
-                    searchApiKey: true,
-                },
-                take: 10,
-            }),
+            countPromise,
+            recordsPromise,
         ]);
 
         return {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
-            totalCount: count,
+            totalCount: count[0].count,
             marker: null,
         };
     }
@@ -408,7 +398,7 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
     ): SearchRecord {
         return {
             address: record.address,
-            markers: record.markers,
+            markers: record.markers as string[],
             collectionName: record.collectionName,
             searchApiKey: record.searchApiKey,
         };

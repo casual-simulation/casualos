@@ -330,24 +330,22 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
     async listItemsByMarker(
         request: ListCrudStoreByMarkerRequest
     ): Promise<ListCrudStoreSuccess<WebhookRecord>> {
-        let query: Prisma.WebhookRecordWhereInput = {
-            recordName: request.recordName,
-            //{ has: request.marker },
-        };
-        if (!!request.startingAddress) {
-            query.address = { gt: request.startingAddress };
-        }
+        const countPromise = this._client.$queryRaw<
+            {
+                count: number;
+            }[]
+        >`SELECT COUNT(*) as count FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
 
-        const countPromise = this._client.$queryRaw<{
-            count: number;
-        }>`SELECT COUNT(*) as count FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers")`;
-
+        const limit = 10;
         const recordsPromise: Prisma.PrismaPromise<PrismaWebhookRecord[]> =
             !!request.startingAddress
-                ? this._client
-                      .$queryRaw`SELECT "address", "markers", "targetRecordName", "targetDataRecordAdress", "targetFileRecordFileName", "targetInstRecordName", "targetPublicInstRecordName", "userId" FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC LIMIT 10`
+                ? request.sort === 'descending'
+                    ? this._client
+                          .$queryRaw`SELECT "address", "markers", "targetRecordName", "targetDataRecordAddress", "targetFileRecordName", "targetInstRecordName", "targetPublicInstRecordName", "userId" FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" < ${request.startingAddress} ORDER BY "address" DESC LIMIT ${limit}`
+                    : this._client
+                          .$queryRaw`SELECT "address", "markers", "targetRecordName", "targetDataRecordAddress", "targetFileRecordName", "targetInstRecordName", "targetPublicInstRecordName", "userId" FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") AND "address" > ${request.startingAddress} ORDER BY "address" ASC LIMIT ${limit}`
                 : this._client
-                      .$queryRaw`SELECT "address", "markers", "targetRecordName", "targetDataRecordAdress", "targetFileRecordFileName", "targetInstRecordName", "targetPublicInstRecordName", "userId" FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC LIMIT 10`;
+                      .$queryRaw`SELECT "address", "markers", "targetRecordName", "targetDataRecordAddress", "targetFileRecordName", "targetInstRecordName", "targetPublicInstRecordName", "userId" FROM "WebhookRecord" WHERE "recordName" = ${request.recordName} AND ${request.marker} IN json_each("markers") ORDER BY "address" ASC LIMIT ${limit}`;
 
         const [count, records] = await Promise.all([
             countPromise,
@@ -357,7 +355,7 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
         return {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
-            totalCount: count.count,
+            totalCount: count[0].count,
             marker: null,
         };
     }

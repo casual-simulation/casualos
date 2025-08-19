@@ -90,7 +90,7 @@ export class PrismaPackageVersionRecordsStore
 
         return {
             item: this._convertToItem(item),
-            parentMarkers: item.package.markers,
+            parentMarkers: item.package.markers as string[],
             packageId: item.package.id,
             recordName: item.package.recordName,
         };
@@ -156,7 +156,7 @@ export class PrismaPackageVersionRecordsStore
 
         return {
             item: this._convertToItem(item),
-            parentMarkers: item.package.markers,
+            parentMarkers: item.package.markers as string[],
             packageId: item.package.id,
             recordName: item.package.recordName,
         };
@@ -179,7 +179,7 @@ export class PrismaPackageVersionRecordsStore
             sha256: item.sha256,
             entitlements: item.entitlements as unknown as Entitlement[],
             description: item.description,
-            markers: item.markers,
+            markers: item.markers as string[],
             sizeInBytes: item.sizeInBytes,
             requiresReview: item.requiresReview,
             createdFile: item.createdFile,
@@ -208,7 +208,7 @@ export class PrismaPackageVersionRecordsStore
 
         return {
             item: this._convertToItem(item),
-            parentMarkers: item.package.markers,
+            parentMarkers: item.package.markers as string[],
             packageId: item.package.id,
             recordName: item.package.recordName,
         };
