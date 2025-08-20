@@ -143,8 +143,7 @@ Resources:
 
     RecordsSnsTopic:
         Type: AWS::SNS::Topic
-        Properties:
-            ContentBasedDeduplication: false
+        Properties: {}
 
     # This is a Lambda function config associated with the source code: services.js
     handleRecords:
