@@ -175,7 +175,8 @@
         "web-push": "3.6.7",
         "ws": "8.18.0",
         "zod": "3.22.4",
-        "yjs": "13.6.8"
+        "yjs": "13.6.8",
+        "preact": "10.19.6"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.6.0",

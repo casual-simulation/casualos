@@ -1240,6 +1240,9 @@ importers:
       pify:
         specifier: 5.0.0
         version: 5.0.0
+      preact:
+        specifier: 10.19.6
+        version: 10.19.6
       prisma:
         specifier: ^5.7.0
         version: 5.22.0

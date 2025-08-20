@@ -123,7 +123,13 @@ export default defineConfig(({ command, mode }) => ({
         }),
         importMapPlugin({
             imports: {
-                yjs: './aux-web/shared/public/yjs/yjs',
+                yjs: './aux-web/shared/public/import-map/yjs',
+                luxon: './aux-web/shared/public/import-map/luxon',
+                preact: './aux-web/shared/public/import-map/preact',
+                'preact/compat':
+                    './aux-web/shared/public/import-map/preact.compat',
+                'preact/jsx-runtime':
+                    './aux-web/shared/public/import-map/preact.jsx-runtime',
             },
         }),
         {

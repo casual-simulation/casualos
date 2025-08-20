@@ -18,24 +18,13 @@
 import importMap from 'virtual:importmap';
 
 /**
- * Determines whether the global document is owned by the browser.
- * Returns true if either the document property exists and it is not writable.
+ * Configures the default import map for CasualOS.
+ * This function creates an import map that is used to resolve module imports that are used inside CasualOS itself and
+ * can be shared with user scripts.
  */
-function isBrowserDocument() {
-    const documentDescriptor = Object.getOwnPropertyDescriptor(
-        globalThis,
-        'document'
-    );
-
-    return documentDescriptor && !documentDescriptor.writable;
-}
-
 function setupImportMap() {
-    if (!isBrowserDocument()) {
-        return;
-    }
-
     const mapScript = document.createElement('script');
+    mapScript.id = 'default-import-map';
     mapScript.type = 'importmap';
     mapScript.textContent = JSON.stringify(importMap);
     document.head.append(mapScript);
