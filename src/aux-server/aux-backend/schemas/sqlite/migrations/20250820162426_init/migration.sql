@@ -6,10 +6,10 @@ CREATE TABLE "User" (
     "phoneNumber" TEXT,
     "avatarPortraitUrl" TEXT,
     "avatarUrl" TEXT,
-    "allSessionRevokeTime" DATETIME,
+    "allSessionRevokeTime" INTEGER,
     "currentLoginRequestId" TEXT,
     "currentWebAuthnChallenge" TEXT,
-    "banTime" DATETIME,
+    "banTime" INTEGER,
     "banReason" TEXT,
     "privoServiceId" TEXT,
     "privoParentServiceId" TEXT,
@@ -18,15 +18,15 @@ CREATE TABLE "User" (
     "subscriptionStatus" TEXT,
     "stripeCustomerId" TEXT,
     "subscriptionId" TEXT,
-    "subscriptionPeriodStart" DATETIME,
-    "subscriptionPeriodEnd" DATETIME,
+    "subscriptionPeriodStart" INTEGER,
+    "subscriptionPeriodEnd" INTEGER,
     "allowPublishData" BOOLEAN,
     "allowPublicData" BOOLEAN,
     "allowAI" BOOLEAN,
     "allowPublicInsts" BOOLEAN,
     "role" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "User_currentLoginRequestId_fkey" FOREIGN KEY ("currentLoginRequestId") REFERENCES "LoginRequest" ("requestId") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "User_subscriptionInfoId_fkey" FOREIGN KEY ("subscriptionInfoId") REFERENCES "Subscription" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -43,8 +43,8 @@ CREATE TABLE "UserAuthenticator" (
     "aaguid" TEXT NOT NULL,
     "registeringUserAgent" TEXT,
     "transports" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "UserAuthenticator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -53,15 +53,15 @@ CREATE TABLE "LoginRequest" (
     "requestId" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "secretHash" TEXT,
-    "requestTime" DATETIME NOT NULL,
-    "expireTime" DATETIME NOT NULL,
-    "completedTime" DATETIME,
+    "requestTime" INTEGER NOT NULL,
+    "expireTime" INTEGER NOT NULL,
+    "completedTime" INTEGER,
     "attemptCount" INTEGER NOT NULL,
     "address" TEXT NOT NULL,
     "addressType" TEXT NOT NULL,
     "ipAddress" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "LoginRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -78,9 +78,9 @@ CREATE TABLE "AuthSession" (
     "oidRefreshToken" TEXT,
     "oidScope" TEXT,
     "oidExpiresAtMs" BIGINT,
-    "grantedTime" DATETIME NOT NULL,
-    "expireTime" DATETIME,
-    "revokeTime" DATETIME,
+    "grantedTime" INTEGER NOT NULL,
+    "expireTime" INTEGER,
+    "revokeTime" INTEGER,
     "revocable" BOOLEAN,
     "requestId" TEXT,
     "oidRequestId" TEXT,
@@ -88,8 +88,8 @@ CREATE TABLE "AuthSession" (
     "previousSessionId" TEXT,
     "nextSessionId" TEXT,
     "ipAddress" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "AuthSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "AuthSession_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "LoginRequest" ("requestId") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "AuthSession_oidRequestId_fkey" FOREIGN KEY ("oidRequestId") REFERENCES "OpenIDLoginRequest" ("requestId") ON DELETE SET NULL ON UPDATE CASCADE,
@@ -108,14 +108,14 @@ CREATE TABLE "OpenIDLoginRequest" (
     "authorizationUrl" TEXT NOT NULL,
     "redirectUrl" TEXT NOT NULL,
     "scope" TEXT NOT NULL,
-    "requestTime" DATETIME NOT NULL,
-    "expireTime" DATETIME NOT NULL,
-    "completedTime" DATETIME,
+    "requestTime" INTEGER NOT NULL,
+    "expireTime" INTEGER NOT NULL,
+    "completedTime" INTEGER,
     "ipAddress" TEXT NOT NULL,
     "authorizationCode" TEXT,
-    "authorizationTime" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "authorizationTime" INTEGER,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL
 );
 
 -- CreateTable
@@ -123,12 +123,12 @@ CREATE TABLE "WebAuthnLoginRequest" (
     "requestId" TEXT NOT NULL PRIMARY KEY,
     "challenge" TEXT NOT NULL,
     "userId" TEXT,
-    "requestTime" DATETIME NOT NULL,
-    "expireTime" DATETIME NOT NULL,
-    "completedTime" DATETIME,
+    "requestTime" INTEGER NOT NULL,
+    "expireTime" INTEGER NOT NULL,
+    "completedTime" INTEGER,
     "ipAddress" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "WebAuthnLoginRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -161,10 +161,10 @@ CREATE TABLE "Studio" (
     "subscriptionStatus" TEXT,
     "stripeCustomerId" TEXT,
     "subscriptionId" TEXT,
-    "subscriptionPeriodStart" DATETIME,
-    "subscriptionPeriodEnd" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "subscriptionPeriodStart" INTEGER,
+    "subscriptionPeriodEnd" INTEGER,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "Studio_ownerStudioComId_fkey" FOREIGN KEY ("ownerStudioComId") REFERENCES "Studio" ("comId") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Studio_subscriptionInfoId_fkey" FOREIGN KEY ("subscriptionInfoId") REFERENCES "Subscription" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -175,8 +175,8 @@ CREATE TABLE "StudioAssignment" (
     "userId" TEXT NOT NULL,
     "isPrimaryContact" BOOLEAN NOT NULL,
     "role" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("studioId", "userId"),
     CONSTRAINT "StudioAssignment_studioId_fkey" FOREIGN KEY ("studioId") REFERENCES "Studio" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -190,8 +190,8 @@ CREATE TABLE "Record" (
     "studioId" TEXT,
     "secretHashes" JSONB NOT NULL,
     "secretSalt" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "Record_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Record_studioId_fkey" FOREIGN KEY ("studioId") REFERENCES "Studio" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -202,8 +202,8 @@ CREATE TABLE "RecordKey" (
     "secretHash" TEXT NOT NULL,
     "policy" TEXT NOT NULL,
     "creatorId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "secretHash"),
     CONSTRAINT "RecordKey_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -216,8 +216,8 @@ CREATE TABLE "Policy" (
     "marker" TEXT NOT NULL,
     "document" JSONB NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "marker"),
     CONSTRAINT "Policy_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -228,8 +228,8 @@ CREATE TABLE "Role" (
     "recordName" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "name"),
     CONSTRAINT "Role_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -241,10 +241,10 @@ CREATE TABLE "RoleAssignment" (
     "roleId" TEXT NOT NULL,
     "subjectId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
-    "expireTime" DATETIME,
+    "expireTime" INTEGER,
     "userId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "roleId", "subjectId"),
     CONSTRAINT "RoleAssignment_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -262,9 +262,9 @@ CREATE TABLE "ResourcePermissionAssignment" (
     "subjectId" TEXT NOT NULL,
     "subjectType" TEXT NOT NULL,
     "userId" TEXT,
-    "expireTime" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "expireTime" INTEGER,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "ResourcePermissionAssignment_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "ResourcePermissionAssignment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -280,9 +280,9 @@ CREATE TABLE "MarkerPermissionAssignment" (
     "subjectId" TEXT NOT NULL,
     "subjectType" TEXT NOT NULL,
     "userId" TEXT,
-    "expireTime" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "expireTime" INTEGER,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "MarkerPermissionAssignment_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "MarkerPermissionAssignment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -295,10 +295,10 @@ CREATE TABLE "GrantedPackageEntitlement" (
     "feature" TEXT NOT NULL,
     "scope" TEXT NOT NULL,
     "recordName" TEXT NOT NULL,
-    "expireTime" DATETIME NOT NULL,
-    "revokeTime" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "expireTime" INTEGER NOT NULL,
+    "revokeTime" INTEGER,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "GrantedPackageEntitlement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "GrantedPackageEntitlement_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "PackageRecord" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "GrantedPackageEntitlement_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -314,8 +314,8 @@ CREATE TABLE "DataRecord" (
     "updatePolicy" JSONB NOT NULL,
     "deletePolicy" JSONB NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "address"),
     CONSTRAINT "DataRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -333,8 +333,8 @@ CREATE TABLE "ManualDataRecord" (
     "updatePolicy" JSONB NOT NULL,
     "deletePolicy" JSONB NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "address"),
     CONSTRAINT "ManualDataRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -351,10 +351,10 @@ CREATE TABLE "FileRecord" (
     "sizeInBytes" BIGINT NOT NULL,
     "description" TEXT,
     "bucket" TEXT,
-    "uploadedAt" DATETIME,
+    "uploadedAt" INTEGER,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "fileName"),
     CONSTRAINT "FileRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -368,8 +368,8 @@ CREATE TABLE "EventRecord" (
     "name" TEXT NOT NULL,
     "count" BIGINT NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "name"),
     CONSTRAINT "EventRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -380,8 +380,8 @@ CREATE TABLE "InstRecord" (
     "recordName" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "name"),
     CONSTRAINT "InstRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -393,8 +393,8 @@ CREATE TABLE "InstBranch" (
     "instName" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "temporary" BOOLEAN NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "instName", "name"),
     CONSTRAINT "InstBranch_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -409,8 +409,8 @@ CREATE TABLE "BranchUpdate" (
     "branchName" TEXT NOT NULL,
     "sizeInBytes" INTEGER NOT NULL,
     "updateData" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "BranchUpdate_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "BranchUpdate_recordName_instName_fkey" FOREIGN KEY ("recordName", "instName") REFERENCES "InstRecord" ("recordName", "name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "BranchUpdate_recordName_instName_branchName_fkey" FOREIGN KEY ("recordName", "instName", "branchName") REFERENCES "InstBranch" ("recordName", "instName", "name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -425,8 +425,8 @@ CREATE TABLE "LoadedPackage" (
     "instRecordName" TEXT NOT NULL,
     "instName" TEXT NOT NULL,
     "branch" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "LoadedPackage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "LoadedPackage_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "PackageRecord" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "LoadedPackage_packageVersionId_fkey" FOREIGN KEY ("packageVersionId") REFERENCES "PackageRecordVersion" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -444,8 +444,8 @@ CREATE TABLE "WebhookRecord" (
     "targetInstRecordName" TEXT,
     "targetPublicInstRecordName" TEXT,
     "userId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "address"),
     CONSTRAINT "WebhookRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -463,13 +463,13 @@ CREATE TABLE "WebhookRun" (
     "webhookAddress" TEXT NOT NULL,
     "statusCode" INTEGER,
     "stateSha256" TEXT NOT NULL,
-    "requestTime" DATETIME NOT NULL,
-    "responseTime" DATETIME NOT NULL,
+    "requestTime" INTEGER NOT NULL,
+    "responseTime" INTEGER NOT NULL,
     "errorResult" JSONB,
     "infoFileRecordName" TEXT,
     "infoFileName" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "WebhookRun_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "WebhookRun_recordName_webhookAddress_fkey" FOREIGN KEY ("recordName", "webhookAddress") REFERENCES "WebhookRecord" ("recordName", "address") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "WebhookRun_infoFileRecordName_infoFileName_fkey" FOREIGN KEY ("infoFileRecordName", "infoFileName") REFERENCES "FileRecord" ("recordName", "fileName") ON DELETE SET NULL ON UPDATE CASCADE
@@ -481,8 +481,8 @@ CREATE TABLE "NotificationRecord" (
     "address" TEXT NOT NULL,
     "description" TEXT,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "address"),
     CONSTRAINT "NotificationRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -494,16 +494,16 @@ CREATE TABLE "PushSubscription" (
     "endpoint" TEXT NOT NULL,
     "keys" JSONB NOT NULL,
     "active" BOOLEAN NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "PushSubscriptionUser" (
     "pushSubscriptionId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("pushSubscriptionId", "userId"),
     CONSTRAINT "PushSubscriptionUser_pushSubscriptionId_fkey" FOREIGN KEY ("pushSubscriptionId") REFERENCES "PushSubscription" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -517,8 +517,8 @@ CREATE TABLE "NotificationSubscription" (
     "notificationAddress" TEXT NOT NULL,
     "userId" TEXT,
     "pushSubscriptionId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "NotificationSubscription_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "NotificationSubscription_recordName_notificationAddress_fkey" FOREIGN KEY ("recordName", "notificationAddress") REFERENCES "NotificationRecord" ("recordName", "address") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "NotificationSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
@@ -539,9 +539,9 @@ CREATE TABLE "SentNotification" (
     "topic" TEXT,
     "defaultAction" JSONB NOT NULL,
     "actions" JSONB NOT NULL,
-    "sentTime" DATETIME NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "sentTime" INTEGER NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "SentNotification_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "SentNotification_recordName_notificationAddress_fkey" FOREIGN KEY ("recordName", "notificationAddress") REFERENCES "NotificationRecord" ("recordName", "address") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -555,8 +555,8 @@ CREATE TABLE "SentPushNotification" (
     "pushSubscriptionId" TEXT,
     "success" BOOLEAN NOT NULL,
     "errorCode" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "SentPushNotification_sentNotificationId_fkey" FOREIGN KEY ("sentNotificationId") REFERENCES "SentNotification" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "SentPushNotification_subscriptionId_fkey" FOREIGN KEY ("subscriptionId") REFERENCES "NotificationSubscription" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "SentPushNotification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -569,8 +569,8 @@ CREATE TABLE "PackageRecord" (
     "recordName" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "PackageRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -592,8 +592,8 @@ CREATE TABLE "PackageRecordVersion" (
     "markers" JSONB NOT NULL,
     "sizeInBytes" INTEGER NOT NULL,
     "createdFile" BOOLEAN NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "PackageRecordVersion_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "PackageRecordVersion_recordName_address_fkey" FOREIGN KEY ("recordName", "address") REFERENCES "PackageRecord" ("recordName", "address") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "PackageRecordVersion_recordName_auxFileName_fkey" FOREIGN KEY ("recordName", "auxFileName") REFERENCES "FileRecord" ("recordName", "fileName") ON DELETE RESTRICT ON UPDATE CASCADE
@@ -608,8 +608,8 @@ CREATE TABLE "PackageRecordVersionReview" (
     "reviewStatus" TEXT NOT NULL,
     "reviewComments" TEXT NOT NULL,
     "reviewingUserId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "PackageRecordVersionReview_packageVersionId_fkey" FOREIGN KEY ("packageVersionId") REFERENCES "PackageRecordVersion" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "PackageRecordVersionReview_reviewingUserId_fkey" FOREIGN KEY ("reviewingUserId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -621,8 +621,8 @@ CREATE TABLE "SearchRecord" (
     "collectionName" TEXT NOT NULL,
     "searchApiKey" TEXT NOT NULL,
     "markers" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
 
     PRIMARY KEY ("recordName", "address"),
     CONSTRAINT "SearchRecord_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE
@@ -637,8 +637,8 @@ CREATE TABLE "SearchRecordSync" (
     "targetResourceKind" TEXT NOT NULL,
     "targetMarker" TEXT NOT NULL,
     "targetMapping" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "SearchRecordSync_searchRecordName_searchRecordAddress_fkey" FOREIGN KEY ("searchRecordName", "searchRecordAddress") REFERENCES "SearchRecord" ("recordName", "address") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -649,13 +649,13 @@ CREATE TABLE "SearchRecordSyncHistory" (
     "searchRecordAddress" TEXT NOT NULL,
     "syncId" TEXT NOT NULL,
     "runId" TEXT NOT NULL,
-    "time" DATETIME NOT NULL,
+    "time" INTEGER NOT NULL,
     "status" TEXT NOT NULL,
     "success" BOOLEAN NOT NULL,
     "numSynced" INTEGER NOT NULL,
     "numErrored" INTEGER NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "SearchRecordSyncHistory_syncId_fkey" FOREIGN KEY ("syncId") REFERENCES "SearchRecordSync" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -663,8 +663,8 @@ CREATE TABLE "SearchRecordSyncHistory" (
 CREATE TABLE "Configuration" (
     "key" TEXT NOT NULL PRIMARY KEY,
     "data" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL
 );
 
 -- CreateTable
@@ -676,10 +676,10 @@ CREATE TABLE "Subscription" (
     "subscriptionStatus" TEXT,
     "stripeCustomerId" TEXT,
     "subscriptionId" TEXT,
-    "currentPeriodStart" DATETIME,
-    "currentPeriodEnd" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "currentPeriodStart" INTEGER,
+    "currentPeriodEnd" INTEGER,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL
 );
 
 -- CreateTable
@@ -687,10 +687,10 @@ CREATE TABLE "SubscriptionPeriod" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "subscriptionId" TEXT NOT NULL,
     "invoiceId" TEXT NOT NULL,
-    "periodStart" DATETIME NOT NULL,
-    "periodEnd" DATETIME NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "periodStart" INTEGER NOT NULL,
+    "periodEnd" INTEGER NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "SubscriptionPeriod_subscriptionId_fkey" FOREIGN KEY ("subscriptionId") REFERENCES "Subscription" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -709,8 +709,8 @@ CREATE TABLE "Invoice" (
     "tax" INTEGER,
     "stripeHostedInvoiceUrl" TEXT NOT NULL,
     "stripeInvoicePdfUrl" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "Invoice_subscriptionId_fkey" FOREIGN KEY ("subscriptionId") REFERENCES "Subscription" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Invoice_periodId_fkey" FOREIGN KEY ("periodId") REFERENCES "SubscriptionPeriod" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -718,7 +718,7 @@ CREATE TABLE "Invoice" (
 -- CreateTable
 CREATE TABLE "AiChatMetrics" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" INTEGER NOT NULL,
     "tokens" INTEGER NOT NULL,
     "userId" TEXT,
     "studioId" TEXT,
@@ -729,7 +729,7 @@ CREATE TABLE "AiChatMetrics" (
 -- CreateTable
 CREATE TABLE "AiImageMetrics" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" INTEGER NOT NULL,
     "squarePixelsGenerated" INTEGER NOT NULL,
     "userId" TEXT,
     "studioId" TEXT,
@@ -740,7 +740,7 @@ CREATE TABLE "AiImageMetrics" (
 -- CreateTable
 CREATE TABLE "AiSkyboxMetrics" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" INTEGER NOT NULL,
     "skyboxesGenerated" INTEGER NOT NULL,
     "userId" TEXT,
     "studioId" TEXT,
@@ -758,7 +758,7 @@ CREATE TABLE "AiSloydMetrics" (
     "modelData" TEXT NOT NULL,
     "thumbnailBase64" TEXT,
     "baseModelId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" INTEGER NOT NULL,
     "userId" TEXT,
     "studioId" TEXT,
     CONSTRAINT "AiSloydMetrics_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -769,7 +769,7 @@ CREATE TABLE "AiSloydMetrics" (
 CREATE TABLE "AiOpenAIRealtimeMetrics" (
     "sessionId" TEXT NOT NULL PRIMARY KEY,
     "request" JSONB NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" INTEGER NOT NULL,
     "userId" TEXT,
     "studioId" TEXT,
     CONSTRAINT "AiOpenAIRealtimeMetrics_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -779,8 +779,8 @@ CREATE TABLE "AiOpenAIRealtimeMetrics" (
 -- CreateTable
 CREATE TABLE "PrivoClientCredentials" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "expiresAt" INTEGER NOT NULL,
     "accessToken" TEXT NOT NULL,
     "refreshToken" TEXT NOT NULL,
     "expiresAtSeconds" INTEGER NOT NULL,
@@ -799,8 +799,8 @@ CREATE TABLE "UserInstReport" (
     "reportReason" TEXT NOT NULL,
     "reportedUrl" TEXT NOT NULL,
     "reportedPermalink" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "UserInstReport_recordName_fkey" FOREIGN KEY ("recordName") REFERENCES "Record" ("name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "UserInstReport_recordName_inst_fkey" FOREIGN KEY ("recordName", "inst") REFERENCES "InstRecord" ("recordName", "name") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "UserInstReport_reportingUserId_fkey" FOREIGN KEY ("reportingUserId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -811,8 +811,8 @@ CREATE TABLE "ModerationJob" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "s3Id" TEXT,
     "type" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL
 );
 
 -- CreateTable
@@ -823,8 +823,8 @@ CREATE TABLE "FileModerationResult" (
     "fileName" TEXT NOT NULL,
     "appearsToMatchBannedContent" BOOLEAN NOT NULL,
     "modelVersion" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "FileModerationResult_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "ModerationJob" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -845,8 +845,8 @@ CREATE TABLE "StudioComIdRequest" (
     "requestedComId" TEXT NOT NULL,
     "userId" TEXT,
     "requestingIpAddress" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
     CONSTRAINT "StudioComIdRequest_studioId_fkey" FOREIGN KEY ("studioId") REFERENCES "Studio" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "StudioComIdRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );

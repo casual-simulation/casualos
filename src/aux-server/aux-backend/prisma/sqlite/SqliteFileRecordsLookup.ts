@@ -73,7 +73,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                 subjectId: result.subjectId,
                 uploaded: !result.uploadedAt
                     ? false
-                    : result.uploadedAt <= new Date(),
+                    : result.uploadedAt <= Date.now(),
                 bucket: result.bucket,
             };
         } else {
@@ -116,7 +116,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
             },
         });
 
-        const now = new Date();
+        const now = Date.now();
         return {
             success: true,
             files: result.map((r) => ({
@@ -140,7 +140,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
         };
 
         if (!!filter.uploadedAfterMs) {
-            query.uploadedAt = { gt: new Date(filter.uploadedAfterMs) };
+            query.uploadedAt = { gt: filter.uploadedAfterMs };
         }
 
         if (!!filter.fileExtensions) {
@@ -196,6 +196,8 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                     markers,
                     bucket,
                     uploadedAt: null,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
                 },
             });
             return {
@@ -243,6 +245,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                 },
                 data: {
                     markers,
+                    updatedAt: Date.now(),
                 },
             });
 
@@ -292,7 +295,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                     uploadedAt: { equals: null },
                 },
                 data: {
-                    uploadedAt: new Date(),
+                    uploadedAt: Date.now(),
                 },
             });
 

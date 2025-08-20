@@ -37,7 +37,6 @@ import type {
 } from '@casual-simulation/aux-records';
 import { isActiveSubscription } from '@casual-simulation/aux-records';
 import type { PrismaClient, Prisma } from '../generated-sqlite';
-import { convertToMillis } from '../Utils';
 import { v4 as uuid } from 'uuid';
 import { DateTime } from 'luxon';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
@@ -61,8 +60,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiOpenAIRealtimeMetricsWhereInput = {
             createdAt: {
-                lt: new Date(metrics.currentPeriodEndMs),
-                gte: new Date(metrics.currentPeriodStartMs),
+                lt: metrics.currentPeriodEndMs,
+                gte: metrics.currentPeriodStartMs,
             },
         };
 
@@ -95,7 +94,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 sessionId: metrics.sessionId,
                 userId: metrics.userId,
                 studioId: metrics.studioId,
-                createdAt: new Date(metrics.createdAtMs),
+                createdAt: metrics.createdAtMs,
                 request: metrics.request as object,
             },
         });
@@ -109,8 +108,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiSloydMetricsWhereInput = {
             createdAt: {
-                lt: new Date(metrics.currentPeriodEndMs),
-                gte: new Date(metrics.currentPeriodStartMs),
+                lt: metrics.currentPeriodEndMs,
+                gte: metrics.currentPeriodStartMs,
             },
         };
 
@@ -149,7 +148,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 name: metrics.name,
                 baseModelId: metrics.baseModelId,
                 thumbnailBase64: metrics.thumbnailBase64,
-                createdAt: new Date(metrics.createdAtMs),
+                createdAt: metrics.createdAtMs,
             },
         });
     }
@@ -225,14 +224,11 @@ export class SqliteMetricsStore implements MetricsStore {
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
-                convertToMillis(
-                    result.owner?.subscriptionPeriodStart ||
-                        result.studio?.subscriptionPeriodStart
-                ),
-                convertToMillis(
-                    result.owner?.subscriptionPeriodEnd ||
-                        result.studio?.subscriptionPeriodEnd
-                )
+
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart,
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
             )),
         };
     }
@@ -245,8 +241,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiImageMetricsWhereInput = {
             createdAt: {
-                lt: new Date(metrics.currentPeriodEndMs),
-                gte: new Date(metrics.currentPeriodStartMs),
+                lt: metrics.currentPeriodEndMs,
+                gte: metrics.currentPeriodStartMs,
             },
         };
 
@@ -280,7 +276,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 userId: metrics.userId,
                 studioId: metrics.studioId,
                 squarePixelsGenerated: metrics.squarePixels,
-                createdAt: new Date(metrics.createdAtMs),
+                createdAt: metrics.createdAtMs,
             },
         });
     }
@@ -293,8 +289,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiSkyboxMetricsWhereInput = {
             createdAt: {
-                lt: new Date(metrics.currentPeriodEndMs),
-                gte: new Date(metrics.currentPeriodStartMs),
+                lt: metrics.currentPeriodEndMs,
+                gte: metrics.currentPeriodStartMs,
             },
         };
 
@@ -327,7 +323,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 userId: metrics.userId,
                 studioId: metrics.studioId,
                 skyboxesGenerated: metrics.skyboxes,
-                createdAt: new Date(metrics.createdAtMs),
+                createdAt: metrics.createdAtMs,
             },
         });
     }
@@ -340,7 +336,7 @@ export class SqliteMetricsStore implements MetricsStore {
                 userId: metrics.userId,
                 studioId: metrics.studioId,
                 tokens: metrics.tokens,
-                createdAt: new Date(metrics.createdAtMs),
+                createdAt: metrics.createdAtMs,
             },
         });
     }
@@ -353,8 +349,8 @@ export class SqliteMetricsStore implements MetricsStore {
 
         const where: Prisma.AiChatMetricsWhereInput = {
             createdAt: {
-                lt: new Date(metrics.currentPeriodEndMs),
-                gte: new Date(metrics.currentPeriodStartMs),
+                lt: metrics.currentPeriodEndMs,
+                gte: metrics.currentPeriodStartMs,
             },
         };
 
@@ -414,14 +410,11 @@ export class SqliteMetricsStore implements MetricsStore {
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
-                convertToMillis(
-                    result.owner?.subscriptionPeriodStart ||
-                        result.studio?.subscriptionPeriodStart
-                ),
-                convertToMillis(
-                    result.owner?.subscriptionPeriodEnd ||
-                        result.studio?.subscriptionPeriodEnd
-                )
+
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart,
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
             )),
         };
     }
@@ -468,14 +461,11 @@ export class SqliteMetricsStore implements MetricsStore {
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
-                convertToMillis(
-                    result.owner?.subscriptionPeriodStart ||
-                        result.studio?.subscriptionPeriodStart
-                ),
-                convertToMillis(
-                    result.owner?.subscriptionPeriodEnd ||
-                        result.studio?.subscriptionPeriodEnd
-                )
+
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart,
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
             )),
         };
     }
@@ -518,14 +508,11 @@ export class SqliteMetricsStore implements MetricsStore {
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
-                convertToMillis(
-                    result.owner?.subscriptionPeriodStart ||
-                        result.studio?.subscriptionPeriodStart
-                ),
-                convertToMillis(
-                    result.owner?.subscriptionPeriodEnd ||
-                        result.studio?.subscriptionPeriodEnd
-                )
+
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart,
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
             )),
         };
     }
@@ -562,8 +549,8 @@ export class SqliteMetricsStore implements MetricsStore {
                 totalRecords: user._count.records,
                 ...(await this._getSubscriptionPeriod(
                     user.subscriptionStatus,
-                    convertToMillis(user.subscriptionPeriodStart),
-                    convertToMillis(user.subscriptionPeriodEnd)
+                    user.subscriptionPeriodStart,
+                    user.subscriptionPeriodEnd
                 )),
             };
         } else {
@@ -594,8 +581,8 @@ export class SqliteMetricsStore implements MetricsStore {
                 totalRecords: studio._count.records,
                 ...(await this._getSubscriptionPeriod(
                     studio.subscriptionStatus,
-                    convertToMillis(studio.subscriptionPeriodStart),
-                    convertToMillis(studio.subscriptionPeriodEnd)
+                    studio.subscriptionPeriodStart,
+                    studio.subscriptionPeriodEnd
                 )),
             };
         }

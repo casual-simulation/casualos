@@ -55,11 +55,14 @@ export class SqliteEventRecordsStore implements EventRecordsStore {
                 recordName: recordName,
                 count: count,
                 markers: null,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 count: {
                     increment: count,
                 },
+                updatedAt: Date.now(),
             },
         });
 
@@ -113,12 +116,15 @@ export class SqliteEventRecordsStore implements EventRecordsStore {
                 name: eventName,
                 count: updates.count ?? 0,
                 markers: updates.markers,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: cleanupObject({
                 recordName: recordName,
                 name: eventName,
                 count: updates.count,
                 markers: updates.markers,
+                updatedAt: Date.now(),
             }),
         });
 

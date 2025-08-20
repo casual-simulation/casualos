@@ -38,7 +38,6 @@ import type {
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
 import { z } from 'zod';
-import { convertToDate } from '../Utils';
 import type { ResourceKinds } from '@casual-simulation/aux-common';
 
 const ERROR_RESULT_SCHEMA = z
@@ -116,6 +115,8 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
                 targetResourceKind: sync.targetResourceKind,
                 targetMarker: sync.targetMarker,
                 targetMapping: sync.targetMapping,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 searchRecordName: sync.searchRecordName,
@@ -124,6 +125,7 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
                 targetResourceKind: sync.targetResourceKind,
                 targetMarker: sync.targetMarker,
                 targetMapping: sync.targetMapping,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -178,11 +180,13 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
                 runId: history.runId,
                 searchRecordName: history.searchRecordName,
                 searchRecordAddress: history.searchRecordAddress,
-                time: convertToDate(history.timeMs),
+                time: history.timeMs,
                 status: history.status,
                 success: history.success,
                 numSynced: history.numSynced,
                 numErrored: history.numErrored,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -230,6 +234,8 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
                 markers: item.markers,
                 collectionName: item.collectionName,
                 searchApiKey: item.searchApiKey,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -271,6 +277,7 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
                 markers: item.markers,
                 collectionName: item.collectionName,
                 searchApiKey: item.searchApiKey,
+                updatedAt: Date.now(),
             }),
         });
     }
@@ -293,11 +300,14 @@ export class SqliteSearchRecordsStore implements SearchRecordsStore {
                 markers: item.markers,
                 collectionName: item.collectionName,
                 searchApiKey: item.searchApiKey,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: cleanupObject({
                 markers: item.markers,
                 collectionName: item.collectionName,
                 searchApiKey: item.searchApiKey,
+                updatedAt: Date.now(),
             }),
         });
     }

@@ -22,7 +22,6 @@ import type {
     UserInstReport,
 } from '@casual-simulation/aux-records';
 import type { PrismaClient } from '../generated-sqlite';
-import { convertToDate, convertToMillis } from '../Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import { v4 as uuid } from 'uuid';
 
@@ -55,8 +54,8 @@ export class SqliteModerationStore implements ModerationStore {
                 reportedUrl: report.reportedUrl,
                 reportReason: report.reportReason,
                 reportReasonText: report.reportReasonText,
-                createdAt: convertToDate(report.createdAtMs),
-                updatedAt: convertToDate(report.updatedAtMs),
+                createdAt: report.createdAtMs,
+                updatedAt: report.updatedAtMs,
             },
             update: {
                 reportingUserId: report.reportingUserId,
@@ -68,8 +67,8 @@ export class SqliteModerationStore implements ModerationStore {
                 reportedUrl: report.reportedUrl,
                 reportReason: report.reportReason,
                 reportReasonText: report.reportReasonText,
-                createdAt: convertToDate(report.createdAtMs),
-                updatedAt: convertToDate(report.updatedAtMs),
+                createdAt: report.createdAtMs,
+                updatedAt: report.updatedAtMs,
             },
         });
     }
@@ -80,8 +79,8 @@ export class SqliteModerationStore implements ModerationStore {
             data: {
                 id: job.id,
                 type: job.type,
-                createdAt: convertToDate(job.createdAtMs),
-                updatedAt: convertToDate(job.updatedAtMs),
+                createdAt: job.createdAtMs,
+                updatedAt: job.updatedAtMs,
                 s3Id: job.s3Id,
             },
         });
@@ -107,8 +106,8 @@ export class SqliteModerationStore implements ModerationStore {
         return {
             id: job.id,
             type: job.type as ModerationJob['type'],
-            createdAtMs: convertToMillis(job.createdAt),
-            updatedAtMs: convertToMillis(job.updatedAt),
+            createdAtMs: job.createdAt,
+            updatedAtMs: job.updatedAt,
             s3Id: job.s3Id,
         };
     }
@@ -125,8 +124,8 @@ export class SqliteModerationStore implements ModerationStore {
                 fileName: result.fileName,
                 modelVersion: result.modelVersion,
                 appearsToMatchBannedContent: result.appearsToMatchBannedContent,
-                createdAt: convertToDate(result.createdAtMs),
-                updatedAt: convertToDate(result.updatedAtMs),
+                createdAt: result.createdAtMs,
+                updatedAt: result.updatedAtMs,
                 labels: {
                     createMany: {
                         data: result.labels.map((label) => {

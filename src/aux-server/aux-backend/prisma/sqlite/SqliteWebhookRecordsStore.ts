@@ -36,7 +36,6 @@ import type {
 } from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
-import { convertToDate, convertToMillis } from '../Utils';
 import { z } from 'zod';
 
 const ERROR_RESULT_SCHEMA = z
@@ -98,8 +97,8 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
                     where: {
                         ...whereRun,
                         requestTime: {
-                            lt: new Date(metrics.currentPeriodEndMs),
-                            gte: new Date(metrics.currentPeriodStartMs),
+                            lt: metrics.currentPeriodEndMs,
+                            gte: metrics.currentPeriodStartMs,
                         },
                     },
                 }),
@@ -107,7 +106,7 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
                     where: {
                         ...whereRun,
                         requestTime: {
-                            gte: new Date(Date.now() - 60 * 60 * 1000),
+                            gte: Date.now() - 60 * 60 * 1000,
                         },
                     },
                 }),
@@ -146,6 +145,8 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
                         ? item.targetAddress
                         : null,
                 userId: item.userId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -241,6 +242,8 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
                         ? item.targetAddress
                         : null,
                 userId: item.userId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: cleanupObject({
                 markers: item.markers,
@@ -262,6 +265,7 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
                         ? item.targetAddress
                         : null,
                 userId: item.userId,
+                updatedAt: Date.now(),
             }),
         });
     }
@@ -367,13 +371,15 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
                 id: run.runId,
                 recordName: run.recordName,
                 webhookAddress: run.webhookAddress,
-                requestTime: convertToDate(run.requestTimeMs),
-                responseTime: convertToDate(run.responseTimeMs),
+                requestTime: run.requestTimeMs,
+                responseTime: run.responseTimeMs,
                 statusCode: run.statusCode,
                 stateSha256: run.stateSha256,
                 errorResult: run.errorResult,
                 infoFileRecordName: run.infoRecordName,
                 infoFileName: run.infoFileName,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -391,7 +397,7 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
 
         if (startingRequestTime) {
             filter.requestTime = {
-                lt: convertToDate(startingRequestTime),
+                lt: startingRequestTime,
             };
         }
 
@@ -475,8 +481,8 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
             runId: r.id,
             recordName: r.recordName,
             webhookAddress: r.webhookAddress,
-            requestTimeMs: convertToMillis(r.requestTime),
-            responseTimeMs: convertToMillis(r.responseTime),
+            requestTimeMs: r.requestTime,
+            responseTimeMs: r.responseTime,
             statusCode: r.statusCode,
             errorResult: ERROR_RESULT_SCHEMA.parse(
                 r.errorResult

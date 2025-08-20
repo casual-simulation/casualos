@@ -44,8 +44,6 @@ import type {
     SubscriptionPeriod,
 } from '../generated-sqlite';
 import { Prisma } from '../generated-sqlite';
-// import { PrismaClientKnownRequestError } from './generated/runtime';
-import { convertToDate, convertToMillis } from '../Utils';
 import { v4 as uuid } from 'uuid';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { UserRole } from '@casual-simulation/aux-common';
@@ -131,7 +129,8 @@ export class SqliteAuthStore implements AuthStore {
                 id: userId,
             },
             data: {
-                allSessionRevokeTime: convertToDate(allSessionRevokeTimeMs),
+                allSessionRevokeTime: allSessionRevokeTimeMs,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -147,6 +146,7 @@ export class SqliteAuthStore implements AuthStore {
             },
             data: {
                 currentLoginRequestId: requestId,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -188,23 +188,21 @@ export class SqliteAuthStore implements AuthStore {
 
     @traced(TRACE_NAME)
     async saveUser(user: AuthUser): Promise<void> {
-        const userData: Prisma.UserUncheckedCreateInput = {
+        const userData: Omit<Prisma.UserUncheckedCreateInput, 'createdAt'> = {
             id: user.id,
             name: user.name as string,
             email: user.email,
             phoneNumber: user.phoneNumber,
             avatarUrl: user.avatarUrl as string,
             avatarPortraitUrl: user.avatarPortraitUrl as string,
-            allSessionRevokeTime: convertToDate(user.allSessionRevokeTimeMs),
+            allSessionRevokeTime: user.allSessionRevokeTimeMs,
             currentLoginRequestId: user.currentLoginRequestId as string,
             stripeCustomerId: user.stripeCustomerId as string,
             subscriptionStatus: user.subscriptionStatus as string,
             subscriptionId: user.subscriptionId as string,
-            subscriptionPeriodStart: convertToDate(
-                user.subscriptionPeriodStartMs
-            ),
-            subscriptionPeriodEnd: convertToDate(user.subscriptionPeriodEndMs),
-            banTime: convertToDate(user.banTimeMs),
+            subscriptionPeriodStart: user.subscriptionPeriodStartMs,
+            subscriptionPeriodEnd: user.subscriptionPeriodEndMs,
+            banTime: user.banTimeMs,
             banReason: user.banReason as string,
             privoServiceId: user.privoServiceId as string,
             privoParentServiceId: user.privoParentServiceId as string,
@@ -214,13 +212,17 @@ export class SqliteAuthStore implements AuthStore {
             allowAI: user.privacyFeatures?.allowAI ?? true,
             allowPublicInsts: user.privacyFeatures?.allowPublicInsts ?? true,
             role: user.role,
+            updatedAt: Date.now(),
         };
 
         await this._client.user.upsert({
             where: {
                 id: user.id,
             },
-            create: userData,
+            create: {
+                ...userData,
+                createdAt: Date.now(),
+            },
             update: userData,
         });
     }
@@ -235,19 +237,13 @@ export class SqliteAuthStore implements AuthStore {
                 phoneNumber: user.phoneNumber,
                 avatarUrl: user.avatarUrl as string,
                 avatarPortraitUrl: user.avatarPortraitUrl as string,
-                allSessionRevokeTime: convertToDate(
-                    user.allSessionRevokeTimeMs
-                ),
+                allSessionRevokeTime: user.allSessionRevokeTimeMs,
                 stripeCustomerId: user.stripeCustomerId as string,
                 subscriptionStatus: user.subscriptionStatus as string,
                 subscriptionId: user.subscriptionId as string,
-                subscriptionPeriodStart: convertToDate(
-                    user.subscriptionPeriodStartMs
-                ),
-                subscriptionPeriodEnd: convertToDate(
-                    user.subscriptionPeriodEndMs
-                ),
-                banTime: convertToDate(user.banTimeMs),
+                subscriptionPeriodStart: user.subscriptionPeriodStartMs,
+                subscriptionPeriodEnd: user.subscriptionPeriodEndMs,
+                banTime: user.banTimeMs,
                 banReason: user.banReason as string,
                 privoServiceId: user.privoServiceId as string,
                 privoParentServiceId: user.privoParentServiceId as string,
@@ -258,6 +254,8 @@ export class SqliteAuthStore implements AuthStore {
                 allowPublicInsts:
                     user.privacyFeatures?.allowPublicInsts ?? true,
                 role: user.role,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             };
 
             if (!!user.currentLoginRequestId) {
@@ -313,9 +311,9 @@ export class SqliteAuthStore implements AuthStore {
             addressType: request.addressType as AddressType,
             userId: request.userId,
             attemptCount: request.attemptCount,
-            completedTimeMs: convertToMillis(request.completedTime),
-            expireTimeMs: convertToMillis(request.expireTime) as number,
-            requestTimeMs: convertToMillis(request.requestTime) as number,
+            completedTimeMs: request.completedTime,
+            expireTimeMs: request.expireTime,
+            requestTimeMs: request.requestTime,
             ipAddress: request.ipAddress,
             secretHash: request.secretHash,
         };
@@ -347,10 +345,10 @@ export class SqliteAuthStore implements AuthStore {
             codeVerifier: request.codeVerifier,
             provider: request.provider,
             scope: request.scope,
-            requestTimeMs: convertToMillis(request.requestTime) as number,
-            expireTimeMs: convertToMillis(request.expireTime) as number,
-            completedTimeMs: convertToMillis(request.completedTime),
-            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            requestTimeMs: request.requestTime,
+            expireTimeMs: request.expireTime,
+            completedTimeMs: request.completedTime,
+            authorizationTimeMs: request.authorizationTime,
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
         };
@@ -382,10 +380,10 @@ export class SqliteAuthStore implements AuthStore {
             codeVerifier: request.codeVerifier,
             provider: request.provider,
             scope: request.scope,
-            requestTimeMs: convertToMillis(request.requestTime) as number,
-            expireTimeMs: convertToMillis(request.expireTime) as number,
-            completedTimeMs: convertToMillis(request.completedTime),
-            authorizationTimeMs: convertToMillis(request.authorizationTime),
+            requestTimeMs: request.requestTime,
+            expireTimeMs: request.expireTime,
+            completedTimeMs: request.completedTime,
+            authorizationTimeMs: request.authorizationTime,
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
         };
@@ -408,12 +406,14 @@ export class SqliteAuthStore implements AuthStore {
                 codeVerifier: request.codeVerifier,
                 provider: request.provider,
                 scope: request.scope,
-                requestTime: convertToDate(request.requestTimeMs),
-                expireTime: convertToDate(request.expireTimeMs),
-                completedTime: convertToDate(request.completedTimeMs),
-                authorizationTime: convertToDate(request.authorizationTimeMs),
+                requestTime: request.requestTimeMs,
+                expireTime: request.expireTimeMs,
+                completedTime: request.completedTimeMs,
+                authorizationTime: request.authorizationTimeMs,
                 authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 authorizationUrl: request.authorizationUrl,
@@ -423,12 +423,13 @@ export class SqliteAuthStore implements AuthStore {
                 codeVerifier: request.codeVerifier,
                 provider: request.provider,
                 scope: request.scope,
-                requestTime: convertToDate(request.requestTimeMs),
-                expireTime: convertToDate(request.expireTimeMs),
-                completedTime: convertToDate(request.completedTimeMs),
-                authorizationTime: convertToDate(request.authorizationTimeMs),
+                requestTime: request.requestTimeMs,
+                expireTime: request.expireTimeMs,
+                completedTime: request.completedTimeMs,
+                authorizationTime: request.authorizationTimeMs,
                 authorizationCode: request.authorizationCode,
                 ipAddress: request.ipAddress,
+                updatedAt: Date.now(),
             },
         });
 
@@ -445,7 +446,8 @@ export class SqliteAuthStore implements AuthStore {
                 requestId: requestId,
             },
             data: {
-                completedTime: convertToDate(completedTimeMs),
+                completedTime: completedTimeMs,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -462,7 +464,8 @@ export class SqliteAuthStore implements AuthStore {
             },
             data: {
                 authorizationCode: authorizationCode,
-                authorizationTime: convertToDate(authorizationTimeMs),
+                authorizationTime: authorizationTimeMs,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -485,9 +488,9 @@ export class SqliteAuthStore implements AuthStore {
             requestId: request.requestId,
             userId: request.userId,
             challenge: request.challenge,
-            requestTimeMs: convertToMillis(request.requestTime) as number,
-            expireTimeMs: convertToMillis(request.expireTime) as number,
-            completedTimeMs: convertToMillis(request.completedTime),
+            requestTimeMs: request.requestTime,
+            expireTimeMs: request.expireTime,
+            completedTimeMs: request.completedTime,
             ipAddress: request.ipAddress,
         };
     }
@@ -504,17 +507,20 @@ export class SqliteAuthStore implements AuthStore {
                 requestId: request.requestId,
                 userId: request.userId,
                 challenge: request.challenge,
-                requestTime: convertToDate(request.requestTimeMs),
-                expireTime: convertToDate(request.expireTimeMs),
-                completedTime: convertToDate(request.completedTimeMs),
+                requestTime: request.requestTimeMs,
+                expireTime: request.expireTimeMs,
+                completedTime: request.completedTimeMs,
                 ipAddress: request.ipAddress,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 challenge: request.challenge,
-                requestTime: convertToDate(request.requestTimeMs),
-                expireTime: convertToDate(request.expireTimeMs),
-                completedTime: convertToDate(request.completedTimeMs),
+                requestTime: request.requestTimeMs,
+                expireTime: request.expireTimeMs,
+                completedTime: request.completedTimeMs,
                 ipAddress: request.ipAddress,
+                updatedAt: Date.now(),
             },
         });
 
@@ -532,8 +538,9 @@ export class SqliteAuthStore implements AuthStore {
                 requestId: requestId,
             },
             data: {
-                completedTime: convertToDate(completedTimeMs),
+                completedTime: completedTimeMs,
                 userId: userId,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -549,6 +556,7 @@ export class SqliteAuthStore implements AuthStore {
             },
             data: {
                 currentWebAuthnChallenge: challenge,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -577,6 +585,7 @@ export class SqliteAuthStore implements AuthStore {
             },
             data: {
                 counter: newCounter,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -617,7 +626,7 @@ export class SqliteAuthStore implements AuthStore {
                 authenticator.transports as AuthUserAuthenticator['transports'],
             aaguid: authenticator.aaguid,
             registeringUserAgent: authenticator.registeringUserAgent,
-            createdAtMs: convertToMillis(authenticator.createdAt),
+            createdAtMs: authenticator.createdAt,
         };
     }
 
@@ -665,7 +674,8 @@ export class SqliteAuthStore implements AuthStore {
                 transports: authenticator.transports,
                 aaguid: authenticator.aaguid,
                 registeringUserAgent: authenticator.registeringUserAgent,
-                createdAt: convertToDate(authenticator.createdAtMs),
+                createdAt: authenticator.createdAtMs,
+                updatedAt: Date.now(),
             },
             update: {
                 id: authenticator.id,
@@ -680,6 +690,7 @@ export class SqliteAuthStore implements AuthStore {
                 transports: authenticator.transports,
                 aaguid: authenticator.aaguid,
                 registeringUserAgent: authenticator.registeringUserAgent,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -716,16 +727,20 @@ export class SqliteAuthStore implements AuthStore {
             address: request.address,
             addressType: request.addressType,
             attemptCount: request.attemptCount,
-            expireTime: convertToDate(request.expireTimeMs) as Date,
-            requestTime: convertToDate(request.requestTimeMs) as Date,
-            completedTime: convertToDate(request.completedTimeMs),
+            expireTime: request.expireTimeMs,
+            requestTime: request.requestTimeMs,
+            completedTime: request.completedTimeMs,
             ipAddress: request.ipAddress,
+            updatedAt: Date.now(),
         };
         await this._client.loginRequest.upsert({
             where: {
                 requestId: request.requestId,
             },
-            create: loginRequest,
+            create: {
+                ...loginRequest,
+                createdAt: Date.now(),
+            },
             update: loginRequest,
         });
         return request;
@@ -742,7 +757,8 @@ export class SqliteAuthStore implements AuthStore {
                 requestId: requestId,
             },
             data: {
-                completedTime: convertToDate(completedTimeMs),
+                completedTime: completedTimeMs,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -760,6 +776,7 @@ export class SqliteAuthStore implements AuthStore {
                 attemptCount: {
                     increment: 1,
                 },
+                updatedAt: Date.now(),
             },
         });
     }
@@ -770,9 +787,9 @@ export class SqliteAuthStore implements AuthStore {
             sessionId: session.sessionId,
             userId: session.userId,
             secretHash: session.secretHash,
-            grantedTime: convertToDate(session.grantedTimeMs) as Date,
-            expireTime: convertToDate(session.expireTimeMs) as Date,
-            revokeTime: convertToDate(session.revokeTimeMs),
+            grantedTime: session.grantedTimeMs,
+            expireTime: session.expireTimeMs,
+            revokeTime: session.revokeTimeMs,
             requestId: session.requestId,
             previousSessionId: session.previousSessionId,
             nextSessionId: session.nextSessionId,
@@ -788,12 +805,16 @@ export class SqliteAuthStore implements AuthStore {
             oidRequestId: session.oidRequestId,
             oidScope: session.oidScope,
             oidTokenType: session.oidTokenType,
+            updatedAt: Date.now(),
         };
         await this._client.authSession.upsert({
             where: {
                 sessionId: session.sessionId,
             },
-            create: sessionData,
+            create: {
+                ...sessionData,
+                createdAt: Date.now(),
+            },
             update: sessionData,
         });
     }
@@ -809,26 +830,25 @@ export class SqliteAuthStore implements AuthStore {
                 sessionId: session.sessionId,
             },
             data: {
-                revokeTime: convertToDate(revokeTimeMs),
+                revokeTime: revokeTimeMs,
                 nextSession: {
                     create: {
                         sessionId: newSession.sessionId,
                         userId: newSession.userId,
                         secretHash: newSession.secretHash,
-                        grantedTime: convertToDate(
-                            newSession.grantedTimeMs
-                        ) as Date,
-                        expireTime: convertToDate(
-                            newSession.expireTimeMs
-                        ) as Date,
-                        revokeTime: convertToDate(newSession.revokeTimeMs),
+                        grantedTime: newSession.grantedTimeMs,
+                        expireTime: newSession.expireTimeMs,
+                        revokeTime: newSession.revokeTimeMs,
                         requestId: newSession.requestId,
                         ipAddress: newSession.ipAddress,
                         previousSessionId: session.sessionId,
                         connectionSecret: newSession.connectionSecret,
                         revocable: session.revocable,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now(),
                     },
                 },
+                updatedAt: Date.now(),
             },
         });
     }
@@ -845,7 +865,7 @@ export class SqliteAuthStore implements AuthStore {
             userId: userId,
         };
         if (expireTimeMs) {
-            where['expireTime'] = { lt: new Date(expireTimeMs) };
+            where['expireTime'] = { lt: expireTimeMs };
         }
 
         const sessions = await this._client.authSession.findMany({
@@ -866,16 +886,18 @@ export class SqliteAuthStore implements AuthStore {
     async saveSubscription(subscription: AuthSubscription): Promise<void> {
         const value = {
             ...subscription,
-            currentPeriodEnd: convertToDate(subscription.currentPeriodEndMs),
-            currentPeriodStart: convertToDate(
-                subscription.currentPeriodStartMs
-            ),
+            currentPeriodEnd: subscription.currentPeriodEndMs,
+            currentPeriodStart: subscription.currentPeriodStartMs,
+            updatedAt: Date.now(),
         };
         await this._client.subscription.upsert({
             where: {
                 id: subscription.id,
             },
-            create: value,
+            create: {
+                ...value,
+                createdAt: Date.now(),
+            },
             update: value,
         });
     }
@@ -915,15 +937,19 @@ export class SqliteAuthStore implements AuthStore {
     ): Promise<void> {
         const value = {
             ...period,
-            periodEnd: convertToDate(period.periodEndMs),
-            periodStart: convertToDate(period.periodStartMs),
+            periodEnd: period.periodEndMs,
+            periodStart: period.periodStartMs,
+            updatedAt: Date.now(),
         };
 
         await this._client.subscriptionPeriod.upsert({
             where: {
                 id: period.id,
             },
-            create: value,
+            create: {
+                ...value,
+                createdAt: Date.now(),
+            },
             update: value,
         });
     }
@@ -964,13 +990,17 @@ export class SqliteAuthStore implements AuthStore {
     async saveInvoice(invoice: AuthInvoice): Promise<void> {
         const value = {
             ...invoice,
+            updatedAt: Date.now(),
         };
 
         await this._client.invoice.upsert({
             where: {
                 id: invoice.id,
             },
-            create: value,
+            create: {
+                ...value,
+                createdAt: Date.now(),
+            },
             update: value,
         });
     }
@@ -991,8 +1021,8 @@ export class SqliteAuthStore implements AuthStore {
     async updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
     ): Promise<void> {
-        const periodStart = convertToDate(request.currentPeriodStartMs);
-        const periodEnd = convertToDate(request.currentPeriodEndMs);
+        const periodStart = request.currentPeriodStartMs;
+        const periodEnd = request.currentPeriodEndMs;
         if (request.userId) {
             const updateData: Prisma.UserUpdateArgs<any>['data'] = {
                 subscriptionId: request.subscriptionId,
@@ -1017,6 +1047,8 @@ export class SqliteAuthStore implements AuthStore {
                             stripeSubscriptionId: request.stripeSubscriptionId,
                             currentPeriodStart: periodStart,
                             currentPeriodEnd: periodEnd,
+                            createdAt: Date.now(),
+                            updatedAt: Date.now(),
                         },
                         update: {
                             subscriptionId: request.subscriptionId,
@@ -1025,6 +1057,7 @@ export class SqliteAuthStore implements AuthStore {
                             stripeSubscriptionId: request.stripeSubscriptionId,
                             currentPeriodStart: periodStart,
                             currentPeriodEnd: periodEnd,
+                            updatedAt: Date.now(),
                         },
                     },
                 };
@@ -1062,6 +1095,8 @@ export class SqliteAuthStore implements AuthStore {
                             stripeSubscriptionId: request.stripeSubscriptionId,
                             currentPeriodStart: periodStart,
                             currentPeriodEnd: periodEnd,
+                            createdAt: Date.now(),
+                            updatedAt: Date.now(),
                         },
                         update: {
                             subscriptionId: request.subscriptionId,
@@ -1070,6 +1105,7 @@ export class SqliteAuthStore implements AuthStore {
                             stripeSubscriptionId: request.stripeSubscriptionId,
                             currentPeriodStart: periodStart,
                             currentPeriodEnd: periodEnd,
+                            updatedAt: Date.now(),
                         },
                     },
                 };
@@ -1092,8 +1128,8 @@ export class SqliteAuthStore implements AuthStore {
     ): Promise<void> {
         const periodId: string = uuid();
         const invoiceId: string = uuid();
-        const periodStart = convertToDate(request.currentPeriodStartMs);
-        const periodEnd = convertToDate(request.currentPeriodEndMs);
+        const periodStart = request.currentPeriodStartMs;
+        const periodEnd = request.currentPeriodEndMs;
 
         if (request.userId) {
             await this._client.user.update({
@@ -1131,12 +1167,18 @@ export class SqliteAuthStore implements AuthStore {
                                                     },
                                                 },
                                                 ...request.invoice,
+                                                createdAt: Date.now(),
+                                                updatedAt: Date.now(),
                                             },
                                         },
                                         periodEnd: periodEnd,
                                         periodStart: periodStart,
+                                        createdAt: Date.now(),
+                                        updatedAt: Date.now(),
                                     },
                                 },
+                                createdAt: Date.now(),
+                                updatedAt: Date.now(),
                             },
                             update: {
                                 periods: {
@@ -1152,12 +1194,17 @@ export class SqliteAuthStore implements AuthStore {
                                                     },
                                                 },
                                                 ...request.invoice,
+                                                createdAt: Date.now(),
+                                                updatedAt: Date.now(),
                                             },
                                         },
                                         periodEnd: periodEnd,
                                         periodStart: periodStart,
+                                        createdAt: Date.now(),
+                                        updatedAt: Date.now(),
                                     },
                                 },
+                                updatedAt: Date.now(),
                             },
                         },
                     },
@@ -1200,12 +1247,18 @@ export class SqliteAuthStore implements AuthStore {
                                                     },
                                                 },
                                                 ...request.invoice,
+                                                createdAt: Date.now(),
+                                                updatedAt: Date.now(),
                                             },
                                         },
                                         periodEnd: periodEnd,
                                         periodStart: periodStart,
+                                        createdAt: Date.now(),
+                                        updatedAt: Date.now(),
                                     },
                                 },
+                                createdAt: Date.now(),
+                                updatedAt: Date.now(),
                             },
                             update: {
                                 periods: {
@@ -1222,12 +1275,17 @@ export class SqliteAuthStore implements AuthStore {
                                                     },
                                                 },
                                                 ...request.invoice,
+                                                createdAt: Date.now(),
+                                                updatedAt: Date.now(),
                                             },
                                         },
                                         periodEnd: periodEnd,
                                         periodStart: periodStart,
+                                        createdAt: Date.now(),
+                                        updatedAt: Date.now(),
                                     },
                                 },
+                                updatedAt: Date.now(),
                             },
                         },
                     },
@@ -1278,13 +1336,11 @@ export class SqliteAuthStore implements AuthStore {
                 avatarUrl: user.avatarUrl,
                 avatarPortraitUrl: user.avatarPortraitUrl,
                 stripeCustomerId: user.stripeCustomerId,
-                allSessionRevokeTimeMs: convertToMillis(
-                    user.allSessionRevokeTime
-                ),
+                allSessionRevokeTimeMs: user.allSessionRevokeTime,
                 currentLoginRequestId: user.currentLoginRequestId,
                 subscriptionStatus:
                     user.subscriptionStatus as AuthUser['subscriptionStatus'],
-                banTimeMs: convertToMillis(user.banTime),
+                banTimeMs: user.banTime,
                 banReason: user.banReason as AuthUser['banReason'],
                 subscriptionId: user.subscriptionId as string | undefined,
                 privoServiceId: user.privoServiceId as string | undefined,
@@ -1300,12 +1356,8 @@ export class SqliteAuthStore implements AuthStore {
                 },
                 currentWebAuthnChallenge: user.currentWebAuthnChallenge,
                 subscriptionInfoId: user.subscriptionInfoId,
-                subscriptionPeriodEndMs: convertToMillis(
-                    user.subscriptionPeriodEnd
-                ),
-                subscriptionPeriodStartMs: convertToMillis(
-                    user.subscriptionPeriodStart
-                ),
+                subscriptionPeriodEndMs: user.subscriptionPeriodEnd,
+                subscriptionPeriodStartMs: user.subscriptionPeriodStart,
                 role: user.role as UserRole,
             };
         }
@@ -1317,9 +1369,9 @@ export class SqliteAuthStore implements AuthStore {
             sessionId: session.sessionId,
             userId: session.userId,
             secretHash: session.secretHash,
-            expireTimeMs: convertToMillis(session.expireTime) as number,
-            grantedTimeMs: convertToMillis(session.grantedTime) as number,
-            revokeTimeMs: convertToMillis(session.revokeTime) as number,
+            expireTimeMs: session.expireTime,
+            grantedTimeMs: session.grantedTime,
+            revokeTimeMs: session.revokeTime,
             requestId: session.requestId,
             previousSessionId: session.previousSessionId,
             ipAddress: session.ipAddress,
@@ -1347,8 +1399,8 @@ export class SqliteAuthStore implements AuthStore {
         if (sub) {
             return {
                 ...sub,
-                currentPeriodEndMs: convertToMillis(sub.currentPeriodEnd),
-                currentPeriodStartMs: convertToMillis(sub.currentPeriodStart),
+                currentPeriodEndMs: sub.currentPeriodEnd,
+                currentPeriodStartMs: sub.currentPeriodStart,
             };
         }
 
@@ -1361,8 +1413,8 @@ export class SqliteAuthStore implements AuthStore {
         if (period) {
             return {
                 ...period,
-                periodEndMs: convertToMillis(period.periodEnd),
-                periodStartMs: convertToMillis(period.periodStart),
+                periodEndMs: period.periodEnd,
+                periodStartMs: period.periodStart,
             };
         }
 

@@ -69,6 +69,7 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
             updatePolicy: updatePolicy as any,
             deletePolicy: deletePolicy as any,
             markers: markers,
+            updatedAt: Date.now(),
         };
         await (this._collection.upsert as PrismaClient['dataRecord']['upsert'])(
             {
@@ -78,7 +79,10 @@ export class SqliteDataRecordsStore implements DataRecordsStore {
                         address: address,
                     },
                 },
-                create: dataRecord,
+                create: {
+                    ...dataRecord,
+                    createdAt: Date.now(),
+                },
                 update: dataRecord,
             }
         );

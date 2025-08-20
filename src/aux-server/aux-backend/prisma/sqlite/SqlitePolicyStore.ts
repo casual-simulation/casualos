@@ -79,7 +79,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     userId,
                     feature,
                     recordName,
-                    expireTime: { gt: convertToDate(nowMs) },
+                    expireTime: { gt: nowMs },
                     revokeTime: { equals: null },
                     packageId: {
                         in: packageIds,
@@ -105,9 +105,10 @@ export class SqlitePolicyStore implements PolicyStore {
                 scope: grantedEntitlement.scope as GrantedEntitlementScope,
                 userId: grantedEntitlement.userId,
                 recordName: grantedEntitlement.recordName,
-                expireTime: convertToDate(grantedEntitlement.expireTimeMs),
-                revokeTime: convertToDate(grantedEntitlement.revokeTimeMs),
-                createdAt: convertToDate(grantedEntitlement.createdAtMs),
+                expireTime: grantedEntitlement.expireTimeMs,
+                revokeTime: grantedEntitlement.revokeTimeMs,
+                createdAt: grantedEntitlement.createdAtMs,
+                updatedAt: Date.now(),
             },
             update: {
                 packageId: grantedEntitlement.packageId,
@@ -115,8 +116,9 @@ export class SqlitePolicyStore implements PolicyStore {
                 scope: grantedEntitlement.scope as GrantedEntitlementScope,
                 userId: grantedEntitlement.userId,
                 recordName: grantedEntitlement.recordName,
-                expireTime: convertToDate(grantedEntitlement.expireTimeMs),
-                revokeTime: convertToDate(grantedEntitlement.revokeTimeMs),
+                expireTime: grantedEntitlement.expireTimeMs,
+                revokeTime: grantedEntitlement.revokeTimeMs,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -164,7 +166,7 @@ export class SqlitePolicyStore implements PolicyStore {
             await this._client.grantedPackageEntitlement.findMany({
                 where: {
                     userId,
-                    expireTime: { gt: convertToDate(nowMs) },
+                    expireTime: { gt: nowMs },
                     revokeTime: { equals: null },
                 },
             });
@@ -183,7 +185,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 where: {
                     userId,
                     packageId,
-                    expireTime: { gt: convertToDate(nowMs) },
+                    expireTime: { gt: nowMs },
                     revokeTime: { equals: null },
                 },
             });
@@ -204,9 +206,9 @@ export class SqlitePolicyStore implements PolicyStore {
             scope: e.scope as GrantedEntitlementScope,
             userId: e.userId,
             recordName: e.recordName,
-            expireTimeMs: convertToMillis(e.expireTime),
-            revokeTimeMs: convertToMillis(e.revokeTime),
-            createdAtMs: convertToMillis(e.createdAt),
+            expireTimeMs: e.expireTime,
+            revokeTimeMs: e.revokeTime,
+            createdAtMs: e.createdAt,
         };
     }
 
@@ -281,7 +283,7 @@ export class SqlitePolicyStore implements PolicyStore {
         currentTimeMs: number
     ): Promise<GetResourcePermissionResult> {
         // prettier-ignore
-        const result = await this._client.$queryRaw<ResourcePermission[]>`SELECT "id", "recordName", "resourceKind", "resourceId", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM public."ResourcePermissionAssignment"
+        const result = await this._client.$queryRaw<ResourcePermission[]>`SELECT "id", "recordName", "resourceKind", "resourceId", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM "ResourcePermissionAssignment"
             WHERE "recordName" = ${recordName}
             AND "resourceKind" = ${resourceKind} 
             AND "resourceId" = ${resourceId} 
@@ -330,14 +332,12 @@ export class SqlitePolicyStore implements PolicyStore {
         currentTimeMs: number
     ): Promise<GetMarkerPermissionResult> {
         // prettier-ignore
-        const result = await this._client.$queryRaw<MarkerPermission[]>`SELECT "id", "recordName", "resourceKind", "marker", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM public."MarkerPermissionAssignment"
+        const result = await this._client.$queryRaw<MarkerPermission[]>`SELECT "id", "recordName", "resourceKind", "marker", "action", "options", "subjectId", "subjectType", "userId", "expireTime" FROM "MarkerPermissionAssignment"
             WHERE "recordName" = ${recordName}
             AND ("resourceKind" IS NULL OR "resourceKind" = ${resourceKind})
             AND "marker" IN (${Prisma.join(markers)})
             AND ("action" IS NULL OR "action" = ${action})
-            AND ("expireTime" IS NULL OR "expireTime" > ${convertToDate(
-                currentTimeMs
-            )})
+            AND ("expireTime" IS NULL OR "expireTime" > ${currentTimeMs})
             AND (
                 ("subjectId" = ${subjectId} AND "subjectType" = ${subjectType}) OR
                 ("subjectType" = 'role' AND "subjectId" IN (SELECT "roleId" FROM "RoleAssignment" WHERE "recordName" = ${recordName} AND "subjectId" = ${subjectId} AND "subjectType" = ${subjectType})))
@@ -388,7 +388,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     resourceKind,
                     resourceId,
                     action,
-                    expireTime: convertToDate(expireTimeMs),
+                    expireTime: expireTimeMs,
                 },
             });
 
@@ -411,7 +411,9 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: subjectId,
                 subjectType: subjectType,
                 userId: subjectType === 'user' ? subjectId : null,
-                expireTime: convertToDate(expireTimeMs),
+                expireTime: expireTimeMs,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
 
@@ -427,7 +429,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: result.subjectId,
                 subjectType: result.subjectType as SubjectType,
                 userId: result.userId,
-                expireTimeMs: convertToMillis(result.expireTime),
+                expireTimeMs: result.expireTime,
             },
         };
     }
@@ -452,7 +454,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     resourceKind,
                     marker,
                     action,
-                    expireTime: convertToDate(expireTimeMs),
+                    expireTime: expireTimeMs,
                 },
             });
 
@@ -475,7 +477,9 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: subjectId,
                 subjectType: subjectType,
                 userId: subjectType === 'user' ? subjectId : null,
-                expireTime: convertToDate(expireTimeMs),
+                expireTime: expireTimeMs,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
 
@@ -491,7 +495,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: result.subjectId,
                 subjectType: result.subjectType as SubjectType,
                 userId: result.userId,
-                expireTimeMs: convertToMillis(result.expireTime),
+                expireTimeMs: result.expireTime,
             },
         };
     }
@@ -556,7 +560,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: p.subjectId,
                 subjectType: p.subjectType as SubjectType,
                 userId: p.userId,
-                expireTimeMs: convertToMillis(p.expireTime),
+                expireTimeMs: p.expireTime,
             })),
             markerAssignments: markerPermissions.map((p) => ({
                 id: p.id,
@@ -568,7 +572,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: p.subjectId,
                 subjectType: p.subjectType as SubjectType,
                 userId: p.userId,
-                expireTimeMs: convertToMillis(p.expireTime),
+                expireTimeMs: p.expireTime,
             })),
         };
     }
@@ -598,7 +602,7 @@ export class SqlitePolicyStore implements PolicyStore {
             subjectId: p.subjectId,
             subjectType: p.subjectType as SubjectType,
             userId: p.userId,
-            expireTimeMs: convertToMillis(p.expireTime),
+            expireTimeMs: p.expireTime,
         }));
     }
 
@@ -625,7 +629,7 @@ export class SqlitePolicyStore implements PolicyStore {
             subjectId: p.subjectId,
             subjectType: p.subjectType as SubjectType,
             userId: p.userId,
-            expireTimeMs: convertToMillis(p.expireTime),
+            expireTimeMs: p.expireTime,
         }));
     }
 
@@ -665,7 +669,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: p.subjectId,
                 subjectType: p.subjectType as SubjectType,
                 userId: p.userId,
-                expireTimeMs: convertToMillis(p.expireTime),
+                expireTimeMs: p.expireTime,
             })),
             markerAssignments: markerPermissions.map((p) => ({
                 id: p.id,
@@ -677,7 +681,7 @@ export class SqlitePolicyStore implements PolicyStore {
                 subjectId: p.subjectId,
                 subjectType: p.subjectType as SubjectType,
                 userId: p.userId,
-                expireTimeMs: convertToMillis(p.expireTime),
+                expireTimeMs: p.expireTime,
             })),
         };
     }
@@ -708,7 +712,7 @@ export class SqlitePolicyStore implements PolicyStore {
             subjectId: result.subjectId,
             subjectType: result.subjectType as SubjectType,
             userId: result.userId,
-            expireTimeMs: convertToMillis(result.expireTime),
+            expireTimeMs: result.expireTime,
         };
     }
 
@@ -737,7 +741,7 @@ export class SqlitePolicyStore implements PolicyStore {
             subjectId: result.subjectId,
             subjectType: result.subjectType as SubjectType,
             userId: result.userId,
-            expireTimeMs: convertToMillis(result.expireTime),
+            expireTimeMs: result.expireTime,
         };
     }
 
@@ -746,7 +750,7 @@ export class SqlitePolicyStore implements PolicyStore {
         recordName: string,
         userId: string
     ): Promise<AssignedRole[]> {
-        const now = new Date();
+        const now = Date.now();
         const assignments = await this._client.roleAssignment.findMany({
             where: {
                 recordName: recordName,
@@ -771,7 +775,7 @@ export class SqlitePolicyStore implements PolicyStore {
             (r) =>
                 ({
                     role: r.roleId,
-                    expireTimeMs: getExpireTime(convertToMillis(r.expireTime)),
+                    expireTimeMs: getExpireTime(r.expireTime),
                 } as AssignedRole)
         );
     }
@@ -781,7 +785,7 @@ export class SqlitePolicyStore implements PolicyStore {
         recordName: string,
         inst: string
     ): Promise<AssignedRole[]> {
-        const now = new Date();
+        const now = Date.now();
         const assignments = await this._client.roleAssignment.findMany({
             where: {
                 recordName: recordName,
@@ -806,7 +810,7 @@ export class SqlitePolicyStore implements PolicyStore {
             (r) =>
                 ({
                     role: r.roleId,
-                    expireTimeMs: getExpireTime(convertToMillis(r.expireTime)),
+                    expireTimeMs: getExpireTime(r.expireTime),
                 } as AssignedRole)
         );
     }
@@ -816,7 +820,7 @@ export class SqlitePolicyStore implements PolicyStore {
         recordName: string,
         role: string
     ): Promise<ListedRoleAssignments> {
-        const now = new Date();
+        const now = Date.now();
         const assignments = await this._client.roleAssignment.findMany({
             where: {
                 recordName: recordName,
@@ -843,9 +847,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     inst: a.subjectId,
                     role: {
                         role: a.roleId,
-                        expireTimeMs: getExpireTime(
-                            convertToMillis(a.expireTime)
-                        ),
+                        expireTimeMs: getExpireTime(a.expireTime),
                     },
                 } as const;
             } else {
@@ -854,9 +856,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     userId: a.userId,
                     role: {
                         role: a.roleId,
-                        expireTimeMs: getExpireTime(
-                            convertToMillis(a.expireTime)
-                        ),
+                        expireTimeMs: getExpireTime(a.expireTime),
                     },
                 } as const;
             }
@@ -873,7 +873,7 @@ export class SqlitePolicyStore implements PolicyStore {
         recordName: string,
         startingRole: string
     ): Promise<ListedRoleAssignments> {
-        const now = new Date();
+        const now = Date.now();
         const simpleQuery: Prisma.RoleAssignmentWhereInput = {
             recordName: recordName,
             OR: [
@@ -929,9 +929,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     inst: a.subjectId,
                     role: {
                         role: a.roleId,
-                        expireTimeMs: getExpireTime(
-                            convertToMillis(a.expireTime)
-                        ),
+                        expireTimeMs: getExpireTime(a.expireTime),
                     },
                 } as const;
             } else {
@@ -940,9 +938,7 @@ export class SqlitePolicyStore implements PolicyStore {
                     userId: a.subjectId,
                     role: {
                         role: a.roleId,
-                        expireTimeMs: getExpireTime(
-                            convertToMillis(a.expireTime)
-                        ),
+                        expireTimeMs: getExpireTime(a.expireTime),
                     },
                 } as const;
             }
@@ -962,7 +958,7 @@ export class SqlitePolicyStore implements PolicyStore {
         role: AssignedRole
     ): Promise<UpdateUserRolesResult> {
         const expireTime =
-            role.expireTimeMs === Infinity ? null : new Date(role.expireTimeMs);
+            role.expireTimeMs === Infinity ? null : role.expireTimeMs;
 
         await this._client.roleAssignment.upsert({
             where: {
@@ -979,9 +975,12 @@ export class SqlitePolicyStore implements PolicyStore {
                 type: type,
                 userId: type === 'user' ? subjectId : null,
                 expireTime: expireTime,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 expireTime: expireTime,
+                updatedAt: Date.now(),
             },
         });
 

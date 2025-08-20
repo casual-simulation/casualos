@@ -37,7 +37,7 @@ export class SqlitePrivoStore implements PrivoStore {
             {
                 where: {
                     expiresAt: {
-                        gt: new Date(),
+                        gt: Date.now(),
                     },
                 },
                 orderBy: {
@@ -56,9 +56,10 @@ export class SqlitePrivoStore implements PrivoStore {
                 id: credentials.id,
                 accessToken: credentials.accessToken,
                 refreshToken: credentials.refreshToken,
-                expiresAt: new Date(credentials.expiresAtSeconds * 1000),
+                expiresAt: credentials.expiresAtSeconds * 1000,
                 expiresAtSeconds: credentials.expiresAtSeconds,
                 scope: credentials.scope,
+                createdAt: Date.now(),
             },
         });
     }

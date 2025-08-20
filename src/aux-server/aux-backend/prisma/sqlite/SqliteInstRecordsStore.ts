@@ -61,6 +61,8 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 packageId: loadedPackage.packageId,
                 packageVersionId: loadedPackage.packageVersionId,
                 userId: loadedPackage.userId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 instRecordName: loadedPackage.recordName,
@@ -69,6 +71,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 packageId: loadedPackage.packageId,
                 packageVersionId: loadedPackage.packageVersionId,
                 userId: loadedPackage.userId,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -329,11 +332,14 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 },
                 update: {
                     markers: inst.markers,
+                    updatedAt: Date.now(),
                 },
                 create: {
                     name: inst.inst,
                     recordName: inst.recordName,
                     markers: inst.markers,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
                 },
             });
 
@@ -369,12 +375,15 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                 },
                 update: {
                     temporary: branch.temporary,
+                    updatedAt: Date.now(),
                 },
                 create: {
                     name: branch.branch,
                     recordName: branch.recordName,
                     instName: branch.inst,
                     temporary: branch.temporary,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
                 },
             });
 
@@ -417,7 +426,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
 
         return {
             updates: updates.map((u) => u.updateData),
-            timestamps: updates.map((u) => u.createdAt.getTime()),
+            timestamps: updates.map((u) => u.createdAt),
             instSizeInBytes: await this.getInstSize(recordName, inst),
         };
     }
@@ -471,7 +480,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
 
         return {
             updates: updates.map((u) => u.updateData),
-            timestamps: updates.map((u) => u.createdAt.getTime()),
+            timestamps: updates.map((u) => u.createdAt),
         };
     }
 
@@ -545,6 +554,8 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
                     branchName: branch,
                     updateData: updateToAdd,
                     sizeInBytes,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
                 },
             });
         } catch (err) {

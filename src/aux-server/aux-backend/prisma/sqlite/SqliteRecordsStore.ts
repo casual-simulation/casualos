@@ -40,7 +40,6 @@ import {
     HUME_CONFIG,
 } from '@casual-simulation/aux-records';
 import type { PrismaClient, Prisma } from '../generated-sqlite';
-import { convertToDate, convertToMillis } from '../Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
 const TRACE_NAME = 'SqliteRecordsStore';
@@ -79,6 +78,7 @@ export class SqliteRecordsStore implements RecordsStore {
             },
             data: {
                 humeConfig: config,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -112,6 +112,7 @@ export class SqliteRecordsStore implements RecordsStore {
             },
             data: {
                 loomConfig: config,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -119,8 +120,14 @@ export class SqliteRecordsStore implements RecordsStore {
     @traced(TRACE_NAME)
     async updateRecord(record: Record): Promise<void> {
         await this._client
-            .$executeRaw`UPSERT INTO public."Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
-            VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, NOW())`;
+            .$executeRaw`INSERT INTO "Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
+            VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, unixepoch()) 
+            ON CONFLICT("name") DO UPDATE SET 
+                "ownerId" = excluded."ownerId",
+                "studioId" = excluded."studioId",
+                "secretHashes" = excluded."secretHashes",
+                "secretSalt" = excluded."secretSalt",
+                "updatedAt" = excluded."updatedAt";`;
     }
 
     @traced(TRACE_NAME)
@@ -150,6 +157,8 @@ export class SqliteRecordsStore implements RecordsStore {
                 secretHash: key.secretHash,
                 creatorId: key.creatorId,
                 policy: key.policy as any,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -237,18 +246,16 @@ export class SqliteRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
-                subscriptionPeriodStart: convertToDate(
-                    studio.subscriptionPeriodStartMs
-                ),
-                subscriptionPeriodEnd: convertToDate(
-                    studio.subscriptionPeriodEndMs
-                ),
+                subscriptionPeriodStart: studio.subscriptionPeriodStartMs,
+                subscriptionPeriodEnd: studio.subscriptionPeriodEndMs,
                 subscriptionInfoId: studio.subscriptionInfoId,
                 comId: studio.comId,
                 comIdConfig: studio.comIdConfig,
                 logoUrl: studio.logoUrl,
                 ownerStudioComId: studio.ownerStudioComId,
                 playerConfig: studio.playerConfig,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -265,12 +272,8 @@ export class SqliteRecordsStore implements RecordsStore {
                 stripeCustomerId: studio.stripeCustomerId,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
-                subscriptionPeriodStart: convertToDate(
-                    studio.subscriptionPeriodStartMs
-                ),
-                subscriptionPeriodEnd: convertToDate(
-                    studio.subscriptionPeriodEndMs
-                ),
+                subscriptionPeriodStart: studio.subscriptionPeriodStartMs,
+                subscriptionPeriodEnd: studio.subscriptionPeriodEndMs,
                 subscriptionInfoId: studio.subscriptionInfoId,
                 comId: studio.comId,
                 comIdConfig: studio.comIdConfig,
@@ -282,8 +285,12 @@ export class SqliteRecordsStore implements RecordsStore {
                         userId: adminId,
                         isPrimaryContact: true,
                         role: 'admin',
+                        createdAt: Date.now(),
+                        updatedAt: Date.now(),
                     },
                 },
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
 
@@ -297,12 +304,8 @@ export class SqliteRecordsStore implements RecordsStore {
                 comId: result.comId,
                 logoUrl: result.logoUrl,
                 subscriptionInfoId: result.subscriptionInfoId,
-                subscriptionPeriodEndMs: convertToMillis(
-                    result.subscriptionPeriodEnd
-                ),
-                subscriptionPeriodStartMs: convertToMillis(
-                    result.subscriptionPeriodStart
-                ),
+                subscriptionPeriodEndMs: result.subscriptionPeriodEnd,
+                subscriptionPeriodStartMs: result.subscriptionPeriodStart,
                 comIdConfig: zodParseConfig(
                     result.comIdConfig,
                     COM_ID_CONFIG_SCHEMA
@@ -343,12 +346,8 @@ export class SqliteRecordsStore implements RecordsStore {
             comId: studio.comId,
             logoUrl: studio.logoUrl,
             subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: convertToMillis(
-                studio.subscriptionPeriodEnd
-            ),
-            subscriptionPeriodStartMs: convertToMillis(
-                studio.subscriptionPeriodStart
-            ),
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStart,
             comIdConfig: zodParseConfig(
                 studio.comIdConfig,
                 COM_ID_CONFIG_SCHEMA
@@ -382,12 +381,8 @@ export class SqliteRecordsStore implements RecordsStore {
             comId: studio.comId,
             logoUrl: studio.logoUrl,
             subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: convertToMillis(
-                studio.subscriptionPeriodEnd
-            ),
-            subscriptionPeriodStartMs: convertToMillis(
-                studio.subscriptionPeriodStart
-            ),
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStart,
             comIdConfig: zodParseConfig(
                 studio.comIdConfig,
                 COM_ID_CONFIG_SCHEMA
@@ -421,12 +416,8 @@ export class SqliteRecordsStore implements RecordsStore {
             comId: studio.comId,
             logoUrl: studio.logoUrl,
             subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: convertToMillis(
-                studio.subscriptionPeriodEnd
-            ),
-            subscriptionPeriodStartMs: convertToMillis(
-                studio.subscriptionPeriodStart
-            ),
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd,
+            subscriptionPeriodStartMs: studio.subscriptionPeriodStart,
             comIdConfig: zodParseConfig(
                 studio.comIdConfig,
                 COM_ID_CONFIG_SCHEMA
@@ -451,30 +442,39 @@ export class SqliteRecordsStore implements RecordsStore {
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
                 subscriptionInfoId: studio.subscriptionInfoId,
-                subscriptionPeriodStart: convertToDate(
-                    studio.subscriptionPeriodStartMs
-                ),
-                subscriptionPeriodEnd: convertToDate(
-                    studio.subscriptionPeriodEndMs
-                ),
+                subscriptionPeriodStart: studio.subscriptionPeriodStartMs,
+                subscriptionPeriodEnd: studio.subscriptionPeriodEndMs,
                 comIdConfig: studio.comIdConfig,
                 playerConfig: studio.playerConfig,
                 logoUrl: studio.logoUrl,
                 comId: studio.comId,
                 ownerStudioComId: studio.ownerStudioComId,
+                updatedAt: Date.now(),
             },
         });
     }
 
     @traced(TRACE_NAME)
     async saveComIdRequest(request: StudioComIdRequest): Promise<void> {
+        //  await this._client
+        //     .$executeRaw`INSERT INTO "Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
+        //     VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, datetime())
+        //     ON CONFLICT("name") DO UPDATE SET
+        //         "ownerId" = excluded."ownerId",
+        //         "studioId" = excluded."studioId",
+        //         "secretHashes" = excluded."secretHashes",
+        //         "secretSalt" = excluded."secretSalt",
+        //         "updatedAt" = excluded."updatedAt";`;
         await this._client
-            .$executeRaw`UPSERT INTO public."StudioComIdRequest" ("id", "studioId", "userId", "requestedComId", "requestingIpAddress", "createdAt", "updatedAt")
-            VALUES (${request.id}, ${request.studioId}, ${request.userId}, ${
-            request.requestedComId
-        }, ${request.requestingIpAddress}, ${convertToDate(
-            request.createdAtMs
-        )}, NOW())`;
+            .$executeRaw`INSERT INTO "StudioComIdRequest" ("id", "studioId", "userId", "requestedComId", "requestingIpAddress", "createdAt", "updatedAt")
+            VALUES (${request.id}, ${request.studioId}, ${request.userId}, ${request.requestedComId}, ${request.requestingIpAddress}, ${request.createdAtMs}, unixepoch())
+        ON CONFLICT("id") DO UPDATE SET
+            "studioId" = excluded."studioId",
+            "userId" = excluded."userId",
+            "requestedComId" = excluded."requestedComId",
+            "requestingIpAddress" = excluded."requestingIpAddress",
+            "createdAt" = excluded."createdAt",
+            "updatedAt" = excluded."updatedAt";`;
     }
 
     @traced(TRACE_NAME)
@@ -579,6 +579,8 @@ export class SqliteRecordsStore implements RecordsStore {
                 userId: assignment.userId,
                 isPrimaryContact: assignment.isPrimaryContact,
                 role: assignment.role,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -595,6 +597,7 @@ export class SqliteRecordsStore implements RecordsStore {
             data: {
                 isPrimaryContact: assignment.isPrimaryContact,
                 role: assignment.role,
+                updatedAt: Date.now(),
             },
         });
     }

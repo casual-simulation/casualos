@@ -39,7 +39,6 @@ import type {
     NotificationRecord as PrismaNotificationRecord,
 } from '../generated-sqlite';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
-import { convertToDate } from '../Utils';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 
 const TRACE_NAME = 'SqliteNotificationRecordsStore';
@@ -68,11 +67,14 @@ export class SqliteNotificationRecordsStore
                 endpoint: pushSubscription.endpoint,
                 keys: pushSubscription.keys,
                 active: pushSubscription.active,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 endpoint: pushSubscription.endpoint,
                 keys: pushSubscription.keys,
                 active: pushSubscription.active,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -91,6 +93,8 @@ export class SqliteNotificationRecordsStore
             create: {
                 pushSubscriptionId: pushSubscription.pushSubscriptionId,
                 userId: pushSubscription.userId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {},
         });
@@ -109,6 +113,7 @@ export class SqliteNotificationRecordsStore
                 },
                 data: {
                     active: false,
+                    updatedAt: Date.now(),
                 },
             }),
             this._client.pushSubscriptionUser.deleteMany({
@@ -135,12 +140,15 @@ export class SqliteNotificationRecordsStore
                 notificationAddress: subscription.notificationAddress,
                 userId: subscription.userId,
                 pushSubscriptionId: subscription.pushSubscriptionId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 recordName: subscription.recordName,
                 notificationAddress: subscription.notificationAddress,
                 userId: subscription.userId,
                 pushSubscriptionId: subscription.pushSubscriptionId,
+                updatedAt: Date.now(),
             },
         });
         return {
@@ -227,7 +235,9 @@ export class SqliteNotificationRecordsStore
                 topic: notification.topic,
                 defaultAction: notification.defaultAction ?? (null as any),
                 actions: notification.actions ?? (null as any),
-                sentTime: convertToDate(notification.sentTimeMs),
+                sentTime: notification.sentTimeMs,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 recordName: notification.recordName,
@@ -241,7 +251,8 @@ export class SqliteNotificationRecordsStore
                 topic: notification.topic,
                 defaultAction: notification.defaultAction ?? (null as any),
                 actions: notification.actions ?? (null as any),
-                sentTime: convertToDate(notification.sentTimeMs),
+                sentTime: notification.sentTimeMs,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -260,6 +271,8 @@ export class SqliteNotificationRecordsStore
                 subscriptionId: push.subscriptionId,
                 success: push.success,
                 errorCode: push.errorCode,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 sentNotificationId: push.sentNotificationId,
@@ -268,6 +281,7 @@ export class SqliteNotificationRecordsStore
                 subscriptionId: push.subscriptionId,
                 success: push.success,
                 errorCode: push.errorCode,
+                updatedAt: Date.now(),
             },
         });
     }
@@ -285,6 +299,8 @@ export class SqliteNotificationRecordsStore
                 subscriptionId: p.subscriptionId,
                 success: p.success,
                 errorCode: p.errorCode,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             })),
         });
     }
@@ -414,8 +430,8 @@ export class SqliteNotificationRecordsStore
                 where: {
                     ...whereRun,
                     sentTime: {
-                        lt: new Date(metrics.currentPeriodEndMs),
-                        gte: new Date(metrics.currentPeriodStartMs),
+                        lt: metrics.currentPeriodEndMs,
+                        gte: metrics.currentPeriodStartMs,
                     },
                 },
             }),
@@ -424,8 +440,8 @@ export class SqliteNotificationRecordsStore
                     sentNotification: {
                         ...whereRun,
                         sentTime: {
-                            lt: new Date(metrics.currentPeriodEndMs),
-                            gte: new Date(metrics.currentPeriodStartMs),
+                            lt: metrics.currentPeriodEndMs,
+                            gte: metrics.currentPeriodStartMs,
                         },
                     },
                 },
@@ -464,6 +480,8 @@ export class SqliteNotificationRecordsStore
                 address: item.address,
                 description: item.description,
                 markers: item.markers,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -529,10 +547,13 @@ export class SqliteNotificationRecordsStore
                 address: item.address,
                 description: item.description,
                 markers: item.markers,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
             update: {
                 description: item.description,
                 markers: item.markers,
+                updatedAt: Date.now(),
             },
         });
     }

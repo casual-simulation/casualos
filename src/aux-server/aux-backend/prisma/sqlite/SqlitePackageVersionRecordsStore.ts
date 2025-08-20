@@ -37,7 +37,6 @@ import type {
 } from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { Entitlement } from '@casual-simulation/aux-common';
-import { convertToDate, convertToMillis } from '../Utils';
 import type { SqliteMetricsStore } from './SqliteMetricsStore';
 import type { JsonObject } from '../generated-sqlite/runtime/library';
 
@@ -183,7 +182,7 @@ export class SqlitePackageVersionRecordsStore
             sizeInBytes: item.sizeInBytes,
             requiresReview: item.requiresReview,
             createdFile: item.createdFile,
-            createdAtMs: convertToMillis(item.createdAt),
+            createdAtMs: item.createdAt,
         };
     }
 
@@ -267,8 +266,8 @@ export class SqlitePackageVersionRecordsStore
                 reviewStatus: review.reviewStatus,
                 reviewingUserId: review.reviewingUserId,
                 packageVersionId: review.packageVersionId,
-                createdAt: convertToDate(review.createdAtMs),
-                updatedAt: convertToDate(review.updatedAtMs),
+                createdAt: review.createdAtMs,
+                updatedAt: review.updatedAtMs,
             },
             update: {
                 approved: review.approved,
@@ -277,7 +276,7 @@ export class SqlitePackageVersionRecordsStore
                 reviewStatus: review.reviewStatus,
                 reviewingUserId: review.reviewingUserId,
                 packageVersionId: review.packageVersionId,
-                updatedAt: convertToDate(review.updatedAtMs),
+                updatedAt: review.updatedAtMs,
             },
         });
 
@@ -333,8 +332,8 @@ export class SqlitePackageVersionRecordsStore
                 review.reviewStatus as PackageVersionReview['reviewStatus'],
             reviewingUserId: review.reviewingUserId,
             packageVersionId: review.packageVersionId,
-            createdAtMs: convertToMillis(review.createdAt),
-            updatedAtMs: convertToMillis(review.updatedAt),
+            createdAtMs: review.createdAt,
+            updatedAtMs: review.updatedAt,
         };
     }
 
@@ -365,8 +364,8 @@ export class SqlitePackageVersionRecordsStore
                 review.reviewStatus as PackageVersionReview['reviewStatus'],
             reviewingUserId: review.reviewingUserId,
             packageVersionId: review.packageVersionId,
-            createdAtMs: convertToMillis(review.createdAt),
-            updatedAtMs: convertToMillis(review.updatedAt),
+            createdAtMs: review.createdAt,
+            updatedAtMs: review.updatedAt,
         };
     }
 
@@ -393,7 +392,8 @@ export class SqlitePackageVersionRecordsStore
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
-                createdAt: convertToDate(item.createdAtMs),
+                createdAt: item.createdAtMs,
+                updatedAt: Date.now(),
             },
         });
 
@@ -428,6 +428,7 @@ export class SqlitePackageVersionRecordsStore
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
+                updatedAt: Date.now(),
             },
         });
 
@@ -469,7 +470,8 @@ export class SqlitePackageVersionRecordsStore
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
-                createdAt: convertToDate(item.createdAtMs),
+                createdAt: item.createdAtMs,
+                updatedAt: Date.now(),
             },
             update: {
                 auxFileName: item.auxFileName,
@@ -481,6 +483,7 @@ export class SqlitePackageVersionRecordsStore
                 sizeInBytes: item.sizeInBytes,
                 requiresReview: item.requiresReview,
                 createdFile: item.createdFile,
+                updatedAt: Date.now(),
             },
         });
 

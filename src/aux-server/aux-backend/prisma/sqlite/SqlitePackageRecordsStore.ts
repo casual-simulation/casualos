@@ -98,6 +98,8 @@ export class SqlitePackageRecordsStore implements PackageRecordsStore {
                 id: item.id,
                 address: item.address,
                 markers: item.markers,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
             },
         });
     }
@@ -163,9 +165,12 @@ export class SqlitePackageRecordsStore implements PackageRecordsStore {
                     recordName,
                     address: item.address,
                     markers: item.markers,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
                 },
                 update: {
                     markers: item.markers,
+                    updatedAt: Date.now(),
                 },
             });
         } else {
@@ -178,6 +183,7 @@ export class SqlitePackageRecordsStore implements PackageRecordsStore {
                 },
                 data: {
                     markers: item.markers,
+                    updatedAt: Date.now(),
                 },
             });
         }
