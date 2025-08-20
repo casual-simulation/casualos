@@ -272,6 +272,59 @@ describe('AIController', () => {
             });
         });
 
+        it('should pass maxCompletionTokens to the chat interface', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'response',
+                            finishReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 50,
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test message',
+                    },
+                ],
+                temperature: 0.5,
+                maxCompletionTokens: 100,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'response',
+                        finishReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface.chat).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test message',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+                maxCompletionTokens: 100,
+                maxTokens: undefined,
+            });
+        });
+
         it('should support using another provider based on the chosen model', async () => {
             chatInterface2.chat.mockReturnValueOnce(
                 Promise.resolve({
@@ -1311,6 +1364,69 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+            });
+        });
+
+        it('should pass maxCompletionTokens to the chat stream interface', async () => {
+            chatInterface.chatStream.mockReturnValueOnce(
+                asyncIterable<AIChatInterfaceStreamResponse>([
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'response',
+                                finishReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 50,
+                    }),
+                ])
+            );
+
+            const result = await unwindAndCaptureAsync(
+                controller.chatStream({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test message',
+                        },
+                    ],
+                    temperature: 0.5,
+                    maxCompletionTokens: 100,
+                    userId,
+                    userSubscriptionTier,
+                })
+            );
+
+            expect(result).toEqual({
+                result: {
+                    success: true,
+                },
+                states: [
+                    {
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'response',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                ],
+            });
+            expect(chatInterface.chatStream).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test message',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+                maxCompletionTokens: 100,
+                maxTokens: undefined,
             });
         });
 

@@ -63,12 +63,12 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
-            let maxTokens = Math.min(request.maxTokens, 4096);
+            let maxTokens = Math.min(request.maxCompletionTokens || request.maxTokens, 4096);
 
             // TODO: Support 8192 tokens for sonnet
             // See https://docs.anthropic.com/en/docs/about-claude/models
             // if (/claude-3-5-sonnet/.test(request.model)) {
-            //     maxTokens = Math.min(request.maxTokens, 8192);
+            //     maxTokens = Math.min(request.maxCompletionTokens || request.maxTokens, 8192);
             // }
 
             const response = await this._ai.messages.create({
@@ -119,12 +119,12 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         request: AIChatInterfaceRequest
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
         try {
-            let maxTokens = Math.min(request.maxTokens, 4096);
+            let maxTokens = Math.min(request.maxCompletionTokens || request.maxTokens, 4096);
 
             // TODO: Support 8192 tokens for sonnet
             // See https://docs.anthropic.com/en/docs/about-claude/models
             // if (/claude-3-5-sonnet/.test(request.model)) {
-            //     maxTokens = Math.min(request.maxTokens, 8192);
+            //     maxTokens = Math.min(request.maxCompletionTokens || request.maxTokens, 8192);
             // }
 
             const response = this._ai.messages.stream({
