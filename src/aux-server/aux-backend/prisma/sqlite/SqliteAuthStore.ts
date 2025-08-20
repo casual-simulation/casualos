@@ -311,9 +311,9 @@ export class SqliteAuthStore implements AuthStore {
             addressType: request.addressType as AddressType,
             userId: request.userId,
             attemptCount: request.attemptCount,
-            completedTimeMs: request.completedTime,
-            expireTimeMs: request.expireTime,
-            requestTimeMs: request.requestTime,
+            completedTimeMs: request.completedTime?.toNumber(),
+            expireTimeMs: request.expireTime?.toNumber(),
+            requestTimeMs: request.requestTime?.toNumber(),
             ipAddress: request.ipAddress,
             secretHash: request.secretHash,
         };
@@ -345,10 +345,10 @@ export class SqliteAuthStore implements AuthStore {
             codeVerifier: request.codeVerifier,
             provider: request.provider,
             scope: request.scope,
-            requestTimeMs: request.requestTime,
-            expireTimeMs: request.expireTime,
-            completedTimeMs: request.completedTime,
-            authorizationTimeMs: request.authorizationTime,
+            requestTimeMs: request.requestTime?.toNumber(),
+            expireTimeMs: request.expireTime?.toNumber(),
+            completedTimeMs: request.completedTime?.toNumber(),
+            authorizationTimeMs: request.authorizationTime?.toNumber(),
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
         };
@@ -380,10 +380,10 @@ export class SqliteAuthStore implements AuthStore {
             codeVerifier: request.codeVerifier,
             provider: request.provider,
             scope: request.scope,
-            requestTimeMs: request.requestTime,
-            expireTimeMs: request.expireTime,
-            completedTimeMs: request.completedTime,
-            authorizationTimeMs: request.authorizationTime,
+            requestTimeMs: request.requestTime?.toNumber(),
+            expireTimeMs: request.expireTime?.toNumber(),
+            completedTimeMs: request.completedTime?.toNumber(),
+            authorizationTimeMs: request.authorizationTime?.toNumber(),
             authorizationCode: request.authorizationCode,
             ipAddress: request.ipAddress,
         };
@@ -488,9 +488,9 @@ export class SqliteAuthStore implements AuthStore {
             requestId: request.requestId,
             userId: request.userId,
             challenge: request.challenge,
-            requestTimeMs: request.requestTime,
-            expireTimeMs: request.expireTime,
-            completedTimeMs: request.completedTime,
+            requestTimeMs: request.requestTime?.toNumber(),
+            expireTimeMs: request.expireTime?.toNumber(),
+            completedTimeMs: request.completedTime?.toNumber(),
             ipAddress: request.ipAddress,
         };
     }
@@ -626,7 +626,7 @@ export class SqliteAuthStore implements AuthStore {
                 authenticator.transports as AuthUserAuthenticator['transports'],
             aaguid: authenticator.aaguid,
             registeringUserAgent: authenticator.registeringUserAgent,
-            createdAtMs: authenticator.createdAt,
+            createdAtMs: authenticator.createdAt?.toNumber(),
         };
     }
 
@@ -1336,11 +1336,11 @@ export class SqliteAuthStore implements AuthStore {
                 avatarUrl: user.avatarUrl,
                 avatarPortraitUrl: user.avatarPortraitUrl,
                 stripeCustomerId: user.stripeCustomerId,
-                allSessionRevokeTimeMs: user.allSessionRevokeTime,
+                allSessionRevokeTimeMs: user.allSessionRevokeTime?.toNumber(),
                 currentLoginRequestId: user.currentLoginRequestId,
                 subscriptionStatus:
                     user.subscriptionStatus as AuthUser['subscriptionStatus'],
-                banTimeMs: user.banTime,
+                banTimeMs: user.banTime?.toNumber(),
                 banReason: user.banReason as AuthUser['banReason'],
                 subscriptionId: user.subscriptionId as string | undefined,
                 privoServiceId: user.privoServiceId as string | undefined,
@@ -1356,8 +1356,9 @@ export class SqliteAuthStore implements AuthStore {
                 },
                 currentWebAuthnChallenge: user.currentWebAuthnChallenge,
                 subscriptionInfoId: user.subscriptionInfoId,
-                subscriptionPeriodEndMs: user.subscriptionPeriodEnd,
-                subscriptionPeriodStartMs: user.subscriptionPeriodStart,
+                subscriptionPeriodEndMs: user.subscriptionPeriodEnd?.toNumber(),
+                subscriptionPeriodStartMs:
+                    user.subscriptionPeriodStart?.toNumber(),
                 role: user.role as UserRole,
             };
         }
@@ -1369,9 +1370,9 @@ export class SqliteAuthStore implements AuthStore {
             sessionId: session.sessionId,
             userId: session.userId,
             secretHash: session.secretHash,
-            expireTimeMs: session.expireTime,
-            grantedTimeMs: session.grantedTime,
-            revokeTimeMs: session.revokeTime,
+            expireTimeMs: session.expireTime?.toNumber(),
+            grantedTimeMs: session.grantedTime?.toNumber(),
+            revokeTimeMs: session.revokeTime?.toNumber(),
             requestId: session.requestId,
             previousSessionId: session.previousSessionId,
             ipAddress: session.ipAddress,
@@ -1399,8 +1400,8 @@ export class SqliteAuthStore implements AuthStore {
         if (sub) {
             return {
                 ...sub,
-                currentPeriodEndMs: sub.currentPeriodEnd,
-                currentPeriodStartMs: sub.currentPeriodStart,
+                currentPeriodEndMs: sub.currentPeriodEnd?.toNumber(),
+                currentPeriodStartMs: sub.currentPeriodStart?.toNumber(),
             };
         }
 
@@ -1413,8 +1414,8 @@ export class SqliteAuthStore implements AuthStore {
         if (period) {
             return {
                 ...period,
-                periodEndMs: period.periodEnd,
-                periodStartMs: period.periodStart,
+                periodEndMs: period.periodEnd?.toNumber(),
+                periodStartMs: period.periodStart?.toNumber(),
             };
         }
 

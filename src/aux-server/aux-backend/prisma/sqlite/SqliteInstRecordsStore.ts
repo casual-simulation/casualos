@@ -426,7 +426,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
 
         return {
             updates: updates.map((u) => u.updateData),
-            timestamps: updates.map((u) => u.createdAt),
+            timestamps: updates.map((u) => u.createdAt?.toNumber()),
             instSizeInBytes: await this.getInstSize(recordName, inst),
         };
     }
@@ -480,7 +480,7 @@ export class SqliteInstRecordsStore implements InstRecordsStore {
 
         return {
             updates: updates.map((u) => u.updateData),
-            timestamps: updates.map((u) => u.createdAt),
+            timestamps: updates.map((u) => u.createdAt?.toNumber()),
         };
     }
 

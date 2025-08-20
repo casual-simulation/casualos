@@ -120,8 +120,12 @@ export class SqliteRecordsStore implements RecordsStore {
     @traced(TRACE_NAME)
     async updateRecord(record: Record): Promise<void> {
         await this._client
-            .$executeRaw`INSERT INTO "Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "updatedAt")
-            VALUES (${record.name}, ${record.ownerId}, ${record.studioId}, ${record.secretHashes}, ${record.secretSalt}, unixepoch()) 
+            .$executeRaw`INSERT INTO "Record" ("name", "ownerId", "studioId", "secretHashes", "secretSalt", "createdAt", "updatedAt")
+            VALUES (${record.name}, ${record.ownerId}, ${
+            record.studioId
+        }, ${JSON.stringify(record.secretHashes)}, ${
+            record.secretSalt
+        }, unixepoch(), unixepoch()) 
             ON CONFLICT("name") DO UPDATE SET 
                 "ownerId" = excluded."ownerId",
                 "studioId" = excluded."studioId",
@@ -304,8 +308,10 @@ export class SqliteRecordsStore implements RecordsStore {
                 comId: result.comId,
                 logoUrl: result.logoUrl,
                 subscriptionInfoId: result.subscriptionInfoId,
-                subscriptionPeriodEndMs: result.subscriptionPeriodEnd,
-                subscriptionPeriodStartMs: result.subscriptionPeriodStart,
+                subscriptionPeriodEndMs:
+                    result.subscriptionPeriodEnd?.toNumber(),
+                subscriptionPeriodStartMs:
+                    result.subscriptionPeriodStart?.toNumber(),
                 comIdConfig: zodParseConfig(
                     result.comIdConfig,
                     COM_ID_CONFIG_SCHEMA
@@ -346,8 +352,9 @@ export class SqliteRecordsStore implements RecordsStore {
             comId: studio.comId,
             logoUrl: studio.logoUrl,
             subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd,
-            subscriptionPeriodStartMs: studio.subscriptionPeriodStart,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd?.toNumber(),
+            subscriptionPeriodStartMs:
+                studio.subscriptionPeriodStart?.toNumber(),
             comIdConfig: zodParseConfig(
                 studio.comIdConfig,
                 COM_ID_CONFIG_SCHEMA
@@ -381,8 +388,9 @@ export class SqliteRecordsStore implements RecordsStore {
             comId: studio.comId,
             logoUrl: studio.logoUrl,
             subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd,
-            subscriptionPeriodStartMs: studio.subscriptionPeriodStart,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd?.toNumber(),
+            subscriptionPeriodStartMs:
+                studio.subscriptionPeriodStart?.toNumber(),
             comIdConfig: zodParseConfig(
                 studio.comIdConfig,
                 COM_ID_CONFIG_SCHEMA
@@ -416,8 +424,9 @@ export class SqliteRecordsStore implements RecordsStore {
             comId: studio.comId,
             logoUrl: studio.logoUrl,
             subscriptionInfoId: studio.subscriptionInfoId,
-            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd,
-            subscriptionPeriodStartMs: studio.subscriptionPeriodStart,
+            subscriptionPeriodEndMs: studio.subscriptionPeriodEnd?.toNumber(),
+            subscriptionPeriodStartMs:
+                studio.subscriptionPeriodStart?.toNumber(),
             comIdConfig: zodParseConfig(
                 studio.comIdConfig,
                 COM_ID_CONFIG_SCHEMA

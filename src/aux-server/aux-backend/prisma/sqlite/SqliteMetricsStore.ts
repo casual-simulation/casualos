@@ -225,10 +225,10 @@ export class SqliteMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
 
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart,
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
+                result.owner?.subscriptionPeriodStart?.toNumber() ||
+                    result.studio?.subscriptionPeriodStart?.toNumber(),
+                result.owner?.subscriptionPeriodEnd?.toNumber() ||
+                    result.studio?.subscriptionPeriodEnd?.toNumber()
             )),
         };
     }
@@ -411,10 +411,10 @@ export class SqliteMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
 
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart,
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
+                result.owner?.subscriptionPeriodStart?.toNumber() ||
+                    result.studio?.subscriptionPeriodStart?.toNumber(),
+                result.owner?.subscriptionPeriodEnd?.toNumber() ||
+                    result.studio?.subscriptionPeriodEnd?.toNumber()
             )),
         };
     }
@@ -462,10 +462,10 @@ export class SqliteMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
 
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart,
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
+                result.owner?.subscriptionPeriodStart?.toNumber() ||
+                    result.studio?.subscriptionPeriodStart?.toNumber(),
+                result.owner?.subscriptionPeriodEnd?.toNumber() ||
+                    result.studio?.subscriptionPeriodEnd?.toNumber()
             )),
         };
     }
@@ -509,10 +509,10 @@ export class SqliteMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                     result.studio?.subscriptionStatus,
 
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart,
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
+                result.owner?.subscriptionPeriodStart?.toNumber() ||
+                    result.studio?.subscriptionPeriodStart?.toNumber(),
+                result.owner?.subscriptionPeriodEnd?.toNumber() ||
+                    result.studio?.subscriptionPeriodEnd?.toNumber()
             )),
         };
     }
@@ -549,8 +549,8 @@ export class SqliteMetricsStore implements MetricsStore {
                 totalRecords: user._count.records,
                 ...(await this._getSubscriptionPeriod(
                     user.subscriptionStatus,
-                    user.subscriptionPeriodStart,
-                    user.subscriptionPeriodEnd
+                    user.subscriptionPeriodStart?.toNumber(),
+                    user.subscriptionPeriodEnd?.toNumber()
                 )),
             };
         } else {
@@ -581,8 +581,8 @@ export class SqliteMetricsStore implements MetricsStore {
                 totalRecords: studio._count.records,
                 ...(await this._getSubscriptionPeriod(
                     studio.subscriptionStatus,
-                    studio.subscriptionPeriodStart,
-                    studio.subscriptionPeriodEnd
+                    studio.subscriptionPeriodStart?.toNumber(),
+                    studio.subscriptionPeriodEnd?.toNumber()
                 )),
             };
         }

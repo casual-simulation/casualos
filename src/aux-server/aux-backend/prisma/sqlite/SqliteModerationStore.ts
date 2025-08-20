@@ -106,8 +106,8 @@ export class SqliteModerationStore implements ModerationStore {
         return {
             id: job.id,
             type: job.type as ModerationJob['type'],
-            createdAtMs: job.createdAt,
-            updatedAtMs: job.updatedAt,
+            createdAtMs: job.createdAt?.toNumber(),
+            updatedAtMs: job.updatedAt?.toNumber(),
             s3Id: job.s3Id,
         };
     }

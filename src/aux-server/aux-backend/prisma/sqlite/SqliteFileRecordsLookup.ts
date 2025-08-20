@@ -73,7 +73,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                 subjectId: result.subjectId,
                 uploaded: !result.uploadedAt
                     ? false
-                    : result.uploadedAt <= Date.now(),
+                    : result.uploadedAt?.toNumber() <= Date.now(),
                 bucket: result.bucket,
             };
         } else {
@@ -124,7 +124,7 @@ export class SqliteFileRecordsLookup implements FileRecordsLookup {
                 sizeInBytes: Number(r.sizeInBytes),
                 markers: convertMarkers(r.markers as string[]),
                 description: r.description,
-                uploaded: r.uploadedAt < now,
+                uploaded: r.uploadedAt?.toNumber() < now,
                 bucket: r.bucket,
             })),
             totalCount: count,

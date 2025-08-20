@@ -481,8 +481,8 @@ export class SqliteWebhookRecordsStore implements WebhookRecordsStore {
             runId: r.id,
             recordName: r.recordName,
             webhookAddress: r.webhookAddress,
-            requestTimeMs: r.requestTime,
-            responseTimeMs: r.responseTime,
+            requestTimeMs: r.requestTime?.toNumber(),
+            responseTimeMs: r.responseTime?.toNumber(),
             statusCode: r.statusCode,
             errorResult: ERROR_RESULT_SCHEMA.parse(
                 r.errorResult
