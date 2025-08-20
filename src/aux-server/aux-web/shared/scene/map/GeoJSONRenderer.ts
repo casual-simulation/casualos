@@ -95,6 +95,7 @@ type CRC2DAllowlist<
 type CRC2DAttributes = Pick<CanvasRenderingContext2D, CRC2DAllowlist>;
 
 interface GeometryAttributes extends CRC2DAttributes {
+    fillStyle?: string;
     sizeType?: 'static' | 'relative';
     size?: GeometryRelativeSize | GeometryStaticSize;
 }
