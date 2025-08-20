@@ -14,6 +14,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import commonjs from 'vite-plugin-commonjs';
+import { importMapPlugin } from 'importmap-vite-plugin';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -119,6 +120,11 @@ export default defineConfig(({ command, mode }) => ({
             ],
             symbolId: 'icon-[name]',
             svgoOptions: false,
+        }),
+        importMapPlugin({
+            imports: {
+                yjs: './aux-web/shared/public/yjs/yjs',
+            },
         }),
         {
             ...copy({

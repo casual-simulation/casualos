@@ -9,6 +9,13 @@ declare module 'jsbarcode';
 declare module 'clipboard-polyfill';
 declare module 'rollup-plugin-copy';
 
+declare module 'virtual:importmap' {
+    const importMap: {
+        imports: Record<string, string>;
+    };
+    export default importMap;
+}
+
 declare module 'virtual:pwa-register' {
     export interface RegisterSWOptions {
         immediate?: boolean;

@@ -15,6 +15,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import './importmap';
-import '@casual-simulation/aux-vm-browser/html/IframeEntry';
-import '@casual-simulation/aux-vm-browser/vm/ViteWorkerEntry';
+import importMap from 'virtual:importmap';
+
+/**
+ * Determines whether the global document is owned by the browser.
+ * Returns true if either the document property exists and it is not writable.
+ */
+function isBrowserDocument() {
+    const documentDescriptor = Object.getOwnPropertyDescriptor(
+        globalThis,
+        'document'
+    );
+
+    return documentDescriptor && !documentDescriptor.writable;
+}
+
+function setupImportMap() {
+    if (!isBrowserDocument()) {
+        return;
+    }
+
+    const mapScript = document.createElement('script');
+    mapScript.type = 'importmap';
+    mapScript.textContent = JSON.stringify(importMap);
+    document.head.append(mapScript);
+}
+
+setupImportMap();
