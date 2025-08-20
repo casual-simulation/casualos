@@ -29,6 +29,7 @@ import { GeoJSON3DOverlay } from './GeoJSON3DOverlay';
 import type { AllGeoJSON } from '@turf/turf';
 import { Vector2 } from 'three';
 import type { GeoJSONMapLayer } from '@casual-simulation/aux-common';
+import { GeoJSONRenderer } from './GeoJSONRenderer';
 
 const TILE_SIZE = 256;
 
@@ -150,9 +151,12 @@ export class MapView extends Object3D {
             overlayData.overlayType === 'geojson' ||
             overlayData.type === 'geojson'
         ) {
-            const style = this._extractStyleFromGeoJSON(overlayData.data);
+            // Use GeoJSONRenderer utilities
+            const style = GeoJSONRenderer.extractStyleFromGeoJSON(
+                overlayData.data
+            );
 
-            if (this._shouldUse3D(overlayData.data)) {
+            if (GeoJSONRenderer.shouldUse3D(overlayData.data)) {
                 return new GeoJSON3DOverlay(
                     dimensions,
                     this._longitude,
@@ -174,10 +178,6 @@ export class MapView extends Object3D {
             }
         }
         throw new Error(`Unknown overlay type: ${overlayData.overlayType}`);
-    }
-
-    private _shouldUse3D(geoJSON: AllGeoJSON): boolean {
-        return this._hasAltitudeData(geoJSON) || this._hasExtrudeData(geoJSON);
     }
 
     setProvider(provider: MapProvider) {
@@ -490,118 +490,6 @@ export class MapView extends Object3D {
         this.add(tile);
         return tile;
     }
-
-    /**
-     * Check if GeoJSON contains altitude data
-     */
-    private _hasAltitudeData(geoJSON: AllGeoJSON): boolean {
-        const checkCoordinates = (coords: any): boolean => {
-            if (Array.isArray(coords)) {
-                if (coords.length === 3 && typeof coords[0] === 'number') {
-                    return true;
-                }
-                return coords.some((c) => checkCoordinates(c));
-            }
-            return false;
-        };
-
-        const checkGeometry = (geometry: any): boolean => {
-            if (geometry.coordinates) {
-                return checkCoordinates(geometry.coordinates);
-            }
-            if (geometry.geometries) {
-                return geometry.geometries.some((g: any) => checkGeometry(g));
-            }
-            return false;
-        };
-
-        if (geoJSON.type === 'FeatureCollection') {
-            return geoJSON.features.some((feature) =>
-                checkGeometry(feature.geometry)
-            );
-        } else if (geoJSON.type === 'Feature') {
-            return checkGeometry(geoJSON.geometry);
-        } else {
-            return checkGeometry(geoJSON);
-        }
-    }
-
-    /**
-     * Check if GeoJSON contains extrude height data
-     */
-    private _hasExtrudeData(geoJSON: AllGeoJSON): boolean {
-        const checkProperties = (properties: any): boolean => {
-            if (!properties) return false;
-
-            return !!(
-                properties.extrudeHeight ||
-                properties.style?.extrudeHeight ||
-                properties.height ||
-                properties.style?.height
-            );
-        };
-
-        if (geoJSON.type === 'FeatureCollection') {
-            return geoJSON.features.some((feature) =>
-                checkProperties(feature.properties)
-            );
-        } else if (geoJSON.type === 'Feature') {
-            return checkProperties(geoJSON.properties);
-        }
-
-        return false;
-    }
-
-    /**
-     * Extract style information from GeoJSON properties
-     */
-    private _extractStyleFromGeoJSON(geoJSON: AllGeoJSON): any {
-        const style: any = {};
-
-        const extractFromFeature = (feature: any) => {
-            if (feature.properties) {
-                const props = feature.properties;
-
-                // Direct style properties
-                if (props.pointColor) style.pointColor = props.pointColor;
-                if (props.pointSize) style.pointSize = props.pointSize;
-                if (props.lineColor) style.lineColor = props.lineColor;
-                if (props.lineWidth) style.lineWidth = props.lineWidth;
-                if (props.lineOpacity) style.lineOpacity = props.lineOpacity;
-                if (props.fillColor) style.polygonColor = props.fillColor;
-                if (props.fillOpacity) style.polygonOpacity = props.fillOpacity;
-                if (props.strokeColor) style.strokeColor = props.strokeColor;
-                if (props.strokeWidth) style.strokeWidth = props.strokeWidth;
-                if (props.extrudeHeight)
-                    style.extrudeHeight = props.extrudeHeight;
-
-                // Style object
-                if (props.style) {
-                    const s = props.style;
-                    if (s.pointColor) style.pointColor = s.pointColor;
-                    if (s.pointSize) style.pointSize = s.pointSize;
-                    if (s.lineColor) style.lineColor = s.lineColor;
-                    if (s.lineWidth) style.lineWidth = s.lineWidth;
-                    if (s.lineOpacity) style.lineOpacity = s.lineOpacity;
-                    if (s.fillColor) style.polygonColor = s.fillColor;
-                    if (s.fillOpacity) style.polygonOpacity = s.fillOpacity;
-                    if (s.strokeColor) style.strokeColor = s.strokeColor;
-                    if (s.strokeWidth) style.strokeWidth = s.strokeWidth;
-                    if (s.extrudeHeight) style.extrudeHeight = s.extrudeHeight;
-                    if (s.height) style.extrudeHeight = s.height;
-                }
-            }
-        };
-
-        if (geoJSON.type === 'FeatureCollection') {
-            geoJSON.features.forEach(extractFromFeature);
-        } else if (geoJSON.type === 'Feature') {
-            extractFromFeature(geoJSON);
-        }
-
-        return style;
-    }
-
     async handleMapLayerAction(
         event: any,
         calc: any
@@ -688,37 +576,13 @@ export class MapView extends Object3D {
             copyright: layer.copyright,
         });
 
-        const dimensions = new Box2(
-            new Vector2(-0.5, -0.5),
-            new Vector2(0.5, 0.5)
+        return GeoJSONRenderer.createOverlay(
+            geoJSONData,
+            this._longitude,
+            this._latitude,
+            this._zoom,
+            512 // canvasSize
         );
-        const style = this._extractStyleFromGeoJSON(geoJSONData);
-        const use3D =
-            this._hasAltitudeData(geoJSONData) ||
-            this._hasExtrudeData(geoJSONData);
-
-        console.log('[MapView] GeoJSON rendering mode', { use3D });
-
-        if (use3D) {
-            return new GeoJSON3DOverlay(
-                dimensions,
-                this._longitude,
-                this._latitude,
-                this._zoom,
-                geoJSONData,
-                style
-            );
-        } else {
-            const canvasSize = 512;
-            return new GeoJSONMapOverlay(
-                dimensions,
-                canvasSize,
-                this._longitude,
-                this._latitude,
-                this._zoom,
-                geoJSONData
-            );
-        }
     }
 
     private async _loadGeoJSONFromURL(url: string): Promise<AllGeoJSON> {

@@ -28,8 +28,7 @@ import type { Box2, Box3, Texture } from '@casual-simulation/three';
 import type { AllGeoJSON } from '@turf/turf';
 import { GeoJSONCanvasRenderer } from './GeoJSONRenderer';
 
-// Convert to interface, This abrstaction extends as 2D.
-
+// Abstract base class remains mostly unchanged
 export abstract class MapOverlay extends Object3D {
     /* The height of the overlay in world units. */
     protected _overlayHeight: number;
@@ -103,8 +102,12 @@ export abstract class MapOverlay extends Object3D {
     abstract dispose(): void;
 }
 
+/**
+ * GeoJSONMapOverlay - 2D rendering of GeoJSON on a canvas texture
+ */
 export class GeoJSONMapOverlay extends MapOverlay {
     private _renderer: GeoJSONCanvasRenderer;
+
     constructor(
         dimensions: Box2 | Box3,
         tileSize: number,
@@ -114,6 +117,7 @@ export class GeoJSONMapOverlay extends MapOverlay {
         private _geojson: AllGeoJSON
     ) {
         super(dimensions, tileSize, longitude, latitude, zoom);
+
         this._renderer = new GeoJSONCanvasRenderer(
             zoom,
             longitude,

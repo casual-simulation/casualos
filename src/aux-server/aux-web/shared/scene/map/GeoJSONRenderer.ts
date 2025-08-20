@@ -20,16 +20,10 @@ import type { AllGeoJSON, Units } from '@turf/turf';
 import type { Feature, Geometry } from 'geojson';
 import { MercatorMath } from './MercatorMath';
 import { shortUuid } from '@casual-simulation/aux-common';
-
-/**
- * Renderer Class:
- * GeoJSONRenderer
- * * Used by the Bot shape.
- *
- * experiment api extension for drawing.
- * localEvent in Decorators and Sim3D
- * asyncResult, asyncError for communicating back to the api.
- */
+import { Vector3, Vector2, Box2 } from '@casual-simulation/three';
+import { MapView } from './MapView';
+import { GeoJSONMapOverlay } from './MapOverlay';
+import { GeoJSON3DOverlay } from './GeoJSON3DOverlay';
 
 /** Longitude in decimal degrees. */
 type longitude = number;
@@ -61,6 +55,50 @@ type PointPosition<a extends boolean = false> = a extends true
  */
 type WorldPixel = [number, number];
 
+export interface GeoJSONStyle {
+    pointColor?: string | number;
+    pointSize?: number;
+    lineColor?: string | number;
+    lineWidth?: number;
+    lineOpacity?: number;
+    polygonColor?: string | number;
+    fillColor?: string | number;
+    polygonOpacity?: number;
+    fillOpacity?: number;
+    strokeColor?: string | number;
+    strokeWidth?: number;
+    extrudeHeight?: number;
+    height?: number;
+    altitudeScale?: number;
+}
+
+interface GeometryRelativeSize {
+    scale: number;
+    ref: 'width' | 'height';
+}
+
+interface GeometryStaticSize {
+    amount: number;
+    unit: Units;
+}
+
+/** Dynamic allowlist to keep up to date with new styling properties on CanvasRenderingContext2D */
+type CRC2DAllowlist<
+    K extends keyof CanvasRenderingContext2D = keyof CanvasRenderingContext2D
+> = K extends string | number
+    ? CanvasRenderingContext2D[K] extends string
+        ? K
+        : never
+    : never;
+
+/** Canvas Rendering Context 2D Attributes */
+type CRC2DAttributes = Pick<CanvasRenderingContext2D, CRC2DAllowlist>;
+
+interface GeometryAttributes extends CRC2DAttributes {
+    sizeType?: 'static' | 'relative';
+    size?: GeometryRelativeSize | GeometryStaticSize;
+}
+
 const ctxAllowList: Set<string> = new Set([
     'font',
     'textAlign',
@@ -89,7 +127,312 @@ const ctxAllowList: Set<string> = new Set([
     'lang',
 ]);
 
-export class GeoJSONCanvasRenderer {
+/**
+ * GeoJSONRenderer: Central utility for GeoJSON rendering and processing
+ * Handles both 2D canvas rendering and provides utilities for 3D rendering
+ */
+export class GeoJSONRenderer {
+    // Static utilities for GeoJSON analysis and processing
+
+    /**
+     * Extract style information from GeoJSON properties
+     */
+    static extractStyleFromGeoJSON(geoJSON: AllGeoJSON): GeoJSONStyle {
+        const style: GeoJSONStyle = {};
+
+        const extractFromFeature = (feature: any) => {
+            if (feature.properties) {
+                const props = feature.properties;
+
+                // Direct style properties
+                if (props.pointColor) style.pointColor = props.pointColor;
+                if (props.pointSize) style.pointSize = props.pointSize;
+                if (props.lineColor) style.lineColor = props.lineColor;
+                if (props.lineWidth) style.lineWidth = props.lineWidth;
+                if (props.lineOpacity) style.lineOpacity = props.lineOpacity;
+                if (props.fillColor) style.fillColor = props.fillColor;
+                if (props.fillOpacity) style.fillOpacity = props.fillOpacity;
+                if (props.strokeColor) style.strokeColor = props.strokeColor;
+                if (props.strokeWidth) style.strokeWidth = props.strokeWidth;
+                if (props.extrudeHeight)
+                    style.extrudeHeight = props.extrudeHeight;
+
+                // Also map polygon-specific properties
+                if (props.fillColor) style.polygonColor = props.fillColor;
+                if (props.fillOpacity) style.polygonOpacity = props.fillOpacity;
+
+                // Style object
+                if (props.style) {
+                    const s = props.style;
+                    if (s.pointColor) style.pointColor = s.pointColor;
+                    if (s.pointSize) style.pointSize = s.pointSize;
+                    if (s.lineColor) style.lineColor = s.lineColor;
+                    if (s.lineWidth) style.lineWidth = s.lineWidth;
+                    if (s.lineOpacity) style.lineOpacity = s.lineOpacity;
+                    if (s.fillColor) {
+                        style.fillColor = s.fillColor;
+                        style.polygonColor = s.fillColor;
+                    }
+                    if (s.fillOpacity) {
+                        style.fillOpacity = s.fillOpacity;
+                        style.polygonOpacity = s.fillOpacity;
+                    }
+                    if (s.strokeColor) style.strokeColor = s.strokeColor;
+                    if (s.strokeWidth) style.strokeWidth = s.strokeWidth;
+                    if (s.extrudeHeight) style.extrudeHeight = s.extrudeHeight;
+                    if (s.height) style.height = s.height;
+                }
+            }
+        };
+
+        if (geoJSON.type === 'FeatureCollection') {
+            geoJSON.features.forEach(extractFromFeature);
+        } else if (geoJSON.type === 'Feature') {
+            extractFromFeature(geoJSON);
+        }
+
+        return style;
+    }
+
+    /**
+     * Check if GeoJSON contains altitude data
+     */
+    static hasAltitudeData(geoJSON: AllGeoJSON): boolean {
+        const checkCoordinates = (coords: any): boolean => {
+            if (Array.isArray(coords)) {
+                if (coords.length === 3 && typeof coords[0] === 'number') {
+                    return true;
+                }
+                return coords.some((c) => checkCoordinates(c));
+            }
+            return false;
+        };
+
+        const checkGeometry = (geometry: any): boolean => {
+            if (geometry.coordinates) {
+                return checkCoordinates(geometry.coordinates);
+            }
+            if (geometry.geometries) {
+                return geometry.geometries.some((g: any) => checkGeometry(g));
+            }
+            return false;
+        };
+
+        if (geoJSON.type === 'FeatureCollection') {
+            return geoJSON.features.some((feature) =>
+                checkGeometry(feature.geometry)
+            );
+        } else if (geoJSON.type === 'Feature') {
+            return checkGeometry(geoJSON.geometry);
+        } else {
+            return checkGeometry(geoJSON);
+        }
+    }
+
+    /**
+     * Check if GeoJSON contains extrude height data
+     */
+    static hasExtrudeData(geoJSON: AllGeoJSON): boolean {
+        const checkProperties = (properties: any): boolean => {
+            if (!properties) return false;
+
+            return !!(
+                properties.extrudeHeight ||
+                properties.style?.extrudeHeight ||
+                properties.height ||
+                properties.style?.height
+            );
+        };
+
+        if (geoJSON.type === 'FeatureCollection') {
+            return geoJSON.features.some((feature) =>
+                checkProperties(feature.properties)
+            );
+        } else if (geoJSON.type === 'Feature') {
+            return checkProperties(geoJSON.properties);
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine if GeoJSON should use 3D rendering
+     */
+    static shouldUse3D(geoJSON: AllGeoJSON): boolean {
+        return this.hasAltitudeData(geoJSON) || this.hasExtrudeData(geoJSON);
+    }
+
+    /**
+     * Convert geographic coordinates to 3D world coordinates
+     */
+    static geoTo3D(
+        lon: number,
+        lat: number,
+        alt: number = 0,
+        centerLon: number,
+        centerLat: number,
+        zoom: number,
+        tileSize: number = 256,
+        altitudeScale: number = 0.00001
+    ): Vector3 {
+        // Calculate pixel coordinates
+        const [pixelX, pixelY] = MapView.calculatePixel(zoom, lon, lat);
+
+        // Get center pixel coordinates
+        const [centerPixelX, centerPixelY] = MapView.calculatePixel(
+            zoom,
+            centerLon,
+            centerLat
+        );
+
+        // Calculate offset from center in pixels
+        const deltaPixelX = pixelX - centerPixelX;
+        const deltaPixelY = pixelY - centerPixelY;
+
+        // Convert to world coordinates
+        const worldX = deltaPixelX / tileSize;
+        const worldZ = deltaPixelY / tileSize;
+        const worldY = alt * altitudeScale;
+
+        return new Vector3(worldX, worldY, worldZ);
+    }
+
+    /**
+     * Process GeoJSON geometry recursively
+     */
+    static processGeometry(
+        geometry: Geometry,
+        callback: {
+            onPoint?: (coords: number[], properties?: any) => void;
+            onLineString?: (coords: number[][], properties?: any) => void;
+            onPolygon?: (coords: number[][][], properties?: any) => void;
+        },
+        properties?: any
+    ): void {
+        if (!geometry) return;
+
+        switch (geometry.type) {
+            case 'Point':
+                callback.onPoint?.(geometry.coordinates, properties);
+                break;
+
+            case 'LineString':
+                callback.onLineString?.(geometry.coordinates, properties);
+                break;
+
+            case 'Polygon':
+                callback.onPolygon?.(geometry.coordinates, properties);
+                break;
+
+            case 'MultiPoint':
+                for (const point of geometry.coordinates) {
+                    callback.onPoint?.(point, properties);
+                }
+                break;
+
+            case 'MultiLineString':
+                for (const line of geometry.coordinates) {
+                    callback.onLineString?.(line, properties);
+                }
+                break;
+
+            case 'MultiPolygon':
+                for (const polygon of geometry.coordinates) {
+                    callback.onPolygon?.(polygon, properties);
+                }
+                break;
+
+            case 'GeometryCollection':
+                for (const geom of geometry.geometries) {
+                    this.processGeometry(geom, callback, properties);
+                }
+                break;
+
+            default:
+                console.warn(
+                    `Unsupported geometry type: ${(geometry as any).type}`
+                );
+        }
+    }
+
+    /**
+     * Process all features in a GeoJSON
+     */
+    static processGeoJSON(
+        geoJSON: AllGeoJSON,
+        callback: {
+            onPoint?: (coords: number[], properties?: any) => void;
+            onLineString?: (coords: number[][], properties?: any) => void;
+            onPolygon?: (coords: number[][][], properties?: any) => void;
+        }
+    ): void {
+        if (!geoJSON) return;
+
+        if (geoJSON.type === 'FeatureCollection') {
+            for (const feature of geoJSON.features) {
+                this.processGeometry(
+                    feature.geometry,
+                    callback,
+                    feature.properties
+                );
+            }
+        } else if (geoJSON.type === 'Feature') {
+            this.processGeometry(
+                geoJSON.geometry,
+                callback,
+                geoJSON.properties
+            );
+        } else if ('type' in geoJSON && 'coordinates' in geoJSON) {
+            this.processGeometry(geoJSON as Geometry, callback);
+        }
+    }
+
+    /**
+     * Create a GeoJSON overlay (2D or 3D based on data)
+     */
+    /**
+     * Create a GeoJSON overlay (2D or 3D based on data)
+     */
+    static createOverlay(
+        geoJSON: AllGeoJSON,
+        longitude: number,
+        latitude: number,
+        zoom: number,
+        canvasSize: number = 512
+    ): any {
+        const dimensions = new Box2(
+            new Vector2(-0.5, -0.5),
+            new Vector2(0.5, 0.5)
+        );
+        const style = this.extractStyleFromGeoJSON(geoJSON);
+        const use3D = this.shouldUse3D(geoJSON);
+
+        if (use3D) {
+            return new GeoJSON3DOverlay(
+                dimensions,
+                longitude,
+                latitude,
+                zoom,
+                geoJSON,
+                style
+            );
+        } else {
+            return new GeoJSONMapOverlay(
+                dimensions,
+                canvasSize,
+                longitude,
+                latitude,
+                zoom,
+                geoJSON
+            );
+        }
+    }
+}
+
+/**
+ * Canvas-based 2D renderer for GeoJSON
+ */
+export class GeoJSONCanvasRenderer extends GeoJSONRenderer {
     canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
 
@@ -108,6 +451,7 @@ export class GeoJSONCanvasRenderer {
         private _latitude: number,
         private _tileSize: number
     ) {
+        super();
         this.canvas = document.createElement('canvas');
         this.canvas.id = `geojson-canvas-${Date.now()}-${shortUuid()}`;
         this.canvas.height = this.canvas.width = _tileSize;
@@ -163,7 +507,6 @@ export class GeoJSONCanvasRenderer {
     }
 
     private _applyAttributes(attributes: Partial<GeometryAttributes>) {
-        //TODO: handle custom attributes like size and sizeType.
         if (!attributes) return;
         for (const [attr, val] of Object.entries(attributes)) {
             if (!ctxAllowList.has(attr)) continue;
@@ -250,13 +593,13 @@ export class GeoJSONCanvasRenderer {
         attr?: Partial<GeometryAttributes>
     ) {
         coordinates = [...coordinates];
-        this._drawRoutine((ctx, attr) => {
+        this._drawRoutine((ctx) => {
             ctx.moveTo(...this.coordToViewPixel(coordinates[0]));
             for (let i = 1; i < coordinates.length; i++) {
                 ctx.lineTo(...this.coordToViewPixel(coordinates[i]));
             }
             ctx.stroke();
-        });
+        }, attr);
     }
 
     drawPolygon(
@@ -264,7 +607,7 @@ export class GeoJSONCanvasRenderer {
         attr?: Partial<GeometryAttributes>
     ) {
         const [base, ...holes] = coordinates;
-        this._drawRoutine((ctx, attr) => {
+        this._drawRoutine((ctx) => {
             ctx.beginPath();
             ctx.moveTo(...this.coordToViewPixel(base[0]));
             for (let i = 1; i < base.length; i++) {
@@ -279,59 +622,30 @@ export class GeoJSONCanvasRenderer {
                 ctx.closePath();
             }
             ctx.fill('evenodd');
-        });
+        }, attr);
     }
 
     drawGeometry<G extends Geometry>(
         geometry: G,
         geometryAttributes: Partial<GeometryAttributes>
     ) {
-        // Draw the geometry based on its type
-        switch (geometry.type) {
-            case 'Point':
-                this.drawPoint(geometry.coordinates, geometryAttributes);
-                break;
-            case 'LineString':
-                this.drawLineString(
-                    geometry.coordinates as Array<[number, number]>,
-                    geometryAttributes
-                );
-                break;
-            case 'Polygon':
-                this.drawPolygon(
-                    geometry.coordinates as Array<Array<[number, number]>>,
-                    geometryAttributes
-                );
-                break;
-            case 'MultiLineString':
-                for (const line of geometry.coordinates) {
+        GeoJSONRenderer.processGeometry(
+            geometry,
+            {
+                onPoint: (coords) => this.drawPoint(coords, geometryAttributes),
+                onLineString: (coords) =>
                     this.drawLineString(
-                        line as Array<[number, number]>,
+                        coords as Array<[number, number]>,
                         geometryAttributes
-                    );
-                }
-                break;
-            case 'MultiPoint':
-                for (const point of geometry.coordinates) {
-                    this.drawPoint(point, geometryAttributes);
-                }
-                break;
-            case 'MultiPolygon':
-                for (const polygon of geometry.coordinates) {
+                    ),
+                onPolygon: (coords) =>
                     this.drawPolygon(
-                        polygon as Array<Array<[number, number]>>,
+                        coords as Array<Array<[number, number]>>,
                         geometryAttributes
-                    );
-                }
-                break;
-            case 'GeometryCollection':
-                for (const part of geometry.geometries) {
-                    this.drawGeometry(part, geometryAttributes);
-                }
-                break;
-            default:
-                console.warn(`Unsupported geometry type`);
-        }
+                    ),
+            },
+            geometryAttributes
+        );
     }
 
     drawFeature(feature: Feature) {
@@ -345,21 +659,17 @@ export class GeoJSONCanvasRenderer {
         if (!geoJSON || !geoJSON.type) {
             throw new Error('Invalid GeoJSON data');
         }
-        if (geoJSON.type == 'FeatureCollection') {
-            if (!geoJSON?.features?.length) return;
-            geoJSON.features.forEach((feature) => {
-                this.drawFeature(feature);
-            });
-        } else if (geoJSON.type === 'Feature') {
-            this.drawFeature(geoJSON);
-        } else if (geoJSON.type === 'GeometryCollection') {
-            if (!geoJSON?.geometries?.length) return;
-            geoJSON.geometries.forEach((geometry) => {
-                this.drawGeometry(geometry, {});
-            });
-        } else {
-            this.drawGeometry(geoJSON, {});
-        }
+
+        GeoJSONRenderer.processGeoJSON(geoJSON, {
+            onPoint: (coords, props) => this.drawPoint(coords, props),
+            onLineString: (coords, props) =>
+                this.drawLineString(coords as Array<[number, number]>, props),
+            onPolygon: (coords, props) =>
+                this.drawPolygon(
+                    coords as Array<Array<[number, number]>>,
+                    props
+                ),
+        });
     }
 
     dispose() {
@@ -369,34 +679,4 @@ export class GeoJSONCanvasRenderer {
         }
         this.ctx = null;
     }
-}
-
-interface GeometryRelativeSize {
-    scale: number;
-    ref: 'width' | 'height';
-}
-
-interface GeometryStaticSize {
-    // TODO: Refine
-    amount: number;
-    unit: Units;
-}
-
-/** Dynamic allowlist to keep up to date with new styling properties on CanvasRenderingContext2D */
-type CRC2DAllowlist<
-    K extends keyof CanvasRenderingContext2D = keyof CanvasRenderingContext2D
-> = K extends string | number
-    ? CanvasRenderingContext2D[K] extends string
-        ? K
-        : never
-    : never;
-
-/** Canvas Rendering Context 2D Attributes */
-type CRC2DAttributes = Pick<CanvasRenderingContext2D, CRC2DAllowlist>;
-
-interface GeometryAttributes extends CRC2DAttributes {
-    /** Whether or not the size of the drawn Geometry is relative to the view scale or static to X units*/
-    sizeType?: 'static' | 'relative';
-    /** The size value for the geometry */
-    size?: GeometryRelativeSize | GeometryStaticSize;
 }

@@ -23,36 +23,20 @@ import {
     SphereGeometry,
     MeshBasicMaterial,
     Mesh,
-    Vector3,
     DoubleSide,
     Shape,
     ExtrudeGeometry,
     ShapeGeometry,
 } from '@casual-simulation/three';
-import type { Box2, Box3, Object3D } from '@casual-simulation/three';
+import type { Box2, Box3, Vector3 } from '@casual-simulation/three';
 import type { AllGeoJSON } from '@turf/turf';
 import { MapOverlay } from './MapOverlay';
-import { MapView } from './MapView';
-import type { Feature, Geometry } from 'geojson';
-
-interface GeoJSON3DStyle {
-    pointColor?: string | number;
-    pointSize?: number;
-    lineColor?: string | number;
-    lineWidth?: number;
-    lineOpacity?: number;
-    polygonColor?: string | number;
-    polygonOpacity?: number;
-    strokeColor?: string | number;
-    strokeWidth?: number;
-    extrudeHeight?: number;
-    altitudeScale?: number; // Scale factor for altitude values
-}
+import { GeoJSONRenderer, type GeoJSONStyle } from './GeoJSONRenderer';
 
 export class GeoJSON3DOverlay extends MapOverlay {
     private _geojson: AllGeoJSON;
-    private _style: GeoJSON3DStyle;
-    private _defaultStyle: GeoJSON3DStyle = {
+    private _style: GeoJSONStyle;
+    private _defaultStyle: GeoJSONStyle = {
         pointColor: 0xff0000,
         pointSize: 0.01,
         lineColor: 0x0000ff,
@@ -63,7 +47,7 @@ export class GeoJSON3DOverlay extends MapOverlay {
         strokeColor: 0x000000,
         strokeWidth: 1,
         extrudeHeight: 0,
-        altitudeScale: 0.00001, // Default scale for altitude (1m = 0.00001 world units)
+        altitudeScale: 0.00001,
     };
     private _geometryGroup: Group;
 
@@ -73,14 +57,14 @@ export class GeoJSON3DOverlay extends MapOverlay {
         latitude: number,
         zoom: number,
         geojson: AllGeoJSON,
-        style?: GeoJSON3DStyle
+        style?: GeoJSONStyle
     ) {
         super(dimensions, 256, longitude, latitude, zoom);
 
         this._geojson = geojson;
         this._style = { ...this._defaultStyle, ...style };
         this._geometryGroup = new Group();
-        this._geometryGroup.position.y = 0.001; // Slightly above the map
+        this._geometryGroup.position.y = 0.001;
         this.add(this._geometryGroup);
 
         // Remove the plane mesh since we're using 3D geometries
@@ -100,29 +84,16 @@ export class GeoJSON3DOverlay extends MapOverlay {
      * Convert geographic coordinates to 3D world coordinates
      */
     private _geoTo3D(lon: number, lat: number, alt: number = 0): Vector3 {
-        // Calculate pixel coordinates
-        const [pixelX, pixelY] = MapView.calculatePixel(this._zoom, lon, lat);
-
-        // Get center pixel coordinates
-        const [centerPixelX, centerPixelY] = MapView.calculatePixel(
-            this._zoom,
+        return GeoJSONRenderer.geoTo3D(
+            lon,
+            lat,
+            alt,
             this._longitude,
-            this._latitude
+            this._latitude,
+            this._zoom,
+            this._tileSize,
+            this._style.altitudeScale || this._defaultStyle.altitudeScale
         );
-
-        // Calculate offset from center in pixels
-        const deltaPixelX = pixelX - centerPixelX;
-        const deltaPixelY = pixelY - centerPixelY;
-
-        // Convert to world coordinates
-        // The map is 1 world unit wide/tall, representing 256 pixels at the current zoom
-        const worldX = deltaPixelX / this._tileSize;
-        const worldZ = deltaPixelY / this._tileSize;
-        const worldY =
-            alt *
-            (this._style.altitudeScale || this._defaultStyle.altitudeScale);
-
-        return new Vector3(worldX, worldY, worldZ);
     }
 
     /**
@@ -308,85 +279,42 @@ export class GeoJSON3DOverlay extends MapOverlay {
     }
 
     /**
-     * Process a geometry and create 3D objects
+     * Render the GeoJSON as 3D objects
      */
-    private _processGeometry(
-        geometry: Geometry,
-        properties?: any
-    ): Object3D | null {
-        switch (geometry.type) {
-            case 'Point': {
-                return this._createPoint(geometry.coordinates, properties);
-            }
-
-            case 'LineString': {
-                return this._createLineString(geometry.coordinates, properties);
-            }
-
-            case 'Polygon': {
-                return this._createPolygon(geometry.coordinates, properties);
-            }
-
-            case 'MultiPoint': {
-                const pointGroup = new Group();
-                for (const point of geometry.coordinates) {
-                    pointGroup.add(this._createPoint(point, properties));
-                }
-                return pointGroup;
-            }
-
-            case 'MultiLineString': {
-                const lineGroup = new Group();
-                for (const line of geometry.coordinates) {
-                    lineGroup.add(this._createLineString(line, properties));
-                }
-                return lineGroup;
-            }
-
-            case 'MultiPolygon': {
-                const polygonGroup = new Group();
-                for (const polygon of geometry.coordinates) {
-                    const poly = this._createPolygon(polygon, properties);
-                    if (poly) polygonGroup.add(poly);
-                }
-                return polygonGroup;
-            }
-
-            case 'GeometryCollection': {
-                const collectionGroup = new Group();
-                for (const geom of geometry.geometries) {
-                    const obj = this._processGeometry(geom, properties);
-                    if (obj) collectionGroup.add(obj);
-                }
-                return collectionGroup;
-            }
-
-            default: {
-                if (geometry && typeof (geometry as any).type === 'string') {
-                    console.warn(
-                        `Unsupported geometry type: ${(geometry as any).type}`
-                    );
+    render(): void {
+        // Clear existing geometries
+        this._geometryGroup.clear();
+        this._geometryGroup.traverse((child) => {
+            if (child instanceof Mesh || child instanceof Line) {
+                child.geometry.dispose();
+                if (Array.isArray(child.material)) {
+                    child.material.forEach((m) => m.dispose());
                 } else {
-                    console.warn(
-                        'Unsupported geometry: invalid or missing type property.',
-                        geometry
-                    );
+                    child.material.dispose();
                 }
-                return null;
             }
-        }
-    }
+        });
 
-    /**
-     * Process a GeoJSON feature
-     */
-    private _processFeature(feature: Feature): void {
-        const object3D = this._processGeometry(
-            feature.geometry,
-            feature.properties
-        );
-        if (object3D) {
-            this._geometryGroup.add(object3D);
+        // Process GeoJSON using the utility
+        if (!this._geojson) return;
+
+        try {
+            GeoJSONRenderer.processGeoJSON(this._geojson, {
+                onPoint: (coords, props) => {
+                    const point = this._createPoint(coords, props);
+                    if (point) this._geometryGroup.add(point);
+                },
+                onLineString: (coords, props) => {
+                    const line = this._createLineString(coords, props);
+                    if (line) this._geometryGroup.add(line);
+                },
+                onPolygon: (coords, props) => {
+                    const polygon = this._createPolygon(coords, props);
+                    if (polygon) this._geometryGroup.add(polygon);
+                },
+            });
+        } catch (error) {
+            console.error('[GeoJSON3DOverlay] Error rendering GeoJSON:', error);
         }
     }
 
@@ -410,46 +338,6 @@ export class GeoJSON3DOverlay extends MapOverlay {
     }
 
     /**
-     * Render the GeoJSON as 3D objects
-     */
-    render(): void {
-        // Clear existing geometries
-        this._geometryGroup.clear();
-        this._geometryGroup.traverse((child) => {
-            if (child instanceof Mesh || child instanceof Line) {
-                child.geometry.dispose();
-                if (Array.isArray(child.material)) {
-                    child.material.forEach((m) => m.dispose());
-                } else {
-                    child.material.dispose();
-                }
-            }
-        });
-
-        // Process GeoJSON
-        if (!this._geojson) return;
-
-        try {
-            if (this._geojson.type === 'FeatureCollection') {
-                for (const feature of this._geojson.features) {
-                    this._processFeature(feature);
-                }
-            } else if (this._geojson.type === 'Feature') {
-                this._processFeature(this._geojson);
-            } else if (
-                'type' in this._geojson &&
-                'coordinates' in this._geojson
-            ) {
-                // Direct geometry
-                const obj = this._processGeometry(this._geojson as Geometry);
-                if (obj) this._geometryGroup.add(obj);
-            }
-        } catch (error) {
-            console.error('[GeoJSON3DOverlay] Error rendering GeoJSON:', error);
-        }
-    }
-
-    /**
      * Update the GeoJSON data
      */
     setGeoJSON(geojson: AllGeoJSON): void {
@@ -460,7 +348,7 @@ export class GeoJSON3DOverlay extends MapOverlay {
     /**
      * Update the style
      */
-    setStyle(style: GeoJSON3DStyle): void {
+    setStyle(style: GeoJSONStyle): void {
         this._style = { ...this._style, ...style };
         this.render();
     }
