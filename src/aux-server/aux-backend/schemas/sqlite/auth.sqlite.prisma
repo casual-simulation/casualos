@@ -21,11 +21,11 @@ model User {
     phoneNumber String? @unique
     avatarPortraitUrl String?
     avatarUrl String?
-    allSessionRevokeTime Int?
+    allSessionRevokeTime Int? @db.Int8
     currentLoginRequestId String? @unique
     currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
     currentWebAuthnChallenge String?
-    banTime Int?
+    banTime Int? @db.Int8
     banReason String?
 
     privoServiceId String? @unique
@@ -38,8 +38,8 @@ model User {
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
-    subscriptionPeriodStart Int?
-    subscriptionPeriodEnd Int?
+    subscriptionPeriodStart Int? @db.Int8
+    subscriptionPeriodEnd Int? @db.Int8
 
     allowPublishData Boolean?
     allowPublicData Boolean?
@@ -88,8 +88,8 @@ model User {
     grantedPackageEntitlements GrantedPackageEntitlement[]
     loadedPackages LoadedPackage[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model UserAuthenticator {
@@ -110,8 +110,8 @@ model UserAuthenticator {
 
     transports Json
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model LoginRequest {
@@ -121,9 +121,9 @@ model LoginRequest {
     
     secretHash String?
 
-    requestTime Int
-    expireTime Int
-    completedTime Int?
+    requestTime Int @db.Int8
+    expireTime Int @db.Int8
+    completedTime Int? @db.Int8
     
     attemptCount Int
     address String
@@ -136,8 +136,8 @@ model LoginRequest {
     // oidRedirectUrl String?
     // oidScope String?
     
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     sessions AuthSession[]
     activeUser User? @relation("CurrentLoginRequest")
@@ -159,9 +159,9 @@ model AuthSession {
     oidScope String?
     oidExpiresAtMs BigInt?
 
-    grantedTime Int
-    expireTime Int?
-    revokeTime Int?
+    grantedTime Int @db.Int8
+    expireTime Int? @db.Int8
+    revokeTime Int? @db.Int8
 
     revocable  Boolean?
 
@@ -184,8 +184,8 @@ model AuthSession {
 
     ipAddress String?
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model OpenIDLoginRequest {
@@ -199,16 +199,16 @@ model OpenIDLoginRequest {
     redirectUrl String
     scope String
 
-    requestTime Int
-    expireTime Int
-    completedTime Int?
+    requestTime Int @db.Int8
+    expireTime Int @db.Int8
+    completedTime Int? @db.Int8
     ipAddress String
 
     authorizationCode String?
-    authorizationTime Int?
+    authorizationTime Int? @db.Int8
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     authSessions AuthSession[]
 }
@@ -220,13 +220,13 @@ model WebAuthnLoginRequest {
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    requestTime Int
-    expireTime Int
-    completedTime Int?
+    requestTime Int @db.Int8
+    expireTime Int @db.Int8
+    completedTime Int? @db.Int8
     ipAddress String
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     authSessions AuthSession[]
 }
@@ -278,8 +278,8 @@ model Studio {
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
-    subscriptionPeriodStart Int?
-    subscriptionPeriodEnd Int?
+    subscriptionPeriodStart Int? @db.Int8
+    subscriptionPeriodEnd Int? @db.Int8
 
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
@@ -290,8 +290,8 @@ model Studio {
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model StudioAssignment {
@@ -306,8 +306,8 @@ model StudioAssignment {
     isPrimaryContact Boolean
     role String
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model Record {
@@ -353,8 +353,8 @@ model Record {
 
     userInstReports UserInstReport[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model RecordKey {
@@ -368,8 +368,8 @@ model RecordKey {
     creatorId String
     creator User @relation(fields: [creatorId], references: [id])
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 // Policies
@@ -382,8 +382,8 @@ model Policy {
     document Json
     markers Json
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model Role {
@@ -394,8 +394,8 @@ model Role {
     name String
     markers Json
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model RoleAssignment {
@@ -407,13 +407,13 @@ model RoleAssignment {
 
     subjectId String
     type String
-    expireTime Int?
+    expireTime Int? @db.Int8
 
     userId String?
     user User? @relation(fields: [userId], references: [id])
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([recordName, subjectId])
     @@index([recordName, roleId])
@@ -454,8 +454,8 @@ model RoleAssignment {
 //     // Null means that the assignment never expires.
 //     expireTime Int?
 
-//     createdAt Int
-//     updatedAt Int
+//     createdAt Int @db.Int8
+//     updatedAt Int @db.Int8
 
 //     @@index([subjectType, subjectId])
 //     @@index([resourceKind, action, subjectType, subjectId])
@@ -497,10 +497,10 @@ model ResourcePermissionAssignment {
 
     // The time that the assignment expires.
     // Null means that the assignment never expires.
-    expireTime Int?
+    expireTime Int? @db.Int8
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([subjectType, subjectId, recordName])
     @@index([recordName, resourceKind, resourceId, action, subjectType, subjectId])
@@ -552,10 +552,10 @@ model MarkerPermissionAssignment {
 
     // The time that the assignment expires.
     // Null means that the assignment never expires.
-    expireTime Int?
+    expireTime Int? @db.Int8
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([subjectType, subjectId, recordName])
     @@index([recordName, marker, action, subjectType, subjectId])
@@ -583,13 +583,13 @@ model GrantedPackageEntitlement {
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
 
     // The time that the entitlement grant expires
-    expireTime Int
+    expireTime Int @db.Int8
 
     // The time that the entitlement was revoked
-    revokeTime Int?
+    revokeTime Int? @db.Int8
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 // Example query:
@@ -622,8 +622,8 @@ model DataRecord {
 
     targetWebhookRecords WebhookRecord[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 // ManualData
@@ -647,8 +647,8 @@ model ManualDataRecord {
 
     markers Json
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model FileRecord {
@@ -671,7 +671,7 @@ model FileRecord {
 
     bucket String?
 
-    uploadedAt Int?
+    uploadedAt Int? @db.Int8
 
     markers Json
 
@@ -680,8 +680,8 @@ model FileRecord {
     webhookRuns WebhookRun[]
     packageVersions PackageRecordVersion[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model EventRecord {
@@ -694,8 +694,8 @@ model EventRecord {
     count BigInt
     markers Json
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model InstRecord {
@@ -714,8 +714,8 @@ model InstRecord {
     webhookRecords WebhookRecord[]
     loadedPackages LoadedPackage[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model InstBranch {
@@ -732,8 +732,8 @@ model InstBranch {
 
     updates BranchUpdate[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model BranchUpdate {
@@ -751,8 +751,8 @@ model BranchUpdate {
     sizeInBytes Int
     updateData String
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([recordName, instName, branchName, id])
 }
@@ -778,8 +778,8 @@ model LoadedPackage {
     branch String
     inst InstRecord @relation(fields: [instRecordName, instName], references: [recordName, name], onDelete: Cascade)
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model WebhookRecord {
@@ -811,8 +811,8 @@ model WebhookRecord {
 
     runs WebhookRun[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model WebhookRun {
@@ -827,8 +827,8 @@ model WebhookRun {
     statusCode Int?
     stateSha256 String
 
-    requestTime Int
-    responseTime Int
+    requestTime Int @db.Int8
+    responseTime Int @db.Int8
 
     errorResult Json?
 
@@ -836,8 +836,8 @@ model WebhookRun {
     infoFileName String?
     infoFile FileRecord? @relation(fields: [infoFileRecordName, infoFileName], references: [recordName, fileName], onDelete: SetNull)
     
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model NotificationRecord {
@@ -855,8 +855,8 @@ model NotificationRecord {
     subscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model PushSubscription {
@@ -871,8 +871,8 @@ model PushSubscription {
     sentNotifications SentPushNotification[]
     subscriptions NotificationSubscription[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([active])
 }
@@ -886,8 +886,8 @@ model PushSubscriptionUser {
     userId String
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model NotificationSubscription {
@@ -907,8 +907,8 @@ model NotificationSubscription {
 
     sentNotifications SentPushNotification[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@unique([recordName, notificationAddress, userId])
     @@unique([recordName, notificationAddress, pushSubscriptionId])
@@ -934,12 +934,12 @@ model SentNotification {
 
     defaultAction Json
     actions Json
-    sentTime Int
+    sentTime Int @db.Int8
 
     sentToDevices SentPushNotification[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model SentPushNotification {
@@ -960,8 +960,8 @@ model SentPushNotification {
     success Boolean
     errorCode String?
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model PackageRecord {
@@ -978,8 +978,8 @@ model PackageRecord {
     grantedEntitlements GrantedPackageEntitlement[]
     loadedPackages LoadedPackage[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@unique([recordName, address])
 }
@@ -1037,8 +1037,8 @@ model PackageRecordVersion {
     reviews PackageRecordVersionReview[]
     loadedPackages LoadedPackage[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@unique([recordName, address, major, minor, patch, tag])
 }
@@ -1066,8 +1066,8 @@ model PackageRecordVersionReview {
     reviewingUserId String
     reviewingUser User @relation(fields: [reviewingUserId], references: [id], onDelete: Cascade)
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model SearchRecord {
@@ -1088,8 +1088,8 @@ model SearchRecord {
 
     syncs SearchRecordSync[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model SearchRecordSync {
@@ -1107,8 +1107,8 @@ model SearchRecordSync {
 
     history SearchRecordSyncHistory[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@unique([searchRecordName, searchRecordAddress, targetRecordName, targetResourceKind, targetMarker])
 }
@@ -1124,22 +1124,22 @@ model SearchRecordSyncHistory {
 
     runId String
 
-    time Int
+    time Int @db.Int8
     status String
     success Boolean
 
     numSynced Int
     numErrored Int
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model Configuration {
     key String @id
     data Json
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model Subscription {
@@ -1156,14 +1156,14 @@ model Subscription {
     stripeCustomerId String? @unique
     subscriptionId String?
 
-    currentPeriodStart Int?
-    currentPeriodEnd Int?
+    currentPeriodStart Int? @db.Int8
+    currentPeriodEnd Int? @db.Int8
 
     periods SubscriptionPeriod[]
     invoices Invoice[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model SubscriptionPeriod {
@@ -1175,11 +1175,11 @@ model SubscriptionPeriod {
     invoiceId String @unique
     invoice Invoice?
 
-    periodStart Int
-    periodEnd Int
+    periodStart Int @db.Int8
+    periodEnd Int @db.Int8
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model Invoice {
@@ -1203,13 +1203,13 @@ model Invoice {
     stripeHostedInvoiceUrl String
     stripeInvoicePdfUrl String
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
 model AiChatMetrics {
     id String @id
-    createdAt Int
+    createdAt Int @db.Int8
 
     tokens Int
 
@@ -1222,7 +1222,7 @@ model AiChatMetrics {
 
 model AiImageMetrics {
     id String @id
-    createdAt Int
+    createdAt Int @db.Int8
     squarePixelsGenerated Int
 
     userId String?
@@ -1234,7 +1234,7 @@ model AiImageMetrics {
 
 model AiSkyboxMetrics {
     id String @id
-    createdAt Int
+    createdAt Int @db.Int8
     skyboxesGenerated Int
 
     userId String?
@@ -1255,7 +1255,7 @@ model AiSloydMetrics {
     thumbnailBase64 String?
     baseModelId String?
 
-    createdAt Int
+    createdAt Int @db.Int8
 
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1269,7 +1269,7 @@ model AiOpenAIRealtimeMetrics {
 
     request Json
 
-    createdAt Int
+    createdAt Int @db.Int8
 
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1280,8 +1280,8 @@ model AiOpenAIRealtimeMetrics {
 
 model PrivoClientCredentials {
     id String @id
-    createdAt Int
-    expiresAt Int
+    createdAt Int @db.Int8
+    expiresAt Int @db.Int8
 
     accessToken String
     refreshToken String
@@ -1310,8 +1310,8 @@ model UserInstReport {
     reportedUrl String
     reportedPermalink String
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([automaticReport, createdAt(sort: Desc), recordName, inst])
     @@index([reportReason, createdAt(sort: Desc), recordName, inst])
@@ -1329,8 +1329,8 @@ model ModerationJob {
 
     results FileModerationResult[]
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     @@index([type, createdAt(sort: Desc)])
 }
@@ -1359,8 +1359,8 @@ model FileModerationResult {
     // The version of the model that was used to produce this result
     modelVersion String
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 
     // Search by banned content status
     @@index([appearsToMatchBannedContent, fileName, createdAt(sort: Desc)])
@@ -1399,7 +1399,7 @@ model StudioComIdRequest {
 
     requestingIpAddress String?
 
-    createdAt Int
-    updatedAt Int
+    createdAt Int @db.Int8
+    updatedAt Int @db.Int8
 }
 
