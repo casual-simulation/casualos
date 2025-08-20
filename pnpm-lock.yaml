@@ -30461,7 +30461,7 @@ snapshots:
 
   sass@1.56.1:
     dependencies:
-      chokidar: 3.5.2
+      chokidar: 3.6.0
       immutable: 4.0.0
       source-map-js: 1.2.1
 
