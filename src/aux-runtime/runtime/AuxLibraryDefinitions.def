@@ -10410,6 +10410,41 @@ export interface AIChatOptions extends RecordActionOptions {
      * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
      */
     stopWords?: string[];
+
+    /**
+     * The maximum number of tokens to generate in the chat completion.
+     */
+    max_completion_tokens?: number;
+
+    /**
+     * Controls the level of detail in the AI's output.
+     */
+    verbosity?: 'low' | 'medium' | 'high';
+
+    /**
+     * Controls the depth of reasoning the AI uses.
+     */
+    reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high';
+
+    /**
+     * Encourages the AI to plan its response before generating output (supported in reasoning models).
+     */
+    preamble?: string;
+
+    /**
+     * Specifies multiple tool options for the AI to choose from.
+     */
+    tool_choice?: string[];
+
+    /**
+     * Custom tool type for text-based (non-JSON) tool payloads.
+     */
+    custom_tool_type?: 'custom';
+
+    /**
+     * Context-Free Grammar specification for constraining outputs.
+     */
+    cfg?: string;
 }
 
 /**
