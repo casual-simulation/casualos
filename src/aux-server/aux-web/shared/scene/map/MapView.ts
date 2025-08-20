@@ -20,16 +20,15 @@ import { MapTile } from './MapTile';
 import { Box2, Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
 import type { MapOverlay } from './MapOverlay';
-import { GeoJSONMapOverlay } from './MapOverlay';
+import type { GeoJSONMapOverlay } from './MapOverlay';
 import {
     type BotCalculationContext,
     type LocalActions,
 } from '@casual-simulation/aux-common';
-import { GeoJSON3DOverlay } from './GeoJSON3DOverlay';
+import type { GeoJSON3DOverlay } from './GeoJSON3DOverlay';
 import type { AllGeoJSON } from '@turf/turf';
 import { Vector2 } from 'three';
 import type { GeoJSONMapLayer } from '@casual-simulation/aux-common';
-import { GeoJSONRenderer } from './GeoJSONRenderer';
 
 const TILE_SIZE = 256;
 
@@ -113,21 +112,22 @@ export class MapView extends Object3D {
         }
 
         if (event.type === 'add_bot_map_layer') {
-            try {
-                const overlay = this._createOverlayFromEvent(event.overlay);
-                const overlayId =
-                    event.overlay.overlayId || this._generateLayerId();
-                this.addOverlay(overlayId, overlay);
-                return {
-                    success: true,
-                    data: { overlayId },
-                };
-            } catch (e) {
-                return {
-                    success: false,
-                    message: `Failed to add overlay: ${e}`,
-                };
-            }
+            // Return a promise for async overlay creation
+            const overlayPromise = this._createOverlayFromEvent(event.overlay)
+                .then((overlay) => {
+                    const overlayId =
+                        event.overlay.overlayId || this._generateLayerId();
+                    this.addOverlay(overlayId, overlay);
+                    return { overlayId };
+                })
+                .catch((e) => {
+                    throw new Error(`Failed to add overlay: ${e}`);
+                });
+
+            return {
+                success: true,
+                data: overlayPromise,
+            };
         } else if (event.type === 'remove_bot_map_layer') {
             const result = this.removeOverlay(event.overlayId);
             return result
@@ -141,7 +141,9 @@ export class MapView extends Object3D {
         return { success: false, message: 'Unknown event type' };
     }
 
-    private _createOverlayFromEvent(overlayData: any): MapOverlay {
+    private async _createOverlayFromEvent(
+        overlayData: any
+    ): Promise<MapOverlay> {
         const dimensions = new Box2(
             new Vector2(-0.5, -0.5),
             new Vector2(0.5, 0.5)
@@ -151,12 +153,15 @@ export class MapView extends Object3D {
             overlayData.overlayType === 'geojson' ||
             overlayData.type === 'geojson'
         ) {
+            const { GeoJSONRenderer } = await import('./GeoJSONRenderer');
+
             // Use GeoJSONRenderer utilities
             const style = GeoJSONRenderer.extractStyleFromGeoJSON(
                 overlayData.data
             );
 
             if (GeoJSONRenderer.shouldUse3D(overlayData.data)) {
+                const { GeoJSON3DOverlay } = await import('./GeoJSON3DOverlay');
                 return new GeoJSON3DOverlay(
                     dimensions,
                     this._longitude,
@@ -167,6 +172,7 @@ export class MapView extends Object3D {
                 );
             } else {
                 const canvasSize = 512;
+                const { GeoJSONMapOverlay } = await import('./MapOverlay');
                 return new GeoJSONMapOverlay(
                     dimensions,
                     canvasSize,
@@ -494,43 +500,27 @@ export class MapView extends Object3D {
         event: any,
         calc: any
     ): Promise<{ success: boolean; data?: any; error?: string }> {
-        console.log('[MapView] handleMapLayerAction', {
-            type: event.type,
-            portal: event.portal,
-            hasLayer: !!event.layer,
-            layerId: event.layerId,
-        });
-
         if (event.type === 'add_map_layer') {
             try {
                 const layerId = this._generateLayerId();
                 let geoJSONData = null;
 
                 if (event.layer.url) {
-                    console.log(
-                        '[MapView] Loading GeoJSON from URL:',
-                        event.layer.url
-                    );
                     geoJSONData = await this._loadGeoJSONFromURL(
                         event.layer.url
                     );
                 } else if (event.layer.data) {
-                    console.log('[MapView] Using provided GeoJSON data');
                     geoJSONData = event.layer.data;
                 } else {
                     throw new Error(
                         'GeoJSON layer must have either url or data property'
                     );
                 }
-
-                const overlay = this._createGeoJSONOverlay(
+                const overlay = await this._createGeoJSONOverlay(
                     geoJSONData,
                     event.layer
                 );
                 this.addOverlay(layerId, overlay);
-
-                console.log('[MapView] Layer added successfully', { layerId });
-
                 return {
                     success: true,
                     data: layerId,
@@ -546,9 +536,6 @@ export class MapView extends Object3D {
             try {
                 const removed = this.removeOverlay(event.layerId);
                 if (removed) {
-                    console.log('[MapView] Layer removed successfully', {
-                        layerId: event.layerId,
-                    });
                     return { success: true };
                 } else {
                     throw new Error(`No layer found with ID: ${event.layerId}`);
@@ -567,14 +554,16 @@ export class MapView extends Object3D {
         };
     }
 
-    private _createGeoJSONOverlay(
+    private async _createGeoJSONOverlay(
         geoJSONData: AllGeoJSON,
         layer: GeoJSONMapLayer
-    ): MapOverlay {
+    ): Promise<MapOverlay> {
         console.log('[MapView] Creating GeoJSON overlay', {
             hasData: !!geoJSONData,
             copyright: layer.copyright,
         });
+
+        const { GeoJSONRenderer } = await import('./GeoJSONRenderer');
 
         return GeoJSONRenderer.createOverlay(
             geoJSONData,

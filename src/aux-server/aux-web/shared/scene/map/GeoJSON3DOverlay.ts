@@ -31,7 +31,7 @@ import {
 import type { Box2, Box3, Vector3 } from '@casual-simulation/three';
 import type { AllGeoJSON } from '@turf/turf';
 import { MapOverlay } from './MapOverlay';
-import { GeoJSONRenderer, type GeoJSONStyle } from './GeoJSONRenderer';
+import type { GeoJSONStyle } from './GeoJSONRenderer';
 
 export class GeoJSON3DOverlay extends MapOverlay {
     private _geojson: AllGeoJSON;
@@ -83,7 +83,12 @@ export class GeoJSON3DOverlay extends MapOverlay {
     /**
      * Convert geographic coordinates to 3D world coordinates
      */
-    private _geoTo3D(lon: number, lat: number, alt: number = 0): Vector3 {
+    private async _geoTo3D(
+        lon: number,
+        lat: number,
+        alt: number = 0
+    ): Promise<Vector3> {
+        const { GeoJSONRenderer } = await import('./GeoJSONRenderer');
         return GeoJSONRenderer.geoTo3D(
             lon,
             lat,
@@ -99,9 +104,12 @@ export class GeoJSON3DOverlay extends MapOverlay {
     /**
      * Create a 3D point mesh
      */
-    private _createPoint(coordinates: number[], properties?: any): Mesh {
+    private async _createPoint(
+        coordinates: number[],
+        properties?: any
+    ): Promise<Mesh> {
         const [lon, lat, alt = 0] = coordinates;
-        const position = this._geoTo3D(lon, lat, alt);
+        const position = await this._geoTo3D(lon, lat, alt);
 
         const geometry = new SphereGeometry(
             this._style.pointSize || this._defaultStyle.pointSize,
@@ -127,12 +135,15 @@ export class GeoJSON3DOverlay extends MapOverlay {
     /**
      * Create a 3D line
      */
-    private _createLineString(coordinates: number[][], properties?: any): Line {
+    private async _createLineString(
+        coordinates: number[][],
+        properties?: any
+    ): Promise<Line> {
         const points: Vector3[] = [];
 
         for (const coord of coordinates) {
             const [lon, lat, alt = 0] = coord;
-            points.push(this._geoTo3D(lon, lat, alt));
+            points.push(await this._geoTo3D(lon, lat, alt));
         }
 
         const geometry = new BufferGeometry().setFromPoints(points);
@@ -164,10 +175,10 @@ export class GeoJSON3DOverlay extends MapOverlay {
     /**
      * Create a 3D polygon
      */
-    private _createPolygon(
+    private async _createPolygon(
         coordinates: number[][][],
         properties?: any
-    ): Mesh | Group {
+    ): Promise<Mesh | Group> {
         const group = new Group();
 
         // Process exterior ring (first ring)
@@ -181,7 +192,7 @@ export class GeoJSON3DOverlay extends MapOverlay {
 
         for (let i = 0; i < exteriorRing.length; i++) {
             const [lon, lat, alt = 0] = exteriorRing[i];
-            const point3D = this._geoTo3D(lon, lat, 0); // Use 0 altitude for shape
+            const point3D = await this._geoTo3D(lon, lat, 0); // Use 0 altitude for shape
 
             if (i === 0) {
                 shape.moveTo(point3D.x, point3D.z);
@@ -210,7 +221,7 @@ export class GeoJSON3DOverlay extends MapOverlay {
 
             for (let j = 0; j < holeRing.length; j++) {
                 const [lon, lat] = holeRing[j];
-                const point3D = this._geoTo3D(lon, lat, 0);
+                const point3D = await this._geoTo3D(lon, lat, 0);
 
                 if (j === 0) {
                     hole.moveTo(point3D.x, point3D.z);
@@ -267,7 +278,7 @@ export class GeoJSON3DOverlay extends MapOverlay {
 
         // Add stroke if needed
         if (this._style.strokeWidth && this._style.strokeWidth > 0) {
-            const strokeLine = this._createLineString(exteriorRing, {
+            const strokeLine = await this._createLineString(exteriorRing, {
                 lineColor: this._style.strokeColor,
                 lineWidth: this._style.strokeWidth,
             });
@@ -281,7 +292,7 @@ export class GeoJSON3DOverlay extends MapOverlay {
     /**
      * Render the GeoJSON as 3D objects
      */
-    render(): void {
+    async render(): Promise<void> {
         // Clear existing geometries
         this._geometryGroup.clear();
         this._geometryGroup.traverse((child) => {
@@ -299,17 +310,19 @@ export class GeoJSON3DOverlay extends MapOverlay {
         if (!this._geojson) return;
 
         try {
-            GeoJSONRenderer.processGeoJSON(this._geojson, {
-                onPoint: (coords, props) => {
-                    const point = this._createPoint(coords, props);
+            const { GeoJSONRenderer } = await import('./GeoJSONRenderer');
+
+            await GeoJSONRenderer.processGeoJSON(this._geojson, {
+                onPoint: async (coords, props) => {
+                    const point = await this._createPoint(coords, props);
                     if (point) this._geometryGroup.add(point);
                 },
-                onLineString: (coords, props) => {
-                    const line = this._createLineString(coords, props);
+                onLineString: async (coords, props) => {
+                    const line = await this._createLineString(coords, props);
                     if (line) this._geometryGroup.add(line);
                 },
-                onPolygon: (coords, props) => {
-                    const polygon = this._createPolygon(coords, props);
+                onPolygon: async (coords, props) => {
+                    const polygon = await this._createPolygon(coords, props);
                     if (polygon) this._geometryGroup.add(polygon);
                 },
             });

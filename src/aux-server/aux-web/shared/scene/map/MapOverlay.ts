@@ -26,7 +26,6 @@ import {
 } from '@casual-simulation/three';
 import type { Box2, Box3, Texture } from '@casual-simulation/three';
 import type { AllGeoJSON } from '@turf/turf';
-import { GeoJSONCanvasRenderer } from './GeoJSONRenderer';
 
 // Abstract base class remains mostly unchanged
 export abstract class MapOverlay extends Object3D {
@@ -87,7 +86,7 @@ export abstract class MapOverlay extends Object3D {
         zoom: number,
         longitude: number,
         latitude: number
-    ): void;
+    ): void | Promise<void>;
 
     /**
      * Renders the overlay.
@@ -106,7 +105,8 @@ export abstract class MapOverlay extends Object3D {
  * GeoJSONMapOverlay - 2D rendering of GeoJSON on a canvas texture
  */
 export class GeoJSONMapOverlay extends MapOverlay {
-    private _renderer: GeoJSONCanvasRenderer;
+    private _renderer: any;
+    private _rendererPromise: Promise<void> | null = null;
 
     constructor(
         dimensions: Box2 | Box3,
@@ -118,38 +118,69 @@ export class GeoJSONMapOverlay extends MapOverlay {
     ) {
         super(dimensions, tileSize, longitude, latitude, zoom);
 
-        this._renderer = new GeoJSONCanvasRenderer(
-            zoom,
-            longitude,
-            latitude,
-            tileSize
-        );
-        this.setTexture(new CanvasTexture(this._renderer.canvas));
+        this._initializeRenderer();
     }
 
-    updateCenter(zoom: number, longitude: number, latitude: number): void {
+    private async _initializeRenderer(): Promise<void> {
+        if (this._rendererPromise) return this._rendererPromise;
+
+        this._rendererPromise = (async () => {
+            const { GeoJSONCanvasRenderer } = await import('./GeoJSONRenderer');
+            this._renderer = new GeoJSONCanvasRenderer(
+                this._zoom,
+                this._longitude,
+                this._latitude,
+                this._tileSize
+            );
+            this.setTexture(new CanvasTexture(this._renderer.canvas));
+            this.render();
+        })();
+
+        return this._rendererPromise;
+    }
+
+    async updateCenter(
+        zoom: number,
+        longitude: number,
+        latitude: number
+    ): Promise<void> {
         if (
             this._zoom == zoom &&
             this._longitude === longitude &&
             this._latitude === latitude
         )
             return;
+
         this._zoom = zoom;
         this._longitude = longitude;
         this._latitude = latitude;
-        this._renderer.setCenter(longitude, latitude, zoom);
-        this.render();
+
+        await this._initializeRenderer();
+
+        if (this._renderer) {
+            this._renderer.setCenter(longitude, latitude, zoom);
+            this.render();
+        }
     }
 
     render(): void {
+        if (!this._renderer) {
+            this._initializeRenderer();
+            return;
+        }
+
         this._renderer.clearCanvas();
         this._renderer.drawGeoJSON(this._geojson);
         this._material.needsUpdate = true;
-        this._overlayTexture.needsUpdate = true;
+        if (this._overlayTexture) {
+            this._overlayTexture.needsUpdate = true;
+        }
     }
 
     dispose(): void {
-        this._renderer.dispose();
+        if (this._renderer) {
+            this._renderer.dispose();
+        }
         if (this._plane) {
             this._plane.geometry.dispose();
             if (Array.isArray(this._plane.material))
