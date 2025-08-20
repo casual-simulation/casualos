@@ -2977,7 +2977,7 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
 type OverlayType = 'geojson_canvas';
 
 export interface AddBotMapOverlayAction extends AsyncAction {
-    type: 'add_bot_map_overlay';
+    type: 'add_bot_map_layer';
     /**
      * The ID of the bot that should be drawn on.
      */
@@ -3002,7 +3002,7 @@ export interface AddBotMapOverlayAction extends AsyncAction {
     };
 }
 export interface RemoveBotMapOverlayAction extends AsyncAction {
-    type: 'remove_bot_map_overlay';
+    type: 'remove_bot_map_layer';
     /**
      * The ID of the bot that the overlay is on.
      */
@@ -5695,7 +5695,7 @@ export function addBotMapOverlay(
     taskId?: string | number
 ): AddBotMapOverlayAction {
     return {
-        type: 'add_bot_map_overlay',
+        type: 'add_bot_map_layer',
         botId: bot?.id,
         overlay: overlayConfig,
         taskId,
@@ -5708,7 +5708,7 @@ export function removeBotMapOverlay(
     taskId?: string | number
 ): RemoveBotMapOverlayAction {
     return {
-        type: 'remove_bot_map_overlay',
+        type: 'remove_bot_map_layer',
         botId: bot?.id,
         overlayId,
         taskId,

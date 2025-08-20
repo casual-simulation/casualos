@@ -25,6 +25,7 @@ import type {
     StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
 import {
+    asyncError,
     asyncResult,
     calculateBooleanTagValue,
     calculateBotIds,
@@ -334,23 +335,32 @@ export class BotShapeDecorator
     }
 
     localEvent(event: LocalActions, calc: BotCalculationContext) {
-        if (event.type === 'local_form_animation') {
-            this._playLocalAnimation(event.animation);
-        }
+        // Handle bot map overlay
         if (
-            event.type === 'add_bot_map_overlay' ||
-            event.type === 'remove_bot_map_overlay'
+            event.type === 'add_bot_map_layer' ||
+            event.type === 'remove_bot_map_layer'
         ) {
-            this._asyncResult(
-                event.taskId,
-                this._mapView
-                    ? this._mapView.localEvent(event, calc)
-                    : {
-                          success: false,
-                          message: 'Map view not available for bot.',
-                      }
-            );
+            if (!this._mapView) {
+                console.warn('[BotShapeDecorator] No map view available');
+                this._asyncError(
+                    event.taskId,
+                    new Error('Bot must have form: "map"')
+                );
+                return;
+            }
+            const result = this._mapView.localEvent(event, calc);
+
+            if (result.success) {
+                this._asyncResult(event.taskId, result.data?.overlayId);
+            } else {
+                this._asyncError(event.taskId, new Error(result.message));
+            }
         }
+    }
+    private _asyncError(taskId: any, error: Error) {
+        return this.bot3D.dimensionGroup.simulation3D.simulation.helper.transaction(
+            asyncError(taskId, error)
+        );
     }
 
     async startAnimation(event: StartFormAnimationAction): Promise<void> {

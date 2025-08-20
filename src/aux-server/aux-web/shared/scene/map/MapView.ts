@@ -17,15 +17,18 @@
  */
 import type { MapProvider } from 'geo-three';
 import { MapTile } from './MapTile';
-import { Object3D, Vector3 } from '@casual-simulation/three';
+import { Box2, Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
 import type { MapOverlay } from './MapOverlay';
-import { GeoJSONCanvasMapOverlay } from './MapOverlay';
+import { GeoJSONMapOverlay } from './MapOverlay';
 import {
-    shortUuid,
     type BotCalculationContext,
     type LocalActions,
 } from '@casual-simulation/aux-common';
+import { GeoJSON3DOverlay } from './GeoJSON3DOverlay';
+import type { AllGeoJSON } from '@turf/turf';
+import { Vector2 } from 'three';
+import type { GeoJSONMapLayer } from '@casual-simulation/aux-common';
 
 const TILE_SIZE = 256;
 
@@ -49,6 +52,9 @@ export class MapView extends Object3D {
     );
 
     private _overlays: Map<string, MapOverlay> = new Map();
+    private _geoJSONOverlay: GeoJSONMapOverlay | null = null;
+    private _geoJSON3DOverlay: GeoJSON3DOverlay | null = null;
+    private _layerIdCounter: number = 0;
 
     get heightProvider() {
         return this._heightProvider;
@@ -59,74 +65,119 @@ export class MapView extends Object3D {
         this.setCenter(zoom, this._longitude, this._latitude);
     }
 
-    addOverlay(
-        type: string,
-        data: any,
-        id: string = `${Date.now()}_${shortUuid()}_overlay`
-    ): string {
+    addOverlay(id: string, overlay: MapOverlay): void {
         this.removeOverlay(id);
-        let newOverlay: MapOverlay;
-        if (type === 'geojson_canvas') {
-            newOverlay = new GeoJSONCanvasMapOverlay(
-                this._clippingBox,
-                TILE_SIZE,
-                this._longitude,
-                this._latitude,
-                this._zoom,
-                data
-            );
-        } else {
-            throw new Error(`Unknown overlay type: ${type}`);
-        }
-        this._overlays.set(id, newOverlay);
-        newOverlay.position.setY(this._overlays.size / 2000);
-        this.add(newOverlay);
-        newOverlay.render();
-        return id;
+
+        this._overlays.set(id, overlay);
+        overlay.position.setY(0.001 + this._overlays.size * 0.0001);
+        this.add(overlay);
+
+        overlay.updateCenter(this._zoom, this._longitude, this._latitude);
+        overlay.render();
     }
 
-    removeOverlay(id: string): string {
-        if (!this._overlays.has(id)) return;
-        const existingOverlay = this._overlays.get(id);
-        this.remove(existingOverlay);
-        existingOverlay.dispose();
-        this._overlays.delete(id);
-        return id;
+    removeOverlay(id: string): boolean {
+        const overlay = this._overlays.get(id);
+        if (overlay) {
+            this.remove(overlay);
+            overlay.dispose();
+            this._overlays.delete(id);
+
+            if (this._geoJSONOverlay === overlay) {
+                this._geoJSONOverlay = null;
+            }
+            if (this._geoJSON3DOverlay === overlay) {
+                this._geoJSON3DOverlay = null;
+            }
+
+            return true;
+        }
+        return false;
     }
 
     localEvent(
         event: LocalActions,
         calc: BotCalculationContext
     ): { success: boolean; data?: any; message?: string } {
-        if (event.type === 'add_bot_map_overlay') {
-            let id: string;
+        if (
+            event.type === 'add_map_layer' ||
+            event.type === 'remove_map_layer'
+        ) {
+            const promise = this.handleMapLayerAction(event, calc);
+
+            return {
+                success: true,
+                data: promise,
+            };
+        }
+
+        if (event.type === 'add_bot_map_layer') {
             try {
-                id = this.addOverlay(
-                    event.overlay.overlayType,
-                    event.overlay.data,
-                    event.overlay.overlayId
-                );
+                const overlay = this._createOverlayFromEvent(event.overlay);
+                const overlayId =
+                    event.overlay.overlayId || this._generateLayerId();
+                this.addOverlay(overlayId, overlay);
+                return {
+                    success: true,
+                    data: { overlayId },
+                };
             } catch (e) {
                 return {
                     success: false,
-                    message: `Failed to add map overlay ${event.overlay.overlayId}: ${e}`,
+                    message: `Failed to add overlay: ${e}`,
                 };
             }
-            return { success: true, data: { overlayId: id } };
-        } else if (event.type === 'remove_bot_map_overlay') {
-            const res = this.removeOverlay(event.overlayId);
-            return typeof res === 'string'
-                ? {
-                      success: true,
-                      data: { overlayId: res },
-                  }
+        } else if (event.type === 'remove_bot_map_layer') {
+            const result = this.removeOverlay(event.overlayId);
+            return result
+                ? { success: true, data: { overlayId: event.overlayId } }
                 : {
                       success: false,
-                      data: { overlayId: null },
-                      message: `No overlay exists with id: ${event.overlayId}`,
+                      message: `No overlay with id: ${event.overlayId}`,
                   };
         }
-        return { success: false, message: 'Unknown local event type' };
+
+        return { success: false, message: 'Unknown event type' };
+    }
+
+    private _createOverlayFromEvent(overlayData: any): MapOverlay {
+        const dimensions = new Box2(
+            new Vector2(-0.5, -0.5),
+            new Vector2(0.5, 0.5)
+        );
+
+        if (
+            overlayData.overlayType === 'geojson' ||
+            overlayData.type === 'geojson'
+        ) {
+            const style = this._extractStyleFromGeoJSON(overlayData.data);
+
+            if (this._shouldUse3D(overlayData.data)) {
+                return new GeoJSON3DOverlay(
+                    dimensions,
+                    this._longitude,
+                    this._latitude,
+                    this._zoom,
+                    overlayData.data,
+                    style
+                );
+            } else {
+                const canvasSize = 512;
+                return new GeoJSONMapOverlay(
+                    dimensions,
+                    canvasSize,
+                    this._longitude,
+                    this._latitude,
+                    this._zoom,
+                    overlayData.data
+                );
+            }
+        }
+        throw new Error(`Unknown overlay type: ${overlayData.overlayType}`);
+    }
+
+    private _shouldUse3D(geoJSON: AllGeoJSON): boolean {
+        return this._hasAltitudeData(geoJSON) || this._hasExtrudeData(geoJSON);
     }
 
     setProvider(provider: MapProvider) {
@@ -438,5 +489,256 @@ export class MapView extends Object3D {
         tile.scale.setScalar(this._tileSize);
         this.add(tile);
         return tile;
+    }
+
+    /**
+     * Check if GeoJSON contains altitude data
+     */
+    private _hasAltitudeData(geoJSON: AllGeoJSON): boolean {
+        const checkCoordinates = (coords: any): boolean => {
+            if (Array.isArray(coords)) {
+                if (coords.length === 3 && typeof coords[0] === 'number') {
+                    return true;
+                }
+                return coords.some((c) => checkCoordinates(c));
+            }
+            return false;
+        };
+
+        const checkGeometry = (geometry: any): boolean => {
+            if (geometry.coordinates) {
+                return checkCoordinates(geometry.coordinates);
+            }
+            if (geometry.geometries) {
+                return geometry.geometries.some((g: any) => checkGeometry(g));
+            }
+            return false;
+        };
+
+        if (geoJSON.type === 'FeatureCollection') {
+            return geoJSON.features.some((feature) =>
+                checkGeometry(feature.geometry)
+            );
+        } else if (geoJSON.type === 'Feature') {
+            return checkGeometry(geoJSON.geometry);
+        } else {
+            return checkGeometry(geoJSON);
+        }
+    }
+
+    /**
+     * Check if GeoJSON contains extrude height data
+     */
+    private _hasExtrudeData(geoJSON: AllGeoJSON): boolean {
+        const checkProperties = (properties: any): boolean => {
+            if (!properties) return false;
+
+            return !!(
+                properties.extrudeHeight ||
+                properties.style?.extrudeHeight ||
+                properties.height ||
+                properties.style?.height
+            );
+        };
+
+        if (geoJSON.type === 'FeatureCollection') {
+            return geoJSON.features.some((feature) =>
+                checkProperties(feature.properties)
+            );
+        } else if (geoJSON.type === 'Feature') {
+            return checkProperties(geoJSON.properties);
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract style information from GeoJSON properties
+     */
+    private _extractStyleFromGeoJSON(geoJSON: AllGeoJSON): any {
+        const style: any = {};
+
+        const extractFromFeature = (feature: any) => {
+            if (feature.properties) {
+                const props = feature.properties;
+
+                // Direct style properties
+                if (props.pointColor) style.pointColor = props.pointColor;
+                if (props.pointSize) style.pointSize = props.pointSize;
+                if (props.lineColor) style.lineColor = props.lineColor;
+                if (props.lineWidth) style.lineWidth = props.lineWidth;
+                if (props.lineOpacity) style.lineOpacity = props.lineOpacity;
+                if (props.fillColor) style.polygonColor = props.fillColor;
+                if (props.fillOpacity) style.polygonOpacity = props.fillOpacity;
+                if (props.strokeColor) style.strokeColor = props.strokeColor;
+                if (props.strokeWidth) style.strokeWidth = props.strokeWidth;
+                if (props.extrudeHeight)
+                    style.extrudeHeight = props.extrudeHeight;
+
+                // Style object
+                if (props.style) {
+                    const s = props.style;
+                    if (s.pointColor) style.pointColor = s.pointColor;
+                    if (s.pointSize) style.pointSize = s.pointSize;
+                    if (s.lineColor) style.lineColor = s.lineColor;
+                    if (s.lineWidth) style.lineWidth = s.lineWidth;
+                    if (s.lineOpacity) style.lineOpacity = s.lineOpacity;
+                    if (s.fillColor) style.polygonColor = s.fillColor;
+                    if (s.fillOpacity) style.polygonOpacity = s.fillOpacity;
+                    if (s.strokeColor) style.strokeColor = s.strokeColor;
+                    if (s.strokeWidth) style.strokeWidth = s.strokeWidth;
+                    if (s.extrudeHeight) style.extrudeHeight = s.extrudeHeight;
+                    if (s.height) style.extrudeHeight = s.height;
+                }
+            }
+        };
+
+        if (geoJSON.type === 'FeatureCollection') {
+            geoJSON.features.forEach(extractFromFeature);
+        } else if (geoJSON.type === 'Feature') {
+            extractFromFeature(geoJSON);
+        }
+
+        return style;
+    }
+
+    async handleMapLayerAction(
+        event: any,
+        calc: any
+    ): Promise<{ success: boolean; data?: any; error?: string }> {
+        console.log('[MapView] handleMapLayerAction', {
+            type: event.type,
+            portal: event.portal,
+            hasLayer: !!event.layer,
+            layerId: event.layerId,
+        });
+
+        if (event.type === 'add_map_layer') {
+            try {
+                const layerId = this._generateLayerId();
+                let geoJSONData = null;
+
+                if (event.layer.url) {
+                    console.log(
+                        '[MapView] Loading GeoJSON from URL:',
+                        event.layer.url
+                    );
+                    geoJSONData = await this._loadGeoJSONFromURL(
+                        event.layer.url
+                    );
+                } else if (event.layer.data) {
+                    console.log('[MapView] Using provided GeoJSON data');
+                    geoJSONData = event.layer.data;
+                } else {
+                    throw new Error(
+                        'GeoJSON layer must have either url or data property'
+                    );
+                }
+
+                const overlay = this._createGeoJSONOverlay(
+                    geoJSONData,
+                    event.layer
+                );
+                this.addOverlay(layerId, overlay);
+
+                console.log('[MapView] Layer added successfully', { layerId });
+
+                return {
+                    success: true,
+                    data: layerId,
+                };
+            } catch (e) {
+                console.error('[MapView] Failed to add layer', e);
+                return {
+                    success: false,
+                    error: e.message || 'Failed to add map layer',
+                };
+            }
+        } else if (event.type === 'remove_map_layer') {
+            try {
+                const removed = this.removeOverlay(event.layerId);
+                if (removed) {
+                    console.log('[MapView] Layer removed successfully', {
+                        layerId: event.layerId,
+                    });
+                    return { success: true };
+                } else {
+                    throw new Error(`No layer found with ID: ${event.layerId}`);
+                }
+            } catch (e) {
+                console.error('[MapView] Failed to remove layer', e);
+                return {
+                    success: false,
+                    error: e.message || 'Failed to remove map layer',
+                };
+            }
+        }
+        return {
+            success: false,
+            error: 'Unknown event type',
+        };
+    }
+
+    private _createGeoJSONOverlay(
+        geoJSONData: AllGeoJSON,
+        layer: GeoJSONMapLayer
+    ): MapOverlay {
+        console.log('[MapView] Creating GeoJSON overlay', {
+            hasData: !!geoJSONData,
+            copyright: layer.copyright,
+        });
+
+        const dimensions = new Box2(
+            new Vector2(-0.5, -0.5),
+            new Vector2(0.5, 0.5)
+        );
+        const style = this._extractStyleFromGeoJSON(geoJSONData);
+        const use3D =
+            this._hasAltitudeData(geoJSONData) ||
+            this._hasExtrudeData(geoJSONData);
+
+        console.log('[MapView] GeoJSON rendering mode', { use3D });
+
+        if (use3D) {
+            return new GeoJSON3DOverlay(
+                dimensions,
+                this._longitude,
+                this._latitude,
+                this._zoom,
+                geoJSONData,
+                style
+            );
+        } else {
+            const canvasSize = 512;
+            return new GeoJSONMapOverlay(
+                dimensions,
+                canvasSize,
+                this._longitude,
+                this._latitude,
+                this._zoom,
+                geoJSONData
+            );
+        }
+    }
+
+    private async _loadGeoJSONFromURL(url: string): Promise<AllGeoJSON> {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to fetch GeoJSON: ${response.statusText}`
+                );
+            }
+            const data = await response.json();
+            return data as AllGeoJSON;
+        } catch (e) {
+            console.error('[MapView] Failed to load GeoJSON from URL', e);
+            throw e;
+        }
+    }
+
+    private _generateLayerId(): string {
+        this._layerIdCounter++;
+        return `geojson_layer_${this._layerIdCounter}_${Date.now()}`;
     }
 }

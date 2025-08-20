@@ -103,7 +103,7 @@ export abstract class MapOverlay extends Object3D {
     abstract dispose(): void;
 }
 
-export class GeoJSONCanvasMapOverlay extends MapOverlay {
+export class GeoJSONMapOverlay extends MapOverlay {
     private _renderer: GeoJSONCanvasRenderer;
     constructor(
         dimensions: Box2 | Box3,

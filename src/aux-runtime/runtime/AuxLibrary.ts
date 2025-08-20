@@ -112,7 +112,6 @@ import type {
     InstConfig,
     UnloadServerConfigAction,
     Point3D,
-    MapLayer,
     DynamicListener,
     HideLoadingScreenAction,
 } from '@casual-simulation/aux-common/bots';
@@ -210,7 +209,6 @@ import {
     endRecording as calcEndRecording,
     speakText as calcSpeakText,
     getVoices as calcGetVoices,
-    addBotMapOverlay as calcAddBotMapOverlay,
     removeBotMapOverlay as calcRemoveBotMapOverlay,
     getGeolocation as calcGetGeolocation,
     cancelAnimation,
@@ -275,8 +273,6 @@ import {
     installAuxFile as calcInstallAuxFile,
     calculateStringListTagValue,
     calculateScreenCoordinatesFromPosition as calcCalculateScreenCoordinatesFromPosition,
-    addMapLayer as calcAddMapLayer,
-    removeMapLayer as calcRemoveMapLayer,
     GET_DYNAMIC_LISTENERS_SYMBOL,
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
@@ -3533,8 +3529,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 endRecording,
                 speakText,
                 getVoices,
-                addBotMapOverlay,
-                removeBotMapOverlay,
             },
 
             loom: {
@@ -12057,12 +12051,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.addMapLayer
      */
     function addMapLayer(
-        portal: 'map' | 'miniMap',
-        layer: MapLayer
+        bot: Bot | string,
+        overlay: {
+            overlayType: 'geojson' | 'geojson_3d';
+            data: any;
+            overlayId?: string;
+        }
     ): Promise<string> {
         const task = context.createTask();
-        const event = calcAddMapLayer(portal, layer, task.taskId);
-        return addAsyncAction(task, event);
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const action: any = {
+            type: 'add_bot_map_layer',
+            botId: botId,
+            overlay: overlay,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -12080,10 +12085,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docid os.removeMapLayer
      * @docname os.removeMapLayer
      */
-    function removeMapLayer(layerId: string): Promise<void> {
+    function removeMapLayer(bot: Bot, overlayId: string): Promise<void> {
         const task = context.createTask();
-        const event = calcRemoveMapLayer(layerId, task.taskId);
-        return addAsyncAction(task, event);
+        const action = calcRemoveBotMapOverlay(bot, overlayId, task.taskId);
+        return addAsyncAction(task, action);
     }
 
     /**
@@ -14226,35 +14231,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getVoices(): Promise<SyntheticVoice[]> {
         const task = context.createTask();
         const action = calcGetVoices(task.taskId);
-        return addAsyncAction(task, action);
-    }
-
-    /**
-     * Adds a map overlay layer to the given bot's map.
-     * @param bot The bot that the overlay layer should be added to.
-     * @param overlayLayer Configuration for the overlay layer to add.
-     */
-    function addBotMapOverlay(
-        bot: Bot,
-        overlay: {
-            overlayType: 'geojson_canvas';
-            data: any;
-            overlayId?: string;
-        }
-    ): Promise<void> {
-        const task = context.createTask();
-        const action = calcAddBotMapOverlay(bot, overlay, task.taskId);
-        return addAsyncAction(task, action);
-    }
-
-    /**
-     * Removes a map overlay layer from the given bot's map.
-     * @param bot The bot that the overlay layer should be removed from.
-     * @param overlayId Idempotent ID of the overlay layer to remove.
-     */
-    function removeBotMapOverlay(bot: Bot, overlayId: string): Promise<void> {
-        const task = context.createTask();
-        const action = calcRemoveBotMapOverlay(bot, overlayId, task.taskId);
         return addAsyncAction(task, action);
     }
 
