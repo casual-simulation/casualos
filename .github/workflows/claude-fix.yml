@@ -1,4 +1,4 @@
-name: Claude Code (Issues & PRs)
+name: Claude Assistant
 
 on:
     issue_comment:
@@ -13,11 +13,8 @@ permissions:
 jobs:
     claude:
         runs-on: ubuntu-latest
-
-        # 👇 This is the key: attach your environment so its secrets are available.
         environment: ai-api-keys
 
-        # Only trigger on manual run OR when someone says '@claude'
         if: |
             github.event_name == 'workflow_dispatch' ||
             (github.event_name == 'issue_comment' &&
@@ -26,31 +23,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            # ===== OPTION A: Direct Anthropic API key stored in the environment =====
-            # Expected environment secret names (create in Settings → Environments → ai-api-keys):
-            #   - ANTHROPIC_API_KEY
-            # Optionally:
-            #   - CLAUDE_MODEL  (e.g., 'claude-3-7-sonnet-20250219')
-            #   - EXTRA_TASKS   (your custom shell steps; see plan below)
             - name: Run Claude Code via Anthropic API
-              if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
-              uses: anthropics/claude-code-action@v1
+              uses: anthropics/claude-code-action@beta
               with:
-                  trigger: '@claude'
-                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
                   model: ${{ secrets.CLAUDE_MODEL_1 }}
-                  plan: |
-                      You are a senior engineer. Read the linked issue/comment context.
-                      - Create a branch: fix/${{ github.event.issue.number || 'manual' }}-<short-slug>
-                      - Implement the fix with small, reviewable commits.
-                      - Try to run tests/linters if found:
-                        * npm ci && npm test && npm run lint
-                        * or: make test
-                      - If $EXTRA_TASKS is set, run it.
-                      - Open a PR that:
-                        * references the issue (Fixes #<num>)
-                        * explains root cause, changes, risks, and test notes
-                        * requests review from @${{ github.actor }}
-              env:
-                  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-                  EXTRA_TASKS: ${{ secrets.EXTRA_TASKS }}
+                  # To allow PR creation, enable GitHub tool:
+                  allowed_tools: mcp__github__create_pull_request
+                  # Optionally, set a custom prompt or use default:
+                  direct_prompt: 'Read the issue and apply a fix; then open a PR.'
+                  # `anthropic_api_key` is passed so Claude can authenticate
