@@ -58,6 +58,7 @@ export {
     loaders,
     replaceEsbuildPlugin,
     replaceThreePlugin,
+    replaceLodashPlugin,
     replaceModulePlugin,
     emptyModulePlugin,
     paths,
@@ -287,13 +288,20 @@ function replaceThreePlugin() {
     return replaceModulePlugin(/^three$/, '@casual-simulation/three');
 }
 
+function replaceLodashPlugin() {
+    return replaceModulePlugin(/^lodash$/, 'es-toolkit/compat');
+}
+
 function replaceModulePlugin(original, replacement) {
     return {
         name: 'replace-module',
         setup(build) {
-            build.onResolve({ filter: original }, (args) => ({
-                path: replacement,
-            }));
+            build.onResolve({ filter: original }, (args) => {
+                const url = new URL(import.meta.resolve(replacement));
+                return {
+                    path: url.pathname.slice(1),
+                };
+            });
         },
     };
 }
