@@ -22,6 +22,7 @@ import {
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
+    replaceLodashPlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
@@ -118,7 +119,11 @@ export function createConfigs(dev, version) {
                 },
                 external: ['deno-vm', 'better-sqlite3'],
                 minify: !dev,
-                plugins: [replaceThreePlugin(), ImportGlobPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceLodashPlugin(),
+                    ImportGlobPlugin(),
+                ],
             },
         ],
         [
@@ -157,6 +162,7 @@ export function createConfigs(dev, version) {
                         ),
                         force: true,
                     }),
+                    replaceLodashPlugin(),
                     ImportGlobPlugin(),
                 ],
                 minify: !dev,
@@ -177,7 +183,7 @@ export function createConfigs(dev, version) {
                 },
                 external: ['better-sqlite3'],
                 minify: !dev,
-                plugins: [ImportGlobPlugin()],
+                plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
             },
         ],
         [
@@ -195,7 +201,7 @@ export function createConfigs(dev, version) {
                 },
                 external: ['better-sqlite3'],
                 minify: !dev,
-                plugins: [ImportGlobPlugin()],
+                plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
             },
         ],
         [
@@ -212,6 +218,7 @@ export function createConfigs(dev, version) {
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
+                    replaceLodashPlugin(),
                     replaceEsbuildPlugin(),
                     copy({
                         src: path.resolve(auxWebDist, 'deno.js'),
@@ -241,7 +248,11 @@ export function createConfigs(dev, version) {
                 },
                 external: ['better-sqlite3'],
                 minify: !dev,
-                plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceLodashPlugin(),
+                    replaceEsbuildPlugin(),
+                ],
             },
         ],
         [

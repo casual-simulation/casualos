@@ -76,7 +76,7 @@ import type {
     BranchName,
     TemporaryInstRecordsStore,
 } from './TemporaryInstRecordsStore';
-import { sumBy } from 'lodash';
+import { sumBy } from 'es-toolkit/compat';
 import type {
     DenialReason,
     ServerError,

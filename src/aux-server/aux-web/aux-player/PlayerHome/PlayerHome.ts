@@ -51,7 +51,7 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual } from 'lodash';
+import { intersection, isEqual } from 'es-toolkit/compat';
 import type { Subscription } from 'rxjs';
 import type { Config } from 'unique-names-generator';
 import { uniqueNamesGenerator } from 'unique-names-generator';

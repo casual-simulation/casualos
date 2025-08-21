@@ -42,7 +42,7 @@
         "@casual-simulation/aux-vm-client": "^3.6.0",
         "@casual-simulation/crypto": "^3.5.0",
         "@casual-simulation/crypto-node": "^3.5.0",
-        "lodash": "4.17.21",
+        "es-toolkit": "1.39.10",
         "rxjs": "8.0.0-alpha.14",
         "uuid": "10.0.0"
     }

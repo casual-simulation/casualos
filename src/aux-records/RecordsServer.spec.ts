@@ -97,7 +97,7 @@ import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';

@@ -2,7 +2,7 @@
 
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, ReflectionType, IntrinsicType, CommentDisplayPart, CommentTag } from 'typedoc';
 import { ReferenceType, Reflection, ReflectionKind, Type, Comment, DeclarationReflection } from 'typedoc';
 import { getProject } from './api';

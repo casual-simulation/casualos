@@ -37,7 +37,7 @@ import { IdePortalConfig } from './IdePortalConfig';
 import type { IdeNode } from '@casual-simulation/aux-vm-browser';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { debounce } from 'lodash';
+import { debounce } from 'es-toolkit/compat';
 import { onMonacoLoaded } from '../../MonacoAsync';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './IdePortalHelpers';

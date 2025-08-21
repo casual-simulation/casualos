@@ -2,7 +2,7 @@ import React from 'react';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
 import Details from '@theme/Details';
-import { flatMap, groupBy, sortBy } from 'lodash';
+import { flatMap, groupBy, sortBy } from 'es-toolkit/compat';
 import { ReflectionBoundary } from './errors';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Link from '@docusaurus/Link';

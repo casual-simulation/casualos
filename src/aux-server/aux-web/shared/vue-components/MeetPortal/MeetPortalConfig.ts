@@ -33,7 +33,7 @@ import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 
 /**
  * Defines a class that is able to watch dimension confic bots and update values.

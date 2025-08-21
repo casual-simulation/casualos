@@ -263,6 +263,7 @@ export default defineConfig(({ command, mode }) => ({
             three: '@casual-simulation/three',
             esbuild: 'esbuild-wasm',
             'monaco-editor': '@casual-simulation/monaco-editor',
+            lodash: 'es-toolkit/compat',
 
             ...(mode === 'static'
                 ? {

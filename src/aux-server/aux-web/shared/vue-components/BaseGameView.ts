@@ -23,7 +23,7 @@ import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
 import type { Game } from '../scene/Game';
 import type { SubscriptionLike } from 'rxjs';
 import { EventBus } from '@casual-simulation/aux-components';
-import { debounce } from 'lodash';
+import { debounce } from 'es-toolkit/compat';
 import type { BotCursorType } from '@casual-simulation/aux-common';
 import { getCursorCSS } from '@casual-simulation/aux-common';
 

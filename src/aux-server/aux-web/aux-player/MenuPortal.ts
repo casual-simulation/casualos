@@ -18,7 +18,7 @@
 import type { SubscriptionLike } from 'rxjs';
 import { Subscription, Subject } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { DimensionItem } from './DimensionItem';
 import type {
     Simulation,

@@ -190,7 +190,9 @@ export default defineConfig(({ command, mode }) => {
                 '.json',
                 '.md',
             ],
-            alias: {},
+            alias: {
+                lodash: 'es-toolkit/compat',
+            },
         },
         server: {
             host: '::',

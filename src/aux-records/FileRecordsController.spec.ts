@@ -43,7 +43,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
