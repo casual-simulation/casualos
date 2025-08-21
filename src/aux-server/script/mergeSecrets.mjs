@@ -17,7 +17,7 @@
  */
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
-import _ from 'lodash';
+import _ from 'es-toolkit/compat';
 import prompts from 'prompts';
 
 async function start() {

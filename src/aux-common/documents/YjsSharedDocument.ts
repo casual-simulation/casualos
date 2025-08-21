@@ -42,13 +42,13 @@ import type {
     SharedMap,
     SharedArray,
     SharedText,
-    SharedArrayDelta,
     SharedTextDelta,
     SharedDocument,
     SharedType,
     SharedMapChanges,
     SharedArrayChanges,
     SharedTextChanges,
+    SharedArrayOp,
 } from './SharedDocument';
 import { fromByteArray, toByteArray } from 'base64-js';
 import type { InstUpdate } from '../bots';
@@ -335,8 +335,8 @@ function convertEvent(event: YEvent<any>): SharedTypeChanges {
 
 function convertArrayDelta<T>(
     delta: YArrayEvent<T>['delta']
-): SharedArrayDelta<T> {
-    let ops: SharedArrayDelta<T> = [];
+): SharedArrayOp<T>[] {
+    let ops: SharedArrayOp<T>[] = [];
     for (let op of delta) {
         if (op.insert) {
             ops.push({
@@ -559,7 +559,7 @@ export class YjsSharedArray<T>
     delete(index: number, count: number): void {
         this.type.delete(index, count);
     }
-    applyDelta(delta: SharedArrayDelta<T>): void {
+    applyDelta(delta: SharedArrayOp<T>[]): void {
         let index = 0;
         for (let op of delta) {
             if (op.type === 'preserve') {

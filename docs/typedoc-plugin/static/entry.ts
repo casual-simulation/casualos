@@ -13,3 +13,4 @@ export * from '../../../src/aux-records/AIOpenAIRealtimeInterface';
 export * from '../../../src/aux-records';
 export * from '../../../src/aux-common/common/RemoteActions';
 export * from '../../../src/crypto/Encryption';
+export * from '../../../src/aux-common/documents/SharedDocument';

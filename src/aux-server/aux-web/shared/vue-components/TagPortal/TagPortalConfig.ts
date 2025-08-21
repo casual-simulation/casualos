@@ -36,7 +36,7 @@ import { watchPortalConfigBot } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import type { SubscriptionLike, Subscription, Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import type { Simulation } from '@casual-simulation/aux-vm';
 
 /**

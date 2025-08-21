@@ -86,7 +86,7 @@ import type { AuxConfig } from './AuxConfig';
 import { buildVersionNumber } from './AuxConfig';
 import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
-import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
+import { mapKeys, mapValues, pick, transform } from 'es-toolkit/compat';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import type { TimeSyncController } from '@casual-simulation/timesync';
@@ -468,7 +468,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     )
                 )
                 .subscribe({ error: (e: any) => console.error(e) }),
-            ...flatMap(partitions, (p) =>
+            ...partitions.flatMap((p) =>
                 this._getCleanupSubscriptionsForPartition(p)
             )
         );

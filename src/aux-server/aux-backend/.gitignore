@@ -4,3 +4,5 @@ secrets.env.json
 secrets.dev.env.json
 
 prisma/generated
+prisma/generated-sqlite
+dev.db

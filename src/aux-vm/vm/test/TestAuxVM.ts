@@ -32,7 +32,7 @@ import {
     tagsOnBot,
 } from '@casual-simulation/aux-common';
 import type { StatusUpdate, DeviceAction } from '@casual-simulation/aux-common';
-import { union } from 'lodash';
+import { union } from 'es-toolkit/compat';
 import type { ChannelActionResult } from '../../vm';
 import type {
     AuxDevice,

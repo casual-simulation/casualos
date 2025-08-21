@@ -108,6 +108,7 @@ Object {
     },
     "prisma": Object {
       "configurationCacheSeconds": 86400,
+      "db": "cockroachdb",
       "options": Object {
         "datasources": Object {
           "db": Object {
@@ -1428,6 +1429,7 @@ Object {
     },
     "prisma": Object {
       "configurationCacheSeconds": 86400,
+      "db": "cockroachdb",
       "options": Object {
         "datasources": Object {
           "db": Object {
@@ -1798,6 +1800,7 @@ Object {
     },
     "prisma": Object {
       "configurationCacheSeconds": 86400,
+      "db": "cockroachdb",
       "options": Object {
         "datasources": Object {
           "db": Object {

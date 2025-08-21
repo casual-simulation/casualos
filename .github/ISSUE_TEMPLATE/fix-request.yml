@@ -1,0 +1,37 @@
+name: 🛠️ Fix Request
+description: Request a bug fix or change that Claude can auto-pick up
+labels: ['fix', 'claude']
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for filing a fix request!  
+              👉 To have Claude auto-create a branch & PR, make sure to **comment** with:
+
+              ```
+              @claude please fix this
+              ```
+
+              Claude will:
+              - Read this issue
+              - Create a branch
+              - Apply changes
+              - Run tests/linters if available
+              - Open a pull request tied to this issue
+
+    - type: input
+      id: summary
+      attributes:
+          label: ✏️ Summary
+          description: A short description of the problem
+          placeholder: 'Login button throws 500 when email already exists'
+
+    - type: textarea
+      id: steps
+      attributes:
+          label: ✅ Steps to Reproduce / Notes
+          description: Steps, logs, or extra info Claude should see
+          placeholder: |
+              1. Go to /signup
+              2. Enter an already-registered email
+              3. Submit form → error 500

@@ -35,7 +35,7 @@ import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { getImageClassifierUrls } from './ImageClassifierUtils';
-import { pick } from 'lodash';
+import { pick } from 'es-toolkit/compat';
 import type {
     ClassificationEvent,
     ModelLoadedEvent,

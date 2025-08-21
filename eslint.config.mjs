@@ -13,11 +13,13 @@ export default defineConfig([
         '**/node_modules/**',
         '**/dist/**',
         '**/prisma/generated/**',
+        '**/prisma/generated-sqlite/**',
         '**/typings/**',
         'src/expect/**',
         'src/stacktrace/**',
         'src/multi-streams-mixer/**',
         'src/chalk/**',
+        'src/aux-server/aux-web/shared/static/lib/**',
     ]),
     { files: ['**/*.{js,mjs,cjs,ts,vue}'] },
     {

@@ -18,7 +18,7 @@
 import type { Bot } from './Bot';
 import type { BotObjectsContext } from './BotObjectsContext';
 import { calculateBotValue } from './BotCalculations';
-import { zip, sortBy } from 'lodash';
+import { zip, sortBy } from 'es-toolkit/compat';
 
 /**
  * Creates a lookup table for the given tags.

@@ -87,7 +87,7 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import type { SystemNotificationMessenger } from '../../SystemNotificationMessenger';
 import { v7 as uuid } from 'uuid';
 import type { PackageRecordsController } from '../PackageRecordsController';
-import { isEqual } from 'lodash';
+import { isEqual } from 'es-toolkit/compat';
 
 const TRACE_NAME = 'PackageVersionRecordsController';
 

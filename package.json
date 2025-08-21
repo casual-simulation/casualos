@@ -84,7 +84,8 @@
         "lint:tunnel": "eslint src/tunnel",
         "lint:undom": "eslint src/undom",
         "lint:shortkey": "eslint src/vue-shortkey",
-        "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev"
+        "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev",
+        "prepare": "husky"
     },
     "devDependencies": {
         "@babel/core": "^7.14.3",
@@ -113,7 +114,6 @@
         "@types/inquirer": "^8.1.3",
         "@types/jest": "^29.5.0",
         "@types/jsonwebtoken": "^9.0.5",
-        "@types/lodash": "^4.14.176",
         "@types/lru-cache": "^5.1.1",
         "@types/luxon": "3.3.7",
         "@types/mime": "^2.0.3",
@@ -129,6 +129,7 @@
         "@types/uuid": "10.0.0",
         "@types/vue-color": "^2.4.3",
         "@types/ws": "^8.5.12",
+        "@typescript-eslint/utils": "^8.26.1",
         "browserslist": ">=4.16.5",
         "chai": "^4.2.0",
         "chalk": "4.1.2",
@@ -139,6 +140,7 @@
         "esbuild-copy-static-files": "0.1.0",
         "eslint": "^9.22.0",
         "eslint-plugin-header": "3.1.1",
+        "eslint-plugin-unused-imports": "4.1.4",
         "eslint-plugin-vue": "^10.0.0",
         "fake-indexeddb": "5.0.1",
         "faker": "5.1.0",
@@ -146,7 +148,7 @@
         "handlebars": "^4.4.2",
         "hash.js": "1.1.7",
         "http-server": "14.1.1",
-        "husky": "^7.0.4",
+        "husky": "^9.1.7",
         "jake": "10.8.5",
         "jest": "^29.5.0",
         "jest-environment-jsdom": "^29.5.0",
@@ -157,7 +159,6 @@
         "jszip": "3.10.1",
         "lerna": "8.0.0",
         "lint-staged": "15.5.0",
-        "lodash": "4.17.21",
         "mock-fs": "5.2.0",
         "nodemon": "^2.0.19",
         "precise-commits": "^1.0.2",
@@ -177,11 +178,10 @@
         "ts-jest-mock-import-meta": "1.3.0",
         "typescript": "^5.0.2",
         "typescript-eslint": "^8.26.1",
-        "@typescript-eslint/utils": "^8.26.1",
-        "eslint-plugin-unused-imports": "4.1.4",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7"
+        "wait-on": "7",
+        "es-toolkit": "1.39.10"
     },
     "engines": {
         "node": ">=v20.18",
@@ -221,6 +221,7 @@
         "onlyBuiltDependencies": [
             "@prisma/client",
             "@prisma/engines",
+            "better-sqlite3",
             "prisma"
         ]
     },

@@ -23,7 +23,7 @@ import { randomBytes } from 'crypto';
 import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'hash.js';
 import axios from 'axios';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { SubscriptionLike, Observable } from 'rxjs';
 import { timer, defer, throwError, EMPTY, NEVER } from 'rxjs';
 import { retryWhen, finalize, tap, repeatWhen, mergeMap } from 'rxjs/operators';

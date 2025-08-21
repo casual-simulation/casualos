@@ -31,7 +31,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
-import { dropWhile } from 'lodash';
+import { dropWhile } from 'es-toolkit/compat';
 import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import type { Simulation3D } from '../../../shared/scene/Simulation3D';

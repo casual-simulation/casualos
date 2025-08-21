@@ -52,7 +52,7 @@ import type {
 } from './WebhookEnvironment';
 import { STORED_AUX_SCHEMA } from './WebhookEnvironment';
 import { getHash } from '@casual-simulation/crypto';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import {
     MemoryTempInstRecordsStore,
     MemoryWebsocketConnectionStore,

@@ -67,7 +67,7 @@
         "inherits": "2.0.4",
         "jsbarcode": "3.11.0",
         "jsqr": "1.2.0",
-        "lodash": "4.17.21",
+        "es-toolkit": "1.39.10",
         "mime": "2.4.6",
         "mongodb": "3.6.2",
         "rxjs": "8.0.0-alpha.14",

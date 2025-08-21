@@ -153,7 +153,7 @@ import {
 } from './Utils';
 import type { AuxRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge, union } from 'lodash';
+import { sortBy, forOwn, merge, union } from 'es-toolkit/compat';
 import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
 import type { CurrentVersion } from '@casual-simulation/aux-common';
 import type { RuntimeStateVersion } from './RuntimeStateVersion';

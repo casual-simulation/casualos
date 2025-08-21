@@ -237,7 +237,7 @@ Here's a list of the tools and packages that we're using to build CasualOS.
             -   [acorn-jsx](https://github.com/acornjs/acorn-jsx) for parsing JSX code in listeners.
         -   [astring](https://github.com/davidbonnet/astring) for generating JS from acorn trees.
         -   [estraverse](https://github.com/estools/estraverse) for traversing the acorn trees and transforming them.
-        -   [lodash](https://lodash.com/) for easy array/object manipulation.
+        -   [es-toolkit](https://es-toolkit.dev/) for easy array/object manipulation.
         -   [lru-cache](https://github.com/isaacs/node-lru-cache) for caching formula transpilation results.
         -   [rxjs](https://github.com/ReactiveX/rxjs) for reactive programming.
         -   [uuid](https://github.com/kelektiv/node-uuid) for generating UUIDs.
