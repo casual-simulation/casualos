@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-runtime",
-    "version": "3.7.0-alpha.17049743052",
+    "version": "3.7.0-alpha.17138097488",
     "description": "Runtime for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -32,8 +32,8 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.7.0-alpha.17049743052",
-        "@casual-simulation/aux-records": "^3.7.0-alpha.17049743052",
+        "@casual-simulation/aux-common": "^3.7.0-alpha.17138097488",
+        "@casual-simulation/aux-records": "^3.7.0-alpha.17138097488",
         "@casual-simulation/crypto": "^3.5.0",
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/error-stack-parser": "^2.0.7",
@@ -52,6 +52,7 @@
         "astring": "1.7.5",
         "axios": "1.7.7",
         "base64-js": "^1.5.1",
+        "es-toolkit": "1.39.10",
         "estraverse": "5.3.0",
         "expect": "27.3.1",
         "hash.js": "1.1.7",
@@ -66,9 +67,7 @@
         "stackframe": "^1.2.0",
         "typesense": "2.0.3",
         "uuid": "10.0.0",
-        "yjs": "13.6.8",
-        "typesense": "2.0.3",
-        "es-toolkit": "1.39.10"
+        "yjs": "13.6.8"
     },
     "devDependencies": {
         "@types/jsdom": "21.1.6",
