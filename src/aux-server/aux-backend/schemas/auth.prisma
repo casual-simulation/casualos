@@ -1150,10 +1150,16 @@ model DatabaseRecord {
     databaseProvider String
 
     // The ID of the database in turso
-    tursoDatabaseId String
+    tursoDatabaseId String?
+
+    // The URL of the database in turso
+    tursoDatabaseUrl String?
 
     // The turso organization that the database is in
-    tursoOrganization String
+    tursoOrganization String?
+
+    // The name of the database file
+    sqliteDatabaseFileName String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
