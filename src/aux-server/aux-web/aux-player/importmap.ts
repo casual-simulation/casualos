@@ -15,6 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import './importmap';
-import '@casual-simulation/aux-vm-browser/html/IframeEntry';
-import '@casual-simulation/aux-vm-browser/vm/ViteWorkerEntry';
+import importMap from 'virtual:importmap';
+
+/**
+ * Configures the default import map for CasualOS.
+ * This function creates an import map that is used to resolve module imports that are used inside CasualOS itself and
+ * can be shared with user scripts.
+ */
+function setupImportMap() {
+    const mapScript = document.createElement('script');
+    mapScript.id = 'default-import-map';
+    mapScript.type = 'importmap';
+    mapScript.textContent = JSON.stringify(importMap);
+    document.head.append(mapScript);
+}
+
+setupImportMap();
