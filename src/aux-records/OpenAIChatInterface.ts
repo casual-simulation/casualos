@@ -88,6 +88,41 @@ export class OpenAIChatInterface implements AIChatInterface {
         this._additionalProperties = options.additionalProperties ?? {};
     }
 
+    private _applyVerbosityToMessages(messages: AIChatMessage[], verbosity?: 'low' | 'medium' | 'high'): AIChatMessage[] {
+        if (!verbosity || verbosity === 'medium') {
+            return messages;
+        }
+
+        const verbosityInstructions = {
+            low: 'Be concise and brief in your response. Provide only the essential information.',
+            high: 'Provide a detailed and comprehensive response with thorough explanations and examples where appropriate.'
+        };
+
+        const instruction = verbosityInstructions[verbosity];
+        
+        // Add verbosity instruction to the first system message if one exists, or create one
+        const modifiedMessages = [...messages];
+        const firstSystemIndex = modifiedMessages.findIndex(m => m.role === 'system');
+        
+        if (firstSystemIndex >= 0) {
+            const existingContent = typeof modifiedMessages[firstSystemIndex].content === 'string'
+                ? modifiedMessages[firstSystemIndex].content
+                : '';
+            modifiedMessages[firstSystemIndex] = {
+                ...modifiedMessages[firstSystemIndex],
+                content: `${existingContent}\n\n${instruction}`.trim()
+            };
+        } else {
+            // Insert at beginning
+            modifiedMessages.unshift({
+                role: 'system',
+                content: instruction
+            });
+        }
+
+        return modifiedMessages;
+    }
+
     @traced(TRACE_NAME, SPAN_OPTIONS)
     async chat(
         request: AIChatInterfaceRequest
@@ -103,12 +138,14 @@ export class OpenAIChatInterface implements AIChatInterface {
                 }
             }
 
+            const processedMessages = this._applyVerbosityToMessages(request.messages, request.verbosity);
+
             const result = await axios.post(
                 `${this._baseUrl}chat/completions`,
                 {
                     ...this._additionalProperties,
                     model: request.model,
-                    messages: request.messages.map((m) => ({
+                    messages: processedMessages.map((m) => ({
                         role: m.role,
                         content:
                             typeof m.content === 'string'
@@ -147,6 +184,9 @@ export class OpenAIChatInterface implements AIChatInterface {
                     user: request.userId,
                     max_tokens: request.maxTokens,
                     max_completion_tokens: request.maxCompletionTokens,
+                    ...(request.reasoningEffort && {
+                        reasoning_effort: request.reasoningEffort
+                    }),
                 },
                 {
                     headers: {
@@ -213,10 +253,12 @@ export class OpenAIChatInterface implements AIChatInterface {
             }
         }
 
+        const processedMessages = this._applyVerbosityToMessages(request.messages, request.verbosity);
+
         const res = await this._client.chat.completions.create({
             ...this._additionalProperties,
             model: request.model,
-            messages: request.messages.map((m) => ({
+            messages: processedMessages.map((m) => ({
                 role: m.role,
                 content:
                     typeof m.content === 'string'
@@ -254,6 +296,9 @@ export class OpenAIChatInterface implements AIChatInterface {
             user: request.userId,
             max_tokens: request.maxTokens,
             max_completion_tokens: request.maxCompletionTokens,
+            ...(request.reasoningEffort && {
+                reasoning_effort: request.reasoningEffort
+            }),
             stream: true,
             stream_options: {
                 include_usage: true,

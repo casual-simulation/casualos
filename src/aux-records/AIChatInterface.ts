@@ -95,6 +95,27 @@ export interface AIChatInterfaceRequest {
     maxCompletionTokens?: number;
 
     /**
+     * Controls the verbosity level of the AI's response.
+     * 
+     * - `low`: Produces concise, brief responses
+     * - `medium`: Produces moderately detailed responses (default behavior)
+     * - `high`: Produces detailed, comprehensive responses
+     */
+    verbosity?: 'low' | 'medium' | 'high';
+
+    /**
+     * Controls the reasoning effort the AI applies when generating responses.
+     * 
+     * - `minimal`: Quick responses with minimal reasoning
+     * - `low`: Some reasoning applied to responses
+     * - `medium`: Moderate reasoning effort (balanced approach)
+     * - `high`: Extensive reasoning and analysis
+     * 
+     * Higher reasoning effort may result in slower responses but potentially higher quality answers.
+     */
+    reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+
+    /**
      * The ID of the user that is making the request.
      */
     userId: string;

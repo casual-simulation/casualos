@@ -177,6 +177,36 @@ export interface AIChatOptions extends RecordActionOptions {
      * This parameter is supported by newer LLM APIs for more precise token control.
      */
     maxCompletionTokens?: number;
+
+    /**
+     * Controls the verbosity level of the AI's response.
+     * 
+     * - `low`: Produces concise, brief responses
+     * - `medium`: Produces moderately detailed responses (default behavior)
+     * - `high`: Produces detailed, comprehensive responses
+     * 
+     * If not specified, the model's default verbosity will be used.
+     * 
+     * @dochash types/ai
+     * @docname AIChatVerbosityLevel
+     */
+    verbosity?: 'low' | 'medium' | 'high';
+
+    /**
+     * Controls the reasoning effort the AI applies when generating responses.
+     * 
+     * - `minimal`: Quick responses with minimal reasoning
+     * - `low`: Some reasoning applied to responses
+     * - `medium`: Moderate reasoning effort (balanced approach)
+     * - `high`: Extensive reasoning and analysis
+     * 
+     * If not specified, the model's default reasoning level will be used.
+     * Higher reasoning effort may result in slower responses but potentially higher quality answers.
+     * 
+     * @dochash types/ai
+     * @docname AIChatReasoningLevel  
+     */
+    reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
 }
 
 /**

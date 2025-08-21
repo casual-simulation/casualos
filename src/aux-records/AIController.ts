@@ -505,6 +505,8 @@ export class AIController {
                 userId: request.userId,
                 maxTokens,
                 maxCompletionTokens: request.maxCompletionTokens,
+                verbosity: request.verbosity,
+                reasoningEffort: request.reasoningEffort,
             });
 
             if (result.totalTokens > 0) {
@@ -732,6 +734,8 @@ export class AIController {
                 userId: request.userId,
                 maxTokens,
                 maxCompletionTokens: request.maxCompletionTokens,
+                verbosity: request.verbosity,
+                reasoningEffort: request.reasoningEffort,
             });
 
             for await (let chunk of result) {
@@ -1744,6 +1748,27 @@ export interface AIChatRequest {
      * This limits only the completion/output tokens, not including the input tokens.
      */
     maxCompletionTokens?: number;
+
+    /**
+     * Controls the verbosity level of the AI's response.
+     * 
+     * - `low`: Produces concise, brief responses
+     * - `medium`: Produces moderately detailed responses (default behavior)
+     * - `high`: Produces detailed, comprehensive responses
+     */
+    verbosity?: 'low' | 'medium' | 'high';
+
+    /**
+     * Controls the reasoning effort the AI applies when generating responses.
+     * 
+     * - `minimal`: Quick responses with minimal reasoning
+     * - `low`: Some reasoning applied to responses
+     * - `medium`: Moderate reasoning effort (balanced approach)
+     * - `high`: Extensive reasoning and analysis
+     * 
+     * Higher reasoning effort may result in slower responses but potentially higher quality answers.
+     */
+    reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
 }
 
 export type AIChatResponse = AIChatSuccess | AIChatFailure;

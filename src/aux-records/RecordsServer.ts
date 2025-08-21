@@ -3564,6 +3564,8 @@ export class RecordsServer {
                         frequencyPenalty: z.number().min(-2).max(2).optional(),
                         stopWords: z.array(z.string()).max(4).optional(),
                         maxCompletionTokens: z.number().int().min(1).optional(),
+                        verbosity: z.enum(['low', 'medium', 'high']).optional(),
+                        reasoningEffort: z.enum(['minimal', 'low', 'medium', 'high']).optional(),
                     })
                 )
                 .handler(
@@ -3614,6 +3616,8 @@ export class RecordsServer {
                         frequencyPenalty: z.number().min(-2).max(2).optional(),
                         stopWords: z.array(z.string()).max(4).optional(),
                         maxCompletionTokens: z.number().int().min(1).optional(),
+                        verbosity: z.enum(['low', 'medium', 'high']).optional(),
+                        reasoningEffort: z.enum(['minimal', 'low', 'medium', 'high']).optional(),
                     })
                 )
                 .handler(async ({ model, messages, ...options }, context) => {

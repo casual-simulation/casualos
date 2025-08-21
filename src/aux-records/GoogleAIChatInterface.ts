@@ -61,6 +61,41 @@ export class GoogleAIChatInterface implements AIChatInterface {
         this._genAI = new GoogleGenerativeAI(options.apiKey);
     }
 
+    private _applyVerbosityToMessages(messages: AIChatMessage[], verbosity?: 'low' | 'medium' | 'high'): AIChatMessage[] {
+        if (!verbosity || verbosity === 'medium') {
+            return messages;
+        }
+
+        const verbosityInstructions = {
+            low: 'Provide concise and brief responses. Focus only on essential information.',
+            high: 'Provide detailed and comprehensive responses with thorough explanations and examples.'
+        };
+
+        const instruction = verbosityInstructions[verbosity];
+        
+        // Add verbosity instruction to the first system message if one exists, or create one
+        const modifiedMessages = [...messages];
+        const firstSystemIndex = modifiedMessages.findIndex(m => m.role === 'system');
+        
+        if (firstSystemIndex >= 0) {
+            const existingContent = typeof modifiedMessages[firstSystemIndex].content === 'string'
+                ? modifiedMessages[firstSystemIndex].content
+                : '';
+            modifiedMessages[firstSystemIndex] = {
+                ...modifiedMessages[firstSystemIndex],
+                content: `${existingContent}\n\n${instruction}`.trim()
+            };
+        } else {
+            // Insert at beginning
+            modifiedMessages.unshift({
+                role: 'system',
+                content: instruction
+            });
+        }
+
+        return modifiedMessages;
+    }
+
     @traced(TRACE_NAME, SPAN_OPTIONS)
     async chat(
         request: AIChatInterfaceRequest
@@ -70,7 +105,8 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 model: request.model,
             });
 
-            const messages = request.messages.map((m) => mapMessage(m));
+            const processedMessages = this._applyVerbosityToMessages(request.messages, request.verbosity);
+            const messages = processedMessages.map((m) => mapMessage(m));
 
             const historyMessages = messages.slice(0, messages.length - 1);
             const lastMessage = messages[messages.length - 1];
@@ -168,7 +204,8 @@ export class GoogleAIChatInterface implements AIChatInterface {
                 model: request.model,
             });
 
-            const messages = request.messages.map((m) => mapMessage(m));
+            const processedMessages = this._applyVerbosityToMessages(request.messages, request.verbosity);
+            const messages = processedMessages.map((m) => mapMessage(m));
 
             const historyMessages = messages.slice(0, messages.length - 1);
             const lastMessage = messages[messages.length - 1];
