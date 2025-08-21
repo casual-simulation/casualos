@@ -58,48 +58,17 @@ export class AnthropicAIChatInterface implements AIChatInterface {
         });
     }
 
-    private _applyVerbosityToMessages(messages: AIChatMessage[], verbosity?: 'low' | 'medium' | 'high'): AIChatMessage[] {
-        if (!verbosity || verbosity === 'medium') {
-            return messages;
-        }
-
-        const verbosityInstructions = {
-            low: 'Provide concise and brief responses. Focus only on essential information.',
-            high: 'Provide detailed and comprehensive responses with thorough explanations and examples.'
-        };
-
-        const instruction = verbosityInstructions[verbosity];
-        
-        // Add verbosity instruction to the first system message if one exists, or create one
-        const modifiedMessages = [...messages];
-        const firstSystemIndex = modifiedMessages.findIndex(m => m.role === 'system');
-        
-        if (firstSystemIndex >= 0) {
-            const existingContent = typeof modifiedMessages[firstSystemIndex].content === 'string'
-                ? modifiedMessages[firstSystemIndex].content
-                : '';
-            modifiedMessages[firstSystemIndex] = {
-                ...modifiedMessages[firstSystemIndex],
-                content: `${existingContent}\n\n${instruction}`.trim()
-            };
-        } else {
-            // Insert at beginning
-            modifiedMessages.unshift({
-                role: 'system',
-                content: instruction
-            });
-        }
-
-        return modifiedMessages;
-    }
-
     @traced(TRACE_NAME, SPAN_OPTIONS)
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
         try {
             let maxTokens = Math.min(
-                ...[request.maxCompletionTokens, request.maxTokens, 4096].filter(x => x != null)
+                ...[
+                    request.maxCompletionTokens,
+                    request.maxTokens,
+                    4096,
+                ].filter((x) => x != null)
             );
 
             // TODO: Support 8192 tokens for sonnet
@@ -108,15 +77,13 @@ export class AnthropicAIChatInterface implements AIChatInterface {
             //     maxTokens = Math.min(request.maxCompletionTokens || request.maxTokens, 8192);
             // }
 
-            const processedMessages = this._applyVerbosityToMessages(request.messages, request.verbosity);
-
             const response = await this._ai.messages.create({
                 max_tokens: maxTokens,
                 top_p: request.topP,
                 temperature: request.temperature,
                 stop_sequences: request.stopWords,
                 model: request.model,
-                messages: processedMessages.map((m) => mapMessage(m)),
+                messages: request.messages.map((m) => mapMessage(m)),
             });
 
             return {
@@ -159,7 +126,11 @@ export class AnthropicAIChatInterface implements AIChatInterface {
     ): AsyncIterable<AIChatInterfaceStreamResponse> {
         try {
             let maxTokens = Math.min(
-                ...[request.maxCompletionTokens, request.maxTokens, 4096].filter(x => x != null)
+                ...[
+                    request.maxCompletionTokens,
+                    request.maxTokens,
+                    4096,
+                ].filter((x) => x != null)
             );
 
             // TODO: Support 8192 tokens for sonnet
@@ -168,15 +139,13 @@ export class AnthropicAIChatInterface implements AIChatInterface {
             //     maxTokens = Math.min(request.maxCompletionTokens || request.maxTokens, 8192);
             // }
 
-            const processedMessages = this._applyVerbosityToMessages(request.messages, request.verbosity);
-
             const response = this._ai.messages.stream({
                 max_tokens: maxTokens,
                 top_p: request.topP,
                 temperature: request.temperature,
                 stop_sequences: request.stopWords,
                 model: request.model,
-                messages: processedMessages.map((m) => mapMessage(m)),
+                messages: request.messages.map((m) => mapMessage(m)),
             });
 
             for await (const chunk of response) {
