@@ -34,6 +34,36 @@
     -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
     -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
     -   Search records have the ability to be automatically synced from data records, but there is currently no API for this and needs to be setup on a case-by-case basis (for now).
+-   Added the ability to allow scripts to import some of the libraries that CasualOS itself uses.
+    -   This now also makes it possible for other libraries to share some libraries with CasualOS itself.
+    -   The following libraries can now be imported by scripts directly:
+        -   `yjs` - The [YJS](https://yjs.dev/) CRDT library.
+        -   `luxon` - The [Luxon](https://github.com/moment/luxon#readme) date and time library.
+        -   `preact` - The [Preact](https://preactjs.com/) JSX rendering library.
+        -   `preact/compat` - The `preact/compat` export of Preact.
+        -   `preact/jsx-runtime` - The `preact/jsx-runtime` export of Preact.
+    -   This change should now make it possible to use libraries that utilize React by setting up an import map (only on deployments which support full DOM features):
+        -   ```typescript
+            const casualOsImportMap =
+                document.getElementById('default-import-map');
+            if (!casualOsImportMap) {
+                console.error('CasualOS import map not found!');
+                return;
+            }
+            const defaultImportMap = JSON.parse(casualOsImportMap.textContent);
+            const mapScript = document.createElement('script');
+            mapScript.id = 'react-import-map';
+            mapScript.type = 'importmap';
+            mapScript.textContent = JSON.stringify({
+                imports: {
+                    react: defaultImportMap.imports['preact/compat'],
+                    'react-dom': defaultImportMap.imports['preact/compat'],
+                    'react/jsx-runtime':
+                        defaultImportMap.imports['preact/jsx-runtime'],
+                },
+            });
+            document.head.append(mapScript);
+            ```
 
 ### :bug: Bug Fixes
 
