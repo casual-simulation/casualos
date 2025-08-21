@@ -342,6 +342,8 @@ model Record {
 
     searchRecords SearchRecord[]
 
+    databaseRecords DatabaseRecord[]
+
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
@@ -1130,6 +1132,28 @@ model SearchRecordSyncHistory {
 
     numSynced Int
     numErrored Int
+
+    createdAt Decimal
+    updatedAt Decimal
+}
+
+model DatabaseRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    
+    address String
+
+    // The provider for the database
+    // For now, this must be "turso"
+    databaseProvider String
+
+    // The ID of the database in turso
+    tursoDatabaseId String
+
+    // The turso organization that the database is in
+    tursoOrganization String
 
     createdAt Decimal
     updatedAt Decimal
