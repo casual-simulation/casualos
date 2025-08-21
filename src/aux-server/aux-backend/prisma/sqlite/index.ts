@@ -15,7 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-export * from './PackageRecordsStore';
-export * from './version/PackageVersionRecordsStore';
-export * from './PackageRecordsController';
-export * from './MemoryPackageRecordsStore';
+export * from './SqliteAuthStore';
+export * from './SqliteDataRecordsStore';
+export * from './SqliteEventRecordsStore';
+export * from './SqliteFileRecordsLookup';
+export * from './SqlitePolicyStore';
+export * from './SqliteRecordsStore';
+export * from './SqliteConfigurationStore';
+export * from './SqliteMetricsStore';
+export * from './SqliteModerationStore';
+export * from './SqliteNotificationRecordsStore';
+export * from './SqlitePackageRecordsStore';
+export * from './SqlitePackageVersionRecordsStore';
+export * from './SqlitePrivoStore';
+export * from './SqliteSearchRecordsStore';
+export * from './SqliteWebhookRecordsStore';
+export * from './SqliteInstRecordsStore';

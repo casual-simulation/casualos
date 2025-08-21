@@ -39,6 +39,9 @@ import type {
     WebhookEnvironment,
     NotificationRecordsStore,
     WebPushInterface,
+    PrivoStore,
+    PackageRecordsStore,
+    PackageVersionRecordsStore,
 } from '@casual-simulation/aux-records';
 import {
     AuthController,
@@ -106,6 +109,7 @@ import {
 } from '../mongo';
 import { sortBy } from 'lodash';
 import { PrismaClient } from '../prisma/generated';
+import { PrismaClient as SqlitePrismaClient } from '../prisma/generated-sqlite';
 import {
     PrismaAuthStore,
     PrismaConfigurationStore,
@@ -193,12 +197,31 @@ import { SearchSyncProcessor } from '@casual-simulation/aux-records/search';
 import { SearchRecordsController } from '@casual-simulation/aux-records/search';
 import { TypesenseSearchInterface } from '@casual-simulation/aux-records/search';
 import type { NodeConfiguration } from 'typesense/lib/Typesense/Configuration';
-import { PrismaSearchRecordsStore } from 'aux-backend/prisma/PrismaSearchRecordsStore';
+import { PrismaSearchRecordsStore } from '../prisma/PrismaSearchRecordsStore';
 import type { IQueue } from '@casual-simulation/aux-records/queue';
 import { Worker as BullWorker, Queue } from 'bullmq';
 import { BullQueue } from '../queue/BullQueue';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { SNSQueue } from '../queue/SNSQueue';
+import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3';
+import {
+    SqliteAuthStore,
+    SqliteConfigurationStore,
+    SqliteMetricsStore,
+    SqlitePolicyStore,
+    SqlitePrivoStore,
+    SqliteRecordsStore,
+    SqliteDataRecordsStore,
+    SqliteEventRecordsStore,
+    SqliteModerationStore,
+    SqliteWebhookRecordsStore,
+    SqliteNotificationRecordsStore,
+    SqlitePackageRecordsStore,
+    SqlitePackageVersionRecordsStore,
+    SqliteSearchRecordsStore,
+    SqliteFileRecordsLookup,
+    SqliteInstRecordsStore,
+} from '../prisma/sqlite';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -260,7 +283,7 @@ export class ServerBuilder implements SubscriptionLike {
     private _multiCache: MultiCache;
 
     private _privoClient: PrivoClient;
-    private _privoStore: PrismaPrivoStore;
+    private _privoStore: PrivoStore;
 
     private _configStore: ConfigurationStore;
     private _metricsStore: MetricsStore;
@@ -368,8 +391,8 @@ export class ServerBuilder implements SubscriptionLike {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
-    private _packagesStore: PrismaPackageRecordsStore;
-    private _packageVersionsStore: PrismaPackageVersionRecordsStore;
+    private _packagesStore: PackageRecordsStore;
+    private _packageVersionsStore: PackageVersionRecordsStore;
     private _packagesController: PackageRecordsController;
     private _packageVersionController: PackageVersionRecordsController;
 
@@ -682,43 +705,85 @@ export class ServerBuilder implements SubscriptionLike {
             prismaClient,
             options
         );
-        const metricsStore = (this._metricsStore = new PrismaMetricsStore(
-            prismaClient,
-            this._configStore
-        ));
-        this._authStore = new PrismaAuthStore(prismaClient);
-        this._privoStore = new PrismaPrivoStore(prismaClient);
-        this._recordsStore = new PrismaRecordsStore(prismaClient);
         this._policyStore = this._ensurePrismaPolicyStore(
             prismaClient,
             options
         );
-        this._dataStore = new PrismaDataRecordsStore(prismaClient);
-        this._manualDataStore = new PrismaDataRecordsStore(prismaClient, true);
-        this._eventsStore = new PrismaEventRecordsStore(prismaClient);
-        this._moderationStore = new PrismaModerationStore(prismaClient);
-        this._webhooksStore = new PrismaWebhookRecordsStore(
-            prismaClient,
-            metricsStore
-        );
-        this._notificationsStore = new PrismaNotificationRecordsStore(
-            prismaClient,
-            metricsStore
-        );
-        this._packagesStore = new PrismaPackageRecordsStore(
-            prismaClient,
-            metricsStore
-        );
-        this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
-            prismaClient,
-            metricsStore
-        );
-        this._searchStore = new PrismaSearchRecordsStore(
-            prismaClient,
-            metricsStore
-        );
+        if (options.prisma.db === 'sqlite') {
+            const client: SqlitePrismaClient = prismaClient as any;
+            const metricsStore = (this._metricsStore = new SqliteMetricsStore(
+                client,
+                this._configStore
+            ));
+            this._authStore = new SqliteAuthStore(client);
+            this._privoStore = new SqlitePrivoStore(client);
+            this._recordsStore = new SqliteRecordsStore(client);
+            this._dataStore = new SqliteDataRecordsStore(client);
+            this._manualDataStore = new SqliteDataRecordsStore(client, true);
+            this._eventsStore = new SqliteEventRecordsStore(client);
+            this._moderationStore = new SqliteModerationStore(client);
+            this._webhooksStore = new SqliteWebhookRecordsStore(
+                client,
+                metricsStore
+            );
+            this._notificationsStore = new SqliteNotificationRecordsStore(
+                client,
+                metricsStore
+            );
+            this._packagesStore = new SqlitePackageRecordsStore(
+                client,
+                metricsStore
+            );
+            this._packageVersionsStore = new SqlitePackageVersionRecordsStore(
+                client,
+                metricsStore
+            );
+            this._searchStore = new SqliteSearchRecordsStore(
+                client,
+                metricsStore
+            );
+        } else {
+            const metricsStore = (this._metricsStore = new PrismaMetricsStore(
+                prismaClient,
+                this._configStore
+            ));
+            this._authStore = new PrismaAuthStore(prismaClient);
+            this._privoStore = new PrismaPrivoStore(prismaClient);
+            this._recordsStore = new PrismaRecordsStore(prismaClient);
+            this._dataStore = new PrismaDataRecordsStore(prismaClient);
+            this._manualDataStore = new PrismaDataRecordsStore(
+                prismaClient,
+                true
+            );
+            this._eventsStore = new PrismaEventRecordsStore(prismaClient);
+            this._moderationStore = new PrismaModerationStore(prismaClient);
+            this._webhooksStore = new PrismaWebhookRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._notificationsStore = new PrismaNotificationRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._packagesStore = new PrismaPackageRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._packageVersionsStore = new PrismaPackageVersionRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._searchStore = new PrismaSearchRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+        }
 
-        const filesLookup = new PrismaFileRecordsLookup(prismaClient);
+        const filesLookup =
+            options.prisma.db === 'sqlite'
+                ? new SqliteFileRecordsLookup(prismaClient as any)
+                : new PrismaFileRecordsLookup(prismaClient);
+
         return {
             prismaClient,
             filesLookup,
@@ -939,7 +1004,9 @@ export class ServerBuilder implements SubscriptionLike {
                 options.redis.publicInstRecordsLifetimeExpireMode,
                 true
             ),
-            new PrismaInstRecordsStore(prisma)
+            options.prisma.db === 'sqlite'
+                ? new SqliteInstRecordsStore(prisma as any)
+                : new PrismaInstRecordsStore(prisma)
         );
 
         return this;
@@ -2174,9 +2241,24 @@ export class ServerBuilder implements SubscriptionLike {
 
     private _ensurePrisma(options: Pick<ServerConfig, 'prisma'>): PrismaClient {
         if (!this._prismaClient) {
-            this._prismaClient = new PrismaClient(
-                options.prisma.options as any
-            );
+            if (options.prisma.db === 'sqlite') {
+                const prismaOptions: any = options.prisma.options ?? {};
+                const adapter = new PrismaBetterSQLite3({
+                    url:
+                        prismaOptions.datasourceUrl ??
+                        prismaOptions.datasources?.db?.url ??
+                        process.env.DATABASE_URL,
+                });
+
+                this._prismaClient = new SqlitePrismaClient({
+                    ...(options.prisma.options ?? {}),
+                    adapter,
+                }) as any;
+            } else {
+                this._prismaClient = new PrismaClient(
+                    options.prisma.options as any
+                );
+            }
             this._subscription.add(() => {
                 this._prismaClient.$disconnect();
             });
@@ -2242,7 +2324,10 @@ export class ServerBuilder implements SubscriptionLike {
         prismaClient: PrismaClient,
         options: Pick<ServerConfig, 'prisma'>
     ): PolicyStore {
-        const policyStore = new PrismaPolicyStore(prismaClient);
+        const policyStore =
+            options.prisma.db === 'sqlite'
+                ? new SqlitePolicyStore(prismaClient as any)
+                : new PrismaPolicyStore(prismaClient);
         if (this._multiCache && options.prisma.policiesCacheSeconds) {
             const cache = this._multiCache.getCache('policies');
             return new CachingPolicyStore(
@@ -2262,11 +2347,23 @@ export class ServerBuilder implements SubscriptionLike {
             'prisma' | 'subscriptions' | 'moderation' | 'privo'
         >
     ): ConfigurationStore {
-        const configStore = new PrismaConfigurationStore(prismaClient, {
-            subscriptions: options.subscriptions as SubscriptionConfiguration,
-            privo: options.privo as PrivoConfiguration,
-            moderation: options.moderation as ModerationConfiguration,
-        });
+        let configStore: ConfigurationStore;
+        if (options.prisma.db === 'sqlite') {
+            configStore = new SqliteConfigurationStore(prismaClient as any, {
+                subscriptions:
+                    options.subscriptions as SubscriptionConfiguration,
+                privo: options.privo as PrivoConfiguration,
+                moderation: options.moderation as ModerationConfiguration,
+            });
+        } else {
+            configStore = new PrismaConfigurationStore(prismaClient, {
+                subscriptions:
+                    options.subscriptions as SubscriptionConfiguration,
+                privo: options.privo as PrivoConfiguration,
+                moderation: options.moderation as ModerationConfiguration,
+            });
+        }
+
         if (this._multiCache && options.prisma.configurationCacheSeconds) {
             const cache = this._multiCache.getCache('config');
             return new CachingConfigStore(
