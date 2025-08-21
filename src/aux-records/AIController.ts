@@ -1751,7 +1751,7 @@ export interface AIChatRequest {
 
     /**
      * Controls the verbosity level of the AI's response.
-     * 
+     *
      * - `low`: Produces concise, brief responses
      * - `medium`: Produces moderately detailed responses (default behavior)
      * - `high`: Produces detailed, comprehensive responses
@@ -1760,15 +1760,14 @@ export interface AIChatRequest {
 
     /**
      * Controls the reasoning effort the AI applies when generating responses.
-     * 
-     * - `minimal`: Quick responses with minimal reasoning
+     *
      * - `low`: Some reasoning applied to responses
      * - `medium`: Moderate reasoning effort (balanced approach)
      * - `high`: Extensive reasoning and analysis
-     * 
+     *
      * Higher reasoning effort may result in slower responses but potentially higher quality answers.
      */
-    reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high';
+    reasoningEffort?: 'low' | 'medium' | 'high';
 }
 
 export type AIChatResponse = AIChatSuccess | AIChatFailure;
