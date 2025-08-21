@@ -303,8 +303,14 @@ function replaceModulePlugin(original, replacement) {
         setup(build) {
             build.onResolve({ filter: original }, (args) => {
                 const url = new URL(import.meta.resolve(replacement));
+
+                let path = url.pathname;
+                if (path.startsWith('/') && process.platform === 'win32') {
+                    path = path.slice(1);
+                }
+
                 return {
-                    path: url.pathname.slice(1),
+                    path,
                 };
             });
         },
