@@ -1529,7 +1529,6 @@ describe('AIController', () => {
                                 finishReason: 'stop',
                             },
                         ],
-                        totalTokens: 50,
                     },
                 ],
             });
