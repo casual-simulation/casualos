@@ -3620,7 +3620,7 @@ export class RecordsServer {
                         maxCompletionTokens: z.number().int().min(1).optional(),
                         verbosity: z.enum(['low', 'medium', 'high']).optional(),
                         reasoningEffort: z
-                            .enum(['minimal', 'low', 'medium', 'high'])
+                            .enum(['low', 'medium', 'high'])
                             .optional(),
                     })
                 )
