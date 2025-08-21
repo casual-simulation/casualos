@@ -170,8 +170,6 @@ import {
     getBotsStateFromStoredAux,
     installAuxFile,
     calculateScreenCoordinatesFromPosition,
-    addMapLayer,
-    removeMapLayer,
     ADD_BOT_LISTENER_SYMBOL,
     GET_DYNAMIC_LISTENERS_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
@@ -9961,22 +9959,23 @@ describe('AuxLibrary', () => {
         describe('os.addMapLayer()', () => {
             it('should send a AddMapLayerAction', () => {
                 const promise: any = library.api.os.addMapLayer('map', {
-                    type: 'geojson',
+                    overlayType: 'geojson',
                     data: {
                         abc: 'def',
                     },
                 });
 
-                const expected = addMapLayer(
-                    'map',
-                    {
-                        type: 'geojson',
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'map',
+                    overlay: {
+                        overlayType: 'geojson',
                         data: {
                             abc: 'def',
                         },
                     },
-                    context.tasks.size
-                );
+                    taskId: context.tasks.size,
+                };
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -9985,10 +9984,112 @@ describe('AuxLibrary', () => {
 
         describe('os.removeMapLayer()', () => {
             it('should send a RemoveMapLayerAction', () => {
-                const promise: any = library.api.os.removeMapLayer('layer');
-                const expected = removeMapLayer('layer', context.tasks.size);
+                const promise: any = library.api.os.removeMapLayer(
+                    bot1,
+                    'layer'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'layer',
+                    taskId: context.tasks.size,
+                };
+
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+
+            it('should handle different layer IDs', () => {
+                const promise: any = library.api.os.removeMapLayer(
+                    bot1,
+                    'custom-layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'custom-layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should increment task ID for multiple calls', () => {
+                const initialTaskSize = context.tasks.size;
+
+                const promise1: any = library.api.os.removeMapLayer(
+                    bot1,
+                    'layer1'
+                );
+                const expected1 = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'layer1',
+                    taskId: initialTaskSize + 1,
+                };
+
+                const promise2: any = library.api.os.removeMapLayer(
+                    bot1,
+                    'layer2'
+                );
+                const expected2 = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'layer2',
+                    taskId: initialTaskSize + 2,
+                };
+
+                expect(promise1[ORIGINAL_OBJECT]).toEqual(expected1);
+                expect(promise2[ORIGINAL_OBJECT]).toEqual(expected2);
+                expect(context.actions).toEqual([expected1, expected2]);
+            });
+        });
+
+        describe('os.removeMapLayer() - Extended Tests', () => {
+            beforeEach(() => {
+                context.actions = [];
+            });
+
+            it('should work with map portal', () => {
+                const promise: any = library.api.os.removeMapLayer(
+                    bot1,
+                    'map-layer'
+                );
+
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'map-layer',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toContainEqual(expected);
+            });
+
+            it('should work with miniMap portal', () => {
+                const promise: any = library.api.os.removeMapLayer(
+                    bot1,
+                    'minimap-layer'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'minimap-layer',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toContainEqual(expected);
+            });
+
+            it('should return a promise', () => {
+                const result = library.api.os.removeMapLayer(
+                    bot1,
+                    'test-layer'
+                );
+                expect(result).toBeInstanceOf(Promise);
             });
         });
 
