@@ -92,7 +92,7 @@ async function build(builds) {
     );
 
     writeMetafiles(builders);
-    logBuilders(builders);
+    logBuilders(builders, true);
 }
 
 async function setupWatch(builds) {
@@ -196,13 +196,18 @@ function writeMetafiles(builders) {
     }
 }
 
-function logBuilders(builders) {
+function logBuilders(builders, throwOnFail = false) {
+    let fail = false;
     for (let [success, name, result] of builders) {
         if (success) {
             logBuildFinish(name, result);
         } else {
+            fail = true;
             logBuildFailure(name, result);
         }
+    }
+    if (throwOnFail && fail) {
+        throw new Error(`[dev-server] One or more builds failed.`);
     }
 }
 
@@ -298,8 +303,14 @@ function replaceModulePlugin(original, replacement) {
         setup(build) {
             build.onResolve({ filter: original }, (args) => {
                 const url = new URL(import.meta.resolve(replacement));
+
+                let path = url.pathname;
+                if (path.startsWith('/') && process.platform === 'win32') {
+                    path = path.slice(1);
+                }
+
                 return {
-                    path: url.pathname.slice(1),
+                    path,
                 };
             });
         },
