@@ -133,6 +133,7 @@ export default defineConfig(({ command, mode }) => ({
                               './aux-web/shared/public/import-map/preact.compat',
                           'preact/jsx-runtime':
                               './aux-web/shared/public/import-map/preact.jsx-runtime',
+                          three: './aux-web/shared/public/import-map/three',
                       },
         }),
         {
