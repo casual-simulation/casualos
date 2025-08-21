@@ -40,7 +40,6 @@ import {
 import type { SubscriptionLike, Observable } from 'rxjs';
 import { Subject, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import { flatMap } from 'es-toolkit/compat';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { CameraRig } from './CameraRigFactory';
 import type { Game } from './Game';
@@ -176,7 +175,7 @@ export abstract class Simulation3D
      * Gets the list of bots that are in this simulation.
      */
     get bots() {
-        return flatMap([...this._botMap.values()]);
+        return [...this._botMap.values()].flatMap((a) => a);
     }
 
     /**

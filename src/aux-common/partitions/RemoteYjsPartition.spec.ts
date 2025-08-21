@@ -66,7 +66,6 @@ import type { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../bots';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
-import { flatMap } from 'es-toolkit/compat';
 import { YjsPartitionImpl } from './YjsPartition';
 import type {
     AddUpdatesMessage,
@@ -842,16 +841,14 @@ describe('RemoteYjsPartition', () => {
                         );
                         expect(updates).toHaveLength(2);
 
-                        const instUpdates = flatMap(
-                            updates,
-                            (u) => (u as AddUpdatesMessage).updates
-                        ).map((u, i) => ({
-                            id: i,
-                            update: u,
-                        }));
+                        const instUpdates = updates
+                            .flatMap((u) => (u as AddUpdatesMessage).updates)
+                            .map((u, i) => ({
+                                id: i,
+                                update: u,
+                            }));
 
-                        const instTimestamps = flatMap(
-                            updates,
+                        const instTimestamps = updates.flatMap(
                             (u) => (u as AddUpdatesMessage).timestamps ?? []
                         );
 

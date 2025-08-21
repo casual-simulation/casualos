@@ -30,17 +30,16 @@ import {
     posToKey,
     hexRing,
 } from './scene/hex';
-import { flatMap } from 'es-toolkit/compat';
 import { Vector2 } from '@casual-simulation/three';
 
 export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {
-    const visibleWorkspacePositions = flatMap(
-        calc.objects.filter(
+    const visibleWorkspacePositions = calc.objects
+        .filter(
             (f) =>
                 isDimension(calc, f) &&
                 getDimensionVisualizeMode(calc, f) === 'surface'
-        ),
-        (f) => {
+        )
+        .flatMap((f) => {
             const position = getDimensionPosition(calc, f);
             const scale = getDimensionScale(calc, f);
             const positions = hexesInRadius(getDimensionSize(calc, f));
@@ -55,8 +54,7 @@ export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {
                     hex.r + centerPosition.r
                 );
             });
-        }
-    );
+        });
 
     const mappedPositions = new Map<string, Axial>();
 

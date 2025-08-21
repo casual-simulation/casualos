@@ -19,7 +19,6 @@ import * as os from 'os';
 import * as process from 'process';
 import type { Handler } from 'express';
 import type { AxiosError } from 'axios';
-import { flatMap } from 'es-toolkit/compat';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
@@ -44,7 +43,7 @@ export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
  */
 export function getLocalIpAddresses() {
     const ifaces = os.networkInterfaces();
-    return flatMap(Object.keys(ifaces), (ifname) => {
+    return Object.keys(ifaces).flatMap((ifname) => {
         return ifaces[ifname]
             .filter((iface) => !iface.internal)
             .map((iface) => iface.address);

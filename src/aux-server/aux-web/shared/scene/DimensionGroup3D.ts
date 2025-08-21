@@ -22,7 +22,6 @@ import type {
     AuxDomain,
 } from '@casual-simulation/aux-common';
 
-import { flatMap } from 'es-toolkit/compat';
 import type { Object3D } from '@casual-simulation/three';
 import { Group } from '@casual-simulation/three';
 import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
@@ -99,7 +98,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
     }
 
     get colliders() {
-        return flatMap([this._childColliders, this.groupColliders]);
+        return [this._childColliders, this.groupColliders].flatMap((c) => c);
     }
 
     set colliders(value: Object3D[]) {
@@ -196,7 +195,9 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
      * Gets the bots that are contained by this builder dimension.
      */
     getBots() {
-        return flatMap([...this.bots.values()].map((b) => [...b.values()]));
+        return [...this.bots.values()]
+            .map((b) => [...b.values()])
+            .flatMap((a) => a);
     }
 
     /**

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
-import { flatMap } from 'es-toolkit/compat';
 import type { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**
@@ -92,7 +91,9 @@ export class DimensionGroupHelper<T extends AuxBotVisualizer> {
      * Gets the bots that are contained by this builder dimension.
      */
     getBots() {
-        return flatMap([...this.bots.values()].map((b) => [...b.values()]));
+        return [...this.bots.values()]
+            .map((b) => [...b.values()])
+            .flatMap((a) => a);
     }
 
     /**

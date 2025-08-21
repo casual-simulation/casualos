@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { flatMap } from 'es-toolkit/compat';
 import type {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
@@ -124,7 +123,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
                 `[StabilityAIImageInterface] [${request.userId}] [generateImage]: Done!`
             );
 
-            const images: AIGeneratedImage[] = flatMap(result.data, (a) =>
+            const images: AIGeneratedImage[] = result.data.flatMap((a: any) =>
                 a.map((d: any) => ({
                     base64: d.base64,
                     mimeType: 'image/png',

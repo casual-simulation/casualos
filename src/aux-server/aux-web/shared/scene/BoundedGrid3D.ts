@@ -31,7 +31,7 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Physics } from './Physics';
-import { groupBy, flatMap, sortBy } from 'es-toolkit/compat';
+import { groupBy, sortBy } from 'es-toolkit/compat';
 import type { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
@@ -402,7 +402,7 @@ export function calculateGridTileLocalCenter(
 }
 
 function constructGridLines(tiles: GridTile[]): LineSegments {
-    const allPoints: Vector3[] = flatMap(tiles, (t) => t.corners);
+    const allPoints: Vector3[] = tiles.flatMap((t) => t.corners);
     const verticalPoints = groupBy(allPoints, (p) => p.x);
     const horizontalPoints = groupBy(allPoints, (p) => p.y);
 

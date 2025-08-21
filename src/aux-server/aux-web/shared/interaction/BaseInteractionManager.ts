@@ -32,7 +32,6 @@ import type {
 } from '@casual-simulation/aux-common';
 import { getBotCursor, hasValue } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
-import { flatMap } from 'es-toolkit/compat';
 import { CameraControls } from './CameraControls';
 import type {
     ControllerData,
@@ -932,15 +931,16 @@ export abstract class BaseInteractionManager {
      */
     getDraggableGroups(): DraggableGroup[] {
         if (this._draggableGroupsDirty || !this._draggableGroups) {
-            const dimensions = flatMap(
-                this._game.getSimulations(),
-                (s) => s.dimensions
-            );
+            const dimensions = this._game
+                .getSimulations()
+                .flatMap((s) => s.dimensions);
             if (dimensions && dimensions.length > 0) {
-                let colliders = flatMap(
-                    dimensions.filter((c) => !!c),
-                    (f) => (f instanceof DimensionGroup3D ? f.colliders : [])
-                ).filter((c) => !!c);
+                let colliders = dimensions
+                    .filter((c) => !!c)
+                    .flatMap((f) =>
+                        f instanceof DimensionGroup3D ? f.colliders : []
+                    )
+                    .filter((c) => !!c);
 
                 this._draggableGroups = [
                     {

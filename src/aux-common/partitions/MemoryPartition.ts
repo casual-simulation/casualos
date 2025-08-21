@@ -44,7 +44,7 @@ import {
 import type { Observable } from 'rxjs';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
-import { flatMap, union } from 'es-toolkit/compat';
+import { union } from 'es-toolkit/compat';
 import { merge } from '../utils';
 import type { TagEdit, TagEditOp } from '../bots';
 import { applyTagEdit, edits, isTagEdit } from '../bots';
@@ -148,7 +148,7 @@ export class MemoryPartitionImpl implements MemoryPartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        let finalEvents = flatMap(events, (e) => {
+        let finalEvents = events.flatMap((e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (

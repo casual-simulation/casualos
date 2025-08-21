@@ -366,14 +366,7 @@ import {
     listInstalledPackages as calcListInstalledPackages,
     recordsCallProcedure,
 } from './RecordsEvents';
-import {
-    sortBy,
-    every,
-    cloneDeep,
-    union,
-    isEqual,
-    flatMap,
-} from 'es-toolkit/compat';
+import { sortBy, every, cloneDeep, union, isEqual } from 'es-toolkit/compat';
 import type {
     DeviceSelector,
     RemoteAction,
@@ -17215,7 +17208,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function createBotLinkApi(
         ...bots: (Bot | string | (Bot | string)[])[]
     ): string {
-        let targets = flatMap(bots);
+        let targets = bots.flatMap((b) => b);
         let result = [] as string[];
         for (let t of targets) {
             if (isBot(t)) {
