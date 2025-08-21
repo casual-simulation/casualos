@@ -334,7 +334,10 @@ export class BotShapeDecorator
         }
     }
 
-    localEvent(event: LocalActions, calc: BotCalculationContext) {
+    async localEvent(event: LocalActions, calc: BotCalculationContext) {
+        if (event.type === 'local_form_animation') {
+            this._playLocalAnimation(event.animation);
+        }
         // Handle bot map overlay
         if (
             event.type === 'add_bot_map_layer' ||
@@ -348,12 +351,27 @@ export class BotShapeDecorator
                 );
                 return;
             }
-            const result = this._mapView.localEvent(event, calc);
 
-            if (result.success) {
-                this._asyncResult(event.taskId, result.data?.overlayId);
-            } else {
-                this._asyncError(event.taskId, new Error(result.message));
+            try {
+                const result = await this._mapView.localEvent(event, calc);
+
+                if (result.success) {
+                    this._asyncResult(
+                        event.taskId,
+                        result.data?.overlayId || result.data
+                    );
+                } else {
+                    this._asyncError(event.taskId, new Error(result.message));
+                }
+            } catch (error) {
+                console.error(
+                    '[BotShapeDecorator] Error handling map layer action:',
+                    error
+                );
+                this._asyncError(
+                    event.taskId,
+                    error instanceof Error ? error : new Error('Unknown error')
+                );
             }
         }
     }

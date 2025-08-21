@@ -20,12 +20,10 @@ import { MapTile } from './MapTile';
 import { Box2, Object3D, Vector3 } from '@casual-simulation/three';
 import { Box3 } from '@casual-simulation/three';
 import type { MapOverlay } from './MapOverlay';
-import type { GeoJSONMapOverlay } from './MapOverlay';
 import {
     type BotCalculationContext,
     type LocalActions,
 } from '@casual-simulation/aux-common';
-import type { GeoJSON3DOverlay } from './GeoJSON3DOverlay';
 import type { AllGeoJSON } from '@turf/turf';
 import { Vector2 } from 'three';
 import type { GeoJSONMapLayer } from '@casual-simulation/aux-common';
@@ -52,8 +50,6 @@ export class MapView extends Object3D {
     );
 
     private _overlays: Map<string, MapOverlay> = new Map();
-    private _geoJSONOverlay: GeoJSONMapOverlay | null = null;
-    private _geoJSON3DOverlay: GeoJSON3DOverlay | null = null;
     private _layerIdCounter: number = 0;
 
     get heightProvider() {
@@ -83,51 +79,45 @@ export class MapView extends Object3D {
             overlay.dispose();
             this._overlays.delete(id);
 
-            if (this._geoJSONOverlay === overlay) {
-                this._geoJSONOverlay = null;
-            }
-            if (this._geoJSON3DOverlay === overlay) {
-                this._geoJSON3DOverlay = null;
-            }
-
             return true;
         }
         return false;
     }
 
-    localEvent(
+    async localEvent(
         event: LocalActions,
         calc: BotCalculationContext
-    ): { success: boolean; data?: any; message?: string } {
+    ): Promise<{ success: boolean; data?: any; message?: string }> {
         if (
             event.type === 'add_map_layer' ||
             event.type === 'remove_map_layer'
         ) {
-            const promise = this.handleMapLayerAction(event, calc);
-
+            const result = await this.handleMapLayerAction(event, calc);
             return {
-                success: true,
-                data: promise,
+                success: result.success,
+                data: result.data || result,
+                message: result.error,
             };
         }
 
         if (event.type === 'add_bot_map_layer') {
-            // Return a promise for async overlay creation
-            const overlayPromise = this._createOverlayFromEvent(event.overlay)
-                .then((overlay) => {
-                    const overlayId =
-                        event.overlay.overlayId || this._generateLayerId();
-                    this.addOverlay(overlayId, overlay);
-                    return { overlayId };
-                })
-                .catch((e) => {
-                    throw new Error(`Failed to add overlay: ${e}`);
-                });
-
-            return {
-                success: true,
-                data: overlayPromise,
-            };
+            try {
+                const overlay = await this._createOverlayFromEvent(
+                    event.overlay
+                );
+                const overlayId =
+                    event.overlay.overlayId || this._generateLayerId();
+                this.addOverlay(overlayId, overlay);
+                return {
+                    success: true,
+                    data: { overlayId },
+                };
+            } catch (e) {
+                return {
+                    success: false,
+                    message: `Failed to add overlay: ${e}`,
+                };
+            }
         } else if (event.type === 'remove_bot_map_layer') {
             const result = this.removeOverlay(event.overlayId);
             return result
