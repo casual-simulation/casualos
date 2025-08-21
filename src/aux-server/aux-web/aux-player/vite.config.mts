@@ -95,7 +95,7 @@ export default defineConfig(({ command, mode }) => ({
                   cssCodeSplit: false,
                   base: './',
                   assetsDir: '',
-                  minify: false,
+                  minify: true,
               }
             : {}
     ),
