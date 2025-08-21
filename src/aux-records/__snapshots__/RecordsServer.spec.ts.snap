@@ -4094,6 +4094,10 @@ Object {
             },
             "type": "array",
           },
+          "maxCompletionTokens": Object {
+            "optional": true,
+            "type": "number",
+          },
           "messages": Object {
             "minLength": 1,
             "schema": Object {
@@ -4179,6 +4183,15 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "reasoningEffort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
+          },
           "stopWords": Object {
             "maxLength": 4,
             "optional": true,
@@ -4194,6 +4207,15 @@ Object {
           "topP": Object {
             "optional": true,
             "type": "number",
+          },
+          "verbosity": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
           },
         },
         "type": "object",
@@ -4221,6 +4243,10 @@ Object {
             },
             "type": "array",
           },
+          "maxCompletionTokens": Object {
+            "optional": true,
+            "type": "number",
+          },
           "messages": Object {
             "minLength": 1,
             "schema": Object {
@@ -4306,6 +4332,15 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "reasoningEffort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
+          },
           "stopWords": Object {
             "maxLength": 4,
             "optional": true,
@@ -4321,6 +4356,15 @@ Object {
           "topP": Object {
             "optional": true,
             "type": "number",
+          },
+          "verbosity": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
           },
         },
         "type": "object",
@@ -9455,6 +9499,10 @@ Object {
             },
             "type": "array",
           },
+          "maxCompletionTokens": Object {
+            "optional": true,
+            "type": "number",
+          },
           "messages": Object {
             "minLength": 1,
             "schema": Object {
@@ -9540,6 +9588,15 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "reasoningEffort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
+          },
           "stopWords": Object {
             "maxLength": 4,
             "optional": true,
@@ -9555,6 +9612,15 @@ Object {
           "topP": Object {
             "optional": true,
             "type": "number",
+          },
+          "verbosity": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
           },
         },
         "type": "object",
@@ -9582,6 +9648,10 @@ Object {
             },
             "type": "array",
           },
+          "maxCompletionTokens": Object {
+            "optional": true,
+            "type": "number",
+          },
           "messages": Object {
             "minLength": 1,
             "schema": Object {
@@ -9667,6 +9737,15 @@ Object {
             "optional": true,
             "type": "number",
           },
+          "reasoningEffort": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
+          },
           "stopWords": Object {
             "maxLength": 4,
             "optional": true,
@@ -9682,6 +9761,15 @@ Object {
           "topP": Object {
             "optional": true,
             "type": "number",
+          },
+          "verbosity": Object {
+            "optional": true,
+            "type": "enum",
+            "values": Array [
+              "low",
+              "medium",
+              "high",
+            ],
           },
         },
         "type": "object",
