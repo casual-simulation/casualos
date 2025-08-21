@@ -64,6 +64,8 @@
             });
             document.head.append(mapScript);
             ```
+-   Added support for SQLite database backends.
+    -   This now means that it is a bit easier to host CasualOS on singular nodes.
 
 ### :bug: Bug Fixes
 

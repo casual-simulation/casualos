@@ -15,7 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-export * from './PackageRecordsStore';
-export * from './version/PackageVersionRecordsStore';
-export * from './PackageRecordsController';
-export * from './MemoryPackageRecordsStore';
+
+import path from 'node:path';
+import { defineConfig } from 'prisma/config';
+import {
+    listEnvironmentFiles,
+    loadEnvFiles,
+} from './aux-backend/shared/EnvUtils';
+
+const auxBackend = path.join(__dirname, 'aux-backend');
+const schemas = path.join(auxBackend, 'schemas');
+const sqlite = path.join(schemas, 'sqlite');
+
+loadEnvFiles(listEnvironmentFiles(sqlite));
+
+export default defineConfig({
+    schema: path.join(sqlite, 'auth.sqlite.prisma'),
+    migrations: {
+        path: path.join(sqlite, 'migrations'),
+    },
+});
