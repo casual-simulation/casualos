@@ -31,7 +31,6 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Physics } from './Physics';
-import type { Dictionary } from 'es-toolkit/compat';
 import { groupBy, flatMap, sortBy } from 'es-toolkit/compat';
 import type { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from './SceneUtils';
@@ -409,7 +408,7 @@ function constructGridLines(tiles: GridTile[]): LineSegments {
 
     let vertices: number[] = [];
 
-    function calcVertices(map: Dictionary<Vector3[]>, prop: 'x' | 'y') {
+    function calcVertices(map: Record<string, Vector3[]>, prop: 'x' | 'y') {
         const keys = Object.keys(map);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];

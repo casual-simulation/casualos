@@ -26,7 +26,6 @@ import {
     LineSegments,
 } from '@casual-simulation/three';
 import type { GridLevel } from './GridLevel';
-import type { Dictionary } from 'es-toolkit/compat';
 import { flatMap, groupBy, minBy, sortBy } from 'es-toolkit/compat';
 import { disposeMesh } from '../SceneUtils';
 
@@ -92,7 +91,7 @@ export function constructGridLines(level: GridLevel): Line {
 
     function calcVerticies(
         keys: string[],
-        map: Dictionary<Vector3[]>,
+        map: Record<string, Vector3[]>,
         prop: 'x' | 'z'
     ) {
         for (let i = 0; i < keys.length; i++) {
