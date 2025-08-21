@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-benchmarks",
-    "version": "3.7.0-alpha.17138097488",
+    "version": "3.7.0-alpha.17139476091",
     "description": "The package for AUX-related benchmarks.",
     "main": "dist/index.js",
     "private": true,
@@ -29,7 +29,7 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.7.0-alpha.17138097488",
+        "@casual-simulation/aux-common": "^3.7.0-alpha.17139476091",
         "benchmark": "2.1.4",
         "es-toolkit": "1.39.10",
         "platform": "1.3.5",
