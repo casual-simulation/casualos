@@ -86,7 +86,13 @@ import type { AuxConfig } from './AuxConfig';
 import { buildVersionNumber } from './AuxConfig';
 import type { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
-import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
+import {
+    flatMap,
+    mapKeys,
+    mapValues,
+    pick,
+    transform,
+} from 'es-toolkit/compat';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';
 import type { TimeSyncController } from '@casual-simulation/timesync';

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import type { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**

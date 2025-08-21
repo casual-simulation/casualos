@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { LineSegments } from './LineSegments';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 
 export function createCubeStroke() {
     const lines = new LineSegments(createCubeStrokeLines());

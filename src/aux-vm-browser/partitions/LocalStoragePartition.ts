@@ -47,7 +47,7 @@ import type {
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { flatMap, union } from 'lodash';
+import { flatMap, union } from 'es-toolkit/compat';
 import type { Observable } from 'rxjs';
 import { Subject, Subscription, fromEventPattern, BehaviorSubject } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';

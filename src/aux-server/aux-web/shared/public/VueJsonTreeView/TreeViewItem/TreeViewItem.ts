@@ -1,4 +1,4 @@
-import { concat } from 'lodash';
+import { concat } from 'es-toolkit/compat';
 import TreeViewItemValue from '../TreeViewItemValue/TreeViewItemValue';
 
 export default {

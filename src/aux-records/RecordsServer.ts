@@ -135,7 +135,7 @@ import {
     listItemsProcedure,
     recordItemProcedure,
 } from './crud/CrudHelpers';
-import { merge, omit } from 'lodash';
+import { merge, omit } from 'es-toolkit/compat';
 import type { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import {
     PUSH_NOTIFICATION_PAYLOAD,

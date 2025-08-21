@@ -39,7 +39,7 @@ import {
     map,
     mergeWith,
 } from 'rxjs/operators';
-import { values } from 'lodash';
+import { values } from 'es-toolkit/compat';
 import type { BotHelper } from './BotHelper';
 import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {

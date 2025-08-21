@@ -15,7 +15,7 @@ to get values out of IME input events immediately.
 
 <script>
   import MdFieldMixin from 'vue-material/src/components/MdField/MdFieldMixin'
-  import { merge as deepmerge } from 'lodash';
+  import { merge as deepmerge } from 'es-toolkit/compat';
 
   const MdUuid = () => {
     return Math.random().toString(36).slice(4)

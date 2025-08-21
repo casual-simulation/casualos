@@ -45,7 +45,7 @@ import type {
     RemoteActions,
 } from '../common/RemoteActions';
 import type { ConnectionInfo } from '../common/ConnectionInfo';
-import { flatMap as lodashFlatMap } from 'lodash';
+import { flatMap as lodashFlatMap } from 'es-toolkit/compat';
 import type { TimeSample } from '@casual-simulation/timesync';
 
 export const DEFAULT_BRANCH_NAME = 'default';

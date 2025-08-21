@@ -50,7 +50,7 @@ import { Input } from '../../../shared/scene/Input';
 import type { PlayerPageSimulation3D } from '../../scene/PlayerPageSimulation3D';
 import type { MiniSimulation3D } from '../../scene/MiniSimulation3D';
 import type { PlayerGame } from '../../scene/PlayerGame';
-import { take, drop } from 'lodash';
+import { take, drop } from 'es-toolkit/compat';
 import type { IOperation } from '../../../shared/interaction/IOperation';
 import { PlayerModDragOperation } from './PlayerModDragOperation';
 import {

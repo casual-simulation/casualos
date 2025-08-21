@@ -20,7 +20,7 @@ import { tagsOnBot, hasValue, calculateBotValue } from './BotCalculations';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { filter, startWith, map } from 'rxjs/operators';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 
 /**
  * Defines a union type for bot index events.

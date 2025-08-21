@@ -139,7 +139,7 @@ import {
     preserve,
 } from '@casual-simulation/aux-common/bots';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { flatMap, pickBy } from 'lodash';
+import { flatMap, pickBy } from 'es-toolkit/compat';
 import type { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import {

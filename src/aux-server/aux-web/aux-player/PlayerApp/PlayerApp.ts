@@ -70,7 +70,7 @@ import type SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
-import { findIndex, merge } from 'lodash';
+import { findIndex, merge } from 'es-toolkit/compat';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import type { Simulation, LoginState } from '@casual-simulation/aux-vm';

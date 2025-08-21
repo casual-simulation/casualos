@@ -26,8 +26,8 @@ import {
     LineSegments,
 } from '@casual-simulation/three';
 import type { GridLevel } from './GridLevel';
-import type { Dictionary } from 'lodash';
-import { flatMap, groupBy, minBy, sortBy } from 'lodash';
+import type { Dictionary } from 'es-toolkit/compat';
+import { flatMap, groupBy, minBy, sortBy } from 'es-toolkit/compat';
 import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;

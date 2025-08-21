@@ -28,7 +28,7 @@ import {
     Object3D,
     Box3Helper,
 } from '@casual-simulation/three';
-import { groupBy, keys } from 'lodash';
+import { groupBy, keys } from 'es-toolkit/compat';
 import type { HexGridMesh, HexMesh } from '../hex';
 import type { GridLevel } from './GridLevel';
 import type { GridTile } from './GridTile';

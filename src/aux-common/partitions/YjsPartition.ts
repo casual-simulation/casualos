@@ -65,7 +65,7 @@ import type {
     PartitionRemoteEvents,
     YjsPartitionConfig,
 } from './AuxPartitionConfig';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
     Text,

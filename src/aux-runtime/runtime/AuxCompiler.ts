@@ -31,7 +31,7 @@ import {
     isModule,
     parseModule,
 } from '@casual-simulation/aux-common/bots';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
 import type {

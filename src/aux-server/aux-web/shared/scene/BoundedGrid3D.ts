@@ -31,8 +31,8 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Physics } from './Physics';
-import type { Dictionary } from 'lodash';
-import { groupBy, flatMap, sortBy } from 'lodash';
+import type { Dictionary } from 'es-toolkit/compat';
+import { groupBy, flatMap, sortBy } from 'es-toolkit/compat';
 import type { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';

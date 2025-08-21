@@ -40,7 +40,7 @@ import {
 import type { SubscriptionLike, Observable } from 'rxjs';
 import { Subject, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { CameraRig } from './CameraRigFactory';
 import type { Game } from './Game';

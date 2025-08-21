@@ -17,7 +17,7 @@
  */
 import { ServerBuilder } from './ServerBuilder';
 import { getAllowedAPIOrigins, allowedOrigins } from './EnvUtils';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import { loadConfig } from './ConfigUtils';
 import type { ServerConfig } from '@casual-simulation/aux-records';
 

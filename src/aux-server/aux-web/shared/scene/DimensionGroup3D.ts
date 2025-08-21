@@ -22,7 +22,7 @@ import type {
     AuxDomain,
 } from '@casual-simulation/aux-common';
 
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import type { Object3D } from '@casual-simulation/three';
 import { Group } from '@casual-simulation/three';
 import type { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';

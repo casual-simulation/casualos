@@ -107,7 +107,7 @@ import {
     differenceBy,
     intersectionBy,
     unionBy,
-} from 'lodash';
+} from 'es-toolkit/compat';
 
 /// <reference path="../typings/global.d.ts" />
 import type { EaseMode, EaseType, Easing, PartialBot } from '../bots';

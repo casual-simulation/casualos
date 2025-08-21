@@ -64,7 +64,7 @@ import type {
     UserPrivacyFeatures,
 } from './PolicyStore';
 import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
-import { sortBy, without } from 'lodash';
+import { sortBy, without } from 'es-toolkit/compat';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import type {
     InstRecordsStore,

@@ -107,7 +107,7 @@ import {
     RECORDS_COLLECTION_NAME,
     STUDIOS_COLLECTION_NAME,
 } from '../mongo';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import { PrismaClient } from '../prisma/generated';
 import { PrismaClient as SqlitePrismaClient } from '../prisma/generated-sqlite';
 import {

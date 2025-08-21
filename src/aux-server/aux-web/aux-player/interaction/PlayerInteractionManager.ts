@@ -80,7 +80,7 @@ import {
 import { appManager } from '../../shared/AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import type { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import { flatMap, isEqual } from 'lodash';
+import { flatMap, isEqual } from 'es-toolkit/compat';
 import { MiniPortalContextGroup3D } from '../scene/MiniPortalContextGroup3D';
 import {
     calculateHitFace,

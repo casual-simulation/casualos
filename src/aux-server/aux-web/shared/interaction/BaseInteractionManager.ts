@@ -32,7 +32,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import { getBotCursor, hasValue } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import { CameraControls } from './CameraControls';
 import type {
     ControllerData,

@@ -17,8 +17,8 @@
  */
 import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
-import lodash from 'lodash';
-// import { merge } from 'lodash';
+import lodash from 'es-toolkit/compat';
+// import { merge } from 'es-toolkit/compat';
 // import { Plugin } from 'vite';
 import { defaultPolicies } from './vite-helpers';
 

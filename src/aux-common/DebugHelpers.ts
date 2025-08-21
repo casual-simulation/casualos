@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 
 /**
  * Adds the given function with the given name to the global aux namespace.

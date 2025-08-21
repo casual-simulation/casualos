@@ -53,7 +53,7 @@ import type { Simulation3D } from '../../shared/scene/Simulation3D';
 import type { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first, map } from 'rxjs/operators';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';

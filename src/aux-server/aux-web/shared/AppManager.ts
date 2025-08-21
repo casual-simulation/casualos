@@ -52,7 +52,7 @@ import AuxVMImpl from '@casual-simulation/aux-vm-browser/vm/AuxVMImpl';
 import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import { addStoredAuxV2ToSimulation } from './SharedUtils';
 import { generateV1ConnectionToken } from '@casual-simulation/aux-common';
 import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';

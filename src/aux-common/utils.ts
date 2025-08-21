@@ -16,7 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { fromByteArray, toByteArray } from 'base64-js';
-import { union, keys, every, some, isObject, mapValues } from 'lodash';
+import {
+    union,
+    keys,
+    every,
+    some,
+    isObject,
+    mapValues,
+} from 'es-toolkit/compat';
 import { v4 as uuid } from 'uuid';
 
 /**

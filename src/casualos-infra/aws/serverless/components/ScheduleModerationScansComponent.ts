@@ -22,7 +22,7 @@ import {
     functionEnvironmentVariables,
     moderationEnvironmentVariables,
 } from '../../helpers';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 
 export interface ScheduleModerationScansInputs {
     /**

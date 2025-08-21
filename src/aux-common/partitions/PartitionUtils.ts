@@ -38,7 +38,7 @@ import {
 import { YjsPartitionImpl } from './YjsPartition';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
-import { forOwn } from 'lodash';
+import { forOwn } from 'es-toolkit/compat';
 import '../BlobPolyfill';
 import type { PartitionRemoteEvents } from './AuxPartitionConfig';
 import type { RemoteActions } from '../common';

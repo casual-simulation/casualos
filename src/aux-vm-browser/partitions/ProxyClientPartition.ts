@@ -41,7 +41,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import type { Remote } from 'comlink';
 import { wrap, proxy, releaseProxy } from 'comlink';
 import { startWith } from 'rxjs/operators';
-import { values } from 'lodash';
+import { values } from 'es-toolkit/compat';
 
 /**
  * Attempts to create a proxy client partition that is loaded from a remote inst.

@@ -24,7 +24,7 @@
  * @license MIT
  */
 
-import { map, last, drop, dropRight, cloneDeep, extend, isPlainObject }  from 'lodash';
+import { map, last, drop, dropRight, cloneDeep, extend, isPlainObject }  from 'es-toolkit/compat';
 import TreeViewItem from '../TreeViewItem/TreeViewItem';
 
 export default {

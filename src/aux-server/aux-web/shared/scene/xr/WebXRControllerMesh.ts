@@ -28,7 +28,7 @@ import {
 import { getGLTFPool } from '../GLTFHelpers';
 import type { SubscriptionLike } from 'rxjs';
 import { disposeGroup, objectWorldForwardRay } from '../SceneUtils';
-import { values } from 'lodash';
+import { values } from 'es-toolkit/compat';
 import type {
     XRFrame,
     XRPose,

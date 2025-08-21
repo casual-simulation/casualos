@@ -1,5 +1,5 @@
 import * as monaco from '../../MonacoLibs';
-import { reject } from 'lodash';
+import { reject } from 'es-toolkit/compat';
 import estraverse from 'estraverse';
 import type { Transpiler} from '@casual-simulation/aux-runtime';
 import { TypeScriptVisistorKeys } from '@casual-simulation/aux-runtime';

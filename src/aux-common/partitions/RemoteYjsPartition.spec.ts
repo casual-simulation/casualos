@@ -66,7 +66,7 @@ import type { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { waitAsync } from '../test/TestHelpers';
 import { del, edit, insert, preserve } from '../bots';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import { YjsPartitionImpl } from './YjsPartition';
 import type {
     AddUpdatesMessage,

@@ -30,7 +30,7 @@ import {
     posToKey,
     hexRing,
 } from './scene/hex';
-import { flatMap } from 'lodash';
+import { flatMap } from 'es-toolkit/compat';
 import { Vector2 } from '@casual-simulation/three';
 
 export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {

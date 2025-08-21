@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { sortedIndexBy } from 'lodash';
+import { sortedIndexBy } from 'es-toolkit/compat';
 import type {
     BranchConnectionMode,
     DeviceBranchConnection,

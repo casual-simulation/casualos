@@ -18,7 +18,7 @@
 import { Vector2 } from '@casual-simulation/three';
 import { Axial } from './Axial';
 import { hexWidth } from './Hex';
-import { values } from 'lodash';
+import { values } from 'es-toolkit/compat';
 
 /**
  * Calcualates the real position of this grid position.

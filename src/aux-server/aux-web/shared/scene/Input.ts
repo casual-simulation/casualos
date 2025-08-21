@@ -23,7 +23,7 @@ import {
     Sphere,
     Matrix4,
 } from '@casual-simulation/three';
-import { find, some } from 'lodash';
+import { find, some } from 'es-toolkit/compat';
 import type { Viewport } from './Viewport';
 import type { Game } from './Game';
 import type { Observable } from 'rxjs';

@@ -44,7 +44,7 @@ import {
 import type { Observable } from 'rxjs';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
-import { flatMap, union } from 'lodash';
+import { flatMap, union } from 'es-toolkit/compat';
 import { merge } from '../utils';
 import type { TagEdit, TagEditOp } from '../bots';
 import { applyTagEdit, edits, isTagEdit } from '../bots';

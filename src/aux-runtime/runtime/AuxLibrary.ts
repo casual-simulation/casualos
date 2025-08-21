@@ -366,7 +366,14 @@ import {
     listInstalledPackages as calcListInstalledPackages,
     recordsCallProcedure,
 } from './RecordsEvents';
-import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
+import {
+    sortBy,
+    every,
+    cloneDeep,
+    union,
+    isEqual,
+    flatMap,
+} from 'es-toolkit/compat';
 import type {
     DeviceSelector,
     RemoteAction,
