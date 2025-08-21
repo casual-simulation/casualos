@@ -2,7 +2,7 @@ import React from 'react';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
 import Details from '@theme/Details';
-import { flatMap, groupBy, sortBy } from 'lodash';
+import { groupBy, sortBy } from 'es-toolkit/compat';
 import { ReflectionBoundary } from './errors';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Link from '@docusaurus/Link';
@@ -1158,7 +1158,7 @@ function flattenObjectChildren(reflection) {
     const isHiddenNamespace = getReflectionTag(reflection, '@hiddennamespace') !== null;
     const namespace = isHiddenNamespace ? null : reflection.name;
 
-    return flatMap(children, c => {
+    return children.flatMap(c => {
         if (isFunctionProperty(c)) {
             return {
                 group: getChildGroup(c),
