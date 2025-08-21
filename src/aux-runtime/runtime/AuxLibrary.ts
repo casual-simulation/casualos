@@ -366,7 +366,7 @@ import {
     listInstalledPackages as calcListInstalledPackages,
     recordsCallProcedure,
 } from './RecordsEvents';
-import { sortBy, every, cloneDeep, union, isEqual } from 'es-toolkit/compat';
+import { sortBy, cloneDeep, union, isEqual } from 'es-toolkit/compat';
 import type {
     DeviceSelector,
     RemoteAction,
@@ -8279,7 +8279,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (!hasValue(miniGridPortal)) {
             return false;
         }
-        return every(bots, (f) => getTag(f, miniGridPortal) === true);
+        return bots.every((f) => getTag(f, miniGridPortal) === true);
     }
 
     /**

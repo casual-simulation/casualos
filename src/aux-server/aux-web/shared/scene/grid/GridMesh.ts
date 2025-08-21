@@ -26,7 +26,7 @@ import {
     LineSegments,
 } from '@casual-simulation/three';
 import type { GridLevel } from './GridLevel';
-import { flatMap, groupBy, minBy, sortBy } from 'es-toolkit/compat';
+import { groupBy, minBy, sortBy } from 'es-toolkit/compat';
 import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;
@@ -80,7 +80,7 @@ export class GridMesh extends Object3D {
 export function constructGridLines(level: GridLevel): Line {
     const validTiles = level.tiles.filter((t) => t.valid);
 
-    const allPoints = flatMap(validTiles, (t) => t.localPoints);
+    const allPoints = validTiles.flatMap((t) => t.localPoints);
 
     const verticalPoints = groupBy(allPoints, (p) => p.x);
     const horizontalPoints = groupBy(allPoints, (p) => p.z);

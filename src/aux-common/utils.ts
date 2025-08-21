@@ -16,14 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { fromByteArray, toByteArray } from 'base64-js';
-import {
-    union,
-    keys,
-    every,
-    some,
-    isObject,
-    mapValues,
-} from 'es-toolkit/compat';
+import { union, isObject, mapValues } from 'es-toolkit/compat';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -46,7 +39,7 @@ export function merge<T1, T2, T3, T4>(
 ): T1 & T2 & T3 & T4;
 export function merge(...objs: any[]): any {
     let result: any = {};
-    const objKeys = objs.map((o) => keys(o));
+    const objKeys = objs.map((o) => Object.keys(o));
     const allKeys = union(...objKeys);
 
     allKeys.forEach((k) => {
@@ -62,11 +55,10 @@ function decide(...vals: any[]) {
         return undefed[0];
     } else {
         if (
-            every(
-                undefed,
+            undefed.every(
                 (v) => typeof v === 'object' && !Array.isArray(v) && v !== null
             ) &&
-            some(undefed, (v) => v !== undefed[0])
+            undefed.some((v) => v !== undefed[0])
         ) {
             return (<any>merge)(...undefed);
         } else {

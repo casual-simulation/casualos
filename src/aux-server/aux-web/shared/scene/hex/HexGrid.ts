@@ -18,7 +18,6 @@
 import { Vector2 } from '@casual-simulation/three';
 import { Axial } from './Axial';
 import { hexWidth } from './Hex';
-import { values } from 'es-toolkit/compat';
 
 /**
  * Calcualates the real position of this grid position.
@@ -138,14 +137,14 @@ export class HexGrid<T> {
      * Gets the number of items contained in this grid.
      */
     get count() {
-        return values(this._data).length;
+        return Object.values(this._data).length;
     }
 
     /**
      * Gets the items contained in this grid.
      */
     get items(): T[] {
-        return values(this._data).map((d) => d.val);
+        return Object.values(this._data).map((d) => d.val);
     }
 
     /**
@@ -189,7 +188,7 @@ export class HexGrid<T> {
      * Gets the array of filled positions in this grid.
      */
     positions(): Axial[] {
-        const vals = values(this._data);
+        const vals = Object.values(this._data);
         return vals.map((v) => v.pos);
     }
 
@@ -198,7 +197,7 @@ export class HexGrid<T> {
      * @param callback
      */
     forEach<R>(callback: (data: T, pos: Axial) => R): R {
-        const vals = values(this._data);
+        const vals = Object.values(this._data);
         for (let i = 0; i < vals.length; i++) {
             const v = vals[i];
             const result = callback(v.val, v.pos);

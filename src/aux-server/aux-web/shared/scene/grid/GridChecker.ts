@@ -28,7 +28,7 @@ import {
     Object3D,
     Box3Helper,
 } from '@casual-simulation/three';
-import { groupBy, keys } from 'es-toolkit/compat';
+import { groupBy } from 'es-toolkit/compat';
 import type { HexGridMesh, HexMesh } from '../hex';
 import type { GridLevel } from './GridLevel';
 import type { GridTile } from './GridTile';
@@ -104,7 +104,7 @@ export class GridChecker {
         const groups = groupBy(this._grid.hexes, (h) =>
             Math.floor(h.height * this._heightSpacing)
         );
-        const heights = keys(groups);
+        const heights = Object.keys(groups);
         const results = heights.map((h) =>
             this.checkLevel(groups[h], groups[h][0].height)
         );

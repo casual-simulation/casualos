@@ -70,7 +70,7 @@ import type SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
-import { findIndex, merge } from 'es-toolkit/compat';
+import { merge } from 'es-toolkit/compat';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import type { Simulation, LoginState } from '@casual-simulation/aux-vm';
@@ -374,7 +374,7 @@ export default class PlayerApp extends Vue {
         icon: string = null,
         group: string = null
     ) {
-        const index = findIndex(this.extraItems, (i) => i.id === id);
+        const index = this.extraItems.findIndex((i) => i.id === id);
         if (index >= 0) {
             this.extraItems[index] = {
                 id: id,
@@ -400,7 +400,7 @@ export default class PlayerApp extends Vue {
      */
     @Provide()
     removeSidebarItem(id: string) {
-        const index = findIndex(this.extraItems, (i) => i.id === id);
+        const index = this.extraItems.findIndex((i) => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
         }

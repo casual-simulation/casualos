@@ -96,11 +96,7 @@ import { cacheFunction } from './BotCalculationContext';
 
 import { v4 as uuid } from 'uuid';
 import {
-    flatMap,
     union,
-    keys,
-    find,
-    values,
     isEqual,
     sortBy,
     cloneDeep,
@@ -298,16 +294,16 @@ export function botTags(
     extraTags: string[],
     allowedTags: string[] = null
 ): { tag: string; space: string }[] {
-    const botTags = flatMap(bots, (f) => keys(f.tags)).map(
-        (t) => ({ tag: t, space: null as string } as const)
-    );
-    const botMasks = flatMap(bots, (b) => {
+    const botTags = bots
+        .flatMap((f) => Object.keys(f.tags))
+        .map((t) => ({ tag: t, space: null as string } as const));
+    const botMasks = bots.flatMap((b) => {
         if (!b.masks) {
             return [];
         }
         let tags = [] as { tag: string; space: string }[];
         for (let space in b.masks) {
-            let spaceTags = keys(b.masks[space]).map(
+            let spaceTags = Object.keys(b.masks[space]).map(
                 (k) =>
                     ({
                         tag: k,
@@ -345,7 +341,7 @@ export function botTags(
 }
 
 export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
-    const botTags = flatMap(bots, (f) => keys(f.tags));
+    const botTags = bots.flatMap((f) => Object.keys(f.tags));
 
     const nonHiddenTags = botTags.filter(
         (t) => includeHidden || !isHiddenTag(t)
@@ -378,7 +374,7 @@ export function botsFromShortIds(bots: Bot[], shortIds: string[]): Bot[] {
  * @returns bot or undefined if no match found.
  */
 export function botFromShortId(bots: Bot[], shortId: string): Bot {
-    return find(bots, (f: Bot) => {
+    return bots.find((f: Bot) => {
         return getShortId(f) === shortId;
     });
 }
@@ -1033,7 +1029,7 @@ export function isBot(object: any): object is Bot {
  * @param state The state to get the active objects of.
  */
 export function getActiveObjects(state: BotsState) {
-    return <Bot[]>values(state);
+    return <Bot[]>Object.values(state);
 }
 
 /**
@@ -1077,7 +1073,7 @@ export function doBotsAppearEqual(
         return true;
     }
 
-    const tags = union(keys(first.tags), keys(second.tags));
+    const tags = union(Object.keys(first.tags), Object.keys(second.tags));
     const usableTags = tags.filter((t) => !isTagWellKnown(t));
 
     let allEqual = true;
@@ -1332,10 +1328,10 @@ export function removeBotFromMenu(
  * @param bot
  */
 export function tagsOnBot(bot: PartialBot): string[] {
-    let tags = new Set(keys(bot.tags));
+    let tags = new Set(Object.keys(bot.tags));
     if (bot.masks) {
         for (let space in bot.masks) {
-            let k = keys(bot.masks[space]);
+            let k = Object.keys(bot.masks[space]);
             for (let key of k) {
                 tags.add(key);
             }
@@ -1483,7 +1479,7 @@ export function calculateStateDiff(
         updatedBots: [],
     };
 
-    const ids = union(keys(prev), keys(current));
+    const ids = union(Object.keys(prev), Object.keys(current));
 
     ids.forEach((id) => {
         const prevVal = prev[id];

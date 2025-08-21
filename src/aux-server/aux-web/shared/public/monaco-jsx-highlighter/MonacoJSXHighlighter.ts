@@ -1,5 +1,4 @@
 import * as monaco from '../../MonacoLibs';
-import { reject } from 'es-toolkit/compat';
 import estraverse from 'estraverse';
 import type { Transpiler} from '@casual-simulation/aux-runtime';
 import { TypeScriptVisistorKeys } from '@casual-simulation/aux-runtime';
@@ -132,7 +131,7 @@ class MonacoJSXHighlighter {
         this.options = {...defaultOptions, ...options};
     }
 
-    getAstPromise = () => new Promise((resolve) => {
+    getAstPromise = () => new Promise((resolve, reject) => {
         try {
             let script = this._monacoEditor.getValue();
             if (script.indexOf('await ') >= 0) {

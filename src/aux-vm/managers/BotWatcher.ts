@@ -39,7 +39,6 @@ import {
     map,
     mergeWith,
 } from 'rxjs/operators';
-import { values } from 'es-toolkit/compat';
 import type { BotHelper } from './BotHelper';
 import type { TagEditOp } from '@casual-simulation/aux-common/bots';
 import {
@@ -96,7 +95,7 @@ export class BotWatcher implements SubscriptionLike {
      * That is, it was created or added by another user.
      */
     get botsDiscovered(): Observable<PrecalculatedBot[]> {
-        const bots = values(this._helper.botsState);
+        const bots = Object.values(this._helper.botsState);
         if (bots.length > 0) {
             return this._botsDiscoveredObservable.pipe(startWith(bots));
         } else {

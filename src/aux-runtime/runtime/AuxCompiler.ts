@@ -31,7 +31,6 @@ import {
     isModule,
     parseModule,
 } from '@casual-simulation/aux-common/bots';
-import { flatMap } from 'es-toolkit/compat';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';
 import type {
@@ -892,15 +891,14 @@ export class AuxCompiler {
 
         let argumentsCode = '';
         if (options.arguments) {
-            const lines = flatMap(
-                options.arguments
-                    .filter((v) => v !== 'this')
-                    .map((v, i) =>
-                        Array.isArray(v)
-                            ? ([v, i] as const)
-                            : ([[v] as string[], i] as const)
-                    ),
-                ([v, i]) =>
+            const lines = options.arguments
+                .filter((v) => v !== 'this')
+                .map((v, i) =>
+                    Array.isArray(v)
+                        ? ([v, i] as const)
+                        : ([[v] as string[], i] as const)
+                )
+                .flatMap(([v, i]) =>
                     v.map((name) => {
                         const defaultName = `_${name}`;
                         if (options.variables?.[defaultName]) {
@@ -908,7 +906,7 @@ export class AuxCompiler {
                         }
                         return `const ${name} = args[${i}];`;
                     })
-            );
+                );
             argumentsCode = '\n' + lines.join('\n');
             transpilerLineOffset += 1 + Math.max(lines.length - 1, 0);
         }

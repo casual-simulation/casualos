@@ -1,4 +1,3 @@
-import { concat } from 'es-toolkit/compat';
 import TreeViewItemValue from '../TreeViewItemValue/TreeViewItemValue';
 
 export default {
@@ -46,7 +45,7 @@ export default {
             return value.isRoot;
         },
         onChangeData: function(path: string[], value: any) {
-            path = concat(this.data.key, path);
+            path = (this.data.key ?? []).concat(path);
             this.$emit('change-data', path, value);
         },
     },
