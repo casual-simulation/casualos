@@ -92,7 +92,7 @@ async function build(builds) {
     );
 
     writeMetafiles(builders);
-    logBuilders(builders);
+    logBuilders(builders, true);
 }
 
 async function setupWatch(builds) {
@@ -196,13 +196,18 @@ function writeMetafiles(builders) {
     }
 }
 
-function logBuilders(builders) {
+function logBuilders(builders, throwOnFail = false) {
+    let fail = false;
     for (let [success, name, result] of builders) {
         if (success) {
             logBuildFinish(name, result);
         } else {
+            fail = true;
             logBuildFailure(name, result);
         }
+    }
+    if (throwOnFail && fail) {
+        throw new Error(`[dev-server] One or more builds failed.`);
     }
 }
 
