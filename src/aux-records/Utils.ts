@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { omitBy, padStart, sortBy } from 'lodash';
+import { omitBy, padStart, sortBy } from 'es-toolkit/compat';
 import { sha256, hmac } from 'hash.js';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
 import axios from 'axios';

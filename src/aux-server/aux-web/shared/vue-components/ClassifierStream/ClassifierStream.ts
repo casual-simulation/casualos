@@ -27,7 +27,7 @@ import type {
     ClassificationEvent,
 } from './ClassifierStreamTypes';
 import * as tmImage from '@teachablemachine/image';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import ClassifierLoader from '../ClassifierLoader/ClassifierLoader';
 
 @Component({

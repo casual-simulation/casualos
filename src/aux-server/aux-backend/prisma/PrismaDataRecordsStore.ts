@@ -208,7 +208,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
                     data: true,
                     markers: true,
                 },
-                take: 10,
+                take: request.count || 10,
             }),
         ]);
 

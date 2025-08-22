@@ -24,7 +24,7 @@ import Component from 'vue-class-component';
 import { Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import type { Subscription } from 'rxjs';
-import { debounce } from 'lodash';
+import { debounce } from 'es-toolkit/compat';
 import Security from '../AuthSecurity/AuthSecurity';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
 import type { PrivacyFeatures } from '@casual-simulation/aux-common';

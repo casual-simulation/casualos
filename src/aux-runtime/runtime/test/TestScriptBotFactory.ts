@@ -32,7 +32,7 @@ import type { RuntimeBotInterface, RuntimeBotFactory } from '../RuntimeBot';
 import { createRuntimeBot, RealtimeEditMode } from '../RuntimeBot';
 import type { CompiledBot } from '../CompiledBot';
 import { createCompiledBot } from '../CompiledBot';
-import { pickBy } from 'lodash';
+import { pickBy } from 'es-toolkit/compat';
 import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
 import type { RuntimeActions } from '../RuntimeEvents';
 

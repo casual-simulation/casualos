@@ -45,7 +45,6 @@ import type {
     RemoteActions,
 } from '../common/RemoteActions';
 import type { ConnectionInfo } from '../common/ConnectionInfo';
-import { flatMap as lodashFlatMap } from 'lodash';
 import type { TimeSample } from '@casual-simulation/timesync';
 
 export const DEFAULT_BRANCH_NAME = 'default';
@@ -292,8 +291,7 @@ export class InstRecordsClient {
                                         // current event is initial event,
                                         // merge events.
                                         const allEvents = events;
-                                        const allUpdates = lodashFlatMap(
-                                            allEvents,
+                                        const allUpdates = allEvents.flatMap(
                                             (e) => e.updates ?? []
                                         );
 

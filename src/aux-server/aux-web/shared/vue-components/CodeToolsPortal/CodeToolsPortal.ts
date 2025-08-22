@@ -36,7 +36,7 @@ import { Subscription } from 'rxjs';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 
 interface CodeTool {
     label: string;
@@ -49,6 +49,10 @@ interface CodeTool {
 @Component({})
 export default class CodeToolsPortal extends Vue {
     @Prop({ required: true }) simId: string;
+
+    @Prop({ required: true }) botId: string;
+    @Prop({ required: true }) tag: string;
+    @Prop({ required: false }) space: string;
 
     tools: CodeTool[] = [];
 
@@ -84,13 +88,13 @@ export default class CodeToolsPortal extends Vue {
         const sim = appManager.simulationManager.simulations.get(tool.simId);
         if (sim) {
             const bot = sim.helper.botsState[tool.botId];
+            const codeBot = this.botId
+                ? sim.helper.botsState[this.botId]
+                : null;
             if (bot) {
                 sim.helper.transaction(
-                    action(
-                        CLICK_ACTION_NAME,
-                        [bot.id],
-                        sim.helper.userId,
-                        onClickArg(
+                    action(CLICK_ACTION_NAME, [bot.id], sim.helper.userId, {
+                        ...onClickArg(
                             null,
                             tool.dimension,
                             null,
@@ -98,13 +102,13 @@ export default class CodeToolsPortal extends Vue {
                             null,
                             null,
                             null
-                        )
-                    ),
-                    action(
-                        ANY_CLICK_ACTION_NAME,
-                        null,
-                        sim.helper.userId,
-                        onAnyClickArg(
+                        ),
+                        codeBot,
+                        codeTag: this.tag,
+                        codeTagSpace: this.space,
+                    }),
+                    action(ANY_CLICK_ACTION_NAME, null, sim.helper.userId, {
+                        ...onAnyClickArg(
                             null,
                             tool.dimension,
                             bot,
@@ -113,8 +117,11 @@ export default class CodeToolsPortal extends Vue {
                             null,
                             null,
                             null
-                        )
-                    )
+                        ),
+                        codeBot,
+                        codeTag: this.tag,
+                        codeTagSpace: this.space,
+                    })
                 );
             }
         }

@@ -20,7 +20,6 @@ import { tagsOnBot, hasValue, calculateBotValue } from './BotCalculations';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { filter, startWith, map } from 'rxjs/operators';
-import { flatMap } from 'lodash';
 
 /**
  * Defines a union type for bot index events.
@@ -90,7 +89,7 @@ export class BotIndex {
 
     initialEvents() {
         let bots = [...this._botMap.values()];
-        let events = flatMap(bots, (b) =>
+        let events = bots.flatMap((b) =>
             tagsOnBot(b).map(
                 (t) =>
                     ({

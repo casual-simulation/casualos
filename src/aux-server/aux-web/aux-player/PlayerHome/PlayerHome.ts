@@ -51,7 +51,7 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual } from 'lodash';
+import { intersection, isEqual } from 'es-toolkit/compat';
 import type { Subscription } from 'rxjs';
 import type { Config } from 'unique-names-generator';
 import { uniqueNamesGenerator } from 'unique-names-generator';
@@ -629,10 +629,11 @@ export default class PlayerHome extends Vue {
     }
 
     private async _getBiosOptions(): Promise<BiosOption[]> {
+        const authData =
+            await appManager.auth.primary.authenticateInBackground();
+        const authenticated = !!authData;
         const privacyFeatures =
-            appManager.auth.primary.currentLoginStatus?.authData
-                ?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
-        const authenticated = await appManager.auth.primary.isAuthenticated();
+            authData?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
         return (
             appManager.config.allowedBiosOptions ?? [
                 'enter join code',

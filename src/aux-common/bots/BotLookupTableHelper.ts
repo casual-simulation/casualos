@@ -19,7 +19,7 @@ import type { BotLookupTable } from './BotLookupTable';
 import { valuesToKey, buildLookupTable } from './BotLookupTable';
 import type { Bot } from './Bot';
 import type { BotObjectsContext } from './BotObjectsContext';
-import { zip, sortBy } from 'lodash';
+import { zip, sortBy } from 'es-toolkit/compat';
 
 /**
  * Defines a helper class for BotLookupTable which is able to dynamically create and reuse

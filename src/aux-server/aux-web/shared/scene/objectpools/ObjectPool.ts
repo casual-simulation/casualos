@@ -17,7 +17,7 @@
  */
 import { getOptionalValue } from '../../SharedUtils';
 import { v4 as uuid } from 'uuid';
-import { remove } from 'lodash';
+import { remove } from 'es-toolkit/compat';
 
 /**
  * This is a generic object pool class that can be extended from to implement a pool for

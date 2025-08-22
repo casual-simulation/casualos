@@ -1,10 +1,27 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import esbuild from 'esbuild';
 import path, { dirname } from 'path';
 import fs, { existsSync } from 'fs';
 import { writeFile, readFile } from 'fs/promises';
 import chalk from 'chalk';
 import chokidar from 'chokidar';
-import _ from 'lodash';
+import { debounce } from 'es-toolkit';
 import root from './root-path.cjs';
 import JSZip from 'jszip';
 import hash from 'hash.js';
@@ -41,6 +58,7 @@ export {
     loaders,
     replaceEsbuildPlugin,
     replaceThreePlugin,
+    replaceLodashPlugin,
     replaceModulePlugin,
     emptyModulePlugin,
     paths,
@@ -74,7 +92,7 @@ async function build(builds) {
     );
 
     writeMetafiles(builders);
-    logBuilders(builders);
+    logBuilders(builders, true);
 }
 
 async function setupWatch(builds) {
@@ -112,7 +130,7 @@ async function setupWatch(builds) {
     );
 
     logBuilders(builders);
-    const build = _.debounce(async () => {
+    const build = debounce(async () => {
         console.log('[dev-server] Rebuilding...');
         builders = await Promise.all(
             builders.map(([success, name, result, context]) => {
@@ -178,13 +196,18 @@ function writeMetafiles(builders) {
     }
 }
 
-function logBuilders(builders) {
+function logBuilders(builders, throwOnFail = false) {
+    let fail = false;
     for (let [success, name, result] of builders) {
         if (success) {
             logBuildFinish(name, result);
         } else {
+            fail = true;
             logBuildFailure(name, result);
         }
+    }
+    if (throwOnFail && fail) {
+        throw new Error(`[dev-server] One or more builds failed.`);
     }
 }
 
@@ -270,13 +293,26 @@ function replaceThreePlugin() {
     return replaceModulePlugin(/^three$/, '@casual-simulation/three');
 }
 
+function replaceLodashPlugin() {
+    return replaceModulePlugin(/^lodash$/, 'es-toolkit/compat');
+}
+
 function replaceModulePlugin(original, replacement) {
     return {
         name: 'replace-module',
         setup(build) {
-            build.onResolve({ filter: original }, (args) => ({
-                path: replacement,
-            }));
+            build.onResolve({ filter: original }, (args) => {
+                const url = new URL(import.meta.resolve(replacement));
+
+                let path = url.pathname;
+                if (path.startsWith('/') && process.platform === 'win32') {
+                    path = path.slice(1);
+                }
+
+                return {
+                    path,
+                };
+            });
         },
     };
 }

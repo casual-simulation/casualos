@@ -340,6 +340,8 @@ model Record {
     packageRecords PackageRecord[]
     packageRecordVersions PackageRecordVersion[]
 
+    searchRecords SearchRecord[]
+
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
@@ -1063,6 +1065,71 @@ model PackageRecordVersionReview {
     // The ID of the user that reviewed the package version
     reviewingUserId String @db.String(128)
     reviewingUser User @relation(fields: [reviewingUserId], references: [id], onDelete: Cascade, map: "PackageRecordVersionReview_reviewingUserId_fkey1")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SearchRecord {
+    @@id([recordName, address])
+
+    recordName String @db.String(128)
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "SearchRecord_recordName_fkey1")
+    
+    address String @db.String(100)
+
+    // The name of the collection that this record is associated with in Typesense.
+    collectionName String @db.String(128)
+
+    // The API key that can be used to search inside this record.
+    searchApiKey String @db.String(128)
+
+    markers String[]
+
+    syncs SearchRecordSync[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SearchRecordSync {
+    id String @id @db.Uuid
+
+    searchRecordName String @db.String(128)
+    searchRecordAddress String @db.String(128)
+
+    searchRecord SearchRecord @relation(fields: [searchRecordName, searchRecordAddress], references: [recordName, address], onDelete: Cascade, map: "SearchRecordSync_searchRecord_fkey1")
+
+    targetRecordName String @db.String(128)
+    targetResourceKind String @db.String(32)
+    targetMarker String @db.String(128)
+    targetMapping Json
+
+    history SearchRecordSyncHistory[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([searchRecordName, searchRecordAddress, targetRecordName, targetResourceKind, targetMarker])
+}
+
+model SearchRecordSyncHistory {
+    id String @id @db.Uuid
+
+    searchRecordName String @db.String(128)
+    searchRecordAddress String @db.String(128)
+
+    syncId String @db.Uuid
+    sync SearchRecordSync @relation(fields: [syncId], references: [id], onDelete: Cascade, map: "SearchRecordSyncHistory_sync_fkey1")
+
+    runId String @db.Uuid
+
+    time DateTime
+    status String @db.String(32)
+    success Boolean
+
+    numSynced Int
+    numErrored Int
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

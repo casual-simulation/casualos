@@ -78,7 +78,7 @@ import type {
 } from '@casual-simulation/aux-vm';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { userBotTagsChanged } from '@casual-simulation/aux-vm-browser';
-import { union, sortBy } from 'lodash';
+import { union, sortBy } from 'es-toolkit/compat';
 import { propertyInsertText } from './CompletionHelpers';
 import type {
     BotCalculationContext,

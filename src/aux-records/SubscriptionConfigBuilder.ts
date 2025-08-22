@@ -34,6 +34,7 @@ import type {
     PackageFeaturesConfiguration,
     PublicInstsConfiguration,
     RecordFeaturesConfiguration,
+    SearchFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
     SubscriptionConfiguration,
@@ -290,6 +291,18 @@ export class FeaturesBuilder {
 
     withPackagesMaxBytesTotal(maxBytes: number): this {
         this._features.packages.maxPackageBytesTotal = maxBytes;
+        return this;
+    }
+
+    withSearch(features?: SearchFeaturesConfiguration): this {
+        this._features.search = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withSearchMaxItems(maxItems: number): this {
+        this._features.search.maxItems = maxItems;
         return this;
     }
 

@@ -41,7 +41,6 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import type { Remote } from 'comlink';
 import { wrap, proxy, releaseProxy } from 'comlink';
 import { startWith } from 'rxjs/operators';
-import { values } from 'lodash';
 
 /**
  * Attempts to create a proxy client partition that is loaded from a remote inst.
@@ -87,7 +86,7 @@ export class ProxyClientPartitionImpl implements ProxyClientPartition {
     realtimeStrategy: AuxPartitionRealtimeStrategy;
 
     get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded.pipe(startWith(values(this.state)));
+        return this._onBotsAdded.pipe(startWith(Object.values(this.state)));
     }
     get onBotsRemoved(): Observable<string[]> {
         return this._onBotsRemoved;

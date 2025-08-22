@@ -68,7 +68,7 @@ import { tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { mapValues, uniq } from 'lodash';
+import { mapValues, uniq } from 'es-toolkit/compat';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';

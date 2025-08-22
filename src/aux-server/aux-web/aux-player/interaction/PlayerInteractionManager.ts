@@ -80,7 +80,7 @@ import {
 import { appManager } from '../../shared/AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import type { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import { flatMap, isEqual } from 'lodash';
+import { isEqual } from 'es-toolkit/compat';
 import { MiniPortalContextGroup3D } from '../scene/MiniPortalContextGroup3D';
 import {
     calculateHitFace,
@@ -244,10 +244,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     getDraggableGroups(): DraggableGroup[] {
         if (this._draggableGroupsDirty) {
-            const contexts = flatMap(
-                this._game.getSimulations(),
-                (s) => s.dimensions
-            );
+            const contexts = this._game
+                .getSimulations()
+                .flatMap((s) => s.dimensions);
             // Sort between miniGridPortal colliders and other colliders.
             let miniPortalColliders: Object3D[] = [];
             let otherColliders: Object3D[] = [];

@@ -43,7 +43,7 @@ import { Input } from '../Input';
 import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
 import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
 import { CubeHelperPool } from '../objectpools/CubeHelperPool';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import { Subscription } from 'rxjs';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';

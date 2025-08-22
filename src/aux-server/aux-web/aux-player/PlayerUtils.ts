@@ -17,7 +17,7 @@
  */
 import type { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { getBotConfigDimensions } from '@casual-simulation/aux-common';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 
 interface PlayerContextSearchResult {
     /**

@@ -37,7 +37,7 @@ import { takeWhile, bufferCount, skip } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'es-toolkit/compat';
 import type { Action } from '../common';
 import { connectionInfo, remote } from '../common';
 import type {

@@ -25,7 +25,7 @@ import type {
     ListCrudStoreSuccess,
     PartialExcept,
 } from './CrudRecordsStore';
-import { orderBy, sortBy } from 'lodash';
+import { orderBy, sortBy } from 'es-toolkit/compat';
 
 export class MemoryCrudRecordsStore<
     T extends CrudRecord,

@@ -1359,7 +1359,8 @@ export class RecordsController {
                         subscriptionTier: getSubscriptionTier(
                             config,
                             s.subscriptionStatus,
-                            s.subscriptionId
+                            s.subscriptionId,
+                            'studio'
                         ),
                         ownerStudioComId: s.ownerStudioComId,
                         comId: s.comId,
@@ -1410,7 +1411,8 @@ export class RecordsController {
                         subscriptionTier: getSubscriptionTier(
                             config,
                             s.subscriptionStatus,
-                            s.subscriptionId
+                            s.subscriptionId,
+                            'studio'
                         ),
                         ownerStudioComId: s.ownerStudioComId,
                         comId: s.comId,

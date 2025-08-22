@@ -28,7 +28,6 @@ import {
 import { getGLTFPool } from '../GLTFHelpers';
 import type { SubscriptionLike } from 'rxjs';
 import { disposeGroup, objectWorldForwardRay } from '../SceneUtils';
-import { values } from 'lodash';
 import type {
     XRFrame,
     XRPose,
@@ -190,9 +189,11 @@ export class WebXRControllerMesh implements SubscriptionLike {
 
         this.controller.updateFromGamepad();
         // Update the 3D model to reflect the button, thumbstick, and touchpad state
-        for (let component of values(this.controller.components)) {
+        for (let component of Object.values(this.controller.components)) {
             // Update node data based on the visual responses' current states
-            for (let visualResponse of values(component.visualResponses)) {
+            for (let visualResponse of Object.values(
+                component.visualResponses
+            )) {
                 const {
                     valueNodeName,
                     minNodeName,
@@ -285,7 +286,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
         }
 
         // Loop through the components and find the nodes needed for each components' visual responses
-        for (let component of values(this.controller.components)) {
+        for (let component of Object.values(this.controller.components)) {
             const { touchPointNodeName, visualResponses } = component;
             if (touchPointNodeName) {
                 this._nodes.set(
@@ -295,7 +296,7 @@ export class WebXRControllerMesh implements SubscriptionLike {
             }
 
             // Loop through all the visual responses to be applied to this component
-            for (let visualResponse of values(visualResponses)) {
+            for (let visualResponse of Object.values(visualResponses)) {
                 const {
                     valueNodeName,
                     minNodeName,

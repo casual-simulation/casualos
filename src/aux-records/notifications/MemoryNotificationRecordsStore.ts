@@ -29,7 +29,7 @@ import type {
     UserPushSubscription,
 } from './NotificationRecordsStore';
 import type { SubscriptionFilter } from '../MetricsStore';
-import { uniqBy } from 'lodash';
+import { uniqBy } from 'es-toolkit/compat';
 
 /**
  * A Memory-based implementation of the NotificationRecordsStore.
