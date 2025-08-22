@@ -117,7 +117,7 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                     ...configVariables,
                 },
-                external: ['deno-vm', 'better-sqlite3'],
+                external: ['deno-vm'],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
@@ -139,7 +139,6 @@ export function createConfigs(dev, version) {
                     ...configVariables,
                     ...extraVariables,
                 },
-                external: ['better-sqlite3'],
                 plugins: [
                     copy({
                         src: schema,
@@ -181,7 +180,6 @@ export function createConfigs(dev, version) {
                     ...configVariables,
                     ...extraVariables,
                 },
-                external: ['better-sqlite3'],
                 minify: !dev,
                 plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
             },
@@ -199,7 +197,6 @@ export function createConfigs(dev, version) {
                     ...configVariables,
                     ...extraVariables,
                 },
-                external: ['better-sqlite3'],
                 minify: !dev,
                 plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
             },
@@ -214,7 +211,6 @@ export function createConfigs(dev, version) {
                     ...versionVariables,
                     ...developmentVariables,
                 },
-                external: ['better-sqlite3'],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
@@ -246,7 +242,6 @@ export function createConfigs(dev, version) {
                     ...versionVariables,
                     ...developmentVariables,
                 },
-                external: ['better-sqlite3'],
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
