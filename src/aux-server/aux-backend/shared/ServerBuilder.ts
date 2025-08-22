@@ -1723,7 +1723,7 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('Background jobs options must be provided.');
         }
 
-        if (options.jobs.search) {
+        if (options.jobs.search && this._searchInterface) {
             if (!this._dataStore) {
                 throw new Error(
                     'Data store must be configured before using background search jobs.'
@@ -1732,11 +1732,6 @@ export class ServerBuilder implements SubscriptionLike {
             if (!this._searchStore) {
                 throw new Error(
                     'Search store must be configured before using background search jobs.'
-                );
-            }
-            if (!this._searchInterface) {
-                throw new Error(
-                    'Search interface must be configured before using background search jobs.'
                 );
             }
 
@@ -1819,6 +1814,10 @@ export class ServerBuilder implements SubscriptionLike {
                     });
                 }
             }
+        } else if (!this._searchInterface) {
+            console.warn(
+                '[ServerBuilder] A Search interface needs to be configured before search background jobs will be enabled.'
+            );
         }
 
         return this;
