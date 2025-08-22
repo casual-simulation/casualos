@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "3.7.0-alpha.17139476091",
+    "version": "3.7.0-alpha.17158525358",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -40,7 +40,7 @@
         "@casual-simulation/js-interpreter": "^3.5.0",
         "@casual-simulation/stacktrace": "^3.1.11",
         "@casual-simulation/three": "^0.140.3",
-        "@casual-simulation/timesync": "^3.7.0-alpha.17139476091",
+        "@casual-simulation/timesync": "^3.7.0-alpha.17158525358",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/resources": "^1.25.1",
         "@opentelemetry/semantic-conventions": "^1.25.1",
