@@ -12731,7 +12731,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     function getSharedDocument(
         recordOrName: string,
-        inst?: string,
+        inst?: string | { markers?: string[] },
         name?: string,
         options?: { markers?: string[] }
     ): Promise<SharedDocument> {
@@ -12746,7 +12746,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             instName = getCurrentServer();
             recordName = getCurrentInstRecord();
             branchName = recordOrName;
-            markers = inst.markers;
+            markers = inst?.markers;
         } else if (!inst && !name) {
             // Called as getSharedDocument(name)
             instName = getCurrentServer();
@@ -12754,6 +12754,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             branchName = recordOrName;
         } else {
             // Called as getSharedDocument(recordName, inst, name) or getSharedDocument(recordName, inst, name, options)
+            if (typeof inst === 'object') {
+                throw new Error(
+                    'The second argument (inst) must be a string when calling getSharedDocument() with three or more arguments.'
+                );
+            }
+
             recordName = recordOrName;
             instName = inst;
             branchName = name;
