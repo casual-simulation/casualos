@@ -1922,6 +1922,13 @@ export interface LoadSharedDocumentAction extends AsyncAction {
      * If null, then the document will not be stored in indexeddb.
      */
     branch: string | null;
+
+    /**
+     * The markers that should be set on the inst if it is new.
+     * If the inst already exists, this field is ignored.
+     * If not provided, the default markers will be used.
+     */
+    markers?: string[];
 }
 
 /**
@@ -5001,12 +5008,14 @@ export function loadSpace(
  * @param inst The instance to load the document into.
  * @param branch The branch to load the document from.
  * @param taskId The ID of the async task.
+ * @param markers The markers that should be set on the inst if it is new.
  */
 export function loadSharedDocument(
     recordName: string | null,
     inst: string | null,
     branch: string,
-    taskId?: number | string
+    taskId?: number | string,
+    markers?: string[]
 ): LoadSharedDocumentAction {
     return {
         type: 'load_shared_document',
@@ -5014,6 +5023,7 @@ export function loadSharedDocument(
         inst,
         branch,
         taskId,
+        markers,
     };
 }
 

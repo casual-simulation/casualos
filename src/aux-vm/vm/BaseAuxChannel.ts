@@ -1025,6 +1025,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             recordName: event.recordName,
             inst: event.inst,
             branch: event.branch,
+            markers: event.markers,
             host: this._config.config.causalRepoConnectionUrl,
             connectionProtocol:
                 this._config.config.causalRepoConnectionProtocol,
