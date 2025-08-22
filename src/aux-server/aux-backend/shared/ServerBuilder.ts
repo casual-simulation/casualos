@@ -203,7 +203,6 @@ import { Worker as BullWorker, Queue } from 'bullmq';
 import { BullQueue } from '../queue/BullQueue';
 import { SNSClient } from '@aws-sdk/client-sns';
 import { SNSQueue } from '../queue/SNSQueue';
-import { PrismaBetterSQLite3 } from '@prisma/adapter-better-sqlite3';
 import {
     SqliteAuthStore,
     SqliteConfigurationStore,
@@ -2242,18 +2241,9 @@ export class ServerBuilder implements SubscriptionLike {
     private _ensurePrisma(options: Pick<ServerConfig, 'prisma'>): PrismaClient {
         if (!this._prismaClient) {
             if (options.prisma.db === 'sqlite') {
-                const prismaOptions: any = options.prisma.options ?? {};
-                const adapter = new PrismaBetterSQLite3({
-                    url:
-                        prismaOptions.datasourceUrl ??
-                        prismaOptions.datasources?.db?.url ??
-                        process.env.DATABASE_URL,
-                });
-
-                this._prismaClient = new SqlitePrismaClient({
-                    ...(options.prisma.options ?? {}),
-                    adapter,
-                }) as any;
+                this._prismaClient = new SqlitePrismaClient(
+                    options.prisma.options as any
+                ) as any;
             } else {
                 this._prismaClient = new PrismaClient(
                     options.prisma.options as any
