@@ -251,6 +251,7 @@ export class RecordsManager {
         'listSearchCollections',
         'recordSearchDocument',
         'eraseSearchDocument',
+        'listRecords',
     ]);
 
     /**

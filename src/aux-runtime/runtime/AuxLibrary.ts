@@ -315,6 +315,7 @@ import {
     grantInstRole as calcGrantInstRole,
     revokeInstRole as calcRevokeInstRole,
     listUserStudios as calcListUserStudios,
+    listStudioRecords as calcListStudioRecords,
     joinRoom as calcJoinRoom,
     leaveRoom as calcLeaveRoom,
     setRoomOptions as calcSetRoomOptions,
@@ -445,6 +446,7 @@ import type {
     AIChatMessage,
     GrantResourcePermissionResult,
     ListStudiosResult,
+    ListRecordsResult,
     ListSubscriptionsResult,
     NotificationRecord,
     PushNotificationPayload,
@@ -3501,6 +3503,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseSearchDocument,
 
                 listUserStudios,
+                listStudioRecords,
 
                 getRecordsEndpoint,
 
@@ -11833,6 +11836,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListUserStudios(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of records that are in the studio with the given ID.
+     *
+     * Returns a promise that resolves with an object that contains the list of records (if successful) or information about the error that occurred.
+     * The user must be a member of the studio to access its records.
+     *
+     * @param studioId The ID of the studio to list records for.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get the list of records in a studio
+     * const result = await os.listStudioRecords('studioId123');
+     *
+     * if (result.success) {
+     *      os.toast(`Found ${result.records.length} records in studio`);
+     *      for (const record of result.records) {
+     *          os.toast(`Record: ${record.name}`);
+     *      }
+     * } else {
+     *      os.toast('Failed to list studio records: ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid listStudioRecords
+     * @docname os.listStudioRecords
+     */
+    function listStudioRecords(studioId: string, endpoint?: string): Promise<ListRecordsResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
+        const task = context.createTask();
+        const event = calcListStudioRecords(studioId, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
