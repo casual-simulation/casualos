@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.7.1
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
+
 ## V3.7.0
 
 #### Date: 8/22/2025
