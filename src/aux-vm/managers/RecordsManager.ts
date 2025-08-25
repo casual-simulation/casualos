@@ -223,6 +223,7 @@ export class RecordsManager {
     private _client: ReturnType<typeof createRecordsClient>;
 
     private _allowedProcedures = new Set<keyof RecordsClientActions>([
+        'createRecord',
         'recordWebhook',
         'getWebhook',
         'listWebhooks',

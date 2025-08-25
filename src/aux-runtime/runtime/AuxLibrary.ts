@@ -443,6 +443,7 @@ import {
 import type {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
+    CreateRecordResult,
     GrantResourcePermissionResult,
     ListStudiosResult,
     ListSubscriptionsResult,
@@ -3429,6 +3430,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
                 requestAuthBotInBackground,
 
+                createRecord,
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
                 grantPermission,
@@ -9005,6 +9007,70 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates a record with the given name. If a studio is specified, then the record will be created in the given studio.
+     * If not specified, then the record will be owned by the current user.
+     *
+     * Returns a promise that resolves with an object that indicates if the request was successful.
+     *
+     * Permissions: User must be logged in. If a studio is specified, then the user must be a member of the studio.
+     *
+     * @param recordName the name of the record to create.
+     * @param studioId the ID of the studio that should own the record. If not specified, the record will be owned by the current user.
+     *
+     * @example Create a record owned by the current user.
+     * const result = await os.createRecord('myRecord');
+     *
+     * if (result.success) {
+     *     os.toast('Record created successfully!');
+     * } else {
+     *     os.toast('Failed to create record: ' + result.errorMessage);
+     * }
+     *
+     * @example Create a record in a studio.
+     * const result = await os.createRecord('myStudioRecord', 'myStudioId');
+     *
+     * if (result.success) {
+     *     os.toast('Studio record created successfully!');
+     * } else {
+     *     os.toast('Failed to create studio record: ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docid os.createRecord
+     * @docname os.createRecord
+     * @docgroup 01-records
+     */
+    function createRecord(
+        recordName: string,
+        studioId?: string
+    ): Promise<CreateRecordResult> {
+        if (!hasValue(recordName)) {
+            throw new Error('recordName must be provided.');
+        } else if (typeof recordName !== 'string') {
+            throw new Error('recordName must be a string.');
+        }
+
+        if (hasValue(studioId) && typeof studioId !== 'string') {
+            throw new Error('studioId must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                createRecord: {
+                    input: {
+                        recordName,
+                        studioId,
+                    },
+                },
+            },
+            {},
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

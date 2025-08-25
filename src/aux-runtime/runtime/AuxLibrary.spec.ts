@@ -6936,6 +6936,65 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.createRecord()', () => {
+            it('should emit a recordsCallProcedure action with createRecord', async () => {
+                const action: any = library.api.os.createRecord('myRecord');
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: undefined,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a recordsCallProcedure action with createRecord and studioId', async () => {
+                const action: any = library.api.os.createRecord(
+                    'myRecord',
+                    'myStudio'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: 'myStudio',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if recordName is not provided', () => {
+                expect(() => {
+                    library.api.os.createRecord(null as any);
+                }).toThrow('recordName must be provided.');
+            });
+
+            it('should throw an error if recordName is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord(123 as any);
+                }).toThrow('recordName must be a string.');
+            });
+
+            it('should throw an error if studioId is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord('myRecord', 123 as any);
+                }).toThrow('studioId must be a string.');
+            });
+        });
+
         describe('os.getPublicRecordKey()', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
