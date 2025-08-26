@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-**CasualOS** is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences. This is a large-scale TypeScript/JavaScript monorepo (36+ packages) using Lerna for package management, built with modern web technologies including Vue.js, Three.js, and Node.js.
+**CasualOS** is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences. This is a large-scale TypeScript/JavaScript monorepo (36+ packages) using PNPM for package management, built with modern web technologies including Vue.js, Three.js, and Node.js.
 
 **Repository Statistics:**
 
@@ -174,6 +174,10 @@ The repository uses TypeScript project references for efficient incremental buil
 -   **Build order**: Libraries (aux-common, aux-vm, etc.) → Server → Applications
 -   **Circular dependencies**: Avoided through careful architecture
 
+### Release Notes
+
+Make sure to update CHANGELOG.md with a summary of the changes you've made.
+
 ## Quick Start for Common Tasks
 
 ### Making Code Changes
@@ -184,6 +188,7 @@ The repository uses TypeScript project references for efficient incremental buil
 4. `npm run build` (full build)
 5. `npm test` (verify changes)
 6. `npm run lint` (check code quality)
+7. Update CHANGELOG.md
 
 ### Working with Specific Packages
 
