@@ -1840,10 +1840,15 @@ export class WebsocketController {
                 return instsResult;
             }
 
+            // Filter insts by the authorized marker(s)
+            const filteredInsts = instsResult.insts.filter((inst) =>
+                inst.markers.some((instMarker) => markers.includes(instMarker))
+            );
+
             return {
                 success: true,
-                insts: instsResult.insts,
-                totalCount: instsResult.totalCount,
+                insts: filteredInsts,
+                totalCount: filteredInsts.length,
             };
         } catch (err) {
             console.error(
