@@ -309,6 +309,7 @@ import {
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
     revokeRecordPermission as calcRevokeRecordPermission,
+    listPermissions as calcListPermissions,
     grantInstAdminPermission as calcGrantInstAdminPermission,
     grantUserRole as calcGrantUserRole,
     revokeUserRole as calcRevokeUserRole,
@@ -373,6 +374,7 @@ import type {
     RemoteAction,
     AvailablePermissions,
     Entitlement,
+    ResourceKinds,
     VersionNumber,
 } from '@casual-simulation/aux-common';
 import {
@@ -452,6 +454,7 @@ import type {
     NotificationRecord,
     PushNotificationPayload,
     RevokePermissionResult,
+    ListPermissionsResult,
     SendNotificationResult,
     SubscribeToNotificationResult,
     UnsubscribeToNotificationResult,
@@ -3437,6 +3440,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getSubjectlessPublicRecordKey,
                 grantPermission,
                 revokePermission,
+                listPermissions,
                 grantInstAdminPermission,
                 grantUserRole,
                 revokeUserRole,
@@ -9213,6 +9217,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             permissionId,
             options ?? {},
             task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned in the given record.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param request the request containing the record name and optional filters.
+     * @param options the options for the operation.
+     *
+     * @example List all permissions in a record.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord'
+     * });
+     *
+     * @example List permissions for a specific marker.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     marker: 'secret'
+     * });
+     *
+     * @example List permissions for a specific resource.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     resourceKind: 'data',
+     *     resourceId: 'address'
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listPermissions
+     * @docname os.listPermissions
+     */
+    function listPermissions(
+        request: {
+            recordName: string;
+            marker?: string;
+            resourceKind?: ResourceKinds;
+            resourceId?: string;
+        },
+        options?: RecordActionOptions
+    ): Promise<ListPermissionsResult> {
+        const task = context.createTask();
+        const event = calcListPermissions(
+            request.recordName,
+            options ?? {},
+            task.taskId,
+            request.marker,
+            request.resourceKind,
+            request.resourceId
         );
         return addAsyncAction(task, event);
     }

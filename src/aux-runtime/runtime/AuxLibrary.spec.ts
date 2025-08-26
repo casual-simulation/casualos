@@ -200,6 +200,7 @@ import {
     getRoomRemoteOptions,
     grantRecordPermission,
     revokeRecordPermission,
+    listPermissions,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -7064,6 +7065,78 @@ describe('AuxLibrary', () => {
                     'permissionId',
                     {},
                     context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPermissions()', () => {
+            it('should emit a RecordsCallProcedureAction when called with all parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'secret',
+                    resourceKind: 'data',
+                    resourceId: 'address'
+                });
+                const expected = listPermissions(
+                    'record',
+                    {},
+                    context.tasks.size,
+                    'secret',
+                    'data',
+                    'address'
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with only recordName', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record'
+                });
+                const expected = listPermissions(
+                    'record',
+                    {},
+                    context.tasks.size,
+                    undefined,
+                    undefined,
+                    undefined
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with marker only', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'test'
+                });
+                const expected = listPermissions(
+                    'record',
+                    {},
+                    context.tasks.size,
+                    'test',
+                    undefined,
+                    undefined
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with resource parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    resourceKind: 'file',
+                    resourceId: 'myfile.txt'
+                });
+                const expected = listPermissions(
+                    'record',
+                    {},
+                    context.tasks.size,
+                    undefined,
+                    'file',
+                    'myfile.txt'
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
