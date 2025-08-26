@@ -16398,7 +16398,7 @@ interface Experiment {
      * @param bot The bot that the overlay should be added to.
      * @param overlayLayer Configuration for the overlay layer to add.
      */
-    addBotMapOverlay(
+    addBotMapLayer(
         bot: Bot,
         overlay: {
             overlayType: 'geojson';
@@ -16412,7 +16412,7 @@ interface Experiment {
      * @param bot The bot that the overlay should be removed from.
      * @param overlayId Id of the overlay to remove.
      */
-    removeBotMapOverlay(bot: Bot, overlayId: string): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
+    removeBotMapLayer(bot: Bot, overlayId: string): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
 };
 
 

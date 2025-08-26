@@ -114,6 +114,10 @@ import type {
     Point3D,
     DynamicListener,
     HideLoadingScreenAction,
+    AddMapLayerAction,
+    RemoveMapLayerAction,
+    AddBotMapLayerAction,
+    RemoveBotMapLayerAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -209,7 +213,6 @@ import {
     endRecording as calcEndRecording,
     speakText as calcSpeakText,
     getVoices as calcGetVoices,
-    removeBotMapOverlay as calcRemoveBotMapOverlay,
     getGeolocation as calcGetGeolocation,
     cancelAnimation,
     disablePOV,
@@ -3465,6 +3468,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 addMapLayer,
                 removeMapLayer,
+                addBotMapLayer,
+                removeBotMapLayer,
 
                 remotes,
                 listInstUpdates,
@@ -12001,12 +12006,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
      * @param layer The layer that should be added.
      *
-     * @example Add a GeoJSON layer to the map portal
-     * const layerId = await os.addMapLayer('map', {
-     *    type: 'geojson',
-     *    data: {
-     *       type: "FeatureCollection",
-     *       features: [
+     * @example Add a GeoJSON layer to a map bot
+     * const layerId = await os.addMapLayer(bot, {
+     *     overlayType: 'geojson',
+     *     data: {
+     *        type: "FeatureCollection",
+     *        features: [
      *           {
      *               type: "Feature",
      *               geometry: { type: "Point", coordinates: [102.0, 0.5] },
@@ -12051,9 +12056,71 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.addMapLayer
      */
     function addMapLayer(
+        portal: 'map' | 'miniMap',
+        layer: {
+            type: 'geojson';
+            data?: any;
+            url?: string;
+            copyright?: string;
+        }
+    ): Promise<string> {
+        const task = context.createTask();
+        const action: AddMapLayerAction = {
+            type: 'add_map_layer',
+            portal: portal,
+            layer: layer,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Removes a layer from a bot with form: "map".
+     *
+     * Returns a promise that resolves when the layer has been removed.
+     *
+     * @param bot The bot that has the layer.
+     * @param overlayId The ID of the layer to remove.
+     *
+     * @example Remove a layer from a map bot
+     * await os.removeMapLayer(bot, 'my-layer-id');
+     *
+     * @dochash actions/os/maps
+     * @docid os.removeMapLayer
+     * @docname os.removeMapLayer
+     */
+    function removeMapLayer(layerId: string): Promise<void> {
+        const task = context.createTask();
+        const action: RemoveMapLayerAction = {
+            type: 'remove_map_layer',
+            layerId: layerId,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Adds a map layer to a bot with form: "map".
+     *
+     * Returns a promise that resolves with the ID of the layer that was added.
+     *
+     * @param bot The bot that should have the layer added.
+     * @param overlay The overlay configuration.
+     *
+     * @example Add a GeoJSON layer to a map bot
+     * const layerId = await os.addBotMapLayer(bot, {
+     *     type: 'geojson',
+     *     data: {
+     *         type: "FeatureCollection",
+     *         features: [...]
+     *     }
+     * });
+     */
+    function addBotMapLayer(
         bot: Bot | string,
         overlay: {
-            overlayType: 'geojson' | 'geojson_3d';
+            overlayType?: 'geojson';
+            type?: 'geojson';
             data: any;
             overlayId?: string;
         }
@@ -12061,33 +12128,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const botId = typeof bot === 'string' ? bot : bot.id;
 
-        const action: any = {
+        const normalizedOverlay = {
+            ...overlay,
+            overlayType: overlay.overlayType || overlay.type || 'geojson',
+        };
+
+        const action: AddBotMapLayerAction = {
             type: 'add_bot_map_layer',
             botId: botId,
-            overlay: overlay,
+            overlay: normalizedOverlay,
             taskId: task.taskId,
         };
         return addAsyncAction(task, action);
     }
 
     /**
-     * Removes a layer from the map or miniMap portal.
+     * Removes a layer from a bot with form: "map".
      *
-     * Returns a promise that resolves when the layer has been removed.
+     * @param bot The bot that has the layer.
+     * @param overlayId The ID of the overlay to remove.
      *
-     * @param layerId The ID of the layer to remove.
-     * @returns A promise that resolves when the layer has been removed.
-     *
-     * @example Remove a layer from the map portal
-     * await os.removeMapLayer('my-layer-id');
-     *
-     * @dochash actions/os/maps
-     * @docid os.removeMapLayer
-     * @docname os.removeMapLayer
+     * @example Remove a layer from a map bot
+     * await os.removeBotMapLayer(bot, 'my-layer-id');
      */
-    function removeMapLayer(bot: Bot, overlayId: string): Promise<void> {
+    function removeBotMapLayer(
+        bot: Bot | string,
+        overlayId: string
+    ): Promise<void> {
         const task = context.createTask();
-        const action = calcRemoveBotMapOverlay(bot, overlayId, task.taskId);
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const action: RemoveBotMapLayerAction = {
+            type: 'remove_bot_map_layer',
+            botId: botId,
+            overlayId: overlayId,
+            taskId: task.taskId,
+        };
         return addAsyncAction(task, action);
     }
 

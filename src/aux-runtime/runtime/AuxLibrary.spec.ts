@@ -9992,6 +9992,136 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.addBotMapLayer()', () => {
+            it('should send a AddBotMapLayerAction', () => {
+                const promise: any = library.api.os.addBotMapLayer(bot1, {
+                    overlayType: 'geojson',
+                    data: {
+                        abc: 'def',
+                    },
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test1',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept bot ID as string', () => {
+                const promise: any = library.api.os.addBotMapLayer('test2', {
+                    overlayType: 'geojson',
+                    data: {
+                        xyz: 123,
+                    },
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test2',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: {
+                            xyz: 123,
+                        },
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support optional overlayId', () => {
+                const promise: any = library.api.os.addBotMapLayer(bot1, {
+                    overlayType: 'geojson',
+                    data: { test: true },
+                    overlayId: 'custom-id',
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test1',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: { test: true },
+                        overlayId: 'custom-id',
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.removeBotMapLayer()', () => {
+            it('should send a RemoveBotMapLayerAction', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'layer'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'layer',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept bot ID as string', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    'test2',
+                    'layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test2',
+                    overlayId: 'layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should handle different layer IDs', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'custom-layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'custom-layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return a promise', () => {
+                const result = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'test-layer'
+                );
+                expect(result).toBeInstanceOf(Promise);
+            });
+        });
+
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
                 const action = library.api.server.shell('abc');

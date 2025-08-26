@@ -160,8 +160,8 @@ export type AsyncActions =
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
-    | AddBotMapOverlayAction
-    | RemoveBotMapOverlayAction
+    | AddBotMapLayerAction
+    | RemoveBotMapLayerAction
     | GetVoicesAction
     | GetGeolocationAction
     | RegisterCustomAppAction
@@ -2976,7 +2976,7 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
 /** Extensible overlay type — bot map form */
 type OverlayType = 'geojson_canvas';
 
-export interface AddBotMapOverlayAction extends AsyncAction {
+export interface AddBotMapLayerAction extends AsyncAction {
     type: 'add_bot_map_layer';
     /**
      * The ID of the bot that should be drawn on.
@@ -2989,7 +2989,8 @@ export interface AddBotMapOverlayAction extends AsyncAction {
         /**
          * The type of overlay to add to the bot map form
          */
-        overlayType: OverlayType;
+        overlayType: 'geojson';
+        type?: 'geojson';
         /**
          * Data specific to the overlay type for layer creation
          */
@@ -3001,7 +3002,7 @@ export interface AddBotMapOverlayAction extends AsyncAction {
         overlayId?: string;
     };
 }
-export interface RemoveBotMapOverlayAction extends AsyncAction {
+export interface RemoveBotMapLayerAction extends AsyncAction {
     type: 'remove_bot_map_layer';
     /**
      * The ID of the bot that the overlay is on.
@@ -5691,9 +5692,9 @@ export function getVoices(taskId?: string | number): GetVoicesAction {
  */
 export function addBotMapOverlay(
     bot: Bot,
-    overlayConfig: AddBotMapOverlayAction['overlay'],
+    overlayConfig: AddBotMapLayerAction['overlay'],
     taskId?: string | number
-): AddBotMapOverlayAction {
+): AddBotMapLayerAction {
     return {
         type: 'add_bot_map_layer',
         botId: bot?.id,
@@ -5706,7 +5707,7 @@ export function removeBotMapOverlay(
     bot: Bot,
     overlayId: string,
     taskId?: string | number
-): RemoveBotMapOverlayAction {
+): RemoveBotMapLayerAction {
     return {
         type: 'remove_bot_map_layer',
         botId: bot?.id,
