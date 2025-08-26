@@ -38,25 +38,15 @@
 3. **Start development services** (required for full functionality):
     ```bash
     # Choose one based on your Docker setup:
-    npm run nerdctl:dev    # If using nerdctl/Rancher Desktop
     npm run docker:dev     # If using standard docker
+    npm run nerdctl:dev    # If using nerdctl/Rancher Desktop
     ```
 
 ### Build Commands - Execution Order and Timing
 
 **CRITICAL: Build commands must be run in this specific order:**
 
-1. **Clean** (30 seconds):
-
-    ```bash
-    npm run clean  # Removes built files, runs jake clean
-    ```
-
-2. **Build Libraries First** (2-4 minutes):
-    ```bash
-    npm run build:libs  # TypeScript compilation: tsc --build
-    ```
-3. **Build Full Project** (5-8 minutes total):
+1. **Build Full Project** (5-8 minutes total):
     ```bash
     npm run build  # Complete build including server, proxy, CLI
     ```
@@ -65,9 +55,9 @@
 
 -   **Prisma Generation Failure**: Bootstrap may fail with "binaries.prisma.sh ENOTFOUND" - use `--ignore-scripts` flag and generate Prisma separately
 -   **Memory Issues**: Use `--max_old_space_size=4096` for Node.js in memory-intensive operations
--   **Build Dependencies**: Libraries MUST be built before server/web components
--   **Docker Services**: MongoDB, Redis, and other services in docker-compose.dev.yml are required for full functionality
 -   **Git Tags Missing**: Some builds (CLI) require git tags for version info - expect failures in fresh clones without release tags
+-   **Build Dependencies**: Libraries MUST be built before server/web components
+-   **Docker Services**: MongoDB, Redis, and other services in docker-compose.dev.yml are required for full functionality, but should not be required for building.
 -   **Windows-specific**: Special node-gyp configuration required (see CI workflow)
 
 ### Testing Commands
@@ -87,8 +77,7 @@ npm run test:ci  # Includes --no-cache --ci flags
 
 **Common Test Issues:**
 
--   Tests may fail if Docker services aren't running
--   Some tests have network dependencies and console warnings (expected)
+-   Some tests may have network dependencies and console warnings (expected)
 -   Use `--detectOpenHandles --forceExit` flags for complete test runs
 
 ### Linting and Code Quality
@@ -104,7 +93,7 @@ npm run lint:server       # Server-specific linting
 **Key Linting Rules:**
 
 -   Header comments required on most TypeScript files
--   Consistent type imports: Use `import type` for type-only imports
+-   Consistent type imports: Use `import type` for type-only imports (auto-fixable)
 -   No unused imports (auto-fixable)
 -   Vue component specific rules in components directories
 
@@ -121,15 +110,14 @@ npm run lint:server       # Server-specific linting
 ├── src/                        # All source packages (34 packages)
 │   ├── aux-common/            # Core shared utilities and types
 │   ├── aux-server/            # Main web application server
-│   │   ├── aux-backend/       # Backend API and data layer (includes Prisma)
-│   │   ├── aux-web/          # Frontend Vue.js application
-│   │   └── aux-player/       # Embedded player component
+│   │   ├── aux-backend/       # Backend API configuration (includes Prisma)
+│   │   ├── aux-web/          # Frontend Vue.js applications
 │   ├── aux-vm/               # Virtual machine abstraction
 │   ├── aux-vm-browser/       # Browser VM implementation
 │   ├── aux-vm-client/        # Client VM implementation
 │   ├── aux-vm-node/          # Node.js VM implementation
-│   ├── aux-records/          # Data records management
-│   ├── aux-runtime/          # Runtime execution engine
+│   ├── aux-records/          # Backend API implementation
+│   ├── aux-runtime/          # Runtime execution engine (user scripts & functions, compilers, etc.)
 │   ├── casualos-cli/         # Command-line interface
 │   └── [21 other packages]   # Supporting libraries (crypto, websocket, etc.)
 ├── package.json              # Root package.json with scripts
@@ -143,7 +131,6 @@ npm run lint:server       # Server-specific linting
 -   **eslint.config.mjs**: ESLint v9 flat config with TypeScript rules
 -   **tsconfig.json**: TypeScript project references for all packages
 -   **jest.config.js**: Jest testing configuration with ts-jest
--   **lerna.json**: Monorepo package management
 -   **docker/docker-compose.dev.yml**: Development services (MongoDB, Redis, MinIO, etc.)
 
 ### CI/CD Pipeline (GitHub Actions)
@@ -193,11 +180,10 @@ The repository uses TypeScript project references for efficient incremental buil
 
 1. `corepack enable && npm run bootstrap`
 2. `npm run docker:dev` (start services)
-3. `npm run clean && npm run build:libs`
-4. Make your changes
-5. `npm run build` (full build)
-6. `npm test` (verify changes)
-7. `npm run lint` (check code quality)
+3. Make your changes
+4. `npm run build` (full build)
+5. `npm test` (verify changes)
+6. `npm run lint` (check code quality)
 
 ### Working with Specific Packages
 
@@ -217,7 +203,7 @@ npm run lint:components
 
 ```bash
 npm run watch  # Starts Vite in watch mode + nodemon
-# Server available at http://localhost:3000
+# Server available at http://localhost:3000 and http://localhost:3002
 ```
 
 ### Documentation Updates
