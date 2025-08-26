@@ -4,6 +4,12 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the `os.createRecord(name)` function ([#668](https://github.com/casual-simulation/casualos/pull/668)).
+-   Added the `os.listSudioRecords(studioId)` function ([#666](https://github.com/casual-simulation/casualos/pull/666)).
+-   Added the the ability to specify markers when loading a shared document. ([#663](https://github.com/casual-simulation/casualos/pull/663))
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
