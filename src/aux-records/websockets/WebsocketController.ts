@@ -1775,7 +1775,8 @@ export class WebsocketController {
     async listInsts(
         recordName: string | null,
         userId: string,
-        startingInst: string | null
+        startingInst: string | null,
+        marker?: string | null
     ): Promise<ListInstsResult> {
         try {
             if (!recordName) {
@@ -1796,12 +1797,13 @@ export class WebsocketController {
                 return contextResult;
             }
             const context = contextResult.context;
+            const markers = hasValue(marker) ? [marker] : [PRIVATE_MARKER];
             const authorizeResult =
                 await this._policies.authorizeUserAndInstances(context, {
                     resourceKind: 'inst',
                     action: 'list',
                     userId,
-                    markers: [PRIVATE_MARKER],
+                    markers,
                     instances: [],
                 });
 

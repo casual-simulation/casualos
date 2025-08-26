@@ -364,6 +364,8 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    listInsts as calcListInsts,
+    listInstsByMarker as calcListInstsByMarker,
     recordsCallProcedure,
 } from './RecordsEvents';
 import { sortBy, cloneDeep, union, isEqual } from 'es-toolkit/compat';
@@ -467,6 +469,7 @@ import type {
     RevokeRoleResult,
     PackageRecord,
     ListInstalledPackagesResult,
+    ListInstsResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3447,6 +3450,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listDataByMarker,
                 eraseData,
                 eraseManualApprovalData,
+
+                listInsts,
+                listInstsByMarker,
 
                 recordWebhook,
                 runWebhook,
@@ -9719,6 +9725,86 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordName,
             marker,
             startingAddress,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of insts that are in the record with the given name.
+     * Returns a promise that resolves with an object that contains the list of insts (if successful) or information about the error that occurred.
+     * @param recordName the name of the record that the insts should be listed from.
+     * @param startingInst the inst that the list should start at. This can be used to paginate through the list of insts. If omitted, then the list will start from the beginning.
+     * @param endpoint the HTTP Endpoint of the records website that the insts should be listed from.
+     * If omitted, then the preconfigured records endpoint will be used.
+     *
+     * @example List insts in a record
+     * const result = await os.listInsts('myRecord');
+     *
+     * if (result.success) {
+     *     os.toast(`Found ${result.insts.length} insts!`);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listInsts
+     * @docid os.listInsts
+     */
+    function listInsts(
+        recordName: string,
+        startingInst: string | null = null,
+        endpoint: string | null = null
+    ): Promise<ListInstsResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+        const task = context.createTask();
+        const event = calcListInsts(
+            recordName,
+            startingInst,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of insts that are in the record with the given name and given marker.
+     * Returns a promise that resolves with an object that contains the list of insts (if successful) or information about the error that occurred.
+     * @param recordName the name of the record that the insts should be listed from.
+     * @param marker the marker that the insts should have.
+     * @param startingInst the inst that the list should start at. This can be used to paginate through the list of insts. If omitted, then the list will start from the beginning.
+     * @param options the options that should be used for the action.
+     *
+     * @example List insts by marker in a record
+     * const result = await os.listInstsByMarker('myRecord', 'public');
+     *
+     * if (result.success) {
+     *     os.toast(`Found ${result.insts.length} insts!`);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listInstsByMarker
+     * @docid os.listInstsByMarker
+     */
+    function listInstsByMarker(
+        recordName: string,
+        marker: string,
+        startingInst: string | null = null,
+        options: RecordActionOptions = {}
+    ): Promise<ListInstsResult> {
+        const task = context.createTask();
+        const event = calcListInstsByMarker(
+            recordName,
+            marker,
+            startingInst,
             options,
             task.taskId
         );
