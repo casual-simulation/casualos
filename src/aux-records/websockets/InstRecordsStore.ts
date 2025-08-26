@@ -46,6 +46,18 @@ export interface InstRecordsStore {
     ): Promise<ListInstsStoreResult>;
 
     /**
+     * Gets the list of insts that are in the given record and have the given marker.
+     * @param recordName The name of the record. If null, then an empty list will be returned.
+     * @param startingInst The name of the inst to start listing at.
+     * @param marker The marker that the insts must have.
+     */
+    listInstsByRecordAndMarker(
+        recordName: string,
+        marker: string,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult>;
+
+    /**
      * Gets the info for the given branch. Returns null if the branch does not exist.
      * @param recordName The name of the record.
      * @param inst The name of the inst.

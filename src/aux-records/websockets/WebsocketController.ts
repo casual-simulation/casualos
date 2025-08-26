@@ -1797,7 +1797,8 @@ export class WebsocketController {
                 return contextResult;
             }
             const context = contextResult.context;
-            const markers = hasValue(marker) ? [marker] : [PRIVATE_MARKER];
+            const hasMarker = hasValue(marker);
+            const markers = hasMarker ? [marker] : [PRIVATE_MARKER];
             const authorizeResult =
                 await this._policies.authorizeUserAndInstances(context, {
                     resourceKind: 'inst',
@@ -1832,23 +1833,24 @@ export class WebsocketController {
                 };
             }
 
-            const instsResult = await this._instStore.listInstsByRecord(
-                recordName,
-                startingInst
-            );
+            const instsResult = hasMarker
+                ? await this._instStore.listInstsByRecordAndMarker(
+                      recordName,
+                      marker,
+                      startingInst
+                  )
+                : await this._instStore.listInstsByRecord(
+                      recordName,
+                      startingInst
+                  );
             if (!instsResult.success) {
                 return instsResult;
             }
 
-            // Filter insts by the authorized marker(s)
-            const filteredInsts = instsResult.insts.filter((inst) =>
-                inst.markers.some((instMarker) => markers.includes(instMarker))
-            );
-
             return {
                 success: true,
-                insts: filteredInsts,
-                totalCount: filteredInsts.length,
+                insts: instsResult.insts,
+                totalCount: instsResult.totalCount,
             };
         } catch (err) {
             console.error(

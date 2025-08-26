@@ -11520,6 +11520,56 @@ describe('WebsocketController', () => {
             });
 
             describe('with marker', () => {
+                it('should return an empty list if recordName is null', async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: ['test'],
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    });
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst2',
+                        markers: ['test'],
+                    });
+
+                    // Grant permission for 'test' marker
+                    await services.policyStore.assignPermissionToSubjectAndMarker(
+                        recordName,
+                        'user',
+                        userId,
+                        'inst',
+                        'test',
+                        'list',
+                        {},
+                        null
+                    );
+
+                    const result = await server.listInsts(
+                        null,
+                        userId,
+                        null,
+                        'test'
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        insts: [],
+                        totalCount: 0,
+                    });
+                });
+
                 it('should be able to list insts with a specific marker if the user has permission', async () => {
                     await services.records.createRecord({
                         userId,
@@ -11550,11 +11600,18 @@ describe('WebsocketController', () => {
                         'user',
                         userId,
                         'inst',
+                        'test',
                         'list',
-                        'test'
+                        {},
+                        null
                     );
 
-                    const result = await server.listInsts(recordName, userId, null, 'test');
+                    const result = await server.listInsts(
+                        recordName,
+                        userId,
+                        null,
+                        'test'
+                    );
 
                     expect(result).toEqual({
                         success: true,
@@ -11575,6 +11632,7 @@ describe('WebsocketController', () => {
                 });
 
                 it('should return not_authorized if the user does not have permission for the marker', async () => {
+                    uuidMock.mockReturnValueOnce('otherUserId');
                     const user = await createTestUser(
                         services,
                         'other@example.com'
@@ -11592,7 +11650,12 @@ describe('WebsocketController', () => {
                         markers: ['test'],
                     });
 
-                    const result = await server.listInsts(recordName, user.userId, null, 'test');
+                    const result = await server.listInsts(
+                        recordName,
+                        user.userId,
+                        null,
+                        'test'
+                    );
 
                     expect(result).toEqual({
                         success: false,
@@ -11623,7 +11686,12 @@ describe('WebsocketController', () => {
                         markers: [PRIVATE_MARKER],
                     });
 
-                    const result = await server.listInsts(recordName, userId, null, null);
+                    const result = await server.listInsts(
+                        recordName,
+                        userId,
+                        null,
+                        null
+                    );
 
                     expect(result).toEqual({
                         success: true,
