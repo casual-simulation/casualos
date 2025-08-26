@@ -10417,6 +10417,39 @@ describe('AuxLibrary', () => {
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
+
+            it('should be able to get a document with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument('docId', {
+                    markers: ['secret', 'team'],
+                });
+                const expected = loadSharedDocument(
+                    'record',
+                    'inst',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['secret', 'team']
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document from a different inst with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId',
+                    { markers: ['public', 'readonly'] }
+                );
+                const expected = loadSharedDocument(
+                    'record2',
+                    'inst2',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['public', 'readonly']
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
         });
 
         describe('os.getLocalDocument()', () => {

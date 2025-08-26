@@ -12788,31 +12788,99 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<SharedDocument>;
 
+    /**
+     * Gets a shared document from the current inst with the given options.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param name The name of the document.
+     * @param options The options for the shared document.
+     *
+     * @example Get a shared document with custom markers.
+     * const sharedDocument = await os.getSharedDocument('myDocument', {
+     *     markers: ['secret', 'team']
+     * });
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-name-options
+     */
+    function getSharedDocument(
+        name: string,
+        options: { markers?: string[] }
+    ): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document record from the given inst by its name with options.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param recordName The name of the record. If null, then a public inst will be used.
+     * @param inst The name of the inst that the shared document is in.
+     * @param branch The name of the branch that the shared document is in.
+     * @param options The options for the shared document.
+     *
+     * @example Get a shared document from the given inst with custom markers.
+     * const sharedDocument = await os.getSharedDocument('recordName', 'myInst', 'myDocument', {
+     *     markers: ['secret', 'team']
+     * });
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-recordName-inst-name-options
+     */
+    function getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string,
+        options: { markers?: string[] }
+    ): Promise<SharedDocument>;
+
     function getSharedDocument(
         recordOrName: string,
-        inst?: string,
-        name?: string
+        inst?: string | { markers?: string[] },
+        name?: string,
+        options?: { markers?: string[] }
     ): Promise<SharedDocument> {
         const task = context.createTask();
         let recordName: string;
         let instName: string;
         let branchName: string;
+        let markers: string[] | undefined;
 
-        if (!inst && !name) {
+        if (typeof inst === 'object' && !name && !options) {
+            // Called as getSharedDocument(name, options)
+            instName = getCurrentServer();
+            recordName = getCurrentInstRecord();
+            branchName = recordOrName;
+            markers = inst?.markers;
+        } else if (!inst && !name) {
+            // Called as getSharedDocument(name)
             instName = getCurrentServer();
             recordName = getCurrentInstRecord();
             branchName = recordOrName;
         } else {
+            // Called as getSharedDocument(recordName, inst, name) or getSharedDocument(recordName, inst, name, options)
+            if (typeof inst === 'object') {
+                throw new Error(
+                    'The second argument (inst) must be a string when calling getSharedDocument() with three or more arguments.'
+                );
+            }
+
             recordName = recordOrName;
             instName = inst;
             branchName = name;
+            markers = options?.markers;
         }
 
         const event = loadSharedDocument(
             recordName,
             instName,
             `doc/${branchName}`,
-            task.taskId
+            task.taskId,
+            markers
         );
 
         return addAsyncAction(task, event);
