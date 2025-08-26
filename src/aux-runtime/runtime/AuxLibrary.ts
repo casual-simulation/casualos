@@ -11846,7 +11846,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * The user must be a member of the studio to access its records.
      *
      * @param studioId The ID of the studio to list records for.
-     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used.
      *
      * @example Get the list of records in a studio
      * const result = await os.listStudioRecords('studioId123');
@@ -11862,10 +11862,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os/records
      * @docgroup 01-records
-     * @docid listStudioRecords
+     * @docid os.listStudioRecords
      * @docname os.listStudioRecords
      */
-    function listStudioRecords(studioId: string, endpoint?: string): Promise<ListRecordsResult> {
+    function listStudioRecords(
+        studioId: string,
+        endpoint?: string
+    ): Promise<ListRecordsResult> {
         let options: RecordActionOptions = {};
         if (hasValue(endpoint)) {
             options.endpoint = endpoint;
