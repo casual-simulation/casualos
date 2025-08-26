@@ -207,6 +207,7 @@ import {
     revokeInstRole,
     getFile,
     listUserStudios,
+    listStudioRecords,
     listDataRecordByMarker,
     aiChatStream,
     aiHumeGetAccessToken,
@@ -9595,6 +9596,29 @@ describe('AuxLibrary', () => {
                     'http://localhost:5000'
                 );
                 const expected = listUserStudios(
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listStudioRecords()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listStudioRecords('studioId123');
+                const expected = listStudioRecords('studioId123', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listStudioRecords(
+                    'studioId123',
+                    'http://localhost:5000'
+                );
+                const expected = listStudioRecords(
+                    'studioId123',
                     { endpoint: 'http://localhost:5000' },
                     context.tasks.size
                 );
