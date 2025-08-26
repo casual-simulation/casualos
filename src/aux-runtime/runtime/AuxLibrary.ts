@@ -301,6 +301,7 @@ import type {
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
     InstallPackageResult,
+    ListPermissionsRequest,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -374,7 +375,6 @@ import type {
     RemoteAction,
     AvailablePermissions,
     Entitlement,
-    ResourceKinds,
     VersionNumber,
 } from '@casual-simulation/aux-common';
 import {
@@ -9224,8 +9224,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the list of permissions that have been assigned in the given record.
      *
-     * See [Record Security](page:learn/records/security) for more information.
-     *
      * @param request the request containing the record name and optional filters.
      * @param options the options for the operation.
      *
@@ -9253,23 +9251,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname os.listPermissions
      */
     function listPermissions(
-        request: {
-            recordName: string;
-            marker?: string;
-            resourceKind?: ResourceKinds;
-            resourceId?: string;
-        },
-        options?: RecordActionOptions
+        request: ListPermissionsRequest
     ): Promise<ListPermissionsResult> {
         const task = context.createTask();
-        const event = calcListPermissions(
-            request.recordName,
-            options ?? {},
-            task.taskId,
-            request.marker,
-            request.resourceKind,
-            request.resourceId
-        );
+        const event = calcListPermissions(request, task.taskId);
         return addAsyncAction(task, event);
     }
 
