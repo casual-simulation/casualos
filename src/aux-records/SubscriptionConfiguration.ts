@@ -581,12 +581,21 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: z
                 .boolean()
                 .describe(
-                    'Whether search records are allowed for the subscription.'
+                    'Whether database records are allowed for the subscription.'
                 ),
             maxItems: z
                 .number()
                 .describe(
-                    'The maximum number of search records that can be created for the subscription. If not specified, then there is no limit.'
+                    'The maximum number of database records that can be created for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxBytesPerDatabase: z
+                .number()
+                .describe(
+                    'The maximum size of the database in bytes. If not specified, then there is no limit.'
                 )
                 .int()
                 .positive()

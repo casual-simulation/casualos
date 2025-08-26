@@ -21,6 +21,7 @@ import type {
     CrudSubscriptionMetrics,
 } from '../crud';
 import type { SubscriptionFilter } from '../MetricsStore';
+import type { SQliteDatabase, TursoDatabase } from './DatabaseInterface';
 
 /**
  * Defines a store that contains search records.
@@ -48,24 +49,9 @@ export interface DatabaseRecord extends CrudRecord {
     databaseProvider: 'turso' | 'sqlite';
 
     /**
-     * The ID of the turso database.
+     * The info for the database.
      */
-    tursoDatabaseId?: string;
-
-    /**
-     * The URL that can be used to access the database over libsql.
-     */
-    tursoDatabaseUrl?: string;
-
-    /**
-     * The organization that the database is in.
-     */
-    tursoOrganization?: string;
-
-    /**
-     * The name of the database file.
-     */
-    sqliteDatabaseFileName?: string;
+    databaseInfo: TursoDatabase | SQliteDatabase;
 }
 
 export interface DatabaseSubscriptionMetrics extends CrudSubscriptionMetrics {
