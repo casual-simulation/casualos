@@ -7077,15 +7077,16 @@ describe('AuxLibrary', () => {
                     recordName: 'record',
                     marker: 'secret',
                     resourceKind: 'data',
-                    resourceId: 'address'
+                    resourceId: 'address',
                 });
                 const expected = listPermissions(
-                    'record',
-                    {},
-                    context.tasks.size,
-                    'secret',
-                    'data',
-                    'address'
+                    {
+                        recordName: 'record',
+                        marker: 'secret',
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                    },
+                    context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -7093,15 +7094,13 @@ describe('AuxLibrary', () => {
 
             it('should emit a RecordsCallProcedureAction when called with only recordName', async () => {
                 const action: any = library.api.os.listPermissions({
-                    recordName: 'record'
+                    recordName: 'record',
                 });
                 const expected = listPermissions(
-                    'record',
-                    {},
-                    context.tasks.size,
-                    undefined,
-                    undefined,
-                    undefined
+                    {
+                        recordName: 'record',
+                    },
+                    context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -7110,15 +7109,14 @@ describe('AuxLibrary', () => {
             it('should emit a RecordsCallProcedureAction when called with marker only', async () => {
                 const action: any = library.api.os.listPermissions({
                     recordName: 'record',
-                    marker: 'test'
+                    marker: 'test',
                 });
                 const expected = listPermissions(
-                    'record',
-                    {},
-                    context.tasks.size,
-                    'test',
-                    undefined,
-                    undefined
+                    {
+                        recordName: 'record',
+                        marker: 'test',
+                    },
+                    context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -7128,15 +7126,15 @@ describe('AuxLibrary', () => {
                 const action: any = library.api.os.listPermissions({
                     recordName: 'record',
                     resourceKind: 'file',
-                    resourceId: 'myfile.txt'
+                    resourceId: 'myfile.txt',
                 });
                 const expected = listPermissions(
-                    'record',
-                    {},
-                    context.tasks.size,
-                    undefined,
-                    'file',
-                    'myfile.txt'
+                    {
+                        recordName: 'record',
+                        resourceKind: 'file',
+                        resourceId: 'myfile.txt',
+                    },
+                    context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -9738,8 +9736,13 @@ describe('AuxLibrary', () => {
 
         describe('os.listStudioRecords()', () => {
             it('should emit a RecordsCallProcedureAction', async () => {
-                const action: any = library.api.os.listStudioRecords('studioId123');
-                const expected = listStudioRecords('studioId123', {}, context.tasks.size);
+                const action: any =
+                    library.api.os.listStudioRecords('studioId123');
+                const expected = listStudioRecords(
+                    'studioId123',
+                    {},
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });
