@@ -186,7 +186,10 @@ export function testCrudRecordsController<
     configureEnvironment?: (
         context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
     ) => Promise<void>,
-    createOutputItem: (item: CrudRecord) => TResult = createStoreItem as any
+    createOutputItem: (item: CrudRecord) => TResult = createStoreItem as any,
+    cleanup?: (
+        context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
+    ) => void
 ) {
     let context: TestContext<TItem, TStoreItem, TStore, TController, TResult>;
     let services: TestControllers;
@@ -221,6 +224,12 @@ export function testCrudRecordsController<
 
         if (configureEnvironment) {
             await configureEnvironment(context);
+        }
+    });
+
+    afterEach(() => {
+        if (cleanup) {
+            cleanup(context);
         }
     });
 

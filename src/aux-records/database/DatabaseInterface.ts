@@ -41,42 +41,52 @@ export interface DatabaseInterface<T> {
     /**
      * Executes a read-only query on the given database.
      * @param database The database to execute the query on.
-     * @param query The SQL query to execute.
-     * @param params The parameters for the query.
+     * @param statements The statements to execute.
      * @param readonly Whether the query is read-only or not.
      */
-    execute(
+    query(
         database: T,
-        query: string,
-        params: any[],
+        statements: DatabaseStatement[],
         readonly: boolean
-    ): Promise<QueryResult>;
+    ): Promise<Result<QueryResult[], SimpleError>>;
 }
 
-export type QueryResult = Result<
-    {
-        /**
-         * The columns that were returned with the query.
-         */
-        columns: string[];
+export interface DatabaseStatement {
+    /**
+     * The query text of the statement.
+     */
+    query: string;
 
-        /**
-         * The rows that were returned with the query.
-         */
-        rows: unknown[];
+    /**
+     * The parameters for the query.
+     */
+    params?: unknown[];
+}
 
-        /**
-         * The number of rows that were affected by the query.
-         */
-        affectedRowCount: number;
+/**
+ * Defiens an interface that represents the results of a single query.
+ */
+export interface QueryResult {
+    /**
+     * The columns that were returned with the query.
+     */
+    columns: string[];
 
-        /**
-         * The ID of the last row that was inserted.
-         */
-        lastInsertId?: unknown;
-    },
-    SimpleError
->;
+    /**
+     * The rows that were returned with the query.
+     */
+    rows: unknown[];
+
+    /**
+     * The number of rows that were affected by the query.
+     */
+    affectedRowCount: number;
+
+    /**
+     * The ID of the last row that was inserted.
+     */
+    lastInsertId?: unknown;
+}
 
 export interface CreateDatabaseOptions {
     /**

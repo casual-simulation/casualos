@@ -37,8 +37,9 @@ import {
 import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import { PUBLIC_READ_MARKER, success } from '@casual-simulation/aux-common';
 import { MemoryDatabaseInterface } from './MemoryDatabaseInterface';
+import { query } from './DatabaseUtils';
 
 console.log = jest.fn();
 // console.error = jest.fn();
@@ -83,7 +84,10 @@ describe('DatabaseRecordsController', () => {
         (item) => ({
             address: item.address,
             markers: item.markers,
-        })
+        }),
+        (context) => {
+            (context.manager as any)._databaseInterface.dispose();
+        }
     );
 
     let store: MemoryStore;
@@ -148,6 +152,10 @@ describe('DatabaseRecordsController', () => {
         );
 
         store.subscriptionConfiguration = builder.config;
+    });
+
+    afterEach(async () => {
+        databaseInterface.dispose();
     });
 
     describe('recordItem()', () => {
@@ -255,6 +263,185 @@ describe('DatabaseRecordsController', () => {
             });
 
             expect(databaseInterface.databases).toEqual([]);
+        });
+    });
+
+    describe('query()', () => {
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                userId,
+                instances: [],
+            });
+        });
+
+        it('should be able to create tables', async () => {
+            const result = await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`CREATE TABLE "test" (id INTEGER PRIMARY KEY, name TEXT);`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        columns: [],
+                        rows: [],
+                        affectedRowCount: 0,
+                        lastInsertId: undefined,
+                    },
+                ])
+            );
+        });
+
+        it('should be able to insert data into tables', async () => {
+            await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`CREATE TABLE "test" (id INTEGER PRIMARY KEY, name TEXT);`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`INSERT INTO "test" (id, name) VALUES (1, \'Hello, World!\');`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        columns: [],
+                        rows: [],
+                        affectedRowCount: 1,
+                        lastInsertId: 1,
+                    },
+                ])
+            );
+        });
+
+        it('should be able to query data in tables', async () => {
+            await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`CREATE TABLE "test" (id INTEGER PRIMARY KEY, name TEXT);`,
+                    query`INSERT INTO "test" (id, name) VALUES (1, 'Hello, World!');`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [query`SELECT * FROM "test";`],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        columns: ['id', 'name'],
+                        rows: [[1, 'Hello, World!']],
+                        affectedRowCount: 0,
+                        lastInsertId: undefined,
+                    },
+                ])
+            );
+        });
+
+        it('should be able to query data in tables', async () => {
+            await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`CREATE TABLE "test" (id INTEGER PRIMARY KEY, name TEXT);`,
+                    query`INSERT INTO "test" (id, name) VALUES (1, 'Hello, World!');`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [query`SELECT * FROM "test";`],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        columns: ['id', 'name'],
+                        rows: [[1, 'Hello, World!']],
+                        affectedRowCount: 0,
+                        lastInsertId: undefined,
+                    },
+                ])
+            );
+        });
+
+        it('should be able to use parameters', async () => {
+            await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`CREATE TABLE "test" (id INTEGER PRIMARY KEY, name TEXT);`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    {
+                        query: `INSERT INTO "test" (id, name) VALUES (?, ?);`,
+                        params: [100, 'Hello, World!'],
+                    },
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        columns: [],
+                        rows: [],
+                        affectedRowCount: 1,
+                        lastInsertId: 100,
+                    },
+                ])
+            );
         });
     });
 });

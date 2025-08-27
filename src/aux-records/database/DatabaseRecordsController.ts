@@ -25,6 +25,7 @@ import type {
     AuthorizationContext,
     AuthorizeUserAndInstancesSuccess,
     AuthorizeUserAndInstancesForResourcesSuccess,
+    ResourceInfo,
 } from '../PolicyController';
 import type {
     CrudRecordsConfiguration,
@@ -44,10 +45,13 @@ import type {
 } from './DatabaseRecordsStore';
 import type {
     DatabaseInterface,
+    DatabaseStatement,
+    QueryResult,
     SQliteDatabase,
     TursoDatabase,
 } from './DatabaseInterface';
 import { v4 as uuid } from 'uuid';
+import { traced } from '../tracing/TracingDecorators';
 
 const TRACE_NAME = 'DatabaseRecordsController';
 
@@ -92,6 +96,80 @@ export class DatabaseRecordsController extends CrudRecordsController<
         });
         this._providerName = config.databaseInterfaceProviderName;
         this._databaseInterface = config.databaseInterface;
+    }
+
+    @traced(TRACE_NAME)
+    async query(
+        request: DatabaseRequest
+    ): Promise<Result<QueryResult[], SimpleError>> {
+        const baseRequest = {
+            recordKeyOrRecordName: request.recordName,
+            userId: request.userId,
+            instances: request.instances,
+        };
+
+        const context = await this.policies.constructAuthorizationContext(
+            baseRequest
+        );
+
+        if (context.success === false) {
+            return failure(context);
+        }
+
+        const item = await this.store.getItemByAddress(
+            context.context.recordName,
+            request.address
+        );
+
+        if (!item) {
+            return failure({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The item was not found.',
+            });
+        }
+
+        const markers = item.markers;
+
+        const resources: ResourceInfo[] = [
+            {
+                resourceKind: this.resourceKind,
+                resourceId: request.address,
+                markers: markers,
+                action: 'read',
+            },
+        ];
+
+        if (!request.readonly) {
+            resources.push({
+                resourceKind: this.resourceKind,
+                resourceId: request.address,
+                markers: markers,
+                action: 'update',
+            });
+        }
+
+        const authorization =
+            await this.policies.authorizeUserAndInstancesForResources(
+                context.context,
+                {
+                    userId: request.userId,
+                    instances: request.instances,
+                    resources: resources,
+                }
+            );
+
+        if (authorization.success === false) {
+            return failure(authorization);
+        }
+
+        const result = await this._databaseInterface.query(
+            item.databaseInfo,
+            request.statements,
+            request.readonly
+        );
+
+        return result;
     }
 
     protected async _eraseItemCore(
@@ -285,14 +363,9 @@ export interface DatabaseRequest {
     address: string;
 
     /**
-     * The search query.
+     * The SQL statements to execute.
      */
-    query: string;
-
-    /**
-     * The parameters for the query.
-     */
-    params: unknown[];
+    statements: DatabaseStatement[];
 
     /**
      * Whether the query should be executed in read-only mode.

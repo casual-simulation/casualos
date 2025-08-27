@@ -18,6 +18,7 @@
 
 import {
     failure,
+    isFailure,
     success,
     type Result,
     type SimpleError,
@@ -25,6 +26,7 @@ import {
 import type {
     CreateDatabaseOptions,
     DatabaseInterface,
+    DatabaseStatement,
     QueryResult,
     SQliteDatabase,
 } from './DatabaseInterface';
@@ -68,12 +70,11 @@ export class MemoryDatabaseInterface
         return success();
     }
 
-    async execute(
+    async query(
         database: SQliteDatabase,
-        query: string,
-        params: any[],
+        statements: DatabaseStatement[],
         readonly: boolean
-    ): Promise<QueryResult> {
+    ): Promise<Result<QueryResult[], SimpleError>> {
         try {
             const db = this._databases.get(database.filePath);
 
@@ -84,36 +85,50 @@ export class MemoryDatabaseInterface
                 });
             }
 
-            const q = db.prepare(query);
+            const results: QueryResult[] = [];
 
-            if (q.reader) {
-                q.raw(true);
-                const columns = q.columns();
-                const rows = q.all(params);
+            const transactionResult = db.transaction(() => {
+                for (let s of statements) {
+                    const q = db.prepare(s.query);
 
-                return success({
-                    columns: columns.map((c) => c.name),
-                    rows,
-                    affectedRowCount: 0,
-                });
-            } else {
-                if (readonly && !q.readonly) {
-                    return failure({
-                        errorCode: 'invalid_request',
-                        errorMessage:
-                            'The query is not allowed in read-only mode.',
-                    });
+                    if (q.reader) {
+                        q.raw(true);
+                        const columns = q.columns();
+                        const rows = q.all(s.params);
+
+                        results.push({
+                            columns: columns.map((c) => c.name),
+                            rows,
+                            affectedRowCount: 0,
+                        });
+                    } else {
+                        if (readonly && !q.readonly) {
+                            return failure({
+                                errorCode: 'invalid_request',
+                                errorMessage:
+                                    'The query is not allowed in read-only mode.',
+                            } as SimpleError);
+                        }
+
+                        const result = q.run(s.params);
+
+                        results.push({
+                            columns: [],
+                            rows: [],
+                            affectedRowCount: result.changes,
+                            lastInsertId: result.lastInsertRowid || undefined,
+                        });
+                    }
                 }
 
-                const result = q.run(params);
+                return success();
+            })();
 
-                return success({
-                    columns: [],
-                    rows: [],
-                    affectedRowCount: result.changes,
-                    lastInsertId: result.lastInsertRowid,
-                });
+            if (isFailure(transactionResult)) {
+                return transactionResult;
             }
+
+            return success(results);
         } catch (err) {
             if (err instanceof BetterSQlite3.SqliteError) {
                 return failure({
