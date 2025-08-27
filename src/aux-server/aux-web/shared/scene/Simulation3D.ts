@@ -40,6 +40,7 @@ import {
 import type { SubscriptionLike, Observable } from 'rxjs';
 import { Subject, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
+import { flatMap } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Event';
 import type { CameraRig } from './CameraRigFactory';
 import type { Game } from './Game';
@@ -175,7 +176,7 @@ export abstract class Simulation3D
      * Gets the list of bots that are in this simulation.
      */
     get bots() {
-        return [...this._botMap.values()].flatMap((a) => a);
+        return flatMap([...this._botMap.values()]);
     }
 
     /**
@@ -556,7 +557,11 @@ export abstract class Simulation3D
     }
 
     private _localEvent(e: RuntimeActions): void {
-        if (e.type === 'local_form_animation') {
+        if (
+            e.type === 'local_form_animation' ||
+            e.type === 'add_bot_map_layer' ||
+            e.type === 'remove_bot_map_layer'
+        ) {
             this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {
             this._queueEventForBot(e, e.botId, e.dimension);

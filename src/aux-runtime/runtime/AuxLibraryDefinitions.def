@@ -3704,206 +3704,6 @@ export interface ListDataOptions extends RecordActionOptions {
     sort?: 'ascending' | 'descending';
 }
 
-/**
- * Defines a node that search clients can use to connect to the search engine.
- *
- * @dochash types/records/search
- * @docname SearchNode
- */
-export interface SearchNode {
-    /**
-     * The host of the node.
-     */
-    host: string;
-
-    /**
-     * The port number of the node.
-     */
-    port: number;
-
-    /**
-     * The protocol to use when connecting to the node.
-     */
-    protocol?: 'http' | 'https';
-}
-
-/**
- * Defines a record that represents a collection of documents that can be searched.
- *
- * @dochash types/records/search
- * @docName SearchRecord
- */
-export interface SearchRecord extends CrudRecord {
-    /**
-     * The name of the collection that this search record is attached to.
-     */
-    collectionName: string;
-
-    /**
-     * The API key that is used to query the collection.
-     */
-    searchApiKey: string;
-
-    /**
-     * The search nodes that should be used by clients to connect to the search engine.
-     */
-    nodes?: SearchNode[];
-}
-
-
-export interface RecordSearchCollectionApiRequest {
-    /**
-     * The name of the record that the package version should be recorded to.
-     */
-    recordName: string;
-
-    /**
-     * The address that the package version should be recorded to.
-     */
-    address: string;
-
-    /**
-     * The schema that should be used for the collection.
-     */
-    schema: SearchCollectionSchema;
-
-    /**
-     * The markers that should be applied to the package version.
-     */
-    markers?: string[];
-}
-
-
-/**
- * Defines a field for a search collection schema.
- * 
- * @dochash types/records/search
- * @docname SearchCollectionField
- */
-export interface SearchCollectionField {
-    /**
-     * The type of the field.
-     */
-    type:
-        | 'string'
-        | 'string[]'
-        | 'int32'
-        | 'int32[]'
-        | 'int64'
-        | 'int64[]'
-        | 'float'
-        | 'float[]'
-        | 'bool'
-        | 'bool[]'
-        | 'geopoint'
-        | 'geopoint[]'
-        | 'geopolygon'
-        | 'object'
-        | 'object[]'
-        | 'string*'
-        | 'image'
-        | 'auto';
-
-    /**
-     * Enables faceting on the field.
-     *
-     * Defaults to `false`.
-     */
-    facet?: boolean;
-
-    /**
-     * When set to `true`, the field can have empty, null or missing values. Default: `false`.
-     */
-    optional?: boolean;
-
-    /**
-     * When set to `false`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: `true`.
-     */
-    index?: boolean;
-
-    /**
-     * When set to `false`, the field value will not be stored on disk. Default: `true`.
-     */
-    store?: boolean;
-
-    /**
-     * When set to true, the field will be sortable. Default: `true` for numbers, `false` otherwise.
-     */
-    sort?: boolean;
-
-    /**
-     * When set to `true`, the field value can be infix-searched. Incurs significant memory overhead. Default: `false`.
-     */
-    infix?: boolean;
-
-    /**
-     * For configuring language specific tokenization, e.g. `jp` for Japanese. Default: `en` which also broadly supports most European languages.
-     */
-    locale?: string;
-}
-
-/**
- * Defines the schema for a search collection.
- * 
- * @dochash types/records/search
- * @docName SearchCollectionSchema
- */
-export interface SearchCollectionSchema {
-    /**
-     * The schema that defines the fields in the search collection.
-     */
-    [key: string]: SearchCollectionField;
-}
-
-/**
- * Defines a document that can be stored in a search collection.
- * 
- * @dochash types/records/search
- * @docname SearchDocument
- */
-export interface SearchDocument {
-    /**
-     * The ID of the document.
-     * If not provided, a new ID will be generated.
-     */
-    id?: string;
-
-    /**
-     * The properties of the document.
-     */
-    [key: string]: any;
-}
-
-export type RecordSearchDocumentResult = RecordSearchDocumentSuccess | RecordSearchDocumentFailure;
-
-export interface RecordSearchDocumentSuccess extends SearchDocument {
-    success: true;
-}
-
-export interface RecordSearchDocumentFailure {
-    success: false;
-    errorCode: string;
-    errorMessage: string;
-}
-
-export type EraseSearchDocumentResult = EraseSearchDocumentSuccess | EraseSearchDocumentFailure;
-
-export interface EraseSearchDocumentSuccess extends SearchDocument {
-    success: true;
-}
-
-export interface EraseSearchDocumentFailure {
-    success: false;
-    errorCode: string;
-    errorMessage: string;
-}
-
-export interface RecordSearchDocumentApiRequest {
-    recordName: string;
-    address: string;
-    document: SearchDocument;
-}
-
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
 export interface RecordDataSuccess {
@@ -11511,11 +11311,6 @@ export interface SharedDocument extends SubscriptionLike {
     onEvents: Observable<Action[]>;
 
     /**
-     * Gets the observable list of updates from the partition.
-     */
-    onUpdates: Observable<string[]>;
-
-    /**
      * Gets the observable list of status updates from the partition.
      */
     onStatusUpdated: Observable<StatusUpdate>;
@@ -11576,12 +11371,6 @@ export interface SharedDocument extends SubscriptionLike {
      * @param updates The updates to apply.
      */
     applyStateUpdates(updates: InstUpdate[]): void;
-
-    /**
-     * Applies the given raw updates to the document.
-     * @param updates The updates to apply.
-     */
-    applyUpdates(updates: string[]): void;
 }
 
 export type SharedType = SharedMap | SharedArray | SharedText;
@@ -11721,7 +11510,7 @@ export interface SharedArray<T = any> extends SharedTypeBase {
      * Applies the given delta to the array.
      * @param delta The delta to apply.
      */
-    applyDelta(delta: SharedArrayOp<T>[]): void;
+    applyDelta(delta: SharedArrayDelta<T>): void;
 
     /**
      * Append items to the end of the array.
@@ -11941,8 +11730,10 @@ export interface SharedArrayChanges<T> {
     /**
      * The changes that were made to the array.
      */
-    delta: SharedArrayOp<T>[];
+    delta: SharedArrayDelta<T>;
 }
+
+export type SharedArrayDelta<T> = SharedArrayOp<T>[];
 
 export type SharedArrayOp<T> =
     | SharedArrayPreserveOp
@@ -15418,192 +15209,6 @@ interface Os {
     listInstalledPackages(options?: RecordActionOptions): Promise<ListInstalledPackagesResult>;
 
     /**
-     * Creates or updates a search collection in the given record.
-     * 
-     * Returns a promise that resolves with the result of the operation.
-     * 
-     * @param request The request to create or update the search collection.
-     * @param options the options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     * 
-     * @example Record a search collection with an automatic schema
-     * const result = await os.recordSearchCollection({
-     *      recordName: 'myRecord',
-     *      address: 'mySearchCollection',
-     *      schema: {
-     *          '.*': {
-     *              type: 'auto'
-     *           }
-     *      }
-     * });
-     * 
-     * @example Record a search collection with a custom schema
-     * const result = await os.recordSearchCollection({
-     *      recordName: 'myRecord',
-     *      address: 'mySearchCollection',
-     *      schema: {
-               title: {
-                  type: 'string',
-               },
-               description: {
-                  type: 'string',
-               },
-               price: {
-                  type: 'int32',
-               }
-     *      }
-     * });
-     * 
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.recordSearchCollection
-     */
-    recordSearchCollection(
-        request: RecordSearchCollectionApiRequest,
-        options?: RecordActionOptions
-    ): Promise<CrudRecordItemResult>;
-
-    /**
-     * Deletes a search collection along with all the documents in it.
-     *
-     * Returns a promise that resolves with the result of the operation.
-     *
-     * @param recordName The name of the record to delete the search collection from.
-     * @param address The address of the search collection to delete.
-     * @param options the options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     *
-     * @example Erase a search collection
-     * const result = await os.eraseSearchCollection('recordName', 'mySearchCollection');
-     *
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.eraseSearchCollection
-     */
-    eraseSearchCollection(
-        recordName: string,
-        address: string,
-        options?: RecordActionOptions
-    ): Promise<CrudRecordItemResult>;
-
-    /**
-     * Lists the search collections in a record.
-     *
-     * Returns a promise that resolves with the result of the operation.
-     *
-     * @param recordName The name of the record to delete the search collection from.
-     * @param startingAddress the address that the listing should start after.
-     * @param options the options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     *
-     * @example List search collections
-     * const result = await os.listSearchCollections('recordName', 'mySearchCollection');
-     *
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.listSearchCollections
-     */
-    listSearchCollections(
-        recordName: string,
-        startingAddress?: string,
-        options?: ListDataOptions
-    ): Promise<CrudRecordItemResult>;
-
-    /**
-     * Lists the search collections in a record by a specific marker.
-     * @param recordName The name of the record to list the search collections from.
-     * @param marker The marker to filter the list by.
-     * @param startingAddress The address that the listing should start after.
-     * @param options The options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     *
-     * @example List public read search collections
-     * const result = await os.listSearchCollectionsByMarker('recordName', 'publicRead');
-     *
-     * @example List private search collections
-     * const result = await os.listSearchCollectionsByMarker('recordName', 'private');
-     *
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.listSearchCollectionsByMarker
-     */
-    listSearchCollectionsByMarker(
-        recordName: string,
-        marker: string,
-        startingAddress?: string,
-        options?: ListDataOptions
-    ): Promise<CrudListItemsResult<SearchRecord>>;
-
-    /**
-     * Gets a search collection from the specified record.
-     * @param recordName The name of the record to retrieve the search collection from.
-     * @param address The address of the search collection to retrieve.
-     * @param options The options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     *
-     * @example Get a search collection
-     * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
-     *
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.getSearchCollection
-     */
-    getSearchCollection(
-        recordName: string,
-        address: string,
-        options?: RecordActionOptions,
-    ): Promise<CrudGetItemResult<SearchRecord>>;
-
-    /**
-     * Records a search document to the specified search collection in the given record.
-     * @param request The request to record the search document.
-     * @param options The options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     *
-     * @example Record a search document
-     * const result = await os.recordSearchDocument({
-     *    recordName: 'myRecord',
-     *    address: 'mySearchCollection',
-     *    document: {
-     *      // ensure that the document matches the schema of the search collection
-     *      title: 'My Document',
-     *      description: 'This is the content of my document.'
-     *      price: 10,
-     *    }
-     * });
-     *
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.recordSearchDocument
-     */
-    recordSearchDocument(
-        request: RecordSearchDocumentApiRequest,
-        options?: RecordActionOptions
-    ): Promise<RecordSearchDocumentResult>;
-
-    /**
-     * Erases a search document from the specified search collection in the given record.
-     * @param recordName The name of the record that the search document is in.
-     * @param address The address of the search collection that the document is in.
-     * @param documentId The ID of the document that should be erased.
-     * @param options The options for the request.
-     * @returns A promise that resolves with the result of the operation.
-     *
-     * @example Erase a search document
-     * const result = await os.eraseSearchDocument('myRecord', 'mySearchCollection', 'documentId');
-     *
-     * @dochash actions/os/records
-     * @docgroup 02-search
-     * @docname os.eraseSearchDocument
-     */
-    eraseSearchDocument(
-        recordName: string,
-        address: string,
-        documentId: string,
-        options?: RecordActionOptions
-    ): Promise<EraseSearchDocumentResult>;
-
-    /**
      * Gets the list of studios that the currently logged in user has access to.
      * 
      * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
@@ -15886,66 +15491,30 @@ interface Os {
 
     /**
      * Gets a shared document record from this inst by its name.
-     *
+     * 
      * Shared documents are a way to share data across insts in a easy and secure manner.
-     *
+     * 
      * Returns a promise that resolves with the shared document.
-     *
+     * 
      * @param name The name of the shared document.
-     *
+     * 
      * @example Get a shared document from the current inst by name.
      * const sharedDocument = await os.getSharedDocument('myDocument');
-     *
-     * @dochash actions/os/documents
-     * @doctitle Document Actions
-     * @docsidebar Documents
-     * @docdescription Actions for working with shared documents.
-     * @docname os.getSharedDocument
-     * @docid os.getShareDocument-name
      */
     getSharedDocument(name: string): Promise<SharedDocument>;
 
     /**
      * Gets a shared document record from the given inst by its name.
-     *
+     * 
      * Shared documents are a way to share data across insts in a easy and secure manner.
-     *
+     * 
      * Returns a promise that resolves with the shared document.
      * @param recordName The name of the record. If null, then a public inst will be used.
      * @param inst The name of the inst that the shared document is in.
      * @param branch The name of the branch that the shared document is in.
-     *
-     * @dochash actions/os/documents
-     * @docname os.getSharedDocument
-     * @docid os.getSharedDocument-recordName-inst-name
      */
-    getSharedDocument(
-        recordName: string | null,
-        inst: string,
-        name: string
-    ): Promise<SharedDocument>;
-    getSharedDocument(
-        recordOrName: string,
-        inst?: string,
-        name?: string
-    ): Promise<SharedDocument>;
-
-    /**
-     * Gets a shared document that is only stored locally on this device.
-     * @param name The name of the document.
-     *
-     * @dochash actions/os/documents
-     * @docname os.getLocalDocument
-     */
-    getLocalDocument(name: string): Promise<SharedDocument>;
-
-    /**
-     * Gets a document that is not shared or saved to the device.
-     *
-     * @dochash actions/os/documents
-     * @docname os.getMemoryDocument
-     */
-    getMemoryDocument(): Promise<SharedDocument>;
+    getSharedDocument(recordName: string | null, inst: string, name: string): Promise<SharedDocument>;
+    getSharedDocument(recordOrName: string, inst?: string, name?: string): Promise<SharedDocument>;
 
     /**
     * Gets the list of remote IDs that are connected to the inst.
@@ -16823,6 +16392,27 @@ interface Experiment {
      * Returns a promise that resolves with the voices.
      */
     getVoices(): Promise<SyntheticVoice[]>;
+
+    /**
+     * Adds a map overlay to the given bot's map form.
+     * @param bot The bot that the overlay should be added to.
+     * @param overlayLayer Configuration for the overlay layer to add.
+     */
+    addBotMapLayer(
+        bot: Bot,
+        overlay: {
+            overlayType: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
+
+    /**
+     * Removes a map overlay from the given bot's map form.
+     * @param bot The bot that the overlay should be removed from.
+     * @param overlayId Id of the overlay to remove.
+     */
+    removeBotMapLayer(bot: Bot, overlayId: string): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
 };
 
 

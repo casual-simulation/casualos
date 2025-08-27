@@ -136,6 +136,7 @@
         "chokidar": "3.5.2",
         "concurrently": "8.2.2",
         "del": "7.0.0",
+        "es-toolkit": "1.39.10",
         "esbuild": "^0.19.8",
         "esbuild-copy-static-files": "0.1.0",
         "eslint": "^9.22.0",
@@ -180,8 +181,7 @@
         "typescript-eslint": "^8.26.1",
         "unified": "11.0.4",
         "vue-template-compiler": "^2.6.14",
-        "wait-on": "7",
-        "es-toolkit": "1.39.10"
+        "wait-on": "7"
     },
     "engines": {
         "node": ">=v20.18",
@@ -236,5 +236,8 @@
         "*.{js,jsx,ts,tsx,vue}": [
             "eslint --fix"
         ]
+    },
+    "dependencies": {
+        "@turf/turf": "^7.2.0"
     }
 }
