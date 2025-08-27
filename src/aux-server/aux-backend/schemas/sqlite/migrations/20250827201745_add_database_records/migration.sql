@@ -2,6 +2,7 @@
 CREATE TABLE "DatabaseRecord" (
     "recordName" TEXT NOT NULL,
     "address" TEXT NOT NULL,
+    "databaseName" TEXT NOT NULL,
     "databaseProvider" TEXT NOT NULL,
     "tursoDatabaseId" TEXT NOT NULL,
     "tursoOrganization" TEXT NOT NULL,

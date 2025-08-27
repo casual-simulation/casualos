@@ -1144,6 +1144,8 @@ model DatabaseRecord {
     record Record @relation(fields: [recordName], references: [name], onDelete: Cascade, map: "DatabaseRecord_recordName_fkey1")
     
     address String @db.String(100)
+
+    databaseName String @db.String(32)
     
     // The provider for the database
     // For now, this must be "turso"

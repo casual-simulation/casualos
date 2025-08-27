@@ -2,9 +2,10 @@
 CREATE TABLE "public"."DatabaseRecord" (
     "recordName" STRING(128) NOT NULL,
     "address" STRING(100) NOT NULL,
+    "databaseName" STRING(32) NOT NULL,
     "databaseProvider" STRING NOT NULL,
-    "tursoDatabaseId" STRING NOT NULL,
-    "tursoOrganization" STRING NOT NULL,
+    "databaseInfo" JSONB NOT NULL,
+    "markers" STRING[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

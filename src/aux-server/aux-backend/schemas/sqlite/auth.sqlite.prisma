@@ -1145,6 +1145,8 @@ model DatabaseRecord {
     
     address String
 
+    databaseName String
+
     // The provider for the database
     // For now, this must be "turso"
     databaseProvider String
