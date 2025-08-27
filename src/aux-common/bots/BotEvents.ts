@@ -5690,7 +5690,7 @@ export function getVoices(taskId?: string | number): GetVoicesAction {
  * @param options
  * @param taskId
  */
-export function addBotMapOverlay(
+export function addBotMapLayer(
     bot: Bot,
     overlayConfig: AddBotMapLayerAction['overlay'],
     taskId?: string | number
@@ -5703,7 +5703,7 @@ export function addBotMapOverlay(
     };
 }
 
-export function removeBotMapOverlay(
+export function removeBotMapLayer(
     bot: Bot,
     overlayId: string,
     taskId?: string | number
