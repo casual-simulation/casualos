@@ -1151,11 +1151,9 @@ model DatabaseRecord {
     // For now, this must be "turso"
     databaseProvider String
 
-    // The ID of the database in turso
-    tursoDatabaseId String
+    databaseInfo Json
 
-    // The turso organization that the database is in
-    tursoOrganization String
+    markers Json
 
     createdAt Decimal
     updatedAt Decimal
