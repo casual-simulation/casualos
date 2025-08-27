@@ -531,7 +531,8 @@ export type EntitlementFeature =
     | 'permissions'
     | 'webhook'
     | 'ai'
-    | 'search';
+    | 'search'
+    | 'database';
 
 /**
  * Defines an interface that represents an entitlement.
@@ -577,6 +578,7 @@ export const ENTITLEMENT_FEATURE_VALIDATION = z.enum([
     'webhook',
     'ai',
     'search',
+    'database',
 ]);
 
 export const ENTITLEMENT_VALIDATION = z.object({

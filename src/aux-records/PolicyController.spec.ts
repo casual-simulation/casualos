@@ -3449,6 +3449,7 @@ describe('PolicyController', () => {
             ['package'],
             ['package.version'],
             ['search'],
+            ['database'],
         ];
 
         // Admins can perform all actions on all resources
@@ -4826,6 +4827,28 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            [
+                'database',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -5399,6 +5422,17 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
+            [
+                'database',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -5491,6 +5525,13 @@ describe('PolicyController', () => {
             ],
             [
                 'search',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'database',
                 [
                     ['read', 'resourceId'],
                     ['list', null],
@@ -5632,6 +5673,13 @@ describe('PolicyController', () => {
             ],
             [
                 'search',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'database',
                 [
                     ['read', 'resourceId'],
                     ['list', null],
@@ -6345,6 +6393,7 @@ describe('PolicyController', () => {
                 ['webhook', ['webhook']],
                 ['ai', ['ai.sloyd', 'ai.hume']],
                 ['search', ['search']],
+                ['database', ['database']],
             ];
 
             const instRecordName = 'instRecord';
