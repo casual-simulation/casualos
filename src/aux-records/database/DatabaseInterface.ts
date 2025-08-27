@@ -43,11 +43,13 @@ export interface DatabaseInterface<T> {
      * @param database The database to execute the query on.
      * @param statements The statements to execute.
      * @param readonly Whether the query is read-only or not.
+     * @param automaticTransaction Whether to automatically wrap the statements in a transaction if there are multiple statements.
      */
     query(
         database: T,
         statements: DatabaseStatement[],
-        readonly: boolean
+        readonly: boolean,
+        automaticTransaction: boolean
     ): Promise<Result<QueryResult[], SimpleError>>;
 }
 

@@ -166,7 +166,8 @@ export class DatabaseRecordsController extends CrudRecordsController<
         const result = await this._databaseInterface.query(
             item.databaseInfo,
             request.statements,
-            request.readonly
+            request.readonly,
+            request.automaticTransaction ?? true
         );
 
         return result;
@@ -373,6 +374,13 @@ export interface DatabaseRequest {
      * This is a safety switch that helps prevent accidental modifications to the database.
      */
     readonly: boolean;
+
+    /**
+     * Whether to automatically wrap the statements in a transaction if there are multiple statements.
+     *
+     * Defaults to true.
+     */
+    automaticTransaction?: boolean;
 
     /**
      * The ID of the user that is currently logged in.

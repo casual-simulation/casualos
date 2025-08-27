@@ -18,7 +18,6 @@
 
 import {
     failure,
-    isFailure,
     success,
     type Result,
     type SimpleError,
@@ -73,7 +72,8 @@ export class MemoryDatabaseInterface
     async query(
         database: SQliteDatabase,
         statements: DatabaseStatement[],
-        readonly: boolean
+        readonly: boolean,
+        automaticTransaction: boolean
     ): Promise<Result<QueryResult[], SimpleError>> {
         try {
             const db = this._databases.get(database.filePath);
@@ -87,45 +87,51 @@ export class MemoryDatabaseInterface
 
             const results: QueryResult[] = [];
 
-            const transactionResult = db.transaction(() => {
-                for (let s of statements) {
-                    const q = db.prepare(s.query);
+            let hasTransaction = false;
+            if (automaticTransaction) {
+                db.exec('BEGIN;');
+                hasTransaction = true;
+            }
 
-                    if (q.reader) {
-                        q.raw(true);
-                        const columns = q.columns();
-                        const rows = q.all(s.params);
+            for (let s of statements) {
+                const q = db.prepare(s.query);
 
-                        results.push({
-                            columns: columns.map((c) => c.name),
-                            rows,
-                            affectedRowCount: 0,
-                        });
-                    } else {
-                        if (readonly && !q.readonly) {
-                            return failure({
-                                errorCode: 'invalid_request',
-                                errorMessage:
-                                    'The query is not allowed in read-only mode.',
-                            } as SimpleError);
+                if (q.reader) {
+                    q.raw(true);
+                    const columns = q.columns();
+                    const rows = q.all(s.params);
+
+                    results.push({
+                        columns: columns.map((c) => c.name),
+                        rows,
+                        affectedRowCount: 0,
+                    });
+                } else {
+                    if (readonly && !q.readonly) {
+                        if (hasTransaction) {
+                            db.exec('ROLLBACK;');
                         }
 
-                        const result = q.run(s.params);
-
-                        results.push({
-                            columns: [],
-                            rows: [],
-                            affectedRowCount: result.changes,
-                            lastInsertId: result.lastInsertRowid || undefined,
-                        });
+                        return failure({
+                            errorCode: 'invalid_request',
+                            errorMessage:
+                                'Queries that modify data are not allowed in read-only mode.',
+                        } as SimpleError);
                     }
+
+                    const result = q.run(s.params);
+
+                    results.push({
+                        columns: [],
+                        rows: [],
+                        affectedRowCount: result.changes,
+                        lastInsertId: result.lastInsertRowid || undefined,
+                    });
                 }
+            }
 
-                return success();
-            })();
-
-            if (isFailure(transactionResult)) {
-                return transactionResult;
+            if (hasTransaction) {
+                db.exec('COMMIT;');
             }
 
             return success(results);

@@ -37,7 +37,11 @@ import {
 import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
-import { PUBLIC_READ_MARKER, success } from '@casual-simulation/aux-common';
+import {
+    failure,
+    PUBLIC_READ_MARKER,
+    success,
+} from '@casual-simulation/aux-common';
 import { MemoryDatabaseInterface } from './MemoryDatabaseInterface';
 import { query } from './DatabaseUtils';
 
@@ -441,6 +445,41 @@ describe('DatabaseRecordsController', () => {
                         lastInsertId: 100,
                     },
                 ])
+            );
+        });
+
+        it('should reject queries that modify data in a readonly transaction', async () => {
+            await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    query`CREATE TABLE "test" (id INTEGER PRIMARY KEY, name TEXT);`,
+                ],
+                readonly: false,
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item1',
+                statements: [
+                    {
+                        query: `INSERT INTO "test" (id, name) VALUES (?, ?);`,
+                        params: [100, 'Hello, World!'],
+                    },
+                ],
+                readonly: true,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'Queries that modify data are not allowed in read-only mode.',
+                })
             );
         });
     });
