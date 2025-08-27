@@ -156,6 +156,7 @@ import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/record
 import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
+import type { DatabaseRecordsController } from './database';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -410,6 +411,12 @@ export interface RecordsServerOptions {
      * If null, then search records are not supported.
      */
     searchRecordsController?: SearchRecordsController | null;
+
+    /**
+     * The controller that should be used for handling database records.
+     * If null, then database records are not supported.
+     */
+    databaseRecordsController?: DatabaseRecordsController | null;
 }
 
 /**
@@ -433,6 +440,7 @@ export class RecordsServer {
     private _packagesController: PackageRecordsController | null;
     private _packageVersionController: PackageVersionRecordsController | null;
     private _searchRecordsController: SearchRecordsController | null;
+    private _databaseRecordsController: DatabaseRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -503,6 +511,7 @@ export class RecordsServer {
         packagesController,
         packageVersionController,
         searchRecordsController,
+        databaseRecordsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -527,6 +536,7 @@ export class RecordsServer {
         this._packagesController = packagesController;
         this._packageVersionController = packageVersionController;
         this._searchRecordsController = searchRecordsController;
+        this._databaseRecordsController = databaseRecordsController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2899,6 +2909,42 @@ export class RecordsServer {
                         return genericResult(result);
                     }
                 ),
+
+            recordDatabase: recordItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    markers: MARKERS_VALIDATION,
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/database')
+            ),
+
+            getDatabase: getItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/database')
+            ),
+
+            eraseDatabase: eraseItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/database')
+            ),
+
+            listDatabases: listItemsProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/database/list')
+            ),
 
             listRecords: procedure()
                 .origins('api')

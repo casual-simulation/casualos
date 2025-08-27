@@ -241,6 +241,84 @@ describe('DatabaseRecordsController', () => {
         });
     });
 
+    describe('getItem()', () => {
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                userId,
+                instances: [],
+            });
+        });
+
+        it('should not include extra info', async () => {
+            const result = await manager.getItem({
+                recordName,
+                address: 'item1',
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+            });
+        });
+    });
+
+    describe('listItems()', () => {
+        beforeEach(async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item1',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                userId,
+                instances: [],
+            });
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                userId,
+                instances: [],
+            });
+        });
+
+        it('should not include extra info', async () => {
+            const result = await manager.listItems({
+                recordName,
+                userId,
+                instances: [],
+            });
+
+            expect(result).toEqual({
+                success: true,
+                items: [
+                    {
+                        address: 'item1',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    {
+                        address: 'item2',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                ],
+                recordName,
+                totalCount: 2,
+            });
+        });
+    });
+
     describe('eraseItem()', () => {
         beforeEach(async () => {
             await manager.recordItem({

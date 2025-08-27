@@ -188,6 +188,11 @@ import { MemorySearchRecordsStore } from './search/MemorySearchRecordsStore';
 import { MemorySearchInterface } from './search/MemorySearchInterface';
 import type { SearchSyncQueueEvent } from './search/SearchSyncProcessor';
 import { MemoryQueue } from './queue/MemoryQueue';
+import {
+    DatabaseRecordsController,
+    MemoryDatabaseRecordsStore,
+} from './database';
+import { MemoryDatabaseInterface } from './database/MemoryDatabaseInterface';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -368,6 +373,10 @@ describe('RecordsServer', () => {
     let searchInterface: MemorySearchInterface;
     let searchQueue: MemoryQueue<SearchSyncQueueEvent>;
     let searchRecordsController: SearchRecordsController;
+
+    let databaseRecordsStore: MemoryDatabaseRecordsStore;
+    let databaseInterface: MemoryDatabaseInterface;
+    let databaseController: DatabaseRecordsController;
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
@@ -815,6 +824,16 @@ describe('RecordsServer', () => {
             policies: policyController,
         });
 
+        databaseRecordsStore = new MemoryDatabaseRecordsStore(store);
+        databaseInterface = new MemoryDatabaseInterface();
+        databaseController = new DatabaseRecordsController({
+            config: store,
+            store: databaseRecordsStore,
+            databaseInterface,
+            databaseInterfaceProviderName: 'sqlite',
+            policies: policyController,
+        });
+
         server = new RecordsServer({
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -838,6 +857,7 @@ describe('RecordsServer', () => {
             packagesController: packageController,
             packageVersionController: packageVersionController,
             searchRecordsController: searchRecordsController,
+            databaseRecordsController: databaseController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -16635,6 +16655,526 @@ describe('RecordsServer', () => {
                         queryBy: 'title,content',
                     },
                 }),
+            () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/database', () => {
+        it('should return not_supported if the database controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/database`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should create a database record', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/database`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'address',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'address',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/database',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/database', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+            });
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                },
+            });
+        });
+
+        it('should return the info about the database', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/database?recordName=${recordName}&address=${'address'}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/database?recordName=${recordName}&address=${'address'}`,
+                apiHeaders
+            )
+        );
+
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/database?recordName=${recordName}&address=${'address2'}`,
+                apiHeaders
+            )
+        );
+    });
+
+    describe('DELETE /api/v2/records/database', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+            });
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                },
+            });
+        });
+
+        it('should return not_supported if the database controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/database`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 403 if the user is not authorized', async () => {
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/database`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'search',
+                        resourceId: 'address',
+                        subjectType: 'user',
+                        subjectId: userId,
+                        action: 'delete',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the search record was not deleted
+            const item = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'address'
+            );
+            expect(item).toBeTruthy();
+        });
+
+        it('should delete a database record', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/database`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'address',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            // Verify the search record was deleted
+            const item = await searchRecordsStore.getItemByAddress(
+                recordName,
+                'address'
+            );
+            expect(item).toBeNull();
+        });
+
+        it('should return not_found if the database record does not exist', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/database`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'nonexistent',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/database',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'address',
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/database/list', () => {
+        beforeEach(async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address1',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+            });
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address2',
+                    markers: [PRIVATE_MARKER],
+                },
+            });
+
+            await databaseController.recordItem({
+                recordKeyOrRecordName: recordName,
+                userId,
+                instances: [],
+                item: {
+                    address: 'address3',
+                    markers: ['secret'],
+                },
+            });
+        });
+
+        it('should list all databases when no marker is specified', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/database/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address1',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'address2',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'address3',
+                            markers: ['secret'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        describe('?marker', () => {
+            it('should list databases filtered by marker', async () => {
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/database/list?recordName=${recordName}&marker=${PUBLIC_READ_MARKER}`,
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        recordName,
+                        items: [
+                            {
+                                address: 'address1',
+                                markers: [PUBLIC_READ_MARKER],
+                            },
+                        ],
+                        totalCount: 1,
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return not_authorized if the user does not have access to the marker', async () => {
+                delete store.roles[recordName];
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/records/database/list?recordName=${recordName}&marker=secret`,
+                        apiHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'database',
+                            action: 'list',
+                            subjectType: 'user',
+                            subjectId: userId,
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        it('should return not_authorized if the user does not have access to the record', async () => {
+            delete store.roles[recordName];
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/database/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'database',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_supported if the search controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/database/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/database/list?recordName=${recordName}`,
+            () => null,
             () => apiHeaders
         );
     });

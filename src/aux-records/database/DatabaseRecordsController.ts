@@ -207,6 +207,17 @@ export class DatabaseRecordsController extends CrudRecordsController<
         };
     }
 
+    protected async _convertItemsToResults(
+        items: DatabaseRecord[],
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): Promise<DatabaseRecordOutput[]> {
+        return items.map((i) => ({
+            address: i.address,
+            markers: i.markers,
+        }));
+    }
+
     protected async _transformInputItem(
         item: DatabaseRecordInput,
         existingItem: DatabaseRecord,

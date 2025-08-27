@@ -844,7 +844,7 @@ export function testCrudRecordsController<
     });
 
     describe('listItems()', () => {
-        let items: TStoreItem[];
+        let items: TResult[];
         beforeEach(async () => {
             items = [];
             for (let i = 0; i < 20; i++) {
@@ -853,7 +853,12 @@ export function testCrudRecordsController<
                     markers: [PRIVATE_MARKER],
                 });
                 await itemsStore.createItem(recordName, item);
-                items.push(item);
+                items.push(
+                    createOutputItem({
+                        address: item.address,
+                        markers: item.markers,
+                    })
+                );
             }
         });
 
@@ -974,7 +979,7 @@ export function testCrudRecordsController<
     });
 
     describe('listItemsByMarker()', () => {
-        let items: TStoreItem[];
+        let items: TResult[];
         beforeEach(async () => {
             items = [];
             for (let i = 0; i < 40; i++) {
@@ -985,7 +990,12 @@ export function testCrudRecordsController<
                     ],
                 });
                 await itemsStore.createItem(recordName, item);
-                items.push(item);
+                items.push(
+                    createOutputItem({
+                        address: item.address,
+                        markers: item.markers,
+                    })
+                );
             }
         });
 
