@@ -50,7 +50,13 @@ export interface TestContext<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 > {
     services: TestControllers;
     store: MemoryStore;
@@ -74,14 +80,20 @@ export async function setupTestContext<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 >(
     storeFactory: (services: TestControllers) => TStore,
     controllerFactory: (
         config: TestControllerConfiguration<TItem, TStore>,
         services: TestControllers
     ) => TController
-): Promise<TestContext<TItem, TStoreItem, TStore, TController>> {
+): Promise<TestContext<TItem, TStoreItem, TStore, TController, TResult>> {
     const services = createTestControllers();
     const store = services.store;
     const itemsStore = storeFactory(services);
@@ -154,7 +166,13 @@ export function testCrudRecordsController<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 >(
     allowRecordKeys: boolean,
     resourceKind: ResourceKinds,
@@ -166,10 +184,10 @@ export function testCrudRecordsController<
     createStoreItem: (item: CrudRecord) => TStoreItem,
     createInputItem: (item: CrudRecord) => TItem,
     configureEnvironment?: (
-        context: TestContext<TItem, TStoreItem, TStore, TController>
+        context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
     ) => Promise<void>
 ) {
-    let context: TestContext<TItem, TStoreItem, TStore, TController>;
+    let context: TestContext<TItem, TStoreItem, TStore, TController, TResult>;
     let services: TestControllers;
     let store: MemoryStore;
     let itemsStore: TStore;

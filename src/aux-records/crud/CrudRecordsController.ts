@@ -232,27 +232,28 @@ export abstract class CrudRecordsController<
                 };
             }
 
+            const subscriptionResult = await this._checkSubscriptionMetrics(
+                action,
+                contextResult.context,
+                authorization,
+                request.item
+            );
+
+            if (subscriptionResult.success === false) {
+                return subscriptionResult;
+            }
+
             const item = await this._transformInputItem(
                 request.item,
                 existingItem,
                 action,
                 contextResult.context,
-                authorization
+                authorization,
+                subscriptionResult
             );
 
             if (isFailure(item)) {
                 return genericResult(item);
-            }
-
-            const subscriptionResult = await this._checkSubscriptionMetrics(
-                action,
-                contextResult.context,
-                authorization,
-                item.value
-            );
-
-            if (subscriptionResult.success === false) {
-                return subscriptionResult;
             }
 
             await this._putItem(recordName, item.value);
@@ -603,7 +604,7 @@ export abstract class CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: TStoreType
+        item?: TInput
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
@@ -642,7 +643,8 @@ export abstract class CrudRecordsController<
         context: AuthorizationContext,
         authorization:
             | AuthorizeUserAndInstancesSuccess
-            | AuthorizeUserAndInstancesForResourcesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess,
+        metrics: CheckSubscriptionMetricsSuccess
     ): Promise<Result<TStoreType, SimpleError>> {
         return success(item as unknown as TStoreType);
     }
