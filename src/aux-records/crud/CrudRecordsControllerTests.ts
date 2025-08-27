@@ -185,7 +185,8 @@ export function testCrudRecordsController<
     createInputItem: (item: CrudRecord) => TItem,
     configureEnvironment?: (
         context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
-    ) => Promise<void>
+    ) => Promise<void>,
+    createOutputItem: (item: CrudRecord) => TResult = createStoreItem as any
 ) {
     let context: TestContext<TItem, TStoreItem, TStore, TController, TResult>;
     let services: TestControllers;
@@ -620,7 +621,7 @@ export function testCrudRecordsController<
 
             expect(result).toMatchObject({
                 success: true,
-                item: createStoreItem({
+                item: createOutputItem({
                     address: 'address2',
                     markers: [PRIVATE_MARKER],
                 }),

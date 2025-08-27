@@ -52,6 +52,11 @@ export interface DatabaseRecord extends CrudRecord {
      * The info for the database.
      */
     databaseInfo: TursoDatabase | SQliteDatabase;
+
+    /**
+     * The name of the database.
+     */
+    databaseName: string;
 }
 
 export interface DatabaseSubscriptionMetrics extends CrudSubscriptionMetrics {

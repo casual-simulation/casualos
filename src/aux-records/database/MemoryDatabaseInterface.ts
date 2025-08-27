@@ -28,19 +28,25 @@ import type {
     QueryResult,
     SQliteDatabase,
 } from './DatabaseInterface';
-import Database from 'better-sqlite3';
+import BetterSQlite3 from 'better-sqlite3';
 
+/**
+ * Defines a database interface that uses in-memory SQLite databases.
+ */
 export class MemoryDatabaseInterface
     implements DatabaseInterface<SQliteDatabase>
 {
-    // private _databases: SQliteDatabase[] = [];
-    private _databases: Map<string, Database.Database> = new Map();
+    private _databases: Map<string, BetterSQlite3.Database> = new Map();
+
+    get databases() {
+        return Array.from(this._databases.keys());
+    }
 
     async createDatabase(
         databaseName: string,
         options: CreateDatabaseOptions
     ): Promise<Result<SQliteDatabase, SimpleError>> {
-        const db = new Database(':memory:');
+        const db = new BetterSQlite3(':memory:');
         this._databases.set(databaseName, db);
         return success({
             filePath: databaseName,
@@ -65,6 +71,65 @@ export class MemoryDatabaseInterface
     async execute(
         database: SQliteDatabase,
         query: string,
-        params: any[]
-    ): Promise<Result<QueryResult, SimpleError>> {}
+        params: any[],
+        readonly: boolean
+    ): Promise<QueryResult> {
+        try {
+            const db = this._databases.get(database.filePath);
+
+            if (!db) {
+                return failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The database was not found.',
+                });
+            }
+
+            const q = db.prepare(query);
+
+            if (q.reader) {
+                q.raw(true);
+                const columns = q.columns();
+                const rows = q.all(params);
+
+                return success({
+                    columns: columns.map((c) => c.name),
+                    rows,
+                    affectedRowCount: 0,
+                });
+            } else {
+                if (readonly && !q.readonly) {
+                    return failure({
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The query is not allowed in read-only mode.',
+                    });
+                }
+
+                const result = q.run(params);
+
+                return success({
+                    columns: [],
+                    rows: [],
+                    affectedRowCount: result.changes,
+                    lastInsertId: result.lastInsertRowid,
+                });
+            }
+        } catch (err) {
+            if (err instanceof BetterSQlite3.SqliteError) {
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: err.message,
+                });
+            } else {
+                throw err;
+            }
+        }
+    }
+
+    dispose() {
+        for (let db of this._databases.values()) {
+            db.close();
+        }
+        this._databases.clear();
+    }
 }

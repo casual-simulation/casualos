@@ -39,16 +39,18 @@ export interface DatabaseInterface<T> {
     deleteDatabase(databaseName: string): Promise<Result<void, SimpleError>>;
 
     /**
-     * Executes a query on the given database.
+     * Executes a read-only query on the given database.
      * @param database The database to execute the query on.
      * @param query The SQL query to execute.
      * @param params The parameters for the query.
+     * @param readonly Whether the query is read-only or not.
      */
     execute(
         database: T,
         query: string,
-        params: any[]
-    ): Promise<Result<QueryResult, SimpleError>>;
+        params: any[],
+        readonly: boolean
+    ): Promise<QueryResult>;
 }
 
 export type QueryResult = Result<
@@ -61,12 +63,17 @@ export type QueryResult = Result<
         /**
          * The rows that were returned with the query.
          */
-        rows: any[];
+        rows: unknown[];
 
         /**
          * The number of rows that were affected by the query.
          */
         affectedRowCount: number;
+
+        /**
+         * The ID of the last row that was inserted.
+         */
+        lastInsertId?: unknown;
     },
     SimpleError
 >;
