@@ -29,7 +29,7 @@ import type {
     QueryResult,
     SQliteDatabase,
 } from './DatabaseInterface';
-import BetterSQlite3 from 'better-sqlite3';
+import BetterSQLite3 from 'libsql';
 import path from 'node:path';
 import { rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -41,9 +41,11 @@ export class SqliteDatabaseInterface
     implements DatabaseInterface<SQliteDatabase>
 {
     private _folderPath: string;
+    #encryptionKey: string | null = null;
 
-    constructor(folder: string) {
+    constructor(folder: string, encryptionKey: string | null = null) {
         this._folderPath = folder;
+        this.#encryptionKey = encryptionKey;
     }
 
     async createDatabase(
@@ -79,9 +81,11 @@ export class SqliteDatabaseInterface
         readonly: boolean,
         automaticTransaction: boolean
     ): Promise<Result<QueryResult[], SimpleError>> {
-        const db = new BetterSQlite3(database.filePath, {
-            readonly: readonly,
-        });
+        const options = {
+            readonly,
+            encryptionKey: this.#encryptionKey ?? undefined,
+        };
+        const db = new BetterSQLite3(database.filePath, options);
         try {
             const results: QueryResult[] = [];
 
@@ -134,7 +138,7 @@ export class SqliteDatabaseInterface
 
             return success(results);
         } catch (err) {
-            if (err instanceof BetterSQlite3.SqliteError) {
+            if (err instanceof BetterSQLite3.SqliteError) {
                 return failure({
                     errorCode: 'server_error',
                     errorMessage: err.message,

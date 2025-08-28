@@ -129,7 +129,6 @@
         "@types/uuid": "10.0.0",
         "@types/vue-color": "^2.4.3",
         "@types/ws": "^8.5.12",
-        "@types/better-sqlite3": "7.6.13",
         "@typescript-eslint/utils": "^8.26.1",
         "browserslist": ">=4.16.5",
         "chai": "^4.2.0",

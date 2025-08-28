@@ -44,6 +44,7 @@
         "@casual-simulation/rate-limit-redis": "^3.4.0",
         "@casual-simulation/timesync": "^3.7.0",
         "@google/generative-ai": "0.11.3",
+        "@libsql/client": "^0.15.14",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/resources": "^1.25.1",
         "@opentelemetry/semantic-conventions": "^1.25.1",
@@ -54,6 +55,7 @@
         "es-toolkit": "1.39.10",
         "hash.js": "1.1.7",
         "jose": "5.4.0",
+        "libsql": "^0.5.20",
         "livekit-server-sdk": "2.7.2",
         "luxon": "3.4.4",
         "mime": "2.4.6",
@@ -63,7 +65,6 @@
         "typesense": "2.1.0-13",
         "uuid": "10.0.0",
         "yjs": "13.6.8",
-        "zod": "3.22.4",
-        "better-sqlite3": "12.2.0"
+        "zod": "3.22.4"
     }
 }

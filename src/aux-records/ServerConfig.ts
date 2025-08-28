@@ -1106,6 +1106,14 @@ const sqliteDatabaseProviderSchema = z.object({
         .string()
         .describe('The folder where the SQLite database files are stored.')
         .min(1),
+
+    encryptionKey: z
+        .string()
+        .describe(
+            'The encryption key that should be used for the SQLite databases. If omitted, then the databases will not be encrypted.'
+        )
+        .min(10)
+        .optional(),
 });
 
 const databasesProviderSchema = z.discriminatedUnion('type', [

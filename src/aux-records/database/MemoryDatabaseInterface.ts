@@ -29,7 +29,7 @@ import type {
     QueryResult,
     SQliteDatabase,
 } from './DatabaseInterface';
-import BetterSQlite3 from 'better-sqlite3';
+import BetterSQLite3 from 'libsql';
 
 /**
  * Defines a database interface that uses in-memory SQLite databases.
@@ -37,7 +37,7 @@ import BetterSQlite3 from 'better-sqlite3';
 export class MemoryDatabaseInterface
     implements DatabaseInterface<SQliteDatabase>
 {
-    private _databases: Map<string, BetterSQlite3.Database> = new Map();
+    private _databases: Map<string, BetterSQLite3.Database> = new Map();
 
     get databases() {
         return Array.from(this._databases.keys());
@@ -47,7 +47,7 @@ export class MemoryDatabaseInterface
         databaseName: string,
         options: CreateDatabaseOptions
     ): Promise<Result<SQliteDatabase, SimpleError>> {
-        const db = new BetterSQlite3(':memory:');
+        const db = new BetterSQLite3(':memory:');
         this._databases.set(databaseName, db);
         return success({
             filePath: databaseName,
@@ -136,7 +136,7 @@ export class MemoryDatabaseInterface
 
             return success(results);
         } catch (err) {
-            if (err instanceof BetterSQlite3.SqliteError) {
+            if (err instanceof BetterSQLite3.SqliteError) {
                 return failure({
                     errorCode: 'server_error',
                     errorMessage: err.message,
