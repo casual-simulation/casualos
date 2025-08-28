@@ -52,7 +52,7 @@ import type {
 } from './WebhookEnvironment';
 import { STORED_AUX_SCHEMA } from './WebhookEnvironment';
 import { getHash } from '@casual-simulation/crypto';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import {
     MemoryTempInstRecordsStore,
     MemoryWebsocketConnectionStore,
@@ -65,6 +65,7 @@ console.log = jest.fn();
 
 describe('WebhookRecordsController', () => {
     testCrudRecordsController<
+        WebhookRecord,
         WebhookRecord,
         WebhookRecordsStore,
         WebhookRecordsController
@@ -106,6 +107,13 @@ describe('WebhookRecordsController', () => {
                     handleHttpRequest: jest.fn(),
                 },
             }),
+        (item) => ({
+            address: item.address,
+            markers: item.markers,
+            targetResourceKind: 'data',
+            targetRecordName: 'recordName',
+            targetAddress: 'data1',
+        }),
         (item) => ({
             address: item.address,
             markers: item.markers,
@@ -157,6 +165,7 @@ describe('WebhookRecordsController', () => {
         };
 
         const context = await setupTestContext<
+            WebhookRecord,
             WebhookRecord,
             WebhookRecordsStore,
             WebhookRecordsController

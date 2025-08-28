@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { Vector2 } from '@casual-simulation/three';
-import { range } from 'lodash';
+import { range } from 'es-toolkit/compat';
 
 // (kal)
 // Lots taken from https://www.redblobgames.com/grids/hexagons/

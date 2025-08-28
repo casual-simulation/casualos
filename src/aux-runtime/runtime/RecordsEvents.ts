@@ -2796,6 +2796,30 @@ export function listUserStudios(
 }
 
 /**
+ * Creates a RecordsCallProcedureAction to list the records in a studio.
+ * @param studioId The ID of the studio.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listStudioRecords(
+    studioId: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listRecords: {
+                input: {
+                    studioId,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a new JoinRoomAction.
  * @param roomName The name of the room.
  * @param options The options to use for the event.

@@ -153,7 +153,7 @@ import {
 } from './Utils';
 import type { AuxRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { sortBy, forOwn, merge, union } from 'lodash';
+import { sortBy, forOwn, merge, union } from 'es-toolkit/compat';
 import { applyTagEdit, isTagEdit } from '@casual-simulation/aux-common/bots';
 import type { CurrentVersion } from '@casual-simulation/aux-common';
 import type { RuntimeStateVersion } from './RuntimeStateVersion';
@@ -828,14 +828,10 @@ export class AuxRuntime
             }
         }
 
-        if (isUrl(moduleName)) {
-            return {
-                id: moduleName,
-                url: moduleName,
-            };
-        }
-
-        return null;
+        return {
+            id: moduleName,
+            url: moduleName,
+        };
     }
 
     getShoutTimers(): { [shout: string]: number } {

@@ -21,7 +21,7 @@ import type {
     SnapTarget,
     SnapGrid,
 } from '@casual-simulation/aux-common';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 
 export interface SnapOptions {
     snapGround: boolean;

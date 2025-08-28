@@ -60,7 +60,7 @@ import {
 } from '@casual-simulation/aux-common';
 import type { SimulationManager } from '@casual-simulation/aux-vm';
 
-import { isEqual, sortBy, union, unionBy } from 'lodash';
+import { isEqual, sortBy, union, unionBy } from 'es-toolkit/compat';
 import type { Observer, SubscriptionLike } from 'rxjs';
 import {
     BehaviorSubject,

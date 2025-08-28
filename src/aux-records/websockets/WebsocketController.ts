@@ -24,6 +24,7 @@ import type {
 import {
     action,
     createInitializationUpdate,
+    hasValue,
     ON_WEBHOOK_ACTION_NAME,
 } from '@casual-simulation/aux-common/bots';
 import {
@@ -75,7 +76,7 @@ import type {
     BranchName,
     TemporaryInstRecordsStore,
 } from './TemporaryInstRecordsStore';
-import { sumBy } from 'lodash';
+import { sumBy } from 'es-toolkit/compat';
 import type {
     DenialReason,
     ServerError,
@@ -86,10 +87,12 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
-    ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
     tryParseJson,
+    parseRecordKey,
+    PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
+import { getMarkerResourcesForCreation } from '../PolicyController';
 import type { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
@@ -308,7 +311,7 @@ export class WebsocketController {
                                 connection.branch
                             ));
 
-                        if (branch.temporary) {
+                        if (branch?.temporary) {
                             console.log(
                                 '[WebsocketController] Deleting temporary branch',
                                 connection.recordName,
@@ -361,8 +364,14 @@ export class WebsocketController {
             return;
         }
 
+        let recordName = event.recordName;
+        const parsedRecordKey = parseRecordKey(recordName);
+        if (hasValue(parsedRecordKey)) {
+            recordName = parsedRecordKey[0]; // Use the record name from the record key
+        }
+
         console.log(
-            `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Watch`
+            `[WebsocketController] [namespace: ${recordName}/${event.inst}/${event.branch}, ${connectionId}] Watch`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -370,13 +379,13 @@ export class WebsocketController {
         );
         if (!connection) {
             console.error(
-                `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to watch branch. Connection not found!`
+                `[WebsocketController] [namespace: ${recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Unable to watch branch. Connection not found!`
             );
             await this.sendError(connectionId, -1, {
                 success: false,
                 errorCode: 'invalid_connection_state',
-                errorMessage: `A server error occurred. (namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId})`,
-                recordName: event.recordName,
+                errorMessage: `A server error occurred. (namespace: ${recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId})`,
+                recordName: recordName,
                 inst: event.inst,
                 branch: event.branch,
             });
@@ -384,10 +393,10 @@ export class WebsocketController {
             return;
         }
 
-        if (connection.token && event.recordName) {
+        if (connection.token && recordName) {
             const authorized = await this._connectionStore.isAuthorizedInst(
                 connectionId,
-                event.recordName,
+                recordName,
                 event.inst,
                 'token'
             );
@@ -398,7 +407,7 @@ export class WebsocketController {
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'You are not authorized to access this inst.',
-                    recordName: event.recordName,
+                    recordName: recordName,
                     inst: event.inst,
                     branch: event.branch,
                     reason: {
@@ -411,14 +420,14 @@ export class WebsocketController {
 
         const config = await this._config.getSubscriptionConfiguration();
 
-        if (!event.recordName) {
+        if (!recordName) {
             if (config?.defaultFeatures?.publicInsts?.allowed === false) {
                 await this.messenger.sendMessage([connectionId], {
                     type: 'repo/watch_branch_result',
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: 'Temporary insts are not allowed.',
-                    recordName: event.recordName,
+                    recordName: recordName,
                     inst: event.inst,
                     branch: event.branch,
                 });
@@ -427,17 +436,19 @@ export class WebsocketController {
         }
 
         const instResult = await this._getOrCreateInst(
-            event.recordName,
+            recordName,
             event.inst,
             connection.userId,
-            config
+            config,
+            null,
+            event.markers
         );
 
         if (instResult.success === false) {
             await this.messenger.sendMessage([connectionId], {
                 ...instResult,
                 type: 'repo/watch_branch_result',
-                recordName: event.recordName,
+                recordName: recordName,
                 inst: event.inst,
                 branch: event.branch,
             });
@@ -454,7 +465,7 @@ export class WebsocketController {
         ) {
             maxConnections = features.insts.maxActiveConnectionsPerInst;
         } else if (
-            !event.recordName &&
+            !recordName &&
             typeof config?.defaultFeatures?.publicInsts
                 ?.maxActiveConnectionsPerInst === 'number'
         ) {
@@ -465,7 +476,7 @@ export class WebsocketController {
         if (maxConnections) {
             const count = await this._connectionStore.countConnectionsByBranch(
                 'branch',
-                event.recordName,
+                recordName,
                 event.inst,
                 event.branch
             );
@@ -478,7 +489,7 @@ export class WebsocketController {
                         : 'not_authorized',
                     errorMessage:
                         'The maximum number of active connections to this inst has been reached.',
-                    recordName: event.recordName,
+                    recordName: recordName,
                     inst: event.inst,
                     branch: event.branch,
                 });
@@ -490,14 +501,14 @@ export class WebsocketController {
             ...connection,
             serverConnectionId: connectionId,
             mode: 'branch',
-            recordName: event.recordName,
+            recordName: recordName,
             inst: event.inst,
             branch: event.branch,
             temporary: event.temporary || false,
         });
 
         const branch = await this._getOrCreateBranch(
-            event.recordName,
+            recordName,
             event.inst,
             event.branch,
             event.temporary,
@@ -509,13 +520,13 @@ export class WebsocketController {
             // Temporary branches use a temporary inst data store.
             // This is because temporary branches are never persisted to disk.
             updates = await this._temporaryStore.getUpdates(
-                event.recordName,
+                recordName,
                 event.inst,
                 event.branch
             );
         } else {
             updates = await this._instStore.getCurrentUpdates(
-                event.recordName,
+                recordName,
                 event.inst,
                 event.branch
             );
@@ -533,13 +544,13 @@ export class WebsocketController {
         const watchingDevices =
             await this._connectionStore.getConnectionsByBranch(
                 'watch_branch',
-                event.recordName,
+                recordName,
                 event.inst,
                 event.branch
             );
 
         console.log(
-            `[WebsocketController] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Connected.`
+            `[WebsocketController] [namespace: ${recordName}/${event.inst}/${event.branch}, ${connectionId}] Connected.`
         );
         const promises = [
             this._messenger.sendMessage(
@@ -553,7 +564,7 @@ export class WebsocketController {
             ),
             this._messenger.sendMessage([connection.serverConnectionId], {
                 type: 'repo/add_updates',
-                recordName: event.recordName,
+                recordName: recordName,
                 inst: event.inst,
                 branch: event.branch,
                 updates: updates.updates,
@@ -561,7 +572,7 @@ export class WebsocketController {
             }),
             this._messenger.sendMessage([connection.serverConnectionId], {
                 type: 'repo/watch_branch_result',
-                recordName: event.recordName,
+                recordName: recordName,
                 inst: event.inst,
                 branch: event.branch,
                 success: true,
@@ -761,7 +772,9 @@ export class WebsocketController {
                     event.recordName,
                     event.inst,
                     connection.userId,
-                    config
+                    config,
+                    null,
+                    undefined
                 );
 
                 if (instResult.success === false) {
@@ -1128,7 +1141,9 @@ export class WebsocketController {
                     request.recordName,
                     request.inst,
                     request.userId,
-                    config
+                    config,
+                    null,
+                    undefined
                 );
 
                 if (instResult.success === false) {
@@ -2758,7 +2773,8 @@ export class WebsocketController {
         instName: string,
         userId: string,
         config: SubscriptionConfiguration,
-        context: AuthorizationContext = null
+        context: AuthorizationContext = null,
+        markers?: string[]
     ): Promise<GetOrCreateInstResult> {
         let inst: InstWithSubscriptionInfo | null = null;
         let features: FeaturesConfiguration | null = null;
@@ -2796,32 +2812,43 @@ export class WebsocketController {
                     context = contextResult.context;
                 }
 
+                // Determine the markers to use
+                let instMarkers: string[];
+                if (markers && markers.length > 0) {
+                    instMarkers = markers;
+                } else {
+                    // Use default markers based on whether it's a record or public inst
+                    if (recordName) {
+                        instMarkers = [PRIVATE_MARKER];
+                    } else {
+                        instMarkers = [PUBLIC_READ_MARKER];
+                    }
+                }
+
+                // Build authorization resources
+                const resources = [
+                    {
+                        resourceKind: 'inst' as const,
+                        resourceId: instName,
+                        action: 'create' as const,
+                        markers: instMarkers,
+                    },
+                    {
+                        resourceKind: 'inst' as const,
+                        resourceId: instName,
+                        action: 'read' as const,
+                        markers: instMarkers,
+                    },
+                    ...getMarkerResourcesForCreation(instMarkers),
+                ];
+
                 const authorizationResult =
                     await this._policies.authorizeUserAndInstancesForResources(
                         context,
                         {
                             userId: userId,
                             instances: [],
-                            resources: [
-                                {
-                                    resourceKind: 'inst',
-                                    resourceId: instName,
-                                    action: 'create',
-                                    markers: [PRIVATE_MARKER],
-                                },
-                                {
-                                    resourceKind: 'marker',
-                                    resourceId: PRIVATE_MARKER,
-                                    action: 'assign',
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                                {
-                                    resourceKind: 'inst',
-                                    resourceId: instName,
-                                    action: 'read',
-                                    markers: [PRIVATE_MARKER],
-                                },
-                            ],
+                            resources,
                         }
                     );
 
@@ -2904,7 +2931,7 @@ export class WebsocketController {
                 inst = {
                     recordName: recordName,
                     inst: instName,
-                    markers: [PRIVATE_MARKER],
+                    markers: instMarkers,
                     subscriptionId: instMetrics.subscriptionId,
                     subscriptionStatus: instMetrics.subscriptionStatus,
                     subscriptionType: instMetrics.subscriptionType,

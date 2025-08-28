@@ -18,7 +18,7 @@
 import { tryParseJson } from '@casual-simulation/aux-common';
 import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 
 declare const DEVELOPMENT: boolean;
 

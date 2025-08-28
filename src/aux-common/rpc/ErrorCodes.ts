@@ -92,7 +92,8 @@ export type KnownErrorCodes =
     | 'hume_api_error'
     | 'invalid_webhook_target'
     | 'took_too_long'
-    | 'parent_not_found';
+    | 'parent_not_found'
+    | 'service_unavailable';
 
 /**
  * Gets the status code that should be used for the given response.
@@ -204,6 +205,8 @@ export function getStatusCode(
             return 500;
         } else if (response.errorCode === 'took_too_long') {
             return 504;
+        } else if (response.errorCode === 'service_unavailable') {
+            return 503;
         } else {
             return 400;
         }

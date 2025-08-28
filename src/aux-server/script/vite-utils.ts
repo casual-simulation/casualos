@@ -17,12 +17,8 @@
  */
 import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
-import lodash from 'lodash';
-// import { merge } from 'lodash';
-// import { Plugin } from 'vite';
+import { merge } from 'es-toolkit/compat';
 import { defaultPolicies } from './vite-helpers';
-
-const { merge } = lodash;
 
 export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
 

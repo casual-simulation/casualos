@@ -44,7 +44,7 @@ import {
     calculateGridScale,
     getDimensionVisualizeMode,
 } from '@casual-simulation/aux-common';
-import { minBy, isEqual } from 'lodash';
+import { minBy, isEqual } from 'es-toolkit/compat';
 import type { GridCheckResults } from './grid/GridChecker';
 import { GridChecker } from './grid/GridChecker';
 import { GameObject } from './GameObject';

@@ -1359,7 +1359,8 @@ export class RecordsController {
                         subscriptionTier: getSubscriptionTier(
                             config,
                             s.subscriptionStatus,
-                            s.subscriptionId
+                            s.subscriptionId,
+                            'studio'
                         ),
                         ownerStudioComId: s.ownerStudioComId,
                         comId: s.comId,
@@ -1410,7 +1411,8 @@ export class RecordsController {
                         subscriptionTier: getSubscriptionTier(
                             config,
                             s.subscriptionStatus,
-                            s.subscriptionId
+                            s.subscriptionId,
+                            'studio'
                         ),
                         ownerStudioComId: s.ownerStudioComId,
                         comId: s.comId,
@@ -2500,12 +2502,6 @@ export interface GetPlayerConfigSuccess {
      * The URL that the comId logo is available at.
      */
     logoUrl: string;
-
-    /**
-     * The background color of the background of the logo.
-     * This is used to set the background color of the splash screen.
-     */
-    logoBackgroundColor?: string;
 
     /**
      * The config that should be used for the player.

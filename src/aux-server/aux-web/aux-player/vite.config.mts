@@ -14,6 +14,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import commonjs from 'vite-plugin-commonjs';
+import { importMapPlugin } from 'importmap-vite-plugin';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -94,7 +95,7 @@ export default defineConfig(({ command, mode }) => ({
                   cssCodeSplit: false,
                   base: './',
                   assetsDir: '',
-                  minify: false,
+                  minify: true,
               }
             : {}
     ),
@@ -119,6 +120,21 @@ export default defineConfig(({ command, mode }) => ({
             ],
             symbolId: 'icon-[name]',
             svgoOptions: false,
+        }),
+        importMapPlugin({
+            imports:
+                mode === 'static'
+                    ? {}
+                    : {
+                          yjs: './aux-web/shared/public/import-map/yjs',
+                          luxon: './aux-web/shared/public/import-map/luxon',
+                          preact: './aux-web/shared/public/import-map/preact',
+                          'preact/compat':
+                              './aux-web/shared/public/import-map/preact.compat',
+                          'preact/jsx-runtime':
+                              './aux-web/shared/public/import-map/preact.jsx-runtime',
+                          three: './aux-web/shared/public/import-map/three',
+                      },
         }),
         {
             ...copy({
@@ -247,6 +263,7 @@ export default defineConfig(({ command, mode }) => ({
             three: '@casual-simulation/three',
             esbuild: 'esbuild-wasm',
             'monaco-editor': '@casual-simulation/monaco-editor',
+            lodash: 'es-toolkit/compat',
 
             ...(mode === 'static'
                 ? {

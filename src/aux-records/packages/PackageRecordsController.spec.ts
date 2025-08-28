@@ -30,7 +30,7 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
-import type { PackageRecordsStore } from './PackageRecordsStore';
+import type { PackageRecord, PackageRecordsStore } from './PackageRecordsStore';
 import { MemoryPackageRecordsStore } from './MemoryPackageRecordsStore';
 
 console.log = jest.fn();
@@ -39,6 +39,7 @@ console.error = jest.fn();
 describe('PackageRecordsController', () => {
     testCrudRecordsController<
         PackageRecordInput,
+        PackageRecord,
         PackageRecordsStore,
         PackageRecordsController
     >(
@@ -49,6 +50,12 @@ describe('PackageRecordsController', () => {
             new PackageRecordsController({
                 ...config,
             }),
+        (item) =>
+            ({
+                address: item.address,
+                markers: item.markers,
+                // id: item.address,
+            } as any),
         (item) => ({
             address: item.address,
             markers: item.markers,
@@ -90,6 +97,7 @@ describe('PackageRecordsController', () => {
 
         const context = await setupTestContext<
             PackageRecordInput,
+            PackageRecord,
             PackageRecordsStore,
             PackageRecordsController
         >(

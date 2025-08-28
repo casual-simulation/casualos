@@ -93,7 +93,7 @@ export default class LoadApp extends Vue {
                     appManager.config?.logoTitle ??
                     null;
                 this.backgroundColor =
-                    appManager.comIdConfig?.logoBackgroundColor ??
+                    appManager.comIdConfig?.playerConfig?.logoBackgroundColor ??
                     appManager.config?.logoBackgroundColor ??
                     null;
             },
@@ -122,6 +122,10 @@ export default class LoadApp extends Vue {
                 if (this.loading) {
                     this.logoUrl =
                         config?.logoUrl ?? appManager.config?.logoUrl ?? null;
+                    this.backgroundColor =
+                        config?.playerConfig?.logoBackgroundColor ??
+                        appManager.config?.logoBackgroundColor ??
+                        null;
                     this.title = this.logoTitle =
                         config.displayName ??
                         config.comId ??

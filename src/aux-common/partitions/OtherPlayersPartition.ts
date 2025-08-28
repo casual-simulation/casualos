@@ -49,7 +49,7 @@ import {
 import type { Observable } from 'rxjs';
 import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, skip, startWith } from 'rxjs/operators';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
 import type { InstRecordsClient } from '../websockets';
 import type {

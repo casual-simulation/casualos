@@ -24,7 +24,7 @@
  * @license MIT
  */
 
-import { map, last, drop, dropRight, cloneDeep, extend, isPlainObject }  from 'lodash';
+import { last, drop, dropRight, cloneDeep, isPlainObject }  from 'es-toolkit/compat';
 import TreeViewItem from '../TreeViewItem/TreeViewItem';
 
 export default {
@@ -48,7 +48,7 @@ export default {
         // both Objects and Arrays, returning either the Key as
         // a string or the Index as an integer
         generateChildrenFromCollection: function(collection: any[]) {
-            return map(collection, (value, keyOrIndex) => {
+            return collection.map((value, keyOrIndex) => {
                 if (this.isObject(value)) {
                     return this.transformObject(value, keyOrIndex);
                 }
@@ -117,7 +117,7 @@ export default {
     },
     computed: {
         allOptions: function() {
-            return extend(
+            return Object.assign(
                 {},
                 {
                     rootObjectKey: 'root',

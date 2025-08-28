@@ -28,7 +28,7 @@ import type {
 
 import type { SubscriptionFilter } from '../../MetricsStore';
 import type { CrudResult, ListSubCrudStoreSuccess } from '../../crud/sub';
-import { isEqual, orderBy } from 'lodash';
+import { isEqual, orderBy } from 'es-toolkit/compat';
 import type { PackageRecord } from '../PackageRecordsStore';
 
 /**

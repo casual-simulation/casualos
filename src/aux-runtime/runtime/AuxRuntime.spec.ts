@@ -139,7 +139,7 @@ import {
     preserve,
 } from '@casual-simulation/aux-common/bots';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { flatMap, pickBy } from 'lodash';
+import { pickBy } from 'es-toolkit/compat';
 import type { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
 import {
@@ -2304,7 +2304,7 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(flatMap(errors)).toEqual([]);
+                    expect(errors.flatMap((a) => a)).toEqual([]);
 
                     if (type === 'interpreted') {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
@@ -2352,7 +2352,9 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(flatMap(errors)).toEqual([new Error('abc')]);
+                    expect(errors.flatMap((a) => a)).toEqual([
+                        new Error('abc'),
+                    ]);
 
                     if (type === 'interpreted') {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
@@ -2866,7 +2868,7 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(flatMap(errors)).toEqual([]);
+                    expect(errors.flatMap((a) => a)).toEqual([]);
 
                     if (type === 'interpreted') {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
@@ -2922,7 +2924,9 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(flatMap(errors)).toEqual([new Error('abc')]);
+                    expect(errors.flatMap((a) => a)).toEqual([
+                        new Error('abc'),
+                    ]);
 
                     if (type === 'interpreted') {
                         // watchBot() events are executed sequentially in separate promise.then() calls,
@@ -2968,7 +2972,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3005,7 +3009,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3045,7 +3049,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3086,7 +3090,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3126,7 +3130,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3172,7 +3176,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events.slice(1)).toEqual([
                             [toast('Changed 1!')],
@@ -3212,7 +3216,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3252,7 +3256,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([[toast('Changed 1!')]]);
                     });
@@ -3285,7 +3289,7 @@ describe('AuxRuntime', () => {
 
                         await waitAsync();
 
-                        expect(flatMap(errors)).toEqual([]);
+                        expect(errors.flatMap((a) => a)).toEqual([]);
 
                         expect(events).toEqual([]);
                     });
@@ -10109,7 +10113,10 @@ describe('AuxRuntime', () => {
 
                     await waitAsync();
 
-                    expect(m === null).toBe(true);
+                    expect(m).toEqual({
+                        id: 'module.library',
+                        url: 'module.library',
+                    });
                     expect(events).toEqual([]);
                 });
 

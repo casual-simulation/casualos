@@ -48,7 +48,7 @@ import {
     hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { toBase64String } from '@casual-simulation/aux-common';
-import { padStart } from 'lodash';
+import { padStart } from 'es-toolkit/compat';
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
@@ -203,14 +203,9 @@ describe('AuthController', () => {
             origin: 'https://example.com',
         };
 
-        controller = new AuthController(
-            store,
-            messenger,
-            store,
-            undefined,
-            privoClient,
-            [relyingParty]
-        );
+        controller = new AuthController(store, messenger, store, privoClient, [
+            relyingParty,
+        ]);
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -1799,7 +1794,6 @@ describe('AuthController', () => {
                 store,
                 messenger,
                 store,
-                undefined,
                 privoClient
             );
             store.privoConfiguration = null;

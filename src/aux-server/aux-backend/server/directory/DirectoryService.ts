@@ -17,7 +17,7 @@
  */
 import type { DirectoryEntry } from './DirectoryEntry';
 import type { DirectoryStore } from './DirectoryStore';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { DirectoryUpdate } from './DirectoryUpdate';
 import { DirectoryUpdateSchema } from './DirectoryUpdate';
 import type { DirectoryResult } from './DirectoryResult';

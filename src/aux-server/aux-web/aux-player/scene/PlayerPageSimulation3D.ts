@@ -40,7 +40,7 @@ import { WristPortalConfig } from './WristPortalConfig';
 import type { XRHandedness } from 'aux-web/shared/scene/xr/WebXRTypes';
 import type { ControllerData } from 'aux-web/shared/scene/Input';
 import type { PortalConfig } from './PortalConfig';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import {
     objectWorldDirectionRay,
     cameraForwardRay,

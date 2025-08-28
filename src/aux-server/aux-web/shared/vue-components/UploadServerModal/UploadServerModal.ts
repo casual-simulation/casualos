@@ -21,16 +21,18 @@ import { appManager } from '../../AppManager';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import vueBotPond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { asyncError, asyncResult } from '@casual-simulation/aux-common';
 import { getFileData } from '../../DownloadHelpers';
 
-const BotPond = vueBotPond();
+const BotPondAsync = () => ({
+    component: import('vue-filepond').then((m) => m.default()),
+    timeout: 1000 * 60 * 5, // 5 minutes
+});
 
 @Component({
     components: {
-        'bot-pond': BotPond,
+        'bot-pond': BotPondAsync,
     },
 })
 export default class UploadServerModal extends Vue {

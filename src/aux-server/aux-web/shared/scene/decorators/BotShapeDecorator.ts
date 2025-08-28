@@ -62,7 +62,7 @@ import {
     Vector2,
 } from '@casual-simulation/three';
 import type { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { SubscriptionLike } from 'rxjs';
 import HelixUrl from '../../public/meshes/dna_form.glb';
 import EggUrl from '../../public/meshes/egg.glb';

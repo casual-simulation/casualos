@@ -20,11 +20,14 @@ import type {
     DenialReason,
     GenericHttpRequest,
     GenericHttpResponse,
+    Result,
     ServerError,
+    SimpleError,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     DEFAULT_BRANCH_NAME,
+    success,
     tryParseJson,
 } from '@casual-simulation/aux-common';
 import type {
@@ -117,6 +120,7 @@ export interface WebhookRecordsConfiguration
  * Defines a controller that is able to handle and execute webhooks.
  */
 export class WebhookRecordsController extends CrudRecordsController<
+    WebhookRecord,
     WebhookRecord,
     WebhookRecordsStore
 > {
@@ -745,9 +749,11 @@ export class WebhookRecordsController extends CrudRecordsController<
         };
     }
 
-    protected _transformInputItem(item: WebhookRecord): WebhookRecord {
+    protected async _transformInputItem(
+        item: WebhookRecord
+    ): Promise<Result<WebhookRecord, SimpleError>> {
         delete item.userId;
-        return item;
+        return success(item);
     }
 }
 

@@ -63,7 +63,7 @@ import type {
     InputModality,
 } from '../../../shared/scene/Input';
 import { posesEqual } from '../ClickOperation/ClickOperationUtils';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import type { SnapBotsInterface } from './SnapInterface';
 import { SnapBotsHelper } from './SnapInterface';
 
