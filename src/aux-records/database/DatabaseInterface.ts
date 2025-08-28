@@ -107,6 +107,11 @@ export interface TursoDatabase {
     name: string;
 
     /**
+     * The hostname that should be used to connect to the database.
+     */
+    databaseHostname: string;
+
+    /**
      * The read token for the database in turso.
      */
     tursoDatabaseReadToken: string;
