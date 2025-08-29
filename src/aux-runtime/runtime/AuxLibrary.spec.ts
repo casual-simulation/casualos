@@ -200,6 +200,7 @@ import {
     getRoomRemoteOptions,
     grantRecordPermission,
     revokeRecordPermission,
+    listPermissions,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -7070,6 +7071,76 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.listPermissions()', () => {
+            it('should emit a RecordsCallProcedureAction when called with all parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'secret',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'secret',
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with only recordName', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with marker only', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'test',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with resource parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    resourceKind: 'file',
+                    resourceId: 'myfile.txt',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        resourceKind: 'file',
+                        resourceId: 'myfile.txt',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.grantInstAdminPermission()', () => {
             it('should emit a GrantInstAdminPermissionAction', async () => {
                 const action: any =
@@ -9665,8 +9736,13 @@ describe('AuxLibrary', () => {
 
         describe('os.listStudioRecords()', () => {
             it('should emit a RecordsCallProcedureAction', async () => {
-                const action: any = library.api.os.listStudioRecords('studioId123');
-                const expected = listStudioRecords('studioId123', {}, context.tasks.size);
+                const action: any =
+                    library.api.os.listStudioRecords('studioId123');
+                const expected = listStudioRecords(
+                    'studioId123',
+                    {},
+                    context.tasks.size
+                );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

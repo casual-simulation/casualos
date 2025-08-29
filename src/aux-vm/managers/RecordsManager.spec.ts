@@ -7633,6 +7633,23 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'listPermissions',
+                    recordsCallProcedure(
+                        {
+                            listPermissions: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    marker: 'test',
+                                    resourceKind: 'data',
+                                    resourceId: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
