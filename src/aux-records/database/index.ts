@@ -19,3 +19,5 @@ export * from './DatabaseRecordsStore';
 export * from './DatabaseRecordsController';
 export * from './MemoryDatabaseRecordsStore';
 export * from './DatabaseInterface';
+export * from './SqliteDatabaseInterface';
+export * from './TursoDatabaseInterface';
