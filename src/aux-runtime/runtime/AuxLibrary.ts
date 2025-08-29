@@ -529,6 +529,11 @@ import type {
     SearchRecordOutput,
     StoreDocumentResult,
 } from '@casual-simulation/aux-records/search';
+import type {
+    DatabaseRecordOutput,
+    DatabaseStatement,
+} from '@casual-simulation/aux-records/database';
+import { query as q } from './database/DatabaseUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -859,12 +864,12 @@ export interface RecordPackageVersionApiRequest {
  */
 export interface RecordSearchCollectionApiRequest {
     /**
-     * The name of the record that the package version should be recorded to.
+     * The name of the record that the collection should be recorded to.
      */
     recordName: string;
 
     /**
-     * The address that the package version should be recorded to.
+     * The address that the collection should be recorded to.
      */
     address: string;
 
@@ -874,7 +879,7 @@ export interface RecordSearchCollectionApiRequest {
     schema: SearchCollectionSchema;
 
     /**
-     * The markers that should be applied to the package version.
+     * The markers that should be applied to the collection.
      */
     markers?: string[];
 }
@@ -889,6 +894,29 @@ export interface RecordSearchDocumentApiRequest {
     recordName: string;
     address: string;
     document: SearchDocument;
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordDatabase}.
+ *
+ * @dochash types/records/database
+ * @docname RecordDatabaseRequest
+ */
+export interface RecordDatabaseApiRequest {
+    /**
+     * The name of the record that the database should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the database should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The markers that should be applied to the database.
+     */
+    markers?: string[];
 }
 
 /**
@@ -2960,6 +2988,66 @@ const DEAD_RECKONING_OFFSET = 50;
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 
+export class ApiDatabase {
+    private _recordName: string;
+    private _address: string;
+    private _options: RecordActionOptions;
+    private _context: AuxGlobalContext;
+
+    constructor(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions,
+        context: AuxGlobalContext
+    ) {
+        this._recordName = recordName;
+        this._address = address;
+        this._options = options;
+        this._context = context;
+    }
+
+    query(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<void> {
+        const statement = q(templates, ...params);
+        return this._run([statement], true);
+    }
+
+    execute(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<void> {
+        const statement = q(templates, ...params);
+        return this._run([statement], false);
+    }
+
+    private _run(
+        statements: DatabaseStatement[],
+        readonly: boolean
+    ): Promise<void> {
+        const task = this._context.createTask();
+        const action = recordsCallProcedure(
+            {
+                queryDatabase: {
+                    input: {
+                        recordName: this._recordName,
+                        address: this._address,
+                        statements,
+                        readonly,
+                    },
+                },
+            },
+            this._options,
+            task.taskId
+        );
+        this._context.enqueueAction(action);
+        let promise = task.promise;
+        (<any>promise)[ORIGINAL_OBJECT] = action;
+        return promise;
+    }
+}
+
 /**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
@@ -3503,6 +3591,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listSearchCollectionsByMarker,
                 recordSearchDocument,
                 eraseSearchDocument,
+
+                recordDatabase,
+                getDatabase,
+                eraseDatabase,
+                listDatabases,
+                listDatabasesByMarker,
 
                 listUserStudios,
                 listStudioRecords,
@@ -11634,7 +11728,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string,
         options: RecordActionOptions = {}
-    ): Promise<CrudRecordItemResult> {
+    ): Promise<CrudEraseItemResult> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -11673,7 +11767,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         startingAddress?: string,
         options: ListDataOptions = {}
-    ): Promise<CrudRecordItemResult> {
+    ): Promise<CrudListItemsResult<SearchRecord>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -11872,6 +11966,210 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
 
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates or updates a database in the given record.
+     *
+     * Databases are used to store and manage structured data within a record.
+     * They use the [SQL programming language](https://www.sqlite.org/lang.html), which is a powerful programming language designed to manage relational databases.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param request The request to create or update the database.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a database.
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     * });
+     *
+     * @example Record a private database
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     *      markers: ['private']
+     * });
+     *
+     *
+     * @doctitle Database Actions
+     * @docsidebar Database
+     * @docdescription Database actions allow you to create and manage databases in your records. Databases enable efficient storage and retrieval of structured data within your records, making it easier to manage and query information.
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.recordDatabase
+     * @docid recordDatabase
+     */
+    function recordDatabase(
+        request: RecordSearchCollectionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordDatabase: {
+                    input: {
+                        recordName: request.recordName,
+                        item: {
+                            address: request.address,
+                            markers: request.markers as [string, ...string[]],
+                        },
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Deletes a database along with all the data in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the database from.
+     * @param address The address of the database to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a database
+     * const result = await os.eraseDatabase('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.eraseDatabase
+     * @docid eraseDatabase
+     */
+    function eraseDatabase(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseDatabase: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the databases in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List databases
+     * const result = await os.listDatabases('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabases
+     * @docid listDatabases
+     */
+    function listDatabases(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<DatabaseRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listDatabases: {
+                    input: {
+                        recordName,
+                        address: startingAddress,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the databases in a record by a specific marker.
+     * @param recordName The name of the record to list the databases from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read databases
+     * const result = await os.listDatabasesByMarker('recordName', 'publicRead');
+     *
+     * @example List private databases
+     * const result = await os.listDatabasesByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabasesByMarker
+     */
+    function listDatabasesByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<DatabaseRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listDatabases: {
+                    input: {
+                        recordName,
+                        marker,
+                        address: startingAddress,
+                        sort: options?.sort,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets basic info about a database from the specified record.
+     *
+     * @param recordName The name of the record to retrieve the database from.
+     * @param address The address of the database to retrieve.
+     * @param options The options for the request.
+     *
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a database
+     * const db = os.getDatabase('myRecord', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.getDatabase
+     */
+    function getDatabase(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): ApiDatabase {
+        return new ApiDatabase(recordName, address, options, context);
     }
 
     /**
