@@ -156,7 +156,7 @@ import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/record
 import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
-import type { DatabaseRecordsController } from './database';
+import type { DatabaseRecordsController, DatabaseStatement } from './database';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -2945,6 +2945,73 @@ export class RecordsServer {
                     .origins('api')
                     .http('GET', '/api/v2/records/database/list')
             ),
+
+            queryDatabase: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/database/query')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        statements: z.array(
+                            z.object({
+                                query: z.string().min(1).max(250_000),
+                                params: z.array(z.any()).optional().default([]),
+                            })
+                        ),
+                        readonly: z.boolean().default(true),
+                        automaticTransaction: z
+                            .boolean()
+                            .optional()
+                            .default(true),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            statements,
+                            readonly,
+                            automaticTransaction,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._databaseRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await validateSessionKey(
+                            this._auth,
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._databaseRecordsController.query({
+                                recordName,
+                                userId: validation.userId,
+                                address,
+                                statements: statements as DatabaseStatement[],
+                                readonly,
+                                automaticTransaction,
+                                instances: instances ?? [],
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
 
             listRecords: procedure()
                 .origins('api')
