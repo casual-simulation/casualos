@@ -253,6 +253,11 @@ export class RecordsManager {
         'recordSearchDocument',
         'eraseSearchDocument',
         'listRecords',
+        'recordDatabase',
+        'eraseDatabase',
+        'listDatabases',
+        'getDatabase',
+        'queryDatabase',
     ]);
 
     /**
