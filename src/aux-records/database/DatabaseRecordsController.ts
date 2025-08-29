@@ -100,7 +100,7 @@ export class DatabaseRecordsController extends CrudRecordsController<
 
     @traced(TRACE_NAME)
     async query(
-        request: DatabaseRequest
+        request: DatabaseQuery
     ): Promise<Result<QueryResult[], SimpleError>> {
         const baseRequest = {
             recordKeyOrRecordName: request.recordName,
@@ -360,10 +360,10 @@ export interface DatabaseRecordOutput
  * Defines a request to query a database.
  *
  * @dochash types/records/database
- * @docname DatabaseRequest
+ * @docname DatabaseQuery
  */
 
-export interface DatabaseRequest {
+export interface DatabaseQuery {
     /**
      * The name of the record that the search should be performed on.
      */

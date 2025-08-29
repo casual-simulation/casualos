@@ -39,6 +39,7 @@ import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import {
     failure,
+    PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
     success,
 } from '@casual-simulation/aux-common';
@@ -557,6 +558,82 @@ describe('DatabaseRecordsController', () => {
                     errorCode: 'invalid_request',
                     errorMessage:
                         'Queries that modify data are not allowed in read-only mode.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user does not have read permission to access the database', async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item2',
+                    markers: [PRIVATE_MARKER],
+                },
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item2',
+                statements: [query`SELECT * FROM "test";`],
+                readonly: true,
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        action: 'read',
+                        recordName: 'testRecord',
+                        resourceId: 'item2',
+                        resourceKind: 'database',
+                        subjectId: 'otherUserId',
+                        subjectType: 'user',
+                        type: 'missing_permission',
+                    },
+                })
+            );
+        });
+
+        it('should return not_authorized if the user does not have update permission to access the database', async () => {
+            await manager.recordItem({
+                recordKeyOrRecordName: recordName,
+                item: {
+                    address: 'item2',
+                    markers: [PUBLIC_READ_MARKER],
+                },
+                userId,
+                instances: [],
+            });
+
+            const result = await manager.query({
+                recordName,
+                address: 'item2',
+                statements: [query`SELECT * FROM "test";`],
+                readonly: false,
+                userId: otherUserId,
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        action: 'update',
+                        recordName: 'testRecord',
+                        resourceId: 'item2',
+                        resourceKind: 'database',
+                        subjectId: 'otherUserId',
+                        subjectType: 'user',
+                        type: 'missing_permission',
+                    },
                 })
             );
         });
