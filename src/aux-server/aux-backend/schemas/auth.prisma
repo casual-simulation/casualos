@@ -1145,7 +1145,7 @@ model DatabaseRecord {
     
     address String @db.String(100)
 
-    databaseName String @db.String(32)
+    databaseName String @db.String(100)
     
     // The provider for the database
     // For now, this must be "turso"
