@@ -184,6 +184,11 @@ async function evalResult(
     }
 
     if (type && result !== undefined && result !== null && result !== '') {
+        if (type === Boolean && typeof result === 'string') {
+            const resultLowercase = result.toLowerCase();
+            return ['true', 'yes', 'on', 'y'].includes(resultLowercase);
+        }
+
         return type(result);
     }
 
