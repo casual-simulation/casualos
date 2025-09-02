@@ -53,6 +53,12 @@ export interface DatabaseInterface<T> {
     ): Promise<Result<QueryResult[], SimpleError>>;
 }
 
+/**
+ * Defines a statement that can be sent to the database.
+ *
+ * @dochash types/records/database
+ * @docname DatabaseStatement
+ */
 export interface DatabaseStatement {
     /**
      * The query text of the statement.
@@ -67,6 +73,9 @@ export interface DatabaseStatement {
 
 /**
  * Defiens an interface that represents the results of a single query.
+ *
+ * @dochash types/records/database
+ * @docname RawQueryResult
  */
 export interface QueryResult {
     /**
@@ -77,7 +86,7 @@ export interface QueryResult {
     /**
      * The rows that were returned with the query.
      */
-    rows: unknown[];
+    rows: any[];
 
     /**
      * The number of rows that were affected by the query.
@@ -87,7 +96,7 @@ export interface QueryResult {
     /**
      * The ID of the last row that was inserted.
      */
-    lastInsertId?: unknown;
+    lastInsertId?: number | string;
 }
 
 export interface CreateDatabaseOptions {

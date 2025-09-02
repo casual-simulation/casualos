@@ -374,6 +374,8 @@ import type {
     AvailablePermissions,
     Entitlement,
     VersionNumber,
+    GenericResult,
+    SimpleError,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -441,35 +443,35 @@ import {
     parseRecordKey,
     isRecordKey as calcIsRecordKey,
 } from '@casual-simulation/aux-common';
-import type {
-    AIChatInterfaceStreamResponse,
-    AIChatMessage,
-    CreateRecordResult,
-    GrantResourcePermissionResult,
-    ListStudiosResult,
-    ListRecordsResult,
-    ListSubscriptionsResult,
-    NotificationRecord,
-    PushNotificationPayload,
-    RevokePermissionResult,
-    SendNotificationResult,
-    SubscribeToNotificationResult,
-    UnsubscribeToNotificationResult,
-    WebhookRecord,
-    CreatePublicRecordKeyResult,
-    GetDataResult,
-    RecordDataResult,
-    RecordFileFailure,
-    EraseDataResult,
-    EraseFileResult,
-    ListDataResult,
-    AddCountResult,
-    GetCountResult,
-    GrantMarkerPermissionResult,
-    GrantRoleResult,
-    RevokeRoleResult,
-    PackageRecord,
-    ListInstalledPackagesResult,
+import {
+    type AIChatInterfaceStreamResponse,
+    type AIChatMessage,
+    type CreateRecordResult,
+    type GrantResourcePermissionResult,
+    type ListStudiosResult,
+    type ListRecordsResult,
+    type ListSubscriptionsResult,
+    type NotificationRecord,
+    type PushNotificationPayload,
+    type RevokePermissionResult,
+    type SendNotificationResult,
+    type SubscribeToNotificationResult,
+    type UnsubscribeToNotificationResult,
+    type WebhookRecord,
+    type CreatePublicRecordKeyResult,
+    type GetDataResult,
+    type RecordDataResult,
+    type RecordFileFailure,
+    type EraseDataResult,
+    type EraseFileResult,
+    type ListDataResult,
+    type AddCountResult,
+    type GetCountResult,
+    type GrantMarkerPermissionResult,
+    type GrantRoleResult,
+    type RevokeRoleResult,
+    type PackageRecord,
+    type ListInstalledPackagesResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -532,6 +534,7 @@ import type {
 import type {
     DatabaseRecordOutput,
     DatabaseStatement,
+    QueryResult,
 } from '@casual-simulation/aux-records/database';
 import { query as q } from './database/DatabaseUtils';
 
@@ -2988,6 +2991,51 @@ const DEAD_RECKONING_OFFSET = 50;
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 
+/**
+ * Defines the result of an API query.
+ *
+ * @dochash types/records/database
+ * @docname QueryResult
+ */
+export interface ApiQueryResult {
+    /**
+     * The rows that were returned from the query.
+     */
+    rows: Record<string, any>[];
+
+    /**
+     * The number of rows that were modified by the query.
+     */
+    affectedRowCount: number;
+
+    /**
+     * The ID of the last row that was inserted by the query.
+     */
+    lastInsertId?: number | string;
+}
+
+/**
+ * Defines the result of a batch query.
+ *
+ * @dochash types/records/database
+ * @docname BatchResult
+ */
+export interface BatchResult {
+    /**
+     * The results of the individual statements.
+     */
+    results: ApiQueryResult[];
+}
+
+/**
+ * Represents a connection to a database record.
+ *
+ * @dochash types/records/database
+ * @docname Database
+ *
+ * @example Get a database connection.
+ * const database = os.getDatabase('myRecord', 'myDatabase');
+ */
 export class ApiDatabase {
     private _recordName: string;
     private _address: string;
@@ -3006,26 +3054,185 @@ export class ApiDatabase {
         this._context = context;
     }
 
-    query(
+    /**
+     * Constructs a database statement from the given [template string literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
+     *
+     * Once constructed, the returned statement can be used with `run()` or `batch()`.
+     *
+     * @param templates The string templates.
+     * @param params The parameters to interpolate into the templates.
+     * @returns A database statement.
+     *
+     * @example Create a database statement from a SQL query
+     * const statement = database.sql`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a database statement
+     * const itemId = 'abc';
+     * const statement = database.sql`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    sql(
         templates: TemplateStringsArray,
         ...params: unknown[]
-    ): Promise<void> {
-        const statement = q(templates, ...params);
-        return this._run([statement], true);
+    ): DatabaseStatement {
+        return q(templates, ...params);
     }
 
-    execute(
+    /**
+     * Runs the given readonly query against the database.
+     * This method requires queries to be read-only. This means that queries can only select data, they cannot insert, update, or delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the query has completed.
+     *
+     * @example Select all items from a table
+     * const result = await database.query`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a query
+     * const itemId = 'abc';
+     * const result = await database.query`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    async query(
         templates: TemplateStringsArray,
         ...params: unknown[]
-    ): Promise<void> {
-        const statement = q(templates, ...params);
-        return this._run([statement], false);
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        return this.run(q(templates, ...params), true);
+    }
+
+    /**
+     * Runs the given SQL on the database and returns the result.
+     * This method supports read-write queries. This means that queries can be used to select, insert, update, and delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the SQL has completed.
+     *
+     * @example Insert a new item into a table
+     * const name = "New Item";
+     * const value = 100;
+     * const result = await database.execute`INSERT INTO items (name, value) VALUES (${name}, ${value})`;
+     *
+     */
+    async execute(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        return this.run(q(templates, ...params), false);
+    }
+
+    /**
+     * Runs the given statements in a single transaction. Transactions can be used to group multiple statements together.
+     * If one statement fails, then none of the statements will have any effect.
+     *
+     * @param func The function that should be used to build the statements.
+     * @param readonly Whether the statements are read-only. If true, then the statements cannot modify data.
+     *
+     * @example Run multiple select queries at once
+     * const results = await database.batch([
+     *      database.sql`SELECT * FROM items WHERE id = 'abc'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'def'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'ghi'`,
+     * ]);
+     *
+     * @example Insert multiple items at once
+     * const results = await database.batch([
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 1', 100)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 2', 200)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 3', 300)`,
+     * ], false);
+     */
+    async batch(
+        statements: DatabaseStatement[],
+        readonly: boolean = true
+    ): Promise<GenericResult<BatchResult, SimpleError>> {
+        const result = await this._run(statements, readonly);
+        if (result.success === false) {
+            return result;
+        } else {
+            return {
+                success: true,
+                results: result.map((r) => this._mapResult(r)),
+            };
+        }
+    }
+
+    /**
+     * Runs the given database statement.
+     *
+     * @param statement The statement to run.
+     * @param readonly Whether the statement is read-only. If true, then the statement cannot modify data.
+     */
+    async run(
+        statement: DatabaseStatement,
+        readonly: boolean = true
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        const batch = await this.batch([statement], readonly);
+        if (batch.success === false) {
+            return batch;
+        } else {
+            const firstResult = batch.results[0];
+            return {
+                success: true,
+                ...firstResult,
+            };
+        }
+    }
+
+    /**
+     * Gets an interface to the database that returns unmodified query results.
+     */
+    get raw() {
+        return {
+            sql: this.sql.bind(this),
+            query: (templates: TemplateStringsArray, ...params: unknown[]) => {
+                return this._run([q(templates, ...params)], true);
+            },
+            execute: (
+                templates: TemplateStringsArray,
+                ...params: unknown[]
+            ) => {
+                return this._run([q(templates, ...params)], false);
+            },
+            batch: (
+                statements: DatabaseStatement[],
+                readonly: boolean = true
+            ) => {
+                return this._run(statements, readonly);
+            },
+            run: (statement: DatabaseStatement, readonly: boolean = true) => {
+                return this._run([statement], readonly);
+            },
+        };
+    }
+
+    private _mapResult(result: QueryResult): ApiQueryResult {
+        const rows: ApiQueryResult['rows'] = [];
+        for (let row of result.rows) {
+            const value: Record<string, any> = {};
+            for (let i = 0; i < result.columns.length; i++) {
+                value[result.columns[i]] = row[i];
+            }
+            rows.push(value);
+        }
+        return {
+            rows,
+            lastInsertId: result.lastInsertId,
+            affectedRowCount: result.affectedRowCount,
+        };
     }
 
     private _run(
         statements: DatabaseStatement[],
         readonly: boolean
-    ): Promise<void> {
+    ): Promise<GenericResult<QueryResult[], SimpleError>> {
         const task = this._context.createTask();
         const action = recordsCallProcedure(
             {
