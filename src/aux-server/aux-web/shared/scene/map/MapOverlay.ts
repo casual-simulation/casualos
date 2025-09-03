@@ -25,7 +25,7 @@ import {
     CanvasTexture,
 } from '@casual-simulation/three';
 import type { Box2, Box3, Texture } from '@casual-simulation/three';
-// import type { AllGeoJSON } from '@turf/turf';
+import type { AllGeoJSON } from '@turf/turf';
 
 // Abstract base class remains mostly unchanged
 export abstract class MapOverlay extends Object3D {

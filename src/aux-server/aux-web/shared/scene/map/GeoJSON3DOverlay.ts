@@ -29,7 +29,7 @@ import {
     ShapeGeometry,
 } from '@casual-simulation/three';
 import type { Box2, Box3, Vector3 } from '@casual-simulation/three';
-// import type { AllGeoJSON } from '@turf/turf';
+import type { AllGeoJSON } from '@turf/turf';
 import { MapOverlay } from './MapOverlay';
 import type { GeoJSONStyle } from './GeoJSONRenderer';
 

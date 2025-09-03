@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { destination, point } from '@turf/turf';
-// import type { AllGeoJSON, Units } from '@turf/turf';
+import type { AllGeoJSON, Units } from '@turf/turf';
 import type { Feature, Geometry } from 'geojson';
 import { MercatorMath } from './MercatorMath';
 import { shortUuid } from '@casual-simulation/aux-common';
