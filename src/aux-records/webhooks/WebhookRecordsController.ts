@@ -27,6 +27,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     DEFAULT_BRANCH_NAME,
+    failure,
     success,
     tryParseJson,
 } from '@casual-simulation/aux-common';
@@ -701,23 +702,6 @@ export class WebhookRecordsController extends CrudRecordsController<
             }
         }
 
-        if (action === 'create') {
-            // create a user for the webhook
-            if (item && !item.userId) {
-                const result = await this._auth.createAccount({
-                    userRole: 'superUser', // The system gets superUser permissions when performing administrative tasks
-                    ipAddress: null,
-                    createSession: false,
-                });
-
-                if (result.success === false) {
-                    return result;
-                } else {
-                    item.userId = result.userId;
-                }
-            }
-        }
-
         if (action === 'run') {
             if (
                 typeof features.maxRunsPerPeriod === 'number' &&
@@ -750,12 +734,35 @@ export class WebhookRecordsController extends CrudRecordsController<
     }
 
     protected async _transformInputItem(
-        item: WebhookRecord
+        item: WebhookRecord,
+        existingItem: WebhookRecord,
+        action: ActionKinds
     ): Promise<Result<WebhookRecord, SimpleError>> {
-        delete item.userId;
+        if (action !== 'create' && action !== 'update') {
+            return failure({
+                errorCode: 'action_not_supported',
+                errorMessage: `The action '${action}' is not supported for webhook records.`,
+            });
+        }
+
+        if (action === 'create') {
+            const result = await this._auth.createAccount({
+                userRole: 'system', // The system gets superUser permissions when performing administrative tasks
+                ipAddress: null,
+                createSession: false,
+            });
+
+            if (result.success === false) {
+                return failure(result);
+            } else {
+                item.userId = result.userId;
+            }
+        }
         return success(item);
     }
 }
+
+export interface WebhookRecordInput extends Omit<WebhookRecord, 'userId'> {}
 
 export interface HandleWebhookRequest {
     /**

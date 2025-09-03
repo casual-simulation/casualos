@@ -593,6 +593,16 @@ export abstract class CrudRecordsController<
 
     /**
      * Checks that the given metrics are valid for the subscription.
+     *
+     * When recording an item, this function checks that the user is allowed to perform the action based on their subscription.
+     *
+     *
+     * ### Order of operations:
+     * 1. Check authorization
+     * 2. call _checkSubscriptionMetrics()
+     * 3. call _transformInputItem()
+     * 4. Store item
+     *
      * @param metrics The metrics that were fetched from the database.
      * @param action The action that is being performed.
      * @param authorization The authorization for the user and instances.
@@ -610,6 +620,13 @@ export abstract class CrudRecordsController<
     /**
      * Converts the given item to a version that is able to be returned to clients.
      * Can be overriden to ensure that some fields are not returned.
+     *
+     * ### Order of operations:
+     * 1. Check authorization
+     * 2. call _checkSubscriptionMetrics()
+     * 3. call _transformInputItem()
+     * 4. Store item
+     *
      * @param item The item that should be converted.
      * @param context The authorization context.
      * @param action The action that is being performed.

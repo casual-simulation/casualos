@@ -231,7 +231,7 @@ export class DatabaseRecordsController extends CrudRecordsController<
         if (action !== 'create' && action !== 'update') {
             return failure({
                 errorCode: 'action_not_supported',
-                errorMessage: `The action '${action}' is not supported for search records.`,
+                errorMessage: `The action '${action}' is not supported for database records.`,
             });
         }
 
