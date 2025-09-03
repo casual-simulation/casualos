@@ -299,7 +299,11 @@ export class TursoDatabaseInterface
                             columns: r.columns,
                             rows: r.rows,
                             affectedRowCount: r.rowsAffected,
-                            lastInsertId: r.lastInsertRowid ?? undefined,
+                            lastInsertId:
+                                r.lastInsertRowid !== null &&
+                                r.lastInsertRowid !== undefined
+                                    ? Number(r.lastInsertRowid)
+                                    : undefined,
                         } satisfies QueryResult)
                 )
             );

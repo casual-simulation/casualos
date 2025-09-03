@@ -127,7 +127,9 @@ export class SqliteDatabaseInterface
                         columns: [],
                         rows: [],
                         affectedRowCount: result.changes,
-                        lastInsertId: result.lastInsertRowid || undefined,
+                        lastInsertId:
+                            (result.lastInsertRowid as number | string) ||
+                            undefined,
                     });
                 }
             }

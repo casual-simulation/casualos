@@ -125,7 +125,8 @@ export class MemoryDatabaseInterface
                         columns: [],
                         rows: [],
                         affectedRowCount: result.changes,
-                        lastInsertId: result.lastInsertRowid || undefined,
+                        lastInsertId:
+                            (result.lastInsertRowid as any) || undefined,
                     });
                 }
             }

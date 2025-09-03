@@ -3159,7 +3159,7 @@ export class ApiDatabase {
         } else {
             return {
                 success: true,
-                results: result.map((r) => this._mapResult(r)),
+                results: result.items.map((r) => this._mapResult(r)),
             };
         }
     }
