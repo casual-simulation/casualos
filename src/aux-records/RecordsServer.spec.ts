@@ -14677,7 +14677,7 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            // Verify the search record was not deleted
+            // Verify the database record was not deleted
             const item = await searchRecordsStore.getItemByAddress(
                 recordName,
                 'address'
@@ -16900,7 +16900,7 @@ describe('RecordsServer', () => {
                     reason: {
                         type: 'missing_permission',
                         recordName,
-                        resourceKind: 'search',
+                        resourceKind: 'database',
                         resourceId: 'address',
                         subjectType: 'user',
                         subjectId: userId,
@@ -16910,8 +16910,8 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            // Verify the search record was not deleted
-            const item = await searchRecordsStore.getItemByAddress(
+            // Verify the database record was not deleted
+            const item = await databaseRecordsStore.getItemByAddress(
                 recordName,
                 'address'
             );
@@ -16938,8 +16938,8 @@ describe('RecordsServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            // Verify the search record was deleted
-            const item = await searchRecordsStore.getItemByAddress(
+            // Verify the database record was deleted
+            const item = await databaseRecordsStore.getItemByAddress(
                 recordName,
                 'address'
             );
