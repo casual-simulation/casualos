@@ -1248,6 +1248,24 @@ export default class PlayerApp extends Vue {
                             asyncError(e.taskId, ex.toString())
                         );
                     }
+                } else if (e.type === 'query_navigator_permissions') {
+                    try {
+                        const res = await navigator.permissions.query({
+                            name: e.name,
+                            userVisibleOnly: e.userVisibleOnly,
+                            sysex: e.sysex,
+                        } as any);
+                        simulation.helper.transaction(
+                            asyncResult(e.taskId, {
+                                state: res.state,
+                                name: res.name,
+                            })
+                        );
+                    } catch (ex) {
+                        simulation.helper.transaction(
+                            asyncError(e.taskId, ex.toString())
+                        );
+                    }
                 } else if (e.type === 'request_auth_data') {
                     try {
                         const id = e.requestInBackground

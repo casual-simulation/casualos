@@ -13610,6 +13610,12 @@ interface Os {
     getGeolocation(): Promise<GeoLocation>;
 
     /**
+     * Queries the permissions api on the DOM's navigator for the given permission name.
+     * @returns A promise that resolves with the permission state.
+     */
+    queryNavigatorPermissions(name: PermissionName, opts?: {userVisibleOnly?: boolean, sysex?: boolean}): Promise<{ state: PermissionState; name: PermissionName; }>;
+
+    /**
      * Shows some HTML to the user.
      * @param html The HTML to show.
      */

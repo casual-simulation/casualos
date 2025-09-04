@@ -162,6 +162,7 @@ export type AsyncActions =
     | SpeakTextAction
     | GetVoicesAction
     | GetGeolocationAction
+    | QueryNavigatorPermissionsAction
     | RegisterCustomAppAction
     | UnregisterCustomAppAction
     | RegisterHtmlAppAction
@@ -3022,6 +3023,20 @@ export interface GetGeolocationAction extends AsyncAction {
 }
 
 /**
+ * An event which is used to proxy a permissions query to the Permissions API on the DOM's navigator.
+ * @link https://developer.mozilla.org/en-US/docs/Web/API/Permissions#browser_compatibility
+ */
+export interface QueryNavigatorPermissionsAction extends AsyncAction {
+    type: 'query_navigator_permissions';
+    /**@link https://developer.mozilla.org/en-US/docs/Web/API/Permissions/query#name*/
+    name: PermissionName;
+    /**@link https://developer.mozilla.org/en-US/docs/Web/API/Permissions/query#uservisibleonly */
+    userVisibleOnly?: boolean;
+    /**@link https://developer.mozilla.org/en-US/docs/Web/API/Permissions/query#sysex */
+    sysex?: boolean;
+}
+
+/**
  * Defines the possible geolocation results.
  *
  * @dochash types/os/geolocation
@@ -5657,6 +5672,20 @@ export function getVoices(taskId?: string | number): GetVoicesAction {
 export function getGeolocation(taskId?: string | number): GetGeolocationAction {
     return {
         type: 'get_geolocation',
+        taskId,
+    };
+}
+
+export function queryNavigatorPermissions(
+    name: PermissionName,
+    optionalParams?: { userVisibleOnly?: boolean; sysex?: boolean },
+    taskId?: string | number
+): QueryNavigatorPermissionsAction {
+    return {
+        type: 'query_navigator_permissions',
+        name,
+        userVisibleOnly: optionalParams?.userVisibleOnly,
+        sysex: optionalParams?.sysex,
         taskId,
     };
 }

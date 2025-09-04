@@ -211,6 +211,7 @@ import {
     speakText as calcSpeakText,
     getVoices as calcGetVoices,
     getGeolocation as calcGetGeolocation,
+    queryNavigatorPermissions as calcQueryNavigatorPermissions,
     cancelAnimation,
     disablePOV,
     enablePOV,
@@ -3402,6 +3403,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 enableCustomDragging,
                 log,
                 getGeolocation,
+                queryNavigatorPermissions,
                 inSheet,
 
                 getCameraPosition,
@@ -8706,6 +8708,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getGeolocation(): Promise<Geolocation> {
         const task = context.createTask();
         const event = calcGetGeolocation(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Queries the navigator permissions api for the given permission name and optional parameters.
+     * @docname os.queryNavigatorPermissions
+     */
+    function queryNavigatorPermissions(
+        name: PermissionName,
+        optionalParams?: { userVisibleOnly?: boolean; sysex?: boolean }
+    ): Promise<PermissionStatus> {
+        const task = context.createTask();
+        const event = calcQueryNavigatorPermissions(
+            name,
+            optionalParams,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
