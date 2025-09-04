@@ -301,6 +301,7 @@ import type {
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
     InstallPackageResult,
+    ListPermissionsRequest,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -309,12 +310,14 @@ import {
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
     revokeRecordPermission as calcRevokeRecordPermission,
+    listPermissions as calcListPermissions,
     grantInstAdminPermission as calcGrantInstAdminPermission,
     grantUserRole as calcGrantUserRole,
     revokeUserRole as calcRevokeUserRole,
     grantInstRole as calcGrantInstRole,
     revokeInstRole as calcRevokeInstRole,
     listUserStudios as calcListUserStudios,
+    listStudioRecords as calcListStudioRecords,
     joinRoom as calcJoinRoom,
     leaveRoom as calcLeaveRoom,
     setRoomOptions as calcSetRoomOptions,
@@ -445,12 +448,15 @@ import {
 import type {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
+    CreateRecordResult,
     GrantResourcePermissionResult,
     ListStudiosResult,
+    ListRecordsResult,
     ListSubscriptionsResult,
     NotificationRecord,
     PushNotificationPayload,
     RevokePermissionResult,
+    ListPermissionsResult,
     SendNotificationResult,
     SubscribeToNotificationResult,
     UnsubscribeToNotificationResult,
@@ -3432,10 +3438,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
                 requestAuthBotInBackground,
 
+                createRecord,
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
                 grantPermission,
                 revokePermission,
+                listPermissions,
                 grantInstAdminPermission,
                 grantUserRole,
                 revokeUserRole,
@@ -3507,6 +3515,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseSearchDocument,
 
                 listUserStudios,
+                listStudioRecords,
 
                 getRecordsEndpoint,
 
@@ -9015,6 +9024,70 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a record with the given name. If a studio is specified, then the record will be created in the given studio.
+     * If not specified, then the record will be owned by the current user.
+     *
+     * Returns a promise that resolves with an object that indicates if the request was successful.
+     *
+     * Permissions: User must be logged in. If a studio is specified, then the user must be a member of the studio.
+     *
+     * @param recordName the name of the record to create.
+     * @param studioId the ID of the studio that should own the record. If not specified, the record will be owned by the current user.
+     *
+     * @example Create a record owned by the current user.
+     * const result = await os.createRecord('myRecord');
+     *
+     * if (result.success) {
+     *     os.toast('Record created successfully!');
+     * } else {
+     *     os.toast('Failed to create record: ' + result.errorMessage);
+     * }
+     *
+     * @example Create a record in a studio.
+     * const result = await os.createRecord('myStudioRecord', 'myStudioId');
+     *
+     * if (result.success) {
+     *     os.toast('Studio record created successfully!');
+     * } else {
+     *     os.toast('Failed to create studio record: ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docid os.createRecord
+     * @docname os.createRecord
+     * @docgroup 01-records
+     */
+    function createRecord(
+        recordName: string,
+        studioId?: string
+    ): Promise<CreateRecordResult> {
+        if (!hasValue(recordName)) {
+            throw new Error('recordName must be provided.');
+        } else if (typeof recordName !== 'string') {
+            throw new Error('recordName must be a string.');
+        }
+
+        if (hasValue(studioId) && typeof studioId !== 'string') {
+            throw new Error('studioId must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                createRecord: {
+                    input: {
+                        recordName,
+                        studioId,
+                    },
+                },
+            },
+            {},
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.
      * Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
      *
@@ -9151,6 +9224,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options ?? {},
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned in the given record.
+     *
+     * @param request the request containing the record name and optional filters.
+     * @param options the options for the operation.
+     *
+     * @example List all permissions in a record.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord'
+     * });
+     *
+     * @example List permissions for a specific marker.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     marker: 'secret'
+     * });
+     *
+     * @example List permissions for a specific resource.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     resourceKind: 'data',
+     *     resourceId: 'address'
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listPermissions
+     * @docname os.listPermissions
+     */
+    function listPermissions(
+        request: ListPermissionsRequest
+    ): Promise<ListPermissionsResult> {
+        const task = context.createTask();
+        const event = calcListPermissions(request, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -11923,6 +12033,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the list of records that are in the studio with the given ID.
+     *
+     * Returns a promise that resolves with an object that contains the list of records (if successful) or information about the error that occurred.
+     * The user must be a member of the studio to access its records.
+     *
+     * @param studioId The ID of the studio to list records for.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used.
+     *
+     * @example Get the list of records in a studio
+     * const result = await os.listStudioRecords('studioId123');
+     *
+     * if (result.success) {
+     *      os.toast(`Found ${result.records.length} records in studio`);
+     *      for (const record of result.records) {
+     *          os.toast(`Record: ${record.name}`);
+     *      }
+     * } else {
+     *      os.toast('Failed to list studio records: ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listStudioRecords
+     * @docname os.listStudioRecords
+     */
+    function listStudioRecords(
+        studioId: string,
+        endpoint?: string
+    ): Promise<ListRecordsResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
+        const task = context.createTask();
+        const event = calcListStudioRecords(studioId, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Gets the default records endpoint. That is, the records endpoint that is used for records actions when no endpoint is specified.
      *
      * @example Get the default records endpoint.
@@ -12765,31 +12915,99 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<SharedDocument>;
 
+    /**
+     * Gets a shared document from the current inst with the given options.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param name The name of the document.
+     * @param options The options for the shared document.
+     *
+     * @example Get a shared document with custom markers.
+     * const sharedDocument = await os.getSharedDocument('myDocument', {
+     *     markers: ['secret', 'team']
+     * });
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-name-options
+     */
+    function getSharedDocument(
+        name: string,
+        options: { markers?: string[] }
+    ): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document record from the given inst by its name with options.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param recordName The name of the record. If null, then a public inst will be used.
+     * @param inst The name of the inst that the shared document is in.
+     * @param branch The name of the branch that the shared document is in.
+     * @param options The options for the shared document.
+     *
+     * @example Get a shared document from the given inst with custom markers.
+     * const sharedDocument = await os.getSharedDocument('recordName', 'myInst', 'myDocument', {
+     *     markers: ['secret', 'team']
+     * });
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-recordName-inst-name-options
+     */
+    function getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string,
+        options: { markers?: string[] }
+    ): Promise<SharedDocument>;
+
     function getSharedDocument(
         recordOrName: string,
-        inst?: string,
-        name?: string
+        inst?: string | { markers?: string[] },
+        name?: string,
+        options?: { markers?: string[] }
     ): Promise<SharedDocument> {
         const task = context.createTask();
         let recordName: string;
         let instName: string;
         let branchName: string;
+        let markers: string[] | undefined;
 
-        if (!inst && !name) {
+        if (typeof inst === 'object' && !name && !options) {
+            // Called as getSharedDocument(name, options)
+            instName = getCurrentServer();
+            recordName = getCurrentInstRecord();
+            branchName = recordOrName;
+            markers = inst?.markers;
+        } else if (!inst && !name) {
+            // Called as getSharedDocument(name)
             instName = getCurrentServer();
             recordName = getCurrentInstRecord();
             branchName = recordOrName;
         } else {
+            // Called as getSharedDocument(recordName, inst, name) or getSharedDocument(recordName, inst, name, options)
+            if (typeof inst === 'object') {
+                throw new Error(
+                    'The second argument (inst) must be a string when calling getSharedDocument() with three or more arguments.'
+                );
+            }
+
             recordName = recordOrName;
             instName = inst;
             branchName = name;
+            markers = options?.markers;
         }
 
         const event = loadSharedDocument(
             recordName,
             instName,
             `doc/${branchName}`,
-            task.taskId
+            task.taskId,
+            markers
         );
 
         return addAsyncAction(task, event);

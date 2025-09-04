@@ -200,6 +200,7 @@ import {
     getRoomRemoteOptions,
     grantRecordPermission,
     revokeRecordPermission,
+    listPermissions,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -207,6 +208,7 @@ import {
     revokeInstRole,
     getFile,
     listUserStudios,
+    listStudioRecords,
     listDataRecordByMarker,
     listInsts as calcListInsts,
     listInstsByMarker as calcListInstsByMarker,
@@ -6938,6 +6940,65 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.createRecord()', () => {
+            it('should emit a recordsCallProcedure action with createRecord', async () => {
+                const action: any = library.api.os.createRecord('myRecord');
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: undefined,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a recordsCallProcedure action with createRecord and studioId', async () => {
+                const action: any = library.api.os.createRecord(
+                    'myRecord',
+                    'myStudio'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: 'myStudio',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if recordName is not provided', () => {
+                expect(() => {
+                    library.api.os.createRecord(null as any);
+                }).toThrow('recordName must be provided.');
+            });
+
+            it('should throw an error if recordName is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord(123 as any);
+                }).toThrow('recordName must be a string.');
+            });
+
+            it('should throw an error if studioId is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord('myRecord', 123 as any);
+                }).toThrow('studioId must be a string.');
+            });
+        });
+
         describe('os.getPublicRecordKey()', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
@@ -7005,6 +7066,76 @@ describe('AuxLibrary', () => {
                     'record',
                     'permissionId',
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPermissions()', () => {
+            it('should emit a RecordsCallProcedureAction when called with all parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'secret',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'secret',
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with only recordName', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with marker only', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'test',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with resource parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    resourceKind: 'file',
+                    resourceId: 'myfile.txt',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        resourceKind: 'file',
+                        resourceId: 'myfile.txt',
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -9705,6 +9836,34 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.listStudioRecords()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any =
+                    library.api.os.listStudioRecords('studioId123');
+                const expected = listStudioRecords(
+                    'studioId123',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listStudioRecords(
+                    'studioId123',
+                    'http://localhost:5000'
+                );
+                const expected = listStudioRecords(
+                    'studioId123',
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.getRecordsEndpoint()', () => {
             it('should return a promise that resolves to the records endpoint', async () => {
                 const result: any = library.api.os.getRecordsEndpoint();
@@ -10432,6 +10591,39 @@ describe('AuxLibrary', () => {
                     'inst2',
                     'doc/docId',
                     context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument('docId', {
+                    markers: ['secret', 'team'],
+                });
+                const expected = loadSharedDocument(
+                    'record',
+                    'inst',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['secret', 'team']
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document from a different inst with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId',
+                    { markers: ['public', 'readonly'] }
+                );
+                const expected = loadSharedDocument(
+                    'record2',
+                    'inst2',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['public', 'readonly']
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
