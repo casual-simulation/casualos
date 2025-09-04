@@ -322,7 +322,7 @@ export class TursoDatabaseInterface
             if (err instanceof LibsqlError) {
                 console.error(`[${TRACE_NAME}] LibSQL query error:`, err);
                 return failure({
-                    errorCode: 'server_error',
+                    errorCode: 'invalid_request',
                     errorMessage: err.message,
                 });
             } else {

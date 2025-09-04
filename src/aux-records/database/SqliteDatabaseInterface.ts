@@ -142,7 +142,7 @@ export class SqliteDatabaseInterface
         } catch (err) {
             if (err instanceof BetterSQLite3.SqliteError) {
                 return failure({
-                    errorCode: 'server_error',
+                    errorCode: 'invalid_request',
                     errorMessage: err.message,
                 });
             } else {
