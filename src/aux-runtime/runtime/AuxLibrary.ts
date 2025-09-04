@@ -3078,6 +3078,19 @@ export class ApiDatabase {
     }
 
     /**
+     * Creates a new database statement from the given SQL and parameters.
+     * @param sql The SQL query string.
+     * @param params The parameters to include in the query.
+     * @returns A new database statement.
+     */
+    statement(sql: string, ...params: unknown[]): DatabaseStatement {
+        return {
+            query: sql,
+            params,
+        };
+    }
+
+    /**
      * Runs the given readonly query against the database.
      * This method requires queries to be read-only. This means that queries can only select data, they cannot insert, update, or delete data.
      *
