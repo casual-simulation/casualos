@@ -302,7 +302,13 @@ export class TursoDatabaseInterface
                     (r) =>
                         ({
                             columns: r.columns,
-                            rows: r.rows,
+                            rows: r.rows.map((r) => {
+                                const row = new Array(r.length);
+                                for (let i = 0; i < r.length; i++) {
+                                    row[i] = r[i];
+                                }
+                                return row;
+                            }),
                             affectedRowCount: r.rowsAffected,
                             lastInsertId:
                                 r.lastInsertRowid !== null &&
