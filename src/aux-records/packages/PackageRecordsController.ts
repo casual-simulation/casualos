@@ -91,7 +91,10 @@ export class PackageRecordsController extends CrudRecordsController<
             });
         }
 
-        return success(existingItem);
+        return success({
+            ...existingItem,
+            markers: item.markers,
+        });
     }
 
     protected async _checkSubscriptionMetrics(
