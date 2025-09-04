@@ -151,19 +151,19 @@ export class TursoDatabaseInterface
             )}/databases/${encodeURIComponent(databaseName)}/auth/tokens`
         );
 
+        const readTokenUrl = new URL(createAuthTokenUrl);
+        readTokenUrl.searchParams.set('authorization', 'read-only');
+
+        const writeTokenUrl = new URL(createAuthTokenUrl);
+        writeTokenUrl.searchParams.set('authorization', 'full-access');
+
         const [readTokenResult, fullAccessResult] = await Promise.all([
-            fetch(createAuthTokenUrl, {
+            fetch(readTokenUrl, {
                 method: 'POST',
-                body: JSON.stringify({
-                    authorization: 'read-only',
-                }),
                 headers: this._headers,
             }),
-            fetch(createAuthTokenUrl, {
+            fetch(writeTokenUrl, {
                 method: 'POST',
-                body: JSON.stringify({
-                    authorization: 'full-access',
-                }),
                 headers: this._headers,
             }),
         ]);
