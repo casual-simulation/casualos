@@ -200,6 +200,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -265,6 +268,9 @@ Object {
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
+          },
+          "databases": Object {
+            "allowed": true,
           },
           "events": Object {
             "allowed": false,
@@ -506,6 +512,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -588,6 +597,9 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -668,6 +680,9 @@ Object {
               "maxItems": 100000,
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -760,6 +775,9 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -840,6 +858,9 @@ Object {
               "maxItems": 50000,
               "maxReadsPerPeriod": 500000,
               "maxWritesPerPeriod": 500000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -932,6 +953,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -1018,6 +1042,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -1099,6 +1126,9 @@ Object {
               "maxReadsPerPeriod": 10000000000,
               "maxWritesPerPeriod": 10000000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000000000,
@@ -1176,6 +1206,9 @@ Object {
               "maxItems": 10000,
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -1263,6 +1296,9 @@ Object {
               "maxItems": 1000000,
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -1533,6 +1569,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -1604,6 +1643,9 @@ Object {
             "maxItems": 10000,
             "maxReadsPerPeriod": 100000,
             "maxWritesPerPeriod": 100000,
+          },
+          "databases": Object {
+            "allowed": true,
           },
           "events": Object {
             "allowed": true,
@@ -1892,6 +1934,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -1957,6 +2002,9 @@ Object {
           "data": Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
+          },
+          "databases": Object {
+            "allowed": true,
           },
           "events": Object {
             "allowed": false,
@@ -2198,6 +2246,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2280,6 +2331,9 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -2360,6 +2414,9 @@ Object {
               "maxItems": 100000,
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -2452,6 +2509,9 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -2532,6 +2592,9 @@ Object {
               "maxItems": 50000,
               "maxReadsPerPeriod": 500000,
               "maxWritesPerPeriod": 500000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -2624,6 +2687,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2710,6 +2776,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2791,6 +2860,9 @@ Object {
               "maxReadsPerPeriod": 10000000000,
               "maxWritesPerPeriod": 10000000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000000000,
@@ -2868,6 +2940,9 @@ Object {
               "maxItems": 10000,
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
@@ -2955,6 +3030,9 @@ Object {
               "maxItems": 1000000,
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
+            },
+            "databases": Object {
+              "allowed": true,
             },
             "events": Object {
               "allowed": true,
