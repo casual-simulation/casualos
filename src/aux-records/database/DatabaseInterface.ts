@@ -121,6 +121,11 @@ export interface TursoDatabase {
     databaseHostname: string;
 
     /**
+     * The ID of the database in turso.
+     */
+    databaseId: string;
+
+    /**
      * The read token for the database in turso.
      */
     tursoDatabaseReadToken: string;

@@ -36,7 +36,10 @@ import { createClient, LibsqlError } from '@libsql/client';
 const TRACE_NAME = 'TursoDatabaseInterface';
 
 const createDatabaseSchema = z.object({
-    Hostname: z.string().min(1),
+    database: z.object({
+        Hostname: z.string().min(1),
+        DbId: z.string().min(1),
+    }),
 });
 
 const createAuthTokenSchema = z.object({
@@ -138,7 +141,8 @@ export class TursoDatabaseInterface
             });
         }
 
-        const databaseHostname = parsed.data.Hostname;
+        const databaseHostname = parsed.data.database.Hostname;
+        const databaseId = parsed.data.database.DbId;
 
         // https://api.turso.tech/v1/organizations/{organizationSlug}/databases/{databaseName}/auth/tokens
         const createAuthTokenUrl = new URL(
@@ -220,6 +224,7 @@ export class TursoDatabaseInterface
         const database: TursoDatabase = {
             name: databaseName,
             databaseHostname: databaseHostname,
+            databaseId: databaseId,
             tursoDatabaseReadToken: parsedReadToken.data.jwt,
             tursoDatabaseWriteToken: parsedFullAccessToken.data.jwt,
         };
