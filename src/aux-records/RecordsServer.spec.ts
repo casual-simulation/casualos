@@ -17138,7 +17138,7 @@ describe('RecordsServer', () => {
             });
         });
 
-        it('should return not_supported if the search controller is null', async () => {
+        it('should return not_supported if the database controller is null', async () => {
             server = new RecordsServer({
                 allowedAccountOrigins,
                 allowedApiOrigins,
