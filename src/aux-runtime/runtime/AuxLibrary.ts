@@ -12364,8 +12364,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @returns A promise that resolves with the result of the operation.
      *
-     * @example Get a database
+     * @example Get a database and query a table
      * const db = os.getDatabase('myRecord', 'myDatabase');
+     * const result = await db.query`SELECT * FROM myTable`;
+     *
+     * @example Insert a new row
+     * const value1 = 'abc';
+     * const value2 = 123;
+     * const result = await db.execute`INSERT INTO myTable (column1, column2) VALUES (${value1}, ${value2})`;
+     *
+     * @example Run multiple queries in a transaction
+     * const values = [
+     *   ['apple', 10],
+     *   ['car', 25000],
+     *   ['strawberry', 1],
+     *   ['lego', 5]
+     * ];
+     *
+     * const result = await db.batch(
+     *   values.map(([name, value]) => db.sql`INSERT INTO data (name, value) VALUES (${name}, ${value})`)
+     * );
      *
      * @dochash actions/os/records/database
      * @docgroup 02-database

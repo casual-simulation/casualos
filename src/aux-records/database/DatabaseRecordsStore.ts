@@ -37,7 +37,7 @@ export interface DatabaseRecordsStore extends CrudRecordsStore<DatabaseRecord> {
 }
 
 /**
- * Defines a record that represents a collection of documents that can be searched.
+ * Defines a record that represents a database that can be queried using SQL.
  */
 export interface DatabaseRecord extends CrudRecord {
     /**

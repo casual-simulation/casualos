@@ -345,7 +345,7 @@ export interface DatabaseRecordInput
     > {}
 
 /**
- * Defines a record that represents a collection of documents that can be searched.
+ * Defines a record that represents a database that can be queried using SQL.
  *
  * @dochash types/records/database
  * @docname DatabaseRecord
