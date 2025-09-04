@@ -36,6 +36,7 @@ import type {
     GrantedEntitlementScope,
     KnownErrorCodes,
     PublicRecordKeyPolicy,
+    ResourceKinds,
     StoredAux,
 } from '@casual-simulation/aux-common';
 
@@ -1684,6 +1685,59 @@ export function revokeRecordPermission(
         options,
         taskId,
     };
+}
+
+/**
+ * Represents a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsRequest
+ */
+export interface ListPermissionsRequest extends RecordActionOptions {
+    /**
+     * The name of the record to list permissions for.
+     */
+    recordName: string;
+
+    /**
+     * The marker  to list permissions for.
+     */
+    marker?: string;
+
+    /**
+     * The kind of resource to list permissions for.
+     */
+    resourceKind?: ResourceKinds;
+
+    /**
+     * The ID of the resource to list permissions for.
+     */
+    resourceId?: string;
+}
+
+/**
+ * Creates a RecordsCallProcedureAction to list permissions for a record.
+ * @param request The request options.
+ * @param taskId The ID of the task.
+ */
+export function listPermissions(
+    request: ListPermissionsRequest,
+    taskId: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listPermissions: {
+                input: {
+                    recordName: request.recordName,
+                    marker: request.marker,
+                    resourceKind: request.resourceKind,
+                    resourceId: request.resourceId,
+                },
+            },
+        },
+        request,
+        taskId
+    );
 }
 
 /**

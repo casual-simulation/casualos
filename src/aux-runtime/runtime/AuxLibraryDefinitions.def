@@ -3598,6 +3598,84 @@ export interface RevokePermissionFailure {
 }
 
 /**
+ * Represents a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsRequest
+ */
+export interface ListPermissionsRequest extends RecordActionOptions {
+    /**
+     * The name of the record to list permissions for.
+     */
+    recordName: string;
+
+    /**
+     * The marker  to list permissions for.
+     */
+    marker?: string;
+
+    /**
+     * The kind of resource to list permissions for.
+     */
+    resourceKind?: string;
+
+    /**
+     * The ID of the resource to list permissions for.
+     */
+    resourceId?: string;
+}
+
+/**
+ * Represents the result of a request to list permissions for a record.
+ * 
+ * @dochash types/permissions
+ * @docname ListPermissionsResult
+ */
+export type ListPermissionsResult =
+    | ListPermissionsSuccess
+    | ListPermissionsFailure;
+
+/**
+ * Represents a successful response to a request to list permissions for a record.
+ * 
+ * @dochash types/permissions
+ * @docname ListPermissionsSuccess
+ */
+export interface ListPermissionsSuccess {
+    success: true;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The list of permissions that apply directly to a resource.
+     */
+    resourcePermissions: ListedResourcePermission[];
+
+    /**
+     * The list of permissions that apply to markers.
+     */
+    markerPermissions: ListedMarkerPermission[];
+}
+
+/**
+ * Represents a failed response to a request to list permissions for a record.
+ * 
+ * @dochash types/permissions
+ * @docname ListPermissionsFailure
+ */
+export interface ListPermissionsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+    errorMessage: string;
+}
+
+/**
  * Defines the possible results of revoking a role.
  *
  * @dochash types/records/roles
@@ -14673,6 +14751,39 @@ interface Os {
         permissionId: string,
         options?: RecordActionOptions
     ): Promise<RevokePermissionResult>;
+
+    /**
+     * Gets the list of permissions that have been assigned in the given record.
+     *
+     * @param request the request containing the record name and optional filters.
+     * @param options the options for the operation.
+     *
+     * @example List all permissions in a record.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord'
+     * });
+     *
+     * @example List permissions for a specific marker.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     marker: 'secret'
+     * });
+     *
+     * @example List permissions for a specific resource.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     resourceKind: 'data',
+     *     resourceId: 'address'
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listPermissions
+     * @docname os.listPermissions
+     */
+    listPermissions(
+        request: ListPermissionsRequest
+    ): Promise<ListPermissionsResult>;
 
     /**
      * Grants the current inst admin permissions in the given record for the rest of the day.
