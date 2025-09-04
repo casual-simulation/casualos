@@ -20,6 +20,9 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 
 import DefaultPanel from './components/DefaultPanel/DefaultPanel.vue';
+import type { SubscriptionLike } from 'rxjs';
+import type { Bot } from '@casual-simulation/aux-common';
+import type { SystemPortalSelectionUpdate } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     name: 'source-control',
@@ -28,8 +31,52 @@ import DefaultPanel from './components/DefaultPanel/DefaultPanel.vue';
     },
 })
 export default class SourceControl extends Vue {
+    private _subs: SubscriptionLike[] = [];
+    private _selectedBot: Bot | null = null;
     currentPanel: string = 'default-panel';
+
+    get selectedBot() {
+        return this._selectedBot;
+    }
+    set selectedBot(value: Bot | null) {
+        this._selectedBot = value;
+    }
+
+    get selectedBotId() {
+        return this._selectedBot ? this._selectedBot.id : null;
+    }
+
+    private loadGitConfig(config: any) {
+        console.log('load git panel', config);
+    }
+
+    private onSelectionUpdated(e: SystemPortalSelectionUpdate) {
+        if (e.hasSelection === false) return;
+        // Tag change specific logic should go before the botId check
+        if (e.bot.id === this.selectedBotId) return;
+        console.log('selection updated', e, this.selectedBot);
+        const b = (this.selectedBot = e.bot);
+        if (b.tags['.git']) {
+            this.loadGitConfig(b.tags['.git']);
+            if (this.currentPanel !== 'git-panel') {
+                this.currentPanel = 'git-panel';
+            }
+        }
+    }
+
     constructor() {
         super();
+        this._subs
+            .push
+            // appManager.systemPortal.onSelectionUpdated.subscribe(
+            //     this.onSelectionUpdated
+            // )
+            ();
+    }
+    initRepo() {
+        console.log('init repo');
+    }
+    cloneRepo() {
+        console.log('clone repo');
     }
 }

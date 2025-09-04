@@ -1,8 +1,8 @@
 <template>
     <default-panel
         v-if="currentPanel === 'default-panel'"
-        @create-repo="$emit('create-repo')"
-        @open-repo="$emit('open-repo')"
+        @init-repo="initRepo"
+        @clone-repo="cloneRepo"
     ></default-panel>
 </template>
 <script src="./SourceControl.ts"></script>

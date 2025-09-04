@@ -8,8 +8,8 @@
         </div>
         <div class="area">
             <div class="list-container">
-                <md-button class="btn btn-primary" @click="$emit('create-repo')">Init</md-button>
-                <md-button class="btn btn-secondary" @click="$emit('open-repo')">Clone</md-button>
+                <md-button class="btn btn-primary" @click="$emit('init-repo')">Init</md-button>
+                <md-button class="btn btn-secondary" @click="$emit('clone-repo')">Clone</md-button>
             </div>
         </div>
     </div>

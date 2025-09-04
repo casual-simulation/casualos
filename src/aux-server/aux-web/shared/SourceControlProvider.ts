@@ -16,17 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import LightningFS from '@isomorphic-git/lightning-fs';
-import http from 'isomorphic-git/http/web';
-import git from 'isomorphic-git';
-// import { Buffer } from 'buffer';
+import type { AuxFileSystem } from '@casual-simulation/aux-common/bots/AuxFileSystem';
+import { AuxFSLightningFS } from '@casual-simulation/aux-vm-browser/fs/AuxFSLightningFS';
+import { AuxIsomorphicGit } from '@casual-simulation/aux-vm-browser/git/AuxIsomorphicGit';
 
 /**
  * Represents a source control provider for Git.
  */
 export interface GitSCP {
-    init(): Promise<void>;
-
     /**
      * Adds a file to staging area.
      * @param path The path of the file to add.
@@ -94,27 +91,47 @@ export const LIGHTNING_FS_NAME = 'git_scp_fs' as const;
 
 /** An implementation of GitSCP using IsomorphicGit */
 export class IsomorphicGitSCP implements GitSCP {
-    /** The filesystem to use in isomorphic git operations. */
-    private _fs: LightningFS = new LightningFS(LIGHTNING_FS_NAME);
-
-    /** The http dependency of isomorphic git for its operations. */
-    private _http: typeof http = http;
-
-    /** The isomorphic git abstraction providing git functionality. */
-    private _git: typeof git = git;
+    private _fs: AuxFileSystem;
+    private _gitHelper: AuxIsomorphicGit;
+    /** The author config to use in git actions (e.g. commits). */
+    private _gitAuthor: GitAuthor;
 
     constructor(
         /** The directory the git repository is working from. */
-        private _dir: string,
-        /** The author config to use in git actions (e.g. commits). */
-        private _gitAuthor: GitAuthor
+        private _dir: string
     ) {}
+
+    get gitAuthor(): GitAuthor {
+        return this._gitAuthor;
+    }
+
+    set gitAuthor(author: GitAuthor) {
+        this._gitAuthor = author;
+    }
+
+    get fs(): AuxFileSystem {
+        if (!this._fs) {
+            return (this._fs = new AuxFSLightningFS());
+        }
+        return this._fs;
+    }
+
+    get gitHelper(): AuxIsomorphicGit {
+        if (!this._gitHelper) {
+            return (this._gitHelper = new AuxIsomorphicGit(this.fs));
+        }
+        return this._gitHelper;
+    }
+
+    get git(): AuxIsomorphicGit['git'] {
+        return this.gitHelper.git;
+    }
 
     async add(
         path: string,
         opts?: { cache?: object; force?: boolean; parallel?: boolean }
     ): Promise<void> {
-        return await this._git.add({
+        return await this.git.add({
             fs: this._fs,
             dir: this._dir,
             filepath: path,
@@ -125,7 +142,7 @@ export class IsomorphicGitSCP implements GitSCP {
     }
 
     async commit(message: string): Promise<string> {
-        return await this._git.commit({
+        return await this.git.commit({
             fs: this._fs,
             dir: this._dir,
             message,
@@ -134,7 +151,7 @@ export class IsomorphicGitSCP implements GitSCP {
     }
 
     async log(opts?: { depth?: number }): Promise<Record<any, any>[]> {
-        return await this._git.log({
+        return await this.git.log({
             fs: this._fs,
             dir: this._dir,
             depth: opts.depth,
@@ -142,7 +159,7 @@ export class IsomorphicGitSCP implements GitSCP {
     }
 
     async remove(path: string, opts?: { cache?: object }): Promise<void> {
-        return await this._git.remove({
+        return await this.git.remove({
             fs: this._fs,
             dir: this._dir,
             filepath: path,
@@ -151,16 +168,12 @@ export class IsomorphicGitSCP implements GitSCP {
     }
 
     async status(path: string, opts?: { cache?: object }): Promise<string> {
-        return await this._git.status({
+        return await this.git.status({
             fs: this._fs,
             dir: this._dir,
             filepath: path,
             cache: opts.cache,
         });
-    }
-
-    async init() {
-        //TODO: fully implement init
     }
 
     async clone(
@@ -173,9 +186,9 @@ export class IsomorphicGitSCP implements GitSCP {
             singleBranch?: boolean;
         }
     ): Promise<void> {
-        return await this._git.clone({
+        return await this.git.clone({
             fs: this._fs,
-            http: this._http,
+            http: AuxIsomorphicGit.http,
             dir: dir,
             url: url,
             corsProxy: opts.corsProxy,

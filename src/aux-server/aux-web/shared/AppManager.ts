@@ -59,6 +59,7 @@ import type { GetPlayerConfigSuccess } from '@casual-simulation/aux-records';
 import { tryParseJson } from '@casual-simulation/aux-common';
 import type { AuxDevice } from '@casual-simulation/aux-runtime';
 import { getSimulationId } from '../../shared/SimulationHelpers';
+import { IsomorphicGitSCP, type GitSCP } from './SourceControlProvider';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -118,6 +119,11 @@ export const PLAYER_OWNER = 'player';
  */
 export const PUBLIC_OWNER = 'public';
 
+/**
+ * The directory where git repos are stored in IDB.
+ */
+export const GIT_SCP_DIRECTORY = 'git_scp';
+
 export class AppManager {
     public appType: AppType;
     private _updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
@@ -161,6 +167,7 @@ export class AppManager {
     private _startLoadTime: number = Date.now();
     private _defaultStudioId: string;
     private _defaultPrivacyFeatures: PrivacyFeatures;
+    private _gitSCP: GitSCP = new IsomorphicGitSCP(GIT_SCP_DIRECTORY);
 
     private _simulationFactory: (
         id: string,
