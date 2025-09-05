@@ -58,15 +58,56 @@ export class RemoteYjsSharedDocument
     extends YjsSharedDocument
     implements SharedDocument
 {
+    /**
+     * Whether the document is static.
+     * Static documents are read-only and only load the initial state once.
+     */
     protected _static: boolean;
+
+    /**
+     * Whether the document should skip the initial load.
+     */
     protected _skipInitialLoad: boolean;
+
+    /**
+     * Whether the document should send initial updates to the server.
+     */
     protected _sendInitialUpdates: boolean = false;
-    protected _watchingBranch: any;
+
+    /**
+     * Whether the document has started watching the branch.
+     */
+    protected _watchingBranch: boolean;
+
+    /**
+     * Whether the document is connected and synced.
+     */
     protected _synced: boolean;
+
+    /**
+     * Whether the document has sent a successful "authorization" status update.
+     */
     protected _authorized: boolean;
+
+    /**
+     * Whether the document is temporary.
+     */
     protected _temporary: boolean;
+
+    /**
+     * Whether the shared document is read-only.
+     * That is, if it can be modified by clients.
+     */
     protected _readOnly: boolean;
+
+    /**
+     * The authentication source that provides authentication information to the document.
+     */
     protected _authSource: PartitionAuthSource;
+
+    /**
+     * The markers that should be set on the branch.
+     */
     protected _markers: string[];
 
     unsubscribe(): void {

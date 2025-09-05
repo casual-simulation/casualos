@@ -83,7 +83,7 @@ describe('PartitionAuthSource', () => {
         expect(promise1 === promise2).toBe(true);
     });
 
-    it('should not de-duplicate requests if they have been responded to', async () => {
+    it('should de-duplicate requests even if they have been responded to', async () => {
         let requests: PartitionAuthRequest[] = [];
         source.onAuthRequest.subscribe((e) => {
             requests.push(e);
@@ -146,7 +146,7 @@ describe('PartitionAuthSource', () => {
             },
         });
 
-        expect(requests.slice(1)).toEqual([
+        expect(requests).toEqual([
             {
                 type: 'request',
                 origin: 'my-origin',

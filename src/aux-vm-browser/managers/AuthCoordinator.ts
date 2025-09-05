@@ -408,6 +408,7 @@ export class AuthCoordinator<TSim extends BrowserSimulation>
                     resourceId,
                     subjectType,
                     subjectId,
+                    actions,
                 });
 
                 return {

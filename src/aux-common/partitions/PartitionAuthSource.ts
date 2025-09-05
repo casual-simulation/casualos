@@ -17,6 +17,7 @@
  */
 import type { WebsocketErrorCode } from '../websockets';
 import type {
+    ActionKinds,
     AuthorizeActionMissingPermission,
     ConnectionIndicator,
     DenialReason,
@@ -151,10 +152,7 @@ export class PartitionAuthSource {
                 this._onAuthResponse
                     .pipe(first((r) => r.origin === request.origin))
                     .subscribe({
-                        next: (r) => {
-                            this._promises.delete(key);
-                            resolve(r);
-                        },
+                        next: (r) => resolve(r),
                         error: (err) => {
                             this._promises.delete(key);
                             reject(err);
@@ -359,6 +357,12 @@ export interface PartitionAuthPermissionResultSuccess {
     resourceId: string;
     subjectType: SubjectType;
     subjectId: string;
+
+    /**
+     * The actions that were authorized.
+     * If null or undefined, then all action kinds were authorized.
+     */
+    actions?: ActionKinds[];
 }
 
 export interface PartitionAuthPermissionResultFailure {
@@ -409,6 +413,12 @@ export interface PartitionAuthExternalPermissionResultSuccess {
     resourceId: string;
     subjectType: SubjectType;
     subjectId: string;
+
+    /**
+     * The actions that were authorized.
+     * If null or undefined, then all action kinds were authorized.
+     */
+    actions?: ActionKinds[];
 }
 
 export interface PartitionAuthExternalPermissionResultFailure {
