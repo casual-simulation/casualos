@@ -56,7 +56,7 @@ import type {
     RemoteActions,
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
-import { union, sortBy, pick, transform } from 'lodash';
+import { union, sortBy, pick, transform } from 'es-toolkit/compat';
 import { BaseHelper } from '../managers/BaseHelper';
 import type {
     AuxRuntime,

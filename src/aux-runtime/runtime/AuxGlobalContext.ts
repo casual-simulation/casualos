@@ -45,7 +45,7 @@ import {
     sortedIndexOf,
     sortedIndexBy,
     transform,
-} from 'lodash';
+} from 'es-toolkit/compat';
 import './PerformanceNowPolyfill';
 import type { SubscriptionLike } from 'rxjs';
 import { Observable, ReplaySubject, Subscription } from 'rxjs';

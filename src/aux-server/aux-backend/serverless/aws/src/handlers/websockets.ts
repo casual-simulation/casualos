@@ -37,14 +37,31 @@ export async function connect(
 [handler] User Agent: ${event.requestContext.identity.userAgent}
 [handler] IP Address: ${event.requestContext.identity.sourceIp}
 `);
-    await builder.ensureInitialized();
 
-    console.log('[handler] Headers:', event.headers);
     const headers: GenericHttpHeaders = {};
     for (let key in event.headers) {
         const value = event.headers[key];
         headers[key.toLowerCase()] = value;
     }
+    const responseHeaders: GenericHttpHeaders = {};
+
+    const protocol = headers['sec-websocket-protocol'];
+    if (protocol) {
+        if (protocol === 'casualos.records') {
+            responseHeaders['sec-websocket-protocol'] = protocol;
+        } else {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Invalid WebSocket protocol',
+                }),
+            };
+        }
+    }
+
+    await builder.ensureInitialized();
 
     const origin = headers['origin'];
     console.log(`[handler] Origin: ${origin}`);
@@ -66,6 +83,7 @@ export async function connect(
 
     return {
         statusCode: 200,
+        headers: responseHeaders,
     };
 }
 

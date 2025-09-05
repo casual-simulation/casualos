@@ -26,7 +26,7 @@ import type {
     WebhookSubscriptionMetrics,
 } from './WebhookRecordsStore';
 import type { ListCrudStoreSuccess } from '../crud/CrudRecordsStore';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 
 export class MemoryWebhookRecordsStore
     extends MemoryCrudRecordsStore<WebhookRecord, WebhookSubscriptionMetrics>

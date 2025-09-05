@@ -31,8 +31,7 @@ import {
 import { getOptionalValue } from '../SharedUtils';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { Physics } from './Physics';
-import type { Dictionary } from 'lodash';
-import { groupBy, flatMap, sortBy } from 'lodash';
+import { groupBy, sortBy } from 'es-toolkit/compat';
 import type { GridTile, Grid3D } from './Grid3D';
 import { disposeObject3D } from './SceneUtils';
 import { hasValue } from '@casual-simulation/aux-common';
@@ -403,13 +402,13 @@ export function calculateGridTileLocalCenter(
 }
 
 function constructGridLines(tiles: GridTile[]): LineSegments {
-    const allPoints: Vector3[] = flatMap(tiles, (t) => t.corners);
+    const allPoints: Vector3[] = tiles.flatMap((t) => t.corners);
     const verticalPoints = groupBy(allPoints, (p) => p.x);
     const horizontalPoints = groupBy(allPoints, (p) => p.y);
 
     let vertices: number[] = [];
 
-    function calcVertices(map: Dictionary<Vector3[]>, prop: 'x' | 'y') {
+    function calcVertices(map: Record<string, Vector3[]>, prop: 'x' | 'y') {
         const keys = Object.keys(map);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];

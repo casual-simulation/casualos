@@ -48,6 +48,7 @@ console.error = jest.fn();
 describe('NotificationRecordsController', () => {
     testCrudRecordsController<
         NotificationRecord,
+        NotificationRecord,
         NotificationRecordsStore,
         NotificationRecordsController
     >(
@@ -62,6 +63,11 @@ describe('NotificationRecordsController', () => {
                     sendNotification: jest.fn(),
                 },
             }),
+        (item) => ({
+            address: item.address,
+            markers: item.markers,
+            description: 'notification description',
+        }),
         (item) => ({
             address: item.address,
             markers: item.markers,
@@ -107,6 +113,7 @@ describe('NotificationRecordsController', () => {
         // };
 
         const context = await setupTestContext<
+            NotificationRecord,
             NotificationRecord,
             NotificationRecordsStore,
             NotificationRecordsController

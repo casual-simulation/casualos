@@ -55,14 +55,14 @@ const TRACE_NAME = 'SubscriptionController';
  * Defines a class that is able to handle subscriptions.
  */
 export class SubscriptionController {
-    private _stripe: StripeInterface;
+    private _stripe: StripeInterface | null;
     private _auth: AuthController;
     private _authStore: AuthStore;
     private _recordsStore: RecordsStore;
     private _config: ConfigurationStore;
 
     constructor(
-        stripe: StripeInterface,
+        stripe: StripeInterface | null,
         auth: AuthController,
         authStore: AuthStore,
         recordsStore: RecordsStore,

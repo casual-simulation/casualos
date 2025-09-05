@@ -31,7 +31,7 @@ import type { UpdatedBotInfo } from './BotWatcher';
 import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import type { BotHelper } from './BotHelper';
-import { difference, union } from 'lodash';
+import { difference, union } from 'es-toolkit/compat';
 
 /**
  * Defines a class that makes it easy to watch for updates to bots in dimensions.

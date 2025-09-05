@@ -28,7 +28,7 @@ import {
     getScriptPrefix,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 
 export type IdeNode = IdeFolderNode | IdeTagNode;
 

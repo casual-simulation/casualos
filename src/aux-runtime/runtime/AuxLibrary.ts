@@ -301,6 +301,7 @@ import type {
     GrantEntitlementsRequest,
     GrantEntitlementsResult,
     InstallPackageResult,
+    ListPermissionsRequest,
 } from './RecordsEvents';
 import {
     aiChat,
@@ -309,12 +310,14 @@ import {
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
     revokeRecordPermission as calcRevokeRecordPermission,
+    listPermissions as calcListPermissions,
     grantInstAdminPermission as calcGrantInstAdminPermission,
     grantUserRole as calcGrantUserRole,
     revokeUserRole as calcRevokeUserRole,
     grantInstRole as calcGrantInstRole,
     revokeInstRole as calcRevokeInstRole,
     listUserStudios as calcListUserStudios,
+    listStudioRecords as calcListStudioRecords,
     joinRoom as calcJoinRoom,
     leaveRoom as calcLeaveRoom,
     setRoomOptions as calcSetRoomOptions,
@@ -364,8 +367,9 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    recordsCallProcedure,
 } from './RecordsEvents';
-import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
+import { sortBy, cloneDeep, union, isEqual } from 'es-toolkit/compat';
 import type {
     DeviceSelector,
     RemoteAction,
@@ -442,12 +446,15 @@ import {
 import type {
     AIChatInterfaceStreamResponse,
     AIChatMessage,
+    CreateRecordResult,
     GrantResourcePermissionResult,
     ListStudiosResult,
+    ListRecordsResult,
     ListSubscriptionsResult,
     NotificationRecord,
     PushNotificationPayload,
     RevokePermissionResult,
+    ListPermissionsResult,
     SendNotificationResult,
     SubscribeToNotificationResult,
     UnsubscribeToNotificationResult,
@@ -517,6 +524,14 @@ import type {
     PackageRecordVersionKeySpecifier,
     RecordPackageVersionResult,
 } from '@casual-simulation/aux-records/packages/version';
+import type {
+    EraseDocumentResult,
+    SearchCollectionSchema,
+    SearchDocument,
+    SearchRecord,
+    SearchRecordOutput,
+    StoreDocumentResult,
+} from '@casual-simulation/aux-records/search';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -837,6 +852,46 @@ export interface RecordPackageVersionApiRequest {
      * The markers that should be applied to the package version.
      */
     markers?: string[];
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordSearchCollection}.
+ *
+ * @dochash types/records/search
+ * @docname RecordSearchCollectionRequest
+ */
+export interface RecordSearchCollectionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The schema that should be used for the collection.
+     */
+    schema: SearchCollectionSchema;
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordSearchDocument}.
+ *
+ * @dochash types/records/search
+ * @docname RecordSearchDocumentRequest
+ */
+export interface RecordSearchDocumentApiRequest {
+    recordName: string;
+    address: string;
+    document: SearchDocument;
 }
 
 /**
@@ -3380,10 +3435,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 requestAuthBot,
                 requestAuthBotInBackground,
 
+                createRecord,
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
                 grantPermission,
                 revokePermission,
+                listPermissions,
                 grantInstAdminPermission,
                 grantUserRole,
                 revokeUserRole,
@@ -3443,7 +3500,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 installPackage,
                 listInstalledPackages,
 
+                recordSearchCollection,
+                getSearchCollection,
+                eraseSearchCollection,
+                listSearchCollections,
+                listSearchCollectionsByMarker,
+                recordSearchDocument,
+                eraseSearchDocument,
+
                 listUserStudios,
+                listStudioRecords,
 
                 getRecordsEndpoint,
 
@@ -8222,7 +8288,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (!hasValue(miniGridPortal)) {
             return false;
         }
-        return every(bots, (f) => getTag(f, miniGridPortal) === true);
+        return bots.every((f) => getTag(f, miniGridPortal) === true);
     }
 
     /**
@@ -8952,6 +9018,70 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates a record with the given name. If a studio is specified, then the record will be created in the given studio.
+     * If not specified, then the record will be owned by the current user.
+     *
+     * Returns a promise that resolves with an object that indicates if the request was successful.
+     *
+     * Permissions: User must be logged in. If a studio is specified, then the user must be a member of the studio.
+     *
+     * @param recordName the name of the record to create.
+     * @param studioId the ID of the studio that should own the record. If not specified, the record will be owned by the current user.
+     *
+     * @example Create a record owned by the current user.
+     * const result = await os.createRecord('myRecord');
+     *
+     * if (result.success) {
+     *     os.toast('Record created successfully!');
+     * } else {
+     *     os.toast('Failed to create record: ' + result.errorMessage);
+     * }
+     *
+     * @example Create a record in a studio.
+     * const result = await os.createRecord('myStudioRecord', 'myStudioId');
+     *
+     * if (result.success) {
+     *     os.toast('Studio record created successfully!');
+     * } else {
+     *     os.toast('Failed to create studio record: ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docid os.createRecord
+     * @docname os.createRecord
+     * @docgroup 01-records
+     */
+    function createRecord(
+        recordName: string,
+        studioId?: string
+    ): Promise<CreateRecordResult> {
+        if (!hasValue(recordName)) {
+            throw new Error('recordName must be provided.');
+        } else if (typeof recordName !== 'string') {
+            throw new Error('recordName must be a string.');
+        }
+
+        if (hasValue(studioId) && typeof studioId !== 'string') {
+            throw new Error('studioId must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                createRecord: {
+                    input: {
+                        recordName,
+                        studioId,
+                    },
+                },
+            },
+            {},
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.
      * Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
      *
@@ -9088,6 +9218,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options ?? {},
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of permissions that have been assigned in the given record.
+     *
+     * @param request the request containing the record name and optional filters.
+     * @param options the options for the operation.
+     *
+     * @example List all permissions in a record.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord'
+     * });
+     *
+     * @example List permissions for a specific marker.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     marker: 'secret'
+     * });
+     *
+     * @example List permissions for a specific resource.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     resourceKind: 'data',
+     *     resourceId: 'address'
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listPermissions
+     * @docname os.listPermissions
+     */
+    function listPermissions(
+        request: ListPermissionsRequest
+    ): Promise<ListPermissionsResult> {
+        const task = context.createTask();
+        const event = calcListPermissions(request, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -11369,6 +11536,386 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Creates or updates a search collection in the given record.
+     * 
+     * Returns a promise that resolves with the result of the operation.
+     * 
+     * @param request The request to create or update the search collection.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     * 
+     * @example Record a search collection with an automatic schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * @example Record a search collection with a custom schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               title: {
+                  type: 'string',
+               },
+               description: {
+                  type: 'string',
+               },
+               price: {
+                  type: 'int32',
+               }
+     *      }
+     * });
+     * 
+     * @example Record a private search collection
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               '.*': {
+     *             type: 'auto'
+     *          }
+     *      },
+     *      markers: ['private']
+     * });
+     * 
+     * @example Record and search through a search collection
+     * import Typesense from 'typesense';
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * if (!result.success) {
+     *   os.toast('Failed to record search collection: ' + result.errorMessage);
+     *   return;
+     * }
+     * 
+     * const collection = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     * 
+     * if (!collection.success) {
+     *    os.toast('Failed to get search collection: ' + collection.errorMessage);
+     *    return;
+     * }
+     * 
+     * const client = new Typesense.Client({
+     *   nodes: collection.item.nodes,
+     *   apiKey: collection.item.searchApiKey,
+     * });
+     *
+     * const searchResults = await client.collections(collection.item.collectionName).documents().search({
+     *   q: 'search term',
+     *   query_by: 'title,description',
+     *   sort_by: 'price:asc',
+     * });
+     * 
+     * console.log('search results', searchResults);
+     * 
+     * 
+     * @doctitle Search Actions
+     * @docsidebar Search
+     * @docdescription Search actions allow you to create and manage search collections in your records. Search collections enable efficient searching and indexing of data within your records, making it easier to retrieve relevant information quickly.
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.recordSearchCollection
+     */
+    function recordSearchCollection(
+        request: RecordSearchCollectionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordSearchCollection: {
+                    input: {
+                        recordName: request.recordName,
+                        item: {
+                            address: request.address,
+                            schema: request.schema,
+                            markers: request.markers as [string, ...string[]],
+                        },
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Deletes a search collection along with all the documents in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param address The address of the search collection to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search collection
+     * const result = await os.eraseSearchCollection('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.eraseSearchCollection
+     */
+    function eraseSearchCollection(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseSearchCollection: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the search collections in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List search collections
+     * const result = await os.listSearchCollections('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.listSearchCollections
+     */
+    function listSearchCollections(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listSearchCollections: {
+                    input: {
+                        recordName,
+                        address: startingAddress,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the search collections in a record by a specific marker.
+     * @param recordName The name of the record to list the search collections from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'publicRead');
+     *
+     * @example List private search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.listSearchCollectionsByMarker
+     */
+    function listSearchCollectionsByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<SearchRecord>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listSearchCollections: {
+                    input: {
+                        recordName,
+                        marker,
+                        address: startingAddress,
+                        sort: options?.sort,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a search collection from the specified record.
+     * @param recordName The name of the record to retrieve the search collection from.
+     * @param address The address of the search collection to retrieve.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a search collection
+     * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * @example Search through a search collection
+     * import Typesense from 'typesense';
+     * const collection = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * if (!collection.success) {
+     *    os.toast('Failed to get search collection: ' + collection.errorMessage);
+     *    return;
+     * }
+     *
+     * const client = new Typesense.Client({
+     *   nodes: collection.item.nodes,
+     *   apiKey: collection.item.searchApiKey,
+     * });
+     *
+     * const searchResults = await client.collections(collection.item.collectionName).documents().search({
+     *   q: 'search term',
+     *   query_by: 'title,description',
+     *   sort_by: 'price:asc',
+     * });
+     *
+     * console.log('search results', searchResults);
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.getSearchCollection
+     */
+    function getSearchCollection(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudGetItemResult<SearchRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getSearchCollection: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Records a search document to the specified search collection in the given record.
+     * @param request The request to record the search document.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a search document
+     * const result = await os.recordSearchDocument({
+     *    recordName: 'myRecord',
+     *    address: 'mySearchCollection',
+     *    document: {
+     *      // ensure that the document matches the schema of the search collection
+     *      title: 'My Document',
+     *      description: 'This is the content of my document.'
+     *      price: 10,
+     *    }
+     * });
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.recordSearchDocument
+     */
+    function recordSearchDocument(
+        request: RecordSearchDocumentApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<StoreDocumentResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordSearchDocument: {
+                    input: {
+                        recordName: request.recordName,
+                        address: request.address,
+                        document: request.document,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases a search document from the specified search collection in the given record.
+     * @param recordName The name of the record that the search document is in.
+     * @param address The address of the search collection that the document is in.
+     * @param documentId The ID of the document that should be erased.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search document
+     * const result = await os.eraseSearchDocument('myRecord', 'mySearchCollection', 'documentId');
+     *
+     * @dochash actions/os/records/search
+     * @docgroup 02-search
+     * @docname os.eraseSearchDocument
+     */
+    function eraseSearchDocument(
+        recordName: string,
+        address: string,
+        documentId: string,
+        options: RecordActionOptions = {}
+    ): Promise<EraseDocumentResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseSearchDocument: {
+                    input: {
+                        recordName: recordName,
+                        address: address,
+                        documentId: documentId,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Gets the list of studios that the currently logged in user has access to.
      *
      * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
@@ -11396,6 +11943,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcListUserStudios(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of records that are in the studio with the given ID.
+     *
+     * Returns a promise that resolves with an object that contains the list of records (if successful) or information about the error that occurred.
+     * The user must be a member of the studio to access its records.
+     *
+     * @param studioId The ID of the studio to list records for.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used.
+     *
+     * @example Get the list of records in a studio
+     * const result = await os.listStudioRecords('studioId123');
+     *
+     * if (result.success) {
+     *      os.toast(`Found ${result.records.length} records in studio`);
+     *      for (const record of result.records) {
+     *          os.toast(`Record: ${record.name}`);
+     *      }
+     * } else {
+     *      os.toast('Failed to list studio records: ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listStudioRecords
+     * @docname os.listStudioRecords
+     */
+    function listStudioRecords(
+        studioId: string,
+        endpoint?: string
+    ): Promise<ListRecordsResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
+        const task = context.createTask();
+        const event = calcListStudioRecords(studioId, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -12158,6 +12745,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Get a shared document from the current inst by name.
      * const sharedDocument = await os.getSharedDocument('myDocument');
      *
+     * @example Get a map from a shared document.
+     * const doc = await os.getSharedDocument('myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a shared document.
+     * const doc = await os.getSharedDocument('myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a shared document
+     * const doc = await os.getSharedDocument('myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getSharedDocument('myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
+     *
      * @dochash actions/os/documents
      * @doctitle Document Actions
      * @docsidebar Documents
@@ -12177,6 +12790,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param inst The name of the inst that the shared document is in.
      * @param branch The name of the branch that the shared document is in.
      *
+     * @example Get a shared document from the given inst.
+     * const sharedDocument = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     *
+     * @example Get a map from a shared document.
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a shared document.
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a shared document
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getSharedDocument('recordName', 'myInst', 'myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
+     *
      * @dochash actions/os/documents
      * @docname os.getSharedDocument
      * @docid os.getSharedDocument-recordName-inst-name
@@ -12187,31 +12829,99 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         name: string
     ): Promise<SharedDocument>;
 
+    /**
+     * Gets a shared document from the current inst with the given options.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param name The name of the document.
+     * @param options The options for the shared document.
+     *
+     * @example Get a shared document with custom markers.
+     * const sharedDocument = await os.getSharedDocument('myDocument', {
+     *     markers: ['secret', 'team']
+     * });
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-name-options
+     */
+    function getSharedDocument(
+        name: string,
+        options: { markers?: string[] }
+    ): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document record from the given inst by its name with options.
+     *
+     * Shared documents are a way to share data across insts in a easy and secure manner.
+     *
+     * Returns a promise that resolves with the shared document.
+     * @param recordName The name of the record. If null, then a public inst will be used.
+     * @param inst The name of the inst that the shared document is in.
+     * @param branch The name of the branch that the shared document is in.
+     * @param options The options for the shared document.
+     *
+     * @example Get a shared document from the given inst with custom markers.
+     * const sharedDocument = await os.getSharedDocument('recordName', 'myInst', 'myDocument', {
+     *     markers: ['secret', 'team']
+     * });
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-recordName-inst-name-options
+     */
+    function getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string,
+        options: { markers?: string[] }
+    ): Promise<SharedDocument>;
+
     function getSharedDocument(
         recordOrName: string,
-        inst?: string,
-        name?: string
+        inst?: string | { markers?: string[] },
+        name?: string,
+        options?: { markers?: string[] }
     ): Promise<SharedDocument> {
         const task = context.createTask();
         let recordName: string;
         let instName: string;
         let branchName: string;
+        let markers: string[] | undefined;
 
-        if (!inst && !name) {
+        if (typeof inst === 'object' && !name && !options) {
+            // Called as getSharedDocument(name, options)
+            instName = getCurrentServer();
+            recordName = getCurrentInstRecord();
+            branchName = recordOrName;
+            markers = inst?.markers;
+        } else if (!inst && !name) {
+            // Called as getSharedDocument(name)
             instName = getCurrentServer();
             recordName = getCurrentInstRecord();
             branchName = recordOrName;
         } else {
+            // Called as getSharedDocument(recordName, inst, name) or getSharedDocument(recordName, inst, name, options)
+            if (typeof inst === 'object') {
+                throw new Error(
+                    'The second argument (inst) must be a string when calling getSharedDocument() with three or more arguments.'
+                );
+            }
+
             recordName = recordOrName;
             instName = inst;
             branchName = name;
+            markers = options?.markers;
         }
 
         const event = loadSharedDocument(
             recordName,
             instName,
             `doc/${branchName}`,
-            task.taskId
+            task.taskId,
+            markers
         );
 
         return addAsyncAction(task, event);
@@ -12219,7 +12929,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a shared document that is only stored locally on this device.
+     *
+     * Note that local documents are inst-specific. This means that they are only accessible within the inst they were created in.
+     *
      * @param name The name of the document.
+     *
+     * @example Get a local document.
+     * const doc = await os.getLocalDocument('myDocument');
+     *
+     * @example Get a map from a local document.
+     * const doc = await os.getLocalDocument('myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a local document.
+     * const doc = await os.getLocalDocument('myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a local document
+     * const doc = await os.getLocalDocument('myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getLocalDocument('myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
      *
      * @dochash actions/os/documents
      * @docname os.getLocalDocument
@@ -12237,6 +12979,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets a document that is not shared or saved to the device.
+     *
+     * @example Get a memory document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     *
+     * @example Get a map from a memory document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const map = doc.getMap('myValues');
+     * map.set('myKey', 'myValue');
+     *
+     * @example Get an array from a memory document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const array = doc.getArray('myArray');
+     * array.push('myValue');
+     *
+     * @example Get text from a memory document
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const text = doc.getText('myText');
+     * text.insert(0, 'Hello, World!');
+     *
+     * os.toast(text.toString());
+     *
+     * @example Get the serialized state of the document.
+     * const doc = await os.getMemoryDocument('myDocument');
+     * const state = doc.getStateUpdate();
+     *
+     * @example Efficiently batch multiple updates
+     * const doc = await os.getLocalDocument('myDocument');
+     * doc.transact(() => {
+     *    const map = doc.getMap('myValues');
+     *    map.set('myKey', 'myValue');
+     *    map.set('myKey2', 'myValue2');
+     *    map.set('myKey3', 'myValue3');
+     * });
      *
      * @dochash actions/os/documents
      * @docname os.getMemoryDocument
@@ -16651,7 +17426,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function createBotLinkApi(
         ...bots: (Bot | string | (Bot | string)[])[]
     ): string {
-        let targets = flatMap(bots);
+        let targets = bots.flatMap((b) => b);
         let result = [] as string[];
         for (let t of targets) {
             if (isBot(t)) {

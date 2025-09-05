@@ -63,7 +63,7 @@ import {
 } from '@casual-simulation/aux-runtime';
 import type { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
-import { merge, cloneDeep } from 'lodash';
+import { merge, cloneDeep } from 'es-toolkit/compat';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import type { TimeSample } from '@casual-simulation/timesync';

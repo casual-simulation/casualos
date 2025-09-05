@@ -20,7 +20,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authManager } from '../../shared/index';
 import type { Subscription } from 'rxjs';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import { tap } from 'rxjs/operators';
 import type { ListedSession } from '@casual-simulation/aux-records/AuthController';
 import SessionLocation from '../SessionLocation/SessionLocation';

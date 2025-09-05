@@ -3448,6 +3448,7 @@ describe('PolicyController', () => {
             ['notification'],
             ['package'],
             ['package.version'],
+            ['search'],
         ];
 
         // Admins can perform all actions on all resources
@@ -4803,6 +4804,28 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            [
+                'search',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['list', null],
+                    ['assign', 'resourceId'],
+                    ['unassign', 'resourceId'],
+                    ['grant', 'resourceId'],
+                    ['revoke', 'resourceId'],
+                    ['grantPermission', 'resourceId'],
+                    ['revokePermission', 'resourceId'],
+                    ['count', 'resourceId'],
+                    ['increment', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['send', 'resourceId'],
+                    ['subscribe', 'resourceId'],
+                    ['listSubscriptions', 'resourceId'],
+                ],
+            ],
         ];
 
         const recordKeySubjectTypeDenialCases: [SubjectType, string][] = [
@@ -5365,6 +5388,17 @@ describe('PolicyController', () => {
                     ['listSubscriptions', 'resourceId'],
                 ],
             ],
+            [
+                'search',
+                [
+                    ['create', 'resourceId'],
+                    ['delete', 'resourceId'],
+                    ['update', 'resourceId'],
+                    ['read', 'resourceId'],
+                    ['run', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         describe.each(studioMemberResourceKindDenialCases)(
@@ -5452,6 +5486,13 @@ describe('PolicyController', () => {
                 [
                     ['read', 'resourceId'],
                     ['run', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
+            [
+                'search',
+                [
+                    ['read', 'resourceId'],
                     ['list', null],
                 ],
             ],
@@ -5589,6 +5630,13 @@ describe('PolicyController', () => {
                     ['list', null],
                 ],
             ],
+            [
+                'search',
+                [
+                    ['read', 'resourceId'],
+                    ['list', null],
+                ],
+            ],
         ];
 
         const publicWriteSubjectTypeCases: [
@@ -5682,7 +5730,6 @@ describe('PolicyController', () => {
                         store,
                         services.authMessenger,
                         store,
-                        true,
                         privoClient
                     );
                     records = new RecordsController({
@@ -6297,6 +6344,7 @@ describe('PolicyController', () => {
                 ['permissions', ['role', 'marker']],
                 ['webhook', ['webhook']],
                 ['ai', ['ai.sloyd', 'ai.hume']],
+                ['search', ['search']],
             ];
 
             const instRecordName = 'instRecord';

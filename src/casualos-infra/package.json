@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/infra",
-    "version": "3.5.0",
+    "version": "3.7.0",
     "description": "Pulumi resources for hosting CasualOS",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -14,7 +14,7 @@
         "@pulumi/aws-native": "^0.116.0",
         "@pulumi/awsx": "^2.0.2",
         "@pulumi/pulumi": "^3.113.0",
-        "lodash": "4.17.21"
+        "es-toolkit": "1.39.10"
     },
     "repository": {
         "type": "git",

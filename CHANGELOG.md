@@ -1,17 +1,97 @@
 # CasualOS Changelog
 
-## V3.6.1
+## V3.7.1
 
 #### Date: TBD
 
 ### :rocket: Features
 
+-   Added the `os.createRecord(name)` function ([#668](https://github.com/casual-simulation/casualos/pull/668)).
+-   Added the `os.listSudioRecords(studioId)` function ([#666](https://github.com/casual-simulation/casualos/pull/666)).
+-   Added the the ability to specify markers when loading a shared document. ([#663](https://github.com/casual-simulation/casualos/pull/663))
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
+-   Fixed an issue where the background color for comID logos would not be displayed at the same time as the comID logo.
+
+## V3.7.0
+
+#### Date: 8/22/2025
+
+### :boom: Breaking Changes
+
+-   Changed local insts (`?staticInst` in the URL query) to no longer require separate permission for performing records actions.
+    -   Previously, public (sometimes called free) insts and local insts had to be granted separate permission for actions that manipulated data.
+    -   This led to a large number of uses of `os.grantInstAdminPermission()`, which was a workaround to allow people to grant an inst permissions.
+    -   The goal was to replace this mechanism by encouraging switching to packages and entitlements which are able to automatically grant insts permissions based on the entitlement grants that users have given indiviaual packages.
+    -   Unfortunately, packages aren't a good solution for scenarios when actively developing AUXes and (as a result) developers are forced to continue using `os.grantInstAdminPermission()` in development.
+    -   Additionally, many developers prefer to use local insts instead of studio insts (which automatically get some permissions), seeing them as temporary and disposable unlike private insts.
+    -   Now, local insts no longer need to be granted special permissions for records actions.
+    -   The downside to this change is that local insts now pose a greater risk and attack vector for cross site scripting (XSS). In such a scenario, an attacker would give a user a malicious AUX that steals their data. If the user decides to run it in an inst, then their data might get stolen by the attacker.
+
+### :rocket: Features
+
 -   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
     -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+-   Added additional properties to `@onClick` and `@onAnyBotClicked` for code tool bots:
+    -   `codeBot` - The bot that is currently being displayed in the code editor.
+    -   `codeTag` - The tag that is currently being displayed in the code editor.
+    -   `codeTagSpace` - The space of the tag that is currently being displayed in the code editor.
+-   Added search records.
+    -   Search records allow you to utilize [Typesense](https://typesense.org/) to easily search over a large number of documents. Each "Search record" maps to a Typesense [collection](https://typesense.org/docs/29.0/api/collections.html), which can store many documents. Documents are just JSON (kinda like data records).
+    -   `os.recordSearchCollection(request)` - Creates or updates a Search collection. Each collection exists at an address and is assigned its own unique collection name.
+    -   `os.getSearchCollection(recordName, address)` - Gets information about a search collection.
+    -   `os.eraseSearchCollection(recordName, address)` - Deletes a search collection.
+    -   `os.listSearchCollections(recordName, startingAddress?)` - Lists search collections in a record.
+    -   `os.listSearchCollectionsByMarker(recordName, marker, startingAddress?)` - Lists search collections by marker.
+    -   `os.recordSearchDocument(request)` - Creates a document inside a search collection.
+    -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
+    -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
+    -   Search records have the ability to be automatically synced from data records, but there is currently no API for this and needs to be setup on a case-by-case basis (for now).
+-   Added the ability to allow scripts to import some of the libraries that CasualOS itself uses.
+    -   This now also makes it possible for other libraries to share some libraries with CasualOS itself.
+    -   The following libraries can now be imported by scripts directly:
+        -   `yjs` - The [YJS](https://yjs.dev/) CRDT library.
+        -   `luxon` - The [Luxon](https://github.com/moment/luxon#readme) date and time library.
+        -   `preact` - The [Preact](https://preactjs.com/) JSX rendering library.
+        -   `preact/compat` - The `preact/compat` export of Preact.
+        -   `preact/jsx-runtime` - The `preact/jsx-runtime` export of Preact.
+    -   This change should now make it possible to use libraries that utilize React by setting up an import map (only on deployments which support full DOM features):
+        -   ```typescript
+            const casualOsImportMap =
+                document.getElementById('default-import-map');
+            if (!casualOsImportMap) {
+                console.error('CasualOS import map not found!');
+                return;
+            }
+            const defaultImportMap = JSON.parse(casualOsImportMap.textContent);
+            const mapScript = document.createElement('script');
+            mapScript.id = 'react-import-map';
+            mapScript.type = 'importmap';
+            mapScript.textContent = JSON.stringify({
+                imports: {
+                    react: defaultImportMap.imports['preact/compat'],
+                    'react-dom': defaultImportMap.imports['preact/compat'],
+                    'react/jsx-runtime':
+                        defaultImportMap.imports['preact/jsx-runtime'],
+                },
+            });
+            document.head.append(mapScript);
+            ```
+-   Added support for SQLite database backends.
+    -   This now means that it is a bit easier to host CasualOS on singular nodes.
+-   Greatly reduced the initial bundle size by replacing Lodash with es-toolkit.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue in the `unpack-aux` CLI command where tags that failed to be written would be omitted from the bot AUX file.
+-   Fixed an issue where strings like `e123` would be recognized as numbers.
+-   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
+-   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+-   Fixed an issue where calling `os.getSharedDocument()` with a record key would sometimes fail.
+-   Fixed the "Document Actions" not being shown in the documentation sidebar.
+-   Fixed issues with inconsistent display of user subscriptions.
 
 ## V3.6.0
 

@@ -65,7 +65,6 @@ import type {
     PartitionRemoteEvents,
     YjsPartitionConfig,
 } from './AuxPartitionConfig';
-import { flatMap } from 'lodash';
 import type { Doc, Transaction, AbstractType, YEvent } from 'yjs';
 import {
     Text,
@@ -376,7 +375,7 @@ export class YjsPartitionImpl
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, (e) => {
+        const finalEvents = events.flatMap((e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (

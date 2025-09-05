@@ -33,7 +33,7 @@ import type {
 import { getFormErrors } from '@casual-simulation/aux-common';
 import FieldErrors from '../../../shared/vue-components/FieldErrors/FieldErrors';
 import type { BiosOption, FormError } from '@casual-simulation/aux-common';
-import { isEqual } from 'lodash';
+import { isEqual } from 'es-toolkit/compat';
 import type { RecordsClientInputs } from '@casual-simulation/aux-records/RecordsClient';
 
 // TODO: Support uploading logos

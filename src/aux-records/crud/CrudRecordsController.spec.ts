@@ -37,6 +37,7 @@ describe('CrudRecordsController', () => {
     describe('allows record key access', () => {
         testCrudRecordsController<
             TestItem,
+            TestItem,
             CrudRecordsStore<TestItem>,
             TestController
         >(
@@ -49,12 +50,14 @@ describe('CrudRecordsController', () => {
                     resourceKind: 'data',
                     name: 'testItem',
                 }),
+            (item) => item,
             (item) => item
         );
     });
 
     describe('denies record key access', () => {
         testCrudRecordsController<
+            TestItem,
             TestItem,
             CrudRecordsStore<TestItem>,
             TestController
@@ -68,6 +71,7 @@ describe('CrudRecordsController', () => {
                     resourceKind: 'marker',
                     name: 'testItem',
                 }),
+            (item) => item,
             (item) => item
         );
     });

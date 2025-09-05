@@ -24,7 +24,7 @@ import type {
     SubCrudRecord,
     SubCrudRecordsStore,
 } from './SubCrudRecordsStore';
-import { isEqual } from 'lodash';
+import { isEqual } from 'es-toolkit/compat';
 import type {
     CrudRecord,
     CrudRecordsStore,

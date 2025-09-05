@@ -353,6 +353,13 @@ export interface WatchBranchMessage {
      * Currently, "updates" is the only supported protocol.
      */
     protocol?: 'updates';
+
+    /**
+     * The markers that should be set on the inst if it is new.
+     * If the inst already exists, this field is ignored.
+     * If not provided, the default markers will be used.
+     */
+    markers?: string[];
 }
 export const watchBranchMessageSchema = z.object({
     type: z.literal('repo/watch_branch'),
@@ -360,6 +367,7 @@ export const watchBranchMessageSchema = z.object({
     inst: z.string(),
     branch: z.string(),
     temporary: z.boolean().optional(),
+    markers: z.array(z.string()).optional(),
 });
 type ZodWatchBranchMessage = z.infer<typeof watchBranchMessageSchema>;
 type ZodWatchBranchMessageAssertion = HasType<

@@ -54,6 +54,8 @@ import { z } from 'zod';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
+import type { IQueue } from './queue';
+import type { SearchSyncQueueEvent } from './search';
 
 const TRACE_NAME = 'DataRecordsController';
 
@@ -62,6 +64,8 @@ export interface DataRecordsConfiguration {
     policies: PolicyController;
     metrics: MetricsStore;
     config: ConfigurationStore;
+
+    searchSyncQueue?: IQueue<SearchSyncQueueEvent> | null;
 }
 
 /**
@@ -73,6 +77,8 @@ export class DataRecordsController {
     private _metrics: MetricsStore;
     private _config: ConfigurationStore;
 
+    private _searchSyncQueue: IQueue<SearchSyncQueueEvent> | null;
+
     /**
      * Creates a DataRecordsController.
      * @param config The configuration that should be used for the data records controller.
@@ -82,6 +88,7 @@ export class DataRecordsController {
         this._policies = config.policies;
         this._metrics = config.metrics;
         this._config = config.config;
+        this._searchSyncQueue = config.searchSyncQueue || null;
     }
 
     /**
@@ -336,6 +343,17 @@ export class DataRecordsController {
                     errorCode: result2.errorCode,
                     errorMessage: result2.errorMessage!,
                 };
+            }
+
+            if (this._searchSyncQueue) {
+                await this._searchSyncQueue.add('dataChanged', {
+                    type: 'sync_item',
+                    itemRecordName: recordName,
+                    itemResourceKind: 'data',
+                    itemAddress: address,
+                    itemMarkers: resourceMarkers,
+                    action: existingRecord.success ? 'update' : 'create',
+                });
             }
 
             return {
@@ -708,6 +726,17 @@ export class DataRecordsController {
                     errorCode: result2.errorCode,
                     errorMessage: result2.errorMessage!,
                 };
+            }
+
+            if (this._searchSyncQueue) {
+                await this._searchSyncQueue.add('dataChanged', {
+                    type: 'sync_item',
+                    itemRecordName: recordName,
+                    itemResourceKind: 'data',
+                    itemAddress: address,
+                    itemMarkers: markers,
+                    action: 'delete',
+                });
             }
 
             return {

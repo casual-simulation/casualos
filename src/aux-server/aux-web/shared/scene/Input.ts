@@ -23,7 +23,6 @@ import {
     Sphere,
     Matrix4,
 } from '@casual-simulation/three';
-import { find, some } from 'lodash';
 import type { Viewport } from './Viewport';
 import type { Game } from './Game';
 import type { Observable } from 'rxjs';
@@ -385,7 +384,7 @@ export class Input {
         element: HTMLElement
     ): boolean {
         let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
-        return some(elements, (e) => e === element);
+        return elements.some((e) => e === element);
     }
 
     constructor(game: Game) {
@@ -955,7 +954,7 @@ export class Input {
      */
     public getTouchData(finderIndex: number): TouchData {
         if (this._touchData.length > 0) {
-            let touchData = find(this._touchData, (d: TouchData) => {
+            let touchData = this._touchData.find((d: TouchData) => {
                 return d.fingerIndex === finderIndex;
             });
             if (touchData) {
@@ -1623,7 +1622,7 @@ export class Input {
         for (let i = 0; i < changed.length; i++) {
             let touch = changed.item(i);
 
-            let existingTouch = find(this._touchData, (d) => {
+            let existingTouch = this._touchData.find((d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
@@ -1716,7 +1715,7 @@ export class Input {
                 HTMLElement
             >document.elementFromPoint(touch.clientX, touch.clientY);
 
-            let existingTouch = find(this._touchData, (d) => {
+            let existingTouch = this._touchData.find((d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.state.setUpFrame(this.time.frameCount);
@@ -1786,7 +1785,7 @@ export class Input {
             // Handle a canceled touche the same as a touch end.
             let touch = changed.item(i);
 
-            let existingTouch = find(this._touchData, (d) => {
+            let existingTouch = this._touchData.find((d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.state.setUpFrame(this.time.frameCount);
@@ -1845,7 +1844,7 @@ export class Input {
 
         event.stopImmediatePropagation();
 
-        let existingTouch = find(this._touchData, (d) => {
+        let existingTouch = this._touchData.find((d) => {
             return d.identifier === event.pointerId;
         });
         if (!existingTouch) {
@@ -2036,7 +2035,7 @@ export class Input {
             event.preventDefault();
         }
 
-        let existingTouch = find(this._touchData, (d) => {
+        let existingTouch = this._touchData.find((d) => {
             return d.identifier === event.pointerId;
         });
         if (!existingTouch) {
@@ -2113,7 +2112,7 @@ export class Input {
             document.elementFromPoint(event.clientX, event.clientY)
         );
 
-        let existingTouch = find(this._touchData, (d) => {
+        let existingTouch = this._touchData.find((d) => {
             return d.identifier === event.pointerId;
         });
 
@@ -2953,7 +2952,7 @@ class WheelData {
      * @param frame The frame number to retrieve.
      */
     getFrame(frame: number): WheelFrame {
-        let wheelFrame = find(this._wheelFrames, (f: WheelFrame) => {
+        let wheelFrame = this._wheelFrames.find((f: WheelFrame) => {
             return f.moveFrame === frame;
         });
         if (wheelFrame) return wheelFrame;

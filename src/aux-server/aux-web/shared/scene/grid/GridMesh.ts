@@ -26,8 +26,7 @@ import {
     LineSegments,
 } from '@casual-simulation/three';
 import type { GridLevel } from './GridLevel';
-import type { Dictionary } from 'lodash';
-import { flatMap, groupBy, minBy, sortBy } from 'lodash';
+import { groupBy, minBy, sortBy } from 'es-toolkit/compat';
 import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;
@@ -81,7 +80,7 @@ export class GridMesh extends Object3D {
 export function constructGridLines(level: GridLevel): Line {
     const validTiles = level.tiles.filter((t) => t.valid);
 
-    const allPoints = flatMap(validTiles, (t) => t.localPoints);
+    const allPoints = validTiles.flatMap((t) => t.localPoints);
 
     const verticalPoints = groupBy(allPoints, (p) => p.x);
     const horizontalPoints = groupBy(allPoints, (p) => p.z);
@@ -92,7 +91,7 @@ export function constructGridLines(level: GridLevel): Line {
 
     function calcVerticies(
         keys: string[],
-        map: Dictionary<Vector3[]>,
+        map: Record<string, Vector3[]>,
         prop: 'x' | 'z'
     ) {
         for (let i = 0; i < keys.length; i++) {

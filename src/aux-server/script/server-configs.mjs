@@ -22,6 +22,7 @@ import {
     getExternals,
     replaceEsbuildPlugin,
     replaceThreePlugin,
+    replaceLodashPlugin,
 } from '../../../script/build-helpers.mjs';
 import { GIT_HASH, GIT_TAG } from '../../../script/git-stats.mjs';
 import copy from 'esbuild-copy-static-files';
@@ -57,6 +58,14 @@ const denoBootstrapScripts = path.resolve(denoVm, 'deno');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 const generatedPrisma = path.resolve(auxBackend, 'prisma', 'generated');
+
+const typesensePath = path.resolve(
+    auxServerNodeModules,
+    'typesense',
+    'src',
+    'Typesense.ts'
+);
+const typesenseOutput = path.resolve(auxWeb, 'shared', 'static', 'lib');
 
 let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
@@ -110,7 +119,11 @@ export function createConfigs(dev, version) {
                 },
                 external: ['deno-vm'],
                 minify: !dev,
-                plugins: [replaceThreePlugin(), ImportGlobPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceLodashPlugin(),
+                    ImportGlobPlugin(),
+                ],
             },
         ],
         [
@@ -148,6 +161,7 @@ export function createConfigs(dev, version) {
                         ),
                         force: true,
                     }),
+                    replaceLodashPlugin(),
                     ImportGlobPlugin(),
                 ],
                 minify: !dev,
@@ -167,7 +181,7 @@ export function createConfigs(dev, version) {
                     ...extraVariables,
                 },
                 minify: !dev,
-                plugins: [ImportGlobPlugin()],
+                plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
             },
         ],
         [
@@ -184,7 +198,7 @@ export function createConfigs(dev, version) {
                     ...extraVariables,
                 },
                 minify: !dev,
-                plugins: [ImportGlobPlugin()],
+                plugins: [replaceLodashPlugin(), ImportGlobPlugin()],
             },
         ],
         [
@@ -200,6 +214,7 @@ export function createConfigs(dev, version) {
                 minify: !dev,
                 plugins: [
                     replaceThreePlugin(),
+                    replaceLodashPlugin(),
                     replaceEsbuildPlugin(),
                     copy({
                         src: path.resolve(auxWebDist, 'deno.js'),
@@ -228,7 +243,22 @@ export function createConfigs(dev, version) {
                     ...developmentVariables,
                 },
                 minify: !dev,
-                plugins: [replaceThreePlugin(), replaceEsbuildPlugin()],
+                plugins: [
+                    replaceThreePlugin(),
+                    replaceLodashPlugin(),
+                    replaceEsbuildPlugin(),
+                ],
+            },
+        ],
+        [
+            'Typesense',
+            {
+                entryPoints: [path.resolve(typesensePath)],
+                outdir: typesenseOutput,
+                platform: 'browser',
+                target: ['es2020'],
+                format: 'esm',
+                minify: !dev,
             },
         ],
     ];
