@@ -362,6 +362,15 @@
                                 </picture>
                                 <md-tooltip>Add Tag</md-tooltip>
                             </md-button>
+                            <!-- Test button for multi-tab functionality -->
+                            <md-button
+                                class="md-raised pin-tag-button"
+                                @click="createTestTab"
+                                v-if="selectedBot"
+                            >
+                                <md-icon>tab</md-icon>
+                                <md-tooltip>Create Test Tab</md-tooltip>
+                            </md-button>
                         </div>
                         <div class="tags-sort-options">
                             <md-button

@@ -1046,9 +1046,39 @@ export default class SystemPortal extends Vue {
                             (t) => t.id === parameters.api.id
                         );
                         if (tab) {
-                            container.textContent = `Editor for ${tab.title}`;
+                            container.style.padding = '16px';
+                            container.style.fontFamily = 'monospace';
+                            container.style.fontSize = '14px';
+                            container.style.backgroundColor = '#f8f8f8';
+                            container.style.border = '1px solid #ddd';
+                            container.style.borderRadius = '4px';
+
+                            container.innerHTML = `
+                                <div style="margin-bottom: 12px;">
+                                    <h3 style="margin: 0 0 8px 0; color: #333;">${
+                                        tab.title
+                                    }</h3>
+                                    <div style="color: #666; font-size: 12px;">
+                                        Bot ID: ${tab.bot.id}<br>
+                                        Tag: ${tab.tag}<br>
+                                        Space: ${tab.space || 'default'}<br>
+                                        Primary: ${tab.isPrimary ? 'Yes' : 'No'}
+                                    </div>
+                                </div>
+                                <div style="background: white; padding: 12px; border-radius: 4px; min-height: 100px;">
+                                    <div style="color: #888; font-style: italic;">
+                                        TagValueEditor will be integrated here.<br>
+                                        Current tag value: ${JSON.stringify(
+                                            tab.bot.tags[tab.tag] || null,
+                                            null,
+                                            2
+                                        )}
+                                    </div>
+                                </div>
+                            `;
                         } else {
-                            container.textContent = 'Loading...';
+                            container.innerHTML =
+                                '<div style="color: #888;">Loading...</div>';
                         }
                     },
                     dispose: () => {
@@ -1112,6 +1142,27 @@ export default class SystemPortal extends Vue {
         );
     }
 
+    createTestTab() {
+        if (!this.selectedBot) {
+            return;
+        }
+
+        // Create a test tab with the current bot and a sample tag
+        const testTag =
+            this.tags.length > 0
+                ? this.tags[0]
+                : { name: 'system', space: undefined };
+        const tabId = appManager.systemPortal.createTab(
+            this.selectedBotSimId,
+            this.selectedBot,
+            testTag.name,
+            testTag.space,
+            false
+        );
+
+        console.log(`Created test tab with ID: ${tabId}`);
+    }
+
     beforeDestroy() {
         if (this.dockview) {
             this.dockview.dispose();
@@ -1168,6 +1219,12 @@ export default class SystemPortal extends Vue {
         this._setSimUserBotTags(this.selectedBotSimId, tags);
 
         // Also create/switch to a tab for this tag
+        console.log(
+            'SystemPortal: Creating tab for tag:',
+            tag.name,
+            'space:',
+            tag.space
+        );
         this.openTabForTag(tag);
         // sim.helper.updateBot(sim.helper.userBot, {
         //     tags,

@@ -345,12 +345,24 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         const tabId = `tab-${this._nextTabId++}`;
         const title = `${getShortId(bot)}.${tag}${space ? ` (${space})` : ''}`;
 
+        console.log('SystemPortalCoordinator: Creating tab', {
+            simulationId,
+            botId: bot.id,
+            tag,
+            space,
+            setAsPrimary,
+        });
+
         // Check if tab already exists
         const existingTab = this._editorTabs.find(
             (t) => t.bot.id === bot.id && t.tag === tag && t.space === space
         );
 
         if (existingTab) {
+            console.log(
+                'SystemPortalCoordinator: Tab already exists, switching to:',
+                existingTab.id
+            );
             this.setActiveTab(existingTab.id);
             return existingTab.id;
         }
@@ -375,6 +387,12 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         }
 
         this._editorTabs.push(newTab);
+        console.log(
+            'SystemPortalCoordinator: Tab created:',
+            tabId,
+            'Total tabs:',
+            this._editorTabs.length
+        );
         this._updateTabsState();
 
         return tabId;
