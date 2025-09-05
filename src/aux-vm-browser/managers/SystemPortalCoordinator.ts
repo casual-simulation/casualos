@@ -107,11 +107,14 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
     private _diffUpdated: BehaviorSubject<SystemPortalDiffUpdate>;
     private _diffSelectionUpdated: BehaviorSubject<SystemPortalDiffSelectionUpdate>;
     private _systemPortalPaneUpdated: BehaviorSubject<SystemPortalPane>;
+    private _tabsUpdated: BehaviorSubject<SystemPortalTabsUpdate>;
     private _buffer: boolean;
     private _recentTags: SystemPortalRecentTag[] = [];
     private _recentTagsListSize: number = 10;
     private _tagSortMode: TagSortMode = 'scripts-first';
     private _extraTags: string[] = [];
+    private _editorTabs: SystemPortalEditorTab[] = [];
+    private _nextTabId: number = 1;
     // private _portals: PortalManager;
 
     get tagSortMode(): TagSortMode {
@@ -166,6 +169,10 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         return this._systemPortalPaneUpdated;
     }
 
+    get onTabsUpdated(): Observable<SystemPortalTabsUpdate> {
+        return this._tabsUpdated;
+    }
+
     /**
      * Creates a new system portal coorindator.
      * @param simulationManager The simulation manager that should be used.
@@ -206,6 +213,11 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         this._systemPortalPaneUpdated = new BehaviorSubject<SystemPortalPane>(
             null
         );
+        this._tabsUpdated = new BehaviorSubject<SystemPortalTabsUpdate>({
+            tabs: [],
+            activeTabId: undefined,
+            primaryTabId: undefined,
+        });
 
         const itemsUpdated = this._calculateItemsUpdated();
         const itemsUpdatedDistinct = itemsUpdated.pipe(
@@ -313,6 +325,173 @@ export class SystemPortalCoordinator<TSim extends BrowserSimulation>
         }
 
         this._updateSelection();
+    }
+
+    /**
+     * Creates a new editor tab for the given bot and tag.
+     * @param simulationId The simulation ID of the bot.
+     * @param bot The bot to edit.
+     * @param tag The tag to edit.
+     * @param space The space of the tag.
+     * @param setAsPrimary Whether to set this tab as the primary tab.
+     */
+    createTab(
+        simulationId: string,
+        bot: Bot,
+        tag: string,
+        space?: string,
+        setAsPrimary: boolean = false
+    ): string {
+        const tabId = `tab-${this._nextTabId++}`;
+        const title = `${getShortId(bot)}.${tag}${space ? ` (${space})` : ''}`;
+
+        // Check if tab already exists
+        const existingTab = this._editorTabs.find(
+            (t) => t.bot.id === bot.id && t.tag === tag && t.space === space
+        );
+
+        if (existingTab) {
+            this.setActiveTab(existingTab.id);
+            return existingTab.id;
+        }
+
+        // Deactivate all current tabs
+        this._editorTabs.forEach((tab) => (tab.isActive = false));
+
+        const newTab: SystemPortalEditorTab = {
+            id: tabId,
+            simulationId,
+            bot,
+            tag,
+            space,
+            title,
+            isActive: true,
+            isPrimary: setAsPrimary || this._editorTabs.length === 0,
+        };
+
+        // If this is the first tab or explicitly set as primary, make it primary
+        if (newTab.isPrimary) {
+            this._editorTabs.forEach((tab) => (tab.isPrimary = false));
+        }
+
+        this._editorTabs.push(newTab);
+        this._updateTabsState();
+
+        return tabId;
+    }
+
+    /**
+     * Closes an editor tab.
+     * @param tabId The ID of the tab to close.
+     */
+    closeTab(tabId: string): void {
+        const tabIndex = this._editorTabs.findIndex((tab) => tab.id === tabId);
+        if (tabIndex === -1) return;
+
+        const closingTab = this._editorTabs[tabIndex];
+        const wasActive = closingTab.isActive;
+        const wasPrimary = closingTab.isPrimary;
+
+        this._editorTabs.splice(tabIndex, 1);
+
+        // If we closed the active tab, activate another tab
+        if (wasActive && this._editorTabs.length > 0) {
+            // Try to activate the tab to the right, or to the left if at the end
+            const newActiveIndex = Math.min(
+                tabIndex,
+                this._editorTabs.length - 1
+            );
+            this._editorTabs[newActiveIndex].isActive = true;
+        }
+
+        // If we closed the primary tab, make the first tab primary
+        if (wasPrimary && this._editorTabs.length > 0) {
+            this._editorTabs[0].isPrimary = true;
+        }
+
+        this._updateTabsState();
+    }
+
+    /**
+     * Sets the active tab.
+     * @param tabId The ID of the tab to activate.
+     */
+    setActiveTab(tabId: string): void {
+        let targetTab: SystemPortalEditorTab | undefined;
+
+        this._editorTabs.forEach((tab) => {
+            if (tab.id === tabId) {
+                tab.isActive = true;
+                targetTab = tab;
+            } else {
+                tab.isActive = false;
+            }
+        });
+
+        if (targetTab) {
+            this._updateTabsState();
+        }
+    }
+
+    /**
+     * Sets the primary tab (synced with systemPortalBot/Tag).
+     * @param tabId The ID of the tab to set as primary.
+     */
+    setPrimaryTab(tabId: string): void {
+        let targetTab: SystemPortalEditorTab | undefined;
+
+        this._editorTabs.forEach((tab) => {
+            if (tab.id === tabId) {
+                tab.isPrimary = true;
+                targetTab = tab;
+            } else {
+                tab.isPrimary = false;
+            }
+        });
+
+        if (targetTab) {
+            this._updateTabsState();
+            // Update systemPortalBot and systemPortalTag to sync with primary tab
+            this._syncPrimaryTabWithSystemTags(targetTab);
+        }
+    }
+
+    /**
+     * Gets the current tabs state.
+     */
+    getTabs(): SystemPortalTabsUpdate {
+        return this._tabsUpdated.value;
+    }
+
+    private _updateTabsState(): void {
+        const activeTab = this._editorTabs.find((tab) => tab.isActive);
+        const primaryTab = this._editorTabs.find((tab) => tab.isPrimary);
+
+        const update: SystemPortalTabsUpdate = {
+            tabs: [...this._editorTabs],
+            activeTabId: activeTab?.id,
+            primaryTabId: primaryTab?.id,
+        };
+
+        this._tabsUpdated.next(update);
+    }
+
+    private async _syncPrimaryTabWithSystemTags(
+        tab: SystemPortalEditorTab
+    ): Promise<void> {
+        const primarySim = this._simulationManager.primary;
+        if (!primarySim) return;
+
+        const helper = primarySim.helper;
+        const userBot = helper.userBot;
+
+        await helper.updateBot(userBot, {
+            tags: {
+                [SYSTEM_PORTAL_BOT]: tab.bot.id,
+                [SYSTEM_PORTAL_TAG]: tab.tag,
+                [SYSTEM_PORTAL_TAG_SPACE]: tab.space || null,
+            },
+        });
     }
 
     private _updateSelection(extraTags?: string[], addedTags?: string[]) {
@@ -1878,6 +2057,71 @@ export interface SystemPortalSelectionTag {
 
 export interface SystemPortalNoSelectionUpdate {
     hasSelection: false;
+}
+
+/**
+ * Represents an individual editor tab for multiple tab support.
+ */
+export interface SystemPortalEditorTab {
+    /**
+     * Unique identifier for the tab.
+     */
+    id: string;
+
+    /**
+     * The simulation ID for the bot.
+     */
+    simulationId: string;
+
+    /**
+     * The bot being edited.
+     */
+    bot: Bot;
+
+    /**
+     * The tag being edited.
+     */
+    tag: string;
+
+    /**
+     * The space of the tag being edited.
+     */
+    space?: string;
+
+    /**
+     * Display title for the tab.
+     */
+    title: string;
+
+    /**
+     * Whether this tab is currently active.
+     */
+    isActive: boolean;
+
+    /**
+     * Whether this is the primary tab (synced with systemPortalBot/Tag).
+     */
+    isPrimary: boolean;
+}
+
+/**
+ * Update for the multi-tab editor state.
+ */
+export interface SystemPortalTabsUpdate {
+    /**
+     * The list of open editor tabs.
+     */
+    tabs: SystemPortalEditorTab[];
+
+    /**
+     * The ID of the currently active tab.
+     */
+    activeTabId?: string;
+
+    /**
+     * The ID of the primary tab (synced with systemPortalBot/Tag).
+     */
+    primaryTabId?: string;
 }
 
 export type TagSortMode = 'alphabetical' | 'scripts-first';

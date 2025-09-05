@@ -96,6 +96,9 @@ import { getActiveTheme } from '../utils';
 import type { Simulation } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
+import type { DockviewApi } from 'dockview';
+import { createDockview } from 'dockview';
+import type { SystemPortalEditorTab } from '@casual-simulation/aux-vm-browser/managers/SystemPortalCoordinator';
 
 @Component({
     components: {
@@ -167,6 +170,9 @@ export default class SystemPortal extends Vue {
     isSettingSheetPortal: boolean = false;
     sheetPortalValue: string = '';
     sliderDown: boolean;
+
+    editorTabs: SystemPortalEditorTab[] = [];
+    dockview: DockviewApi | null = null;
 
     private _showQuickAccessAfterModelLoad: boolean = false;
     private _focusEditorOnSelectionUpdate: boolean = false;
@@ -358,7 +364,11 @@ export default class SystemPortal extends Vue {
                         }
                     }
                 }
-            )
+            ),
+            appManager.systemPortal.onTabsUpdated.subscribe((update) => {
+                this.editorTabs = update.tabs;
+                this._updateDockview();
+            })
         );
 
         this._subs.push(
@@ -494,6 +504,10 @@ export default class SystemPortal extends Vue {
         }
 
         this.hasSheetPortal = false;
+    }
+
+    mounted() {
+        this._initializeDockview();
     }
 
     showSearch() {
@@ -1011,7 +1025,98 @@ export default class SystemPortal extends Vue {
         );
     }
 
+    private _initializeDockview() {
+        if (!this.$refs.dockviewContainer) {
+            return;
+        }
+
+        const element = this.$refs.dockviewContainer as HTMLElement;
+
+        this.dockview = createDockview(element, {
+            createComponent: (options: any) => {
+                // Create a DOM element for the editor
+                const container = document.createElement('div');
+                container.className = 'tab-editor';
+
+                return {
+                    element: container,
+                    init: (parameters: any) => {
+                        // Find the tab data using the panel ID
+                        const tab = this.editorTabs.find(
+                            (t) => t.id === parameters.api.id
+                        );
+                        if (tab) {
+                            container.textContent = `Editor for ${tab.title}`;
+                        } else {
+                            container.textContent = 'Loading...';
+                        }
+                    },
+                    dispose: () => {
+                        // Cleanup if needed
+                    },
+                };
+            },
+        });
+    }
+
+    private _updateDockview() {
+        if (!this.dockview) {
+            this.$nextTick(() => this._initializeDockview());
+            return;
+        }
+
+        // Update existing panels and create new ones
+        for (const tab of this.editorTabs) {
+            const existingPanel = this.dockview.getPanel(tab.id);
+            if (!existingPanel) {
+                this.dockview.addPanel({
+                    id: tab.id,
+                    title: tab.title,
+                    component: 'tab-editor',
+                });
+            }
+        }
+
+        // Remove panels that no longer exist
+        const existingPanelIds = this.dockview.panels.map((p) => p.id);
+        for (const panelId of existingPanelIds) {
+            if (!this.editorTabs.find((t) => t.id === panelId)) {
+                const panel = this.dockview.getPanel(panelId);
+                if (panel) {
+                    this.dockview.removePanel(panel);
+                }
+            }
+        }
+
+        // Set active panel
+        const activeTab = this.editorTabs.find((t) => t.isActive);
+        if (activeTab) {
+            const panel = this.dockview.getPanel(activeTab.id);
+            if (panel) {
+                panel.focus();
+            }
+        }
+    }
+
+    openTabForTag(tag: SystemPortalSelectionTag) {
+        if (!this.selectedBot) {
+            return;
+        }
+
+        const tabId = appManager.systemPortal.createTab(
+            this.selectedBotSimId,
+            this.selectedBot,
+            tag.name,
+            tag.space,
+            false
+        );
+    }
+
     beforeDestroy() {
+        if (this.dockview) {
+            this.dockview.dispose();
+        }
+
         for (let s of this._subs) {
             s.unsubscribe();
         }
@@ -1061,6 +1166,9 @@ export default class SystemPortal extends Vue {
             [SYSTEM_PORTAL_TAG_SPACE]: tag.space ?? null,
         };
         this._setSimUserBotTags(this.selectedBotSimId, tags);
+
+        // Also create/switch to a tab for this tag
+        this.openTabForTag(tag);
         // sim.helper.updateBot(sim.helper.userBot, {
         //     tags,
         // });

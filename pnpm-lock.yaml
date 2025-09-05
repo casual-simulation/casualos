@@ -1171,6 +1171,9 @@ importers:
       deno-vm:
         specifier: 0.13.0
         version: 0.13.0(patch_hash=2a6d5036373ec04b771962451fe9bd1f41cd0764a94698793f994de3703ec90d)
+      dockview:
+        specifier: ^4.7.1
+        version: 4.7.1(react@18.3.1)
       downloadjs:
         specifier: ^1.4.7
         version: 1.4.7
@@ -5016,6 +5019,7 @@ packages:
 
   '@simplewebauthn/types@9.0.1':
     resolution: {integrity: sha512-tGSRP1QvsAvsJmnOlRQyw/mvK9gnPtjEc5fg2+m8n+QUa+D7rvrKkOYyfpy42GTs90X3RDOnqJgfHt+qO67/+w==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -7951,6 +7955,14 @@ packages:
   dns-packet@5.6.1:
     resolution: {integrity: sha512-l4gcSouhcgIKRvyy99RNVOgxXiicE+2jZoNmaNmZ6JXiGajBOJAesk1OBlJuM5k2c+eudGdLxDqXuPCKIj6kpw==}
     engines: {node: '>=6'}
+
+  dockview-core@4.7.1:
+    resolution: {integrity: sha512-Tia3vYHtqACMZTiZv86yQOabwKj5KrBhQqlSr7qXV0qmmRSZ8dNbaU63LIHYFprST7JgHupIm9JVES+OhqMoTQ==}
+
+  dockview@4.7.1:
+    resolution: {integrity: sha512-DgMzSKNjDvZzIQjFfAV6I6EDkqe40Sjz1Qgyf88KG4U1Kgp/bIIEDSLpz65BsW5ZD9Qi3y18TCISYTgsNvU9TA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   dom-align@1.12.4:
     resolution: {integrity: sha512-R8LUSEay/68zE5c8/3BDxiTEvgb4xZTF0RKmAHfiEVN3klfIpXfi2/QCoiWPccVQ0J/ZGdz9OjzL4uJEP/MRAw==}
@@ -23993,6 +24005,13 @@ snapshots:
   dns-packet@5.6.1:
     dependencies:
       '@leichtgewicht/ip-codec': 2.0.5
+
+  dockview-core@4.7.1: {}
+
+  dockview@4.7.1(react@18.3.1):
+    dependencies:
+      dockview-core: 4.7.1
+      react: 18.3.1
 
   dom-align@1.12.4: {}
 

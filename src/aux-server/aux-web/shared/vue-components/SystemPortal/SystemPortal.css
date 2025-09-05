@@ -379,6 +379,26 @@
     position: relative;
 }
 
+.multi-tab-editor {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.dockview-container {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+}
+
+.tab-editor {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    font-family: monospace;
+    border: 1px solid #ccc;
+}
+
 .pin-tag-button {
     width: calc(100% - 16px);
     margin: 8px;
