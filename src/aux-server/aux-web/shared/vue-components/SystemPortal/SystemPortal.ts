@@ -1163,6 +1163,14 @@ export default class SystemPortal extends Vue {
         console.log(`Created test tab with ID: ${tabId}`);
     }
 
+    openTagContextMenu(tag: SystemPortalSelectionTag, event: MouseEvent) {
+        // Simple context menu implementation - in a real app, you'd use a proper context menu component
+        const confirmed = confirm(`Open "${tag.name}" in a new tab?`);
+        if (confirmed) {
+            this.openTabForTag(tag);
+        }
+    }
+
     beforeDestroy() {
         if (this.dockview) {
             this.dockview.dispose();

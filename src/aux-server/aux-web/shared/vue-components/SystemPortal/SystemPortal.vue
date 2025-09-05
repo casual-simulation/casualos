@@ -342,6 +342,7 @@
                                 :tag="tag"
                                 :selected="isTagSelected(tag)"
                                 @click="selectTag(tag)"
+                                @contextmenu.prevent="openTagContextMenu(tag, $event)"
                                 @pin="pinTag(tag)"
                                 @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                             >
