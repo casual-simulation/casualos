@@ -14,6 +14,7 @@
 
 -   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
 -   Fixed an issue where the background color for comID logos would not be displayed at the same time as the comID logo.
+-   Reworked OpenID Connect sign-in to use redirects instead of popups, eliminating issues with browser popup blockers ([#652](https://github.com/casual-simulation/casualos/issues/652)).
 
 ## V3.7.0
 
