@@ -24,6 +24,10 @@
                         <md-icon>box</md-icon>
                         <span class="md-list-item-text">Granted Entitlements</span>
                     </md-list-item>
+                    <md-list-item :to="{ name: 'user-notifications' }">
+                        <md-icon>notifications</md-icon>
+                        <span class="md-list-item-text">Notifications</span>
+                    </md-list-item>
                     <md-list-item
                         md-expand
                         :md-expanded.sync="showRecords"
