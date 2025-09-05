@@ -18,7 +18,6 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authManager } from '../../shared/index';
-import { OAUTH_LOGIN_CHANNEL_NAME } from '../../shared/AuthManager';
 
 @Component({
     components: {},
@@ -28,7 +27,6 @@ export default class OAuthRedirect extends Vue {
 
     async mounted() {
         this.errorMessage = null;
-        const channel = new BroadcastChannel(OAUTH_LOGIN_CHANNEL_NAME);
 
         const url = new URL(window.location.href);
         let params: any = {};
@@ -41,11 +39,52 @@ export default class OAuthRedirect extends Vue {
 
             if (result.success === true) {
                 console.log('[OAuthRedirect] Login successful');
-                channel.postMessage('login');
 
-                setTimeout(() => {
-                    window.close();
-                }, 0);
+                // Get the stored request ID from localStorage
+                const requestId = localStorage.getItem(
+                    'privo_oauth_request_id'
+                );
+                const after = localStorage.getItem('privo_oauth_after');
+
+                if (requestId) {
+                    // Complete the OAuth login process
+                    const loginResult = await authManager.completeOAuthLogin(
+                        requestId
+                    );
+
+                    if (loginResult.success === true) {
+                        await authManager.loadUserInfo();
+
+                        // Clean up stored data
+                        localStorage.removeItem('privo_oauth_request_id');
+                        localStorage.removeItem('privo_oauth_after');
+
+                        // Redirect to the appropriate page
+                        if (after) {
+                            this.$router.push({ name: after });
+                        } else {
+                            this.$router.push({ name: 'home' });
+                        }
+                    } else {
+                        console.error(
+                            '[OAuthRedirect] OAuth login completion failed',
+                            loginResult
+                        );
+                        if (loginResult.errorCode === 'not_completed') {
+                            this.errorMessage =
+                                'Login was canceled or not completed.';
+                        } else {
+                            this.errorMessage =
+                                loginResult.errorMessage || 'Login failed.';
+                        }
+                    }
+                } else {
+                    console.error(
+                        '[OAuthRedirect] No request ID found in localStorage'
+                    );
+                    this.errorMessage =
+                        'Login session expired. Please try again.';
+                }
             } else {
                 console.error('[OAuthRedirect] Login failed', result);
                 if (
@@ -60,7 +99,13 @@ export default class OAuthRedirect extends Vue {
                 }
             }
         } else if (params.error) {
-            // TODO: handle errors
+            // Handle OAuth error parameters
+            let errorDescription = params.error_description || params.error;
+            this.errorMessage = `OAuth error: ${errorDescription}`;
+            console.error('[OAuthRedirect] OAuth error', params);
+        } else {
+            this.errorMessage =
+                'Invalid OAuth callback. Missing required parameters.';
         }
     }
 }
