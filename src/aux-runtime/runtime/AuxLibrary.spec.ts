@@ -210,6 +210,8 @@ import {
     listUserStudios,
     listStudioRecords,
     listDataRecordByMarker,
+    listInsts as calcListInsts,
+    listInstsByMarker as calcListInstsByMarker,
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
@@ -7855,6 +7857,106 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'myMarker',
                     'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInsts()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listInsts('recordName');
+                const expected = calcListInsts(
+                    'recordName',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listInsts(
+                    'recordName',
+                    undefined,
+                    'myEndpoint'
+                );
+                const expected = calcListInsts(
+                    'recordName',
+                    null,
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting inst', async () => {
+                const action: any = library.api.os.listInsts(
+                    'recordName',
+                    'startingInst'
+                );
+                const expected = calcListInsts(
+                    'recordName',
+                    'startingInst',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInstsByMarker()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker'
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    undefined,
+                    {
+                        endpoint: 'myEndpoint',
+                    }
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting inst', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    'startingInst'
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    'startingInst',
                     {},
                     context.tasks.size
                 );

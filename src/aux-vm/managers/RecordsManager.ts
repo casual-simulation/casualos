@@ -254,6 +254,7 @@ export class RecordsManager {
         'eraseSearchDocument',
         'listRecords',
         'listPermissions',
+        'listInsts',
     ]);
 
     /**
