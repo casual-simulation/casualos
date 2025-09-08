@@ -115,6 +115,8 @@ import type {
     MapLayer,
     DynamicListener,
     HideLoadingScreenAction,
+    AddBotMapLayerAction,
+    RemoveBotMapLayerAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -367,6 +369,8 @@ import {
     getPackageContainer as calcGetPackageContainer,
     installPackage as calcInstallPackage,
     listInstalledPackages as calcListInstalledPackages,
+    listInsts as calcListInsts,
+    listInstsByMarker as calcListInstsByMarker,
     recordsCallProcedure,
 } from './RecordsEvents';
 import { sortBy, cloneDeep, union, isEqual } from 'es-toolkit/compat';
@@ -473,6 +477,7 @@ import type {
     RevokeRoleResult,
     PackageRecord,
     ListInstalledPackagesResult,
+    ListInstsResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3456,6 +3461,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 eraseData,
                 eraseManualApprovalData,
 
+                listInsts,
+                listInstsByMarker,
+
                 recordWebhook,
                 runWebhook,
                 getWebhook,
@@ -3533,6 +3541,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 addMapLayer,
                 removeMapLayer,
+                addBotMapLayer,
+                removeBotMapLayer,
 
                 remotes,
                 listInstUpdates,
@@ -9836,6 +9846,86 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Gets the list of insts that are in the record with the given name.
+     * Returns a promise that resolves with an object that contains the list of insts (if successful) or information about the error that occurred.
+     * @param recordName the name of the record that the insts should be listed from.
+     * @param startingInst the inst that the list should start at. This can be used to paginate through the list of insts. If omitted, then the list will start from the beginning.
+     * @param endpoint the HTTP Endpoint of the records website that the insts should be listed from.
+     * If omitted, then the preconfigured records endpoint will be used.
+     *
+     * @example List insts in a record
+     * const result = await os.listInsts('myRecord');
+     *
+     * if (result.success) {
+     *     os.toast(`Found ${result.insts.length} insts!`);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listInsts
+     * @docid os.listInsts
+     */
+    function listInsts(
+        recordName: string,
+        startingInst: string | null = null,
+        endpoint: string | null = null
+    ): Promise<ListInstsResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+        const task = context.createTask();
+        const event = calcListInsts(
+            recordName,
+            startingInst,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of insts that are in the record with the given name and given marker.
+     * Returns a promise that resolves with an object that contains the list of insts (if successful) or information about the error that occurred.
+     * @param recordName the name of the record that the insts should be listed from.
+     * @param marker the marker that the insts should have.
+     * @param startingInst the inst that the list should start at. This can be used to paginate through the list of insts. If omitted, then the list will start from the beginning.
+     * @param options the options that should be used for the action.
+     *
+     * @example List insts by marker in a record
+     * const result = await os.listInstsByMarker('myRecord', 'public');
+     *
+     * if (result.success) {
+     *     os.toast(`Found ${result.insts.length} insts!`);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.listInstsByMarker
+     * @docid os.listInstsByMarker
+     */
+    function listInstsByMarker(
+        recordName: string,
+        marker: string,
+        startingInst: string | null = null,
+        options: RecordActionOptions = {}
+    ): Promise<ListInstsResult> {
+        const task = context.createTask();
+        const event = calcListInstsByMarker(
+            recordName,
+            marker,
+            startingInst,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).
      * Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
      * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
@@ -12667,6 +12757,74 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcRemoveMapLayer(layerId, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds a map layer to a bot with form: "map".
+     *
+     * Returns a promise that resolves with the ID of the layer that was added.
+     *
+     * @param bot The bot that should have the layer added.
+     * @param overlay The overlay configuration.
+     *
+     * @example Add a GeoJSON layer to a map bot
+     * const layerId = await os.addBotMapLayer(bot, {
+     *     type: 'geojson',
+     *     data: {
+     *         type: "FeatureCollection",
+     *         features: [...]
+     *     }
+     * });
+     */
+    function addBotMapLayer(
+        bot: Bot | string,
+        overlay: {
+            overlayType?: 'geojson';
+            type?: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<string> {
+        const task = context.createTask();
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const normalizedOverlay = {
+            ...overlay,
+            overlayType: overlay.overlayType || overlay.type || 'geojson',
+        };
+
+        const action: AddBotMapLayerAction = {
+            type: 'add_bot_map_layer',
+            botId: botId,
+            overlay: normalizedOverlay,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Removes a layer from a bot with form: "map".
+     *
+     * @param bot The bot that has the layer.
+     * @param overlayId The ID of the overlay to remove.
+     *
+     * @example Remove a layer from a map bot
+     * await os.removeBotMapLayer(bot, 'my-layer-id');
+     */
+    function removeBotMapLayer(
+        bot: Bot | string,
+        overlayId: string
+    ): Promise<void> {
+        const task = context.createTask();
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const action: RemoveBotMapLayerAction = {
+            type: 'remove_bot_map_layer',
+            botId: botId,
+            overlayId: overlayId,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
     }
 
     /**

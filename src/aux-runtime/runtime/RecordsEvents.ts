@@ -2988,6 +2988,63 @@ export function setRoomTrackOptions(
 }
 
 /**
+ * Creates an action that is able to list the insts in a record.
+ * @param recordName The name of the record.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInsts(
+    recordName: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the insts in a record with the given marker.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInstsByMarker(
+    recordName: string,
+    marker: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a new GetRoomRemoteOptionsAction.
  * @param roomName The name of the room.
  * @param remoteId The ID of the remote user.

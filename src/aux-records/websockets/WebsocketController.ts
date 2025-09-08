@@ -1782,7 +1782,8 @@ export class WebsocketController {
     async listInsts(
         recordName: string | null,
         userId: string,
-        startingInst: string | null
+        startingInst: string | null,
+        marker?: string | null
     ): Promise<ListInstsResult> {
         try {
             if (!recordName) {
@@ -1803,12 +1804,14 @@ export class WebsocketController {
                 return contextResult;
             }
             const context = contextResult.context;
+            const hasMarker = hasValue(marker);
+            const markers = hasMarker ? [marker] : [PRIVATE_MARKER];
             const authorizeResult =
                 await this._policies.authorizeUserAndInstances(context, {
                     resourceKind: 'inst',
                     action: 'list',
                     userId,
-                    markers: [PRIVATE_MARKER],
+                    markers,
                     instances: [],
                 });
 
@@ -1837,10 +1840,16 @@ export class WebsocketController {
                 };
             }
 
-            const instsResult = await this._instStore.listInstsByRecord(
-                recordName,
-                startingInst
-            );
+            const instsResult = hasMarker
+                ? await this._instStore.listInstsByRecordAndMarker(
+                      recordName,
+                      marker,
+                      startingInst
+                  )
+                : await this._instStore.listInstsByRecord(
+                      recordName,
+                      startingInst
+                  );
             if (!instsResult.success) {
                 return instsResult;
             }
