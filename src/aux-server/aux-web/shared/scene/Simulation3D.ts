@@ -556,7 +556,11 @@ export abstract class Simulation3D
     }
 
     private _localEvent(e: RuntimeActions): void {
-        if (e.type === 'local_form_animation') {
+        if (
+            e.type === 'local_form_animation' ||
+            e.type === 'add_bot_map_layer' ||
+            e.type === 'remove_bot_map_layer'
+        ) {
             this._queueEventForBot(e, e.botId);
         } else if (e.type === 'local_tween') {
             this._queueEventForBot(e, e.botId, e.dimension);

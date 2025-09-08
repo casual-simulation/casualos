@@ -109,6 +109,18 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         return this._permanent.listInstsByRecord(recordName, startingInst);
     }
 
+    listInstsByRecordAndMarker(
+        recordName: string,
+        marker: string,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult> {
+        return this._permanent.listInstsByRecordAndMarker(
+            recordName,
+            marker,
+            startingInst
+        );
+    }
+
     async getBranchByName(
         recordName: string | null,
         inst: string,

@@ -17307,6 +17307,27 @@ interface Experiment {
      * Returns a promise that resolves with the voices.
      */
     getVoices(): Promise<SyntheticVoice[]>;
+
+    /**
+     * Adds a map overlay to the given bot's map form.
+     * @param bot The bot that the overlay should be added to.
+     * @param overlayLayer Configuration for the overlay layer to add.
+     */
+    addBotMapLayer(
+        bot: Bot,
+        overlay: {
+            overlayType: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
+
+    /**
+     * Removes a map overlay from the given bot's map form.
+     * @param bot The bot that the overlay should be removed from.
+     * @param overlayId Id of the overlay to remove.
+     */
+    removeBotMapLayer(bot: Bot, overlayId: string): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
 };
 
 

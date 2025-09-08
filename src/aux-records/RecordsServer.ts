@@ -4803,9 +4803,10 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION.optional(),
                         inst: z.string().optional(),
+                        marker: z.string().optional(),
                     })
                 )
-                .handler(async ({ recordName, inst }, context) => {
+                .handler(async ({ recordName, inst, marker }, context) => {
                     if (!this._websocketController) {
                         return INSTS_NOT_SUPPORTED_RESULT;
                     }
@@ -4829,7 +4830,8 @@ export class RecordsServer {
                     const result = await this._websocketController.listInsts(
                         recordName,
                         userId,
-                        inst
+                        inst,
+                        marker
                     );
                     return result;
                 }),

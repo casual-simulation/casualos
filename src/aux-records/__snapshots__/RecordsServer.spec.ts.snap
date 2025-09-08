@@ -5464,6 +5464,10 @@ Object {
             "optional": true,
             "type": "string",
           },
+          "marker": Object {
+            "optional": true,
+            "type": "string",
+          },
           "recordName": Object {
             "optional": true,
             "type": "string",
@@ -11068,6 +11072,10 @@ Object {
       "inputs": Object {
         "schema": Object {
           "inst": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "marker": Object {
             "optional": true,
             "type": "string",
           },
