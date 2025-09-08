@@ -9,6 +9,7 @@
 -   Added the `os.createRecord(name)` function ([#668](https://github.com/casual-simulation/casualos/pull/668)).
 -   Added the `os.listSudioRecords(studioId)` function ([#666](https://github.com/casual-simulation/casualos/pull/666)).
 -   Added the the ability to specify markers when loading a shared document. ([#663](https://github.com/casual-simulation/casualos/pull/663))
+-   Added the ability to view your notification subscriptions on the auth site. ([#680](https://github.com/casual-simulation/casualos/pull/680))
 
 ### :bug: Bug Fixes
 
