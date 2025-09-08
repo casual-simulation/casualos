@@ -18,6 +18,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authManager } from '../../shared/index';
+import { OAUTH_LOGIN_CHANNEL_NAME } from '../../shared/AuthManager';
 
 @Component({
     components: {},
@@ -27,6 +28,7 @@ export default class OAuthRedirect extends Vue {
 
     async mounted() {
         this.errorMessage = null;
+        const channel = new BroadcastChannel(OAUTH_LOGIN_CHANNEL_NAME);
 
         const url = new URL(window.location.href);
         let params: any = {};
@@ -39,6 +41,7 @@ export default class OAuthRedirect extends Vue {
 
             if (result.success === true) {
                 console.log('[OAuthRedirect] Login successful');
+                channel.postMessage('login');
 
                 // Get the stored request ID from localStorage
                 const requestId = localStorage.getItem(
@@ -82,8 +85,9 @@ export default class OAuthRedirect extends Vue {
                     console.error(
                         '[OAuthRedirect] No request ID found in localStorage'
                     );
-                    this.errorMessage =
-                        'Login session expired. Please try again.';
+                    setTimeout(() => {
+                        window.close();
+                    }, 0);
                 }
             } else {
                 console.error('[OAuthRedirect] Login failed', result);
