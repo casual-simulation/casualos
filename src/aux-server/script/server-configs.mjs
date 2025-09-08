@@ -67,6 +67,8 @@ const typesensePath = path.resolve(
 );
 const typesenseOutput = path.resolve(auxWeb, 'shared', 'static', 'lib');
 
+const libsqlPath = path.resolve(auxServerNodeModules, '@libsql');
+
 let SERVER_CONFIG = null;
 if (process.env.SERVER_CONFIG) {
     SERVER_CONFIG = JSON.parse(process.env.SERVER_CONFIG);
@@ -160,6 +162,17 @@ export function createConfigs(dev, version) {
                             'libquery_engine-rhel-openssl-1.0.x.so.node'
                         ),
                         force: true,
+                    }),
+                    copy({
+                        src: path.resolve(libsqlPath),
+                        dest: path.resolve(
+                            serverlessDist,
+                            'handlers',
+                            'node_modules',
+                            '@libsql'
+                        ),
+                        force: true,
+                        recursive: true,
                     }),
                     replaceLodashPlugin(),
                     ImportGlobPlugin(),
