@@ -115,6 +115,8 @@ import type {
     MapLayer,
     DynamicListener,
     HideLoadingScreenAction,
+    AddBotMapLayerAction,
+    RemoveBotMapLayerAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -3533,6 +3535,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 addMapLayer,
                 removeMapLayer,
+                addBotMapLayer,
+                removeBotMapLayer,
 
                 remotes,
                 listInstUpdates,
@@ -12667,6 +12671,74 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcRemoveMapLayer(layerId, task.taskId);
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Adds a map layer to a bot with form: "map".
+     *
+     * Returns a promise that resolves with the ID of the layer that was added.
+     *
+     * @param bot The bot that should have the layer added.
+     * @param overlay The overlay configuration.
+     *
+     * @example Add a GeoJSON layer to a map bot
+     * const layerId = await os.addBotMapLayer(bot, {
+     *     type: 'geojson',
+     *     data: {
+     *         type: "FeatureCollection",
+     *         features: [...]
+     *     }
+     * });
+     */
+    function addBotMapLayer(
+        bot: Bot | string,
+        overlay: {
+            overlayType?: 'geojson';
+            type?: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<string> {
+        const task = context.createTask();
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const normalizedOverlay = {
+            ...overlay,
+            overlayType: overlay.overlayType || overlay.type || 'geojson',
+        };
+
+        const action: AddBotMapLayerAction = {
+            type: 'add_bot_map_layer',
+            botId: botId,
+            overlay: normalizedOverlay,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Removes a layer from a bot with form: "map".
+     *
+     * @param bot The bot that has the layer.
+     * @param overlayId The ID of the overlay to remove.
+     *
+     * @example Remove a layer from a map bot
+     * await os.removeBotMapLayer(bot, 'my-layer-id');
+     */
+    function removeBotMapLayer(
+        bot: Bot | string,
+        overlayId: string
+    ): Promise<void> {
+        const task = context.createTask();
+        const botId = typeof bot === 'string' ? bot : bot.id;
+
+        const action: RemoveBotMapLayerAction = {
+            type: 'remove_bot_map_layer',
+            botId: botId,
+            overlayId: overlayId,
+            taskId: task.taskId,
+        };
+        return addAsyncAction(task, action);
     }
 
     /**
