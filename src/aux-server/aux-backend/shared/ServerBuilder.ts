@@ -221,6 +221,18 @@ import {
     SqliteFileRecordsLookup,
     SqliteInstRecordsStore,
 } from '../prisma/sqlite';
+import type {
+    DatabaseInterface,
+    DatabaseRecordsStore,
+    DatabaseType,
+} from '@casual-simulation/aux-records/database';
+import {
+    DatabaseRecordsController,
+    SqliteDatabaseInterface,
+    TursoDatabaseInterface,
+} from '@casual-simulation/aux-records/database';
+import { SqliteDatabaseRecordsStore } from 'aux-backend/prisma/sqlite/SqliteDatabaseRecordsStore';
+import { PrismaDatabaseRecordsStore } from 'aux-backend/prisma/PrismaDatabaseRecordsStore';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -402,6 +414,11 @@ export class ServerBuilder implements SubscriptionLike {
     private _searchSyncProcessor: SearchSyncProcessor | null = null;
     private _searchQueue: IQueue<SearchSyncQueueEvent> | null = null;
     private _searchWorker: BullWorker | null = null;
+
+    private _databasesStore: DatabaseRecordsStore | null = null;
+    private _databaseInterfaceProviderName: 'sqlite' | 'turso' | null = null;
+    private _databaseInterface: DatabaseInterface<DatabaseType> | null = null;
+    private _databasesController: DatabaseRecordsController | null = null;
 
     constructor(options?: ServerConfig) {
         this._options = options ?? {};
@@ -741,6 +758,10 @@ export class ServerBuilder implements SubscriptionLike {
                 client,
                 metricsStore
             );
+            this._databasesStore = new SqliteDatabaseRecordsStore(
+                client,
+                metricsStore
+            );
         } else {
             const metricsStore = (this._metricsStore = new PrismaMetricsStore(
                 prismaClient,
@@ -773,6 +794,10 @@ export class ServerBuilder implements SubscriptionLike {
                 metricsStore
             );
             this._searchStore = new PrismaSearchRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._databasesStore = new PrismaDatabaseRecordsStore(
                 prismaClient,
                 metricsStore
             );
@@ -1278,6 +1303,37 @@ export class ServerBuilder implements SubscriptionLike {
             connectionTimeoutSeconds: typesense.connectionTimeoutSeconds,
         });
         this._searchInterface = new TypesenseSearchInterface(client);
+
+        return this;
+    }
+
+    useDatabases(
+        options: Pick<ServerConfig, 'databases'> = this._options
+    ): this {
+        if (!options.databases) {
+            throw new Error('Database options must be provided.');
+        }
+
+        const provider = options.databases.provider;
+        this._databaseInterfaceProviderName = provider.type;
+        if (provider.type === 'sqlite') {
+            console.log('[ServerBuilder] Using SQLite database records.');
+            this._databaseInterface = new SqliteDatabaseInterface(
+                provider.folderPath,
+                provider.encryptionKey
+            );
+        } else if (provider.type === 'turso') {
+            console.log('[ServerBuilder] Using Turso SQLite database records.');
+            this._databaseInterface = new TursoDatabaseInterface({
+                organizationSlug: provider.organization,
+                groupName: provider.group,
+                authToken: provider.token,
+            });
+        } else {
+            throw new Error(
+                `Unsupported database provider type: ${(provider as any).type}`
+            );
+        }
 
         return this;
     }
@@ -2029,6 +2085,18 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
+        if (this._databasesStore && this._databaseInterface) {
+            console.log('[ServerBuilder] Using Database Records.');
+            this._databasesController = new DatabaseRecordsController({
+                config: this._configStore,
+                policies: this._policyController,
+                store: this._databasesStore,
+                databaseInterface: this._databaseInterface,
+                databaseInterfaceProviderName:
+                    this._databaseInterfaceProviderName,
+            });
+        }
+
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -2052,6 +2120,7 @@ export class ServerBuilder implements SubscriptionLike {
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
             searchRecordsController: this._searchController,
+            databaseRecordsController: this._databasesController,
         });
 
         const buildReturn: BuildReturn = {

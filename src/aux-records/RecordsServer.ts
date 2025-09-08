@@ -156,6 +156,7 @@ import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/record
 import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import { genericResult } from '@casual-simulation/aux-common';
+import type { DatabaseRecordsController, DatabaseStatement } from './database';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -410,6 +411,12 @@ export interface RecordsServerOptions {
      * If null, then search records are not supported.
      */
     searchRecordsController?: SearchRecordsController | null;
+
+    /**
+     * The controller that should be used for handling database records.
+     * If null, then database records are not supported.
+     */
+    databaseRecordsController?: DatabaseRecordsController | null;
 }
 
 /**
@@ -433,6 +440,7 @@ export class RecordsServer {
     private _packagesController: PackageRecordsController | null;
     private _packageVersionController: PackageVersionRecordsController | null;
     private _searchRecordsController: SearchRecordsController | null;
+    private _databaseRecordsController: DatabaseRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -503,6 +511,7 @@ export class RecordsServer {
         packagesController,
         packageVersionController,
         searchRecordsController,
+        databaseRecordsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -527,6 +536,7 @@ export class RecordsServer {
         this._packagesController = packagesController;
         this._packageVersionController = packageVersionController;
         this._searchRecordsController = searchRecordsController;
+        this._databaseRecordsController = databaseRecordsController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -2896,6 +2906,109 @@ export class RecordsServer {
                                 userId: validation.userId,
                                 instances: instances ?? [],
                             });
+                        return genericResult(result);
+                    }
+                ),
+
+            recordDatabase: recordItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    markers: MARKERS_VALIDATION,
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/database')
+            ),
+
+            getDatabase: getItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/database')
+            ),
+
+            eraseDatabase: eraseItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/database')
+            ),
+
+            listDatabases: listItemsProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/database/list')
+            ),
+
+            queryDatabase: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/database/query')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        statements: z.array(
+                            z.object({
+                                query: z.string().min(1).max(250_000),
+                                params: z.array(z.any()).optional().default([]),
+                            })
+                        ),
+                        readonly: z.boolean().default(true),
+                        automaticTransaction: z
+                            .boolean()
+                            .optional()
+                            .default(true),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            statements,
+                            readonly,
+                            automaticTransaction,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._databaseRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await validateSessionKey(
+                            this._auth,
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._databaseRecordsController.query({
+                                recordName,
+                                userId: validation.userId,
+                                address,
+                                statements: statements as DatabaseStatement[],
+                                readonly,
+                                automaticTransaction,
+                                instances: instances ?? [],
+                            });
+
                         return genericResult(result);
                     }
                 ),

@@ -255,6 +255,11 @@ export class RecordsManager {
         'listRecords',
         'listPermissions',
         'listInsts',
+        'recordDatabase',
+        'eraseDatabase',
+        'listDatabases',
+        'getDatabase',
+        'queryDatabase',
     ]);
 
     /**

@@ -575,6 +575,39 @@ export const subscriptionFeaturesSchema = z.object({
         .default({
             allowed: true,
         }),
+
+    databases: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether database records are allowed for the subscription.'
+                ),
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of database records that can be created for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxBytesPerDatabase: z
+                .number()
+                .describe(
+                    'The maximum size of the database in bytes. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for database records features. Defaults to allowed.'
+        )
+        .optional()
+        .default({
+            allowed: true,
+        }),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -1026,6 +1059,11 @@ export interface FeaturesConfiguration {
      * The configuration for search features.
      */
     search?: SearchFeaturesConfiguration;
+
+    /**
+     * The configuration for database features.
+     */
+    databases?: DatabasesFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -1284,6 +1322,10 @@ export type SearchFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['search'];
 
+export type DatabasesFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['databases'];
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -1330,6 +1372,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         search: {
+            allowed: true,
+        },
+        databases: {
             allowed: true,
         },
     };
@@ -1383,7 +1428,38 @@ export function denyAllFeatures(): FeaturesConfiguration {
         search: {
             allowed: false,
         },
+        databases: {
+            allowed: false,
+        },
     };
+}
+
+/**
+ * Gets the database features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getDatabaseFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): DatabasesFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.databases ?? { allowed: true };
 }
 
 /**

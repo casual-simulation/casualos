@@ -3991,7 +3991,8 @@ function getEntitlementFeatureForAction(
         resourceKind === 'notification' ||
         resourceKind === 'package' ||
         resourceKind === 'webhook' ||
-        resourceKind === 'search'
+        resourceKind === 'search' ||
+        resourceKind === 'database'
     ) {
         return resourceKind;
     } else if (resourceKind === 'ai.hume' || resourceKind === 'ai.sloyd') {

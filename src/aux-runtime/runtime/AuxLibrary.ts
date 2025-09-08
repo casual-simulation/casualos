@@ -380,6 +380,8 @@ import type {
     AvailablePermissions,
     Entitlement,
     VersionNumber,
+    GenericResult,
+    SimpleError,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -537,6 +539,12 @@ import type {
     SearchRecordOutput,
     StoreDocumentResult,
 } from '@casual-simulation/aux-records/search';
+import type {
+    DatabaseRecordOutput,
+    DatabaseStatement,
+    QueryResult,
+} from '@casual-simulation/aux-records/database';
+import { query as q } from './database/DatabaseUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -867,12 +875,12 @@ export interface RecordPackageVersionApiRequest {
  */
 export interface RecordSearchCollectionApiRequest {
     /**
-     * The name of the record that the package version should be recorded to.
+     * The name of the record that the collection should be recorded to.
      */
     recordName: string;
 
     /**
-     * The address that the package version should be recorded to.
+     * The address that the collection should be recorded to.
      */
     address: string;
 
@@ -882,7 +890,7 @@ export interface RecordSearchCollectionApiRequest {
     schema: SearchCollectionSchema;
 
     /**
-     * The markers that should be applied to the package version.
+     * The markers that should be applied to the collection.
      */
     markers?: string[];
 }
@@ -897,6 +905,29 @@ export interface RecordSearchDocumentApiRequest {
     recordName: string;
     address: string;
     document: SearchDocument;
+}
+
+/**
+ * Defines an interface that represents a request for {@link recordDatabase}.
+ *
+ * @dochash types/records/database
+ * @docname RecordDatabaseRequest
+ */
+export interface RecordDatabaseApiRequest {
+    /**
+     * The name of the record that the database should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the database should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The markers that should be applied to the database.
+     */
+    markers?: string[];
 }
 
 /**
@@ -2969,6 +3000,283 @@ const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 
 /**
+ * Defines the result of an API query.
+ *
+ * @dochash types/records/database
+ * @docname QueryResult
+ */
+export interface ApiQueryResult {
+    /**
+     * The rows that were returned from the query.
+     */
+    rows: Record<string, any>[];
+
+    /**
+     * The number of rows that were modified by the query.
+     */
+    affectedRowCount: number;
+
+    /**
+     * The ID of the last row that was inserted by the query.
+     */
+    lastInsertId?: number | string;
+}
+
+/**
+ * Defines the result of a batch query.
+ *
+ * @dochash types/records/database
+ * @docname BatchResult
+ */
+export interface BatchResult {
+    /**
+     * The results of the individual statements.
+     */
+    results: ApiQueryResult[];
+}
+
+/**
+ * Represents a connection to a database record.
+ *
+ * @dochash types/records/database
+ * @docname Database
+ *
+ * @example Get a database connection.
+ * const database = os.getDatabase('myRecord', 'myDatabase');
+ */
+export class ApiDatabase {
+    private _recordName: string;
+    private _address: string;
+    private _options: RecordActionOptions;
+    private _context: AuxGlobalContext;
+
+    constructor(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions,
+        context: AuxGlobalContext
+    ) {
+        this._recordName = recordName;
+        this._address = address;
+        this._options = options;
+        this._context = context;
+    }
+
+    /**
+     * Constructs a database statement from the given [template string literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
+     *
+     * Once constructed, the returned statement can be used with `run()` or `batch()`.
+     *
+     * @param templates The string templates.
+     * @param params The parameters to interpolate into the templates.
+     * @returns A database statement.
+     *
+     * @example Create a database statement from a SQL query
+     * const statement = database.sql`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a database statement
+     * const itemId = 'abc';
+     * const statement = database.sql`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    sql(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): DatabaseStatement {
+        return q(templates, ...params);
+    }
+
+    /**
+     * Creates a new database statement from the given SQL and parameters.
+     * @param sql The SQL query string.
+     * @param params The parameters to include in the query.
+     * @returns A new database statement.
+     */
+    statement(sql: string, ...params: unknown[]): DatabaseStatement {
+        return {
+            query: sql,
+            params,
+        };
+    }
+
+    /**
+     * Runs the given readonly query against the database.
+     * This method requires queries to be read-only. This means that queries can only select data, they cannot insert, update, or delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the query has completed.
+     *
+     * @example Select all items from a table
+     * const result = await database.query`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a query
+     * const itemId = 'abc';
+     * const result = await database.query`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    async query(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        return this.run(q(templates, ...params), true);
+    }
+
+    /**
+     * Runs the given SQL on the database and returns the result.
+     * This method supports read-write queries. This means that queries can be used to select, insert, update, and delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the SQL has completed.
+     *
+     * @example Insert a new item into a table
+     * const name = "New Item";
+     * const value = 100;
+     * const result = await database.execute`INSERT INTO items (name, value) VALUES (${name}, ${value})`;
+     *
+     */
+    async execute(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        return this.run(q(templates, ...params), false);
+    }
+
+    /**
+     * Runs the given statements in a single transaction. Transactions can be used to group multiple statements together.
+     * If one statement fails, then none of the statements will have any effect.
+     *
+     * @param func The function that should be used to build the statements.
+     * @param readonly Whether the statements are read-only. If true, then the statements cannot modify data.
+     *
+     * @example Run multiple select queries at once
+     * const results = await database.batch([
+     *      database.sql`SELECT * FROM items WHERE id = 'abc'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'def'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'ghi'`,
+     * ]);
+     *
+     * @example Insert multiple items at once
+     * const results = await database.batch([
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 1', 100)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 2', 200)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 3', 300)`,
+     * ], false);
+     */
+    async batch(
+        statements: DatabaseStatement[],
+        readonly: boolean = true
+    ): Promise<GenericResult<BatchResult, SimpleError>> {
+        const result = await this._run(statements, readonly);
+        if (result.success === false) {
+            return result;
+        } else {
+            return {
+                success: true,
+                results: result.items.map((r) => this._mapResult(r)),
+            };
+        }
+    }
+
+    /**
+     * Runs the given database statement.
+     *
+     * @param statement The statement to run.
+     * @param readonly Whether the statement is read-only. If true, then the statement cannot modify data.
+     */
+    async run(
+        statement: DatabaseStatement,
+        readonly: boolean = true
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>> {
+        const batch = await this.batch([statement], readonly);
+        if (batch.success === false) {
+            return batch;
+        } else {
+            const firstResult = batch.results[0];
+            return {
+                success: true,
+                ...firstResult,
+            };
+        }
+    }
+
+    /**
+     * Gets an interface to the database that returns unmodified query results.
+     */
+    get raw() {
+        return {
+            sql: this.sql.bind(this),
+            query: (templates: TemplateStringsArray, ...params: unknown[]) => {
+                return this._run([q(templates, ...params)], true);
+            },
+            execute: (
+                templates: TemplateStringsArray,
+                ...params: unknown[]
+            ) => {
+                return this._run([q(templates, ...params)], false);
+            },
+            batch: (
+                statements: DatabaseStatement[],
+                readonly: boolean = true
+            ) => {
+                return this._run(statements, readonly);
+            },
+            run: (statement: DatabaseStatement, readonly: boolean = true) => {
+                return this._run([statement], readonly);
+            },
+        };
+    }
+
+    private _mapResult(result: QueryResult): ApiQueryResult {
+        const rows: ApiQueryResult['rows'] = [];
+        for (let row of result.rows) {
+            const value: Record<string, any> = {};
+            for (let i = 0; i < result.columns.length; i++) {
+                value[result.columns[i]] = row[i];
+            }
+            rows.push(value);
+        }
+        return {
+            rows,
+            lastInsertId: result.lastInsertId,
+            affectedRowCount: result.affectedRowCount,
+        };
+    }
+
+    private _run(
+        statements: DatabaseStatement[],
+        readonly: boolean
+    ): Promise<GenericResult<QueryResult[], SimpleError>> {
+        const task = this._context.createTask();
+        const action = recordsCallProcedure(
+            {
+                queryDatabase: {
+                    input: {
+                        recordName: this._recordName,
+                        address: this._address,
+                        statements,
+                        readonly,
+                    },
+                },
+            },
+            this._options,
+            task.taskId
+        );
+        this._context.enqueueAction(action);
+        let promise = task.promise;
+        (<any>promise)[ORIGINAL_OBJECT] = action;
+        return promise;
+    }
+}
+
+/**
  * Creates a library that includes the default functions and APIs.
  * @param context The global context that should be used.
  */
@@ -3515,6 +3823,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 listSearchCollectionsByMarker,
                 recordSearchDocument,
                 eraseSearchDocument,
+
+                recordDatabase,
+                getDatabase,
+                eraseDatabase,
+                listDatabases,
+                listDatabasesByMarker,
 
                 listUserStudios,
                 listStudioRecords,
@@ -11765,7 +12079,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string,
         options: RecordActionOptions = {}
-    ): Promise<CrudRecordItemResult> {
+    ): Promise<CrudEraseItemResult> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -11804,7 +12118,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         startingAddress?: string,
         options: ListDataOptions = {}
-    ): Promise<CrudRecordItemResult> {
+    ): Promise<CrudListItemsResult<SearchRecord>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -12003,6 +12317,228 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         );
 
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates or updates a database in the given record.
+     *
+     * Databases are used to store and manage structured data within a record.
+     * They use the [SQL programming language](https://www.sqlite.org/lang.html), which is a powerful programming language designed to manage relational databases.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param request The request to create or update the database.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a database.
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     * });
+     *
+     * @example Record a private database
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     *      markers: ['private']
+     * });
+     *
+     *
+     * @doctitle Database Actions
+     * @docsidebar Database
+     * @docdescription Database actions allow you to create and manage databases in your records. Databases enable efficient storage and retrieval of structured data within your records, making it easier to manage and query information.
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.recordDatabase
+     * @docid recordDatabase
+     */
+    function recordDatabase(
+        request: RecordSearchCollectionApiRequest,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordDatabase: {
+                    input: {
+                        recordName: request.recordName,
+                        item: {
+                            address: request.address,
+                            markers: request.markers as [string, ...string[]],
+                        },
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Deletes a database along with all the data in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the database from.
+     * @param address The address of the database to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a database
+     * const result = await os.eraseDatabase('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.eraseDatabase
+     * @docid eraseDatabase
+     */
+    function eraseDatabase(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<CrudRecordItemResult> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                eraseDatabase: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the databases in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List databases
+     * const result = await os.listDatabases('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabases
+     * @docid listDatabases
+     */
+    function listDatabases(
+        recordName: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<DatabaseRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listDatabases: {
+                    input: {
+                        recordName,
+                        address: startingAddress,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the databases in a record by a specific marker.
+     * @param recordName The name of the record to list the databases from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read databases
+     * const result = await os.listDatabasesByMarker('recordName', 'publicRead');
+     *
+     * @example List private databases
+     * const result = await os.listDatabasesByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabasesByMarker
+     */
+    function listDatabasesByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options: ListDataOptions = {}
+    ): Promise<CrudListItemsResult<DatabaseRecordOutput>> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listDatabases: {
+                    input: {
+                        recordName,
+                        marker,
+                        address: startingAddress,
+                        sort: options?.sort,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets basic info about a database from the specified record.
+     *
+     * @param recordName The name of the record to retrieve the database from.
+     * @param address The address of the database to retrieve.
+     * @param options The options for the request.
+     *
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a database and query a table
+     * const db = os.getDatabase('myRecord', 'myDatabase');
+     * const result = await db.query`SELECT * FROM myTable`;
+     *
+     * @example Insert a new row
+     * const value1 = 'abc';
+     * const value2 = 123;
+     * const result = await db.execute`INSERT INTO myTable (column1, column2) VALUES (${value1}, ${value2})`;
+     *
+     * @example Run multiple queries in a transaction
+     * const values = [
+     *   ['apple', 10],
+     *   ['car', 25000],
+     *   ['strawberry', 1],
+     *   ['lego', 5]
+     * ];
+     *
+     * const result = await db.batch(
+     *   values.map(([name, value]) => db.sql`INSERT INTO data (name, value) VALUES (${name}, ${value})`)
+     * );
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.getDatabase
+     */
+    function getDatabase(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): ApiDatabase {
+        return new ApiDatabase(recordName, address, options, context);
     }
 
     /**

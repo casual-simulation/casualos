@@ -50,7 +50,13 @@ export interface TestContext<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 > {
     services: TestControllers;
     store: MemoryStore;
@@ -74,14 +80,20 @@ export async function setupTestContext<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 >(
     storeFactory: (services: TestControllers) => TStore,
     controllerFactory: (
         config: TestControllerConfiguration<TItem, TStore>,
         services: TestControllers
     ) => TController
-): Promise<TestContext<TItem, TStoreItem, TStore, TController>> {
+): Promise<TestContext<TItem, TStoreItem, TStore, TController, TResult>> {
     const services = createTestControllers();
     const store = services.store;
     const itemsStore = storeFactory(services);
@@ -154,7 +166,13 @@ export function testCrudRecordsController<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 >(
     allowRecordKeys: boolean,
     resourceKind: ResourceKinds,
@@ -166,10 +184,14 @@ export function testCrudRecordsController<
     createStoreItem: (item: CrudRecord) => TStoreItem,
     createInputItem: (item: CrudRecord) => TItem,
     configureEnvironment?: (
-        context: TestContext<TItem, TStoreItem, TStore, TController>
-    ) => Promise<void>
+        context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
+    ) => Promise<void>,
+    createOutputItem: (item: CrudRecord) => TResult = createStoreItem as any,
+    cleanup?: (
+        context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
+    ) => void
 ) {
-    let context: TestContext<TItem, TStoreItem, TStore, TController>;
+    let context: TestContext<TItem, TStoreItem, TStore, TController, TResult>;
     let services: TestControllers;
     let store: MemoryStore;
     let itemsStore: TStore;
@@ -202,6 +224,12 @@ export function testCrudRecordsController<
 
         if (configureEnvironment) {
             await configureEnvironment(context);
+        }
+    });
+
+    afterEach(() => {
+        if (cleanup) {
+            cleanup(context);
         }
     });
 
@@ -602,7 +630,7 @@ export function testCrudRecordsController<
 
             expect(result).toMatchObject({
                 success: true,
-                item: createStoreItem({
+                item: createOutputItem({
                     address: 'address2',
                     markers: [PRIVATE_MARKER],
                 }),
@@ -816,7 +844,7 @@ export function testCrudRecordsController<
     });
 
     describe('listItems()', () => {
-        let items: TStoreItem[];
+        let items: TResult[];
         beforeEach(async () => {
             items = [];
             for (let i = 0; i < 20; i++) {
@@ -825,7 +853,12 @@ export function testCrudRecordsController<
                     markers: [PRIVATE_MARKER],
                 });
                 await itemsStore.createItem(recordName, item);
-                items.push(item);
+                items.push(
+                    createOutputItem({
+                        address: item.address,
+                        markers: item.markers,
+                    })
+                );
             }
         });
 
@@ -946,7 +979,7 @@ export function testCrudRecordsController<
     });
 
     describe('listItemsByMarker()', () => {
-        let items: TStoreItem[];
+        let items: TResult[];
         beforeEach(async () => {
             items = [];
             for (let i = 0; i < 40; i++) {
@@ -957,7 +990,12 @@ export function testCrudRecordsController<
                     ],
                 });
                 await itemsStore.createItem(recordName, item);
-                items.push(item);
+                items.push(
+                    createOutputItem({
+                        address: item.address,
+                        markers: item.markers,
+                    })
+                );
             }
         });
 
