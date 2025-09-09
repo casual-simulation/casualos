@@ -127,7 +127,6 @@ export class Input {
 
     private _htmlElements: () => HTMLElement[];
     private _zoomElements: () => HTMLElement[];
-    private _isOculusBrowser: boolean;
     private _isSafariBrowser: boolean;
 
     get time() {
@@ -398,14 +397,9 @@ export class Input {
         this._zoomElements = () => [...game.getUIZoomElements()];
 
         const browser = Bowser.getParser(navigator.userAgent);
-
-        // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
-        const isOculusBrowser = browser.test(/OculusBrowser\/[\d.]+/);
-        const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
         const isSafariBrowser = browser.getBrowserName(true) === 'safari';
 
-        this._isOculusBrowser = isOculusBrowser;
-        this._usePointerEvents = isOculusBrowser && isOculusVR;
+        this._usePointerEvents = false;
         if (this.debugLevel > 0) {
             console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
         }
@@ -1817,7 +1811,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerCancel(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerCancel(event);
         }
 
@@ -1876,7 +1870,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerDown(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerDown(event);
         }
 
@@ -1951,7 +1945,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerEnter(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerEnter(event);
         }
 
@@ -1981,7 +1975,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerLeave(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerLeave(event);
         }
 
@@ -2074,7 +2068,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerUp(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerUp(event);
         }
 

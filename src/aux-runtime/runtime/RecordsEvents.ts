@@ -36,6 +36,7 @@ import type {
     GrantedEntitlementScope,
     KnownErrorCodes,
     PublicRecordKeyPolicy,
+    ResourceKinds,
     StoredAux,
 } from '@casual-simulation/aux-common';
 
@@ -1687,6 +1688,59 @@ export function revokeRecordPermission(
 }
 
 /**
+ * Represents a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsRequest
+ */
+export interface ListPermissionsRequest extends RecordActionOptions {
+    /**
+     * The name of the record to list permissions for.
+     */
+    recordName: string;
+
+    /**
+     * The marker  to list permissions for.
+     */
+    marker?: string;
+
+    /**
+     * The kind of resource to list permissions for.
+     */
+    resourceKind?: ResourceKinds;
+
+    /**
+     * The ID of the resource to list permissions for.
+     */
+    resourceId?: string;
+}
+
+/**
+ * Creates a RecordsCallProcedureAction to list permissions for a record.
+ * @param request The request options.
+ * @param taskId The ID of the task.
+ */
+export function listPermissions(
+    request: ListPermissionsRequest,
+    taskId: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listPermissions: {
+                input: {
+                    recordName: request.recordName,
+                    marker: request.marker,
+                    resourceKind: request.resourceKind,
+                    resourceId: request.resourceId,
+                },
+            },
+        },
+        request,
+        taskId
+    );
+}
+
+/**
  * Creates a GrantRoleAction for a user.
  * @param recordName The name of the record.
  * @param role The role that should be granted.
@@ -2796,6 +2850,30 @@ export function listUserStudios(
 }
 
 /**
+ * Creates a RecordsCallProcedureAction to list the records in a studio.
+ * @param studioId The ID of the studio.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listStudioRecords(
+    studioId: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listRecords: {
+                input: {
+                    studioId,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a new JoinRoomAction.
  * @param roomName The name of the room.
  * @param options The options to use for the event.
@@ -2907,6 +2985,63 @@ export function setRoomTrackOptions(
         options,
         taskId,
     };
+}
+
+/**
+ * Creates an action that is able to list the insts in a record.
+ * @param recordName The name of the record.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInsts(
+    recordName: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the insts in a record with the given marker.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInstsByMarker(
+    recordName: string,
+    marker: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
 }
 
 /**

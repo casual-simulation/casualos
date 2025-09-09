@@ -28,7 +28,8 @@ This assumes you installed Packer to your PATH.
 
 ```
 $ cd ./.aws/ami
-$ packer build packer.json
+$ packer init packer.json.pkr.hcl
+$ packer build packer.json.pkr.hcl
 ```
 
 When finished, you will have a new AMI named `nodejs-docker-ubuntu20-{{timestamp}}` in your AWS account.

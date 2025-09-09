@@ -200,6 +200,7 @@ import {
     getRoomRemoteOptions,
     grantRecordPermission,
     revokeRecordPermission,
+    listPermissions,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -207,7 +208,10 @@ import {
     revokeInstRole,
     getFile,
     listUserStudios,
+    listStudioRecords,
     listDataRecordByMarker,
+    listInsts as calcListInsts,
+    listInstsByMarker as calcListInstsByMarker,
     aiChatStream,
     aiHumeGetAccessToken,
     aiSloydGenerateModel,
@@ -6936,6 +6940,65 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.createRecord()', () => {
+            it('should emit a recordsCallProcedure action with createRecord', async () => {
+                const action: any = library.api.os.createRecord('myRecord');
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: undefined,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a recordsCallProcedure action with createRecord and studioId', async () => {
+                const action: any = library.api.os.createRecord(
+                    'myRecord',
+                    'myStudio'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: 'myStudio',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if recordName is not provided', () => {
+                expect(() => {
+                    library.api.os.createRecord(null as any);
+                }).toThrow('recordName must be provided.');
+            });
+
+            it('should throw an error if recordName is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord(123 as any);
+                }).toThrow('recordName must be a string.');
+            });
+
+            it('should throw an error if studioId is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord('myRecord', 123 as any);
+                }).toThrow('studioId must be a string.');
+            });
+        });
+
         describe('os.getPublicRecordKey()', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
@@ -7003,6 +7066,76 @@ describe('AuxLibrary', () => {
                     'record',
                     'permissionId',
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPermissions()', () => {
+            it('should emit a RecordsCallProcedureAction when called with all parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'secret',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'secret',
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with only recordName', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with marker only', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'test',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with resource parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    resourceKind: 'file',
+                    resourceId: 'myfile.txt',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        resourceKind: 'file',
+                        resourceId: 'myfile.txt',
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -7724,6 +7857,106 @@ describe('AuxLibrary', () => {
                     'recordName',
                     'myMarker',
                     'address',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInsts()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listInsts('recordName');
+                const expected = calcListInsts(
+                    'recordName',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listInsts(
+                    'recordName',
+                    undefined,
+                    'myEndpoint'
+                );
+                const expected = calcListInsts(
+                    'recordName',
+                    null,
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting inst', async () => {
+                const action: any = library.api.os.listInsts(
+                    'recordName',
+                    'startingInst'
+                );
+                const expected = calcListInsts(
+                    'recordName',
+                    'startingInst',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInstsByMarker()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker'
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    undefined,
+                    {
+                        endpoint: 'myEndpoint',
+                    }
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting inst', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    'startingInst'
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    'startingInst',
                     {},
                     context.tasks.size
                 );
@@ -9603,6 +9836,34 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.listStudioRecords()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any =
+                    library.api.os.listStudioRecords('studioId123');
+                const expected = listStudioRecords(
+                    'studioId123',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listStudioRecords(
+                    'studioId123',
+                    'http://localhost:5000'
+                );
+                const expected = listStudioRecords(
+                    'studioId123',
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.getRecordsEndpoint()', () => {
             it('should return a promise that resolves to the records endpoint', async () => {
                 const result: any = library.api.os.getRecordsEndpoint();
@@ -10178,6 +10439,136 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.addBotMapLayer()', () => {
+            it('should send a AddBotMapLayerAction', () => {
+                const promise: any = library.api.os.addBotMapLayer(bot1, {
+                    overlayType: 'geojson',
+                    data: {
+                        abc: 'def',
+                    },
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test1',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept bot ID as string', () => {
+                const promise: any = library.api.os.addBotMapLayer('test2', {
+                    overlayType: 'geojson',
+                    data: {
+                        xyz: 123,
+                    },
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test2',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: {
+                            xyz: 123,
+                        },
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support optional overlayId', () => {
+                const promise: any = library.api.os.addBotMapLayer(bot1, {
+                    overlayType: 'geojson',
+                    data: { test: true },
+                    overlayId: 'custom-id',
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test1',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: { test: true },
+                        overlayId: 'custom-id',
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.removeBotMapLayer()', () => {
+            it('should send a RemoveBotMapLayerAction', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'layer'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'layer',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept bot ID as string', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    'test2',
+                    'layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test2',
+                    overlayId: 'layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should handle different layer IDs', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'custom-layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'custom-layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return a promise', () => {
+                const result = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'test-layer'
+                );
+                expect(result).toBeInstanceOf(Promise);
+            });
+        });
+
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
                 const action = library.api.server.shell('abc');
@@ -10330,6 +10721,39 @@ describe('AuxLibrary', () => {
                     'inst2',
                     'doc/docId',
                     context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument('docId', {
+                    markers: ['secret', 'team'],
+                });
+                const expected = loadSharedDocument(
+                    'record',
+                    'inst',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['secret', 'team']
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document from a different inst with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId',
+                    { markers: ['public', 'readonly'] }
+                );
+                const expected = loadSharedDocument(
+                    'record2',
+                    'inst2',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['public', 'readonly']
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
