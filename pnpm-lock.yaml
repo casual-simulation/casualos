@@ -1066,6 +1066,15 @@ importers:
       '@juggle/resize-observer':
         specifier: 2.3.0
         version: 2.3.0
+      '@libsql/linux-arm64-gnu':
+        specifier: ^0.5.22
+        version: 0.5.22
+      '@libsql/linux-x64-gnu':
+        specifier: ^0.5.22
+        version: 0.5.22
+      '@libsql/win32-x64-msvc':
+        specifier: ^0.5.22
+        version: 0.5.22
       '@loomhq/loom-embed':
         specifier: ^1.7.0
         version: 1.7.0
@@ -3774,6 +3783,11 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@libsql/linux-arm64-gnu@0.5.22':
+    resolution: {integrity: sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA==}
+    cpu: [arm64]
+    os: [linux]
+
   '@libsql/linux-arm64-musl@0.5.20':
     resolution: {integrity: sha512-Xb112/q3/Z6lKKhwJgR2QVRYtRQblEB69VbStIVjKKw5RZv+r77ZSOHfsR3RHL+R66VN431+DLJBV0+B+AImQw==}
     cpu: [arm64]
@@ -3784,6 +3798,11 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@libsql/linux-x64-gnu@0.5.22':
+    resolution: {integrity: sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew==}
+    cpu: [x64]
+    os: [linux]
+
   '@libsql/linux-x64-musl@0.5.20':
     resolution: {integrity: sha512-EpT1Va1L/y2w0Sj75lxRmaTyX/MD32eKpZiz++3mrE2zRTYAURo9GEbglvSC6Y5aRnLcHPx6XmR25wigRb8WZg==}
     cpu: [x64]
@@ -3791,6 +3810,11 @@ packages:
 
   '@libsql/win32-x64-msvc@0.5.20':
     resolution: {integrity: sha512-3/G5/SZWXmOCaNwEwDdiXEpjeY7NGx1khPjON1yi3BViKrb2TJiiHHn6zpCN7+ZWNibQFZylkETSTURRlealNA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@libsql/win32-x64-msvc@0.5.22':
+    resolution: {integrity: sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA==}
     cpu: [x64]
     os: [win32]
 
@@ -19098,17 +19122,23 @@ snapshots:
   '@libsql/linux-arm64-gnu@0.5.20':
     optional: true
 
+  '@libsql/linux-arm64-gnu@0.5.22': {}
+
   '@libsql/linux-arm64-musl@0.5.20':
     optional: true
 
   '@libsql/linux-x64-gnu@0.5.20':
     optional: true
 
+  '@libsql/linux-x64-gnu@0.5.22': {}
+
   '@libsql/linux-x64-musl@0.5.20':
     optional: true
 
   '@libsql/win32-x64-msvc@0.5.20':
     optional: true
+
+  '@libsql/win32-x64-msvc@0.5.22': {}
 
   '@livekit/protocol@1.15.0':
     dependencies:

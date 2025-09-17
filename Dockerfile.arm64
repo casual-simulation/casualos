@@ -23,6 +23,7 @@ COPY ./src/aux-server/aux-web/aux-auth/dist ./aux-web/aux-auth/dist/
 COPY ./src/aux-server/aux-backend/schemas/auth.prisma ./aux-backend/schemas/auth.prisma
 COPY ./src/aux-server/aux-backend/schemas/migrations ./aux-backend/schemas/migrations
 COPY ./src/aux-server/aux-backend/prisma/generated/libquery_engine-linux-arm64-openssl-3.0.x.so.node ./aux-backend/prisma/generated/libquery_engine-linux-arm64-openssl-3.0.x.so.node
+COPY ./src/aux-server/node_modules/@libsql ./aux-backend/node_modules/@libsql
 
 # HTTP
 EXPOSE 3000
