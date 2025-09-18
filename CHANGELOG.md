@@ -56,6 +56,7 @@
 -   Fixed an issue where the background color for comID logos would not be displayed at the same time as the comID logo.
 -   Fixed an issue where input events would not be handled correctly on newly updated Meta Quest devices.
 -   Reworked OpenID Connect sign-in to use redirects instead of popups, eliminating issues with browser popup blockers ([#652](https://github.com/casual-simulation/casualos/issues/652)).
+-   Fixed an issue where rapidly refreshing browser tabs could create duplicate remote connections that would persist in the `os.remotes()` list. The system now properly cleans up all remote device registrations when a connection is lost and prevents registering the current connection as a remote.
 
 ## V3.7.0
 
