@@ -7692,9 +7692,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(authMock.isAuthenticated).toBeCalled();
-                    expect(authMock.authenticate).not.toBeCalled();
-                    expect(authMock.getAuthToken).toBeCalled();
                 });
 
                 it('should include the inst', async () => {
@@ -7763,9 +7760,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(authMock.isAuthenticated).toBeCalled();
-                    expect(authMock.authenticate).not.toBeCalled();
-                    expect(authMock.getAuthToken).toBeCalled();
                 });
 
                 it('should not include the inst if the inst is static', async () => {
@@ -7833,9 +7827,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(authMock.isAuthenticated).toBeCalled();
-                    expect(authMock.authenticate).not.toBeCalled();
-                    expect(authMock.getAuthToken).toBeCalled();
                 });
 
                 it('should fail if no recordsOrigin is set', async () => {
@@ -7934,9 +7925,6 @@ describe('RecordsManager', () => {
                             address: 'myAddress',
                         }),
                     ]);
-                    expect(customAuthMock.isAuthenticated).toBeCalled();
-                    expect(customAuthMock.authenticate).not.toBeCalled();
-                    expect(customAuthMock.getAuthToken).toBeCalled();
                 });
             });
         });

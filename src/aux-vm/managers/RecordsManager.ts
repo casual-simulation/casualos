@@ -222,44 +222,44 @@ export class RecordsManager {
     private _httpRequestId: number = 0;
     private _client: ReturnType<typeof createRecordsClient>;
 
-    private _allowedProcedures = new Set<keyof RecordsClientActions>([
-        'createRecord',
-        'recordWebhook',
-        'getWebhook',
-        'listWebhooks',
-        'eraseWebhook',
-        'runWebhook',
-        'recordNotification',
-        'getNotification',
-        'listNotifications',
-        'eraseNotification',
-        'subscribeToNotification',
-        'unsubscribeFromNotification',
-        'sendNotification',
-        'listNotificationSubscriptions',
-        'listUserNotificationSubscriptions',
-        'createOpenAIRealtimeSession',
-        'erasePackageVersion',
-        'listPackageVersions',
-        'getPackageVersion',
-        'recordPackage',
-        'erasePackage',
-        'listPackages',
-        'getPackage',
-        'recordSearchCollection',
-        'getSearchCollection',
-        'eraseSearchCollection',
-        'listSearchCollections',
-        'recordSearchDocument',
-        'eraseSearchDocument',
-        'listRecords',
-        'listPermissions',
-        'listInsts',
-        'recordDatabase',
-        'eraseDatabase',
-        'listDatabases',
-        'getDatabase',
-        'queryDatabase',
+    private _allowedProcedures = new Map<keyof RecordsClientActions, boolean>([
+        ['createRecord', true],
+        ['recordWebhook', true],
+        ['getWebhook', true],
+        ['listWebhooks', true],
+        ['eraseWebhook', true],
+        ['runWebhook', true],
+        ['recordNotification', true],
+        ['getNotification', false],
+        ['listNotifications', false],
+        ['eraseNotification', true],
+        ['subscribeToNotification', true],
+        ['unsubscribeFromNotification', true],
+        ['sendNotification', true],
+        ['listNotificationSubscriptions', true],
+        ['listUserNotificationSubscriptions', true],
+        ['createOpenAIRealtimeSession', true],
+        ['erasePackageVersion', true],
+        ['listPackageVersions', false],
+        ['getPackageVersion', false],
+        ['recordPackage', true],
+        ['erasePackage', true],
+        ['listPackages', false],
+        ['getPackage', false],
+        ['recordSearchCollection', true],
+        ['getSearchCollection', false],
+        ['eraseSearchCollection', true],
+        ['listSearchCollections', false],
+        ['recordSearchDocument', true],
+        ['eraseSearchDocument', true],
+        ['listRecords', true],
+        ['listPermissions', true],
+        ['listInsts', true],
+        ['recordDatabase', true],
+        ['eraseDatabase', true],
+        ['listDatabases', false],
+        ['getDatabase', true],
+        ['queryDatabase', true],
     ]);
 
     /**
@@ -488,7 +488,8 @@ export class RecordsManager {
             return;
         }
 
-        const info = await this._resolveInfoForEvent(event);
+        const requireLogin = this._allowedProcedures.get(name);
+        const info = await this._resolveInfoForEvent(event, requireLogin);
 
         if (info.error) {
             return;
@@ -698,6 +699,9 @@ export class RecordsManager {
             return;
         }
         try {
+            // Force login when listing data records without specifying a marker to list by
+            // This is because listing all data records requires access to the "private" marker
+            // If someone wants to avoid the login, they can use a subjectless record key or list by a marker.
             const info = await this._resolveInfoForEvent(event);
             if (info.error) {
                 return;
