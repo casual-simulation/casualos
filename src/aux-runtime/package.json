@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-runtime",
-    "version": "3.7.1-alpha.17809973136",
+    "version": "3.7.1-alpha.17920269336",
     "description": "Runtime for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -32,8 +32,8 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.7.1-alpha.17809973136",
-        "@casual-simulation/aux-records": "^3.7.1-alpha.17809973136",
+        "@casual-simulation/aux-common": "^3.7.1-alpha.17920269336",
+        "@casual-simulation/aux-records": "^3.7.1-alpha.17920269336",
         "@casual-simulation/crypto": "^3.5.0",
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/error-stack-parser": "^2.0.7",
