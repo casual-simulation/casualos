@@ -160,6 +160,8 @@ export type AsyncActions =
     | BeginRecordingAction
     | EndRecordingAction
     | SpeakTextAction
+    | AddBotMapLayerAction
+    | RemoveBotMapLayerAction
     | GetVoicesAction
     | GetGeolocationAction
     | RegisterCustomAppAction
@@ -1922,6 +1924,13 @@ export interface LoadSharedDocumentAction extends AsyncAction {
      * If null, then the document will not be stored in indexeddb.
      */
     branch: string | null;
+
+    /**
+     * The markers that should be set on the inst if it is new.
+     * If the inst already exists, this field is ignored.
+     * If not provided, the default markers will be used.
+     */
+    markers?: string[];
 }
 
 /**
@@ -2969,6 +2978,47 @@ export interface SpeakTextAction extends AsyncAction, SpeakTextOptions {
      * The text that should be spoken.
      */
     text: string;
+}
+
+/** Extensible overlay type — bot map form */
+type OverlayType = 'geojson_canvas';
+
+export interface AddBotMapLayerAction extends AsyncAction {
+    type: 'add_bot_map_layer';
+    /**
+     * The ID of the bot that should be drawn on.
+     */
+    botId: string;
+    /**
+     * Layer configuration
+     */
+    overlay: {
+        /**
+         * The type of overlay to add to the bot map form
+         */
+        overlayType: 'geojson';
+        type?: 'geojson';
+        /**
+         * Data specific to the overlay type for layer creation
+         */
+        data: any;
+        /**
+         * An optional user defined ID of the overlay that should be added.
+         * Will be generated and returned if ommited.
+         */
+        overlayId?: string;
+    };
+}
+export interface RemoveBotMapLayerAction extends AsyncAction {
+    type: 'remove_bot_map_layer';
+    /**
+     * The ID of the bot that the overlay is on.
+     */
+    botId: string;
+    /**
+     * The ID of the overlay that should be removed.
+     */
+    overlayId: string;
 }
 
 /**
@@ -5001,12 +5051,14 @@ export function loadSpace(
  * @param inst The instance to load the document into.
  * @param branch The branch to load the document from.
  * @param taskId The ID of the async task.
+ * @param markers The markers that should be set on the inst if it is new.
  */
 export function loadSharedDocument(
     recordName: string | null,
     inst: string | null,
     branch: string,
-    taskId?: number | string
+    taskId?: number | string,
+    markers?: string[]
 ): LoadSharedDocumentAction {
     return {
         type: 'load_shared_document',
@@ -5014,6 +5066,7 @@ export function loadSharedDocument(
         inst,
         branch,
         taskId,
+        markers,
     };
 }
 
@@ -5636,6 +5689,39 @@ export function speakText(
 export function getVoices(taskId?: string | number): GetVoicesAction {
     return {
         type: 'get_voices',
+        taskId,
+    };
+}
+
+/**
+ * Creates an action that adds a map overlay to the given bot.
+ * @param bot
+ * @param overlayId
+ * @param options
+ * @param taskId
+ */
+export function addBotMapLayer(
+    bot: Bot,
+    overlayConfig: AddBotMapLayerAction['overlay'],
+    taskId?: string | number
+): AddBotMapLayerAction {
+    return {
+        type: 'add_bot_map_layer',
+        botId: bot?.id,
+        overlay: overlayConfig,
+        taskId,
+    };
+}
+
+export function removeBotMapLayer(
+    bot: Bot,
+    overlayId: string,
+    taskId?: string | number
+): RemoveBotMapLayerAction {
+    return {
+        type: 'remove_bot_map_layer',
+        botId: bot?.id,
+        overlayId,
         taskId,
     };
 }

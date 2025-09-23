@@ -87,11 +87,12 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
-    ACCOUNT_MARKER,
     DEFAULT_BRANCH_NAME,
     tryParseJson,
     parseRecordKey,
+    PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
+import { getMarkerResourcesForCreation } from '../PolicyController';
 import type { ZodIssue } from 'zod';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { v4 as uuid, v7 as uuidv7 } from 'uuid';
@@ -438,7 +439,9 @@ export class WebsocketController {
             recordName,
             event.inst,
             connection.userId,
-            config
+            config,
+            null,
+            event.markers
         );
 
         if (instResult.success === false) {
@@ -769,7 +772,9 @@ export class WebsocketController {
                     event.recordName,
                     event.inst,
                     connection.userId,
-                    config
+                    config,
+                    null,
+                    undefined
                 );
 
                 if (instResult.success === false) {
@@ -1136,7 +1141,9 @@ export class WebsocketController {
                     request.recordName,
                     request.inst,
                     request.userId,
-                    config
+                    config,
+                    null,
+                    undefined
                 );
 
                 if (instResult.success === false) {
@@ -1775,7 +1782,8 @@ export class WebsocketController {
     async listInsts(
         recordName: string | null,
         userId: string,
-        startingInst: string | null
+        startingInst: string | null,
+        marker?: string | null
     ): Promise<ListInstsResult> {
         try {
             if (!recordName) {
@@ -1796,12 +1804,14 @@ export class WebsocketController {
                 return contextResult;
             }
             const context = contextResult.context;
+            const hasMarker = hasValue(marker);
+            const markers = hasMarker ? [marker] : [PRIVATE_MARKER];
             const authorizeResult =
                 await this._policies.authorizeUserAndInstances(context, {
                     resourceKind: 'inst',
                     action: 'list',
                     userId,
-                    markers: [PRIVATE_MARKER],
+                    markers,
                     instances: [],
                 });
 
@@ -1830,10 +1840,16 @@ export class WebsocketController {
                 };
             }
 
-            const instsResult = await this._instStore.listInstsByRecord(
-                recordName,
-                startingInst
-            );
+            const instsResult = hasMarker
+                ? await this._instStore.listInstsByRecordAndMarker(
+                      recordName,
+                      marker,
+                      startingInst
+                  )
+                : await this._instStore.listInstsByRecord(
+                      recordName,
+                      startingInst
+                  );
             if (!instsResult.success) {
                 return instsResult;
             }
@@ -2766,7 +2782,8 @@ export class WebsocketController {
         instName: string,
         userId: string,
         config: SubscriptionConfiguration,
-        context: AuthorizationContext = null
+        context: AuthorizationContext = null,
+        markers?: string[]
     ): Promise<GetOrCreateInstResult> {
         let inst: InstWithSubscriptionInfo | null = null;
         let features: FeaturesConfiguration | null = null;
@@ -2804,32 +2821,43 @@ export class WebsocketController {
                     context = contextResult.context;
                 }
 
+                // Determine the markers to use
+                let instMarkers: string[];
+                if (markers && markers.length > 0) {
+                    instMarkers = markers;
+                } else {
+                    // Use default markers based on whether it's a record or public inst
+                    if (recordName) {
+                        instMarkers = [PRIVATE_MARKER];
+                    } else {
+                        instMarkers = [PUBLIC_READ_MARKER];
+                    }
+                }
+
+                // Build authorization resources
+                const resources = [
+                    {
+                        resourceKind: 'inst' as const,
+                        resourceId: instName,
+                        action: 'create' as const,
+                        markers: instMarkers,
+                    },
+                    {
+                        resourceKind: 'inst' as const,
+                        resourceId: instName,
+                        action: 'read' as const,
+                        markers: instMarkers,
+                    },
+                    ...getMarkerResourcesForCreation(instMarkers),
+                ];
+
                 const authorizationResult =
                     await this._policies.authorizeUserAndInstancesForResources(
                         context,
                         {
                             userId: userId,
                             instances: [],
-                            resources: [
-                                {
-                                    resourceKind: 'inst',
-                                    resourceId: instName,
-                                    action: 'create',
-                                    markers: [PRIVATE_MARKER],
-                                },
-                                {
-                                    resourceKind: 'marker',
-                                    resourceId: PRIVATE_MARKER,
-                                    action: 'assign',
-                                    markers: [ACCOUNT_MARKER],
-                                },
-                                {
-                                    resourceKind: 'inst',
-                                    resourceId: instName,
-                                    action: 'read',
-                                    markers: [PRIVATE_MARKER],
-                                },
-                            ],
+                            resources,
                         }
                     );
 
@@ -2912,7 +2940,7 @@ export class WebsocketController {
                 inst = {
                     recordName: recordName,
                     inst: instName,
-                    markers: [PRIVATE_MARKER],
+                    markers: instMarkers,
                     subscriptionId: instMetrics.subscriptionId,
                     subscriptionStatus: instMetrics.subscriptionStatus,
                     subscriptionType: instMetrics.subscriptionType,

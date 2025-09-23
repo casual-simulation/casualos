@@ -170,6 +170,57 @@ export class PrismaInstRecordsStore implements InstRecordsStore {
     }
 
     @traced(TRACE_NAME)
+    async listInstsByRecordAndMarker(
+        recordName: string,
+        marker: string,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult> {
+        let filter: Prisma.InstRecordWhereInput = {
+            recordName: recordName,
+            markers: {
+                has: marker,
+            },
+        };
+
+        if (startingInst) {
+            filter.name = {
+                gt: startingInst,
+            };
+        }
+
+        const insts = await this._prisma.instRecord.findMany({
+            where: filter,
+            orderBy: {
+                name: 'asc',
+            },
+            take: 10,
+            select: {
+                name: true,
+                markers: true,
+            },
+        });
+
+        const totalCount = await this._prisma.instRecord.count({
+            where: {
+                recordName: recordName,
+                markers: {
+                    has: marker,
+                },
+            },
+        });
+
+        return {
+            success: true,
+            insts: insts.map((i) => ({
+                recordName: recordName,
+                inst: i.name,
+                markers: i.markers,
+            })),
+            totalCount,
+        };
+    }
+
+    @traced(TRACE_NAME)
     async getInstByName(
         recordName: string,
         inst: string

@@ -85,6 +85,7 @@ import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
 import AuthGrantedEntitlements from './AuthGrantedEntitlements/AuthGrantedEntitlements';
+import AuthUserNotifications from './AuthUserNotifications/AuthUserNotifications';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -183,6 +184,11 @@ const routes: RouteConfig[] = [
         path: '/granted-entitlements',
         name: 'granted-entitlements',
         component: AuthGrantedEntitlements,
+    },
+    {
+        path: '/notifications',
+        name: 'user-notifications',
+        component: AuthUserNotifications,
     },
     {
         path: '/records/:recordName',

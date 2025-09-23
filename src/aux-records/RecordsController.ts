@@ -2504,12 +2504,6 @@ export interface GetPlayerConfigSuccess {
     logoUrl: string;
 
     /**
-     * The background color of the background of the logo.
-     * This is used to set the background color of the splash screen.
-     */
-    logoBackgroundColor?: string;
-
-    /**
      * The config that should be used for the player.
      */
     playerConfig: ComIdPlayerConfig;

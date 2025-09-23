@@ -1,5 +1,63 @@
 # CasualOS Changelog
 
+## V3.7.1
+
+#### Date: 9/23/2025
+
+### :rocket: Features
+
+-   Added the `os.createRecord(name)` function ([#668](https://github.com/casual-simulation/casualos/pull/668)).
+-   Added the `os.listSudioRecords(studioId)` function ([#666](https://github.com/casual-simulation/casualos/pull/666)).
+-   Added the the ability to specify markers when loading a shared document. ([#663](https://github.com/casual-simulation/casualos/pull/663))
+-   Added the ability to view your notification subscriptions on the auth site. ([#680](https://github.com/casual-simulation/casualos/pull/680))
+-   Added support for database records.
+    -   Database records add the ability to run arbitrary SQL queries on SQLite database instances.
+    -   Database records can be accessed via the following functions:
+        -   `os.recordDatabase(request, options?)` - Creates or updates a database record.
+        -   `os.eraseDatabase(recordName, address, options?)` - Deletes a database record and associated data.
+        -   `os.listDatabases(recordName, startingAddress?, options?)` - Lists the databases that are stored in a record.
+        -   `os.listDatabasesByMarker(recordName, marker, startingAddress?, options?)` - Lists the databases which have the given marker.
+        -   `os.getDatabase(recordName, address)` - Gets a database instance that can be used to run queries against a database. Returns an object which has the following functions:
+            -   `query` - A [tagged template literal function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) that can query the database. Only allows read-only queries.
+            -   `execute` - A tagged template literal function that can execute SQL code on the database. Allows read-write.
+            -   `batch(statements, readonly?)` - Accepts an array of statements which are all executed in a [transaction](https://sqlite.org/lang_transaction.html). If any one fails, then none of the statements will have any effect.
+            -   `sql` - A tagged template literal function that constructs a statement from the given SQL and parameters.
+            -   `run(statement, readonly?)` - Accepts a statement and executes it.
+            -   `raw` - Gets an object that is able to interface with the database without any special mapping of rows.
+    -   By default, database features are not enabled. To configure database features, specify the `databases` key in your `SERVER_CONFIG`:
+        -   To configure SQLite:
+            ```json
+            {
+                "databases": {
+                    "provider": {
+                        "type": "sqlite",
+                        "folderPath": "/path/to/sqlite/databases/folder"
+                    }
+                }
+            }
+            ```
+        -   To configure Turso:
+            ```json
+            {
+                "databases": {
+                    "provider": {
+                        "type": "turso",
+                        "organization": "YOUR_ORGANIZATION",
+                        "token": "YOUR_API_TOKEN",
+                        "group": "YOUR_DATABASE_GROUP"
+                    }
+                }
+            }
+            ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
+-   Fixed an issue where the background color for comID logos would not be displayed at the same time as the comID logo.
+-   Fixed an issue where input events would not be handled correctly on newly updated Meta Quest devices.
+-   Reworked OpenID Connect sign-in to use redirects instead of popups, eliminating issues with browser popup blockers ([#652](https://github.com/casual-simulation/casualos/issues/652)).
+-   Fixed an issue where listing data by marker would force login.
+
 ## V3.7.0
 
 #### Date: 8/22/2025

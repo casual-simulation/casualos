@@ -1086,6 +1086,41 @@ const backgroundJobSchema = z.discriminatedUnion('type', [
     bullmqSchema,
 ]);
 
+const tursoDatabaseProviderSchema = z.object({
+    type: z.literal('turso'),
+    organization: z.string().describe('The Turso organization name.'),
+    token: z
+        .string()
+        .describe(
+            'The API Token that should be used to access the Turso Platform API.'
+        ),
+    group: z
+        .string()
+        .describe('The Turso group name that databases should be placed in.'),
+});
+
+const sqliteDatabaseProviderSchema = z.object({
+    type: z.literal('sqlite'),
+
+    folderPath: z
+        .string()
+        .describe('The folder where the SQLite database files are stored.')
+        .min(1),
+
+    encryptionKey: z
+        .string()
+        .describe(
+            'The encryption key that should be used for the SQLite databases. If omitted, then the databases will not be encrypted.'
+        )
+        .min(10)
+        .optional(),
+});
+
+const databasesProviderSchema = z.discriminatedUnion('type', [
+    tursoDatabaseProviderSchema,
+    sqliteDatabaseProviderSchema,
+]);
+
 export const serverConfigSchema = z.object({
     s3: s3Schema
         .describe(
@@ -1310,6 +1345,17 @@ export const serverConfigSchema = z.object({
         })
         .describe(
             'Configuration options for background jobs. If omitted, then background jobs will not be supported.'
+        )
+        .optional(),
+
+    databases: z
+        .object({
+            provider: databasesProviderSchema.describe(
+                'The options for the database provider that should be used.'
+            ),
+        })
+        .describe(
+            'Configuration options for database records. If omitted, then database records will be disabled.'
         )
         .optional(),
 });

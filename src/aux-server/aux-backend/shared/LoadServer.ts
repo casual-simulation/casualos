@@ -235,6 +235,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useTypesense();
     }
 
+    if (config.databases) {
+        builder.useDatabases();
+    }
+
     if (config.jobs) {
         builder.useBackgroundJobs();
     }
