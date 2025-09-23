@@ -702,7 +702,10 @@ export class RecordsManager {
             // Force login when listing data records without specifying a marker to list by
             // This is because listing all data records requires access to the "private" marker
             // If someone wants to avoid the login, they can use a subjectless record key or list by a marker.
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(
+                event,
+                event.type !== 'list_record_data_by_marker'
+            );
             if (info.error) {
                 return;
             }

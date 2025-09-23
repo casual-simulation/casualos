@@ -1611,6 +1611,7 @@ describe('RecordsManager', () => {
                         },
                     }),
                 ]);
+                expect(authMock.getAuthToken).toHaveBeenCalled();
             });
 
             it('should not include the Authorization header if the user is not logged in', async () => {
@@ -1654,6 +1655,8 @@ describe('RecordsManager', () => {
                         },
                     }),
                 ]);
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+                expect(authMock.authenticate).toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
@@ -2025,6 +2028,8 @@ describe('RecordsManager', () => {
                         marker: 'myMarker',
                     }),
                 ]);
+                expect(authMock.getAuthToken).toHaveBeenCalled();
+                expect(authMock.authenticate).not.toHaveBeenCalled();
             });
 
             it('should include the inst', async () => {
