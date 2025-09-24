@@ -15,7 +15,7 @@ ENV PRISMA_QUERY_ENGINE_BINARY="/usr/src/app/aux-backend/prisma/generated/libque
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v1.4.0
 
 RUN npm install -g prisma@^5.7.0
-RUN npm install --no-package-lock --no-save deno-vm@^0.12.0
+RUN npm install --no-package-lock --no-save deno-vm@^0.12.0 @libsql/linux-x64-gnu@^0.5.22
 
 COPY ./src/aux-server/package*.json ./
 COPY ./src/aux-server/aux-backend/server/dist ./aux-backend/server/dist/
