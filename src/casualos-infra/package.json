@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/infra",
-    "version": "3.7.2-alpha.18013752430",
+    "version": "3.7.2-alpha.18014719607",
     "description": "Pulumi resources for hosting CasualOS",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
