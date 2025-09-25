@@ -276,6 +276,59 @@ export function testPartitionImplementation(
             });
         });
 
+        it('should preserve masks if the masks are added before the bot is', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            let added: Bot[] = [];
+            partition.onBotsAdded.subscribe((a) => added.push(...a));
+
+            partition.space = 'test';
+            await partition.applyEvents([
+                botUpdated('test', {
+                    masks: {
+                        test: {
+                            test: 'mask',
+                        },
+                    },
+                }),
+                botAdded(bot1),
+            ]);
+
+            expect(added).toEqual([
+                {
+                    id: 'test',
+                    space: 'test',
+                    tags: {
+                        abc: 'def',
+                    },
+                    masks: {
+                        test: {
+                            test: 'mask',
+                        },
+                    },
+                },
+            ]);
+            expect(partition.state).toEqual({
+                test: {
+                    id: 'test',
+                    space: 'test',
+                    tags: {
+                        abc: 'def',
+                    },
+                    masks: {
+                        test: {
+                            test: 'mask',
+                        },
+                    },
+                },
+            });
+        });
+
         describe('data types', () => {
             it.each(allDataTypeCases)(
                 'should support %s tags',
