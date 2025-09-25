@@ -421,6 +421,203 @@ describe('OtherPlayersPartition', () => {
                     });
                 });
 
+                describe('rapid refresh handling - BUG FIX VERIFICATION', () => {
+                    it('should not register self as a remote device when connection state updates', async () => {
+                        partition.connect();
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+                        const selfConnection = connectionInfo(
+                            'testUser',
+                            'testDevice',
+                            'test'
+                        );
+
+                        deviceConnected.next({
+                            type: 'repo/connected_to_branch',
+                            broadcast: false,
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                            connection: selfConnection,
+                        });
+
+                        await waitAsync();
+                        const joinEvents = events.filter(
+                            (e) =>
+                                e.type === ON_REMOTE_JOINED_ACTION_NAME ||
+                                e.type ===
+                                    ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME
+                        );
+
+                        expect(joinEvents).toEqual([]);
+                        await partition.sendRemoteEvents([
+                            remote(
+                                getRemotes(),
+                                undefined,
+                                undefined,
+                                'self-test'
+                            ),
+                        ]);
+
+                        const result = events.find(
+                            (e) =>
+                                e.type === 'async_result' &&
+                                (e as any).taskId === 'self-test'
+                        ) as any;
+
+                        expect(result.result).toEqual(['test']);
+                    });
+
+                    it('should handle rapid browser refresh without creating ghost connections', async () => {
+                        partition.connect();
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const originalTab = connectionInfo(
+                            'user1',
+                            'browser-tab',
+                            'session-v1'
+                        );
+                        deviceConnected.next({
+                            type: 'repo/connected_to_branch',
+                            broadcast: false,
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                            connection: originalTab,
+                        });
+
+                        await waitAsync();
+
+                        const refreshedTab = connectionInfo(
+                            'user1',
+                            'browser-tab',
+                            'session-v2'
+                        );
+                        deviceConnected.next({
+                            type: 'repo/connected_to_branch',
+                            broadcast: false,
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName: recordName,
+                                inst: 'inst',
+                                branch: 'testBranch',
+                            },
+                            connection: refreshedTab,
+                        });
+
+                        await waitAsync();
+
+                        deviceDisconnected.next({
+                            type: 'repo/disconnected_from_branch',
+                            broadcast: false,
+                            recordName: recordName,
+                            inst: 'inst',
+                            branch: 'testBranch',
+                            connection: originalTab,
+                        });
+
+                        await waitAsync();
+                        await partition.sendRemoteEvents([
+                            remote(
+                                getRemotes(),
+                                undefined,
+                                undefined,
+                                'refresh-check'
+                            ),
+                        ]);
+
+                        const result = events.find(
+                            (e) =>
+                                e.type === 'async_result' &&
+                                (e as any).taskId === 'refresh-check'
+                        ) as any;
+
+                        expect(result).toBeDefined();
+                        expect(result.result.sort()).toEqual(
+                            ['session-v2', 'test'].sort()
+                        );
+                        expect(result.result).not.toContain('session-v1');
+                    });
+
+                    it('should handle multiple rapid refreshes in succession', async () => {
+                        partition.connect();
+                        await waitAsync();
+
+                        const events = [] as Action[];
+                        partition.onEvents.subscribe((e) => events.push(...e));
+
+                        const sessions = [];
+                        for (let i = 1; i <= 5; i++) {
+                            const session = connectionInfo(
+                                'user1',
+                                'tab',
+                                `session-${i}`
+                            );
+                            sessions.push(session);
+
+                            deviceConnected.next({
+                                type: 'repo/connected_to_branch',
+                                broadcast: false,
+                                branch: {
+                                    type: 'repo/watch_branch',
+                                    recordName: recordName,
+                                    inst: 'inst',
+                                    branch: 'testBranch',
+                                },
+                                connection: session,
+                            });
+
+                            await waitAsync();
+
+                            if (i > 1) {
+                                deviceDisconnected.next({
+                                    type: 'repo/disconnected_from_branch',
+                                    broadcast: false,
+                                    recordName: recordName,
+                                    inst: 'inst',
+                                    branch: 'testBranch',
+                                    connection: sessions[i - 2],
+                                });
+                            }
+                        }
+
+                        await waitAsync();
+                        await partition.sendRemoteEvents([
+                            remote(
+                                getRemotes(),
+                                undefined,
+                                undefined,
+                                'multi-refresh'
+                            ),
+                        ]);
+
+                        const result = events.find(
+                            (e) =>
+                                e.type === 'async_result' &&
+                                (e as any).taskId === 'multi-refresh'
+                        ) as any;
+
+                        expect(result.result.sort()).toEqual(
+                            ['session-5', 'test'].sort()
+                        );
+
+                        for (let i = 1; i < 5; i++) {
+                            expect(result.result).not.toContain(`session-${i}`);
+                        }
+                    });
+                });
+
                 describe('other_players', () => {
                     it('should watch for other devices', async () => {
                         partition.connect();

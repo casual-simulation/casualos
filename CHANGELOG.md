@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.7.2
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where rapidly refreshing browser tabs could create duplicate remote connections that would persist in the `os.remotes()` list. The system now properly cleans up all remote device registrations when a connection is lost and prevents registering the current connection as a remote.
+
 ## V3.7.1
 
 #### Date: 9/23/2025
