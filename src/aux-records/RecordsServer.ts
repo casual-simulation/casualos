@@ -3778,7 +3778,8 @@ export class RecordsServer {
 
                     const result = await this._aiController.listChatModels({
                         userId: sessionKeyValidation.userId,
-                        userRole: sessionKeyValidation.role,
+                        userSubscriptionTier:
+                            sessionKeyValidation.subscriptionTier,
                     });
 
                     return result;

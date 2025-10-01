@@ -2409,7 +2409,7 @@ describe('AIController', () => {
 
             const result = await controller.listChatModels({
                 userId,
-                userRole: 'none',
+                userSubscriptionTier,
             });
 
             expect(result).toEqual({
@@ -2485,6 +2485,11 @@ describe('AIController', () => {
                         tokenModifierRatio: {},
                     },
                 },
+                generateSkybox: null,
+                images: null,
+                hume: null,
+                sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: null,
@@ -2494,7 +2499,7 @@ describe('AIController', () => {
 
             const result = await controller.listChatModels({
                 userId,
-                userRole: 'none',
+                userSubscriptionTier,
             });
 
             expect(result).toEqual({
@@ -2540,7 +2545,7 @@ describe('AIController', () => {
 
             const result = await controller.listChatModels({
                 userId,
-                userRole: 'none',
+                userSubscriptionTier,
             });
 
             expect(result).toEqual({
@@ -2563,7 +2568,7 @@ describe('AIController', () => {
         it('should return not_logged_in if no userId is provided', async () => {
             const result = await controller.listChatModels({
                 userId: null,
-                userRole: 'none',
+                userSubscriptionTier,
             });
 
             expect(result).toEqual({
@@ -2576,7 +2581,7 @@ describe('AIController', () => {
         it('should return subscription_limit_reached if the user has no subscription', async () => {
             const result = await controller.listChatModels({
                 userId,
-                userRole: 'none',
+                userSubscriptionTier: null,
             });
 
             expect(result).toEqual({
@@ -2611,7 +2616,7 @@ describe('AIController', () => {
 
             const result = await controller.listChatModels({
                 userId,
-                userRole: 'none',
+                userSubscriptionTier: 'other-tier',
             });
 
             expect(result).toEqual({
@@ -2624,6 +2629,12 @@ describe('AIController', () => {
 
         it('should return not_supported if no chat configuration is provided', async () => {
             controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: null,
+                hume: null,
+                sloyd: null,
+                openai: null,
                 metrics: store,
                 config: store,
                 policies: null,
@@ -2633,7 +2644,7 @@ describe('AIController', () => {
 
             const result = await controller.listChatModels({
                 userId,
-                userRole: 'none',
+                userSubscriptionTier,
             });
 
             expect(result).toEqual({

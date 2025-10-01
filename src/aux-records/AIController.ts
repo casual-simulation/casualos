@@ -1689,6 +1689,29 @@ export class AIController {
                 };
             }
 
+            if (
+                this._allowedChatSubscriptionTiers !== true &&
+                !this._matchesSubscriptionTiers(
+                    request.userSubscriptionTier,
+                    this._allowedChatSubscriptionTiers
+                )
+            ) {
+                if (!request.userSubscriptionTier) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage: 'The user does not have a subscription.',
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'This operation is not available to the user at their current subscription tier.',
+                    };
+                }
+            }
+
             const metrics = await this._metrics.getSubscriptionAiChatMetrics({
                 ownerId: request.userId,
             });
@@ -1700,35 +1723,12 @@ export class AIController {
                 'user'
             );
 
-            if (!allowedFeatures) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage: 'The user does not have a subscription.',
-                };
-            }
-
             if (!allowedFeatures.ai.chat.allowed) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
                     errorMessage:
-                        'This operation is not available to the user at their current subscription tier.',
-                };
-            }
-
-            if (
-                this._allowedChatSubscriptionTiers !== true &&
-                !this._matchesSubscriptionTiers(
-                    metrics.subscriptionStatus,
-                    this._allowedChatSubscriptionTiers
-                )
-            ) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'This operation is not available to the user at their current subscription tier.',
+                        'The subscription does not permit AI Chat features.',
                 };
             }
 
@@ -2344,9 +2344,10 @@ export interface ListChatModelsRequest {
     userId: string;
 
     /**
-     * The role of the user.
+     * The subscription tier of the user.
+     * Should be null if the user is not logged in or if they do not have a subscription.
      */
-    userRole: string;
+    userSubscriptionTier: string;
 }
 
 /**
