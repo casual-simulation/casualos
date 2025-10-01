@@ -62,6 +62,7 @@ export type RecordsAsyncActions =
     | GetEventCountAction
     | AIChatAction
     | AIChatStreamAction
+    | AIListChatModelsAction
     | AIGenerateImageAction
     | AIGenerateSkyboxAction
     | AIHumeGetAccessTokenAction
@@ -120,6 +121,41 @@ export interface AIChatStreamAction extends AsyncAction {
      * The list of messages comprising the conversation so far.
      */
     messages: AIChatMessage[];
+}
+
+/**
+ * An event that is used to list available chat models.
+ */
+export interface AIListChatModelsAction extends AsyncAction {
+    type: 'ai_list_chat_models';
+
+    /**
+     * The options for the action.
+     */
+    options: RecordActionOptions;
+}
+
+/**
+ * Defines an interface that represents a listed chat model.
+ *
+ * @dochash types/ai
+ * @docname ListedChatModel
+ */
+export interface ListedChatModel {
+    /**
+     * The name of the model.
+     */
+    name: string;
+
+    /**
+     * The provider of the model.
+     */
+    provider: string;
+
+    /**
+     * Whether this is the default model.
+     */
+    isDefault?: boolean;
 }
 
 /**
@@ -1513,6 +1549,23 @@ export function aiChatStream(
     return {
         type: 'ai_chat_stream',
         messages,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIListChatModelsAction.
+ *
+ * @param options The options for listing chat models.
+ * @param taskId The ID of the async task.
+ */
+export function aiListChatModels(
+    options?: RecordActionOptions,
+    taskId?: number | string
+): AIListChatModelsAction {
+    return {
+        type: 'ai_list_chat_models',
         options: options ?? {},
         taskId,
     };

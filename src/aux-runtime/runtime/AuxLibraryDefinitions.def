@@ -12983,6 +12983,22 @@ interface Ai {
     ): Promise<AIChatMessage | string>;
 
     /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @param options The options that should be used.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    listChatModels(options?: RecordActionOptions): Promise<ListedChatModel[]>;
+
+    /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
      * 
      * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
