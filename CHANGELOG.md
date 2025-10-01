@@ -4,6 +4,10 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where rapidly refreshing browser tabs could create duplicate remote connections that would persist in the `os.remotes()` list. The system now properly cleans up all remote device registrations when a connection is lost and prevents registering the current connection as a remote.
