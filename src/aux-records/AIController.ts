@@ -1689,11 +1689,18 @@ export class AIController {
                 };
             }
 
-            const subscriptionStatus = await this._config.getSubscriptionStatus(
-                request.userId
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
             );
 
-            if (!subscriptionStatus) {
+            if (!allowedFeatures) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
@@ -1701,13 +1708,7 @@ export class AIController {
                 };
             }
 
-            if (
-                this._allowedChatSubscriptionTiers !== true &&
-                !this._matchesSubscriptionTiers(
-                    subscriptionStatus.subscriptionTier,
-                    this._allowedChatSubscriptionTiers
-                )
-            ) {
+            if (!allowedFeatures.ai.chat.allowed) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
@@ -1716,16 +1717,18 @@ export class AIController {
                 };
             }
 
-            const features = await getSubscriptionFeatures(
-                this._config,
-                subscriptionStatus.subscriptionId
-            );
-
-            if (!features) {
+            if (
+                this._allowedChatSubscriptionTiers !== true &&
+                !this._matchesSubscriptionTiers(
+                    metrics.subscriptionStatus,
+                    this._allowedChatSubscriptionTiers
+                )
+            ) {
                 return {
                     success: false,
                     errorCode: 'subscription_limit_reached',
-                    errorMessage: 'The user does not have a subscription.',
+                    errorMessage:
+                        'This operation is not available to the user at their current subscription tier.',
                 };
             }
 
@@ -1744,7 +1747,7 @@ export class AIController {
                 }
             }
 
-            const allowedModels = features.ai.chat.allowedModels ?? [
+            const allowedModels = allowedFeatures.ai.chat.allowedModels ?? [
                 ...this._allowedChatModels.keys(),
             ];
 

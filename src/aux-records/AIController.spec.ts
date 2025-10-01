@@ -2383,6 +2383,267 @@ describe('AIController', () => {
         });
     });
 
+    describe('listChatModels()', () => {
+        it('should return the list of allowed chat models', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('test-tier')
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIChat({
+                                allowed: true,
+                            })
+                    )
+            );
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                models: [
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model3',
+                        provider: 'provider2',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model-token-ratio',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ],
+            });
+        });
+
+        it('should mark the default model', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('test-tier')
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIChat({
+                                allowed: true,
+                            })
+                    )
+            );
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            controller = new AIController({
+                chat: {
+                    interfaces: {
+                        provider1: chatInterface,
+                        provider2: chatInterface2,
+                    },
+                    options: {
+                        defaultModel: 'test-model1',
+                        defaultModelProvider: 'provider1',
+                        allowedChatModels: [
+                            {
+                                provider: 'provider1',
+                                model: 'test-model1',
+                            },
+                            {
+                                provider: 'provider1',
+                                model: 'test-model2',
+                            },
+                        ],
+                        allowedChatSubscriptionTiers: ['test-tier'],
+                        tokenModifierRatio: {},
+                    },
+                },
+                metrics: store,
+                config: store,
+                policies: null,
+                policyController: policies,
+                records: store,
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                models: [
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: true,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ],
+            });
+        });
+
+        it('should filter models based on subscription features', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('test-tier')
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIChat({
+                                allowed: true,
+                                allowedModels: ['test-model1', 'test-model2'],
+                            })
+                    )
+            );
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: true,
+                models: [
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ],
+            });
+        });
+
+        it('should return not_logged_in if no userId is provided', async () => {
+            const result = await controller.listChatModels({
+                userId: null,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage: 'The user is not logged in.',
+            });
+        });
+
+        it('should return subscription_limit_reached if the user has no subscription', async () => {
+            const result = await controller.listChatModels({
+                userId,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage: 'The user does not have a subscription.',
+            });
+        });
+
+        it('should return subscription_limit_reached if the user subscription tier is not allowed', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('other-tier')
+                            .withAllDefaultFeatures()
+                            .withAI()
+                            .withAIChat({
+                                allowed: true,
+                            })
+                    )
+            );
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'This operation is not available to the user at their current subscription tier.',
+            });
+        });
+
+        it('should return not_supported if no chat configuration is provided', async () => {
+            controller = new AIController({
+                metrics: store,
+                config: store,
+                policies: null,
+                policyController: policies,
+                records: store,
+            });
+
+            const result = await controller.listChatModels({
+                userId,
+                userRole: 'none',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+    });
+
     describe('generateSkybox()', () => {
         it('should return the result from the generateSkybox interface', async () => {
             generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
