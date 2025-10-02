@@ -7967,15 +7967,16 @@ describe('AuxLibrary', () => {
 
         describe('os.eraseInst()', () => {
             it('should emit a RecordsCallProcedureAction', async () => {
+                const recordKey = formatV1RecordKey('recordName', 'test');
                 const action: any = library.api.os.eraseInst(
-                    'recordKey',
+                    recordKey,
                     'myInst'
                 );
                 const expected = recordsCallProcedure(
                     {
                         deleteInst: {
                             input: {
-                                recordKey: 'recordKey',
+                                recordKey: recordKey,
                                 recordName: undefined,
                                 inst: 'myInst',
                             },
@@ -8011,8 +8012,9 @@ describe('AuxLibrary', () => {
             });
 
             it('should support custom options', async () => {
+                const recordKey = formatV1RecordKey('recordName', 'test');
                 const action: any = library.api.os.eraseInst(
-                    'recordKey',
+                    recordKey,
                     'myInst',
                     {
                         endpoint: 'myEndpoint',
@@ -8022,7 +8024,7 @@ describe('AuxLibrary', () => {
                     {
                         deleteInst: {
                             input: {
-                                recordKey: 'recordKey',
+                                recordKey: recordKey,
                                 recordName: undefined,
                                 inst: 'myInst',
                             },
