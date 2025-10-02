@@ -384,6 +384,7 @@ import type {
     VersionNumber,
     GenericResult,
     SimpleError,
+    GenericSuccess,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -5740,7 +5741,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = aiListChatModels(options, task.taskId);
         const final = addAsyncResultAction(task, action).then(
-            (result) => result.models
+            (result: GenericSuccess<ListedChatModel[]>) => result.items
         );
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;

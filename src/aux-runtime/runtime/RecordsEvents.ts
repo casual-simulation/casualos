@@ -62,7 +62,6 @@ export type RecordsAsyncActions =
     | GetEventCountAction
     | AIChatAction
     | AIChatStreamAction
-    | AIListChatModelsAction
     | AIGenerateImageAction
     | AIGenerateSkyboxAction
     | AIHumeGetAccessTokenAction
@@ -121,18 +120,6 @@ export interface AIChatStreamAction extends AsyncAction {
      * The list of messages comprising the conversation so far.
      */
     messages: AIChatMessage[];
-}
-
-/**
- * An event that is used to list available chat models.
- */
-export interface AIListChatModelsAction extends AsyncAction {
-    type: 'ai_list_chat_models';
-
-    /**
-     * The options for the action.
-     */
-    options: RecordActionOptions;
 }
 
 /**
@@ -1563,12 +1550,16 @@ export function aiChatStream(
 export function aiListChatModels(
     options?: RecordActionOptions,
     taskId?: number | string
-): AIListChatModelsAction {
-    return {
-        type: 'ai_list_chat_models',
-        options: options ?? {},
-        taskId,
-    };
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            aiListChatModels: {
+                input: {},
+            },
+        },
+        options,
+        taskId
+    );
 }
 
 /**
