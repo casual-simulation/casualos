@@ -3759,7 +3759,8 @@ export class RecordsServer {
             aiListChatModels: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/ai/chat/models')
-                .handler(async (input, context) => {
+                .inputs(z.object({}))
+                .handler(async (_, context) => {
                     if (!this._aiController) {
                         return AI_NOT_SUPPORTED_RESULT;
                     }
@@ -3780,9 +3781,10 @@ export class RecordsServer {
                         userId: sessionKeyValidation.userId,
                         userSubscriptionTier:
                             sessionKeyValidation.subscriptionTier,
+                        userRole: sessionKeyValidation.role,
                     });
 
-                    return result;
+                    return genericResult(result);
                 }),
 
             createAiSkybox: procedure()

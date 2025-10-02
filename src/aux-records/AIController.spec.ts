@@ -45,7 +45,11 @@ import type {
     AISloydInterfaceEditModelResponse,
 } from './AISloydInterface';
 import type { PolicyController } from './PolicyController';
-import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-common';
+import {
+    failure,
+    PUBLIC_READ_MARKER,
+    success,
+} from '@casual-simulation/aux-common';
 import { fromByteArray } from 'base64-js';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 import type { AIOpenAIRealtimeInterface } from './AIOpenAIRealtimeInterface';
@@ -2389,7 +2393,7 @@ describe('AIController', () => {
                 (config) =>
                     config.addSubscription('sub1', (sub) =>
                         sub
-                            .withTier('test-tier')
+                            .withTier(userSubscriptionTier)
                             .withAllDefaultFeatures()
                             .withAI()
                             .withAIChat({
@@ -2410,11 +2414,11 @@ describe('AIController', () => {
             const result = await controller.listChatModels({
                 userId,
                 userSubscriptionTier,
+                userRole: 'none',
             });
 
-            expect(result).toEqual({
-                success: true,
-                models: [
+            expect(result).toEqual(
+                success([
                     {
                         name: 'test-model1',
                         provider: 'provider1',
@@ -2435,8 +2439,8 @@ describe('AIController', () => {
                         provider: 'provider1',
                         isDefault: false,
                     },
-                ],
-            });
+                ])
+            );
         });
 
         it('should mark the default model', async () => {
@@ -2444,7 +2448,7 @@ describe('AIController', () => {
                 (config) =>
                     config.addSubscription('sub1', (sub) =>
                         sub
-                            .withTier('test-tier')
+                            .withTier(userSubscriptionTier)
                             .withAllDefaultFeatures()
                             .withAI()
                             .withAIChat({
@@ -2481,7 +2485,7 @@ describe('AIController', () => {
                                 model: 'test-model2',
                             },
                         ],
-                        allowedChatSubscriptionTiers: ['test-tier'],
+                        allowedChatSubscriptionTiers: [userSubscriptionTier],
                         tokenModifierRatio: {},
                     },
                 },
@@ -2500,11 +2504,11 @@ describe('AIController', () => {
             const result = await controller.listChatModels({
                 userId,
                 userSubscriptionTier,
+                userRole: 'none',
             });
 
-            expect(result).toEqual({
-                success: true,
-                models: [
+            expect(result).toEqual(
+                success([
                     {
                         name: 'test-model1',
                         provider: 'provider1',
@@ -2515,8 +2519,8 @@ describe('AIController', () => {
                         provider: 'provider1',
                         isDefault: false,
                     },
-                ],
-            });
+                ])
+            );
         });
 
         it('should filter models based on subscription features', async () => {
@@ -2524,7 +2528,7 @@ describe('AIController', () => {
                 (config) =>
                     config.addSubscription('sub1', (sub) =>
                         sub
-                            .withTier('test-tier')
+                            .withTier(userSubscriptionTier)
                             .withAllDefaultFeatures()
                             .withAI()
                             .withAIChat({
@@ -2546,11 +2550,11 @@ describe('AIController', () => {
             const result = await controller.listChatModels({
                 userId,
                 userSubscriptionTier,
+                userRole: 'none',
             });
 
-            expect(result).toEqual({
-                success: true,
-                models: [
+            expect(result).toEqual(
+                success([
                     {
                         name: 'test-model1',
                         provider: 'provider1',
@@ -2561,34 +2565,138 @@ describe('AIController', () => {
                         provider: 'provider1',
                         isDefault: false,
                     },
-                ],
+                ])
+            );
+        });
+
+        it('should return all models if the user is a superUser', async () => {
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier(userSubscriptionTier)
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                        .withUserDefaultFeatures((features) =>
+                            features.withAIChat({
+                                allowed: false,
+                            })
+                        )
+            );
+            await store.saveUser({
+                id: userId,
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: null,
+                subscriptionStatus: null,
+                role: 'superUser',
             });
+
+            const result = await controller.listChatModels({
+                userId,
+                userSubscriptionTier,
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model3',
+                        provider: 'provider2',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model-token-ratio',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ])
+            );
         });
 
         it('should return not_logged_in if no userId is provided', async () => {
             const result = await controller.listChatModels({
                 userId: null,
                 userSubscriptionTier,
+                userRole: 'none',
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_logged_in',
-                errorMessage: 'The user is not logged in.',
-            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_logged_in',
+                    errorMessage: 'The user is not logged in.',
+                })
+            );
         });
 
         it('should return subscription_limit_reached if the user has no subscription', async () => {
-            const result = await controller.listChatModels({
-                userId,
-                userSubscriptionTier: null,
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config
+                        .addSubscription('sub1', (sub) =>
+                            sub
+                                .withTier(userSubscriptionTier)
+                                .withAllDefaultFeatures()
+                                .withAI()
+                                .withAIChat({
+                                    allowed: true,
+                                    allowedModels: [
+                                        'test-model1',
+                                        'test-model2',
+                                    ],
+                                })
+                        )
+                        .withUserDefaultFeatures((features) =>
+                            features.withAIChat({
+                                allowed: false,
+                            })
+                        )
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: null,
+                subscriptionStatus: null,
+                subscriptionInfoId: null,
+                subscriptionPeriodEndMs: null,
+                subscriptionPeriodStartMs: null,
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'subscription_limit_reached',
-                errorMessage: 'The user does not have a subscription.',
+            const result = await controller.listChatModels({
+                userId,
+                userSubscriptionTier,
+                userRole: 'none',
             });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The subscription does not permit AI Chat features.',
+                })
+            );
         });
 
         it('should return subscription_limit_reached if the user subscription tier is not allowed', async () => {
@@ -2617,14 +2725,18 @@ describe('AIController', () => {
             const result = await controller.listChatModels({
                 userId,
                 userSubscriptionTier: 'other-tier',
+                userRole: 'none',
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'subscription_limit_reached',
-                errorMessage:
-                    'This operation is not available to the user at their current subscription tier.',
-            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_subscription_tier',
+                    errorMessage:
+                        'This operation is not available to the user at their current subscription tier.',
+                    allowedSubscriptionTiers: ['test-tier'],
+                    currentSubscriptionTier: 'other-tier',
+                })
+            );
         });
 
         it('should return not_supported if no chat configuration is provided', async () => {
@@ -2645,13 +2757,15 @@ describe('AIController', () => {
             const result = await controller.listChatModels({
                 userId,
                 userSubscriptionTier,
+                userRole: 'none',
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_supported',
-                errorMessage: 'This operation is not supported.',
-            });
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                })
+            );
         });
     });
 

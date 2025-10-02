@@ -61,9 +61,15 @@ import type {
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
-import type {
-    DenialReason,
-    KnownErrorCodes,
+import type { UserRole } from '@casual-simulation/aux-common';
+import {
+    failure,
+    isSuperUserRole,
+    success,
+    type DenialReason,
+    type KnownErrorCodes,
+    type Result,
+    type SimpleError,
 } from '@casual-simulation/aux-common';
 import type { HumeConfig, RecordsStore } from './RecordsStore';
 import type {
@@ -1671,85 +1677,97 @@ export class AIController {
     @traced(TRACE_NAME)
     async listChatModels(
         request: ListChatModelsRequest
-    ): Promise<ListChatModelsResponse> {
+    ): Promise<Result<ListedChatModel[], SimpleError>> {
         try {
             if (!this._chatProviders) {
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'not_supported',
                     errorMessage: 'This operation is not supported.',
-                };
+                });
             }
 
             if (!request.userId) {
-                return {
-                    success: false,
+                return failure({
                     errorCode: 'not_logged_in',
                     errorMessage: 'The user is not logged in.',
-                };
+                });
             }
 
-            if (
-                this._allowedChatSubscriptionTiers !== true &&
-                !this._matchesSubscriptionTiers(
-                    request.userSubscriptionTier,
-                    this._allowedChatSubscriptionTiers
-                )
-            ) {
-                if (!request.userSubscriptionTier) {
-                    return {
-                        success: false,
-                        errorCode: 'subscription_limit_reached',
-                        errorMessage: 'The user does not have a subscription.',
-                    };
-                } else {
-                    return {
-                        success: false,
+            let allowedModels;
+            if (!isSuperUserRole(request.userRole)) {
+                if (
+                    this._allowedChatSubscriptionTiers !== true &&
+                    !this._matchesSubscriptionTiers(
+                        request.userSubscriptionTier,
+                        this._allowedChatSubscriptionTiers
+                    )
+                ) {
+                    if (!request.userSubscriptionTier) {
+                        return failure({
+                            errorCode: 'not_subscribed',
+                            errorMessage:
+                                'The user must be subscribed in order to use this operation.',
+                            allowedSubscriptionTiers: [
+                                ...(this
+                                    ._allowedChatSubscriptionTiers as Set<string>),
+                            ],
+                        });
+                    } else {
+                        return failure({
+                            errorCode: 'invalid_subscription_tier',
+                            errorMessage:
+                                'This operation is not available to the user at their current subscription tier.',
+                            allowedSubscriptionTiers: [
+                                ...(this
+                                    ._allowedChatSubscriptionTiers as Set<string>),
+                            ],
+                            currentSubscriptionTier:
+                                request.userSubscriptionTier,
+                        });
+                    }
+                }
+
+                const metrics =
+                    await this._metrics.getSubscriptionAiChatMetrics({
+                        ownerId: request.userId,
+                    });
+                const config =
+                    await this._config.getSubscriptionConfiguration();
+                const allowedFeatures = getSubscriptionFeatures(
+                    config,
+                    metrics.subscriptionStatus,
+                    metrics.subscriptionId,
+                    'user'
+                );
+
+                if (!allowedFeatures.ai.chat.allowed) {
+                    return failure({
                         errorCode: 'subscription_limit_reached',
                         errorMessage:
-                            'This operation is not available to the user at their current subscription tier.',
-                    };
+                            'The subscription does not permit AI Chat features.',
+                    });
                 }
-            }
 
-            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
-                ownerId: request.userId,
-            });
-            const config = await this._config.getSubscriptionConfiguration();
-            const allowedFeatures = getSubscriptionFeatures(
-                config,
-                metrics.subscriptionStatus,
-                metrics.subscriptionId,
-                'user'
-            );
+                if (this._policyStore) {
+                    const privacyFeatures =
+                        await this._policyStore.getUserPrivacyFeatures(
+                            request.userId
+                        );
 
-            if (!allowedFeatures.ai.chat.allowed) {
-                return {
-                    success: false,
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'The subscription does not permit AI Chat features.',
-                };
-            }
-
-            if (this._policyStore) {
-                const privacyFeatures =
-                    await this._policyStore.getUserPrivacyFeatures(
-                        request.userId
-                    );
-
-                if (!privacyFeatures.allowAI) {
-                    return {
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: 'AI Access is not allowed',
-                    };
+                    if (!privacyFeatures.allowAI) {
+                        return failure({
+                            errorCode: 'not_authorized',
+                            errorMessage: 'AI Access is not allowed',
+                        });
+                    }
                 }
-            }
 
-            const allowedModels = allowedFeatures.ai.chat.allowedModels ?? [
-                ...this._allowedChatModels.keys(),
-            ];
+                allowedModels = allowedFeatures.ai.chat.allowedModels ?? [
+                    ...this._allowedChatModels.keys(),
+                ];
+            } else {
+                allowedModels = [...this._allowedChatModels.keys()];
+            }
 
             const models: ListedChatModel[] = [];
             for (const model of allowedModels) {
@@ -1765,20 +1783,16 @@ export class AIController {
                 }
             }
 
-            return {
-                success: true,
-                models: models,
-            };
+            return success(models);
         } catch (err) {
             console.error(
                 '[AIController] Error handling listChatModels request:',
                 err
             );
-            return {
-                success: false,
+            return failure({
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
-            };
+            });
         }
     }
 
@@ -2344,10 +2358,15 @@ export interface ListChatModelsRequest {
     userId: string;
 
     /**
-     * The subscription tier of the user.
-     * Should be null if the user is not logged in or if they do not have a subscription.
+     * The role of the user.
      */
-    userSubscriptionTier: string;
+    userRole: UserRole;
+
+    /**
+     * The tier of the user's subscription.
+     * Null if the user doesn't have a subscription.
+     */
+    userSubscriptionTier: string | null;
 }
 
 /**
@@ -2371,33 +2390,4 @@ export interface ListedChatModel {
      * Whether this is the default model.
      */
     isDefault?: boolean;
-}
-
-/**
- * The response to a request to list available chat models.
- */
-export type ListChatModelsResponse =
-    | ListChatModelsSuccess
-    | ListChatModelsFailure;
-
-/**
- * A successful response to a request to list available chat models.
- */
-export interface ListChatModelsSuccess {
-    success: true;
-    models: ListedChatModel[];
-}
-
-/**
- * A failed response to a request to list available chat models.
- */
-export interface ListChatModelsFailure {
-    success: false;
-    errorCode:
-        | 'not_logged_in'
-        | 'not_supported'
-        | 'not_authorized'
-        | 'subscription_limit_reached'
-        | 'server_error';
-    errorMessage: string;
 }
