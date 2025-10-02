@@ -390,6 +390,11 @@ export class WebhookRecordsController extends CrudRecordsController<
                     checkMetrics.features.addStateTimeoutMs ?? 1000,
             };
 
+            console.log(
+                `[WebhookRecordsController] [recordName: ${recordName} address: ${webhook.address}] Running webhook with options`,
+                options
+            );
+
             const result = await this._environment.handleHttpRequest({
                 state: state,
                 recordName: stateRecordName,

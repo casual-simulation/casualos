@@ -304,10 +304,12 @@ import type {
     GrantEntitlementsResult,
     InstallPackageResult,
     ListPermissionsRequest,
+    ListedChatModel,
 } from './RecordsEvents';
 import {
     aiChat,
     aiChatStream,
+    aiListChatModels,
     aiGenerateSkybox,
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
@@ -382,6 +384,7 @@ import type {
     VersionNumber,
     GenericResult,
     SimpleError,
+    GenericSuccess,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -3489,6 +3492,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             ai: {
                 chat,
+                listChatModels,
                 generateSkybox,
                 generateImage,
                 hume: {
@@ -5719,6 +5723,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         (promise as any)[ORIGINAL_OBJECT] = action;
         return promise;
+    }
+
+    /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    function listChatModels(
+        options?: RecordActionOptions
+    ): Promise<ListedChatModel[]> {
+        const task = context.createTask();
+        const action = aiListChatModels(options, task.taskId);
+        const final = addAsyncResultAction(task, action).then(
+            (result: GenericSuccess<ListedChatModel[]>) => result.items
+        );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
     }
 
     /**

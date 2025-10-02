@@ -237,6 +237,7 @@ import {
     recordPackageVersion,
     installPackage,
     listInstalledPackages,
+    aiListChatModels,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -3268,6 +3269,134 @@ describe('AuxLibrary', () => {
                     ],
                     undefined,
                     context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
+        });
+
+        describe('ai.listChatModels()', () => {
+            it('should emit a RecordsCallProcedureAction', () => {
+                const promise: any = library.api.ai.listChatModels();
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the items from the result', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.listChatModels();
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        items: [
+                            {
+                                name: 'test-model1',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model2',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model3',
+                                provider: 'provider2',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model-token-ratio',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model3',
+                        provider: 'provider2',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model-token-ratio',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ]);
+                expect(error).toBeUndefined();
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.listChatModels();
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
                 );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
