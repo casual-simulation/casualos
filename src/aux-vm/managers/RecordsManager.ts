@@ -256,6 +256,7 @@ export class RecordsManager {
         ['listRecords', true],
         ['listPermissions', true],
         ['listInsts', true],
+        ['deleteInst', true],
         ['recordDatabase', true],
         ['eraseDatabase', true],
         ['listDatabases', false],

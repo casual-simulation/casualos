@@ -6,6 +6,7 @@
 
 ### :rocket: Features
 
+-   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 
 ### :bug: Bug Fixes
