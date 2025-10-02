@@ -21469,6 +21469,96 @@ describe('RecordsServer', () => {
         );
     });
 
+    describe('GET /api/v2/ai/chat/models', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return not_supported if the server has a null AI controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/ai/chat/models', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the list of available chat models for a user with subscription', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/ai/chat/models', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    items: [
+                        {
+                            name: 'model-1',
+                            provider: 'provider1',
+                            isDefault: false,
+                        },
+                        {
+                            name: 'model-2',
+                            provider: 'provider1',
+                            isDefault: false,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpGet('/api/v2/ai/chat/models', apiHeaders)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('GET', '/api/v2/ai/chat/models');
+        testAuthorization(() => httpGet('/api/v2/ai/chat/models', apiHeaders));
+    });
+
     describe('POST /api/v2/ai/image', () => {
         beforeEach(async () => {
             const u = await store.findUser(userId);

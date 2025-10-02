@@ -238,6 +238,7 @@ export class RecordsManager {
         ['sendNotification', true],
         ['listNotificationSubscriptions', true],
         ['listUserNotificationSubscriptions', true],
+        ['aiListChatModels', true],
         ['createOpenAIRealtimeSession', true],
         ['erasePackageVersion', true],
         ['listPackageVersions', false],
