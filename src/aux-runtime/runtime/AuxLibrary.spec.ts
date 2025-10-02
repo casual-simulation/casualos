@@ -7965,6 +7965,101 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.eraseInst()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.eraseInst(
+                    'recordKey',
+                    'myInst'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: 'recordKey',
+                                recordName: undefined,
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support record names', async () => {
+                const action: any = library.api.os.eraseInst(
+                    'recordName',
+                    'myInst'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: undefined,
+                                recordName: 'recordName',
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.eraseInst(
+                    'recordKey',
+                    'myInst',
+                    {
+                        endpoint: 'myEndpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: 'recordKey',
+                                recordName: undefined,
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no recordKeyOrName is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseInst(null, 'myInst');
+                }).toThrow('recordKeyOrName must be provided.');
+            });
+
+            it('should throw an error if no instName is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseInst('recordKey', null);
+                }).toThrow('instName must be provided.');
+            });
+
+            it('should throw an error if recordKeyOrName is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseInst({} as string, 'myInst');
+                }).toThrow('recordKeyOrName must be a string.');
+            });
+
+            it('should throw an error if instName is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseInst('recordKey', {} as string);
+                }).toThrow('instName must be a string.');
+            });
+        });
+
         describe('os.eraseData()', () => {
             it('should emit a EraseRecordDataAction', async () => {
                 const action: any = library.api.os.eraseData(
