@@ -14,6 +14,7 @@
 -   Fixed an issue where rapidly refreshing browser tabs could create duplicate remote connections that would persist in the `os.remotes()` list. The system now properly cleans up all remote device registrations when a connection is lost and prevents registering the current connection as a remote.
 -   Fixed an issue where tag masks in the shared space might be ignored after the server runs some cleanup.
 -   Fixed an issue where the `from` position values in `onDrag`, `onDrop`, `onAnyBotDrag`, and `onAnyBotDrop` events were being incorrectly rounded to integers, causing non-integer bot positions (e.g., 0.5, 0.4) to be rounded before being passed to event handlers.
+-   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
 
 ## V3.7.1
 
