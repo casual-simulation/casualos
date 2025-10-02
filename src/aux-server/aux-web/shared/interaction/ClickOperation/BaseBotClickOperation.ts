@@ -61,10 +61,7 @@ export abstract class BaseBotClickOperation extends BaseClickOperation {
                 this._bot3D.bot,
                 (this._bot3D as AuxBot3D).dimension
             );
-            startBotPos = new Vector2(
-                Math.round(tempPos.x),
-                Math.round(tempPos.y)
-            );
+            startBotPos = new Vector2(tempPos.x, tempPos.y);
         }
 
         return this._createDragOperation(calc, startBotPos);
