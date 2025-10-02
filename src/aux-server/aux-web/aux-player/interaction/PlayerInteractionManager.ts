@@ -187,10 +187,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             this._game.findMiniMapSimulation3D(simulation);
         if (isBot(bot)) {
             let tempPos = getBotPosition(null, bot, dimension);
-            let startBotPos = new Vector2(
-                Math.round(tempPos.x),
-                Math.round(tempPos.y)
-            );
+            let startBotPos = new Vector2(tempPos.x, tempPos.y);
             let botDragOp = new PlayerBotDragOperation(
                 pageSimulation,
                 miniSimulation,

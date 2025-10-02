@@ -237,6 +237,7 @@ import {
     recordPackageVersion,
     installPackage,
     listInstalledPackages,
+    aiListChatModels,
 } from './RecordsEvents';
 import {
     DEFAULT_BRANCH_NAME,
@@ -3268,6 +3269,134 @@ describe('AuxLibrary', () => {
                     ],
                     undefined,
                     context.iterableTasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
+        });
+
+        describe('ai.listChatModels()', () => {
+            it('should emit a RecordsCallProcedureAction', () => {
+                const promise: any = library.api.ai.listChatModels();
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the items from the result', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.listChatModels();
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        items: [
+                            {
+                                name: 'test-model1',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model2',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model3',
+                                provider: 'provider2',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model-token-ratio',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model3',
+                        provider: 'provider2',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model-token-ratio',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ]);
+                expect(error).toBeUndefined();
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.listChatModels();
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
                 );
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
@@ -7962,6 +8091,103 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseInst()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const recordKey = formatV1RecordKey('recordName', 'test');
+                const action: any = library.api.os.eraseInst(
+                    recordKey,
+                    'myInst'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: recordKey,
+                                recordName: undefined,
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support record names', async () => {
+                const action: any = library.api.os.eraseInst(
+                    'recordName',
+                    'myInst'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: undefined,
+                                recordName: 'recordName',
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const recordKey = formatV1RecordKey('recordName', 'test');
+                const action: any = library.api.os.eraseInst(
+                    recordKey,
+                    'myInst',
+                    {
+                        endpoint: 'myEndpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: recordKey,
+                                recordName: undefined,
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no recordKeyOrName is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseInst(null, 'myInst');
+                }).toThrow('recordKeyOrName must be provided.');
+            });
+
+            it('should throw an error if no instName is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseInst('recordKey', null);
+                }).toThrow('instName must be provided.');
+            });
+
+            it('should throw an error if recordKeyOrName is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseInst({} as string, 'myInst');
+                }).toThrow('recordKeyOrName must be a string.');
+            });
+
+            it('should throw an error if instName is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseInst('recordKey', {} as string);
+                }).toThrow('instName must be a string.');
             });
         });
 
