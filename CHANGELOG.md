@@ -8,6 +8,7 @@
 
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
+-   Changed webhooks to record logs to the same record that the webhook is stored in.
 
 ### :bug: Bug Fixes
 
@@ -15,6 +16,7 @@
 -   Fixed an issue where tag masks in the shared space might be ignored after the server runs some cleanup.
 -   Fixed an issue where the `from` position values in `onDrag`, `onDrop`, `onAnyBotDrag`, and `onAnyBotDrop` events were being incorrectly rounded to integers, causing non-integer bot positions (e.g., 0.5, 0.4) to be rounded before being passed to event handlers.
 -   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
+-   Fixed an issue where it was not possible to publish packages to studios.
 
 ## V3.7.1
 
