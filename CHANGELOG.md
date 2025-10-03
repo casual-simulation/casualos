@@ -6,6 +6,7 @@
 
 ### :rocket: Features
 
+-   Added the `os.showAlert(options)` function to show an information/alert dialog with a single dismiss button. This is useful for communicating important information to the user that needs to be manually dismissed.
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 -   Changed webhooks to record logs to the same record that the webhook is stored in.
