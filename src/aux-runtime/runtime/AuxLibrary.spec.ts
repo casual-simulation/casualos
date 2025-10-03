@@ -152,6 +152,7 @@ import {
     analyticsRecordEvent,
     KNOWN_TAGS,
     showConfirm,
+    showAlert,
     getCurrentInstUpdate,
     openPhotoCamera,
     enableCollaboration,
@@ -6116,6 +6117,32 @@ describe('AuxLibrary', () => {
             it('should throw an error if not given an options object', () => {
                 expect(() => {
                     (library.api.os.showConfirm as any)();
+                }).toThrowError();
+            });
+        });
+
+        describe('os.showAlert()', () => {
+            it('should emit a ShowAlertAction', () => {
+                const promise: any = library.api.os.showAlert({
+                    title: 'Alert',
+                    content: 'This is an important message.',
+                    dismissText: 'OK',
+                });
+                const expected = showAlert(
+                    {
+                        title: 'Alert',
+                        content: 'This is an important message.',
+                        dismissText: 'OK',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if not given an options object', () => {
+                expect(() => {
+                    (library.api.os.showAlert as any)();
                 }).toThrowError();
             });
         });

@@ -97,6 +97,7 @@ import type {
     WakeLockConfiguration,
     EnableXROptions,
     ShowConfirmOptions,
+    ShowAlertOptions,
     StoredAux,
     StoredAuxVersion2,
     StoredAuxVersion1,
@@ -154,6 +155,7 @@ import {
     showInputForTag as calcShowInputForTag,
     showInput as calcShowInput,
     showConfirm as calcShowConfirm,
+    showAlert as calcShowAlert,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
@@ -3702,6 +3704,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 _showInput: showInput,
                 showInput: makeMockableFunction(showInput, 'os.showInput'),
                 showConfirm,
+                showAlert,
                 goToDimension,
                 goToURL,
                 openURL,
@@ -8484,6 +8487,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
         const task = context.createTask();
         const event = calcShowConfirm(options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Shows an alert dialog using the given options. Alert dialogs are useful for communicating information to the user that needs to be manually dismissed.
+     *
+     * Returns a promise that resolves when the user dismisses the alert.
+     *
+     * @param options the options that should be used for the alert dialog.
+     *
+     * @example Show an alert dialog
+     * await os.showAlert({
+     *     title: 'Alert',
+     *     content: 'This is an important message.'
+     * });
+     *
+     * os.toast('Alert dismissed');
+     *
+     * @example Show an alert dialog with custom button text
+     * await os.showAlert({
+     *     title: 'Warning',
+     *     content: 'Please read this carefully.',
+     *     dismissText: 'Got it'
+     * });
+     *
+     * @dochash actions/os/portals
+     * @docname os.showAlert
+     * @docgroup 10-showInput
+     */
+    function showAlert(options: ShowAlertOptions): Promise<void> {
+        if (!options) {
+            throw new Error(
+                'You must provide an options object for os.showAlert()'
+            );
+        }
+        const task = context.createTask();
+        const event = calcShowAlert(options, task.taskId);
         return addAsyncAction(task, event);
     }
 

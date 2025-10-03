@@ -14431,6 +14431,12 @@ interface Os {
     showConfirm(options: ShowConfirmOptions): Promise<boolean>;
 
     /**
+     * Shows an alert dialog. Returns a promise that resolves when the user dismisses the alert.
+     * @param options The options that indicate how the alert dialog should be customized.
+     */
+    showAlert(options: ShowAlertOptions): Promise<void>;
+
+    /**
      * Gets the dimension that the player is currently viewing.
      */
     getCurrentDimension(): string;
