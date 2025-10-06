@@ -1507,6 +1507,29 @@ declare interface ShowConfirmOptions {
 }
 
 /**
+ * Defines an interface that represents the options that can be used for an alert dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowAlertOptions
+ */
+export interface ShowAlertOptions {
+    /**
+     * The title that should be shown on the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Dismiss" button.
+     */
+    dismissText?: string;
+}
+
+/**
  * Defines an event for actions.
  * Actions are basically user-defined events.
  */
