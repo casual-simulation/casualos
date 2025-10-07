@@ -234,6 +234,22 @@ export const subscriptionFeaturesSchema = z.object({
             .nullable()
             .optional()
             .default(500000),
+
+        creditFeePerRead: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each read operation. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
+
+        creditFeePerWrite: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each write operation. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
     }),
     files: z.object({
         allowed: z
@@ -264,6 +280,22 @@ export const subscriptionFeaturesSchema = z.object({
             )
             .int()
             .positive()
+            .optional(),
+
+        creditFeePerBytePerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each byte stored in files per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
+
+        creditFeePerFilePerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each file per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
             .optional(),
     }),
     events: z.object({
@@ -321,6 +353,14 @@ export const subscriptionFeaturesSchema = z.object({
                     'The list of model IDs that are allowed for the subscription. If omitted, then all models are allowed.'
                 )
                 .optional(),
+
+            creditFeePerToken: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each token that is generated. If not specified, then there is no fee.'
+                )
+                .int()
+                .optional(),
         }),
         images: z.object({
             allowed: z
@@ -336,6 +376,14 @@ export const subscriptionFeaturesSchema = z.object({
                 .int()
                 .positive()
                 .optional(),
+
+            creditFeePerSquarePixel: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each square pixel that is generated. If not specified, then there is no fee.'
+                )
+                .int()
+                .optional(),
         }),
         skyboxes: z.object({
             allowed: z
@@ -350,6 +398,14 @@ export const subscriptionFeaturesSchema = z.object({
                 )
                 .int()
                 .positive()
+                .optional(),
+
+            creditFeePerSkybox: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each skybox that is generated. If not specified, then there is no fee.'
+                )
+                .int()
                 .optional(),
         }),
         hume: z
@@ -421,6 +477,14 @@ export const subscriptionFeaturesSchema = z.object({
                                 'The list of models that are allowed to be used with the realtime API. If ommited, then all models are allowed.'
                             )
                             .optional(),
+
+                        creditFeePerRealtimeSession: z
+                            .number()
+                            .describe(
+                                'The number of credits that are charged for each realtime session that is initiated. If not specified, then there is no fee.'
+                            )
+                            .int()
+                            .optional(),
                     })
                     .describe(
                         'The configuration for OpenAI realtime API features.'
@@ -466,17 +530,28 @@ export const subscriptionFeaturesSchema = z.object({
             .int()
             .positive()
             .optional(),
+
+        creditFeePerInstPerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each inst per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
+
+        creditFeePerBytePerPeriod: z
+            .number()
+            .describe(
+                'The number of credits that are charged for each byte stored in an inst per subscription period. If not specified, then there is no fee.'
+            )
+            .int()
+            .optional(),
     }),
     comId: z
         .object({
             allowed: z
                 .boolean()
                 .describe('Whether comId features are granted to the studio.'),
-            // allowCustomComId: z
-            //     .boolean()
-            //     .describe(
-            //         'Whether the studio is allowed to set their own comId. If false, then the user will be able to request changes to their comId, but they will not automatically apply.'
-            //     ),
             maxStudios: z
                 .number()
                 .describe(
@@ -492,8 +567,8 @@ export const subscriptionFeaturesSchema = z.object({
         .optional()
         .default({
             allowed: false,
-            // allowCustomComId: false,
         }),
+
     loom: z
         .object({
             allowed: z
@@ -552,6 +627,28 @@ export const subscriptionFeaturesSchema = z.object({
                 )
                 .int()
                 .positive()
+                .optional(),
+
+            creditFeePerNotificationSent: z
+                .number()
+                .describe(
+                    'The number of credits that it costs to send a notification. If not specified, then sending notifications is free.'
+                )
+                .int()
+                .optional(),
+            creditFeePerPushNotificationSent: z
+                .number()
+                .describe(
+                    'The number of credits that it costs to send a push notification. If not specified, then sending push notifications is free.'
+                )
+                .int()
+                .optional(),
+            creditFeePerSubscriberPerPeriod: z
+                .number()
+                .describe(
+                    'The number of credits that are charged for each subscriber per subscription period. If not specified, then there is no fee.'
+                )
+                .int()
                 .optional(),
         })
         .describe(
