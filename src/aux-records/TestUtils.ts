@@ -99,7 +99,7 @@ export function createTestControllers(
         subscriptions: subConfig,
     });
     const authMessenger = new MemoryAuthMessenger();
-    const auth = new AuthController(store, authMessenger, store, true);
+    const auth = new AuthController(store, authMessenger, store);
     const records = new RecordsController({
         store: store,
         auth: store,

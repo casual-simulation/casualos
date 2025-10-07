@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/timesync",
-    "version": "3.5.0",
+    "version": "3.7.0",
     "description": "Time Synchronization utilities",
     "keywords": [
         "cryptography",
@@ -40,7 +40,7 @@
         "access": "public"
     },
     "dependencies": {
-        "lodash": "4.17.21",
+        "es-toolkit": "1.39.10",
         "rxjs": "8.0.0-alpha.14"
     }
 }

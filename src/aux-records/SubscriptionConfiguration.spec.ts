@@ -21,10 +21,376 @@ import type {
 } from './SubscriptionConfiguration';
 import {
     allowAllFeatures,
+    getSubscription,
     getSubscriptionFeatures,
     getSubscriptionTier,
     subscriptionMatchesRole,
 } from './SubscriptionConfiguration';
+
+describe('getSubscription()', () => {
+    let config: SubscriptionConfiguration = {
+        cancelUrl: 'url',
+        returnUrl: 'url',
+        successUrl: 'url',
+        subscriptions: [
+            {
+                id: 'subId',
+                tier: 'beta',
+                eligibleProducts: [],
+                featureList: [],
+                product: '',
+            },
+        ],
+        tiers: {
+            beta: {
+                features: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                    insts: {
+                        allowed: true,
+                    },
+                },
+            },
+        },
+        defaultFeatures: {
+            studio: {
+                data: {
+                    allowed: true,
+                },
+                events: {
+                    allowed: true,
+                },
+                files: {
+                    allowed: true,
+                },
+                records: {
+                    allowed: true,
+                },
+                ai: {
+                    chat: {
+                        allowed: false,
+                    },
+                    images: {
+                        allowed: false,
+                    },
+                    skyboxes: {
+                        allowed: false,
+                    },
+                },
+                insts: {
+                    allowed: true,
+                },
+            },
+            user: {
+                data: {
+                    allowed: true,
+                },
+                events: {
+                    allowed: true,
+                },
+                files: {
+                    allowed: true,
+                },
+                records: {
+                    allowed: true,
+                },
+                ai: {
+                    chat: {
+                        allowed: false,
+                    },
+                    images: {
+                        allowed: false,
+                    },
+                    skyboxes: {
+                        allowed: false,
+                    },
+                },
+                insts: {
+                    allowed: true,
+                },
+            },
+        },
+        webhookSecret: 'secret',
+    };
+
+    beforeEach(() => {
+        config = {
+            cancelUrl: 'url',
+            returnUrl: 'url',
+            successUrl: 'url',
+            subscriptions: [
+                {
+                    id: 'subId',
+                    tier: 'beta',
+                    eligibleProducts: [],
+                    featureList: [],
+                    product: '',
+                },
+            ],
+            tiers: {
+                beta: {
+                    features: {
+                        data: {
+                            allowed: true,
+                        },
+                        events: {
+                            allowed: true,
+                        },
+                        files: {
+                            allowed: true,
+                        },
+                        records: {
+                            allowed: true,
+                        },
+                        ai: {
+                            chat: {
+                                allowed: false,
+                            },
+                            images: {
+                                allowed: false,
+                            },
+                            skyboxes: {
+                                allowed: false,
+                            },
+                        },
+                        insts: {
+                            allowed: true,
+                        },
+                    },
+                },
+            },
+            defaultFeatures: {
+                studio: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                    insts: {
+                        allowed: true,
+                    },
+                },
+                user: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                    insts: {
+                        allowed: true,
+                    },
+                },
+            },
+            webhookSecret: 'secret',
+        };
+    });
+
+    it('should return undefined when given a null config', () => {
+        const sub = getSubscription(null, 'active', 'subId', 'user');
+        expect(sub).toBeUndefined();
+    });
+
+    it('should return the sub for the given subscription ID', () => {
+        const sub = getSubscription(config, 'active', 'subId', 'user');
+
+        expect(sub).toEqual(config.subscriptions[0]);
+    });
+
+    it('should return the features for the default subscription for the user subscriber type', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                defaultSubscription: true,
+            },
+        ];
+
+        const sub = getSubscription(config, null, null, 'user');
+
+        expect(sub).toEqual(config.subscriptions[0]);
+    });
+
+    it('should return the features for the default subscription for the studio subscriber type', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                defaultSubscription: true,
+            },
+        ];
+
+        const sub = getSubscription(config, null, null, 'studio');
+
+        expect(sub).toEqual(config.subscriptions[0]);
+    });
+
+    it('should return null if no default subscription matches the user type', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                studioOnly: true,
+                defaultSubscription: true,
+            },
+        ];
+
+        const sub = getSubscription(config, null, null, 'user');
+
+        expect(sub).toBe(null);
+    });
+
+    it('should return null if no default subscription matches the studio type', () => {
+        config.subscriptions = [
+            {
+                id: 'default',
+                tier: 'beta',
+                featureList: [],
+                userOnly: true,
+                defaultSubscription: true,
+            },
+        ];
+
+        const sub = getSubscription(config, null, null, 'studio');
+
+        expect(sub).toBe(null);
+    });
+
+    it('should return the default features for the user subscriber type', () => {
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'missing',
+            'user'
+        );
+
+        expect(features === config.defaultFeatures.user).toBe(true);
+    });
+
+    const statusTypes = [
+        ['active', true] as const,
+        ['trialing', true] as const,
+        ['canceled', false] as const,
+        ['ended', false] as const,
+        ['past_due', false] as const,
+        ['unpaid', false] as const,
+        ['incomplete', false] as const,
+        ['incomplete_expired', false] as const,
+        ['paused', false] as const,
+        ['invalid status', false] as const,
+        [null as any, false] as const,
+        [undefined as any, false] as const,
+    ];
+
+    describe.each(statusTypes)('%s status', (status, expected) => {
+        if (expected) {
+            it('should return the sub for the subscription ID for the user', () => {
+                const sub = getSubscription(config, status, 'subId', 'user');
+                expect(sub).toEqual(config.subscriptions[0]);
+            });
+
+            it('should return the sub for the subscription ID for the studio', () => {
+                const sub = getSubscription(config, status, 'subId', 'studio');
+                expect(sub).toEqual(config.subscriptions[0]);
+            });
+
+            it('should return null if the subscription has expired', () => {
+                const sub = getSubscription(
+                    config,
+                    status,
+                    'subId',
+                    'user',
+                    1000, // start
+                    2000, // end
+                    2001 // now
+                );
+                expect(sub).toBeNull();
+            });
+
+            it('should return the sub for the subscription if it is still active', () => {
+                const sub = getSubscription(
+                    config,
+                    status,
+                    'subId',
+                    'user',
+                    1000, // start
+                    2000, // end
+                    1500 // now
+                );
+                expect(sub).toEqual(config.subscriptions[0]);
+            });
+        } else {
+            it('should return null for the user', () => {
+                const sub = getSubscription(config, status, 'subId', 'user');
+                expect(sub).toBeNull();
+            });
+
+            it('should return null for the studio', () => {
+                const sub = getSubscription(config, status, 'subId', 'studio');
+                expect(sub).toBeNull();
+            });
+        }
+    });
+});
 
 describe('getSubscriptionFeatures()', () => {
     let config: SubscriptionConfiguration = {
@@ -685,12 +1051,24 @@ describe('getSubscriptionTier()', () => {
     });
 
     it('should return the tier for the given subscription ID', () => {
-        expect(getSubscriptionTier(config, 'active', 'sub0')).toBe('tier2');
-        expect(getSubscriptionTier(config, 'active', 'subId')).toBe('beta');
-        expect(getSubscriptionTier(config, 'active', 'missing')).toBe(null);
+        expect(getSubscriptionTier(config, 'active', 'sub0', 'studio')).toBe(
+            'tier2'
+        );
+        expect(getSubscriptionTier(config, 'active', 'subId', 'studio')).toBe(
+            'beta'
+        );
+        expect(getSubscriptionTier(config, 'active', 'missing', 'studio')).toBe(
+            null
+        );
 
-        expect(getSubscriptionTier(config, 'ended', 'sub0')).toBe(null);
-        expect(getSubscriptionTier(config, 'ended', 'subId')).toBe(null);
-        expect(getSubscriptionTier(config, 'ended', 'missing')).toBe(null);
+        expect(getSubscriptionTier(config, 'ended', 'sub0', 'studio')).toBe(
+            null
+        );
+        expect(getSubscriptionTier(config, 'ended', 'subId', 'studio')).toBe(
+            null
+        );
+        expect(getSubscriptionTier(config, 'ended', 'missing', 'studio')).toBe(
+            null
+        );
     });
 });

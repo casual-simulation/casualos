@@ -19,6 +19,7 @@ import type { MemoryStore } from '../MemoryStore';
 import type { RecordsController } from '../RecordsController';
 import type { PolicyController } from '../PolicyController';
 import type {
+    CrudListItemsSuccess,
     CrudRecordItemSuccess,
     CrudRecordsConfiguration,
     CrudRecordsController,
@@ -49,7 +50,13 @@ export interface TestContext<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 > {
     services: TestControllers;
     store: MemoryStore;
@@ -73,14 +80,20 @@ export async function setupTestContext<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 >(
     storeFactory: (services: TestControllers) => TStore,
     controllerFactory: (
         config: TestControllerConfiguration<TItem, TStore>,
         services: TestControllers
     ) => TController
-): Promise<TestContext<TItem, TStoreItem, TStore, TController>> {
+): Promise<TestContext<TItem, TStoreItem, TStore, TController, TResult>> {
     const services = createTestControllers();
     const store = services.store;
     const itemsStore = storeFactory(services);
@@ -153,7 +166,13 @@ export function testCrudRecordsController<
     TItem extends CrudRecord,
     TStoreItem extends CrudRecord,
     TStore extends CrudRecordsStore<TStoreItem>,
-    TController extends CrudRecordsController<TItem, TStoreItem, TStore>
+    TController extends CrudRecordsController<
+        TItem,
+        TStoreItem,
+        TStore,
+        TResult
+    >,
+    TResult extends Partial<TStoreItem> = TStoreItem
 >(
     allowRecordKeys: boolean,
     resourceKind: ResourceKinds,
@@ -165,8 +184,12 @@ export function testCrudRecordsController<
     createStoreItem: (item: CrudRecord) => TStoreItem,
     createInputItem: (item: CrudRecord) => TItem,
     configureEnvironment?: (
-        context: TestContext<TItem, TStoreItem, TStore, TController>
+        context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
     ) => Promise<void>,
+    createOutputItem: (item: CrudRecord) => TResult = createStoreItem as any,
+    cleanup?: (
+        context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
+    ) => void,
     allowedActions: ActionKinds[] = [
         'create',
         'update',
@@ -175,7 +198,7 @@ export function testCrudRecordsController<
         'list',
     ]
 ) {
-    let context: TestContext<TItem, TStoreItem, TStore, TController>;
+    let context: TestContext<TItem, TStoreItem, TStore, TController, TResult>;
     let services: TestControllers;
     let store: MemoryStore;
     let itemsStore: TStore;
@@ -208,6 +231,12 @@ export function testCrudRecordsController<
 
         if (configureEnvironment) {
             await configureEnvironment(context);
+        }
+    });
+
+    afterEach(() => {
+        if (cleanup) {
+            cleanup(context);
         }
     });
 
@@ -399,13 +428,15 @@ export function testCrudRecordsController<
             if (allowedActions.includes('update')) {
                 describe('update', () => {
                     beforeEach(async () => {
-                        await itemsStore.createItem(
-                            recordName,
-                            createStoreItem({
+                        await manager.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            item: createInputItem({
                                 address: 'address',
                                 markers: [PUBLIC_READ_MARKER],
-                            })
-                        );
+                            }),
+                            instances: [],
+                        });
                     });
 
                     it('should update the markers in the store', async () => {
@@ -428,7 +459,12 @@ export function testCrudRecordsController<
 
                         await expect(
                             itemsStore.getItemByAddress(recordName, 'address')
-                        ).resolves.toMatchObject(item);
+                        ).resolves.toMatchObject(
+                            createStoreItem({
+                                address: 'address',
+                                markers: [PRIVATE_MARKER],
+                            })
+                        );
                     });
 
                     it('should reject the request if given an invalid key', async () => {
@@ -857,7 +893,7 @@ export function testCrudRecordsController<
 
     if (allowedActions.includes('list')) {
         describe('listItems()', () => {
-            let items: TStoreItem[];
+            let items: TResult[];
             beforeEach(async () => {
                 items = [];
                 for (let i = 0; i < 20; i++) {
@@ -866,41 +902,58 @@ export function testCrudRecordsController<
                         markers: [PRIVATE_MARKER],
                     });
                     await itemsStore.createItem(recordName, item);
-                    items.push(item);
+                    items.push(
+                        createOutputItem({
+                            address: item.address,
+                            markers: item.markers,
+                        })
+                    );
                 }
             });
 
             it('should return a list of items', async () => {
-                const result = await manager.listItems({
+                const result = (await manager.listItems({
                     recordName: recordName,
                     userId,
                     startingAddress: null,
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items.slice(0, 10),
+                    items: expect.any(Array),
                     totalCount: 20,
                 });
+
+                const expectedItems = items.slice(0, 10);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
             });
 
             if (allowRecordKeys) {
                 it('should be able to use a record key', async () => {
-                    const result = await manager.listItems({
+                    const result = (await manager.listItems({
                         recordName: key,
                         userId: otherUserId,
                         startingAddress: null,
                         instances: [],
-                    });
+                    })) as CrudListItemsSuccess<any>;
 
                     expect(result).toEqual({
                         success: true,
                         recordName: recordName,
-                        items: items.slice(0, 10),
+                        items: expect.any(Array),
                         totalCount: 20,
                     });
+
+                    const expectedItems = items.slice(0, 10);
+                    expect(result.items.length).toBe(expectedItems.length);
+                    for (let i = 0; i < expectedItems.length; i++) {
+                        expect(result.items[i]).toMatchObject(expectedItems[i]);
+                    }
                 });
             } else {
                 it('should return not_authorized if record keys are not allowed', async () => {
@@ -938,9 +991,15 @@ export function testCrudRecordsController<
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items.slice(4, 10),
+                    items: expect.any(Array),
                     totalCount: 20,
                 });
+
+                const expectedItems = items.slice(4, 10);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
             });
 
             it('should return not_authorized if the user does not have access to the account marker', async () => {
@@ -969,7 +1028,7 @@ export function testCrudRecordsController<
         });
 
         describe('listItemsByMarker()', () => {
-            let items: TStoreItem[];
+            let items: TResult[];
             beforeEach(async () => {
                 items = [];
                 for (let i = 0; i < 40; i++) {
@@ -980,78 +1039,99 @@ export function testCrudRecordsController<
                         ],
                     });
                     await itemsStore.createItem(recordName, item);
-                    items.push(item);
+                    items.push(
+                        createOutputItem({
+                            address: item.address,
+                            markers: item.markers,
+                        })
+                    );
                 }
             });
 
             it('should return a list of items that have the given marker', async () => {
-                const result = await manager.listItemsByMarker({
+                const result = (await manager.listItemsByMarker({
                     recordName: recordName,
                     userId,
                     marker: PRIVATE_MARKER,
                     startingAddress: null,
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items
-                        .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                        .slice(0, 10),
+                    items: expect.any(Array),
                     totalCount: 20,
                 });
+
+                const expectedItems = items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(0, 10);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
             });
 
             it('should return a list of items that are after the starting address', async () => {
-                const result = await manager.listItemsByMarker({
+                const result = (await manager.listItemsByMarker({
                     recordName: recordName,
                     userId,
                     marker: PRIVATE_MARKER,
                     startingAddress: 'address1',
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: true,
                     recordName: recordName,
-                    items: items
-                        .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                        .slice(1, 11),
+                    items: expect.any(Array),
                     totalCount: 20,
                 });
+
+                const expectedItems = items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(1, 11);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
             });
 
             if (allowRecordKeys) {
                 it('should be able to use a record key', async () => {
-                    const result = await manager.listItemsByMarker({
+                    const result = (await manager.listItemsByMarker({
                         recordName: key,
                         userId: otherUserId,
                         marker: PRIVATE_MARKER,
                         startingAddress: null,
                         instances: [],
-                    });
+                    })) as CrudListItemsSuccess<any>;
 
                     expect(result).toEqual({
                         success: true,
                         recordName: recordName,
-                        items: items
-                            .filter(
-                                (i) => i.markers.indexOf(PRIVATE_MARKER) >= 0
-                            )
-                            .slice(0, 10),
+                        items: expect.any(Array),
                         totalCount: 20,
                     });
+
+                    const expectedItems = items
+                        .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                        .slice(0, 10);
+                    expect(result.items.length).toBe(expectedItems.length);
+                    for (let i = 0; i < expectedItems.length; i++) {
+                        expect(result.items[i]).toMatchObject(expectedItems[i]);
+                    }
                 });
             } else {
                 it('should return not_authorized if record keys are not allowed', async () => {
-                    const result = await manager.listItemsByMarker({
+                    const result = (await manager.listItemsByMarker({
                         recordName: key,
                         userId: otherUserId,
                         marker: PRIVATE_MARKER,
                         startingAddress: null,
                         instances: [],
-                    });
+                    })) as CrudListItemsSuccess<any>;
 
                     expect(result).toEqual({
                         success: false,

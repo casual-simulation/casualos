@@ -23,7 +23,6 @@ import {
     Sphere,
     Matrix4,
 } from '@casual-simulation/three';
-import { find, some } from 'lodash';
 import type { Viewport } from './Viewport';
 import type { Game } from './Game';
 import type { Observable } from 'rxjs';
@@ -43,6 +42,7 @@ import { WebXRControllerMesh } from './xr/WebXRControllerMesh';
 import { createMotionController, copyPose } from './xr/WebXRHelpers';
 import { startWith } from 'rxjs/operators';
 import Bowser from 'bowser';
+import type { Point2D } from '@casual-simulation/aux-common';
 
 export const MIN_FINGER_TIP_RADIUS = 0.019;
 
@@ -127,7 +127,6 @@ export class Input {
 
     private _htmlElements: () => HTMLElement[];
     private _zoomElements: () => HTMLElement[];
-    private _isOculusBrowser: boolean;
     private _isSafariBrowser: boolean;
 
     get time() {
@@ -210,10 +209,12 @@ export class Input {
      * @param pagePos The page position of the coordinates that we want converted.
      * @param view The HTML element that we want the position to be relative to.
      */
-    public static offsetPosition(pagePos: Vector2, view: HTMLElement) {
-        let globalPos = new Vector2(pagePos.x, pagePos.y);
+    public static offsetPosition(pagePos: Point2D, view: HTMLElement) {
         let viewRect = view.getBoundingClientRect();
-        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        let viewPos = new Vector2(
+            pagePos.x - viewRect.left,
+            pagePos.y - viewRect.top
+        );
         return viewPos;
     }
 
@@ -223,10 +224,12 @@ export class Input {
      * @param event The mouse event to get the viewport position out of.
      * @param view The HTML element that we want the position to be relative to.
      */
-    public static screenPosition(pagePos: Vector2, view: HTMLElement) {
-        let globalPos = new Vector2(pagePos.x, pagePos.y);
+    public static screenPosition(pagePos: Point2D, view: HTMLElement) {
         let viewRect = view.getBoundingClientRect();
-        let viewPos = globalPos.sub(new Vector2(viewRect.left, viewRect.top));
+        let viewPos = new Vector2(
+            pagePos.x - viewRect.left,
+            pagePos.y - viewRect.top
+        );
         return new Vector2(
             (viewPos.x / viewRect.width) * 2 - 1,
             -(viewPos.y / viewRect.height) * 2 + 1
@@ -239,7 +242,7 @@ export class Input {
      * @param viewport The viewport that we want the position to be relative to.
      */
     public static offsetPositionForViewport(
-        pagePos: Vector2,
+        pagePos: Point2D,
         viewport: Viewport
     ): Vector2 {
         const globalPos = new Vector2(pagePos.x, pagePos.y);
@@ -257,15 +260,14 @@ export class Input {
      * @param viewport The viewport that we want the position to be relative to.
      */
     public static unoffsetPositionForViewport(
-        viewPos: Vector2,
+        viewPos: Point2D,
         viewport: Viewport
     ): Vector2 {
-        viewPos = viewPos.clone();
         const viewRect = viewport.getRootElement().getBoundingClientRect();
         const left = viewRect.left + viewport.x;
         const top =
             viewRect.height - (viewport.y + viewport.height) + viewRect.top;
-        const globalPos = viewPos.add(new Vector2(left, top));
+        const globalPos = new Vector2(viewPos.x + left, viewPos.y + top);
         return globalPos;
     }
 
@@ -281,7 +283,7 @@ export class Input {
      * @param pagePos The current global page position (pixels).
      */
     public static screenPositionForViewport(
-        pagePos: Vector2,
+        pagePos: Point2D,
         viewport: Viewport
     ): Vector2 {
         const viewPos = Input.offsetPositionForViewport(pagePos, viewport);
@@ -298,7 +300,7 @@ export class Input {
      * @param viewport The viewport.
      */
     public static pagePositionForViewport(
-        screenPosition: Vector2,
+        screenPosition: Point2D,
         viewport: Viewport
     ): Vector2 {
         const viewPos = new Vector2(
@@ -316,7 +318,7 @@ export class Input {
      * @param viewports Other viewports to check if they are occluding the given viewport above.
      */
     public static pagePositionOnViewport(
-        pagePos: Vector2,
+        pagePos: Point2D,
         viewport: Viewport,
         otherViewports?: Viewport[]
     ): boolean {
@@ -364,7 +366,7 @@ export class Input {
      * @param element The HTML element to test against.
      */
     public static eventIsDirectlyOverElement(
-        clientPos: Vector2,
+        clientPos: Point2D,
         element: HTMLElement
     ): boolean {
         let mouseOver = document.elementFromPoint(clientPos.x, clientPos.y);
@@ -377,11 +379,11 @@ export class Input {
      * @param element The HTML element to test against.
      */
     public static eventIsOverElement(
-        clientPos: Vector2,
+        clientPos: Point2D,
         element: HTMLElement
     ): boolean {
         let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
-        return some(elements, (e) => e === element);
+        return elements.some((e) => e === element);
     }
 
     constructor(game: Game) {
@@ -395,14 +397,9 @@ export class Input {
         this._zoomElements = () => [...game.getUIZoomElements()];
 
         const browser = Bowser.getParser(navigator.userAgent);
-
-        // See https://developer.oculus.com/documentation/web/browser-specs/#user-agent-string
-        const isOculusBrowser = browser.test(/OculusBrowser\/[\d.]+/);
-        const isOculusVR = browser.test(/(?:\sVR\s)|(?:\sMobile VR\s)/);
         const isSafariBrowser = browser.getBrowserName(true) === 'safari';
 
-        this._isOculusBrowser = isOculusBrowser;
-        this._usePointerEvents = isOculusBrowser && isOculusVR;
+        this._usePointerEvents = false;
         if (this.debugLevel > 0) {
             console.log(`[input] usePointerEvents: ${this._usePointerEvents}`);
         }
@@ -948,7 +945,7 @@ export class Input {
      */
     public getTouchData(finderIndex: number): TouchData {
         if (this._touchData.length > 0) {
-            let touchData = find(this._touchData, (d: TouchData) => {
+            let touchData = this._touchData.find((d: TouchData) => {
                 return d.fingerIndex === finderIndex;
             });
             if (touchData) {
@@ -1616,7 +1613,7 @@ export class Input {
         for (let i = 0; i < changed.length; i++) {
             let touch = changed.item(i);
 
-            let existingTouch = find(this._touchData, (d) => {
+            let existingTouch = this._touchData.find((d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.clientPos = new Vector2(touch.clientX, touch.clientY);
@@ -1709,7 +1706,7 @@ export class Input {
                 HTMLElement
             >document.elementFromPoint(touch.clientX, touch.clientY);
 
-            let existingTouch = find(this._touchData, (d) => {
+            let existingTouch = this._touchData.find((d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.state.setUpFrame(this.time.frameCount);
@@ -1779,7 +1776,7 @@ export class Input {
             // Handle a canceled touche the same as a touch end.
             let touch = changed.item(i);
 
-            let existingTouch = find(this._touchData, (d) => {
+            let existingTouch = this._touchData.find((d) => {
                 return d.identifier === touch.identifier;
             });
             existingTouch.state.setUpFrame(this.time.frameCount);
@@ -1814,7 +1811,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerCancel(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerCancel(event);
         }
 
@@ -1838,7 +1835,7 @@ export class Input {
 
         event.stopImmediatePropagation();
 
-        let existingTouch = find(this._touchData, (d) => {
+        let existingTouch = this._touchData.find((d) => {
             return d.identifier === event.pointerId;
         });
         if (!existingTouch) {
@@ -1873,7 +1870,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerDown(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerDown(event);
         }
 
@@ -1948,7 +1945,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handleTouchPointerEnter(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerEnter(event);
         }
 
@@ -1978,7 +1975,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerLeave(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerLeave(event);
         }
 
@@ -2029,7 +2026,7 @@ export class Input {
             event.preventDefault();
         }
 
-        let existingTouch = find(this._touchData, (d) => {
+        let existingTouch = this._touchData.find((d) => {
             return d.identifier === event.pointerId;
         });
         if (!existingTouch) {
@@ -2071,7 +2068,7 @@ export class Input {
 
         if (event.pointerType === 'touch') {
             this._handlerTouchPointerUp(event);
-        } else if (!this._isOculusBrowser && event.pointerType === 'mouse') {
+        } else if (event.pointerType === 'mouse') {
             this._handleMousePointerUp(event);
         }
 
@@ -2106,7 +2103,7 @@ export class Input {
             document.elementFromPoint(event.clientX, event.clientY)
         );
 
-        let existingTouch = find(this._touchData, (d) => {
+        let existingTouch = this._touchData.find((d) => {
             return d.identifier === event.pointerId;
         });
 
@@ -2946,7 +2943,7 @@ class WheelData {
      * @param frame The frame number to retrieve.
      */
     getFrame(frame: number): WheelFrame {
-        let wheelFrame = find(this._wheelFrames, (f: WheelFrame) => {
+        let wheelFrame = this._wheelFrames.find((f: WheelFrame) => {
             return f.moveFrame === frame;
         });
         if (wheelFrame) return wheelFrame;

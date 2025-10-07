@@ -23,7 +23,6 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
-import type { CompleteOpenIDLoginSuccess } from '@casual-simulation/aux-records';
 import type { FormError } from '@casual-simulation/aux-common';
 import { getFormErrors } from '@casual-simulation/aux-common';
 import HasAccountCard from '../HasAccountCard/HasAccountCard';
@@ -109,47 +108,17 @@ export default class AuthLogin extends Vue {
         }
     }
 
-    private async _loginWithPrivo() {
+    private async _loginWithPrivo(): Promise<string | null> {
         const result = await authManager.loginWithPrivo();
         if (result.success) {
             const requestId = result.requestId;
-            const newTab = window.open(result.authorizationUrl, '_blank');
 
-            const codes: CompleteOpenIDLoginSuccess =
-                await new Promise<CompleteOpenIDLoginSuccess>(
-                    (resolve, reject) => {
-                        let intervalId: number | NodeJS.Timeout;
-                        const handleClose = async () => {
-                            if (intervalId) {
-                                clearInterval(intervalId);
-                            }
+            // Store the request ID and current page info in localStorage for the redirect flow
+            localStorage.setItem('privo_oauth_request_id', requestId);
+            localStorage.setItem('privo_oauth_after', this.after || '');
 
-                            const loginResult =
-                                await authManager.completeOAuthLogin(requestId);
-
-                            if (loginResult.success === true) {
-                                resolve(loginResult);
-                            } else {
-                                if (loginResult.errorCode === 'not_completed') {
-                                    reject(new Error('Login canceled.'));
-                                } else {
-                                    reject(new Error('Login failed.'));
-                                }
-                            }
-                        };
-
-                        intervalId = setInterval(() => {
-                            if (newTab.closed) {
-                                console.error('Closed!');
-                                handleClose();
-                            }
-                        }, 500);
-                    }
-                );
-
-            await authManager.loadUserInfo();
-
-            return authManager.userId;
+            // Redirect to the authorization URL instead of opening a popup
+            location.href = result.authorizationUrl;
         }
         return null;
     }

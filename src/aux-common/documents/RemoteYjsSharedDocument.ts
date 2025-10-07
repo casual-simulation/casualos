@@ -67,6 +67,7 @@ export class RemoteYjsSharedDocument
     protected _temporary: boolean;
     protected _readOnly: boolean;
     protected _authSource: PartitionAuthSource;
+    protected _markers: string[];
 
     unsubscribe(): void {
         this._sub.unsubscribe();
@@ -86,6 +87,7 @@ export class RemoteYjsSharedDocument
         this._static = config.static;
         this._skipInitialLoad = config.skipInitialLoad;
         this._temporary = config.temporary;
+        this._markers = config.markers;
         this._persistence = config.localPersistence;
         this._synced = false;
         this._authorized = false;
@@ -210,6 +212,7 @@ export class RemoteYjsSharedDocument
                     inst: this._inst,
                     branch: this._branch,
                     temporary: this._temporary,
+                    markers: this._markers,
                 })
                 .subscribe({
                     next: (event) => {

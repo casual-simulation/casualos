@@ -49,7 +49,7 @@ import {
     hashLowEntropyPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { toBase64String } from '@casual-simulation/aux-common';
-import { padStart } from 'lodash';
+import { padStart } from 'es-toolkit/compat';
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
@@ -1813,7 +1813,6 @@ describe('AuthController', () => {
                 store,
                 messenger,
                 store,
-                undefined,
                 privoClient
             );
             store.privoConfiguration = null;

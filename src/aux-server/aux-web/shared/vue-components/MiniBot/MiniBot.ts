@@ -24,7 +24,7 @@ import type { BotRenderer } from '../../scene/BotRenderer';
 import { appManager } from '../../AppManager';
 import TagColor from '../TagColor/TagColor';
 import { EventBus } from '@casual-simulation/aux-components';
-import { debounce } from 'lodash';
+import { debounce } from 'es-toolkit/compat';
 
 @Component({
     components: {

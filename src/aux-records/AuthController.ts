@@ -45,7 +45,10 @@ import type { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import { randomCode } from './CryptoUtils';
-import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    getSubscription,
+    type SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
 import type { ConfigurationStore } from './ConfigurationStore';
 import type {
     PrivacyFeatures,
@@ -200,7 +203,6 @@ export interface RelyingParty {
 export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
-    private _forceAllowSubscriptionFeatures: boolean;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
     private _financialController: FinancialController = null;
@@ -219,7 +221,6 @@ export class AuthController {
         authStore: AuthStore,
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
-        forceAllowSubscriptionFeatures: boolean = false,
         privoClient: PrivoClientInterface = null,
         financialController: FinancialController = null,
         relyingParties: RelyingParty[] = []
@@ -227,7 +228,6 @@ export class AuthController {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
-        this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
         this._privoClient = privoClient;
         this._financialController = financialController;
         this._webAuthNRelyingParties = relyingParties;
@@ -2735,50 +2735,31 @@ export class AuthController {
     }
 
     private async _getSubscriptionInfo(user: AuthUser) {
-        const hasActiveSubscription =
-            this._forceAllowSubscriptionFeatures ||
-            isActiveSubscription(user.subscriptionStatus);
-
         let tier: string = null;
-        let sub: SubscriptionConfiguration['subscriptions'][0] = null;
         const subscriptionConfig: SubscriptionConfiguration =
             await this._config.getSubscriptionConfiguration();
-        if (hasActiveSubscription) {
-            if (user.subscriptionId) {
-                sub = subscriptionConfig?.subscriptions.find(
-                    (s) => s.id === user.subscriptionId
-                );
-            }
 
-            if (!sub) {
-                sub = subscriptionConfig?.subscriptions[0];
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using first subscription for user.'
-                    );
-                }
-            }
-
-            tier = 'beta';
-        }
-
-        if (!sub) {
-            sub = subscriptionConfig?.subscriptions.find(
-                (s) => s.defaultSubscription
-            );
-            if (sub) {
-                console.log(
-                    '[AuthController] [getUserInfo] Using default subscription for user.'
-                );
-            }
-        }
+        const sub = getSubscription(
+            subscriptionConfig,
+            user.subscriptionStatus,
+            user.subscriptionId,
+            'user',
+            user.subscriptionPeriodStartMs,
+            user.subscriptionPeriodEndMs
+        );
 
         if (sub) {
             tier = sub.tier || 'beta';
         }
 
         return {
-            hasActiveSubscription,
+            hasActiveSubscription:
+                !!sub &&
+                isActiveSubscription(
+                    user.subscriptionStatus,
+                    user.subscriptionPeriodStartMs,
+                    user.subscriptionPeriodEndMs
+                ),
             subscriptionId: sub?.id,
             subscriptionTier: tier,
         };

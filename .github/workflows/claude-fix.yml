@@ -1,0 +1,36 @@
+name: Claude Assistant
+
+on:
+    issue_comment:
+        types: [created]
+    workflow_dispatch: {}
+
+permissions:
+    id-token: write
+    contents: write
+    pull-requests: write
+    issues: read
+
+jobs:
+    claude:
+        runs-on: ubuntu-latest
+        environment: ai-api-keys
+
+        if: |
+            github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'issue_comment' &&
+             contains(github.event.comment.body, '@claude'))
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Run Claude Code via Anthropic API
+              uses: anthropics/claude-code-action@beta
+              with:
+                  anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+                  model: ${{ secrets.CLAUDE_MODEL_1 }}
+                  # To allow PR creation, enable GitHub tool:
+                  allowed_tools: mcp__github__create_pull_request
+                  # Optionally, set a custom prompt or use default:
+                  direct_prompt: 'Read the issue and apply a fix; then open a PR.'
+                  # `anthropic_api_key` is passed so Claude can authenticate

@@ -48,6 +48,7 @@ import type {
     SystemPortalPane,
     MenuBotSubtype,
     BotMeshPositioningMode,
+    MapPortalKind,
 } from './Bot';
 import {
     DEFAULT_WORKSPACE_SCALE,
@@ -85,6 +86,7 @@ import {
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
     DEFAULT_MESH_POSITIONING_MODE,
+    DEFAULT_MAP_PORTAL_KIND,
 } from './Bot';
 import type { Easing as TweenEasing } from '@tweenjs/tween.js';
 import TWEEN from '@tweenjs/tween.js';
@@ -94,18 +96,14 @@ import { cacheFunction } from './BotCalculationContext';
 
 import { v4 as uuid } from 'uuid';
 import {
-    flatMap,
     union,
-    keys,
-    find,
-    values,
     isEqual,
     sortBy,
     cloneDeep,
     differenceBy,
     intersectionBy,
     unionBy,
-} from 'lodash';
+} from 'es-toolkit/compat';
 
 /// <reference path="../typings/global.d.ts" />
 import type { EaseMode, EaseType, Easing, PartialBot } from '../bots';
@@ -296,16 +294,16 @@ export function botTags(
     extraTags: string[],
     allowedTags: string[] = null
 ): { tag: string; space: string }[] {
-    const botTags = flatMap(bots, (f) => keys(f.tags)).map(
-        (t) => ({ tag: t, space: null as string } as const)
-    );
-    const botMasks = flatMap(bots, (b) => {
+    const botTags = bots
+        .flatMap((f) => Object.keys(f.tags))
+        .map((t) => ({ tag: t, space: null as string } as const));
+    const botMasks = bots.flatMap((b) => {
         if (!b.masks) {
             return [];
         }
         let tags = [] as { tag: string; space: string }[];
         for (let space in b.masks) {
-            let spaceTags = keys(b.masks[space]).map(
+            let spaceTags = Object.keys(b.masks[space]).map(
                 (k) =>
                     ({
                         tag: k,
@@ -343,7 +341,7 @@ export function botTags(
 }
 
 export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
-    const botTags = flatMap(bots, (f) => keys(f.tags));
+    const botTags = bots.flatMap((f) => Object.keys(f.tags));
 
     const nonHiddenTags = botTags.filter(
         (t) => includeHidden || !isHiddenTag(t)
@@ -376,7 +374,7 @@ export function botsFromShortIds(bots: Bot[], shortIds: string[]): Bot[] {
  * @returns bot or undefined if no match found.
  */
 export function botFromShortId(bots: Bot[], shortId: string): Bot {
-    return find(bots, (f: Bot) => {
+    return bots.find((f: Bot) => {
         return getShortId(f) === shortId;
     });
 }
@@ -479,6 +477,26 @@ export function calculateBotValue(
     return value;
 }
 
+export function calculateRawBotValue(
+    context: BotObjectsContext | null,
+    object: Bot | PrecalculatedBot,
+    tag: keyof BotTags
+) {
+    const value = object.tags[tag];
+    if (
+        typeof value === 'undefined' &&
+        typeof tag === 'string' &&
+        tag.startsWith('aux') &&
+        tag.length >= 4
+    ) {
+        const firstChar = tag.substring(3, 4);
+        const rest = tag.substring(4);
+        const newTag = firstChar.toLowerCase() + rest;
+        return object.tags[newTag];
+    }
+    return value;
+}
+
 /**
  * Calculates the list of bot IDs that are stored in the given tag in the given bot.
  * @param bot The bot.
@@ -533,6 +551,12 @@ export function calculateFormattedBotValue(
     tag: string
 ): string {
     const value = calculateBotValue(context, bot, tag);
+    if (typeof value === 'number') {
+        const rawValue = calculateRawBotValue(context, bot, tag);
+        if (typeof rawValue === 'string') {
+            return rawValue;
+        }
+    }
     return formatValue(value);
 }
 
@@ -770,7 +794,7 @@ export function isNumber(value: string): boolean {
     return (
         typeof value === 'string' &&
         value.length > 0 &&
-        ((/^-?\d*(?:\.?\d+)?(?:[eE]-?\d+)?$/.test(value) && value !== '-') ||
+        ((/^-?\d*(?:\.?\d+)?(?:\d[eE]-?\d+)?$/.test(value) && value !== '-') ||
             (typeof value === 'string' && INFINITIES.has(value.toLowerCase())))
     );
 }
@@ -1005,7 +1029,7 @@ export function isBot(object: any): object is Bot {
  * @param state The state to get the active objects of.
  */
 export function getActiveObjects(state: BotsState) {
-    return <Bot[]>values(state);
+    return <Bot[]>Object.values(state);
 }
 
 /**
@@ -1049,7 +1073,7 @@ export function doBotsAppearEqual(
         return true;
     }
 
-    const tags = union(keys(first.tags), keys(second.tags));
+    const tags = union(Object.keys(first.tags), Object.keys(second.tags));
     const usableTags = tags.filter((t) => !isTagWellKnown(t));
 
     let allEqual = true;
@@ -1304,10 +1328,10 @@ export function removeBotFromMenu(
  * @param bot
  */
 export function tagsOnBot(bot: PartialBot): string[] {
-    let tags = new Set(keys(bot.tags));
+    let tags = new Set(Object.keys(bot.tags));
     if (bot.masks) {
         for (let space in bot.masks) {
-            let k = keys(bot.masks[space]);
+            let k = Object.keys(bot.masks[space]);
             for (let key of k) {
                 tags.add(key);
             }
@@ -1455,7 +1479,7 @@ export function calculateStateDiff(
         updatedBots: [],
     };
 
-    const ids = union(keys(prev), keys(current));
+    const ids = union(Object.keys(prev), Object.keys(current));
 
     ids.forEach((id) => {
         const prevVal = prev[id];
@@ -2135,6 +2159,18 @@ export function calculateAnchorPoint(value: BotAnchorPoint) {
         return value;
     }
     return DEFAULT_ANCHOR_POINT;
+}
+
+export function getMapPortalKind(bot: Bot): MapPortalKind {
+    const kind = calculateStringTagValue(null, bot, 'auxMapPortalKind', null);
+    return calculateMapPortalKind(kind) ?? DEFAULT_MAP_PORTAL_KIND;
+}
+
+export function calculateMapPortalKind(value: string): MapPortalKind | null {
+    if (value === 'globe' || value === 'plane') {
+        return value;
+    }
+    return null;
 }
 
 /**

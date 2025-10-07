@@ -232,27 +232,28 @@ export abstract class CrudRecordsController<
                 };
             }
 
+            const subscriptionResult = await this._checkSubscriptionMetrics(
+                action,
+                contextResult.context,
+                authorization,
+                request.item
+            );
+
+            if (subscriptionResult.success === false) {
+                return subscriptionResult;
+            }
+
             const item = await this._transformInputItem(
                 request.item,
                 existingItem,
                 action,
                 contextResult.context,
-                authorization
+                authorization,
+                subscriptionResult
             );
 
             if (isFailure(item)) {
                 return genericResult(item);
-            }
-
-            const subscriptionResult = await this._checkSubscriptionMetrics(
-                action,
-                contextResult.context,
-                authorization,
-                item.value
-            );
-
-            if (subscriptionResult.success === false) {
-                return subscriptionResult;
             }
 
             await this._putItem(recordName, item.value);
@@ -337,7 +338,11 @@ export abstract class CrudRecordsController<
 
             return {
                 success: true,
-                item: this._convertItemToResult(result, context.context),
+                item: await this._convertItemToResult(
+                    result,
+                    context.context,
+                    'read'
+                ),
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -416,7 +421,16 @@ export abstract class CrudRecordsController<
                 return subscriptionResult;
             }
 
-            await this._store.deleteItem(recordName, request.address);
+            const eraseResult = await this._eraseItemCore(
+                recordName,
+                request.address,
+                result,
+                authorization
+            );
+
+            if (isFailure(eraseResult)) {
+                return genericResult(eraseResult);
+            }
 
             return {
                 success: true,
@@ -483,8 +497,10 @@ export abstract class CrudRecordsController<
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context)
+                items: await this._convertItemsToResults(
+                    result2.items,
+                    context.context,
+                    'list'
                 ),
                 totalCount: result2.totalCount,
             };
@@ -552,8 +568,10 @@ export abstract class CrudRecordsController<
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: result2.items.map((item) =>
-                    this._convertItemToResult(item, context.context)
+                items: await this._convertItemsToResults(
+                    result2.items,
+                    context.context,
+                    'list'
                 ),
                 totalCount: result2.totalCount,
             };
@@ -575,6 +593,16 @@ export abstract class CrudRecordsController<
 
     /**
      * Checks that the given metrics are valid for the subscription.
+     *
+     * When recording an item, this function checks that the user is allowed to perform the action based on their subscription.
+     *
+     *
+     * ### Order of operations:
+     * 1. Check authorization
+     * 2. call _checkSubscriptionMetrics()
+     * 3. call _transformInputItem()
+     * 4. Store item
+     *
      * @param metrics The metrics that were fetched from the database.
      * @param action The action that is being performed.
      * @param authorization The authorization for the user and instances.
@@ -586,21 +614,38 @@ export abstract class CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: TStoreType
+        item?: TInput
     ): Promise<CheckSubscriptionMetricsResult>;
 
     /**
      * Converts the given item to a version that is able to be returned to clients.
      * Can be overriden to ensure that some fields are not returned.
+     *
+     * ### Order of operations:
+     * 1. Check authorization
+     * 2. call _checkSubscriptionMetrics()
+     * 3. call _transformInputItem()
+     * 4. Store item
+     *
      * @param item The item that should be converted.
      * @param context The authorization context.
+     * @param action The action that is being performed.
      * @returns The converted item.
      */
-    protected _convertItemToResult(
+    protected async _convertItemToResult(
         item: TStoreType,
-        context: AuthorizationContext
-    ): TResult {
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): Promise<TResult> {
         return item as unknown as TResult;
+    }
+
+    protected async _convertItemsToResults(
+        items: TStoreType[],
+        context: AuthorizationContext,
+        action: ActionKinds
+    ): Promise<TResult[]> {
+        return items as unknown as TResult[];
     }
 
     /**
@@ -615,9 +660,22 @@ export abstract class CrudRecordsController<
         context: AuthorizationContext,
         authorization:
             | AuthorizeUserAndInstancesSuccess
-            | AuthorizeUserAndInstancesForResourcesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess,
+        metrics: CheckSubscriptionMetricsSuccess
     ): Promise<Result<TStoreType, SimpleError>> {
         return success(item as unknown as TStoreType);
+    }
+
+    protected async _eraseItemCore(
+        recordName: string,
+        address: string,
+        item: TStoreType,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess
+    ): Promise<Result<void, SimpleError>> {
+        await this._store.deleteItem(recordName, address);
+        return success();
     }
 }
 

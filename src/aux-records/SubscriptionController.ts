@@ -131,7 +131,7 @@ export const ACCESS_KEY_ID_BYTE_LENGTH = 16; // 128-bit
  * Defines a class that is able to handle subscriptions.
  */
 export class SubscriptionController {
-    private _stripe: StripeInterface;
+    private _stripe: StripeInterface | null;
     private _auth: AuthController;
     private _authStore: AuthStore;
     private _recordsStore: RecordsStore;
@@ -143,7 +143,7 @@ export class SubscriptionController {
     private _contractRecords: ContractRecordsStore;
 
     constructor(
-        stripe: StripeInterface,
+        stripe: StripeInterface | null,
         auth: AuthController,
         authStore: AuthStore,
         recordsStore: RecordsStore,

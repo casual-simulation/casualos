@@ -17,7 +17,7 @@
  */
 import { ServerBuilder } from './ServerBuilder';
 import { getAllowedAPIOrigins, allowedOrigins } from './EnvUtils';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import { loadConfig } from './ConfigUtils';
 import type { ServerConfig } from '@casual-simulation/aux-records';
 
@@ -40,6 +40,8 @@ export const MODERATION_JOB_ROLE_ARN = process.env.MODERATION_JOB_ROLE_ARN;
 export const MODERATION_JOB_PRIORITY = process.env.MODERATION_JOB_PRIORITY;
 export const MODERATION_PROJECT_VERSION =
     process.env.MODERATION_PROJECT_VERSION;
+
+export const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
 
 /**
  * Creates a new server builder that uses environment variables that are specific to the serverless environment.
@@ -100,6 +102,15 @@ export function constructServerlessAwsServerBuilder() {
                             MODERATION_PROJECT_VERSION || undefined,
                     },
                 },
+            },
+        });
+    }
+
+    if (SNS_TOPIC_ARN) {
+        dynamicConfig.jobs = merge(dynamicConfig.jobs || {}, {
+            search: {
+                type: 'sns',
+                topicArn: SNS_TOPIC_ARN,
             },
         });
     }
@@ -222,6 +233,18 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
 
     if (config.notifications) {
         builder.useSystemNotifications();
+    }
+
+    if (config.typesense) {
+        builder.useTypesense();
+    }
+
+    if (config.databases) {
+        builder.useDatabases();
+    }
+
+    if (config.jobs) {
+        builder.useBackgroundJobs();
     }
 
     if (config.webauthn) {

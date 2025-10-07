@@ -85,6 +85,7 @@ import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
 import AuthGrantedEntitlements from './AuthGrantedEntitlements/AuthGrantedEntitlements';
+import AuthUserNotifications from './AuthUserNotifications/AuthUserNotifications';
 import AuthStoreFulfillment from './AuthStoreFulfillment/AuthStoreFulfillment';
 import AuthStoreActivation from './AuthStoreActivation/AuthStoreActivation.vue';
 
@@ -187,6 +188,11 @@ const routes: RouteConfig[] = [
         component: AuthGrantedEntitlements,
     },
     {
+        path: '/notifications',
+        name: 'user-notifications',
+        component: AuthUserNotifications,
+    },
+    {
         path: '/records/:recordName',
         name: 'records',
         props: (route) => ({
@@ -270,7 +276,7 @@ const routes: RouteConfig[] = [
         props: (route) => ({
             sessionId: route.params.sessionId,
         }),
-    }
+    },
     {
         path: '/store/activate',
         name: 'store-activation',
@@ -278,7 +284,7 @@ const routes: RouteConfig[] = [
         props: (route) => ({
             activationKey: route.query.key,
         }),
-    }
+    },
 ];
 
 const router = new VueRouter({

@@ -53,7 +53,6 @@ import type { Simulation3D } from '../../shared/scene/Simulation3D';
 import type { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first, map } from 'rxjs/operators';
-import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { getPortalConfigBot } from '@casual-simulation/aux-vm-browser';
@@ -81,6 +80,10 @@ import type {
     CapturePortalScreenshotAction,
     CameraPortal,
     Photo,
+    CalculateScreenCoordinatesFromPositionAction,
+    MapPortalKind,
+    AddMapLayerAction,
+    RemoveMapLayerAction,
 } from '@casual-simulation/aux-common';
 import {
     clamp,
@@ -105,6 +108,7 @@ import {
     formatBotVector,
     getBotsStateFromStoredAux,
     isStoredVersion2,
+    DEFAULT_MAP_PORTAL_KIND,
 } from '@casual-simulation/aux-common';
 import type { TweenCameraPosition } from '../../shared/scene/SceneUtils';
 import {
@@ -136,6 +140,8 @@ import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
 import { EARTH_RADIUS } from './MapPortalGrid3D';
 import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 import { Subscription } from 'rxjs';
+import { v4 as uuid } from 'uuid';
+import { loadModules as loadEsriModules } from 'esri-loader';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -158,6 +164,8 @@ const MINI_PORTAL_SMALL_WIDTH = 0.9;
  * The default padding needed for the available height padding.
  */
 const MINI_PORTAL_DEFAULT_HEIGHT_PADDING = 40;
+
+const _tempVector = new Vector3();
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -218,6 +226,8 @@ export class PlayerGame extends Game {
         sim: BrowserSimulation;
         portal: CameraPortal;
     }[] = [];
+    private _mapGlobeMask: Mesh;
+    private _miniMapGlobeMask: Mesh<SphereGeometry, MeshBasicMaterial>;
 
     private get slider() {
         if (!this._slider) {
@@ -254,6 +264,11 @@ export class PlayerGame extends Game {
      * The maximum width of the miniGridPortal in px.
      */
     private _miniPortalMaxWidth: number = 700;
+
+    /**
+     * The map of layer IDs to the object URLs that were created for the GeoJSON data.
+     */
+    private _geoJsonUrls: Map<string, string> = new Map();
 
     defaultPlayerZoom: number = null;
     defaultPlayerRotationX: number = null;
@@ -590,6 +605,22 @@ export class PlayerGame extends Game {
         );
     }
 
+    getMapPortalKind(): MapPortalKind {
+        return this._getSimulationValue(
+            this.mapSimulations,
+            'kind',
+            DEFAULT_MAP_PORTAL_KIND
+        );
+    }
+
+    getMiniMapPortalKind(): MapPortalKind {
+        return this._getSimulationValue(
+            this.miniMapSimulations,
+            'kind',
+            DEFAULT_MAP_PORTAL_KIND
+        );
+    }
+
     private _getSimulationValue<T, K extends keyof T>(
         simulations: T[],
         name: K,
@@ -656,10 +687,10 @@ export class PlayerGame extends Game {
     }
     findAllBotsById(id: string): AuxBotVisualizer[] {
         return [
-            ...flatMap(this.playerSimulations, (s) => s.findBotsById(id)),
-            ...flatMap(this.miniSimulations, (s) => s.findBotsById(id)),
-            ...flatMap(this.mapSimulations, (s) => s.findBotsById(id)),
-            ...flatMap(this.miniMapSimulations, (s) => s.findBotsById(id)),
+            ...this.playerSimulations.flatMap((s) => s.findBotsById(id)),
+            ...this.miniSimulations.flatMap((s) => s.findBotsById(id)),
+            ...this.mapSimulations.flatMap((s) => s.findBotsById(id)),
+            ...this.miniMapSimulations.flatMap((s) => s.findBotsById(id)),
         ];
     }
     setGridsVisible(visible: boolean): void {
@@ -998,6 +1029,10 @@ export class PlayerGame extends Game {
                         sim,
                         e
                     );
+                } else if (
+                    e.type === 'calculate_screen_coordinates_from_position'
+                ) {
+                    this._calculateScreenCoordinatesFromPosition(sim, e);
                 } else if (e.type === 'buffer_form_address_gltf') {
                     this._bufferFormAddressGltf(sim, e);
                 } else if (e.type === 'start_form_animation') {
@@ -1010,10 +1045,96 @@ export class PlayerGame extends Game {
                     this._countLDrawBuildSteps(sim, e);
                 } else if (e.type === 'capture_portal_screenshot') {
                     this._capturePortalScreenshot(sim, e);
+                } else if (e.type === 'add_map_layer') {
+                    this._addMapLayer(sim, e);
+                } else if (e.type === 'remove_map_layer') {
+                    this._removeMapLayer(sim, e);
                 }
             }),
             sub
         );
+    }
+
+    private _removeMapLayer(sim: BrowserSimulation, e: RemoveMapLayerAction) {
+        try {
+            if (this._geoJsonUrls.has(e.layerId)) {
+                // Revoke the object URL if it was created for a GeoJSON layer
+                const url = this._geoJsonUrls.get(e.layerId);
+                try {
+                    URL.revokeObjectURL(url);
+                } catch (revokeError) {
+                    console.warn('Failed to revoke object URL:', revokeError);
+                }
+                this._geoJsonUrls.delete(e.layerId);
+            }
+            this.gameView.removeMapLayer(e.layerId);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            console.error('Error removing map layer:', err);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncError(e.taskId, err));
+            }
+        }
+    }
+
+    private async _addMapLayer(sim: BrowserSimulation, e: AddMapLayerAction) {
+        try {
+            // Add the map layer
+            const portalTag = getPortalTag(e.portal);
+
+            const layerId = uuid();
+            let layer: __esri.Layer = null;
+            if (e.layer.type === 'geojson') {
+                const [GeoJSONLayer] = (await loadEsriModules([
+                    'esri/layers/GeoJSONLayer',
+                ])) as [typeof __esri.GeoJSONLayer];
+
+                let url: string;
+                if (e.layer.data) {
+                    const blob = new Blob([JSON.stringify(e.layer.data)], {
+                        type: 'application/json',
+                    });
+                    url = URL.createObjectURL(blob);
+                    this._geoJsonUrls.set(layerId, url);
+                } else {
+                    url = e.layer.url;
+                }
+
+                if (!url) {
+                    throw new Error(
+                        'No URL or data provided for GeoJSON layer.'
+                    );
+                }
+
+                layer = new GeoJSONLayer({
+                    url,
+                    copyright: e.layer.copyright,
+                });
+            }
+
+            if (!layer) {
+                throw new Error(
+                    `Unsupported layer type: ${e.layer.type}. Only 'geojson' is supported.`
+                );
+            }
+
+            if (portalTag === 'mapPortal') {
+                this.gameView.addMapLayer(layerId, layer);
+            } else {
+                this.gameView.addMiniMapLayer(layerId, layer);
+            }
+
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncResult(e.taskId, layerId));
+            }
+        } catch (err) {
+            console.error('Error adding map layer:', err);
+            if (hasValue(e.taskId)) {
+                sim.helper.transaction(asyncError(e.taskId, err));
+            }
+        }
     }
 
     private simulationRemoved(sim: BrowserSimulation) {
@@ -1147,32 +1268,23 @@ export class PlayerGame extends Game {
             const rig = _3dSim.getMainCameraRig();
             const gridScale = _3dSim.getDefaultGridScale();
 
-            const position = {
-                x: e.position.x,
-                y: e.position.y,
-                z: e.position.z,
-            };
-
-            let vector;
-
-            const coordinateTransform = _3dSim.coordinateTransformer
-                ? _3dSim.coordinateTransformer(position)
-                : null;
-
-            if (coordinateTransform) {
-                vector = new Vector3(0, 0, 0);
-                vector.applyMatrix4(coordinateTransform);
+            if (_3dSim.coordinateTransformer) {
+                const coordinateTransform = _3dSim.coordinateTransformer(
+                    e.position
+                );
+                _tempVector.set(0, 0, 0);
+                _tempVector.applyMatrix4(coordinateTransform);
             } else {
-                vector = new Vector3(
-                    position.x * gridScale,
-                    position.y * gridScale,
-                    position.z * gridScale
+                _tempVector.set(
+                    e.position.x * gridScale,
+                    e.position.y * gridScale,
+                    e.position.z * gridScale
                 );
             }
 
-            vector.project(rig.mainCamera);
+            _tempVector.project(rig.mainCamera);
 
-            const viewportPosition = convertVector2(vector);
+            const viewportPosition = convertVector2(_tempVector);
 
             sim.helper.transaction(
                 asyncResult(e.taskId, viewportPosition, true)
@@ -1228,6 +1340,56 @@ export class PlayerGame extends Game {
                 );
             } else {
                 sim.helper.transaction(asyncResult(e.taskId, null));
+            }
+        } catch (err) {
+            sim.helper.transaction(asyncError(e.taskId, err.toString()));
+        }
+    }
+
+    private _calculateScreenCoordinatesFromPosition(
+        sim: BrowserSimulation,
+        e: CalculateScreenCoordinatesFromPositionAction
+    ) {
+        try {
+            const _3dSim = this._findSimulationForPortalTag(
+                sim,
+                getPortalTag(e.portal)
+            );
+
+            if (_3dSim) {
+                const rig = _3dSim.getMainCameraRig();
+                const gridScale = _3dSim.getDefaultGridScale();
+
+                const results: string[] = [];
+
+                for (let position of e.coordinates) {
+                    if (_3dSim.coordinateTransformer) {
+                        const coordinateTransform =
+                            _3dSim.coordinateTransformer(position);
+                        _tempVector.set(0, 0, 0);
+                        _tempVector.applyMatrix4(coordinateTransform);
+                    } else {
+                        _tempVector.set(
+                            position.x * gridScale,
+                            position.y * gridScale,
+                            position.z * gridScale
+                        );
+                    }
+
+                    _tempVector.project(rig.mainCamera);
+
+                    // convert to screen position
+                    const pagePosition = Input.pagePositionForViewport(
+                        _tempVector,
+                        rig.viewport
+                    );
+
+                    results.push(convertVector2(pagePosition));
+                }
+
+                sim.helper.transaction(asyncResult(e.taskId, results, true));
+            } else {
+                sim.helper.transaction(asyncResult(e.taskId, []));
             }
         } catch (err) {
             sim.helper.transaction(asyncError(e.taskId, err.toString()));
@@ -1756,7 +1918,8 @@ export class PlayerGame extends Game {
         this.mapScene = new Scene();
         this.mapScene.autoUpdate = false;
 
-        this.mapScene.add(this._createGlobeMask());
+        this._mapGlobeMask = this._createGlobeMask();
+        this.mapScene.add(this._mapGlobeMask);
 
         // miniGridPortal camera.
         this.mapCameraRig = this._createMapCameraRig(
@@ -1780,7 +1943,8 @@ export class PlayerGame extends Game {
         this.miniMapScene = new Scene();
         this.miniMapScene.autoUpdate = false;
 
-        this.miniMapScene.add(this._createGlobeMask());
+        this._miniMapGlobeMask = this._createGlobeMask();
+        this.miniMapScene.add(this._miniMapGlobeMask);
 
         // miniGridPortal camera.
         this.miniMapCameraRig = this._createMapCameraRig(
@@ -2021,12 +2185,66 @@ export class PlayerGame extends Game {
         this._updateMapPortalBasemap();
         this._updateMiniMapPortalVisibility();
         this._updateMiniMapPortalBasemap();
+        this._updateMapPortalKind();
+        this._updateMiniMapPortalKind();
     }
 
     private _updateMapPortalBasemap() {
         const view = this.gameView.getMapView();
         if (view) {
             this.gameView.setBasemap(this.getMapPortalBasemap());
+        }
+    }
+
+    private _updateMapPortalKind() {
+        const view = this.gameView.getMapView();
+        if (view) {
+            const kind = this.getMapPortalKind();
+
+            const viewingMode = kind === 'globe' ? 'global' : 'local';
+            if (view.viewingMode !== viewingMode) {
+                if (view.ready) {
+                    const cameraProperties: __esri.CameraProperties = {
+                        position: view.camera.position.toJSON(),
+                        fov: view.camera.fov,
+                        tilt: view.camera.tilt,
+                        heading: view.camera.heading,
+                    };
+                    this._disableMapPortal();
+                    this._setupMapPortal(cameraProperties);
+                } else {
+                    view.viewingMode = viewingMode;
+                }
+            }
+
+            // update the globe mask visibility
+            this._mapGlobeMask.visible = kind === 'globe';
+        }
+    }
+
+    private _updateMiniMapPortalKind() {
+        const view = this.gameView.getMiniMapView();
+        if (view) {
+            const kind = this.getMiniMapPortalKind();
+
+            const viewingMode = kind === 'globe' ? 'global' : 'local';
+
+            if (view.viewingMode !== viewingMode) {
+                if (view.ready) {
+                    const cameraProperties: __esri.CameraProperties = {
+                        position: view.camera.position.toJSON(),
+                        fov: view.camera.fov,
+                        tilt: view.camera.tilt,
+                        heading: view.camera.heading,
+                    };
+                    this._disableMiniMapPortal();
+                    this._setupMiniMapPortal(cameraProperties);
+                } else {
+                    view.viewingMode = viewingMode;
+                }
+            }
+
+            this._miniMapGlobeMask.visible = kind === 'globe';
         }
     }
 
@@ -2038,7 +2256,24 @@ export class PlayerGame extends Game {
 
         this.mapPortalVisible = visible;
         if (visible) {
-            this.gameView.enableMapView({
+            this._setupMapPortal();
+        } else {
+            this._disableMapPortal();
+        }
+    }
+
+    private _disableMapPortal() {
+        for (let sim of this.mapSimulations) {
+            sim.coordinateTransformer = null;
+            sim.mapView = null;
+        }
+        this.gameView.disableMapView();
+        this.mapViewport.layer = -1;
+    }
+
+    private async _setupMapPortal(camera?: __esri.CameraProperties) {
+        await this.gameView.enableMapView(
+            {
                 setup: (context) => {
                     const view = this.gameView.getMapView();
                     const coordinateTransform =
@@ -2090,15 +2325,9 @@ export class PlayerGame extends Game {
                     this.mapAmbientLight.updateMatrixWorld(true);
                 },
                 dispose: (context) => {},
-            });
-        } else {
-            for (let sim of this.mapSimulations) {
-                sim.coordinateTransformer = null;
-                sim.mapView = null;
-            }
-            this.gameView.disableMapView();
-            this.mapViewport.layer = -1;
-        }
+            },
+            camera
+        );
     }
 
     private _updateMiniMapPortalVisibility() {
@@ -2109,8 +2338,25 @@ export class PlayerGame extends Game {
 
         this.miniMapPortalVisible = visible;
         if (visible) {
-            this.miniMapViewport.setScale(null, 0);
-            this.gameView.enableMiniMapView({
+            this._setupMiniMapPortal();
+        } else {
+            this._disableMiniMapPortal();
+        }
+    }
+
+    private _disableMiniMapPortal() {
+        for (let sim of this.miniMapSimulations) {
+            sim.coordinateTransformer = null;
+            sim.mapView = null;
+        }
+        this.gameView.disableMiniMapView();
+        this.miniMapViewport.layer = -1;
+    }
+
+    private _setupMiniMapPortal(camera?: __esri.CameraProperties) {
+        this.miniMapViewport.setScale(null, 0);
+        this.gameView.enableMiniMapView(
+            {
                 setup: (context) => {
                     const view = this.gameView.getMiniMapView();
                     const coordinateTransform =
@@ -2165,15 +2411,9 @@ export class PlayerGame extends Game {
                     // this.renderMapViewport();
                 },
                 dispose: (context) => {},
-            });
-        } else {
-            for (let sim of this.miniMapSimulations) {
-                sim.coordinateTransformer = null;
-                sim.mapView = null;
-            }
-            this.gameView.disableMiniMapView();
-            this.miniMapViewport.layer = -1;
-        }
+            },
+            camera
+        );
     }
 
     private _updateMiniMapPortalBasemap() {

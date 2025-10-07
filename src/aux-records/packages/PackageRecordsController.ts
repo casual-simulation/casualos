@@ -15,7 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { ActionKinds } from '@casual-simulation/aux-common';
+import {
+    success,
+    type ActionKinds,
+    type Result,
+    type SimpleError,
+} from '@casual-simulation/aux-common';
 
 import type {
     AuthorizationContext,
@@ -69,13 +74,36 @@ export class PackageRecordsController extends CrudRecordsController<
         });
     }
 
+    protected async _transformInputItem(
+        item: PackageRecordInput,
+        existingItem: PackageRecord,
+        action: ActionKinds,
+        context: AuthorizationContext,
+        authorization:
+            | AuthorizeUserAndInstancesSuccess
+            | AuthorizeUserAndInstancesForResourcesSuccess,
+        metrics: CheckSubscriptionMetricsSuccess
+    ): Promise<Result<PackageRecord, SimpleError>> {
+        if (action === 'create') {
+            return success({
+                ...item,
+                id: uuid(),
+            });
+        }
+
+        return success({
+            ...existingItem,
+            markers: item.markers,
+        });
+    }
+
     protected async _checkSubscriptionMetrics(
         action: ActionKinds,
         context: AuthorizationContext,
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: PackageRecord
+        item?: PackageRecordInput
     ): Promise<PackageRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
@@ -112,8 +140,6 @@ export class PackageRecordsController extends CrudRecordsController<
                         'The maximum number of package items has been reached for your subscription.',
                 };
             }
-
-            item!.id = uuid();
         }
 
         return {

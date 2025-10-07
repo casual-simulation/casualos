@@ -31,6 +31,7 @@ export class SocketManager {
     // Whether this manager has forced the user to be offline or not.
     private _forcedOffline: boolean = false;
     private _url: string | URL;
+    private _protocol: string | undefined;
 
     private _connectionStateChanged: BehaviorSubject<boolean>;
 
@@ -68,15 +69,17 @@ export class SocketManager {
      * Creates a new SocketManager.
      * @param user The user account to use for connecting.
      * @param url The URL to connect to.
+     * @param protocol The protocol to use for the WebSocket connection.
      */
-    constructor(url?: string | URL) {
+    constructor(url?: string | URL, protocol?: string) {
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
         this._url = url;
+        this._protocol = protocol;
     }
 
     init(): void {
         console.log('[WebSocketManager] Starting...');
-        this._socket = new ReconnectableSocket(this._url);
+        this._socket = new ReconnectableSocket(this._url, this._protocol);
 
         this._socket.onClose
             .pipe(

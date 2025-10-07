@@ -93,6 +93,7 @@ export type KnownErrorCodes =
     | 'invalid_webhook_target'
     | 'took_too_long'
     | 'parent_not_found'
+    | 'service_unavailable'
     | 'insufficient_funds'
     | 'item_already_purchased'
     | 'item_not_found'
@@ -206,6 +207,12 @@ export function getStatusCode(
             return 500;
         } else if (response.errorCode === 'user_already_exists') {
             return 400;
+        } else if (response.errorCode === 'hume_api_error') {
+            return 500;
+        } else if (response.errorCode === 'took_too_long') {
+            return 504;
+        } else if (response.errorCode === 'service_unavailable') {
+            return 503;
         } else {
             return 400;
         }

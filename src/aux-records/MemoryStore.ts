@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { cloneDeep, orderBy, sortBy } from 'lodash';
-import type { RegexRule } from './Utils';
+import { cloneDeep, orderBy, sortBy } from 'es-toolkit/compat';
+import { type RegexRule } from './Utils';
 import { cloneDeepNull } from './Utils';
 import type {
     AddressType,
@@ -3374,6 +3374,46 @@ export class MemoryStore
         }
 
         let insts = [...record.values()];
+        if (startingInst) {
+            insts = insts.filter((i) => i.inst > startingInst);
+        }
+
+        return {
+            success: true,
+            insts: insts.slice(0, 10).map((i) => ({
+                recordName: i.recordName,
+                inst: i.inst,
+                markers: i.markers,
+            })),
+            totalCount: insts.length,
+        };
+    }
+
+    async listInstsByRecordAndMarker(
+        recordName: string,
+        marker: string,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult> {
+        if (!recordName) {
+            return {
+                success: true,
+                insts: [],
+                totalCount: 0,
+            };
+        }
+        const record = await this._getInstRecord(recordName);
+
+        if (!record) {
+            return {
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'The record was not found.',
+            };
+        }
+
+        let insts = [...record.values()].filter((i) =>
+            i.markers.includes(marker)
+        );
         if (startingInst) {
             insts = insts.filter((i) => i.inst > startingInst);
         }

@@ -18,7 +18,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { some, union, sortBy } from 'lodash';
+import { union, sortBy } from 'es-toolkit/compat';
 import type { Bot, BotTags, BotSpace } from '@casual-simulation/aux-common';
 import {
     botTags,
@@ -57,7 +57,7 @@ import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
-import { sumBy } from 'lodash';
+import { sumBy } from 'es-toolkit/compat';
 import TagValueEditorWrapper from '../TagValueEditorWrapper/TagValueEditorWrapper';
 import { getModelUriFromId } from '../../MonacoUtils';
 // import {} from 'vue-material/dist/'
@@ -747,7 +747,7 @@ export default class BotTable extends Vue {
     }
 
     tagHasValue(tag: string, space: string): boolean {
-        return some(this.bots, (b) =>
+        return this.bots.some((b) =>
             hasValue(getTagValueForSpace(b.bot, tag, space))
         );
     }

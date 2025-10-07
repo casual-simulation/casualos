@@ -945,6 +945,20 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if (resourceKind === 'search') {
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'database') {
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     } else if (resourceKind === 'purchasableItem') {
         // purchasableItem.read and purchasableItem.list
         if (action === 'read' || action === 'list' || action === 'purchase') {
@@ -1042,6 +1056,20 @@ export function getPublicWritePermission(
         }
     } else if (resourceKind === 'package.version') {
         if (action === 'read' || action === 'list' || action === 'run') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'search') {
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'database') {
+        if (action === 'read' || action === 'list') {
             return {
                 resourceKind,
                 action,

@@ -108,6 +108,7 @@ Object {
     },
     "prisma": Object {
       "configurationCacheSeconds": 86400,
+      "db": "cockroachdb",
       "options": Object {
         "datasources": Object {
           "db": Object {
@@ -199,6 +200,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -222,6 +226,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "store": Object {
             "allowed": false,
@@ -271,6 +278,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -294,6 +304,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "store": Object {
             "allowed": false,
@@ -517,6 +530,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -547,6 +563,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -605,6 +624,9 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -638,6 +660,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -692,6 +717,9 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -729,6 +757,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 300,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -789,6 +820,9 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -822,6 +856,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1500,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -876,6 +913,9 @@ Object {
               "maxReadsPerPeriod": 500000,
               "maxWritesPerPeriod": 500000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 500,
@@ -913,6 +953,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 150,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -973,6 +1016,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -1006,6 +1052,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -1065,6 +1114,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -1095,6 +1147,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -1152,6 +1207,9 @@ Object {
               "maxReadsPerPeriod": 10000000000,
               "maxWritesPerPeriod": 10000000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000000000,
@@ -1182,6 +1240,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1000000000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -1236,6 +1297,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -1273,6 +1337,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -1329,6 +1396,9 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -1362,6 +1432,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 3000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -1500,6 +1573,7 @@ Object {
     },
     "prisma": Object {
       "configurationCacheSeconds": 86400,
+      "db": "cockroachdb",
       "options": Object {
         "datasources": Object {
           "db": Object {
@@ -1603,6 +1677,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -1626,6 +1703,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "store": Object {
             "allowed": false,
@@ -1681,6 +1761,9 @@ Object {
             "maxReadsPerPeriod": 100000,
             "maxWritesPerPeriod": 100000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": true,
             "maxEvents": 100,
@@ -1714,6 +1797,9 @@ Object {
           "records": Object {
             "allowed": true,
             "maxRecords": 30,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "store": Object {
             "allowed": false,
@@ -1882,6 +1968,7 @@ Object {
     },
     "prisma": Object {
       "configurationCacheSeconds": 86400,
+      "db": "cockroachdb",
       "options": Object {
         "datasources": Object {
           "db": Object {
@@ -1973,6 +2060,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -1996,6 +2086,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "store": Object {
             "allowed": false,
@@ -2045,6 +2138,9 @@ Object {
             "allowed": false,
             "maxItemSizeInBytes": 500000,
           },
+          "databases": Object {
+            "allowed": true,
+          },
           "events": Object {
             "allowed": false,
           },
@@ -2068,6 +2164,9 @@ Object {
           },
           "records": Object {
             "allowed": false,
+          },
+          "search": Object {
+            "allowed": true,
           },
           "store": Object {
             "allowed": false,
@@ -2291,6 +2390,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2321,6 +2423,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2379,6 +2484,9 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -2412,6 +2520,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2466,6 +2577,9 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -2503,6 +2617,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 300,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2563,6 +2680,9 @@ Object {
               "maxReadsPerPeriod": 1000000,
               "maxWritesPerPeriod": 1000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000,
@@ -2596,6 +2716,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1500,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2650,6 +2773,9 @@ Object {
               "maxReadsPerPeriod": 500000,
               "maxWritesPerPeriod": 500000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 500,
@@ -2687,6 +2813,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 150,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2747,6 +2876,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2780,6 +2912,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2839,6 +2974,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -2869,6 +3007,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -2926,6 +3067,9 @@ Object {
               "maxReadsPerPeriod": 10000000000,
               "maxWritesPerPeriod": 10000000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 1000000000,
@@ -2956,6 +3100,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 1000000000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -3010,6 +3157,9 @@ Object {
               "maxReadsPerPeriod": 100000,
               "maxWritesPerPeriod": 100000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 100,
@@ -3047,6 +3197,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 30,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,
@@ -3103,6 +3256,9 @@ Object {
               "maxReadsPerPeriod": 10000000,
               "maxWritesPerPeriod": 10000000,
             },
+            "databases": Object {
+              "allowed": true,
+            },
             "events": Object {
               "allowed": true,
               "maxEvents": 10000,
@@ -3136,6 +3292,9 @@ Object {
             "records": Object {
               "allowed": true,
               "maxRecords": 3000,
+            },
+            "search": Object {
+              "allowed": true,
             },
             "store": Object {
               "allowed": false,

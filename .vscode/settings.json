@@ -7,6 +7,7 @@
         "**/.DS_Store": true,
         "**/*.js": { "when": "$(basename).ts" },
         "**/*.js.map": true,
+        "**/*.tsbuildinfo": true,
         "src/aux-common/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-components/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm/**/*.d.ts": { "when": "$(basename).ts" },

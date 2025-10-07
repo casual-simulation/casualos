@@ -66,6 +66,21 @@ export const GET_TAG_MASKS_SYMBOL = Symbol('get_tag_masks');
 export const REPLACE_BOT_SYMBOL = Symbol('replace_bot');
 
 /**
+ * Defines a symbol that is used to add a bot listener.
+ */
+export const ADD_BOT_LISTENER_SYMBOL = Symbol('add_bot_listener');
+
+/**
+ * Defines a symbol that is used to remove a bot listener.
+ */
+export const REMOVE_BOT_LISTENER_SYMBOL = Symbol('remove_bot_listener');
+
+/**
+ * Defines a symbol that is used to get dynamic listeners for a bot.
+ */
+export const GET_DYNAMIC_LISTENERS_SYMBOL = Symbol('get_dynamic_listeners');
+
+/**
  * Defines an interface for a bot in a script/formula.
  *
  * The difference between this and Bot is that the tags
@@ -202,6 +217,36 @@ export interface RuntimeBot {
     [REPLACE_BOT_SYMBOL]: (bot: RuntimeBot) => void;
 
     /**
+     * Registers the given function as a listener for events that would trigger the given tag.
+     * @param tagName The name of the tag that the listener should be registered for.
+     * @param listener The listener function that should be called when the tag is triggered.
+     */
+    [ADD_BOT_LISTENER_SYMBOL]: (
+        tagName: string,
+        listener: DynamicListener
+    ) => void;
+
+    /**
+     * Unregisters the given function as a listener for events that would trigger the given tag.
+     *
+     * @param tagName The name of the tag that the listener should be unregistered for.
+     * @param listener The listener function that should be removed.
+     */
+    [REMOVE_BOT_LISTENER_SYMBOL]: (
+        tagName: string,
+        listener: DynamicListener
+    ) => void;
+
+    /**
+     * Gets the list of dynamic listeners that are registered for the given tag.
+     * @param tagName The name of the tag that the listeners are registered for.
+     * @returns The list of dynamic listeners for the tag, or null if none are registered.
+     */
+    [GET_DYNAMIC_LISTENERS_SYMBOL]: (
+        tagName: string
+    ) => DynamicListener[] | null;
+
+    /**
      * Gets the listener or bot property with the given name.
      *
      * If given a property name, like `"tags"` or `"vars"`, then it will return the value of that property.
@@ -314,8 +359,30 @@ export interface RuntimeBotVars {
 export interface CompiledBotListeners {
     /**
      * Gets the listener in the given tag.
+     *
+     * Can be one of the following:
+     * - A function that takes an optional argument and returns a value.
+     * - A function that takes the bot and tag name as arguments and returns a value.
      */
-    [tag: string]: (arg?: any) => any;
+    [tag: string]: DynamicListener | null;
+}
+
+/**
+ * An interface that maps tag names to dynamic listeners which have been registered.
+ *
+ * ```typescript
+ * interface DynamicListeners {
+ *      [tag: string]: Listener[];
+ * }
+ * ```
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname DynamicListeners
+ * @docid DynamicBotListeners
+ */
+export interface DynamicBotListeners {
+    [tag: string]: DynamicListener[];
 }
 
 /**
@@ -344,9 +411,20 @@ export interface CompiledBotExports {
 }
 
 /**
- * The function signature of a bot listener.
+ * The function signature of a dynamic bot listener.
+ *
+ * That is, a listener that is registered at runtime by a user script instead of parsed from a tag.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listener
+ * @docid DynamicListener
  */
-export type CompiledBotListener = (arg?: any) => any;
+export type DynamicListener = (
+    that: any,
+    bot: RuntimeBot,
+    tagName: string
+) => any;
 
 /**
  * Defines an interface for a bot that is precalculated.
@@ -1341,7 +1419,19 @@ export const DEFAULT_MAP_PORTAL_GRID_SCALE = 10;
  * The default basemap that should be used for the map portal.
  * See https://developers.arcgis.com/javascript/latest/api-reference/esri-Map.html#basemap
  */
-export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray';
+export const DEFAULT_MAP_PORTAL_BASEMAP = 'dark-gray-vector';
+
+/**
+ * The possible kinds of map portals.
+ * - "globe" means that the map portal is rendered as a globe.
+ * - "plane" means that the map portal is rendered as a flat plane.
+ */
+export type MapPortalKind = 'globe' | 'plane';
+
+/**
+ * The default kind of map portal.
+ */
+export const DEFAULT_MAP_PORTAL_KIND: MapPortalKind = 'globe';
 
 /**
  * The default longitude that the map portal should show.
@@ -2246,6 +2336,11 @@ export const EDITOR_CODE_BUTTON_DIMENSION = 'true';
 export const EDITOR_CODE_TOOL_PORTAL = 'codeToolsPortal';
 
 /**
+ * The name of the grid portal.
+ */
+export const GRID_PORTAL: string = 'gridPortal';
+
+/**
  * The name of the miniGridPortal.
  */
 export const MINI_PORTAL: string = 'miniGridPortal';
@@ -2445,7 +2540,7 @@ export const KNOWN_TAG_PREFIXES: string[] = [
  * The list of all portal tags.
  */
 export const KNOWN_PORTALS: string[] = [
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     IMU_PORTAL,
@@ -2462,10 +2557,26 @@ export const KNOWN_PORTALS: string[] = [
 ];
 
 /**
+ * The list of portal tags that trigger closing the loading screen.
+ */
+export const LOAD_PORTALS: string[] = [
+    GRID_PORTAL,
+    SHEET_PORTAL,
+    IDE_PORTAL,
+    SYSTEM_PORTAL,
+    MINI_PORTAL,
+    MAP_PORTAL,
+    MINI_MAP_PORTAL,
+    MEET_PORTAL,
+    TAG_PORTAL,
+    BOT_PORTAL,
+];
+
+/**
  * The list of portal tags that should always be represented in the query string.
  */
 export const QUERY_PORTALS: string[] = [
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -2486,7 +2597,7 @@ export const QUERY_PORTALS: string[] = [
  * when it is updated.
  */
 export const QUERY_FULL_HISTORY_TAGS: Set<string> = new Set([
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     MEET_PORTAL,
@@ -2511,7 +2622,7 @@ export const QUERY_PARTIAL_HISTORY_TAGS: Set<string> = new Set([
  */
 export const KNOWN_TAGS: string[] = [
     'playerActive',
-    'gridPortal',
+    GRID_PORTAL,
     SHEET_PORTAL,
     IDE_PORTAL,
     SYSTEM_PORTAL,
@@ -2686,6 +2797,8 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalJWT',
     'meetPortalLanguage',
     'mapPortalBasemap',
+    'mapPortalKind',
+    'mapPortalGridKind',
 
     'tagPortalAnchorPoint',
     'tagPortalStyle',

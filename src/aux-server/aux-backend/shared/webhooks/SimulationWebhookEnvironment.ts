@@ -215,11 +215,15 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             const initTimeoutMs = request.options?.initTimeoutMs ?? 5000;
             const initErr = await timeout(sim.init(), initTimeoutMs);
 
-            if (initErr) {
+            if (initErr && initErr instanceof Error) {
+                console.error(
+                    '[SimulationWebhookEnvironment] Error initializing simulation:',
+                    initErr
+                );
                 return {
                     success: false,
                     errorCode: 'took_too_long',
-                    errorMessage: 'The inst took too long to start.',
+                    errorMessage: `The inst took too long to start. It must take less than ${initTimeoutMs}ms.`,
                 };
             }
 
@@ -254,11 +258,14 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                     const data = await timeout(fetchPromise, fetchTimeoutMs);
 
                     if (data instanceof Error) {
+                        console.error(
+                            '[SimulationWebhookEnvironment] Error fetching state from URL:',
+                            data
+                        );
                         return {
                             success: false,
                             errorCode: 'took_too_long',
-                            errorMessage:
-                                'The inst took too long to fetch the state.',
+                            errorMessage: `The inst took too long to fetch the state. It must take less than ${fetchTimeoutMs}ms.`,
                         };
                     }
 
@@ -301,11 +308,14 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                         addStateTimeoutMs
                     );
                     if (addStateResult instanceof Error) {
+                        console.error(
+                            '[SimulationWebhookEnvironment] Error applying state to inst:',
+                            addStateResult
+                        );
                         return {
                             success: false,
                             errorCode: 'took_too_long',
-                            errorMessage:
-                                'The inst took too long to apply the fetched state.',
+                            errorMessage: `The inst took too long to apply the fetched state. It must take less than ${addStateTimeoutMs}ms.`,
                         };
                     }
                 }
@@ -344,11 +354,14 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
             );
 
             if (result instanceof Error) {
+                console.error(
+                    '[SimulationWebhookEnvironment] Error handling webhook request:',
+                    result
+                );
                 return {
                     success: false,
                     errorCode: 'took_too_long',
-                    errorMessage:
-                        'The inst took too long to respond to the webhook.',
+                    errorMessage: `The inst took too long to respond to the webhook. It must take less than ${requestTimeoutMs}ms.`,
                 };
             }
 

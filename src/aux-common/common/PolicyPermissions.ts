@@ -46,6 +46,8 @@ export const WEBHOOK_RESOURCE_KIND = 'webhook';
 export const NOTIFICATION_RESOURCE_KIND = 'notification';
 export const PACKAGE_RESOURCE_KIND = 'package';
 export const PACKAGE_VERSION_RESOURCE_KIND = 'package.version';
+export const SEARCH_RESOURCE_KIND = 'search';
+export const DATABASE_RESOURCE_KIND = 'database';
 export const PURCHASABLE_ITEM_RESOURCE_KIND = 'purchasableItem';
 export const CONTRACT_RESOURCE_KIND = 'contract';
 export const INVOICE_RESOURCE_KIND = 'invoice';
@@ -67,10 +69,12 @@ export type ResourceKinds =
     | 'notification'
     | 'package'
     | 'package.version'
+    | 'search'
     | 'loom'
     | 'ai.sloyd'
     | 'ai.hume'
     | 'ai.openai.realtime'
+    | 'database'
     | 'purchasableItem'
     | 'contract'
     | 'invoice';
@@ -282,6 +286,32 @@ export type PackageVersionActionKinds =
     | 'run';
 
 /**
+ * The possible types of actions that can be performed on search resources.
+ *
+ * @dochash types/permissions
+ * @docname SearchActionKinds
+ */
+export type SearchActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list';
+
+/**
+ * The possible types of actions that can be performed on database resources.
+ *
+ * @dochash types/permissions
+ * @docname DatabaseActionKinds
+ */
+export type DatabaseActionKinds =
+    | 'create'
+    | 'read'
+    | 'update'
+    | 'delete'
+    | 'list';
+
+/**
  * The possible types of actions that can be performed on purchasableItem resources.
  *
  * @dochash types/permissions
@@ -349,7 +379,9 @@ export type AvailablePermissions =
     | WebhookPermission
     | NotificationPermission
     | PackagePermission
-    | PackageVersionPermission;
+    | PackageVersionPermission
+    | SearchPermission
+    | DatabasePermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 
@@ -449,6 +481,22 @@ export const PACKAGE_VERSION_ACTION_KINDS_VALIDATION = z.enum([
     RUN_ACTION,
 ]);
 
+export const SEARCH_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+]);
+
+export const DATABASE_ACTION_KINDS_VALIDATION = z.enum([
+    CREATE_ACTION,
+    READ_ACTION,
+    UPDATE_ACTION,
+    DELETE_ACTION,
+    LIST_ACTION,
+]);
+
 export const PURCHASABLE_ITEM_ACTION_KINDS_VALIDATION = z.enum([
     CREATE_ACTION,
     READ_ACTION,
@@ -493,6 +541,8 @@ export const RESOURCE_KIND_VALIDATION = z.enum([
     NOTIFICATION_RESOURCE_KIND,
     PACKAGE_RESOURCE_KIND,
     PACKAGE_VERSION_RESOURCE_KIND,
+    SEARCH_RESOURCE_KIND,
+    DATABASE_RESOURCE_KIND,
     PURCHASABLE_ITEM_RESOURCE_KIND,
     CONTRACT_RESOURCE_KIND,
     INVOICE_RESOURCE_KIND,
@@ -574,7 +624,9 @@ export type EntitlementFeature =
     | 'package'
     | 'permissions'
     | 'webhook'
-    | 'ai';
+    | 'ai'
+    | 'search'
+    | 'database';
 
 /**
  * Defines an interface that represents an entitlement.
@@ -619,6 +671,8 @@ export const ENTITLEMENT_FEATURE_VALIDATION = z.enum([
     'permissions',
     'webhook',
     'ai',
+    'search',
+    'database',
 ]);
 
 export const ENTITLEMENT_VALIDATION = z.object({
@@ -1152,6 +1206,62 @@ type ZodPackageVersionPermissionAssertion = HasType<
 >;
 
 /**
+ * Defines an interface that describes common options for all permissions that affect search resources.
+ *
+ * @dochash types/permissions
+ * @docname SearchPermission
+ */
+export interface SearchPermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'search';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: SearchActionKinds | null;
+}
+export const SEARCH_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(SEARCH_RESOURCE_KIND),
+    action: SEARCH_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodSearchPermission = z.infer<typeof SEARCH_PERMISSION_VALIDATION>;
+type ZodSearchPermissionAssertion = HasType<
+    ZodSearchPermission,
+    SearchPermission
+>;
+
+/**
+ * Defines an interface that describes common options for all permissions that affect search resources.
+ *
+ * @dochash types/permissions
+ * @docname DatabasePermission
+ */
+export interface DatabasePermission extends Permission {
+    /**
+     * The kind of the permission.
+     */
+    resourceKind: 'database';
+
+    /**
+     * The action that is allowed.
+     * If null, then all actions are allowed.
+     */
+    action: DatabaseActionKinds | null;
+}
+export const DATABASE_PERMISSION_VALIDATION = PERMISSION_VALIDATION.extend({
+    resourceKind: z.literal(DATABASE_RESOURCE_KIND),
+    action: DATABASE_ACTION_KINDS_VALIDATION.nullable(),
+});
+type ZodDatabasePermission = z.infer<typeof DATABASE_PERMISSION_VALIDATION>;
+type ZodDatabasePermissionAssertion = HasType<
+    ZodDatabasePermission,
+    DatabasePermission
+>;
+
+/**
  * Defines an interface that describes common options for all purchasableItem permissions.
  *
  * @dochash types/permissions
@@ -1261,6 +1371,8 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion(
         NOTIFICATION_PERMISSION_VALIDATION,
         PACKAGE_PERMISSION_VALIDATION,
         PACKAGE_VERSION_PERMISSION_VALIDATION,
+        SEARCH_PERMISSION_VALIDATION,
+        DATABASE_PERMISSION_VALIDATION,
         PURCHASABLE_ITEM_PERMISSION_VALIDATION,
         CONTRACT_PERMISSION_VALIDATION,
         INVOICE_PERMISSION_VALIDATION,

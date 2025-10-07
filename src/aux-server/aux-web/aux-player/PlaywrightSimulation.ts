@@ -199,7 +199,11 @@ export class PlaywrightSimulation
             config.recordsOrigin
         );
         this._login = new LoginManager(this._vm);
-        this._progress = new ProgressManager(this._vm);
+        this._portals = new PortalManager(this._vm);
+        this._progress = new ProgressManager(
+            this._vm,
+            this._portals.portalLoaded
+        );
     }
 
     async init() {
@@ -258,7 +262,7 @@ export class PlaywrightSimulation
 
     protected _beforeVmInit() {
         super._beforeVmInit();
-        this._portals = new PortalManager(this._vm);
+
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
         this._recordsManager = new RecordsManager(

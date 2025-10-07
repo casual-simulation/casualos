@@ -49,7 +49,7 @@ import {
 import type { Observable } from 'rxjs';
 import { BehaviorSubject, Subject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, skip, startWith } from 'rxjs/operators';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import { createRemoteClientYjsPartition } from './RemoteYjsPartition';
 import type { InstRecordsClient } from '../websockets';
 import type {
@@ -134,6 +134,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
 
     private: boolean;
     private _childParitionType: OtherPlayersClientPartitionConfig['childPartitionType'];
+    private _currentConnectionId: string | null = null;
 
     get space(): string {
         return this._space;
@@ -187,6 +188,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     }
 
     unsubscribe() {
+        this._cleanupAllDevices();
+
         this._sub.unsubscribe();
         for (let sub of this._partitionSubs.values()) {
             sub.unsubscribe();
@@ -299,6 +302,14 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
         });
     }
 
+    private _cleanupAllDevices() {
+        for (let [connectionId, device] of this._devices.entries()) {
+            this._unregisterDevice(device.deviceInfo);
+            this._tryUnloadBranchForDevice(device.deviceInfo);
+        }
+        this._devices.clear();
+    }
+
     private _watchDevices() {
         this._sub.add(
             this._client.connection.connectionState.subscribe((state) => {
@@ -307,7 +318,11 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                     type: 'connection',
                     connected: !!connected,
                 });
+
                 if (connected) {
+                    this._currentConnectionId =
+                        state.info?.connectionId ?? null;
+
                     this._onStatusUpdated.next({
                         type: 'authentication',
                         authenticated: true,
@@ -318,6 +333,8 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
                         authorized: true,
                     });
                 } else {
+                    this._cleanupAllDevices();
+                    this._currentConnectionId = null;
                     this._updateSynced(false);
                 }
             })
@@ -357,6 +374,9 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     }
 
     private _registerDevice(device: ConnectionInfo) {
+        if (device.connectionId === this._currentConnectionId) {
+            return;
+        }
         if (this._devices.has(device.connectionId)) {
             let connected = this._devices.get(device.connectionId);
             connected.connectionCount += 1;

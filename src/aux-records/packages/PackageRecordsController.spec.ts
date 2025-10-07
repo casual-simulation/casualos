@@ -50,6 +50,12 @@ describe('PackageRecordsController', () => {
             new PackageRecordsController({
                 ...config,
             }),
+        (item) =>
+            ({
+                address: item.address,
+                markers: item.markers,
+                // id: item.address,
+            } as any),
         (item) => ({
             address: item.address,
             markers: item.markers,

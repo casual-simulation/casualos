@@ -59,18 +59,27 @@ export default {
                                 'actions/os/barcodes',
                                 'actions/os/camera',
                                 'actions/os/clipboard',
+                                'actions/os/documents',
                                 'actions/os/event',
                                 'actions/os/files',
                                 'actions/os/geolocation',
                                 'actions/os/image-classification',
                                 'actions/os/input',
                                 'actions/os/ldraw',
+                                'actions/os/maps',
                                 'actions/os/media',
                                 'actions/os/moderation',
                                 'actions/os/portals',
                                 'actions/os/spaces',
                                 'actions/os/system',
-                                'actions/os/records',
+                                {
+                                    type: 'category',
+                                    label: 'Records',
+                                    link: { type: 'doc', id: 'actions/os/records' },
+                                    items: [
+                                        'actions/os/records/search'
+                                    ]
+                                },
                                 'actions/os/remotes',
                                 'actions/os/rooms',
                                 'actions/os/time',
@@ -95,6 +104,7 @@ export default {
                                 'types/debuggers/pausable-debugger',
                             ]
                         },
+                        'types/documents',
                         'types/error',
                         'types/experimental',
                         {
@@ -119,6 +129,7 @@ export default {
                                 'types/os/geolocation',
                                 'types/os/image-classification',
                                 'types/os/input',
+                                'types/os/maps',
                                 'types/os/media',
                                 'types/os/moderation',
                                 'types/os/portals',
@@ -138,6 +149,7 @@ export default {
                                 'types/records/files',
                                 'types/records/events',
                                 'types/records/roles',
+                                'types/records/search',
                                 'types/records/policies',
                                 'types/records/extra'
                             ]

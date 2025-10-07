@@ -89,6 +89,9 @@ export * from './ServerConfig';
 export * from './webhooks';
 export * from './notifications';
 export * from './packages';
+export * from './search';
+
+export * from './PrivoStore';
 
 export * from './purchasable-items';
 

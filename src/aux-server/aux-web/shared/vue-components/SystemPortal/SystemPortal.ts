@@ -50,6 +50,7 @@ import {
     getPortalTag,
     getTagValueForSpace,
     SYSTEM_PORTAL_PANE,
+    MAP_PORTAL,
 } from '@casual-simulation/aux-common';
 import type {
     BrowserSimulation,
@@ -68,7 +69,7 @@ import { tap } from 'rxjs/operators';
 import { SystemPortalConfig } from './SystemPortalConfig';
 import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
-import { mapValues, uniq } from 'lodash';
+import { mapValues, uniq } from 'es-toolkit/compat';
 // import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
@@ -584,18 +585,29 @@ export default class SystemPortal extends Vue {
     showSheet() {
         this._selectPane('sheet');
         const sim = appManager.simulationManager.primary;
+
+        // Check mapPortal first, then gridPortal
+        const mapPortal = calculateBotValue(
+            null,
+            sim.helper.userBot,
+            MAP_PORTAL
+        );
         const gridPortal = calculateBotValue(
             null,
             sim.helper.userBot,
             'gridPortal'
         );
-        if (!hasValue(gridPortal) || this.hasSheetPortal) {
+
+        // Use mapPortal if available, otherwise fall back to gridPortal
+        const portalValue = hasValue(mapPortal) ? mapPortal : gridPortal;
+
+        if (!hasValue(portalValue) || this.hasSheetPortal) {
             this.isSettingSheetPortal = true;
             this.sheetPortalValue = '';
         } else {
             sim.helper.updateBot(sim.helper.userBot, {
                 tags: {
-                    [SHEET_PORTAL]: gridPortal,
+                    [SHEET_PORTAL]: portalValue,
                 },
             });
         }

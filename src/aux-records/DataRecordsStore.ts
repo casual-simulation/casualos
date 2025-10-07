@@ -161,6 +161,12 @@ export interface ListDataStoreByMarkerRequest {
      * Defaults to "ascending".
      */
     sort?: 'ascending' | 'descending';
+
+    /**
+     * The maximum number of items that should be returned.
+     * If not provided, a default value will be used.
+     */
+    count?: number;
 }
 
 /**

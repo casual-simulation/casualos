@@ -85,7 +85,7 @@ import {
     WORLD_UP,
 } from './SceneUtils';
 import { createHtmlMixerContext, disposeHtmlMixerContext } from './HtmlUtils';
-import { merge, union } from 'lodash';
+import { merge, union } from 'es-toolkit/compat';
 import { EventBus } from '@casual-simulation/aux-components';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { AuxBot3D } from './AuxBot3D';

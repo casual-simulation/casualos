@@ -64,7 +64,7 @@ import type {
     UserPrivacyFeatures,
 } from './PolicyStore';
 import { getExpireTime, getPublicMarkersPermission } from './PolicyStore';
-import { sortBy, without } from 'lodash';
+import { sortBy, without } from 'es-toolkit/compat';
 import { getRootMarker, getRootMarkersOrDefault } from './Utils';
 import type {
     InstRecordsStore,
@@ -3825,18 +3825,47 @@ export interface AuthorizeSubjectFailure {
     recommendedEntitlement?: RecommendedPackageEntitlement;
 }
 
+/**
+ * Represents the result of a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsResult
+ */
 export type ListPermissionsResult =
     | ListPermissionsSuccess
     | ListPermissionsFailure;
 
+/**
+ * Represents a successful response to a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsSuccess
+ */
 export interface ListPermissionsSuccess {
     success: true;
+
+    /**
+     * The name of the record.
+     */
     recordName: string;
 
+    /**
+     * The list of permissions that apply directly to a resource.
+     */
     resourcePermissions: ListedResourcePermission[];
+
+    /**
+     * The list of permissions that apply to markers.
+     */
     markerPermissions: ListedMarkerPermission[];
 }
 
+/**
+ * Represents a failed response to a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsFailure
+ */
 export interface ListPermissionsFailure {
     success: false;
     errorCode:
@@ -3962,7 +3991,9 @@ function getEntitlementFeatureForAction(
         resourceKind === 'inst' ||
         resourceKind === 'notification' ||
         resourceKind === 'package' ||
-        resourceKind === 'webhook'
+        resourceKind === 'webhook' ||
+        resourceKind === 'search' ||
+        resourceKind === 'database'
     ) {
         return resourceKind;
     } else if (resourceKind === 'ai.hume' || resourceKind === 'ai.sloyd') {

@@ -47,7 +47,7 @@ import type {
     Action,
     CurrentVersion,
 } from '@casual-simulation/aux-common';
-import { flatMap, union } from 'lodash';
+import { union } from 'es-toolkit/compat';
 import type { Observable } from 'rxjs';
 import { Subject, Subscription, fromEventPattern, BehaviorSubject } from 'rxjs';
 import { startWith, filter, map } from 'rxjs/operators';
@@ -168,7 +168,7 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
-        const finalEvents = flatMap(events, (e) => {
+        const finalEvents = events.flatMap((e) => {
             if (e.type === 'apply_state') {
                 return breakIntoIndividualEvents(this.state, e);
             } else if (
@@ -265,6 +265,10 @@ export class LocalStoragePartitionImpl implements LocalStoragePartition {
                     ...ensureBotIsSerializable(event.bot),
                     space: this.space as BotSpace,
                 };
+                const existingBot = this.state[event.bot.id];
+                if (existingBot && existingBot.masks) {
+                    bot.masks = existingBot.masks;
+                }
                 if (createdNewState) {
                     this._state[event.bot.id] = bot;
                 } else {

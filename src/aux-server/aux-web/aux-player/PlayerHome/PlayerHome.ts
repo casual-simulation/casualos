@@ -51,7 +51,7 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual } from 'lodash';
+import { intersection, isEqual } from 'es-toolkit/compat';
 import type { Subscription } from 'rxjs';
 import type { Config } from 'unique-names-generator';
 import { uniqueNamesGenerator } from 'unique-names-generator';
@@ -542,9 +542,7 @@ export default class PlayerHome extends Vue {
         update.staticInst = inst;
         update.bios = null;
 
-        if (!hasValue(this.query['gridPortal'])) {
-            update.gridPortal = 'home';
-        }
+        this._addGridPortalToQuery(update);
 
         if (Object.keys(update).length > 0) {
             this._updateQuery(update);
@@ -573,9 +571,7 @@ export default class PlayerHome extends Vue {
         update.joinCode = joinCode;
         update.bios = null;
 
-        if (!hasValue(this.query['gridPortal'])) {
-            update.gridPortal = 'home';
-        }
+        this._addGridPortalToQuery(update);
 
         if (Object.keys(update).length > 0) {
             this._updateQuery(update);
@@ -596,9 +592,7 @@ export default class PlayerHome extends Vue {
             update.inst = inst;
             update.bios = null;
 
-            if (!hasValue(this.query['gridPortal'])) {
-                update.gridPortal = 'home';
-            }
+            this._addGridPortalToQuery(update);
 
             if (Object.keys(update).length > 0) {
                 this._updateQuery(update);
@@ -616,9 +610,7 @@ export default class PlayerHome extends Vue {
         update.inst = inst;
         update.bios = null;
 
-        if (!hasValue(this.query['gridPortal'])) {
-            update.gridPortal = 'home';
-        }
+        this._addGridPortalToQuery(update);
 
         if (Object.keys(update).length > 0) {
             this._updateQuery(update);
@@ -627,11 +619,21 @@ export default class PlayerHome extends Vue {
         this._setServer(PUBLIC_OWNER, inst, false);
     }
 
+    private _addGridPortalToQuery(update: Dictionary<string | string[]>) {
+        if (
+            !hasValue(this.query['gridPortal']) &&
+            !('noGridPortal' in this.query)
+        ) {
+            update.gridPortal = 'home';
+        }
+    }
+
     private async _getBiosOptions(): Promise<BiosOption[]> {
+        const authData =
+            await appManager.auth.primary.authenticateInBackground();
+        const authenticated = !!authData;
         const privacyFeatures =
-            appManager.auth.primary.currentLoginStatus?.authData
-                ?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
-        const authenticated = await appManager.auth.primary.isAuthenticated();
+            authData?.privacyFeatures ?? appManager.defaultPrivacyFeatures;
         return (
             appManager.config.allowedBiosOptions ?? [
                 'enter join code',
@@ -791,6 +793,12 @@ export default class PlayerHome extends Vue {
         for (let portal of KNOWN_PORTALS) {
             if (update.tags.has(portal)) {
                 const value = calculateBotValue(calc, update.bot, portal);
+
+                if (hasValue(value)) {
+                    // send portal load event
+                    sim.portals.notifyPortalLoaded(portal);
+                }
+
                 actions.push(
                     ...sim.helper.actions([
                         {

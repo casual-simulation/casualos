@@ -79,7 +79,6 @@ export class FileRecordsController {
      * @param recordNameOrKey The name of the record or the record key of the record.
      * @param userId The ID of the user that is logged in. Should be null if the user is not logged in.
      * @param request The request.
-     * @param userRole the role of the user that is requesting the file.
      * @returns
      */
     @traced(TRACE_NAME)
@@ -125,16 +124,6 @@ export class FileRecordsController {
                         ],
                     }
                 );
-
-            // const result = await this._policies.authorizeRequest({
-            //     action: 'file.create',
-            //     recordKeyOrRecordName: recordKeyOrRecordName,
-            //     userId,
-            //     resourceMarkers: markers,
-            //     fileSizeInBytes: request.fileByteLength,
-            //     fileMimeType: request.fileMimeType,
-            //     instances: request.instances,
-            // });
 
             if (authorization.success === false) {
                 return authorization;

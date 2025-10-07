@@ -2,12 +2,12 @@
 
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
-import { sortBy } from 'lodash';
-import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, DeclarationReflection, ReflectionType, IntrinsicType, ContainerReflection, CommentDisplayPart, ReflectionSymbolId, CommentTag } from 'typedoc';
+import { sortBy } from 'es-toolkit/compat';
+import type { SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, ReflectionType, IntrinsicType, CommentDisplayPart, CommentTag } from 'typedoc';
+import { ReferenceType, Reflection, ReflectionKind, Type, Comment, DeclarationReflection } from 'typedoc';
 import { getProject } from './api';
-import { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
-import { CallSignatureDeclaration, Declaration } from 'typescript';
-import { Project, StructureKind } from 'ts-morph';
+import type { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
+import { Project } from 'ts-morph';
 import path from 'path';
 
 export type CommentType = {
@@ -424,6 +424,7 @@ export async function loadContent() {
     const { app, project } = await getProject();
     if (!project) {
         console.warn('[docusarus-plugin-typedoc] Unable to load TypeDoc project!');
+        throw new Error('Unable to load TypeDoc project!');
     }
 
     let commentPartSerializer = new CommentDisplayPartSerializer(app, project);
@@ -696,9 +697,9 @@ function walk(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: 
 }
 
 function walkSingle(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: string) => void, parent: WalkType = null) {
-    // if (!obj) {
-    //     return;
-    // }
+    if (!obj) {
+        return;
+    }
     let type = 'kind' in obj ? ReflectionKind.singularString(obj.kind) : 'type' in obj ? obj.type : 'comment';
     let keys = (keysMap as any)[type] || [];
     for(let key of keys) {

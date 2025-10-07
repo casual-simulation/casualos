@@ -59,7 +59,7 @@ import { mergeMap } from 'rxjs/operators';
 import type { ScriptPrefix } from '@casual-simulation/aux-vm';
 import { getActiveTheme } from '../utils';
 import CodeToolsPortal from '../CodeToolsPortal/CodeToolsPortal';
-import { union } from 'lodash';
+import { union } from 'es-toolkit/compat';
 
 setup();
 

@@ -48,7 +48,11 @@ import {
 } from '@casual-simulation/aux-common/common/RemoteActions';
 import type { RequestMissingPermissionResponseSuccessMessage } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
 import { WebsocketEventTypes } from '@casual-simulation/aux-common/websockets/WebsocketEvents';
-import { createTestControllers, createTestUser } from '../TestUtils';
+import {
+    createTestControllers,
+    createTestRecordKey,
+    createTestUser,
+} from '../TestUtils';
 import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import type { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
@@ -1163,6 +1167,128 @@ describe('WebsocketController', () => {
                                 expect(
                                     messenger.getEvents(serverConnectionId)
                                 ).toEqual([]);
+
+                                expect(
+                                    await instStore.getInstByName(
+                                        recordName,
+                                        inst
+                                    )
+                                ).toEqual({
+                                    recordName,
+                                    inst,
+                                    markers: [PRIVATE_MARKER],
+                                });
+                            });
+
+                            it('should support record keys', async () => {
+                                const { recordKey } = await createTestRecordKey(
+                                    services,
+                                    userId,
+                                    recordName,
+                                    'subjectfull'
+                                );
+
+                                await server.login(serverConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: connectionToken,
+                                });
+
+                                await server.watchBranch(serverConnectionId, {
+                                    type: 'repo/watch_branch',
+                                    recordName: recordKey,
+                                    inst,
+                                    branch: 'testBranch',
+                                });
+
+                                expect(
+                                    messenger.getEvents(serverConnectionId)
+                                ).toEqual([]);
+
+                                expect(
+                                    messenger
+                                        .getMessages(serverConnectionId)
+                                        .slice(1)
+                                ).toEqual([
+                                    {
+                                        type: 'repo/add_updates',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
+                                        updates: [],
+                                        initial: true,
+                                    },
+                                    {
+                                        type: 'repo/watch_branch_result',
+                                        success: true,
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
+                                    },
+                                ]);
+
+                                expect(
+                                    await instStore.getInstByName(
+                                        recordName,
+                                        inst
+                                    )
+                                ).toEqual({
+                                    recordName,
+                                    inst,
+                                    markers: [PRIVATE_MARKER],
+                                });
+                            });
+
+                            it('should not error if given a record key and connection token that matches the record key', async () => {
+                                const { recordKey } = await createTestRecordKey(
+                                    services,
+                                    userId,
+                                    recordName,
+                                    'subjectfull'
+                                );
+                                connectionToken = generateV1ConnectionToken(
+                                    connectionKey,
+                                    connectionId,
+                                    recordKey,
+                                    inst
+                                );
+
+                                await server.login(serverConnectionId, 1, {
+                                    type: 'login',
+                                    connectionToken: connectionToken,
+                                });
+
+                                await server.watchBranch(serverConnectionId, {
+                                    type: 'repo/watch_branch',
+                                    recordName: recordKey,
+                                    inst,
+                                    branch: 'testBranch',
+                                });
+
+                                expect(
+                                    messenger.getEvents(serverConnectionId)
+                                ).toEqual([]);
+
+                                expect(
+                                    messenger
+                                        .getMessages(serverConnectionId)
+                                        .slice(1)
+                                ).toEqual([
+                                    {
+                                        type: 'repo/add_updates',
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
+                                        updates: [],
+                                        initial: true,
+                                    },
+                                    {
+                                        type: 'repo/watch_branch_result',
+                                        success: true,
+                                        recordName,
+                                        inst,
+                                        branch: 'testBranch',
+                                    },
+                                ]);
 
                                 expect(
                                     await instStore.getInstByName(
@@ -11390,6 +11516,194 @@ describe('WebsocketController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'Insts are not allowed for this subscription.',
+                });
+            });
+
+            describe('with marker', () => {
+                it('should return an empty list if recordName is null', async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: ['test'],
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    });
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst2',
+                        markers: ['test'],
+                    });
+
+                    // Grant permission for 'test' marker
+                    await services.policyStore.assignPermissionToSubjectAndMarker(
+                        recordName,
+                        'user',
+                        userId,
+                        'inst',
+                        'test',
+                        'list',
+                        {},
+                        null
+                    );
+
+                    const result = await server.listInsts(
+                        null,
+                        userId,
+                        null,
+                        'test'
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        insts: [],
+                        totalCount: 0,
+                    });
+                });
+
+                it('should be able to list insts with a specific marker if the user has permission', async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: ['test'],
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst',
+                        markers: [PRIVATE_MARKER],
+                    });
+                    await instStore.saveInst({
+                        recordName,
+                        inst: 'otherInst2',
+                        markers: ['test'],
+                    });
+
+                    // Grant permission for 'test' marker
+                    await services.policyStore.assignPermissionToSubjectAndMarker(
+                        recordName,
+                        'user',
+                        userId,
+                        'inst',
+                        'test',
+                        'list',
+                        {},
+                        null
+                    );
+
+                    const result = await server.listInsts(
+                        recordName,
+                        userId,
+                        null,
+                        'test'
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        insts: [
+                            {
+                                recordName,
+                                inst,
+                                markers: ['test'],
+                            },
+                            {
+                                recordName,
+                                inst: 'otherInst2',
+                                markers: ['test'],
+                            },
+                        ],
+                        totalCount: 2,
+                    });
+                });
+
+                it('should return not_authorized if the user does not have permission for the marker', async () => {
+                    uuidMock.mockReturnValueOnce('otherUserId');
+                    const user = await createTestUser(
+                        services,
+                        'other@example.com'
+                    );
+
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: ['test'],
+                    });
+
+                    const result = await server.listInsts(
+                        recordName,
+                        user.userId,
+                        null,
+                        'test'
+                    );
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            resourceKind: 'inst',
+                            action: 'list',
+                            subjectType: 'user',
+                            subjectId: user.userId,
+                        },
+                    });
+                });
+
+                it('should use private marker permission by default when no marker is specified', async () => {
+                    await services.records.createRecord({
+                        userId,
+                        recordName,
+                        ownerId: userId,
+                    });
+
+                    await instStore.saveInst({
+                        recordName,
+                        inst,
+                        markers: [PRIVATE_MARKER],
+                    });
+
+                    const result = await server.listInsts(
+                        recordName,
+                        userId,
+                        null,
+                        null
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        insts: [
+                            {
+                                recordName,
+                                inst,
+                                markers: [PRIVATE_MARKER],
+                            },
+                        ],
+                        totalCount: 1,
+                    });
                 });
             });
         });

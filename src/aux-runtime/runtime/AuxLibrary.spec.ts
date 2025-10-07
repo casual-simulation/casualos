@@ -169,6 +169,11 @@ import {
     loadSharedDocument,
     getBotsStateFromStoredAux,
     installAuxFile,
+    calculateScreenCoordinatesFromPosition,
+    addMapLayer,
+    removeMapLayer,
+    ADD_BOT_LISTENER_SYMBOL,
+    GET_DYNAMIC_LISTENERS_SYMBOL,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -195,6 +200,7 @@ import {
     getRoomRemoteOptions,
     grantRecordPermission,
     revokeRecordPermission,
+    listPermissions,
     grantInstAdminPermission,
     grantUserRole,
     revokeUserRole,
@@ -202,7 +208,10 @@ import {
     revokeInstRole,
     getFile,
     listUserStudios,
+    listStudioRecords,
     listDataRecordByMarker,
+    listInsts as calcListInsts,
+    listInstsByMarker as calcListInstsByMarker,
     recordStoreItem,
     getStoreItem,
     eraseStoreItem,
@@ -233,6 +242,7 @@ import {
     recordPackageVersion,
     installPackage,
     listInstalledPackages,
+    aiListChatModels,
     purchaseStoreItem,
 } from './RecordsEvents';
 import {
@@ -311,6 +321,7 @@ import {
     formatV1RecordKey,
     formatV2RecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
+import type { HideLoadingScreenAction } from '@casual-simulation/aux-common/bots/BotEvents';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -3292,6 +3303,134 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('ai.listChatModels()', () => {
+            it('should emit a RecordsCallProcedureAction', () => {
+                const promise: any = library.api.ai.listChatModels();
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the items from the result', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.listChatModels();
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        items: [
+                            {
+                                name: 'test-model1',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model2',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model3',
+                                provider: 'provider2',
+                                isDefault: false,
+                            },
+                            {
+                                name: 'test-model-token-ratio',
+                                provider: 'provider1',
+                                isDefault: false,
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual([
+                    {
+                        name: 'test-model1',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model2',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model3',
+                        provider: 'provider2',
+                        isDefault: false,
+                    },
+                    {
+                        name: 'test-model-token-ratio',
+                        provider: 'provider1',
+                        isDefault: false,
+                    },
+                ]);
+                expect(error).toBeUndefined();
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.listChatModels();
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiListChatModels(
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
+        });
+
         describe('ai.generateSkybox()', () => {
             it('should emit a AIGenerateSkyboxAction', () => {
                 const promise: any =
@@ -3797,6 +3936,18 @@ describe('AuxLibrary', () => {
                 const action = library.api.os.exitFullscreenMode();
                 expect(action).toEqual(exitFullscreen());
                 expect(context.actions).toEqual([exitFullscreen()]);
+            });
+        });
+
+        describe('os.hideLoadingScreen()', () => {
+            it('should issue a hide_loading_screen action', () => {
+                const promise: any = library.api.os.hideLoadingScreen();
+                const expected: HideLoadingScreenAction = {
+                    type: 'hide_loading_screen',
+                    taskId: context.tasks.size,
+                };
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -6925,6 +7076,65 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.createRecord()', () => {
+            it('should emit a recordsCallProcedure action with createRecord', async () => {
+                const action: any = library.api.os.createRecord('myRecord');
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: undefined,
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a recordsCallProcedure action with createRecord and studioId', async () => {
+                const action: any = library.api.os.createRecord(
+                    'myRecord',
+                    'myStudio'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        createRecord: {
+                            input: {
+                                recordName: 'myRecord',
+                                studioId: 'myStudio',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if recordName is not provided', () => {
+                expect(() => {
+                    library.api.os.createRecord(null as any);
+                }).toThrow('recordName must be provided.');
+            });
+
+            it('should throw an error if recordName is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord(123 as any);
+                }).toThrow('recordName must be a string.');
+            });
+
+            it('should throw an error if studioId is not a string', () => {
+                expect(() => {
+                    library.api.os.createRecord('myRecord', 123 as any);
+                }).toThrow('studioId must be a string.');
+            });
+        });
+
         describe('os.getPublicRecordKey()', () => {
             it('should emit a GetPublicRecordAction', async () => {
                 const action: any = library.api.os.getPublicRecordKey('name');
@@ -6992,6 +7202,76 @@ describe('AuxLibrary', () => {
                     'record',
                     'permissionId',
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listPermissions()', () => {
+            it('should emit a RecordsCallProcedureAction when called with all parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'secret',
+                    resourceKind: 'data',
+                    resourceId: 'address',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'secret',
+                        resourceKind: 'data',
+                        resourceId: 'address',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with only recordName', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with marker only', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    marker: 'test',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        marker: 'test',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a RecordsCallProcedureAction when called with resource parameters', async () => {
+                const action: any = library.api.os.listPermissions({
+                    recordName: 'record',
+                    resourceKind: 'file',
+                    resourceId: 'myfile.txt',
+                });
+                const expected = listPermissions(
+                    {
+                        recordName: 'record',
+                        resourceKind: 'file',
+                        resourceId: 'myfile.txt',
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -7718,6 +7998,203 @@ describe('AuxLibrary', () => {
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInsts()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listInsts('recordName');
+                const expected = calcListInsts(
+                    'recordName',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listInsts(
+                    'recordName',
+                    undefined,
+                    'myEndpoint'
+                );
+                const expected = calcListInsts(
+                    'recordName',
+                    null,
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting inst', async () => {
+                const action: any = library.api.os.listInsts(
+                    'recordName',
+                    'startingInst'
+                );
+                const expected = calcListInsts(
+                    'recordName',
+                    'startingInst',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listInstsByMarker()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker'
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    undefined,
+                    {
+                        endpoint: 'myEndpoint',
+                    }
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    null,
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given starting inst', async () => {
+                const action: any = library.api.os.listInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    'startingInst'
+                );
+                const expected = calcListInstsByMarker(
+                    'recordName',
+                    'myMarker',
+                    'startingInst',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseInst()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const recordKey = formatV1RecordKey('recordName', 'test');
+                const action: any = library.api.os.eraseInst(
+                    recordKey,
+                    'myInst'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: recordKey,
+                                recordName: undefined,
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support record names', async () => {
+                const action: any = library.api.os.eraseInst(
+                    'recordName',
+                    'myInst'
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: undefined,
+                                recordName: 'recordName',
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', async () => {
+                const recordKey = formatV1RecordKey('recordName', 'test');
+                const action: any = library.api.os.eraseInst(
+                    recordKey,
+                    'myInst',
+                    {
+                        endpoint: 'myEndpoint',
+                    }
+                );
+                const expected = recordsCallProcedure(
+                    {
+                        deleteInst: {
+                            input: {
+                                recordKey: recordKey,
+                                recordName: undefined,
+                                inst: 'myInst',
+                            },
+                        },
+                    },
+                    { endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if no recordKeyOrName is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseInst(null, 'myInst');
+                }).toThrow('recordKeyOrName must be provided.');
+            });
+
+            it('should throw an error if no instName is provided', async () => {
+                expect(() => {
+                    library.api.os.eraseInst('recordKey', null);
+                }).toThrow('instName must be provided.');
+            });
+
+            it('should throw an error if recordKeyOrName is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseInst({} as string, 'myInst');
+                }).toThrow('recordKeyOrName must be a string.');
+            });
+
+            it('should throw an error if instName is not a string', async () => {
+                expect(() => {
+                    library.api.os.eraseInst('recordKey', {} as string);
+                }).toThrow('instName must be a string.');
             });
         });
 
@@ -9385,6 +9862,192 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.recordSearchCollection()', () => {
+            it('should emit a RecordSearchCollectionAction', async () => {
+                const action: any = library.api.os.recordSearchCollection({
+                    recordName: 'test',
+                    address: 'test',
+                    schema: {
+                        test: {
+                            type: 'auto',
+                        },
+                    },
+                });
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordSearchCollection: {
+                            input: {
+                                recordName: 'test',
+                                item: {
+                                    address: 'test',
+                                    schema: {
+                                        test: {
+                                            type: 'auto',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseSearchCollection()', () => {
+            it('should emit a RecordSearchCollectionAction', async () => {
+                const action: any = library.api.os.eraseSearchCollection(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        eraseSearchCollection: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listSearchCollections()', () => {
+            it('should emit a ListSearchCollectionsAction', async () => {
+                const action: any =
+                    library.api.os.listSearchCollections('test');
+
+                const expected = recordsCallProcedure(
+                    {
+                        listSearchCollections: {
+                            input: {
+                                recordName: 'test',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listSearchCollectionsByMarker()', () => {
+            it('should emit a ListSearchCollectionsAction', async () => {
+                const action: any =
+                    library.api.os.listSearchCollectionsByMarker(
+                        'test',
+                        'marker'
+                    );
+
+                const expected = recordsCallProcedure(
+                    {
+                        listSearchCollections: {
+                            input: {
+                                recordName: 'test',
+                                marker: 'marker',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.getSearchCollection()', () => {
+            it('should emit a GetSearchCollectionAction', async () => {
+                const action: any = library.api.os.getSearchCollection(
+                    'test',
+                    'address'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        getSearchCollection: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.recordSearchDocument()', () => {
+            it('should emit a RecordSearchDocumentAction', async () => {
+                const action: any = library.api.os.recordSearchDocument({
+                    recordName: 'test',
+                    address: 'address',
+                    document: {
+                        title: 'Test Document',
+                    },
+                });
+
+                const expected = recordsCallProcedure(
+                    {
+                        recordSearchDocument: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                document: {
+                                    title: 'Test Document',
+                                },
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.eraseSearchDocument()', () => {
+            it('should emit a RecordSearchDocumentAction', async () => {
+                const action: any = library.api.os.eraseSearchDocument(
+                    'test',
+                    'address',
+                    '1'
+                );
+
+                const expected = recordsCallProcedure(
+                    {
+                        eraseSearchDocument: {
+                            input: {
+                                recordName: 'test',
+                                address: 'address',
+                                documentId: '1',
+                            },
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.listUserStudios()', () => {
             it('should emit a GetEventCountAction', async () => {
                 const action: any = library.api.os.listUserStudios();
@@ -9398,6 +10061,34 @@ describe('AuxLibrary', () => {
                     'http://localhost:5000'
                 );
                 const expected = listUserStudios(
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.listStudioRecords()', () => {
+            it('should emit a RecordsCallProcedureAction', async () => {
+                const action: any =
+                    library.api.os.listStudioRecords('studioId123');
+                const expected = listStudioRecords(
+                    'studioId123',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listStudioRecords(
+                    'studioId123',
+                    'http://localhost:5000'
+                );
+                const expected = listStudioRecords(
+                    'studioId123',
                     { endpoint: 'http://localhost:5000' },
                     context.tasks.size
                 );
@@ -9435,7 +10126,7 @@ describe('AuxLibrary', () => {
                 const expected = recordStoreItem(
                     'recordKey',
                     'address',
-                    { 
+                    {
                         name: 'item',
                         description: 'description',
                         cost: 100,
@@ -9457,7 +10148,7 @@ describe('AuxLibrary', () => {
             it('should emit a GetStoreItemAction', async () => {
                 const action: any = library.api.os.getStoreItem(
                     'recordKey',
-                    'address',
+                    'address'
                 );
                 const expected = getStoreItem(
                     'recordKey',
@@ -9474,7 +10165,7 @@ describe('AuxLibrary', () => {
             it('should emit a EraseStoreItemAction', async () => {
                 const action: any = library.api.os.eraseStoreItem(
                     'recordKey',
-                    'address',
+                    'address'
                 );
                 const expected = eraseStoreItem(
                     'recordKey',
@@ -9489,9 +10180,7 @@ describe('AuxLibrary', () => {
 
         describe('os.listStoreItems()', () => {
             it('should emit a ListStoreItemsAction', async () => {
-                const action: any = library.api.os.listStoreItems(
-                    'recordKey'
-                );
+                const action: any = library.api.os.listStoreItems('recordKey');
                 const expected = listStoreItems(
                     'recordKey',
                     null,
@@ -9560,7 +10249,7 @@ describe('AuxLibrary', () => {
                     {
                         address: 'address',
                         cost: 100,
-                        currency: 'usd'
+                        currency: 'usd',
                     }
                 );
                 const expected = purchaseStoreItem(
@@ -9568,7 +10257,7 @@ describe('AuxLibrary', () => {
                     {
                         address: 'address',
                         cost: 100,
-                        currency: 'usd'
+                        currency: 'usd',
                     },
                     {},
                     context.tasks.size
@@ -9722,6 +10411,61 @@ describe('AuxLibrary', () => {
                     );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.calculateScreenCoordinatesFromPosition()', () => {
+            it('should emit a CalculateScreenCoordinatesFromPosition', async () => {
+                const promise: any =
+                    library.api.os.calculateScreenCoordinatesFromPosition(
+                        'grid',
+                        new Vector3(1, 2, 3)
+                    );
+                const expected = calculateScreenCoordinatesFromPosition(
+                    'grid',
+                    [new Vector3(1, 2, 3)],
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    context.tasks.size,
+                    [new Vector3(4, 5, 6)],
+                    false
+                );
+
+                const result = await promise;
+
+                expect(result).toEqual(new Vector3(4, 5, 6));
+            });
+
+            it('should support arrays', async () => {
+                const promise: any =
+                    library.api.os.calculateScreenCoordinatesFromPosition(
+                        'grid',
+                        [new Vector3(1, 2, 3), new Vector3(4, 5, 6)]
+                    );
+                const expected = calculateScreenCoordinatesFromPosition(
+                    'grid',
+                    [new Vector3(1, 2, 3), new Vector3(4, 5, 6)],
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    context.tasks.size,
+                    [new Vector3(7, 8, 9), new Vector3(10, 11, 12)],
+                    false
+                );
+
+                const result = await promise;
+
+                expect(result).toEqual([
+                    new Vector3(7, 8, 9),
+                    new Vector3(10, 11, 12),
+                ]);
             });
         });
 
@@ -10054,6 +10798,170 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.addMapLayer()', () => {
+            it('should send a AddMapLayerAction', () => {
+                const promise: any = library.api.os.addMapLayer('map', {
+                    type: 'geojson',
+                    data: {
+                        abc: 'def',
+                    },
+                });
+
+                const expected = addMapLayer(
+                    'map',
+                    {
+                        type: 'geojson',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.removeMapLayer()', () => {
+            it('should send a RemoveMapLayerAction', () => {
+                const promise: any = library.api.os.removeMapLayer('layer');
+                const expected = removeMapLayer('layer', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.addBotMapLayer()', () => {
+            it('should send a AddBotMapLayerAction', () => {
+                const promise: any = library.api.os.addBotMapLayer(bot1, {
+                    overlayType: 'geojson',
+                    data: {
+                        abc: 'def',
+                    },
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test1',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept bot ID as string', () => {
+                const promise: any = library.api.os.addBotMapLayer('test2', {
+                    overlayType: 'geojson',
+                    data: {
+                        xyz: 123,
+                    },
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test2',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: {
+                            xyz: 123,
+                        },
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support optional overlayId', () => {
+                const promise: any = library.api.os.addBotMapLayer(bot1, {
+                    overlayType: 'geojson',
+                    data: { test: true },
+                    overlayId: 'custom-id',
+                });
+
+                const expected = {
+                    type: 'add_bot_map_layer',
+                    botId: 'test1',
+                    overlay: {
+                        overlayType: 'geojson',
+                        data: { test: true },
+                        overlayId: 'custom-id',
+                    },
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.removeBotMapLayer()', () => {
+            it('should send a RemoveBotMapLayerAction', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'layer'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'layer',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should accept bot ID as string', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    'test2',
+                    'layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test2',
+                    overlayId: 'layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should handle different layer IDs', () => {
+                const promise: any = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'custom-layer-id'
+                );
+                const expected = {
+                    type: 'remove_bot_map_layer',
+                    botId: 'test1',
+                    overlayId: 'custom-layer-id',
+                    taskId: context.tasks.size,
+                };
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return a promise', () => {
+                const result = library.api.os.removeBotMapLayer(
+                    bot1,
+                    'test-layer'
+                );
+                expect(result).toBeInstanceOf(Promise);
+            });
+        });
+
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
                 const action = library.api.server.shell('abc');
@@ -10206,6 +11114,39 @@ describe('AuxLibrary', () => {
                     'inst2',
                     'doc/docId',
                     context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument('docId', {
+                    markers: ['secret', 'team'],
+                });
+                const expected = loadSharedDocument(
+                    'record',
+                    'inst',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['secret', 'team']
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should be able to get a document from a different inst with custom markers', () => {
+                const promise: any = library.api.os.getSharedDocument(
+                    'record2',
+                    'inst2',
+                    'docId',
+                    { markers: ['public', 'readonly'] }
+                );
+                const expected = loadSharedDocument(
+                    'record2',
+                    'inst2',
+                    'doc/docId',
+                    context.tasks.size,
+                    ['public', 'readonly']
                 );
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
@@ -14871,9 +15812,13 @@ describe('AuxLibrary', () => {
                     })
                 );
 
-                expect(onAnyCreate1).toHaveBeenCalledWith({
-                    bot: bot,
-                });
+                expect(onAnyCreate1).toHaveBeenCalledWith(
+                    {
+                        bot: bot,
+                    },
+                    bot1,
+                    'onAnyCreate'
+                );
             });
             it('should support arrays of diffs as arguments', () => {
                 uuidMock
@@ -16420,10 +17365,10 @@ describe('AuxLibrary', () => {
 
                 let arg = {};
                 handleResult(priorityShout(['abc', 'def'], arg));
-                expect(abc1).toHaveBeenCalledWith(arg);
-                expect(abc2).toHaveBeenCalledWith(arg);
-                expect(def1).toHaveBeenCalledWith(arg);
-                expect(def2).toHaveBeenCalledWith(arg);
+                expect(abc1).toHaveBeenCalledWith(arg, bot1, 'abc');
+                expect(abc2).toHaveBeenCalledWith(arg, bot2, 'abc');
+                expect(def1).toHaveBeenCalledWith(arg, bot1, 'def');
+                expect(def2).toHaveBeenCalledWith(arg, bot2, 'def');
             });
         });
 
@@ -16505,8 +17450,16 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', { hi: 'test' }));
-                expect(sayHello1).toHaveBeenCalledWith({ hi: 'test' });
-                expect(sayHello2).toHaveBeenCalledWith({ hi: 'test' });
+                expect(sayHello1).toHaveBeenCalledWith(
+                    { hi: 'test' },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello2).toHaveBeenCalledWith(
+                    { hi: 'test' },
+                    bot2,
+                    'sayHello'
+                );
             });
 
             it('should handle passing bots as arguments', () => {
@@ -16516,8 +17469,8 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', bot3));
-                expect(sayHello1).toHaveBeenCalledWith(bot3);
-                expect(sayHello2).toHaveBeenCalledWith(bot3);
+                expect(sayHello1).toHaveBeenCalledWith(bot3, bot1, 'sayHello');
+                expect(sayHello2).toHaveBeenCalledWith(bot3, bot2, 'sayHello');
             });
 
             it('should be able to modify bots that are arguments', () => {
@@ -16546,8 +17499,16 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', { bot: bot3 }));
-                expect(sayHello1).toHaveBeenCalledWith({ bot: bot3 });
-                expect(sayHello2).toHaveBeenCalledWith({ bot: bot3 });
+                expect(sayHello1).toHaveBeenCalledWith(
+                    { bot: bot3 },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello2).toHaveBeenCalledWith(
+                    { bot: bot3 },
+                    bot2,
+                    'sayHello'
+                );
                 expect(bot3.tags.hit1).toEqual(true);
                 expect(bot3.tags.hit2).toEqual(true);
             });
@@ -16558,8 +17519,8 @@ describe('AuxLibrary', () => {
                 recordListeners();
 
                 handleResult(shout('sayHello', true));
-                expect(sayHello1).toHaveBeenCalledWith(true);
-                expect(sayHello2).toHaveBeenCalledWith(true);
+                expect(sayHello1).toHaveBeenCalledWith(true, bot1, 'sayHello');
+                expect(sayHello2).toHaveBeenCalledWith(true, bot2, 'sayHello');
             });
 
             it('should return an array of results from the other formulas', () => {
@@ -16586,6 +17547,23 @@ describe('AuxLibrary', () => {
 
                     const results = handleResult(shout('sayHello'));
                     expect(results).toEqual([1]);
+                    expect(sayHello1).toHaveBeenCalled();
+                    expect(sayHello2).not.toHaveBeenCalled();
+                });
+
+                it('should ignore dynamic listeners on bots that are not listening', () => {
+                    const sayHello1 = jest.fn(() => 1);
+                    const sayHello2 = jest.fn(() => 2);
+                    bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                    bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+
+                    context.recordListenerPresense(bot1.id, 'sayHello', true);
+                    context.recordListenerPresense(bot2.id, 'sayHello', true);
+
+                    bot2.tags[tag] = false;
+
+                    const results = handleResult(shout('sayHello'));
+                    expect(results).toEqual([]);
                     expect(sayHello1).toHaveBeenCalled();
                     expect(sayHello2).not.toHaveBeenCalled();
                 });
@@ -16742,10 +17720,22 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3],
                     listeners: [bot1, bot2, bot3], // should exclude erroring listeners
                 };
-                expect(onListen1).toHaveBeenCalledWith(expected);
-                expect(onListen2).toHaveBeenCalledWith(expected);
-                expect(onListen3).toHaveBeenCalledWith(expected);
-                expect(onListen4).not.toHaveBeenCalledWith(expected);
+                expect(onListen1).toHaveBeenCalledWith(
+                    expected,
+                    bot1,
+                    'onListen'
+                );
+                expect(onListen2).toHaveBeenCalledWith(
+                    expected,
+                    bot2,
+                    'onListen'
+                );
+                expect(onListen3).toHaveBeenCalledWith(
+                    expected,
+                    bot3,
+                    'onListen'
+                );
+                expect(onListen4).not.toHaveBeenCalled();
             });
 
             it('should send a onAnyListen shout', () => {
@@ -16771,7 +17761,11 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3, bot4],
                     listeners: [bot1, bot2, bot3, bot4], // should exclude erroring listeners
                 };
-                expect(onAnyListen4).toHaveBeenCalledWith(expected);
+                expect(onAnyListen4).toHaveBeenCalledWith(
+                    expected,
+                    bot4,
+                    'onAnyListen'
+                );
             });
 
             it('should perform an energy check', () => {
@@ -16876,12 +17870,123 @@ describe('AuxLibrary', () => {
                         abc: 'def',
                     })
                 );
-                expect(sayHello1).toHaveBeenCalledWith({
-                    abc: 'def',
-                });
-                expect(sayHello2).toHaveBeenCalledWith({
-                    abc: 'def',
-                });
+                expect(sayHello1).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello2).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot2,
+                    'sayHello'
+                );
+            });
+
+            it('should call dynamic listeners even when there is a regular listener', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello22 = jest.fn(() => 22);
+                const sayHello33 = jest.fn(() => 33);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello22);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello33);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                const results = handleResult(shout('sayHello', 123));
+
+                // dynamic listeners cant return values, but they should cause the results array
+                // to include an undefined value for the called bot
+                expect(results).toEqual([1]);
+                expect(sayHello1).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello11).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello22).toHaveBeenCalledWith(123, bot2, 'sayHello');
+                expect(sayHello33).toHaveBeenCalledWith(123, bot3, 'sayHello');
+            });
+
+            it('should call dynamic listeners', () => {
+                const sayHello1 = jest.fn(() => 1);
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello2 = jest.fn(() => 2);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+
+                const results = handleResult(
+                    shout('sayHello', {
+                        abc: 'def',
+                    })
+                );
+
+                // dynamic listeners cannot return values to shout()
+                expect(results).toEqual([]);
+                expect(sayHello1).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello11).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot1,
+                    'sayHello'
+                );
+                expect(sayHello2).toHaveBeenCalledWith(
+                    {
+                        abc: 'def',
+                    },
+                    bot2,
+                    'sayHello'
+                );
+            });
+
+            it('should call onListen listeners for dynamic listeners', () => {
+                const sayHello1 = jest.fn();
+                const sayHello11 = jest.fn();
+                const sayHello2 = jest.fn();
+                const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+                const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+
+                handleResult(shout('sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [] as any[],
+                    targets: [bot1, bot2],
+                    listeners: [bot1, bot2], // should exclude erroring listeners
+                };
+                expect(onListen1).toHaveBeenCalledTimes(1);
+                expect(onListen1).toHaveBeenCalledWith(
+                    expected,
+                    bot1,
+                    'onListen'
+                );
+                expect(onListen2).toHaveBeenCalledTimes(1);
+                expect(onListen2).toHaveBeenCalledWith(
+                    expected,
+                    bot2,
+                    'onListen'
+                );
             });
 
             it('should throw a reasonable error if given a null listener name', () => {
@@ -17033,6 +18138,29 @@ describe('AuxLibrary', () => {
                     expect(sayHello2).not.toHaveBeenCalled();
                     expect(sayHello3).not.toHaveBeenCalled();
                 });
+
+                it('should ignore dynamic listeners on bots that are not listening', () => {
+                    const sayHello1 = jest.fn(() => 1);
+                    const sayHello2 = jest.fn(() => 2);
+                    const sayHello3 = jest.fn(() => 3);
+                    bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                    bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+                    bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello3);
+
+                    context.recordListenerPresense(bot1.id, 'sayHello', true);
+                    context.recordListenerPresense(bot2.id, 'sayHello', true);
+                    context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                    bot2.tags[tag] = false;
+
+                    const results = handleResult(
+                        whisper([bot2, bot1], 'sayHello')
+                    );
+                    expect(results).toEqual([undefined]);
+                    expect(sayHello1).toHaveBeenCalled();
+                    expect(sayHello2).not.toHaveBeenCalled();
+                    expect(sayHello3).not.toHaveBeenCalled();
+                });
             });
 
             it('should ignore bots where either listening tag is false', () => {
@@ -17102,9 +18230,17 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3],
                     listeners: [bot1, bot2], // should exclude erroring listeners
                 };
-                expect(onListen1).toHaveBeenCalledWith(expected);
-                expect(onListen2).toHaveBeenCalledWith(expected);
-                expect(onListen3).not.toHaveBeenCalledWith(expected);
+                expect(onListen1).toHaveBeenCalledWith(
+                    expected,
+                    bot1,
+                    'onListen'
+                );
+                expect(onListen2).toHaveBeenCalledWith(
+                    expected,
+                    bot2,
+                    'onListen'
+                );
+                expect(onListen3).not.toHaveBeenCalled();
                 expect(onListen4).not.toHaveBeenCalled();
             });
 
@@ -17126,7 +18262,11 @@ describe('AuxLibrary', () => {
                     targets: [bot1, bot2, bot3],
                     listeners: [bot1, bot2, bot3], // should exclude erroring listeners
                 };
-                expect(onAnyListen4).toHaveBeenCalledWith(expected);
+                expect(onAnyListen4).toHaveBeenCalledWith(
+                    expected,
+                    bot4,
+                    'onAnyListen'
+                );
             });
 
             it('should ignore null bots', () => {
@@ -17226,6 +18366,102 @@ describe('AuxLibrary', () => {
                 context.energy = 20;
 
                 expect(handleResult(whisper(bot1, 'first'))).toEqual([3]);
+            });
+
+            it('should call dynamic listeners even when there is a regular listener', () => {
+                const sayHello1 = (bot1.listeners.sayHello = jest.fn(() => 1));
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello22 = jest.fn(() => 22);
+                const sayHello33 = jest.fn(() => 33);
+                // bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello22);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello33);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                const results = handleResult(
+                    whisper([bot2, bot1], 'sayHello', 123)
+                );
+
+                // dynamic listeners cant return values, but they should cause the results array
+                // to include an undefined value for the called bot
+                expect(results).toEqual([1]);
+                expect(sayHello1).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello11).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello22).toHaveBeenCalledWith(123, bot2, 'sayHello');
+                expect(sayHello33).not.toHaveBeenCalled();
+            });
+
+            it('should call dynamic listeners', () => {
+                const sayHello1 = jest.fn(() => 1);
+                const sayHello11 = jest.fn(() => 11);
+                const sayHello2 = jest.fn(() => 2);
+                const sayHello3 = jest.fn(() => 3);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello3);
+
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                const results = handleResult(
+                    whisper([bot2, bot1], 'sayHello', 123)
+                );
+
+                // dynamic listeners cant return values via shout() or whisper()
+                expect(results.length).toBe(0);
+                expect(results).toEqual([]);
+                expect(sayHello1).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello11).toHaveBeenCalledWith(123, bot1, 'sayHello');
+                expect(sayHello2).toHaveBeenCalledWith(123, bot2, 'sayHello');
+                expect(sayHello3).not.toHaveBeenCalled();
+            });
+
+            it('should call onListen listeners for dynamic listeners', () => {
+                const sayHello1 = jest.fn();
+                const sayHello11 = jest.fn();
+                const sayHello2 = jest.fn();
+                const sayHello3 = jest.fn();
+                const onListen1 = (bot1.listeners.onListen = jest.fn(() => {}));
+                const onListen2 = (bot2.listeners.onListen = jest.fn(() => {}));
+                const onListen3 = (bot3.listeners.onListen = jest.fn(() => {}));
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello1);
+                bot1[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello11);
+                bot2[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello2);
+                bot3[ADD_BOT_LISTENER_SYMBOL]('sayHello', sayHello3);
+
+                recordListeners();
+                context.recordListenerPresense(bot1.id, 'sayHello', true);
+                context.recordListenerPresense(bot2.id, 'sayHello', true);
+                context.recordListenerPresense(bot3.id, 'sayHello', true);
+
+                handleResult(whisper([bot2, bot1], 'sayHello', 123));
+                const expected = {
+                    name: 'sayHello',
+                    that: 123,
+                    responses: [] as any[],
+                    targets: [bot2, bot1],
+                    listeners: [bot2, bot1], // should exclude erroring listeners
+                };
+                expect(onListen1).toHaveBeenCalledTimes(1);
+                expect(onListen1).toHaveBeenCalledWith(
+                    expected,
+                    bot1,
+                    'onListen'
+                );
+                expect(onListen2).toHaveBeenCalledTimes(1);
+                expect(onListen2).toHaveBeenCalledWith(
+                    expected,
+                    bot2,
+                    'onListen'
+                );
+                expect(onListen3).not.toHaveBeenCalled();
             });
         });
 
@@ -17703,6 +18939,47 @@ describe('AuxLibrary', () => {
             expect(() => {
                 library.api.assertEqual(new Error('abc'), new Error('def'));
             }).toThrow();
+        });
+    });
+
+    describe('os.addBotListener()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+        });
+
+        it('should add a listener to the bot', () => {
+            const fn = jest.fn();
+
+            library.api.os.addBotListener(bot1, 'test', fn);
+
+            const listeners = bot1[GET_DYNAMIC_LISTENERS_SYMBOL]('test');
+
+            expect(listeners).toBeDefined();
+            expect(listeners!.length).toBe(1);
+            expect(listeners![0]).toBe(fn);
+        });
+    });
+
+    describe('os.removeBotListener()', () => {
+        let bot1: RuntimeBot;
+
+        beforeEach(() => {
+            bot1 = createDummyRuntimeBot('test1');
+            addToContext(context, bot1);
+        });
+
+        it('should add a listener to the bot', () => {
+            const fn = jest.fn();
+
+            library.api.os.addBotListener(bot1, 'test', fn);
+            library.api.os.removeBotListener(bot1, 'test', fn);
+
+            const listeners = bot1[GET_DYNAMIC_LISTENERS_SYMBOL]('test');
+
+            expect(listeners).toBe(null);
         });
     });
 

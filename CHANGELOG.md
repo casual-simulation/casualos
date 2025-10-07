@@ -1,5 +1,306 @@
 # CasualOS Changelog
 
+## V3.8.0
+
+#### Date: TBD
+
+### :rocket: Features
+
+-   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
+-   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
+-   Changed webhooks to record logs to the same record that the webhook is stored in.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where rapidly refreshing browser tabs could create duplicate remote connections that would persist in the `os.remotes()` list. The system now properly cleans up all remote device registrations when a connection is lost and prevents registering the current connection as a remote.
+-   Fixed an issue where tag masks in the shared space might be ignored after the server runs some cleanup.
+-   Fixed an issue where the `from` position values in `onDrag`, `onDrop`, `onAnyBotDrag`, and `onAnyBotDrop` events were being incorrectly rounded to integers, causing non-integer bot positions (e.g., 0.5, 0.4) to be rounded before being passed to event handlers.
+-   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
+-   Fixed an issue where it was not possible to publish packages to studios.
+
+## V3.7.1
+
+#### Date: 9/23/2025
+
+### :rocket: Features
+
+-   Added the `os.createRecord(name)` function ([#668](https://github.com/casual-simulation/casualos/pull/668)).
+-   Added the `os.listSudioRecords(studioId)` function ([#666](https://github.com/casual-simulation/casualos/pull/666)).
+-   Added the the ability to specify markers when loading a shared document. ([#663](https://github.com/casual-simulation/casualos/pull/663))
+-   Added the ability to view your notification subscriptions on the auth site. ([#680](https://github.com/casual-simulation/casualos/pull/680))
+-   Added support for database records.
+    -   Database records add the ability to run arbitrary SQL queries on SQLite database instances.
+    -   Database records can be accessed via the following functions:
+        -   `os.recordDatabase(request, options?)` - Creates or updates a database record.
+        -   `os.eraseDatabase(recordName, address, options?)` - Deletes a database record and associated data.
+        -   `os.listDatabases(recordName, startingAddress?, options?)` - Lists the databases that are stored in a record.
+        -   `os.listDatabasesByMarker(recordName, marker, startingAddress?, options?)` - Lists the databases which have the given marker.
+        -   `os.getDatabase(recordName, address)` - Gets a database instance that can be used to run queries against a database. Returns an object which has the following functions:
+            -   `query` - A [tagged template literal function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) that can query the database. Only allows read-only queries.
+            -   `execute` - A tagged template literal function that can execute SQL code on the database. Allows read-write.
+            -   `batch(statements, readonly?)` - Accepts an array of statements which are all executed in a [transaction](https://sqlite.org/lang_transaction.html). If any one fails, then none of the statements will have any effect.
+            -   `sql` - A tagged template literal function that constructs a statement from the given SQL and parameters.
+            -   `run(statement, readonly?)` - Accepts a statement and executes it.
+            -   `raw` - Gets an object that is able to interface with the database without any special mapping of rows.
+    -   By default, database features are not enabled. To configure database features, specify the `databases` key in your `SERVER_CONFIG`:
+        -   To configure SQLite:
+            ```json
+            {
+                "databases": {
+                    "provider": {
+                        "type": "sqlite",
+                        "folderPath": "/path/to/sqlite/databases/folder"
+                    }
+                }
+            }
+            ```
+        -   To configure Turso:
+            ```json
+            {
+                "databases": {
+                    "provider": {
+                        "type": "turso",
+                        "organization": "YOUR_ORGANIZATION",
+                        "token": "YOUR_API_TOKEN",
+                        "group": "YOUR_DATABASE_GROUP"
+                    }
+                }
+            }
+            ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the `Sec-Websocket-Protocol` header wasn't supported on API Gateway.
+-   Fixed an issue where the background color for comID logos would not be displayed at the same time as the comID logo.
+-   Fixed an issue where input events would not be handled correctly on newly updated Meta Quest devices.
+-   Reworked OpenID Connect sign-in to use redirects instead of popups, eliminating issues with browser popup blockers ([#652](https://github.com/casual-simulation/casualos/issues/652)).
+-   Fixed an issue where listing data by marker would force login.
+
+## V3.7.0
+
+#### Date: 8/22/2025
+
+### :boom: Breaking Changes
+
+-   Changed local insts (`?staticInst` in the URL query) to no longer require separate permission for performing records actions.
+    -   Previously, public (sometimes called free) insts and local insts had to be granted separate permission for actions that manipulated data.
+    -   This led to a large number of uses of `os.grantInstAdminPermission()`, which was a workaround to allow people to grant an inst permissions.
+    -   The goal was to replace this mechanism by encouraging switching to packages and entitlements which are able to automatically grant insts permissions based on the entitlement grants that users have given indiviaual packages.
+    -   Unfortunately, packages aren't a good solution for scenarios when actively developing AUXes and (as a result) developers are forced to continue using `os.grantInstAdminPermission()` in development.
+    -   Additionally, many developers prefer to use local insts instead of studio insts (which automatically get some permissions), seeing them as temporary and disposable unlike private insts.
+    -   Now, local insts no longer need to be granted special permissions for records actions.
+    -   The downside to this change is that local insts now pose a greater risk and attack vector for cross site scripting (XSS). In such a scenario, an attacker would give a user a malicious AUX that steals their data. If the user decides to run it in an inst, then their data might get stolen by the attacker.
+
+### :rocket: Features
+
+-   Improved the `pack-aux` and `unpack-aux` commands in the CLI to replace bot IDs with a placeholder by default.
+    -   This helps prevent version control churn if the AUX files are being packed and repacked a lot.
+-   Added additional properties to `@onClick` and `@onAnyBotClicked` for code tool bots:
+    -   `codeBot` - The bot that is currently being displayed in the code editor.
+    -   `codeTag` - The tag that is currently being displayed in the code editor.
+    -   `codeTagSpace` - The space of the tag that is currently being displayed in the code editor.
+-   Added search records.
+    -   Search records allow you to utilize [Typesense](https://typesense.org/) to easily search over a large number of documents. Each "Search record" maps to a Typesense [collection](https://typesense.org/docs/29.0/api/collections.html), which can store many documents. Documents are just JSON (kinda like data records).
+    -   `os.recordSearchCollection(request)` - Creates or updates a Search collection. Each collection exists at an address and is assigned its own unique collection name.
+    -   `os.getSearchCollection(recordName, address)` - Gets information about a search collection.
+    -   `os.eraseSearchCollection(recordName, address)` - Deletes a search collection.
+    -   `os.listSearchCollections(recordName, startingAddress?)` - Lists search collections in a record.
+    -   `os.listSearchCollectionsByMarker(recordName, marker, startingAddress?)` - Lists search collections by marker.
+    -   `os.recordSearchDocument(request)` - Creates a document inside a search collection.
+    -   `os.eraseSearchDocument(recordName, address, documentId)` - Deletes a document from a search collection.
+    -   To enable search records, you need to configure the [`typesense` object](./src/aux-records/ServerConfig.ts#L177) in the server config.
+    -   Search records have the ability to be automatically synced from data records, but there is currently no API for this and needs to be setup on a case-by-case basis (for now).
+-   Added the ability to allow scripts to import some of the libraries that CasualOS itself uses.
+    -   This now also makes it possible for other libraries to share some libraries with CasualOS itself.
+    -   The following libraries can now be imported by scripts directly:
+        -   `yjs` - The [YJS](https://yjs.dev/) CRDT library.
+        -   `luxon` - The [Luxon](https://github.com/moment/luxon#readme) date and time library.
+        -   `preact` - The [Preact](https://preactjs.com/) JSX rendering library.
+        -   `preact/compat` - The `preact/compat` export of Preact.
+        -   `preact/jsx-runtime` - The `preact/jsx-runtime` export of Preact.
+    -   This change should now make it possible to use libraries that utilize React by setting up an import map (only on deployments which support full DOM features):
+        -   ```typescript
+            const casualOsImportMap =
+                document.getElementById('default-import-map');
+            if (!casualOsImportMap) {
+                console.error('CasualOS import map not found!');
+                return;
+            }
+            const defaultImportMap = JSON.parse(casualOsImportMap.textContent);
+            const mapScript = document.createElement('script');
+            mapScript.id = 'react-import-map';
+            mapScript.type = 'importmap';
+            mapScript.textContent = JSON.stringify({
+                imports: {
+                    react: defaultImportMap.imports['preact/compat'],
+                    'react-dom': defaultImportMap.imports['preact/compat'],
+                    'react/jsx-runtime':
+                        defaultImportMap.imports['preact/jsx-runtime'],
+                },
+            });
+            document.head.append(mapScript);
+            ```
+-   Added support for SQLite database backends.
+    -   This now means that it is a bit easier to host CasualOS on singular nodes.
+-   Greatly reduced the initial bundle size by replacing Lodash with es-toolkit.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue in the `unpack-aux` CLI command where tags that failed to be written would be omitted from the bot AUX file.
+-   Fixed an issue where strings like `e123` would be recognized as numbers.
+-   Fixed an issue where strings that look like numbers could cause labels to render differently from their strings.
+-   Fixed an issue where `os.installPackage()` and `os.listInstalledPackages()` would require the user to login first.
+-   Fixed an issue where calling `os.getSharedDocument()` with a record key would sometimes fail.
+-   Fixed the "Document Actions" not being shown in the documentation sidebar.
+-   Fixed issues with inconsistent display of user subscriptions.
+
+## V3.6.0
+
+#### Date: 7/28/2025
+
+### :boom: Breaking Changes
+
+-   Prevented the loading screen from being hidden until one of two things happens:
+    1. One of the following portals is displayed:
+        - `gridPortal`
+        - `sheetPortal`
+        - `systemPortal`
+        - `miniGridPortal`
+        - `mapPortal`
+        - `miniMapPortal`
+        - `meetPortal`
+        - `tagPortal`
+    2. `os.hideLoadingScreen()` is called.
+    -   This change makes the loading experience able to be more deeply customized on a per-experience basis.
+-   comId's which have a configured `logoUrl` will now display the logo in fullscreen like a "splash screen".
+    -   This gives more prominence to their branding and simplifies our white-labeling story moving forward.
+
+### :rocket: Features
+
+-   Added the ability to prevent the `gridPortal` from loading automatically by setting the `noGridPortal` query parameter.
+-   Added the ability to display a fullscreen "splash screen"
+    -   Can be controlled by the following environment variables:
+        -   `LOGO_URL` - The URL to the logo that should be displayed. If set, then the logo will be displayed full screen.
+        -   `LOGO_TITLE` - The descriptive title for the logo. Used as alt text for the logo. Additionally can be specified on its own to display a title in the regular loading dialog.
+        -   `LOGO_BACKGROUND_COLOR` - The [color](https://developer.mozilla.org/en-US/docs/Web/CSS/background-color) that should be displayed for the splash screen background.
+-   Added the `os.hideLoadingScreen()` function.
+    -   This function can be used to trigger hiding the loading screen by a script.
+
+### :bug: Bug Fixes
+
+-   Actually fixed the issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+-   Fixed an issue with the CLI where `pack-aux` would not read files with non-standard extensions.
+
+## V3.5.6
+
+#### Date: 7/23/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where serverless AWS deployments of CasualOS wouldn't have permissions to send emails via [SES](https://aws.amazon.com/ses/).
+
+## V3.5.5
+
+#### Date: 7/22/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the CLI would add `.txt` to tag names that already have an extension when unpacking an `.aux` file.
+-   Fixed an issue where duplicate bots could make the CLI try to write a tag to both the tag file and an additional `.txt` file.
+
+## V3.5.4
+
+#### Date: 7/22/2025
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was impossible to set listeners on bots immediately after they were created.
+-   Fixed an issue where it was impossible to delete listener overrides using the `delete` keyword.
+
+## V3.5.3
+
+#### Date: 7/21/2025
+
+### :boom: Breaking Changes
+
+-   Changed the default mapPortal and miniMapPortal basemap to `dark-gray-vector` from `dark-gray`
+    -   This may cause some things like labels and street markings to appear different.
+
+### :rocket: Features
+
+-   Added the `Sec-Websocket-Protocol=casualos.records` header for websocket requests made to the records system.
+    -   This can help load balancers differentiate between records requests and inst requests.
+-   Added a better date of birth input to the "Sign Up" page.
+-   Added the `os.calculateScreenCoordinatesFromPosition()` function.
+-   Added batching for events sent from the main thread to the worker thread.
+-   Added the `mapPortalKind` and `mapPortalGridKind` tags for the `mapPortalBot` and `miniMapPortalBot`.
+    -   `mapPortalKind` can be used to cause the mapPortal or miniMapPortal to display the map as a flat plane instead of a sphere.
+        -   `globe` - The Earth is displayed as a globe. (Default)
+        -   `plane` - The Earth is displayed as a flat plane by using the Mercator projection.
+    -   `mapPortalGridKind` can be used to cause the mapPortal or miniMapPortal use a grid that matches the globe or plane settings from `mapPortalKind`.
+        -   `null` - The grid matches the `mapPortalKind`. (Default)
+        -   `globe` - The grid aligns best with the `globe` `mapPortalKind`.
+        -   `plane` - The grid aligns best with the `plane` `mapPortalKind`.
+-   Improved `mapPortalBasemap` to support [web tile URLs](https://developers.arcgis.com/javascript/latest/api-reference/esri-layers-WebTileLayer.html#urlTemplate).
+    -   This allows you to set a custom basemap in the mapPortal or miniMapPortal.
+    -   The URL should follow one of the following templates:
+        -   `https://some.domain.com/{level}/{col}/{row}.png`
+        -   `https://some.domain.com/{z}/{x}/{y}.png`
+        -   Where anything in curly braces `{}` represents a template parameter that the mapPortal/miniMapPortal will fill with the corresponding coordinate information for the requested tile.
+-   Added the `os.addMapLayer(portal, layer)` and `os.removeMapLayer(layerId)` functions.
+    -   These functions allow you to visualize and render [GeoJSON](https://geojson.org/) data in the mapPortal or miniMapPortal.
+    -   `os.addMapLayer(portal, layer)` - Adds a map layer to the given portal. Returns a promise that resolves with string with the ID of the layer that was added. It accepts the following arguments:
+        -   `portal` - The portal that the layer should be rendered in. Can either be `map` or `miniMap`.
+        -   `layer` - The layer that should be displayed. Should be an object with the following structure:
+            -   `type` - The type of the layer. Currently only `geojson` is supported.
+            -   `url` - (Optional) The URL that the GeoJSON data can be downloaded from.
+            -   `data` - (Optional) The GeoJSON data that is contained in the layer. Required if `url` is not specified.
+    -   `os.removeMapLayer(layerId)` - Removes a map layer from the portal it is in. Returns a promise that resolves once the layer has been removed.
+        -   `layerId` - The ID of the layer that should be removed. You can get this from the resolved value from `os.addMapLayer()`.
+-   Added the `os.addBotListener(bot, tag, listener)` and `os.removeBotListener(bot, tag, listener)` functions.
+    -   `os.addBotListener(bot, tag, listener)` Adds the given listener to the given bot for the given tag.
+        -   It can be used to add arbitrary functions to be triggered when a listener would be triggered on a bot.
+        -   This function only adds listeners, it cannot override existing listeners.
+        -   Listeners added by this function will not be called if the bot is not listening.
+        -   `bot` is the bot that the lister should be added to.
+        -   `tag` is the [listen tag](https://docs.casualos.com/tags/listen/).
+        -   `listener` is the function that should be called when the listen tag is triggered. It should be a function that accepts the following arguments:
+            -   `that` - the `that` argument of the listener.
+            -   `bot` - The bot that the listener was triggered on. (Same as `bot` above)
+            -   `tag` - The name of the tag. (Same as `tag` above)
+    -   `os.removeBotListener(bot, tag, listener)` Removes the given listener from the given bot and tag.
+        -   This function can only be used to remove listeners which have been added by `os.addBotListener()`.
+        -   `bot` is the bot that the listener should be removed from.
+        -   `tag` is the [listen tag](https://docs.casualos.com/tags/listen/).
+        -   `listener` is the function that should be removed.
+-   Added the ability to add/override bot listen tags by setting `bot.listeners.tag`.
+
+    -   For example, the following code will override the `onClick` listen tag to toast "overridden" when the bot is clicked:
+
+        ```typescript
+        bot.tags.onClick = `@os.toast("default")`;
+        bot.listeners.onClick = () => os.toast('overridden');
+
+        // when bot is clicked, "overridden" will be toasted instead of "default".
+        ```
+
+    -   Just like the `masks` property, the `listeners` property allows you to override the default tags.
+    -   The difference is that `listeners` is all about listen tags and functions. You can only set functions, and `listeners` are always `tempLocal`.
+    -   Functions set on the `listeners` property will override listen tags set by tags and tag masks.
+        -   It will only override the listener, not the tag data. In the example above, `bot.tags.onClick` will continue to return `@os.toast("default")`.
+
+-   Improved the CLI to support packing and unpacking AUX files into a file and folder structure.
+    -   See [#605](https://github.com/casual-simulation/casualos/issues/605)
+    -   The following commands are now available:
+        -   `pack-aux` - Takes a folder and builds an `.aux` file from it.
+        -   `unpack-aux` - Takes a `.aux` file and builds a folder from it.
+    -   See the CLI documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Improved error handling for `ai.stream.chat()` and `ai.generateImage()`.
+-   Added documentation for `crypto.decrypt()`.
+
 ## V3.5.2
 
 #### Date: 6/13/2025

@@ -39,6 +39,7 @@ import type { AuxVM, AuxConfig } from '@casual-simulation/aux-vm/vm';
 import {
     BaseSimulation,
     LoginManager,
+    RECORDS_WS_PROTOCOL,
     RecordsManager,
 } from '@casual-simulation/aux-vm';
 import { BotPanelManager } from './BotPanelManager';
@@ -332,7 +333,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 config.requirePrivoLogin
             );
         this._login = new LoginManager(this._vm);
-        this._progress = new ProgressManager(this._vm);
+        this._portals = new PortalManager(this._vm);
+        this._progress = new ProgressManager(
+            this._vm,
+            this._portals.portalLoaded
+        );
     }
 
     async editBot(
@@ -359,7 +364,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     protected _beforeVmInit() {
         super._beforeVmInit();
-        this._portals = new PortalManager(this._vm);
         this._botPanel = new BotPanelManager(this._watcher, this._helper);
         this._idePortal = new IdePortalManager(this._watcher, this.helper);
         this._recordsManager = new RecordsManager(
@@ -379,7 +383,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     } else if (url.protocol === 'https:') {
                         url.protocol = 'wss:';
                     }
-                    const manager = new WebSocketManager(url);
+                    const manager = new WebSocketManager(
+                        url,
+                        RECORDS_WS_PROTOCOL
+                    );
                     manager.init();
                     return new ApiGatewayWebsocketConnectionClient(
                         manager.socket
@@ -391,7 +398,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     } else if (url.protocol === 'https:') {
                         url.protocol = 'wss:';
                     }
-                    const manager = new WebSocketManager(url);
+                    const manager = new WebSocketManager(
+                        url,
+                        RECORDS_WS_PROTOCOL
+                    );
                     manager.init();
 
                     return new WebsocketConnectionClient(manager.socket);

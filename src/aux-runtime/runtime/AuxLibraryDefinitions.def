@@ -3596,6 +3596,84 @@ export interface RevokePermissionFailure {
 }
 
 /**
+ * Represents a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsRequest
+ */
+export interface ListPermissionsRequest extends RecordActionOptions {
+    /**
+     * The name of the record to list permissions for.
+     */
+    recordName: string;
+
+    /**
+     * The marker  to list permissions for.
+     */
+    marker?: string;
+
+    /**
+     * The kind of resource to list permissions for.
+     */
+    resourceKind?: string;
+
+    /**
+     * The ID of the resource to list permissions for.
+     */
+    resourceId?: string;
+}
+
+/**
+ * Represents the result of a request to list permissions for a record.
+ * 
+ * @dochash types/permissions
+ * @docname ListPermissionsResult
+ */
+export type ListPermissionsResult =
+    | ListPermissionsSuccess
+    | ListPermissionsFailure;
+
+/**
+ * Represents a successful response to a request to list permissions for a record.
+ * 
+ * @dochash types/permissions
+ * @docname ListPermissionsSuccess
+ */
+export interface ListPermissionsSuccess {
+    success: true;
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The list of permissions that apply directly to a resource.
+     */
+    resourcePermissions: ListedResourcePermission[];
+
+    /**
+     * The list of permissions that apply to markers.
+     */
+    markerPermissions: ListedMarkerPermission[];
+}
+
+/**
+ * Represents a failed response to a request to list permissions for a record.
+ * 
+ * @dochash types/permissions
+ * @docname ListPermissionsFailure
+ */
+export interface ListPermissionsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | AuthorizeSubjectFailure['errorCode'];
+    errorMessage: string;
+}
+
+/**
  * Defines the possible results of revoking a role.
  *
  * @dochash types/records/roles
@@ -3652,6 +3730,96 @@ export interface GrantRoleFailure {
 }
 
 /**
+ * Defines the possible results of erasing an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstResult
+ */
+export type EraseInstResult = EraseInstSuccess | EraseInstFailure;
+
+/**
+ * Defines an interface that represents a successful request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstSuccess
+ */
+export interface EraseInstSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstFailure
+ */
+export interface EraseInstFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
+        | NotSupportedError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'not_authorized';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines the possible results of erasing an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstResult
+ */
+export type EraseInstResult = EraseInstSuccess | EraseInstFailure;
+
+/**
+ * Defines an interface that represents a successful request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstSuccess
+ */
+export interface EraseInstSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstFailure
+ */
+export interface EraseInstFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
+        | NotSupportedError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'not_authorized';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+/**
  * The options for data record actions.
  */
 export interface RecordDataOptions {
@@ -3694,6 +3862,206 @@ export interface ListDataOptions extends RecordActionOptions {
      * - "descending" means that the items should be sorted in alphebatically descending order by address.
      */
     sort?: 'ascending' | 'descending';
+}
+
+/**
+ * Defines a node that search clients can use to connect to the search engine.
+ *
+ * @dochash types/records/search
+ * @docname SearchNode
+ */
+export interface SearchNode {
+    /**
+     * The host of the node.
+     */
+    host: string;
+
+    /**
+     * The port number of the node.
+     */
+    port: number;
+
+    /**
+     * The protocol to use when connecting to the node.
+     */
+    protocol?: 'http' | 'https';
+}
+
+/**
+ * Defines a record that represents a collection of documents that can be searched.
+ *
+ * @dochash types/records/search
+ * @docName SearchRecord
+ */
+export interface SearchRecord extends CrudRecord {
+    /**
+     * The name of the collection that this search record is attached to.
+     */
+    collectionName: string;
+
+    /**
+     * The API key that is used to query the collection.
+     */
+    searchApiKey: string;
+
+    /**
+     * The search nodes that should be used by clients to connect to the search engine.
+     */
+    nodes?: SearchNode[];
+}
+
+
+export interface RecordSearchCollectionApiRequest {
+    /**
+     * The name of the record that the package version should be recorded to.
+     */
+    recordName: string;
+
+    /**
+     * The address that the package version should be recorded to.
+     */
+    address: string;
+
+    /**
+     * The schema that should be used for the collection.
+     */
+    schema: SearchCollectionSchema;
+
+    /**
+     * The markers that should be applied to the package version.
+     */
+    markers?: string[];
+}
+
+
+/**
+ * Defines a field for a search collection schema.
+ * 
+ * @dochash types/records/search
+ * @docname SearchCollectionField
+ */
+export interface SearchCollectionField {
+    /**
+     * The type of the field.
+     */
+    type:
+        | 'string'
+        | 'string[]'
+        | 'int32'
+        | 'int32[]'
+        | 'int64'
+        | 'int64[]'
+        | 'float'
+        | 'float[]'
+        | 'bool'
+        | 'bool[]'
+        | 'geopoint'
+        | 'geopoint[]'
+        | 'geopolygon'
+        | 'object'
+        | 'object[]'
+        | 'string*'
+        | 'image'
+        | 'auto';
+
+    /**
+     * Enables faceting on the field.
+     *
+     * Defaults to `false`.
+     */
+    facet?: boolean;
+
+    /**
+     * When set to `true`, the field can have empty, null or missing values. Default: `false`.
+     */
+    optional?: boolean;
+
+    /**
+     * When set to `false`, the field will not be indexed in any in-memory index (e.g. search/sort/filter/facet). Default: `true`.
+     */
+    index?: boolean;
+
+    /**
+     * When set to `false`, the field value will not be stored on disk. Default: `true`.
+     */
+    store?: boolean;
+
+    /**
+     * When set to true, the field will be sortable. Default: `true` for numbers, `false` otherwise.
+     */
+    sort?: boolean;
+
+    /**
+     * When set to `true`, the field value can be infix-searched. Incurs significant memory overhead. Default: `false`.
+     */
+    infix?: boolean;
+
+    /**
+     * For configuring language specific tokenization, e.g. `jp` for Japanese. Default: `en` which also broadly supports most European languages.
+     */
+    locale?: string;
+}
+
+/**
+ * Defines the schema for a search collection.
+ * 
+ * @dochash types/records/search
+ * @docName SearchCollectionSchema
+ */
+export interface SearchCollectionSchema {
+    /**
+     * The schema that defines the fields in the search collection.
+     */
+    [key: string]: SearchCollectionField;
+}
+
+/**
+ * Defines a document that can be stored in a search collection.
+ * 
+ * @dochash types/records/search
+ * @docname SearchDocument
+ */
+export interface SearchDocument {
+    /**
+     * The ID of the document.
+     * If not provided, a new ID will be generated.
+     */
+    id?: string;
+
+    /**
+     * The properties of the document.
+     */
+    [key: string]: any;
+}
+
+export type RecordSearchDocumentResult = RecordSearchDocumentSuccess | RecordSearchDocumentFailure;
+
+export interface RecordSearchDocumentSuccess extends SearchDocument {
+    success: true;
+}
+
+export interface RecordSearchDocumentFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export type EraseSearchDocumentResult = EraseSearchDocumentSuccess | EraseSearchDocumentFailure;
+
+export interface EraseSearchDocumentSuccess extends SearchDocument {
+    success: true;
+}
+
+export interface EraseSearchDocumentFailure {
+    success: false;
+    errorCode: string;
+    errorMessage: string;
+}
+
+export interface RecordSearchDocumentApiRequest {
+    recordName: string;
+    address: string;
+    document: SearchDocument;
 }
 
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -11335,6 +11703,227 @@ export interface CrudListItemsFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines a record that represents a database that can be queried using SQL.
+ */
+export interface DatabaseRecord extends CrudRecord {}
+
+/**
+ * Defines a statement that can be sent to the database.
+ *
+ * @dochash types/records/database
+ * @docname DatabaseStatement
+ */
+export interface DatabaseStatement {
+    /**
+     * The query text of the statement.
+     */
+    query: string;
+
+    /**
+     * The parameters for the query.
+     */
+    params?: unknown[];
+}
+
+
+export type ErrorType = {
+    errorCode: string;
+    errorMessage: string;
+    [key: string]: any;
+};
+
+export type GenericSuccess<T> = T extends Array<any>
+    ? { success: true; items: T }
+    : T extends object
+    ? {
+          success: true;
+      } & T
+    : {
+          success: true;
+          value: T;
+      };
+
+export type GenericFailure<E extends ErrorType> = {
+    success: false;
+} & E;
+
+export type GenericResult<T, E extends ErrorType> =
+    | GenericSuccess<T>
+    | GenericFailure<E>;
+
+export type SimpleError = {
+    errorCode: KnownErrorCodes;
+    errorMessage: string;
+
+    reason?: any;
+    issues?: Zod.ZodIssue[];
+};
+
+/**
+ * Defines the result of an API query.
+ *
+ * @dochash types/records/database
+ * @docname QueryResult
+ */
+export interface ApiQueryResult {
+    /**
+     * The rows that were returned from the query.
+     */
+    rows: Record<string, any>[];
+
+    /**
+     * The number of rows that were modified by the query.
+     */
+    affectedRowCount: number;
+
+    /**
+     * The ID of the last row that was inserted by the query.
+     */
+    lastInsertId?: number | string;
+}
+
+/**
+ * Defines the result of a batch query.
+ *
+ * @dochash types/records/database
+ * @docname BatchResult
+ */
+export interface BatchResult {
+    /**
+     * The results of the individual statements.
+     */
+    results: ApiQueryResult[];
+}
+
+/**
+ * Represents a connection to a database record.
+ *
+ * @dochash types/records/database
+ * @docname Database
+ *
+ * @example Get a database connection.
+ * const database = os.getDatabase('myRecord', 'myDatabase');
+ */
+export interface ApiDatabase {
+    /**
+     * Constructs a database statement from the given [template string literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).
+     *
+     * Once constructed, the returned statement can be used with `run()` or `batch()`.
+     *
+     * @param templates The string templates.
+     * @param params The parameters to interpolate into the templates.
+     * @returns A database statement.
+     *
+     * @example Create a database statement from a SQL query
+     * const statement = database.sql`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a database statement
+     * const itemId = 'abc';
+     * const statement = database.sql`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    sql(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): DatabaseStatement;
+
+    /**
+     * Creates a new database statement from the given SQL and parameters.
+     * @param sql The SQL query string.
+     * @param params The parameters to include in the query.
+     * @returns A new database statement.
+     */
+    statement(sql: string, ...params: unknown[]): DatabaseStatement;
+
+    /**
+     * Runs the given readonly query against the database.
+     * This method requires queries to be read-only. This means that queries can only select data, they cannot insert, update, or delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the query has completed.
+     *
+     * @example Select all items from a table
+     * const result = await database.query`SELECT * FROM items`;
+     *
+     * @example Use a parameter in a query
+     * const itemId = 'abc';
+     * const result = await database.query`SELECT * FROM items WHERE id = ${itemId}`;
+     */
+    query(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>>;
+
+    /**
+     * Runs the given SQL on the database and returns the result.
+     * This method supports read-write queries. This means that queries can be used to select, insert, update, and delete data.
+     *
+     * Supports [template string literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) for parameterized queries.
+     *
+     * **Warning:** To avoid [SQL Injection attacks](https://en.wikipedia.org/wiki/SQL_injection), always use template literals with expressions. Never use the `+` operator to concatenate strings containing SQL code.
+     *
+     * @param templates The string templates.
+     * @param params The parameters that should be used.
+     * @returns A promise that resolves when the SQL has completed.
+     *
+     * @example Insert a new item into a table
+     * const name = "New Item";
+     * const value = 100;
+     * const result = await database.execute`INSERT INTO items (name, value) VALUES (${name}, ${value})`;
+     *
+     */
+    execute(
+        templates: TemplateStringsArray,
+        ...params: unknown[]
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>>;
+    /**
+     * Runs the given statements in a single transaction. Transactions can be used to group multiple statements together.
+     * If one statement fails, then none of the statements will have any effect.
+     *
+     * @param func The function that should be used to build the statements.
+     * @param readonly Whether the statements are read-only. If true, then the statements cannot modify data. Defaults to true.
+     *
+     * @example Run multiple select queries at once
+     * const results = await database.batch([
+     *      database.sql`SELECT * FROM items WHERE id = 'abc'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'def'`,
+     *      database.sql`SELECT * FROM items WHERE id = 'ghi'`,
+     * ]);
+     *
+     * @example Insert multiple items at once
+     * const results = await database.batch([
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 1', 100)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 2', 200)`,
+     *      database.sql`INSERT INTO items (name, value) VALUES ('Item 3', 300)`,
+     * ], false);
+     */
+    batch(
+        statements: DatabaseStatement[],
+        readonly?: boolean
+    ): Promise<GenericResult<BatchResult, SimpleError>>;
+
+    /**
+     * Runs the given database statement.
+     *
+     * @param statement The statement to run.
+     * @param readonly Whether the statement is read-only. If true, then the statement cannot modify data. Defaults to true.
+     */
+    run(
+        statement: DatabaseStatement,
+        readonly?: boolean
+    ): Promise<GenericResult<ApiQueryResult, SimpleError>>;
+
+    /**
+     * Gets an interface to the database that returns unmodified query results.
+     */
+    get raw(): Omit<ApiDatabase, 'raw'>;
+}
+
 export type HandleWebhookResult = HandleWebhookSuccess | HandleWebhookFailure;
 
 export interface HandleWebhookSuccess {
@@ -11683,6 +12272,11 @@ export interface SharedDocument extends SubscriptionLike {
     onEvents: Observable<Action[]>;
 
     /**
+     * Gets the observable list of updates from the partition.
+     */
+    onUpdates: Observable<string[]>;
+
+    /**
      * Gets the observable list of status updates from the partition.
      */
     onStatusUpdated: Observable<StatusUpdate>;
@@ -11743,6 +12337,12 @@ export interface SharedDocument extends SubscriptionLike {
      * @param updates The updates to apply.
      */
     applyStateUpdates(updates: InstUpdate[]): void;
+
+    /**
+     * Applies the given raw updates to the document.
+     * @param updates The updates to apply.
+     */
+    applyUpdates(updates: string[]): void;
 }
 
 export type SharedType = SharedMap | SharedArray | SharedText;
@@ -11882,7 +12482,7 @@ export interface SharedArray<T = any> extends SharedTypeBase {
      * Applies the given delta to the array.
      * @param delta The delta to apply.
      */
-    applyDelta(delta: SharedArrayDelta<T>): void;
+    applyDelta(delta: SharedArrayOp<T>[]): void;
 
     /**
      * Append items to the end of the array.
@@ -12102,10 +12702,8 @@ export interface SharedArrayChanges<T> {
     /**
      * The changes that were made to the array.
      */
-    delta: SharedArrayDelta<T>;
+    delta: SharedArrayOp<T>[];
 }
-
-export type SharedArrayDelta<T> = SharedArrayOp<T>[];
 
 export type SharedArrayOp<T> =
     | SharedArrayPreserveOp
@@ -12623,6 +13221,65 @@ export interface RecordPackageVersionSuccess extends CrudRecordItemSuccess {
     auxFileResult: RecordFileResult;
 }
 
+/**
+ * The kinds of map layers that can be added to the map or miniMapPortal.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayer
+ */
+export type MapLayer = GeoJSONMapLayer;
+
+/**
+ * Defines a base interface for map layers.
+ *
+ * @dochash types/os/maps
+ * @docid MapLayerBase
+ */
+export interface MapLayerBase {
+    /**
+     * Copyright information for the layer.
+     */
+    copyright?: string;
+}
+
+/**
+ * A map layer that contains GeoJSON data.
+ *
+ * @dochash types/os/maps
+ * @docid GeoJSONMapLayer
+ */
+export interface GeoJSONMapLayer extends MapLayerBase {
+    type: 'geojson';
+
+    /**
+     * The URL that contains the GeoJSON data.
+     *
+     * Can be a blob url, a data url, or a regular URL.
+     */
+    url?: string;
+
+    /**
+     * The GeoJSON data for the layer.
+     */
+    data?: object;
+}
+
+/**
+ * The function signature of a dynamic bot listener.
+ *
+ * That is, a listener that is registered at runtime by a user script instead of parsed from a tag.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Listener
+ * @docid DynamicListener
+ */
+export type DynamicListener = (
+    that: any,
+    bot: Bot,
+    tagName: string
+) => any;
+
 
 /**
  * Defines an interface that represents a store item.
@@ -13017,6 +13674,22 @@ interface Ai {
     ): Promise<AIChatMessage | string>;
 
     /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @param options The options that should be used.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    listChatModels(options?: RecordActionOptions): Promise<ListedChatModel[]>;
+
+    /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
      *
      * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
@@ -13375,6 +14048,34 @@ interface Ai {
 }
 
 interface Os {
+
+    /**
+     * Adds the given listener to the given bot for the given tag.
+     * 
+     * @param bot The bot that the listener should be added to.
+     * @param tagName The name of the tag that the listener should be added to.
+     * @param listener The listener that should be added to the bot.
+     * 
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.addBotListener
+     * @docid os.addBotListener
+     */
+    addBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
+    
+    /**
+     * Removes the given listener from a bot for a specific tag.
+     * @param bot The bot that the listener should be removed from.
+     * @param tagName The name of the tag that the listener should be removed from.
+     * @param listener The listener that should be removed from the bot.
+     * 
+     * @dochash actions/os/event
+     * @docgroup 02-event-actions
+     * @docname os.removeBotListener
+     * @docid os.removeBotListener
+     */
+    removeBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
+
     /**
      * Sleeps for time in ms.
      * @param time Time in ms. 1 second is 1000ms.
@@ -13813,6 +14514,20 @@ interface Os {
      * Exits fullscreen mode.
      */
     exitFullscreenMode(): ExitFullscreenAction;
+    
+    /**
+     * Hides the loading screen.
+     * 
+     * Returns a promise that resolves when the loading screen has been hidden.
+     * 
+     * @example Hide the loading screen.
+     * await os.hideLoadingScreen();
+     * 
+     * @dochash actions/os/portals
+     * @docname os.hideLoadingScreen
+     * @docgroup 11-loading
+     */
+    hideLoadingScreen(): Promise<void>;
 
     /**
      * Shares some information via the device's social sharing functionality.
@@ -14806,6 +15521,39 @@ interface Os {
     ): Promise<RevokePermissionResult>;
 
     /**
+     * Gets the list of permissions that have been assigned in the given record.
+     *
+     * @param request the request containing the record name and optional filters.
+     * @param options the options for the operation.
+     *
+     * @example List all permissions in a record.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord'
+     * });
+     *
+     * @example List permissions for a specific marker.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     marker: 'secret'
+     * });
+     *
+     * @example List permissions for a specific resource.
+     * const result = await os.listPermissions({
+     *     recordName: 'myRecord',
+     *     resourceKind: 'data',
+     *     resourceId: 'address'
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docid os.listPermissions
+     * @docname os.listPermissions
+     */
+    listPermissions(
+        request: ListPermissionsRequest
+    ): Promise<ListPermissionsResult>;
+
+    /**
      * Grants the current inst admin permissions in the given record for the rest of the day.
      * @param recordName The name of the record.
      * @param options The options.
@@ -14874,6 +15622,18 @@ interface Os {
         inst: string,
         options?: RecordActionOptions
     ): Promise<RevokeRoleResult>;
+
+    /**
+     * Erases the inst with the given name from the given record.
+     * @param recordKeyOrName The record key or record name that should be used to access the record.
+     * @param instName The name of the inst that should be deleted.
+     * @param options The options for the request.
+     */
+    eraseInst(
+        recordKeyOrName: string,
+        instName: string,
+        options?: RecordActionOptions
+    ): Promise<EraseInstResult>;
 
     /**
      * Determines if the given value is a record key.
@@ -15803,6 +16563,344 @@ interface Os {
     listInstalledPackages(options?: RecordActionOptions): Promise<ListInstalledPackagesResult>;
 
     /**
+     * Creates or updates a search collection in the given record.
+     * 
+     * Returns a promise that resolves with the result of the operation.
+     * 
+     * @param request The request to create or update the search collection.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     * 
+     * @example Record a search collection with an automatic schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+     *          '.*': {
+     *              type: 'auto'
+     *           }
+     *      }
+     * });
+     * 
+     * @example Record a search collection with a custom schema
+     * const result = await os.recordSearchCollection({
+     *      recordName: 'myRecord',
+     *      address: 'mySearchCollection',
+     *      schema: {
+               title: {
+                  type: 'string',
+               },
+               description: {
+                  type: 'string',
+               },
+               price: {
+                  type: 'int32',
+               }
+     *      }
+     * });
+     * 
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.recordSearchCollection
+     */
+    recordSearchCollection(
+        request: RecordSearchCollectionApiRequest,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult>;
+
+    /**
+     * Deletes a search collection along with all the documents in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param address The address of the search collection to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search collection
+     * const result = await os.eraseSearchCollection('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.eraseSearchCollection
+     */
+    eraseSearchCollection(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult>;
+
+    /**
+     * Lists the search collections in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List search collections
+     * const result = await os.listSearchCollections('recordName', 'mySearchCollection');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.listSearchCollections
+     */
+    listSearchCollections(
+        recordName: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<CrudRecordItemResult>;
+
+    /**
+     * Lists the search collections in a record by a specific marker.
+     * @param recordName The name of the record to list the search collections from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'publicRead');
+     *
+     * @example List private search collections
+     * const result = await os.listSearchCollectionsByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.listSearchCollectionsByMarker
+     */
+    listSearchCollectionsByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<CrudListItemsResult<SearchRecord>>;
+
+    /**
+     * Gets a search collection from the specified record.
+     * @param recordName The name of the record to retrieve the search collection from.
+     * @param address The address of the search collection to retrieve.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a search collection
+     * const result = await os.getSearchCollection('myRecord', 'mySearchCollection');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.getSearchCollection
+     */
+    getSearchCollection(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions,
+    ): Promise<CrudGetItemResult<SearchRecord>>;
+
+    /**
+     * Records a search document to the specified search collection in the given record.
+     * @param request The request to record the search document.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a search document
+     * const result = await os.recordSearchDocument({
+     *    recordName: 'myRecord',
+     *    address: 'mySearchCollection',
+     *    document: {
+     *      // ensure that the document matches the schema of the search collection
+     *      title: 'My Document',
+     *      description: 'This is the content of my document.'
+     *      price: 10,
+     *    }
+     * });
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.recordSearchDocument
+     */
+    recordSearchDocument(
+        request: RecordSearchDocumentApiRequest,
+        options?: RecordActionOptions
+    ): Promise<RecordSearchDocumentResult>;
+
+    /**
+     * Erases a search document from the specified search collection in the given record.
+     * @param recordName The name of the record that the search document is in.
+     * @param address The address of the search collection that the document is in.
+     * @param documentId The ID of the document that should be erased.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a search document
+     * const result = await os.eraseSearchDocument('myRecord', 'mySearchCollection', 'documentId');
+     *
+     * @dochash actions/os/records
+     * @docgroup 02-search
+     * @docname os.eraseSearchDocument
+     */
+    eraseSearchDocument(
+        recordName: string,
+        address: string,
+        documentId: string,
+        options?: RecordActionOptions
+    ): Promise<EraseSearchDocumentResult>;
+
+    /**
+     * Creates or updates a database in the given record.
+     *
+     * Databases are used to store and manage structured data within a record.
+     * They use the [SQL programming language](https://www.sqlite.org/lang.html), which is a powerful programming language designed to manage relational databases.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param request The request to create or update the database.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Record a database.
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     * });
+     *
+     * @example Record a private database
+     * const result = await os.recordDatabase({
+     *      recordName: 'myRecord',
+     *      address: 'myDatabase',
+     *      markers: ['private']
+     * });
+     *
+     *
+     * @doctitle Database Actions
+     * @docsidebar Database
+     * @docdescription Database actions allow you to create and manage databases in your records. Databases enable efficient storage and retrieval of structured data within your records, making it easier to manage and query information.
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.recordDatabase
+     * @docid recordDatabase
+     */
+    recordDatabase(
+        request: RecordSearchCollectionApiRequest,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult>;
+
+    /**
+     * Deletes a database along with all the data in it.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the database from.
+     * @param address The address of the database to delete.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Erase a database
+     * const result = await os.eraseDatabase('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.eraseDatabase
+     * @docid eraseDatabase
+     */
+    eraseDatabase(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<CrudRecordItemResult>;
+
+    /**
+     * Lists the databases in a record.
+     *
+     * Returns a promise that resolves with the result of the operation.
+     *
+     * @param recordName The name of the record to delete the search collection from.
+     * @param startingAddress the address that the listing should start after.
+     * @param options the options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List databases
+     * const result = await os.listDatabases('recordName', 'myDatabase');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabases
+     * @docid listDatabases
+     */
+    listDatabases(
+        recordName: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<CrudListItemsResult<DatabaseRecord>>;
+
+    /**
+     * Lists the databases in a record by a specific marker.
+     * @param recordName The name of the record to list the databases from.
+     * @param marker The marker to filter the list by.
+     * @param startingAddress The address that the listing should start after.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example List public read databases
+     * const result = await os.listDatabasesByMarker('recordName', 'publicRead');
+     *
+     * @example List private databases
+     * const result = await os.listDatabasesByMarker('recordName', 'private');
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.listDatabasesByMarker
+     */
+    listDatabasesByMarker(
+        recordName: string,
+        marker: string,
+        startingAddress?: string,
+        options?: ListDataOptions
+    ): Promise<CrudListItemsResult<DatabaseRecord>>;
+
+    /**
+     * Gets basic info about a database from the specified record.
+     *
+     * @param recordName The name of the record to retrieve the database from.
+     * @param address The address of the database to retrieve.
+     * @param options The options for the request.
+     *
+     * @returns A promise that resolves with the result of the operation.
+     *
+     * @example Get a database and query a table
+     * const db = os.getDatabase('myRecord', 'myDatabase');
+     * const result = await db.query`SELECT * FROM myTable`;
+     *
+     * @example Insert a new row
+     * const value1 = 'abc';
+     * const value2 = 123;
+     * const result = await db.execute`INSERT INTO myTable (column1, column2) VALUES (${value1}, ${value2})`;
+     * 
+     * @example Run multiple queries in a transaction
+     * const values = [
+     *   ['apple', 10],
+     *   ['car', 25000],
+     *   ['strawberry', 1],
+     *   ['lego', 5]
+     * ];
+     *
+     * const result = await db.batch(
+     *   values.map(([name, value]) => db.sql`INSERT INTO data (name, value) VALUES (${name}, ${value})`)
+     * );
+     *
+     * @dochash actions/os/records/database
+     * @docgroup 02-database
+     * @docname os.getDatabase
+     */
+    getDatabase(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): ApiDatabase;
+
+    /**
      * Gets the list of studios that the currently logged in user has access to.
      *
      * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
@@ -16030,6 +17128,68 @@ interface Os {
     ): Promise<Vector2>;
 
     /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinate the 3D position that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition
+     * @docgroup 10-raycast
+     */
+    calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinate: Point3D
+    ): Promise<Vector2>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.calculateScreenCoordinatesFromPosition
+     * @docid os.calculateScreenCoordinatesFromPosition-array
+     * @docgroup 10-raycast
+     */
+    calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D[]
+    ): Promise<Vector2[]>;
+    /**
+     * Calculates the screen coordinates that the given 3D position map to on the screen.
+     * Returns a promise that resolves with the calculated screen coordinates.
+     * 
+     * Screen coordinates are in pixels and are relative to the top-left corner of the screen.
+     * 
+     * @param portal the name of the portal that should be tested.
+     * @param coordinates the 3D positions that should be converted to screen coordinates.
+     * 
+     * @example Calculate the screen coordinates of the bots in the home dimension in the grid portal
+     * const botPositions = getBots(inDimension('home')).map(bot => new Vector3(bot.tags.homeX, bot.tags.homeY, bot.tags.homeZ));
+     * const coordinates = await os.calculateScreenCoordinatesFromPosition('grid', botPositions);
+     */
+    calculateScreenCoordinatesFromPosition(
+        portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
+        coordinates: Point3D | Point3D[]
+    ): Promise<Vector2[] | Vector2>;
+
+    /**
      * Calculates the viewport coordinates that the given screen coordinates map to on the camera.
      * Returns a promise that resolves with the calculated viewport coordinates.
      *
@@ -16163,30 +17323,66 @@ interface Os {
 
     /**
      * Gets a shared document record from this inst by its name.
-     * 
+     *
      * Shared documents are a way to share data across insts in a easy and secure manner.
-     * 
+     *
      * Returns a promise that resolves with the shared document.
-     * 
+     *
      * @param name The name of the shared document.
-     * 
+     *
      * @example Get a shared document from the current inst by name.
      * const sharedDocument = await os.getSharedDocument('myDocument');
+     *
+     * @dochash actions/os/documents
+     * @doctitle Document Actions
+     * @docsidebar Documents
+     * @docdescription Actions for working with shared documents.
+     * @docname os.getSharedDocument
+     * @docid os.getShareDocument-name
      */
     getSharedDocument(name: string): Promise<SharedDocument>;
 
     /**
      * Gets a shared document record from the given inst by its name.
-     * 
+     *
      * Shared documents are a way to share data across insts in a easy and secure manner.
-     * 
+     *
      * Returns a promise that resolves with the shared document.
      * @param recordName The name of the record. If null, then a public inst will be used.
      * @param inst The name of the inst that the shared document is in.
      * @param branch The name of the branch that the shared document is in.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getSharedDocument
+     * @docid os.getSharedDocument-recordName-inst-name
      */
-    getSharedDocument(recordName: string | null, inst: string, name: string): Promise<SharedDocument>;
-    getSharedDocument(recordOrName: string, inst?: string, name?: string): Promise<SharedDocument>;
+    getSharedDocument(
+        recordName: string | null,
+        inst: string,
+        name: string
+    ): Promise<SharedDocument>;
+    getSharedDocument(
+        recordOrName: string,
+        inst?: string,
+        name?: string
+    ): Promise<SharedDocument>;
+
+    /**
+     * Gets a shared document that is only stored locally on this device.
+     * @param name The name of the document.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getLocalDocument
+     */
+    getLocalDocument(name: string): Promise<SharedDocument>;
+
+    /**
+     * Gets a document that is not shared or saved to the device.
+     *
+     * @dochash actions/os/documents
+     * @docname os.getMemoryDocument
+     */
+    getMemoryDocument(): Promise<SharedDocument>;
 
     /**
      * Gets the list of remote IDs that are connected to the inst.
@@ -16290,6 +17486,80 @@ interface Os {
      * @param debug The debugger that should be detached.
      */
     detachDebugger(debug: Debugger): Promise<void>;
+
+    /**
+     * Adds a map layer to the map or miniMap portal.
+     * 
+     * Returns a promise that resolves with the ID of the layer that was added.
+     * 
+     * @param portal The portal that the layer should be added to. Either 'map' or 'miniMap'.
+     * @param layer The layer that should be added.
+     * 
+     * @example Add a GeoJSON layer to the map portal
+     * const layerId = await os.addMapLayer('map', {
+     *    type: 'geojson',
+     *    data: {
+     *       type: "FeatureCollection",
+     *       features: [
+     *           {
+     *               type: "Feature",
+     *               geometry: { type: "Point", coordinates: [102.0, 0.5] },
+     *               properties: { prop0: "value0" }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "LineString",
+     *                   coordinates: [
+     *                       [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: 0.0
+     *               }
+     *           },
+     *           {
+     *               type: "Feature",
+     *               geometry: {
+     *                   type: "Polygon",
+     *                   coordinates: [
+     *                       [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+     *                       [100.0, 1.0], [100.0, 0.0]]
+     *                   ]
+     *               },
+     *               properties: {
+     *                   prop0: "value0",
+     *                   prop1: { "this": "that" }
+     *               }
+     *           }
+     *       ]
+     *   }
+     * });
+     * 
+     * @dochash action/os/maps
+     * @doctitle Map Actions
+     * @docsidebar Maps
+     * @docdescription Actions for working with maps and map layers.
+     * @docid os.addMapLayer
+     */
+    addMapLayer(portal: 'map' | 'miniMap', layer: MapLayer): Promise<string>;
+    
+    /**
+     * Removes a layer from the map or miniMap portal.
+     * 
+     * Returns a promise that resolves when the layer has been removed.
+     * 
+     * @param layerId The ID of the layer to remove.
+     * @returns A promise that resolves when the layer has been removed.
+     * 
+     * @example Remove a layer from the map portal
+     * await os.removeMapLayer('my-layer-id');
+     * 
+     * @dochash action/os/maps
+     * @docid os.removeMapLayer
+     */
+    removeMapLayer(layerId: string): Promise<void>;
 
     /**
      * The global variables that are stored in the OS.
@@ -17159,6 +18429,27 @@ interface Experiment {
      * Returns a promise that resolves with the voices.
      */
     getVoices(): Promise<SyntheticVoice[]>;
+
+    /**
+     * Adds a map overlay to the given bot's map form.
+     * @param bot The bot that the overlay should be added to.
+     * @param overlayLayer Configuration for the overlay layer to add.
+     */
+    addBotMapLayer(
+        bot: Bot,
+        overlay: {
+            overlayType: 'geojson';
+            data: any;
+            overlayId?: string;
+        }
+    ): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
+
+    /**
+     * Removes a map overlay from the given bot's map form.
+     * @param bot The bot that the overlay should be removed from.
+     * @param overlayId Id of the overlay to remove.
+     */
+    removeBotMapLayer(bot: Bot, overlayId: string): Promise<{ success: boolean, data?: { overlayId: string }, message?: string }>;
 }
 
 /**

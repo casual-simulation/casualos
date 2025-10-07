@@ -36,6 +36,7 @@ import type {
     GrantedEntitlementScope,
     KnownErrorCodes,
     PublicRecordKeyPolicy,
+    ResourceKinds,
     StoredAux,
 } from '@casual-simulation/aux-common';
 
@@ -125,6 +126,29 @@ export interface AIChatStreamAction extends AsyncAction {
      * The list of messages comprising the conversation so far.
      */
     messages: AIChatMessage[];
+}
+
+/**
+ * Defines an interface that represents a listed chat model.
+ *
+ * @dochash types/ai
+ * @docname ListedChatModel
+ */
+export interface ListedChatModel {
+    /**
+     * The name of the model.
+     */
+    name: string;
+
+    /**
+     * The provider of the model.
+     */
+    provider: string;
+
+    /**
+     * Whether this is the default model.
+     */
+    isDefault?: boolean;
 }
 
 /**
@@ -1787,6 +1811,27 @@ export function aiChatStream(
 }
 
 /**
+ * Creates a new AIListChatModelsAction.
+ *
+ * @param options The options for listing chat models.
+ * @param taskId The ID of the async task.
+ */
+export function aiListChatModels(
+    options?: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            aiListChatModels: {
+                input: {},
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a new AIGenerateSkyboxAction.
  * @param prompt The prompt that describes what the generated skybox should look like.
  * @param negativePrompt The negative prompt that describes what the generated skybox should not look like.
@@ -1953,6 +1998,59 @@ export function revokeRecordPermission(
         options,
         taskId,
     };
+}
+
+/**
+ * Represents a request to list permissions for a record.
+ *
+ * @dochash types/permissions
+ * @docname ListPermissionsRequest
+ */
+export interface ListPermissionsRequest extends RecordActionOptions {
+    /**
+     * The name of the record to list permissions for.
+     */
+    recordName: string;
+
+    /**
+     * The marker  to list permissions for.
+     */
+    marker?: string;
+
+    /**
+     * The kind of resource to list permissions for.
+     */
+    resourceKind?: ResourceKinds;
+
+    /**
+     * The ID of the resource to list permissions for.
+     */
+    resourceId?: string;
+}
+
+/**
+ * Creates a RecordsCallProcedureAction to list permissions for a record.
+ * @param request The request options.
+ * @param taskId The ID of the task.
+ */
+export function listPermissions(
+    request: ListPermissionsRequest,
+    taskId: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listPermissions: {
+                input: {
+                    recordName: request.recordName,
+                    marker: request.marker,
+                    resourceKind: request.resourceKind,
+                    resourceId: request.resourceId,
+                },
+            },
+        },
+        request,
+        taskId
+    );
 }
 
 /**
@@ -3147,6 +3245,30 @@ export function listUserStudios(
 }
 
 /**
+ * Creates a RecordsCallProcedureAction to list the records in a studio.
+ * @param studioId The ID of the studio.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listStudioRecords(
+    studioId: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listRecords: {
+                input: {
+                    studioId,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
  * Creates a RecordStoreItemAction.
  * @param recordName The name of the record.
  * @param address The address of the item in the record.
@@ -3396,6 +3518,63 @@ export function setRoomTrackOptions(
         options,
         taskId,
     };
+}
+
+/**
+ * Creates an action that is able to list the insts in a record.
+ * @param recordName The name of the record.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInsts(
+    recordName: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                },
+            },
+        },
+        options,
+        taskId
+    );
+}
+
+/**
+ * Creates an action that is able to list the insts in a record with the given marker.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param startingInst The inst that the list should start with.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function listInstsByMarker(
+    recordName: string,
+    marker: string,
+    startingInst?: string | null,
+    options: RecordActionOptions = {},
+    taskId?: number | string
+): RecordsCallProcedureAction {
+    return recordsCallProcedure(
+        {
+            listInsts: {
+                input: {
+                    recordName,
+                    inst: startingInst,
+                    marker,
+                },
+            },
+        },
+        options,
+        taskId
+    );
 }
 
 /**

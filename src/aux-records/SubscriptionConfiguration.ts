@@ -709,6 +709,63 @@ export const subscriptionFeaturesSchema = z.object({
             allowed: true,
         }),
 
+    search: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether search records are allowed for the subscription.'
+                ),
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of search records that can be created for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for search records features. Defaults to allowed.'
+        )
+        .optional()
+        .default({
+            allowed: true,
+        }),
+
+    databases: z
+        .object({
+            allowed: z
+                .boolean()
+                .describe(
+                    'Whether database records are allowed for the subscription.'
+                ),
+            maxItems: z
+                .number()
+                .describe(
+                    'The maximum number of database records that can be created for the subscription. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+
+            maxBytesPerDatabase: z
+                .number()
+                .describe(
+                    'The maximum size of the database in bytes. If not specified, then there is no limit.'
+                )
+                .int()
+                .positive()
+                .optional(),
+        })
+        .describe(
+            'The configuration for database records features. Defaults to allowed.'
+        )
+        .optional()
+        .default({
+            allowed: true,
+        }),
+
     store: z
         .object({
             allowed: z
@@ -1210,6 +1267,16 @@ export interface FeaturesConfiguration {
     packages?: PackageFeaturesConfiguration;
 
     /**
+     * The configuration for search features.
+     */
+    search?: SearchFeaturesConfiguration;
+
+    /**
+     * The configuration for database features.
+     */
+    databases?: DatabasesFeaturesConfiguration;
+
+    /**
      * The configuration for purchasable items features.
      */
     store?: PurchasableItemFeaturesConfiguration;
@@ -1472,6 +1539,14 @@ export type PackageFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['packages'];
 
+export type SearchFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['search'];
+
+export type DatabasesFeaturesConfiguration = z.infer<
+    typeof subscriptionFeaturesSchema
+>['databases'];
+
 export type PurchasableItemFeaturesConfiguration = z.infer<
     typeof subscriptionFeaturesSchema
 >['store'];
@@ -1525,6 +1600,12 @@ export function allowAllFeatures(): FeaturesConfiguration {
         packages: {
             allowed: true,
         },
+        search: {
+            allowed: true,
+        },
+        databases: {
+            allowed: true,
+        },
     };
 }
 
@@ -1573,20 +1654,23 @@ export function denyAllFeatures(): FeaturesConfiguration {
         packages: {
             allowed: false,
         },
-        contracts: {
+        search: {
+            allowed: false,
+        },
+        databases: {
             allowed: false,
         },
     };
 }
 
 /**
- * Gets the contract features that are available for the given subscription.
+ * Gets the database features that are available for the given subscription.
  * @param config The configuration. If null, then all default features are allowed.
  * @param subscriptionStatus The status of the subscription.
  * @param subscriptionId The ID of the subscription.
  * @param type The type of the user.
  */
-export function getContractFeatures(
+export function getDatabaseFeatures(
     config: SubscriptionConfiguration | null,
     subscriptionStatus: string,
     subscriptionId: string,
@@ -1594,7 +1678,7 @@ export function getContractFeatures(
     periodStartMs?: number | null,
     periodEndMs?: number | null,
     nowMs: number = Date.now()
-): ContractFeaturesConfiguration {
+): DatabasesFeaturesConfiguration {
     const features = getSubscriptionFeatures(
         config,
         subscriptionStatus,
@@ -1604,7 +1688,35 @@ export function getContractFeatures(
         periodEndMs,
         nowMs
     );
-    return features.contracts ?? { allowed: false };
+    return features.databases ?? { allowed: true };
+}
+
+/**
+ * Gets the search features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getSearchFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): SearchFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.search ?? { allowed: true };
 }
 
 /**
@@ -1893,8 +2005,54 @@ export function getSubscriptionFeatures(
     periodEndMs?: number | null,
     nowMs: number = Date.now()
 ): FeaturesConfiguration {
-    if (!config) {
+    const sub = getSubscription(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    if (typeof sub === 'undefined') {
         return allowAllFeatures();
+    } else if (sub) {
+        const tier = sub?.tier;
+        const features = tier ? config?.tiers?.[tier]?.features : null;
+
+        if (features) {
+            return features;
+        }
+    }
+
+    return config.defaultFeatures?.[type] ?? allowAllFeatures();
+}
+
+/**
+ * Gets the subscription for the given configuration, subscription status, subscription ID, user type and period.
+ *
+ * If there is no subscription configuration, then undefined is returned.
+ * If no subscription could be found that matches the given parameters, then null is returned.
+ *
+ * @param config The configuration. If null, then all  features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ * @param periodStartMs The start of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param periodEndMs The end of the subscription period in unix time in miliseconds. If omitted, then the period won't be checked.
+ * @param nowMs The current time in milliseconds.
+ */
+export function getSubscription(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+) {
+    if (!config) {
+        return undefined;
     }
     if (config.tiers) {
         const roleSubscriptions = config.subscriptions.filter((s) =>
@@ -1909,40 +2067,34 @@ export function getSubscriptionFeatures(
             )
         ) {
             const sub = roleSubscriptions.find((s) => s.id === subscriptionId);
-            const tier = sub?.tier;
-            const features = tier ? config.tiers[tier]?.features : null;
 
-            if (features) {
-                return features;
+            if (sub) {
+                return sub;
             }
-        } else {
-            const sub = roleSubscriptions.find((s) => s.defaultSubscription);
-            const tier = sub?.tier;
-            const features = tier ? config.tiers[tier]?.features : null;
+        }
 
-            if (features) {
-                return features;
-            }
+        const sub = roleSubscriptions.find((s) => s.defaultSubscription);
+
+        if (sub) {
+            return sub;
         }
     }
 
-    return config.defaultFeatures?.[type] ?? allowAllFeatures();
+    return null;
 }
 
 export function getSubscriptionTier(
     config: SubscriptionConfiguration,
     subscriptionStatus: string,
-    subId: string
+    subId: string,
+    type: 'user' | 'studio'
 ): string | null {
-    if (!config) {
+    const sub = getSubscription(config, subscriptionStatus, subId, type);
+
+    if (!sub) {
         return null;
     }
 
-    if (!isActiveSubscription(subscriptionStatus)) {
-        return null;
-    }
-
-    const sub = config.subscriptions.find((s) => s.id === subId);
     return sub?.tier ?? null;
 }
 

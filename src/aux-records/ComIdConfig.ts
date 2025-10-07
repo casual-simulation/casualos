@@ -43,6 +43,7 @@ export const COM_ID_PLAYER_CONFIG = WEB_CONFIG_SCHEMA.pick({
     defaultBiosOption: true,
     jitsiAppName: true,
     what3WordsApiKey: true,
+    logoBackgroundColor: true,
 })
     .describe(
         'The configuration that the comId provides which overrides the default player configuration.'

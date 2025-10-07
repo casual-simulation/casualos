@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type {
     AddUpdatesResult,
     BranchRecord,
@@ -107,6 +107,18 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         startingInst?: string
     ): Promise<ListInstsStoreResult> {
         return this._permanent.listInstsByRecord(recordName, startingInst);
+    }
+
+    listInstsByRecordAndMarker(
+        recordName: string,
+        marker: string,
+        startingInst?: string | null
+    ): Promise<ListInstsStoreResult> {
+        return this._permanent.listInstsByRecordAndMarker(
+            recordName,
+            marker,
+            startingInst
+        );
     }
 
     async getBranchByName(

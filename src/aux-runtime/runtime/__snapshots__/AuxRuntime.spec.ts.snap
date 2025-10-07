@@ -265,6 +265,8 @@ Array [
   "arguments",
   "that",
   "data",
+  "$__bot",
+  "$__tag",
   "___importModule",
   "___exportModule",
   "create",

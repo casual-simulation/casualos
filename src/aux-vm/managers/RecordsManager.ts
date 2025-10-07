@@ -91,6 +91,7 @@ import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { Observable } from 'rxjs';
+import { mergeWith } from 'rxjs';
 import {
     ReplaySubject,
     Subject,
@@ -202,6 +203,8 @@ export type GetEndpointInfoFunction = (
     authenticateIfNotLoggedIn: boolean
 ) => Promise<RecordsEndpointInfo | null>;
 
+export const RECORDS_WS_PROTOCOL = 'casualos.records';
+
 /**
  * Defines a class that provides capabilities for storing and retrieving records.
  */
@@ -224,32 +227,49 @@ export class RecordsManager {
     private _httpRequestId: number = 0;
     private _client: ReturnType<typeof createRecordsClient>;
 
-    private _allowedProcedures = new Set<keyof RecordsClientActions>([
-        'recordWebhook',
-        'getWebhook',
-        'listWebhooks',
-        'eraseWebhook',
-        'runWebhook',
-        'recordNotification',
-        'getNotification',
-        'listNotifications',
-        'eraseNotification',
-        'subscribeToNotification',
-        'unsubscribeFromNotification',
-        'sendNotification',
-        'listNotificationSubscriptions',
-        'listUserNotificationSubscriptions',
-        'createOpenAIRealtimeSession',
-        'erasePackageVersion',
-        'listPackageVersions',
-        'getPackageVersion',
-        'recordPackage',
-        'erasePackage',
-        'listPackages',
-        'getPackage',
-        'getXpUserMeta',
-        'createXpContract',
-        'updateXpContract',
+    private _allowedProcedures = new Map<keyof RecordsClientActions, boolean>([
+        ['createRecord', true],
+        ['recordWebhook', true],
+        ['getWebhook', true],
+        ['listWebhooks', true],
+        ['eraseWebhook', true],
+        ['runWebhook', true],
+        ['recordNotification', true],
+        ['getNotification', false],
+        ['listNotifications', false],
+        ['eraseNotification', true],
+        ['subscribeToNotification', true],
+        ['unsubscribeFromNotification', true],
+        ['sendNotification', true],
+        ['listNotificationSubscriptions', true],
+        ['listUserNotificationSubscriptions', true],
+        ['aiListChatModels', true],
+        ['createOpenAIRealtimeSession', true],
+        ['erasePackageVersion', true],
+        ['listPackageVersions', false],
+        ['getPackageVersion', false],
+        ['recordPackage', true],
+        ['erasePackage', true],
+        ['listPackages', false],
+        ['getPackage', false],
+        ['recordSearchCollection', true],
+        ['getSearchCollection', false],
+        ['eraseSearchCollection', true],
+        ['listSearchCollections', false],
+        ['recordSearchDocument', true],
+        ['eraseSearchDocument', true],
+        ['listRecords', true],
+        ['listPermissions', true],
+        ['listInsts', true],
+        ['deleteInst', true],
+        ['recordDatabase', true],
+        ['eraseDatabase', true],
+        ['listDatabases', false],
+        ['getDatabase', true],
+        ['queryDatabase', true],
+        ['getXpUserMeta', true],
+        ['createXpContract', true],
+        ['updateXpContract', true],
     ]);
 
     /**
@@ -373,7 +393,7 @@ export class RecordsManager {
                 this._listUserStudios(event);
             } else if (event.type === 'get_records_endpoint') {
                 this._getRecordsEndpoint(event);
-            } else if(event.type === 'record_store_item') {
+            } else if (event.type === 'record_store_item') {
                 this._recordStoreItem(event);
             } else if (event.type === 'get_store_item') {
                 this._getStoreItem(event);
@@ -488,19 +508,15 @@ export class RecordsManager {
             return;
         }
 
-        const info = await this._resolveInfoForEvent(event);
+        const requireLogin = this._allowedProcedures.get(name);
+        const info = await this._resolveInfoForEvent(event, requireLogin);
 
         if (info.error) {
             return;
         }
 
         if (hasValue(this._helper.origin)) {
-            const instances = [
-                formatInstId(
-                    this._helper.origin.recordName,
-                    this._helper.origin.inst
-                ),
-            ];
+            const instances = this._getInstancesForRequest();
             if (query) {
                 query.instances = instances;
             } else {
@@ -540,23 +556,24 @@ export class RecordsManager {
             ];
         }
 
-        const result = await this._client.recordPurchasableItem({
-            recordName: event.recordName,
-            item: {
-                ...event.item,
-                address: event.address,
-                markers: event.item.markers as [string, ...string[]],
+        const result = await this._client.recordPurchasableItem(
+            {
+                recordName: event.recordName,
+                item: {
+                    ...event.item,
+                    address: event.address,
+                    markers: event.item.markers as [string, ...string[]],
+                },
+                instances,
             },
-            instances
-        }, {
-            endpoint: await info.auth.getRecordsOrigin(),
-            headers: info.headers,
-        });
+            {
+                endpoint: await info.auth.getRecordsOrigin(),
+                headers: info.headers,
+            }
+        );
 
         if (hasValue(event.taskId)) {
-            this._helper.transaction(
-                asyncResult(event.taskId, result)
-            );
+            this._helper.transaction(asyncResult(event.taskId, result));
         }
     }
 
@@ -577,19 +594,20 @@ export class RecordsManager {
             ];
         }
 
-        const result = await this._client.getPurchasableItem({
-            recordName: event.recordName,
-            address: event.address,
-            instances
-        }, {
-            endpoint: await info.auth.getRecordsOrigin(),
-            headers: info.headers,
-        });
+        const result = await this._client.getPurchasableItem(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                instances,
+            },
+            {
+                endpoint: await info.auth.getRecordsOrigin(),
+                headers: info.headers,
+            }
+        );
 
         if (hasValue(event.taskId)) {
-            this._helper.transaction(
-                asyncResult(event.taskId, result)
-            );
+            this._helper.transaction(asyncResult(event.taskId, result));
         }
     }
 
@@ -610,19 +628,20 @@ export class RecordsManager {
             ];
         }
 
-        const result = await this._client.erasePurchasableItem({
-            recordName: event.recordName,
-            address: event.address,
-            instances
-        }, {
-            endpoint: await info.auth.getRecordsOrigin(),
-            headers: info.headers,
-        });
+        const result = await this._client.erasePurchasableItem(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                instances,
+            },
+            {
+                endpoint: await info.auth.getRecordsOrigin(),
+                headers: info.headers,
+            }
+        );
 
         if (hasValue(event.taskId)) {
-            this._helper.transaction(
-                asyncResult(event.taskId, result)
-            );
+            this._helper.transaction(asyncResult(event.taskId, result));
         }
     }
 
@@ -643,19 +662,20 @@ export class RecordsManager {
             ];
         }
 
-        const result = await this._client.listPurchasableItems({
-            recordName: event.recordName,
-            address: event.address,
-            instances
-        }, {
-            endpoint: await info.auth.getRecordsOrigin(),
-            headers: info.headers,
-        });
+        const result = await this._client.listPurchasableItems(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                instances,
+            },
+            {
+                endpoint: await info.auth.getRecordsOrigin(),
+                headers: info.headers,
+            }
+        );
 
         if (hasValue(event.taskId)) {
-            this._helper.transaction(
-                asyncResult(event.taskId, result)
-            );
+            this._helper.transaction(asyncResult(event.taskId, result));
         }
     }
 
@@ -676,20 +696,21 @@ export class RecordsManager {
             ];
         }
 
-        const result = await this._client.listPurchasableItems({
-            recordName: event.recordName,
-            address: event.address,
-            marker: event.marker,
-            instances
-        }, {
-            endpoint: await info.auth.getRecordsOrigin(),
-            headers: info.headers,
-        });
+        const result = await this._client.listPurchasableItems(
+            {
+                recordName: event.recordName,
+                address: event.address,
+                marker: event.marker,
+                instances,
+            },
+            {
+                endpoint: await info.auth.getRecordsOrigin(),
+                headers: info.headers,
+            }
+        );
 
         if (hasValue(event.taskId)) {
-            this._helper.transaction(
-                asyncResult(event.taskId, result)
-            );
+            this._helper.transaction(asyncResult(event.taskId, result));
         }
     }
 
@@ -775,14 +796,7 @@ export class RecordsManager {
                 data: event.data,
             };
 
-            if (hasValue(this._helper.origin)) {
-                requestData.instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            requestData.instances = this._getInstancesForRequest();
 
             if (hasValue(event.options.markers)) {
                 requestData.markers = event.options.markers;
@@ -838,16 +852,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
@@ -889,7 +894,13 @@ export class RecordsManager {
             return;
         }
         try {
-            const info = await this._resolveInfoForEvent(event);
+            // Force login when listing data records without specifying a marker to list by
+            // This is because listing all data records requires access to the "private" marker
+            // If someone wants to avoid the login, they can use a subjectless record key or list by a marker.
+            const info = await this._resolveInfoForEvent(
+                event,
+                event.type !== 'list_record_data_by_marker'
+            );
             if (info.error) {
                 return;
             }
@@ -908,15 +919,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (hasValue(event.taskId)) {
                 let query: any = {
@@ -968,15 +971,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting data...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
@@ -1041,15 +1036,7 @@ export class RecordsManager {
 
             const { byteLength, hash, mimeType, data } = fileInfo;
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<RecordFileResult> = await axios.post(
                 await this._publishUrl(
@@ -1272,15 +1259,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<ReadFileResult> = await axios.get(
                 await this._publishUrl(
@@ -1379,15 +1358,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting file...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 ...this._axiosOptions,
@@ -1431,15 +1402,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording event...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 await this._publishUrl(
@@ -1484,15 +1447,7 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
-                let instances: string[] = undefined;
-                if (hasValue(this._helper.origin)) {
-                    instances = [
-                        formatInstId(
-                            this._helper.origin.recordName,
-                            this._helper.origin.inst
-                        ),
-                    ];
-                }
+                const instances = this._getInstancesForRequest();
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
                         info.recordsOrigin,
@@ -1722,15 +1677,7 @@ export class RecordsManager {
                 '[RecordsManager] Granting policy permission...',
                 event
             );
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             let requestData: any = {
                 recordName: event.recordName,
@@ -1785,15 +1732,7 @@ export class RecordsManager {
                 '[RecordsManager] Revoking policy permission...',
                 event
             );
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             let requestData: any = {
                 recordName: event.recordName,
@@ -1842,12 +1781,6 @@ export class RecordsManager {
             return;
         }
         try {
-            const info = await this._resolveInfoForEvent(event);
-
-            if (info.error) {
-                return;
-            }
-
             if (!hasValue(this._helper.origin)) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
@@ -1857,6 +1790,24 @@ export class RecordsManager {
                         )
                     );
                 }
+                return;
+            }
+
+            if (this._helper.origin.isStatic) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncError(
+                            event.taskId,
+                            'Unable to grant inst admin permission to static insts.'
+                        )
+                    );
+                }
+                return;
+            }
+
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
                 return;
             }
 
@@ -1923,15 +1874,7 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Granting role...', event);
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             let requestData: any = {
                 recordName: event.recordName,
@@ -1980,15 +1923,7 @@ export class RecordsManager {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             console.log('[RecordsManager] Revoking role...', event);
             let requestData: any = {
@@ -2057,14 +1992,7 @@ export class RecordsManager {
                 messages: event.messages,
             };
 
-            if (hasValue(this._helper.origin)) {
-                requestData.instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            requestData.instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<AIChatResponse> = await axios.post(
                 await this._publishUrl(info.recordsOrigin, '/api/v2/ai/chat'),
@@ -2117,14 +2045,7 @@ export class RecordsManager {
                 messages: event.messages,
             };
 
-            if (hasValue(this._helper.origin)) {
-                requestData.instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            requestData.instances = this._getInstancesForRequest();
 
             if (USE_HTTP_STREAMING) {
                 const result = await this._client.aiChatStream(requestData, {
@@ -2255,15 +2176,7 @@ export class RecordsManager {
                 blockadeLabs: blockadeLabs,
             };
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result: AxiosResponse<AIGenerateSkyboxResponse> =
                 await axios.post(
@@ -2384,15 +2297,7 @@ export class RecordsManager {
                 ...rest,
             };
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result =
                 await this._sendWebsocketSupportedRequest<AIGenerateImageResponse>(
@@ -2542,15 +2447,7 @@ export class RecordsManager {
 
             const { byteLength, hash, mimeType, data } = fileInfo;
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             const result = await this._client.recordPackageVersion(
                 {
@@ -2630,21 +2527,13 @@ export class RecordsManager {
 
     private async _installPackage(event: InstallPackageAction) {
         try {
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(event, false);
 
             if (info.error) {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (this._helper.origin?.isStatic) {
                 // static origins need to install packages via fetching the package
@@ -2655,16 +2544,18 @@ export class RecordsManager {
                     instances,
                 };
 
-                if (typeof event.key === 'string') {
-                    input.key = event.key;
-                } else if (typeof event.key === 'object') {
-                    if (event.key.sha256) {
-                        input.sha256 = event.key.sha256;
-                    } else {
-                        input.major = event.key.major;
-                        input.minor = event.key.minor;
-                        input.patch = event.key.patch;
-                        input.tag = event.key.tag;
+                if (event.key) {
+                    if (typeof event.key === 'string') {
+                        input.key = event.key;
+                    } else if (typeof event.key === 'object') {
+                        if (event.key.sha256) {
+                            input.sha256 = event.key.sha256;
+                        } else {
+                            input.major = event.key.major;
+                            input.minor = event.key.minor;
+                            input.patch = event.key.patch;
+                            input.tag = event.key.tag;
+                        }
                     }
                 }
 
@@ -2790,21 +2681,13 @@ export class RecordsManager {
 
     private async _listInstalledPackages(event: ListInstalledPackagesAction) {
         try {
-            const info = await this._resolveInfoForEvent(event);
+            const info = await this._resolveInfoForEvent(event, false);
 
             if (info.error) {
                 return;
             }
 
-            let instances: string[] = undefined;
-            if (hasValue(this._helper.origin)) {
-                instances = [
-                    formatInstId(
-                        this._helper.origin.recordName,
-                        this._helper.origin.inst
-                    ),
-                ];
-            }
+            const instances = this._getInstancesForRequest();
 
             if (
                 !hasValue(this._helper.origin) ||
@@ -2850,6 +2733,19 @@ export class RecordsManager {
         }
     }
 
+    private _getInstancesForRequest() {
+        let instances: string[] = undefined;
+        if (hasValue(this._helper.origin) && !this._helper.origin.isStatic) {
+            instances = [
+                formatInstId(
+                    this._helper.origin.recordName,
+                    this._helper.origin.inst
+                ),
+            ];
+        }
+        return instances;
+    }
+
     private async _sendWebsocketSupportedRequest<TResponse>(
         recordsOrigin: string,
         websocketOrigin: string,
@@ -2880,11 +2776,19 @@ export class RecordsManager {
                 client.connectionState.pipe(filter((c) => c.connected))
             );
 
+            const disconnected = client.connectionState.pipe(
+                filter((c) => !c.connected),
+                map(() => {
+                    throw new Error('The request encountered an error.');
+                })
+            );
+
             const id = this._httpRequestId++;
             const promise = firstValueFrom(
-                client
-                    .event('http_response')
-                    .pipe(filter((response) => response.id === id))
+                client.event('http_response').pipe(
+                    mergeWith(disconnected),
+                    filter((response) => response.id === id)
+                )
             );
 
             client.send({
@@ -2933,7 +2837,16 @@ export class RecordsManager {
         );
 
         const id = this._httpRequestId++;
+
+        const disconnected = client.connectionState.pipe(
+            filter((c) => !c.connected),
+            map(() => {
+                throw new Error('The request encountered an error.');
+            })
+        );
+
         const responses = client.event('http_partial_response').pipe(
+            mergeWith(disconnected),
             filter((response) => response.id === id),
             takeWhile((response) => !response.final),
             map((response) => {

@@ -136,7 +136,7 @@ import {
     listItemsProcedure,
     recordItemProcedure,
 } from './crud/CrudHelpers';
-import { merge, omit } from 'lodash';
+import { merge, omit } from 'es-toolkit/compat';
 import type { NotificationRecordsController } from './notifications/NotificationRecordsController';
 import {
     PUSH_NOTIFICATION_PAYLOAD,
@@ -154,6 +154,10 @@ import type {
 } from './packages/version/PackageVersionRecordsStore';
 import { getPackageVersionSpecifier } from './packages/version/PackageVersionRecordsStore';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
+import type { SearchQuery, SearchRecordsController } from './search';
+import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
+import { genericResult } from '@casual-simulation/aux-common';
+import type { DatabaseRecordsController, DatabaseStatement } from './database';
 import type { XpController } from './XpController';
 import type { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItem } from './purchasable-items/PurchasableItemRecordsStore';
@@ -419,6 +423,18 @@ export interface RecordsServerOptions {
     packageVersionController?: PackageVersionRecordsController | null;
 
     /**
+     * The controller that should be used for handling search records.
+     * If null, then search records are not supported.
+     */
+    searchRecordsController?: SearchRecordsController | null;
+
+    /**
+     * The controller that should be used for handling database records.
+     * If null, then database records are not supported.
+     */
+    databaseRecordsController?: DatabaseRecordsController | null;
+
+    /**
      * The controller that should be used for handling XP requests.
      * If null, then XP is not supported.
      */
@@ -451,6 +467,8 @@ export class RecordsServer {
     private _notificationsController: NotificationRecordsController | null;
     private _packagesController: PackageRecordsController | null;
     private _packageVersionController: PackageVersionRecordsController | null;
+    private _searchRecordsController: SearchRecordsController | null;
+    private _databaseRecordsController: DatabaseRecordsController | null;
     private _xpController: XpController | null;
 
     /**
@@ -522,6 +540,8 @@ export class RecordsServer {
         notificationsController,
         packagesController,
         packageVersionController,
+        searchRecordsController,
+        databaseRecordsController,
         xpController,
         purchasableItemsController,
     }: RecordsServerOptions) {
@@ -547,6 +567,8 @@ export class RecordsServer {
         this._notificationsController = notificationsController;
         this._packagesController = packagesController;
         this._packageVersionController = packageVersionController;
+        this._searchRecordsController = searchRecordsController;
+        this._databaseRecordsController = databaseRecordsController;
         this._xpController = xpController;
         this._tracer = trace.getTracer(
             'RecordsServer',
@@ -2634,6 +2656,403 @@ export class RecordsServer {
                     return result;
                 }),
 
+            recordSearchCollection: recordItemProcedure(
+                this._auth,
+                this._searchRecordsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    markers: MARKERS_VALIDATION,
+                    schema: SEARCH_COLLECTION_SCHEMA,
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/search/collection')
+            ),
+
+            getSearchCollection: getItemProcedure(
+                this._auth,
+                this._searchRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/search/collection')
+            ),
+
+            eraseSearchCollection: eraseItemProcedure(
+                this._auth,
+                this._searchRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/search/collection')
+            ),
+
+            listSearchCollections: listItemsProcedure(
+                this._auth,
+                this._searchRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/search/collection/list')
+            ),
+
+            recordSearchDocument: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/search/document')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        document: SEARCH_DOCUMENT_SCHEMA,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, document, instances },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._searchRecordsController.storeDocument({
+                                recordName,
+                                address,
+                                document,
+                                userId: validation.userId,
+                                instances,
+                            });
+                        return genericResult(result);
+                    }
+                ),
+
+            eraseSearchDocument: procedure()
+                .origins('api')
+                .http('DELETE', '/api/v2/records/search/document')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        documentId: z.string().min(1).max(256),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, documentId, instances },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result =
+                            await this._searchRecordsController.eraseDocument({
+                                recordName,
+                                address,
+                                documentId,
+                                userId: validation.userId,
+                                instances,
+                            });
+                        return genericResult(result);
+                    }
+                ),
+
+            syncSearchRecord: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/search/sync')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        targetRecordName: RECORD_NAME_VALIDATION,
+                        targetResourceKind: z.enum(['data']),
+                        targetMarker: MARKER_VALIDATION,
+                        targetMapping: z
+                            .array(
+                                z.tuple([
+                                    z.string().max(100),
+                                    z.string().max(100),
+                                ])
+                            )
+                            .max(100),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            targetRecordName,
+                            targetResourceKind,
+                            targetMarker,
+                            targetMapping,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (validation.success === false) {
+                            if (validation.errorCode === 'no_session_key') {
+                                return NOT_LOGGED_IN_RESULT;
+                            }
+                            return validation;
+                        }
+
+                        const result = await this._searchRecordsController.sync(
+                            {
+                                recordName,
+                                address,
+                                targetRecordName,
+                                targetResourceKind,
+                                targetMarker,
+                                targetMapping: targetMapping as [
+                                    string,
+                                    string
+                                ][],
+                                userId: validation.userId,
+                                instances: instances ?? [],
+                            }
+                        );
+                        return genericResult(result);
+                    }
+                ),
+
+            unsyncSearchRecord: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/search/unsync')
+                .inputs(
+                    z.object({
+                        syncId: z.string().min(1),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(async ({ syncId, instances }, context) => {
+                    if (!this._searchRecordsController) {
+                        return {
+                            success: false,
+                            errorCode: 'not_supported',
+                            errorMessage: 'This feature is not supported.',
+                        };
+                    }
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        if (validation.errorCode === 'no_session_key') {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return validation;
+                    }
+
+                    const result = await this._searchRecordsController.unsync({
+                        syncId,
+                        userId: validation.userId,
+                        instances: instances ?? [],
+                    });
+                    return genericResult(result);
+                }),
+
+            search: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/search')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        query: z
+                            .object({
+                                q: z.string().min(1).max(1024),
+                                queryBy: z.string().min(1).max(1024),
+                                filterBy: z
+                                    .string()
+                                    .min(1)
+                                    .max(1024)
+                                    .optional()
+                                    .nullable(),
+                            })
+                            .catchall(
+                                z.union([
+                                    z.string().max(1024),
+                                    z.boolean(),
+                                    z.number(),
+                                ])
+                            ),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        { recordName, address, query, instances },
+                        context
+                    ) => {
+                        if (!this._searchRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._searchRecordsController.search({
+                                recordName,
+                                address,
+                                query: query as SearchQuery,
+                                userId: validation.userId,
+                                instances: instances ?? [],
+                            });
+                        return genericResult(result);
+                    }
+                ),
+
+            recordDatabase: recordItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    markers: MARKERS_VALIDATION,
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/database')
+            ),
+
+            getDatabase: getItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/database')
+            ),
+
+            eraseDatabase: eraseItemProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/database')
+            ),
+
+            listDatabases: listItemsProcedure(
+                this._auth,
+                this._databaseRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/database/list')
+            ),
+
+            queryDatabase: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/records/database/query')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        statements: z.array(
+                            z.object({
+                                query: z.string().min(1).max(250_000),
+                                params: z.array(z.any()).optional().default([]),
+                            })
+                        ),
+                        readonly: z.boolean().default(true),
+                        automaticTransaction: z
+                            .boolean()
+                            .optional()
+                            .default(true),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            address,
+                            statements,
+                            readonly,
+                            automaticTransaction,
+                            instances,
+                        },
+                        context
+                    ) => {
+                        if (!this._databaseRecordsController) {
+                            return {
+                                success: false,
+                                errorCode: 'not_supported',
+                                errorMessage: 'This feature is not supported.',
+                            };
+                        }
+
+                        const validation = await validateSessionKey(
+                            this._auth,
+                            context.sessionKey
+                        );
+                        if (
+                            validation.success === false &&
+                            validation.errorCode !== 'no_session_key'
+                        ) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._databaseRecordsController.query({
+                                recordName,
+                                userId: validation.userId,
+                                address,
+                                statements: statements as DatabaseStatement[],
+                                readonly,
+                                automaticTransaction,
+                                instances: instances ?? [],
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
             getXpUserInfo: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/xp/user')
@@ -3537,6 +3956,37 @@ export class RecordsServer {
                     return result;
                 }),
 
+            aiListChatModels: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/ai/chat/models')
+                .inputs(z.object({}))
+                .handler(async (_, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._aiController.listChatModels({
+                        userId: sessionKeyValidation.userId,
+                        userSubscriptionTier:
+                            sessionKeyValidation.subscriptionTier,
+                        userRole: sessionKeyValidation.role,
+                    });
+
+                    return genericResult(result);
+                }),
+
             createAiSkybox: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/ai/skybox')
@@ -4052,6 +4502,17 @@ export class RecordsServer {
                             .url()
                             .min(1)
                             .max(512)
+                            .nullable()
+                            .optional(),
+                        logoBackgroundColor: z
+                            .string({
+                                invalid_type_error:
+                                    'logoBackgroundColor must be a string.',
+                                required_error:
+                                    'logoBackgroundColor is required.',
+                            })
+                            .min(1)
+                            .max(32)
                             .nullable()
                             .optional(),
                         comIdConfig: COM_ID_CONFIG_SCHEMA.optional(),
@@ -4616,9 +5077,10 @@ export class RecordsServer {
                     z.object({
                         recordName: RECORD_NAME_VALIDATION.optional(),
                         inst: z.string().optional(),
+                        marker: z.string().optional(),
                     })
                 )
-                .handler(async ({ recordName, inst }, context) => {
+                .handler(async ({ recordName, inst, marker }, context) => {
                     if (!this._websocketController) {
                         return INSTS_NOT_SUPPORTED_RESULT;
                     }
@@ -4642,7 +5104,8 @@ export class RecordsServer {
                     const result = await this._websocketController.listInsts(
                         recordName,
                         userId,
-                        inst
+                        inst,
+                        marker
                     );
                     return result;
                 }),

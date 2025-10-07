@@ -25,6 +25,7 @@ import type {
     AISkyboxFeaturesConfiguration,
     AISloydFeaturesConfiguration,
     APISubscription,
+    DatabasesFeaturesConfiguration,
     ContractFeaturesConfiguration,
     DataFeaturesConfiguration,
     EventFeaturesConfiguration,
@@ -36,6 +37,7 @@ import type {
     PublicInstsConfiguration,
     PurchasableItemFeaturesConfiguration,
     RecordFeaturesConfiguration,
+    SearchFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
     SubscriptionConfiguration,
@@ -292,6 +294,35 @@ export class FeaturesBuilder {
 
     withPackagesMaxBytesTotal(maxBytes: number): this {
         this._features.packages.maxPackageBytesTotal = maxBytes;
+        return this;
+    }
+
+    withSearch(features?: SearchFeaturesConfiguration): this {
+        this._features.search = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withSearchMaxItems(maxItems: number): this {
+        this._features.search.maxItems = maxItems;
+        return this;
+    }
+
+    withDatabases(features?: DatabasesFeaturesConfiguration): this {
+        this._features.databases = features ?? {
+            allowed: true,
+        };
+        return this;
+    }
+
+    withDatabasesMaxItems(maxItems: number): this {
+        this._features.databases.maxItems = maxItems;
+        return this;
+    }
+
+    withDatabasesMaxBytesPerDatabase(maxBytes: number): this {
+        this._features.databases.maxBytesPerDatabase = maxBytes;
         return this;
     }
 

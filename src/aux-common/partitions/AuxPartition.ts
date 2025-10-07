@@ -36,7 +36,7 @@ import {
     REMOTE_TEMPORARY_SHARED_PARTITION_ID,
 } from '../bots';
 import type { Observable, SubscriptionLike } from 'rxjs';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 
 /**
  * Defines an interface that maps Bot IDs to their corresponding partitions.

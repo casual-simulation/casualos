@@ -101,6 +101,7 @@ describe('getStatusCode()', () => {
         ['invalid_webhook_target', 501] as const,
         ['took_too_long', 504] as const,
         ['parent_not_found', 400] as const,
+        ['service_unavailable', 503] as const,
         ['item_already_purchased', 400] as const,
         ['item_not_found', 404] as const,
         ['store_disabled', 400] as const,

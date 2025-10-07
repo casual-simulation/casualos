@@ -43,7 +43,7 @@ import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
 } from '@casual-simulation/aux-common';
-import { sortBy } from 'lodash';
+import { sortBy } from 'es-toolkit/compat';
 import type { MemoryStore } from './MemoryStore';
 import { buildSubscriptionConfig } from './SubscriptionConfigBuilder';
 
@@ -159,6 +159,81 @@ describe('FileRecordsController', () => {
                 recordName: recordName,
                 publisherId: 'testUser',
                 subjectId: 'subjectId',
+                sizeInBytes: 100,
+                markers: [PUBLIC_READ_MARKER],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should set publisher to null if the system is publishing to a studio', async () => {
+            await store.addStudio({
+                id: 'studio1',
+                displayName: 'My Studio',
+            });
+            await store.addStudioAssignment({
+                isPrimaryContact: true,
+                role: 'admin',
+                studioId: 'studio1',
+                userId: ownerId,
+            });
+
+            const recordName = 'studioRecord';
+            await store.addRecord({
+                name: recordName,
+                ownerId: null,
+                studioId: 'studio1',
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(recordName, null, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+                userRole: 'system',
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+                markers: [PUBLIC_READ_MARKER],
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: recordName,
+                publisherId: null,
+                subjectId: null,
                 sizeInBytes: 100,
                 markers: [PUBLIC_READ_MARKER],
                 uploaded: false,

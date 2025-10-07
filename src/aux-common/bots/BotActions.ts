@@ -26,7 +26,7 @@ import type {
     UpdateBotAction,
 } from './BotEvents';
 import { botRemoved, botAdded, botUpdated } from './BotEvents';
-import { uniq } from 'lodash';
+import { uniq } from 'es-toolkit/compat';
 
 /**
  * Calculates the list of events needed to destroy the given bot and all of its decendents.
