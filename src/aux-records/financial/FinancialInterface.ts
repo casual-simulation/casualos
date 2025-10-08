@@ -654,6 +654,8 @@ export function getMessageForTransferError(error: CreateTransferError) {
             return 'The transfer must have the same ledger as the accounts.';
         case CreateTransferError.linked_event_failed:
             return 'The linked event for the transfer failed.';
+        case CreateTransferError.pending_transfer_not_pending:
+            return 'The pending transfer was not pending.';
         default:
             return `An unknown error occurred (${error}).`;
     }

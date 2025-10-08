@@ -78,6 +78,11 @@ export async function downloadAndUnzipIfNeeded(url: string): Promise<string> {
     return targetDir;
 }
 
+/**
+ * Downloads and executes TigerBeetle, returning the process and port number.
+ * @param label The label to use for the TigerBeetle database file. Ensure that this is unique if you are running multiple instances.
+ * @returns A promise that resolves to an object containing the port number and the ChildProcess instance.
+ */
 export async function runTigerBeetle(label: string): Promise<{
     port: string | null;
     process: ChildProcess;

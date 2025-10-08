@@ -47,7 +47,10 @@ import type {
     ServerError,
 } from '@casual-simulation/aux-common/Errors';
 import { isActiveSubscription } from './Utils';
-import type { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import type {
+    APISubscription,
+    SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
 import {
     getContractFeatures,
     getPurchasableItemsFeatures,
@@ -72,6 +75,7 @@ import type {
 } from '@casual-simulation/aux-common';
 import {
     failure,
+    genericResult,
     isFailure,
     isSuccess,
     isSuperUserRole,
@@ -98,7 +102,11 @@ import type { PolicyStore } from './PolicyStore';
 import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import type { FinancialController, InternalTransfer } from './financial';
+import type {
+    FinancialController,
+    InternalTransfer,
+    UniqueFinancialAccountFilter,
+} from './financial';
 import {
     ACCOUNT_IDS,
     AMOUNT_MAX,
@@ -2277,6 +2285,11 @@ export class SubscriptionController {
         });
     }
 
+    /**
+     * Completes a checkout session. Grants the user access to the purchased items or completes a contract purchase.
+     * @param request The request for the checkout session fulfillment.
+     * @returns A promise that resolves to the result of the checkout session fulfillment.
+     */
     @traced(TRACE_NAME)
     async fulfillCheckoutSession(
         request: FulfillCheckoutSessionRequest
@@ -3126,6 +3139,19 @@ export class SubscriptionController {
                     currentPeriodStartMs: periodStartMs,
                     invoice: authInvoice,
                 });
+
+                const creditResult =
+                    await this._internalTransactionPurchaseCreditsStripe(
+                        sub,
+                        invoice,
+                        {
+                            userId: user.id,
+                        }
+                    );
+
+                if (isFailure(creditResult)) {
+                    return genericResult(creditResult);
+                }
             } else {
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] No user found for customer ID (${customerId}).`
@@ -3148,90 +3174,17 @@ export class SubscriptionController {
                         invoice: authInvoice,
                     });
 
-                    const creditGrant = sub.creditGrant ?? 'match-invoice';
-                    if (creditGrant !== 0 && this._financialController) {
-                        const studioAccount =
-                            await this._financialController.getOrCreateFinancialAccount(
-                                {
-                                    studioId: studio.id,
-                                    ledger: LEDGERS.credits,
-                                }
-                            );
-
-                        if (isFailure(studioAccount)) {
-                            logError(
-                                studioAccount.error,
-                                `[SubscriptionController] [handleStripeWebhook] Unable to get or create studio account for studio (${studio.id})!`
-                            );
-                            return {
-                                success: false,
-                                errorCode: 'server_error',
-                                errorMessage:
-                                    'Unable to get or create a studio account to record credits.',
-                            };
-                        }
-
-                        let creditAmount: bigint;
-                        if (creditGrant === 'match-invoice') {
-                            const converted = convertBetweenLedgers(
-                                LEDGERS.usd,
-                                LEDGERS.credits,
-                                BigInt(invoice.total)
-                            );
-                            if (converted.remainder > 0n) {
-                                console.warn(
-                                    `[SubscriptionController] [handleStripeWebhook] Rounding down remainder when converting invoice amount to credits for studio (${studio.id}).`
-                                );
+                    const creditResult =
+                        await this._internalTransactionPurchaseCreditsStripe(
+                            sub,
+                            invoice,
+                            {
+                                studioId: studio.id,
                             }
-                            creditAmount = converted.value;
-                        } else {
-                            creditAmount = BigInt(creditGrant);
-                        }
+                        );
 
-                        if (creditAmount > 0) {
-                            const transactionResult =
-                                await this._financialController.internalTransaction(
-                                    {
-                                        transfers: [
-                                            {
-                                                amount: invoice.total,
-                                                code: TransferCodes.purchase_credits,
-                                                debitAccountId:
-                                                    ACCOUNT_IDS.assets_stripe,
-                                                creditAccountId:
-                                                    ACCOUNT_IDS.liquidity_usd,
-                                                currency: 'usd',
-                                            },
-                                            {
-                                                amount: creditAmount,
-                                                code: TransferCodes.purchase_credits,
-                                                debitAccountId:
-                                                    ACCOUNT_IDS.liquidity_credits,
-                                                creditAccountId:
-                                                    studioAccount.value.id,
-                                                currency: 'credits',
-                                            },
-                                        ],
-                                    }
-                                );
-
-                            if (isFailure(transactionResult)) {
-                                logError(
-                                    transactionResult.error,
-                                    `[SubscriptionController] [handleStripeWebhook] Unable to record credit grant for studio (${studio.id})!`
-                                );
-                                return {
-                                    success: false,
-                                    errorCode: 'server_error',
-                                    errorMessage:
-                                        'Unable to record credit grant for studio.',
-                                };
-                            }
-
-                            console.log(
-                                `[SubscriptionController] [handleStripeWebhook] Granted ${creditAmount} credits to studio (${studio.id}) for invoice (${invoice.id}).`
-                            );
-                        }
+                    if (isFailure(creditResult)) {
+                        return genericResult(creditResult);
                     }
                 } else {
                     console.log(
@@ -3294,6 +3247,103 @@ export class SubscriptionController {
         return {
             success: true,
         };
+    }
+
+    private async _internalTransactionPurchaseCreditsStripe(
+        sub: APISubscription,
+        invoice: StripeInvoice,
+        accountFilter: Omit<UniqueFinancialAccountFilter, 'ledger'>
+    ): Promise<
+        Result<
+            void,
+            {
+                errorCode: HandleStripeWebhookFailure['errorCode'];
+                errorMessage: string;
+            }
+        >
+    > {
+        const creditGrant = sub.creditGrant ?? 'match-invoice';
+        if (creditGrant === 0 || !this._financialController) {
+            return success();
+        }
+
+        const account =
+            await this._financialController.getOrCreateFinancialAccount({
+                ...accountFilter,
+                ledger: LEDGERS.credits,
+            });
+
+        if (isFailure(account)) {
+            logError(
+                account.error,
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id}] Unable to get or create credit account!`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            });
+        }
+
+        const accountId = account.value.id;
+        let creditAmount: bigint;
+        if (creditGrant === 'match-invoice') {
+            const converted = convertBetweenLedgers(
+                LEDGERS.usd,
+                LEDGERS.credits,
+                BigInt(invoice.total)
+            );
+            if (converted.remainder > 0n) {
+                console.warn(
+                    `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Rounding down remainder when converting invoice amount to credits.`
+                );
+            }
+            creditAmount = converted.value;
+        } else {
+            creditAmount = BigInt(creditGrant);
+        }
+
+        if (creditAmount > 0) {
+            const transactionResult =
+                await this._financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: invoice.total,
+                            code: TransferCodes.purchase_credits,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                            currency: 'usd',
+                        },
+                        {
+                            amount: creditAmount,
+                            code: TransferCodes.purchase_credits,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: accountId,
+                            currency: 'credits',
+                        },
+                    ],
+                });
+
+            if (isFailure(transactionResult)) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Unable to record credit grant for invoice!`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'Unable to record credit grant for invoice.',
+                });
+            }
+
+            console.log(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] Granted ${creditAmount} credits for invoice (${invoice.id}).`
+            );
+        } else {
+            console.warn(
+                `[SubscriptionController] [_internalTransactionPurchaseCreditsStripe invoice: ${invoice.id} account: ${accountId}] No credits granted for invoice (${invoice.id}).`
+            );
+        }
+
+        return success();
     }
 
     @traced(TRACE_NAME)
