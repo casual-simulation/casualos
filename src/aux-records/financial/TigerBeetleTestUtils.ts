@@ -20,7 +20,7 @@ import path from 'path';
 import os from 'os';
 import { sha256 } from 'hash.js';
 import { existsSync } from 'fs';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, readdir, writeFile } from 'fs/promises';
 // import { ZipReader, BlobReader, BlobWriter } from '@zip.js/zip.js';
 import { promisify } from 'util';
 import type { ChildProcess } from 'child_process';
@@ -47,7 +47,7 @@ export async function downloadAndUnzipIfNeeded(url: string): Promise<string> {
 
     const targetDir = path.join(os.tmpdir(), 'casualos-downloads', urlHash);
 
-    if (existsSync(targetDir)) {
+    if (existsSync(targetDir) && (await readdir(targetDir)).length > 0) {
         return targetDir;
     }
 
