@@ -10198,6 +10198,122 @@ describe('SubscriptionController', () => {
                     expect(studio?.subscriptionPeriodStartMs).toBe(456000);
                     expect(studio?.subscriptionPeriodEndMs).toBe(999000);
                 });
+
+                describe('creditGrant', () => {
+                    beforeEach(async () => {
+                        await financialController.init();
+                    });
+
+                    it('should support match-price', async () => {
+                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                            id: 'event_id',
+                            type: 'invoice.paid',
+                            object: 'event',
+                            account: 'account_id',
+                            api_version: 'api_version',
+                            created: 123,
+                            data: {
+                                object: {
+                                    id: 'invoiceId',
+                                    customer: 'customer_id',
+                                    currency: 'usd',
+                                    total: 1000,
+                                    subtotal: 1000,
+                                    tax: 0,
+                                    description: 'description',
+                                    status: 'paid',
+                                    paid: true,
+                                    hosted_invoice_url: 'invoiceUrl',
+                                    invoice_pdf: 'pdfUrl',
+                                    lines: {
+                                        object: 'list',
+                                        data: [
+                                            {
+                                                id: 'line_item_1_id',
+                                                price: {
+                                                    id: 'price_1',
+                                                    product: 'product_1_id',
+                                                },
+                                            },
+                                        ],
+                                    },
+                                    subscription: 'sub',
+                                },
+                            },
+                            livemode: true,
+                            pending_webhooks: 1,
+                            request: {},
+                        });
+                        stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                            id: 'sub',
+                            status: 'active',
+                            current_period_start: 456,
+                            current_period_end: 999,
+                        });
+
+                        const result = await controller.handleStripeWebhook({
+                            requestBody: 'request_body',
+                            signature: 'request_signature',
+                        });
+
+                        expect(result).toEqual({
+                            success: true,
+                        });
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledTimes(1);
+                        expect(
+                            stripeMock.constructWebhookEvent
+                        ).toHaveBeenCalledWith(
+                            'request_body',
+                            'request_signature',
+                            'webhook_secret'
+                        );
+
+                        const studio = await store.getStudioById(studioId);
+                        expect(studio?.subscriptionPeriodStartMs).toBe(456000);
+                        expect(studio?.subscriptionPeriodEndMs).toBe(999000);
+
+                        const studioAccount = unwrap(
+                            await financialController.getFinancialAccount({
+                                studioId: studioId,
+                                ledger: LEDGERS.credits,
+                            })
+                        );
+
+                        checkAccounts(financialInterface, [
+                            {
+                                id: studioAccount.id,
+                                credits_pending: 0n,
+                                credits_posted: 1000n * USD_TO_CREDITS,
+                                debits_pending: 0n,
+                                debits_posted: 0n,
+                            },
+                        ]);
+
+                        checkTransfers(
+                            await financialInterface.lookupTransfers([3n, 4n]),
+                            [
+                                {
+                                    id: 3n,
+                                    amount: 1000n,
+                                    code: TransferCodes.purchase_credits,
+                                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                                    credit_account_id:
+                                        ACCOUNT_IDS.liquidity_usd,
+                                },
+                                {
+                                    id: 4n,
+                                    amount: 1000n * USD_TO_CREDITS,
+                                    code: TransferCodes.purchase_credits,
+                                    debit_account_id:
+                                        ACCOUNT_IDS.liquidity_credits,
+                                    credit_account_id: studioAccount.id,
+                                },
+                            ]
+                        );
+                    });
+                });
             });
         });
 

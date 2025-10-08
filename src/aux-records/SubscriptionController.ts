@@ -139,7 +139,7 @@ export class SubscriptionController {
     private _policies: PolicyController;
     private _policyStore: PolicyStore;
     private _purchasableItems: PurchasableItemRecordsStore;
-    private _financialController: FinancialController;
+    private _financialController: FinancialController | null;
     private _contractRecords: ContractRecordsStore;
 
     constructor(
@@ -151,7 +151,7 @@ export class SubscriptionController {
         policies: PolicyController,
         policyStore: PolicyStore,
         purchasableItems: PurchasableItemRecordsStore,
-        financialController: FinancialController,
+        financialController: FinancialController | null,
         contractRecords: ContractRecordsStore
     ) {
         this._stripe = stripe;
@@ -3147,6 +3147,92 @@ export class SubscriptionController {
                         currentPeriodStartMs: periodStartMs,
                         invoice: authInvoice,
                     });
+
+                    const creditGrant = sub.creditGrant ?? 'match-invoice';
+                    if (creditGrant !== 0 && this._financialController) {
+                        const studioAccount =
+                            await this._financialController.getOrCreateFinancialAccount(
+                                {
+                                    studioId: studio.id,
+                                    ledger: LEDGERS.credits,
+                                }
+                            );
+
+                        if (isFailure(studioAccount)) {
+                            logError(
+                                studioAccount.error,
+                                `[SubscriptionController] [handleStripeWebhook] Unable to get or create studio account for studio (${studio.id})!`
+                            );
+                            return {
+                                success: false,
+                                errorCode: 'server_error',
+                                errorMessage:
+                                    'Unable to get or create a studio account to record credits.',
+                            };
+                        }
+
+                        let creditAmount: bigint;
+                        if (creditGrant === 'match-invoice') {
+                            const converted = convertBetweenLedgers(
+                                LEDGERS.usd,
+                                LEDGERS.credits,
+                                BigInt(invoice.total)
+                            );
+                            if (converted.remainder > 0n) {
+                                console.warn(
+                                    `[SubscriptionController] [handleStripeWebhook] Rounding down remainder when converting invoice amount to credits for studio (${studio.id}).`
+                                );
+                            }
+                            creditAmount = converted.value;
+                        } else {
+                            creditAmount = BigInt(creditGrant);
+                        }
+
+                        if (creditAmount > 0) {
+                            const transactionResult =
+                                await this._financialController.internalTransaction(
+                                    {
+                                        transfers: [
+                                            {
+                                                amount: invoice.total,
+                                                code: TransferCodes.purchase_credits,
+                                                debitAccountId:
+                                                    ACCOUNT_IDS.assets_stripe,
+                                                creditAccountId:
+                                                    ACCOUNT_IDS.liquidity_usd,
+                                                currency: 'usd',
+                                            },
+                                            {
+                                                amount: creditAmount,
+                                                code: TransferCodes.purchase_credits,
+                                                debitAccountId:
+                                                    ACCOUNT_IDS.liquidity_credits,
+                                                creditAccountId:
+                                                    studioAccount.value.id,
+                                                currency: 'credits',
+                                            },
+                                        ],
+                                    }
+                                );
+
+                            if (isFailure(transactionResult)) {
+                                logError(
+                                    transactionResult.error,
+                                    `[SubscriptionController] [handleStripeWebhook] Unable to record credit grant for studio (${studio.id})!`
+                                );
+                                return {
+                                    success: false,
+                                    errorCode: 'server_error',
+                                    errorMessage:
+                                        'Unable to record credit grant for studio.',
+                                };
+                            }
+
+                            console.log(
+                                `[SubscriptionController] [handleStripeWebhook] Granted ${creditAmount} credits to studio (${studio.id}) for invoice (${invoice.id}).`
+                            );
+                        }
+                    }
                 } else {
                     console.log(
                         `[SubscriptionController] [handleStripeWebhook] No studio found for customer ID (${customerId}).`

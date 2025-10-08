@@ -134,6 +134,13 @@ export interface ConvertedCurrency {
      * This is the amount that could not be converted due to the conversion rate.
      */
     remainder: bigint;
+
+    /**
+     * The rate that was used for the conversion.
+     *
+     * value = from / rate;
+     */
+    rate: bigint;
 }
 
 /**
@@ -152,12 +159,14 @@ export function convertBetweenLedgers(
         return {
             value: value * rate,
             remainder: 0n,
+            rate,
         };
     } else {
         rate = getExchangeRate(to, from);
         return {
             value: value / rate,
             remainder: value % rate,
+            rate,
         };
     }
 }

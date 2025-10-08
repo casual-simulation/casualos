@@ -190,7 +190,9 @@ export class TigerBeetleFinancialInterface implements FinancialInterface {
 
     async getAccountTransfers(filter: AccountFilter): Promise<Transfer[]> {
         return this._mapTransferIds(
-            await this._client.getAccountTransfers(filter),
+            await this._client.getAccountTransfers(
+                this._mapAccountFilter(filter, this._idOffset)
+            ),
             -this._idOffset
         );
     }

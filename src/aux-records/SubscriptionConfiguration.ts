@@ -936,6 +936,25 @@ export const subscriptionConfigSchema = z.object({
                         'Whether this subscription can only be purchased by studios. Defaults to false.'
                     )
                     .optional(),
+
+                creditGrant: z
+                    .union([
+                        z
+                            .number()
+                            .describe(
+                                'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.'
+                            )
+                            .int()
+                            .positive(),
+                        z.enum([
+                            'match-invoice', // Grants credits equal to the total of the invoice that pays for the subscription.
+                        ]),
+                    ])
+                    .describe(
+                        'The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription. Defaults to matching the price that the user paid for the subscription.'
+                    )
+                    .optional()
+                    .default('match-invoice'),
             })
         )
         .describe('The list of subscriptions that are in use.'),
@@ -1142,6 +1161,12 @@ export interface APISubscription {
      * Defaults to "beta".
      */
     tier?: string;
+
+    /**
+     * The number of credits that should be granted to the user/studio upon purchasing (and renewal) of this subscription.
+     * Defaults to matching the invoice total that the user paid for the subscription.
+     */
+    creditGrant?: number | 'match-invoice';
 }
 
 export interface TiersConfiguration {
