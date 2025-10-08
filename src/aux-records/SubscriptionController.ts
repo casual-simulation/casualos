@@ -1221,6 +1221,10 @@ export class SubscriptionController {
         };
     }
 
+    /**
+     * Creates a link that the user can be redirected to in order to purchase a purchasable item.
+     * @param request The request to create the purchase item link.
+     */
     @traced(TRACE_NAME)
     async createPurchaseItemLink(
         request: CreatePurchaseItemLinkRequest
@@ -1511,6 +1515,11 @@ export class SubscriptionController {
         }
     }
 
+    /**
+     * Creates a link that the user can be redirected to in order to purchase a contract.
+     * @param request The request to purchase the contract.
+     * @returns A promise that resolves to the result of the purchase contract operation.
+     */
     @traced(TRACE_NAME)
     async purchaseContract(
         request: PurchaseContractRequest
@@ -2072,6 +2081,11 @@ export class SubscriptionController {
         }
     }
 
+    /**
+     * Cancels a contract and issues a refund if applicable.
+     * @param request The request to cancel the contract.
+     * @returns A promise that resolves to the result of the cancel contract operation.
+     */
     @traced(TRACE_NAME)
     async cancelContract(
         request: CancelContractRequest
@@ -2137,6 +2151,13 @@ export class SubscriptionController {
         return refundResult;
     }
 
+    /**
+     * Initiates a refund for a canceled contract.
+     * @param request The request to cancel the contract.
+     * @param item The contract record to refund.
+     * @param context The authorization context for the operation.
+     * @returns A promise that resolves to the result of the refund operation.
+     */
     private async _refundContract(
         request: CancelContractRequest,
         item: ContractRecord,

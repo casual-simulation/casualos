@@ -1664,6 +1664,34 @@ export function denyAllFeatures(): FeaturesConfiguration {
 }
 
 /**
+ * Gets the contract features that are available for the given subscription.
+ * @param config The configuration. If null, then all default features are allowed.
+ * @param subscriptionStatus The status of the subscription.
+ * @param subscriptionId The ID of the subscription.
+ * @param type The type of the user.
+ */
+export function getContractFeatures(
+    config: SubscriptionConfiguration | null,
+    subscriptionStatus: string,
+    subscriptionId: string,
+    type: 'user' | 'studio',
+    periodStartMs?: number | null,
+    periodEndMs?: number | null,
+    nowMs: number = Date.now()
+): ContractFeaturesConfiguration {
+    const features = getSubscriptionFeatures(
+        config,
+        subscriptionStatus,
+        subscriptionId,
+        type,
+        periodStartMs,
+        periodEndMs,
+        nowMs
+    );
+    return features.contracts ?? { allowed: false };
+}
+
+/**
  * Gets the database features that are available for the given subscription.
  * @param config The configuration. If null, then all default features are allowed.
  * @param subscriptionStatus The status of the subscription.
