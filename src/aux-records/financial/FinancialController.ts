@@ -47,6 +47,7 @@ import {
 } from './FinancialInterface';
 import type { Account, CreateTransferError, Transfer } from 'tigerbeetle-node';
 import {
+    AccountFilterFlags,
     AccountFlags,
     CreateAccountError,
     TransferFlags,
@@ -653,7 +654,7 @@ export class FinancialController {
         const transfers = await this._financialInterface.getAccountTransfers({
             account_id: accountId,
             code: 0, // 0 means all codes
-            flags: 0, // 0 means all flags
+            flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
             limit: 1000, // Limit to 1000 transfers
             timestamp_max: 0n, // No timestamp limit
             timestamp_min: 0n, // No timestamp limit
@@ -1160,6 +1161,7 @@ export interface InternalTransferRequest {
 
     /**
      * The ID of the transaction that should be created.
+     * If null, then a new transaction will be created.
      */
     transactionId?: bigint | string | null;
 

@@ -560,6 +560,56 @@ describe('FinancialController', () => {
         });
     });
 
+    describe('listTransfers()', () => {
+        let account1Id: string;
+        let account2Id: string;
+
+        beforeEach(async () => {
+            unwrap(await controller.init());
+
+            ({ id: account1Id } = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.usd
+                )
+            ));
+            ({ id: account2Id } = unwrap(
+                await controller.createAccount(
+                    AccountCodes.liabilities_user,
+                    LEDGERS.usd
+                )
+            ));
+        });
+
+        it('should return the list of transfers for the account', async () => {
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account1Id,
+                            currency: 'usd',
+                            amount: 100n,
+                            code: TransferCodes.admin_credit,
+                        },
+                    ],
+                })
+            );
+
+            const list = unwrap(await controller.listTransfers(account1Id));
+
+            checkTransfers(list, [
+                {
+                    id: 4n,
+                    amount: 100n,
+                    credit_account_id: BigInt(account1Id),
+                    debit_account_id: ACCOUNT_IDS.assets_stripe,
+                    code: TransferCodes.admin_credit,
+                },
+            ]);
+        });
+    });
+
     describe('internalTransaction()', () => {
         let account1Id: string;
         let account2Id: string;
