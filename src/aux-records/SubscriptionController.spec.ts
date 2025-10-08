@@ -62,7 +62,7 @@ import {
     createTestUser,
     randomBigInt,
 } from './TestUtils';
-import { merge } from 'lodash';
+import { merge } from 'es-toolkit/compat';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
 import {
     PRIVATE_MARKER,

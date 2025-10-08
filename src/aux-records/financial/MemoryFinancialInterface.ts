@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { orderBy } from 'lodash';
+import { orderBy } from 'es-toolkit/compat';
 import type { FinancialInterface } from './FinancialInterface';
 import type {
     Account,
