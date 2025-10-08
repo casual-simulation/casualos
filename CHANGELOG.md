@@ -17,6 +17,7 @@
 -   Fixed an issue where the `from` position values in `onDrag`, `onDrop`, `onAnyBotDrag`, and `onAnyBotDrop` events were being incorrectly rounded to integers, causing non-integer bot positions (e.g., 0.5, 0.4) to be rounded before being passed to event handlers.
 -   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
 -   Fixed an issue where it was not possible to publish packages to studios.
+-   Changed to ensure that the "Sign In" dialog is shown to unauthenticated users who are trying to access a public inst on Privo-enabled deployments.
 
 ## V3.7.1
 
