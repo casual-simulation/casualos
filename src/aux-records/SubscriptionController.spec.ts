@@ -73,6 +73,7 @@ import type { FinancialController } from './financial';
 import {
     ACCOUNT_IDS,
     AccountCodes,
+    CREDITS_DISPLAY_FACTOR,
     CurrencyCodes,
     LEDGERS,
     TigerBeetleFinancialInterface,
@@ -831,6 +832,228 @@ describe('SubscriptionController', () => {
                     ],
                 });
             });
+
+            it('should return the balances of the accounts that the user has', async () => {
+                const account1 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.usd,
+                        userId,
+                    })
+                );
+                const account2 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.credits,
+                        userId,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: 201n,
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            creditAccountId: account1.id,
+                            amount: 5000,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            transferId: 202n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: account2.id,
+                            amount: 2000,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                });
+
+                const result = await controller.getSubscriptionStatus({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    accountBalances: {
+                        usd: {
+                            pendingCreditsN: '0',
+                            pendingDebitsN: '0',
+                            creditsN: '5000',
+                            debitsN: '0',
+                            displayFactorN: '100',
+                        },
+                        credits: {
+                            pendingCreditsN: '0',
+                            pendingDebitsN: '0',
+                            creditsN: '2000',
+                            debitsN: '0',
+                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                        },
+                    },
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should include pending credits and debits in the account balances', async () => {
+                const account1 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.usd,
+                        userId,
+                    })
+                );
+                const account2 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.credits,
+                        userId,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 201n,
+                                debitAccountId: ACCOUNT_IDS.assets_cash,
+                                creditAccountId: account1.id,
+                                amount: 5000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                            },
+                            {
+                                transferId: 202n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account2.id,
+                                amount: 2000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 203n,
+                                debitAccountId: ACCOUNT_IDS.assets_cash,
+                                creditAccountId: account1.id,
+                                amount: 5000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                            {
+                                transferId: 204n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account2.id,
+                                amount: 2000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                                pending: true,
+                            },
+                        ],
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 205n,
+                                debitAccountId: account1.id,
+                                creditAccountId: ACCOUNT_IDS.assets_cash,
+                                amount: 123,
+                                code: TransferCodes.admin_debit,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                            {
+                                transferId: 206n,
+                                debitAccountId: account2.id,
+                                creditAccountId: ACCOUNT_IDS.liquidity_credits,
+                                amount: 123,
+                                code: TransferCodes.admin_debit,
+                                currency: CurrencyCodes.credits,
+                                pending: true,
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    userId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    accountBalances: {
+                        usd: {
+                            pendingCreditsN: '5000',
+                            pendingDebitsN: '123',
+                            creditsN: '5000',
+                            debitsN: '0',
+                            displayFactorN: '100',
+                        },
+                        credits: {
+                            pendingCreditsN: '2000',
+                            pendingDebitsN: '123',
+                            creditsN: '2000',
+                            debitsN: '0',
+                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                        },
+                    },
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
         });
 
         describe('studio', () => {
@@ -1289,6 +1512,230 @@ describe('SubscriptionController', () => {
                     studioId,
                     publishableKey: 'publishable_key',
                     subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should return the balances of the accounts that the user has', async () => {
+                const account1 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.usd,
+                        studioId,
+                    })
+                );
+                const account2 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.credits,
+                        studioId,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            transferId: 201n,
+                            debitAccountId: ACCOUNT_IDS.assets_cash,
+                            creditAccountId: account1.id,
+                            amount: 5000,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            transferId: 202n,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            creditAccountId: account2.id,
+                            amount: 2000,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.credits,
+                        },
+                    ],
+                });
+
+                const result = await controller.getSubscriptionStatus({
+                    studioId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    accountBalances: {
+                        usd: {
+                            pendingCreditsN: '0',
+                            pendingDebitsN: '0',
+                            creditsN: '5000',
+                            debitsN: '0',
+                            displayFactorN: '100',
+                        },
+                        credits: {
+                            pendingCreditsN: '0',
+                            pendingDebitsN: '0',
+                            creditsN: '2000',
+                            debitsN: '0',
+                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                        },
+                    },
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should include pending credits and debits in the account balances', async () => {
+                const account1 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.usd,
+                        studioId,
+                    })
+                );
+                const account2 = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.credits,
+                        studioId,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 201n,
+                                debitAccountId: ACCOUNT_IDS.assets_cash,
+                                creditAccountId: account1.id,
+                                amount: 5000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                            },
+                            {
+                                transferId: 202n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account2.id,
+                                amount: 2000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                            },
+                        ],
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 203n,
+                                debitAccountId: ACCOUNT_IDS.assets_cash,
+                                creditAccountId: account1.id,
+                                amount: 5000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                            {
+                                transferId: 204n,
+                                debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                                creditAccountId: account2.id,
+                                amount: 2000,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.credits,
+                                pending: true,
+                            },
+                        ],
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                transferId: 205n,
+                                debitAccountId: account1.id,
+                                creditAccountId: ACCOUNT_IDS.assets_cash,
+                                amount: 123,
+                                code: TransferCodes.admin_debit,
+                                currency: CurrencyCodes.usd,
+                                pending: true,
+                            },
+                            {
+                                transferId: 206n,
+                                debitAccountId: account2.id,
+                                creditAccountId: ACCOUNT_IDS.liquidity_credits,
+                                amount: 123,
+                                code: TransferCodes.admin_debit,
+                                currency: CurrencyCodes.credits,
+                                pending: true,
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    studioId,
+                    sessionKey,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    accountBalances: {
+                        usd: {
+                            pendingCreditsN: '5000',
+                            pendingDebitsN: '123',
+                            creditsN: '5000',
+                            debitsN: '0',
+                            displayFactorN: '100',
+                        },
+                        credits: {
+                            pendingCreditsN: '2000',
+                            pendingDebitsN: '123',
+                            creditsN: '2000',
+                            debitsN: '0',
+                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                        },
+                    },
                     purchasableSubscriptions: [
                         {
                             id: 'sub_1',

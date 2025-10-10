@@ -72,6 +72,7 @@ import type {
     DenialReason,
     Result,
     SimpleError,
+    KnownErrorCodes,
 } from '@casual-simulation/aux-common';
 import {
     failure,
@@ -111,12 +112,14 @@ import {
     ACCOUNT_IDS,
     AMOUNT_MAX,
     convertBetweenLedgers,
+    CREDITS_DISPLAY_FACTOR,
     CURRENCIES,
     CurrencyCodes,
     getAccountBalance,
     getLiquidityAccountByLedger,
     LEDGERS,
     TransferCodes,
+    USD_DISPLAY_FACTOR,
 } from './financial';
 import type {
     ContractRecord,
@@ -240,6 +243,12 @@ export class SubscriptionController {
                 request.sessionKey
             );
 
+            let accountBalances: Result<AccountBalances, SimpleError> = success(
+                {
+                    usd: undefined,
+                    credits: undefined,
+                }
+            );
             let customerId: string;
             let role: 'user' | 'studio';
             if (keyResult.success === false) {
@@ -263,6 +272,10 @@ export class SubscriptionController {
                     const user = await this._authStore.findUser(request.userId);
                     customerId = user.stripeCustomerId;
                     role = 'user';
+
+                    accountBalances = await this._getAccountBalances({
+                        userId: request.userId,
+                    });
                 } else if (request.studioId) {
                     const assignments =
                         await this._recordsStore.listStudioAssignments(
@@ -292,7 +305,19 @@ export class SubscriptionController {
                     );
                     customerId = studio.stripeCustomerId;
                     role = 'studio';
+
+                    accountBalances = await this._getAccountBalances({
+                        studioId: request.studioId,
+                    });
                 }
+            }
+
+            if (isFailure(accountBalances)) {
+                logError(
+                    accountBalances.error,
+                    '[SubscriptionController] [getSubscriptionStatus] Failed to get account balances:'
+                );
+                return genericResult(accountBalances);
             }
 
             // const user = await this._authStore.findUser(keyResult.userId);
@@ -308,6 +333,7 @@ export class SubscriptionController {
                     subscriptions: [],
                     purchasableSubscriptions:
                         await this._getPurchasableSubscriptions(role, config),
+                    accountBalances: accountBalances.value,
                 };
             }
 
@@ -363,6 +389,7 @@ export class SubscriptionController {
                 publishableKey: this._stripe.publishableKey,
                 subscriptions,
                 purchasableSubscriptions,
+                accountBalances: accountBalances.value,
             };
         } catch (err) {
             const span = trace.getActiveSpan();
@@ -379,6 +406,76 @@ export class SubscriptionController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    @traced(TRACE_NAME)
+    private async _getAccountBalances(
+        filter: Omit<UniqueFinancialAccountFilter, 'ledger'>
+    ): Promise<Result<AccountBalances | undefined, SimpleError>> {
+        if (!this._financialController) {
+            return success(undefined);
+        }
+
+        const [usdResult, creditsResult] = await Promise.all([
+            this._getAccountBalance({
+                ...filter,
+                ledger: LEDGERS.usd,
+            }),
+            this._getAccountBalance({
+                ...filter,
+                ledger: LEDGERS.credits,
+            }),
+        ]);
+
+        if (isFailure(usdResult)) {
+            return usdResult;
+        } else if (isFailure(creditsResult)) {
+            return creditsResult;
+        }
+
+        if (!usdResult.value && !creditsResult.value) {
+            return success(undefined);
+        }
+
+        return success({
+            usd: usdResult.value,
+            credits: creditsResult.value,
+        });
+    }
+
+    @traced(TRACE_NAME)
+    private async _getAccountBalance(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<Result<AccountBalance | undefined, SimpleError>> {
+        if (!this._financialController) {
+            return success(undefined);
+        }
+
+        const result = await this._financialController.getFinancialAccount(
+            filter
+        );
+        if (isFailure(result)) {
+            if (result.error.errorCode === 'not_found') {
+                return success(undefined);
+            } else {
+                logError(
+                    result.error,
+                    `[SubscriptionController] [_getAccountBalance userId: ${filter.userId} studioId: ${filter.studioId} contractId: ${filter.contractId} ledger: ${filter.ledger}] Failed to get financial account:`
+                );
+                return result;
+            }
+        }
+
+        return success({
+            creditsN: result.value.credits_posted.toString(),
+            debitsN: result.value.debits_posted.toString(),
+            pendingCreditsN: result.value.credits_pending.toString(),
+            pendingDebitsN: result.value.debits_pending.toString(),
+            displayFactorN: (filter.ledger === LEDGERS.credits
+                ? CREDITS_DISPLAY_FACTOR
+                : USD_DISPLAY_FACTOR
+            ).toString(),
+        });
     }
 
     /**
@@ -3680,6 +3777,59 @@ export interface GetSubscriptionStatusSuccess {
      * The list of subscriptions that the user can purchase.
      */
     purchasableSubscriptions: PurchasableSubscription[];
+
+    /**
+     * The account balances for the user.
+     *
+     * This will be undefined if the financial controller is not enabled.
+     */
+    accountBalances?: AccountBalances;
+}
+
+export interface AccountBalances {
+    /**
+     * The USD account balance.
+     *
+     * This will be undefined if the user does not have a USD account.
+     */
+    usd: AccountBalance | undefined;
+
+    /**
+     * The credits account balance.
+     *
+     * This will be undefined if the user does not have a credits account.
+     */
+    credits: AccountBalance | undefined;
+}
+
+/**
+ * Represents the balance of a financial account.
+ */
+export interface AccountBalance {
+    /**
+     * The number of credits in the account as a string.
+     */
+    creditsN: string;
+
+    /**
+     * The number of pending credits in the account as a string.
+     */
+    pendingCreditsN: string;
+
+    /**
+     * The number of debits in the account as a string.
+     */
+    debitsN: string;
+
+    /**
+     * The number of pending debits in the account as a string.
+     */
+    pendingDebitsN: string;
+
+    /**
+     * The factor that should be used to convert between credits and USD as a string.
+     */
+    displayFactorN: string;
 }
 
 export interface SubscriptionStatus {
@@ -3835,13 +3985,7 @@ export interface GetSubscriptionStatusFailure {
     /**
      * The error code.
      */
-    errorCode:
-        | ServerError
-        | ValidateSessionKeyFailure['errorCode']
-        | 'unacceptable_user_id'
-        | 'unacceptable_studio_id'
-        | 'unacceptable_request'
-        | 'not_supported';
+    errorCode: KnownErrorCodes;
 
     /**
      * The error message.

@@ -83,6 +83,20 @@ export type CurrencyCodesType = keyof typeof CurrencyCodes;
 export const USD_TO_CREDITS = 1000000n; // 1 USD = 1,000,000 credits
 
 /**
+ * The factor for displaying credits to users.
+ *
+ * This is the number of credits that make up one credit to be displayed to users.
+ *
+ * For example, if the factor is 1,000,000, then 1 display credit = 1,000,000 credits.
+ */
+export const CREDITS_DISPLAY_FACTOR = USD_TO_CREDITS * 100n; // 1 display credit = 1,000,000,000 credits
+
+/**
+ * The factor for displaying USD to users.
+ */
+export const USD_DISPLAY_FACTOR = 100; // 1 display USD = 100 cents
+
+/**
  * The exchange rates between ledgers.
  */
 export const LEDGER_EXCHANGE_RATES = new Map<
