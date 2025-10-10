@@ -105,12 +105,14 @@ import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import type {
     CurrencyCodesType,
+    FinancialAccount,
     FinancialController,
     InternalTransfer,
     UniqueFinancialAccountFilter,
 } from './financial';
 import {
     ACCOUNT_IDS,
+    ACCOUNT_NAMES,
     AMOUNT_MAX,
     convertBetweenLedgers,
     CREDITS_DISPLAY_FACTOR,
@@ -127,7 +129,7 @@ import type {
     ContractRecord,
     ContractRecordsStore,
 } from './contracts/ContractRecordsStore';
-import type { Account } from 'tigerbeetle-node';
+import type { Account, Transfer } from 'tigerbeetle-node';
 import { TransferFlags } from 'tigerbeetle-node';
 
 /**
@@ -411,6 +413,91 @@ export class SubscriptionController {
     }
 
     @traced(TRACE_NAME)
+    async listAccountTransfers(
+        request: ListAccountTransfersRequest
+    ): Promise<Result<ListedAccountTransfers, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            });
+        }
+
+        // Get the account details to verify it exists and get permissions info
+        const accountDetailsResult =
+            await this._financialController.getAccountDetails(
+                request.accountId
+            );
+
+        if (isFailure(accountDetailsResult)) {
+            return accountDetailsResult;
+        }
+
+        const { account, financialAccount } = accountDetailsResult.value;
+
+        // Check if the user has permission to access this account
+        if (!isSuperUserRole(request.userRole)) {
+            // Users can only access their own accounts
+            if (
+                financialAccount.userId &&
+                financialAccount.userId !== request.userId
+            ) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+
+            // Users cannot access studio accounts they don't belong to
+            if (financialAccount.studioId || financialAccount.contractId) {
+                // TODO: Check if the user is a member of the studio
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+        }
+
+        // Get the transfers for this account
+        const transfersResult = await this._financialController.listTransfers(
+            request.accountId
+        );
+
+        if (isFailure(transfersResult)) {
+            return transfersResult;
+        }
+
+        const transfers = transfersResult.value;
+
+        // Map Transfer objects to AccountTransfer objects
+        const accountTransfers: AccountTransfer[] = transfers.map(
+            (transfer) =>
+                ({
+                    id: transfer.id.toString(),
+                    amountN: transfer.amount.toString(),
+                    debitAccountId: transfer.debit_account_id.toString(),
+                    creditAccountId: transfer.credit_account_id.toString(),
+                    pending: (transfer.flags & TransferFlags.pending) !== 0,
+                    code: transfer.code as TransferCodes,
+                    timeMs: Number(transfer.timestamp / 1000000n), // Convert nanoseconds to milliseconds
+                    transactionId:
+                        transfer.user_data_128 !== 0n
+                            ? transfer.user_data_128.toString()
+                            : undefined,
+                    note: charactarizeTransfer(transfer),
+                } satisfies AccountTransfer)
+        );
+
+        return success({
+            accountDetails: financialAccount,
+            account: this._convertToAccountBalance(account),
+            transfers: accountTransfers,
+        });
+    }
+
+    @traced(TRACE_NAME)
     private async _getAccountBalances(
         filter: Omit<UniqueFinancialAccountFilter, 'ledger'>
     ): Promise<Result<AccountBalances | undefined, SimpleError>> {
@@ -468,18 +555,22 @@ export class SubscriptionController {
             }
         }
 
-        return success({
-            creditsN: result.value.credits_posted.toString(),
-            debitsN: result.value.debits_posted.toString(),
-            pendingCreditsN: result.value.credits_pending.toString(),
-            pendingDebitsN: result.value.debits_pending.toString(),
-            displayFactorN: (filter.ledger === LEDGERS.credits
+        return success(this._convertToAccountBalance(result.value.account));
+    }
+
+    private _convertToAccountBalance(account: Account): AccountBalance {
+        return {
+            creditsN: account.credits_posted.toString(),
+            debitsN: account.debits_posted.toString(),
+            pendingCreditsN: account.credits_pending.toString(),
+            pendingDebitsN: account.debits_pending.toString(),
+            displayFactorN: (account.ledger === LEDGERS.credits
                 ? CREDITS_DISPLAY_FACTOR
                 : USD_DISPLAY_FACTOR
             ).toString(),
-            currency: getAccountCurrency(result.value),
-            accountId: result.value.id.toString(),
-        });
+            currency: getAccountCurrency(account),
+            accountId: account.id.toString(),
+        };
     }
 
     /**
@@ -1894,12 +1985,12 @@ export class SubscriptionController {
                     console.warn
                 );
             } else {
-                const balance = getAccountBalance(userUsdAccount.value);
+                const balance = getAccountBalance(userUsdAccount.value.account);
 
                 if (balance >= totalCost) {
                     // try to create a transfer from the user account
                     console.log(
-                        `[SubscriptionController] [purchaseContract accountId: ${userUsdAccount.value.id}] Attempting to pay out of user USD account.`
+                        `[SubscriptionController] [purchaseContract accountId: ${userUsdAccount.value.account.id}] Attempting to pay out of user USD account.`
                     );
 
                     const builder = new TransactionBuilder();
@@ -1907,8 +1998,8 @@ export class SubscriptionController {
                     builder.addContract({
                         recordName,
                         item,
-                        contractAccountId: contractAccount.value.id,
-                        debitAccountId: userUsdAccount.value.id,
+                        contractAccountId: contractAccount.value.account.id,
+                        debitAccountId: userUsdAccount.value.account.id,
                     });
 
                     if (applicationFee > 0) {
@@ -1916,7 +2007,7 @@ export class SubscriptionController {
                             recordName,
                             item,
                             fee: applicationFee,
-                            debitAccountId: userUsdAccount.value.id,
+                            debitAccountId: userUsdAccount.value.account.id,
                         });
                     }
 
@@ -1958,12 +2049,14 @@ export class SubscriptionController {
                         console.warn
                     );
                 } else {
-                    const balance = getAccountBalance(userCreditAccount.value);
+                    const balance = getAccountBalance(
+                        userCreditAccount.value.account
+                    );
 
                     if (balance >= totalCost) {
                         // try to create a transfer from the user account
                         console.log(
-                            `[SubscriptionController] [purchaseContract accountId: ${userCreditAccount.value.id}] Attempting to pay out of user credits account.`
+                            `[SubscriptionController] [purchaseContract accountId: ${userCreditAccount.value.account.id}] Attempting to pay out of user credits account.`
                         );
 
                         const totalCreditCost = convertBetweenLedgers(
@@ -1986,12 +2079,12 @@ export class SubscriptionController {
                         const builder = new TransactionBuilder();
                         builder.usePendingTransfers(false);
                         builder.addTransfer({
-                            debitAccountId: userCreditAccount.value.id,
+                            debitAccountId: userCreditAccount.value.account.id,
                             creditAccountId: getLiquidityAccountByLedger(
-                                userCreditAccount.value.ledger
+                                userCreditAccount.value.account.ledger
                             ),
                             currency: CURRENCIES.get(
-                                userCreditAccount.value.ledger
+                                userCreditAccount.value.account.ledger
                             ),
                             amount: totalCreditCost.value,
                             code: TransferCodes.exchange,
@@ -1999,9 +2092,9 @@ export class SubscriptionController {
                         builder.addContract({
                             recordName,
                             item,
-                            contractAccountId: contractAccount.value.id,
+                            contractAccountId: contractAccount.value.account.id,
                             debitAccountId: getLiquidityAccountByLedger(
-                                contractAccount.value.ledger
+                                contractAccount.value.account.ledger
                             ),
                         });
 
@@ -2011,7 +2104,7 @@ export class SubscriptionController {
                                 item,
                                 fee: applicationFee,
                                 debitAccountId: getLiquidityAccountByLedger(
-                                    contractAccount.value.ledger
+                                    contractAccount.value.account.ledger
                                 ),
                             });
                         }
@@ -2054,7 +2147,7 @@ export class SubscriptionController {
                 builder.addContract({
                     recordName,
                     item,
-                    contractAccountId: contractAccount.value.id,
+                    contractAccountId: contractAccount.value.account.id,
                     debitAccountId: ACCOUNT_IDS.assets_stripe,
                 });
 
@@ -2313,7 +2406,7 @@ export class SubscriptionController {
                 await this._financialController.getOrCreateFinancialAccount({
                     userId: context.recordOwnerId,
                     studioId: context.recordStudioId,
-                    ledger: contractAccount.value.ledger,
+                    ledger: contractAccount.value.account.ledger,
                 });
 
             if (isFailure(account)) {
@@ -2323,11 +2416,11 @@ export class SubscriptionController {
                 );
                 return account;
             }
-            refundAccount = account.value;
+            refundAccount = account.value.account;
         }
 
         console.log(
-            `[SubscriptionController] [cancelContract contractId: ${item.id} contractAccountId: ${contractAccount.value.id} refundAccountId: ${refundAccount.id}] Attempting to cancel contract.`
+            `[SubscriptionController] [cancelContract contractId: ${item.id} contractAccountId: ${contractAccount.value.account.id} refundAccountId: ${refundAccount.id}] Attempting to cancel contract.`
         );
 
         const refundId = this._financialController.generateId();
@@ -2338,7 +2431,7 @@ export class SubscriptionController {
                     {
                         transferId: refundId,
                         amount: AMOUNT_MAX,
-                        debitAccountId: contractAccount.value.id,
+                        debitAccountId: contractAccount.value.account.id,
                         creditAccountId: refundAccount.id,
                         code: TransferCodes.contract_refund,
                         currency: CurrencyCodes.usd,
@@ -2347,7 +2440,7 @@ export class SubscriptionController {
                     {
                         transferId: cancelId,
                         amount: 0,
-                        debitAccountId: contractAccount.value.id,
+                        debitAccountId: contractAccount.value.account.id,
                         creditAccountId: refundAccount.id,
                         code: TransferCodes.account_closing,
                         currency: CurrencyCodes.usd,
@@ -3385,7 +3478,7 @@ export class SubscriptionController {
             });
         }
 
-        const accountId = account.value.id;
+        const accountId = account.value.account.id;
         let creditAmount: bigint;
         if (creditGrant === 'match-invoice') {
             const converted = convertBetweenLedgers(
@@ -3661,6 +3754,91 @@ export function parseActivationKey(
         return [name, secret];
     } catch (err) {
         return null;
+    }
+}
+
+const TRANSFER_CODE_ACTIONS: Map<TransferCodes, string> = new Map([
+    [TransferCodes.admin_credit, 'Admin credit'],
+    [TransferCodes.admin_debit, 'Admin debit'],
+    [TransferCodes.account_closing, 'Account closing'],
+    [TransferCodes.purchase_credits, 'Purchase credits'],
+    [TransferCodes.contract_payment, 'Contract payment'],
+    [TransferCodes.contract_refund, 'Contract refund'],
+    [TransferCodes.exchange, 'Exchange'],
+    [TransferCodes.invoice_payment, 'Invoice payment'],
+    [TransferCodes.item_payment, 'Item payment'],
+    [TransferCodes.purchase_credits, 'Credit purchase'],
+    [TransferCodes.reverse_transfer, 'Transfer reversal'],
+    [TransferCodes.store_platform_fee, 'Platform fee'],
+    [TransferCodes.xp_platform_fee, 'Platform fee'],
+    [TransferCodes.user_payout, 'Payout'],
+    [TransferCodes.control, 'Controlling transfer'],
+    [TransferCodes.exchange, 'Exchange'],
+]);
+
+/**
+ * Generates a human readable note for the given transfer.
+ * @param transfer The transfer that should be characterized.
+ */
+export function charactarizeTransfer(transfer: Transfer): string | null {
+    let action: string;
+    let source: string;
+    let destination: string;
+
+    action = TRANSFER_CODE_ACTIONS.get(transfer.code);
+
+    if (!action) {
+        return null;
+    }
+
+    if (transfer.code === TransferCodes.admin_credit) {
+        source = ACCOUNT_NAMES.get(transfer.debit_account_id);
+        destination = ACCOUNT_NAMES.get(transfer.credit_account_id);
+    } else if (transfer.code === TransferCodes.admin_debit) {
+        destination = ACCOUNT_NAMES.get(transfer.credit_account_id);
+        source = ACCOUNT_NAMES.get(transfer.debit_account_id);
+    } else if (transfer.code === TransferCodes.user_payout) {
+        destination = ACCOUNT_NAMES.get(transfer.credit_account_id);
+    } else if (transfer.code === TransferCodes.exchange) {
+        if (
+            transfer.debit_account_id === ACCOUNT_IDS.liquidity_usd ||
+            transfer.credit_account_id === ACCOUNT_IDS.liquidity_credits
+        ) {
+            // Exchanging from Credits to USD
+            source = 'Credits';
+            destination = 'USD';
+        } else if (
+            transfer.debit_account_id === ACCOUNT_IDS.liquidity_credits ||
+            transfer.credit_account_id === ACCOUNT_IDS.liquidity_usd
+        ) {
+            // Exchanging from USD to Credits
+            source = 'USD';
+            destination = 'Credits';
+        }
+    } else if (transfer.code === TransferCodes.purchase_credits) {
+        source = ACCOUNT_NAMES.get(transfer.debit_account_id);
+    } else if (transfer.code === TransferCodes.account_closing) {
+        source = ACCOUNT_NAMES.get(transfer.debit_account_id);
+        destination = ACCOUNT_NAMES.get(transfer.credit_account_id);
+    } else if (
+        transfer.code === TransferCodes.contract_payment ||
+        transfer.code === TransferCodes.invoice_payment ||
+        transfer.code === TransferCodes.item_payment
+    ) {
+        source = ACCOUNT_NAMES.get(transfer.debit_account_id);
+        destination = ACCOUNT_NAMES.get(transfer.credit_account_id);
+    } else if (transfer.code === TransferCodes.contract_refund) {
+        destination = ACCOUNT_NAMES.get(transfer.credit_account_id);
+    }
+
+    if (source && destination) {
+        return `${action} from ${source} to ${destination}`;
+    } else if (source) {
+        return `${action} from ${source}`;
+    } else if (destination) {
+        return `${action} to ${destination}`;
+    } else {
+        return action;
     }
 }
 
@@ -4650,3 +4828,73 @@ interface SimpleItem {
 
 //     return builder;
 // }
+
+export interface ListAccountTransfersRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The ID of the account to list transfers for.
+     */
+    accountId: string | bigint;
+}
+
+export interface ListedAccountTransfers {
+    accountDetails: FinancialAccount;
+    account: AccountBalance;
+    transfers: AccountTransfer[];
+}
+
+export interface AccountTransfer {
+    /**
+     * The ID of the transfer.
+     */
+    id: string;
+
+    /**
+     * The amount of the transfer in the smallest unit of the currency.
+     */
+    amountN: string;
+
+    /**
+     * The ID of the account that the transfer was debited from.
+     */
+    debitAccountId: string;
+
+    /**
+     * The ID of the account that the transfer was credited to.
+     */
+    creditAccountId: string;
+
+    /**
+     * Whether the transfer is currently pending.
+     */
+    pending: boolean;
+
+    /**
+     * The code for the transfer.
+     */
+    code: TransferCodes;
+
+    /**
+     * The time of the transfer in miliseconds since the Unix epoch.
+     */
+    timeMs: number;
+
+    /**
+     * The ID of the transaction that the transfer belongs to.
+     */
+    transactionId?: string;
+
+    /**
+     * A helpful note for the transfer.
+     */
+    note?: string;
+}

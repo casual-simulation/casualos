@@ -305,6 +305,18 @@ export const ACCOUNT_IDS = {
     liquidity_credits: 6002n,
 };
 
+/**
+ * A map of built-in account IDs to their names.
+ */
+export const ACCOUNT_NAMES = new Map<bigint, string>([
+    [ACCOUNT_IDS.assets_cash, 'Cash'],
+    [ACCOUNT_IDS.assets_stripe, 'Stripe'],
+    [ACCOUNT_IDS.revenue_xp_platform_fees, 'XP Platform Fees'],
+    [ACCOUNT_IDS.revenue_store_platform_fees, 'Store Platform Fees'],
+    [ACCOUNT_IDS.liquidity_credits, 'Credits'],
+    [ACCOUNT_IDS.liquidity_usd, 'USD'],
+]);
+
 export function getLiquidityAccountByLedger(
     ledger: (typeof LEDGERS)[keyof typeof LEDGERS]
 ) {

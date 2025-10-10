@@ -21,6 +21,7 @@ import type {
 } from './SubscriptionController';
 import {
     SubscriptionController,
+    charactarizeTransfer,
     formatV1ActivationKey,
     getAccountStatus,
     parseActivationKey,
@@ -69,7 +70,7 @@ import {
     PUBLIC_READ_MARKER,
     toBase64String,
 } from '@casual-simulation/aux-common';
-import type { FinancialController } from './financial';
+import type { AccountWithDetails, FinancialController } from './financial';
 import {
     ACCOUNT_IDS,
     AccountCodes,
@@ -82,7 +83,7 @@ import {
 } from './financial';
 import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
-import type { Client, Account } from 'tigerbeetle-node';
+import type { Client } from 'tigerbeetle-node';
 import { createClient } from 'tigerbeetle-node';
 import type { ChildProcess } from 'child_process';
 import { runTigerBeetle } from './financial/TigerBeetleTestUtils';
@@ -852,7 +853,7 @@ describe('SubscriptionController', () => {
                         {
                             transferId: 201n,
                             debitAccountId: ACCOUNT_IDS.assets_cash,
-                            creditAccountId: account1.id,
+                            creditAccountId: account1.account.id,
                             amount: 5000,
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
@@ -860,7 +861,7 @@ describe('SubscriptionController', () => {
                         {
                             transferId: 202n,
                             debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                            creditAccountId: account2.id,
+                            creditAccountId: account2.account.id,
                             amount: 2000,
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.credits,
@@ -885,7 +886,7 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
-                            accountId: account1.id.toString(),
+                            accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
@@ -894,7 +895,7 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
-                            accountId: account2.id.toString(),
+                            accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
                     },
@@ -942,7 +943,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 201n,
                                 debitAccountId: ACCOUNT_IDS.assets_cash,
-                                creditAccountId: account1.id,
+                                creditAccountId: account1.account.id,
                                 amount: 5000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.usd,
@@ -950,7 +951,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 202n,
                                 debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                                creditAccountId: account2.id,
+                                creditAccountId: account2.account.id,
                                 amount: 2000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.credits,
@@ -965,7 +966,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 203n,
                                 debitAccountId: ACCOUNT_IDS.assets_cash,
-                                creditAccountId: account1.id,
+                                creditAccountId: account1.account.id,
                                 amount: 5000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.usd,
@@ -974,7 +975,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 204n,
                                 debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                                creditAccountId: account2.id,
+                                creditAccountId: account2.account.id,
                                 amount: 2000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.credits,
@@ -989,7 +990,7 @@ describe('SubscriptionController', () => {
                         transfers: [
                             {
                                 transferId: 205n,
-                                debitAccountId: account1.id,
+                                debitAccountId: account1.account.id,
                                 creditAccountId: ACCOUNT_IDS.assets_cash,
                                 amount: 123,
                                 code: TransferCodes.admin_debit,
@@ -998,7 +999,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 transferId: 206n,
-                                debitAccountId: account2.id,
+                                debitAccountId: account2.account.id,
                                 creditAccountId: ACCOUNT_IDS.liquidity_credits,
                                 amount: 123,
                                 code: TransferCodes.admin_debit,
@@ -1026,7 +1027,7 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
-                            accountId: account1.id.toString(),
+                            accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
@@ -1035,7 +1036,7 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
-                            accountId: account2.id.toString(),
+                            accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
                     },
@@ -1563,7 +1564,7 @@ describe('SubscriptionController', () => {
                         {
                             transferId: 201n,
                             debitAccountId: ACCOUNT_IDS.assets_cash,
-                            creditAccountId: account1.id,
+                            creditAccountId: account1.account.id,
                             amount: 5000,
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
@@ -1571,7 +1572,7 @@ describe('SubscriptionController', () => {
                         {
                             transferId: 202n,
                             debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                            creditAccountId: account2.id,
+                            creditAccountId: account2.account.id,
                             amount: 2000,
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.credits,
@@ -1597,7 +1598,7 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
-                            accountId: account1.id.toString(),
+                            accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
@@ -1606,7 +1607,7 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
-                            accountId: account2.id.toString(),
+                            accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
                     },
@@ -1654,7 +1655,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 201n,
                                 debitAccountId: ACCOUNT_IDS.assets_cash,
-                                creditAccountId: account1.id,
+                                creditAccountId: account1.account.id,
                                 amount: 5000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.usd,
@@ -1662,7 +1663,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 202n,
                                 debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                                creditAccountId: account2.id,
+                                creditAccountId: account2.account.id,
                                 amount: 2000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.credits,
@@ -1677,7 +1678,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 203n,
                                 debitAccountId: ACCOUNT_IDS.assets_cash,
-                                creditAccountId: account1.id,
+                                creditAccountId: account1.account.id,
                                 amount: 5000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.usd,
@@ -1686,7 +1687,7 @@ describe('SubscriptionController', () => {
                             {
                                 transferId: 204n,
                                 debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                                creditAccountId: account2.id,
+                                creditAccountId: account2.account.id,
                                 amount: 2000,
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.credits,
@@ -1701,7 +1702,7 @@ describe('SubscriptionController', () => {
                         transfers: [
                             {
                                 transferId: 205n,
-                                debitAccountId: account1.id,
+                                debitAccountId: account1.account.id,
                                 creditAccountId: ACCOUNT_IDS.assets_cash,
                                 amount: 123,
                                 code: TransferCodes.admin_debit,
@@ -1710,7 +1711,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 transferId: 206n,
-                                debitAccountId: account2.id,
+                                debitAccountId: account2.account.id,
                                 creditAccountId: ACCOUNT_IDS.liquidity_credits,
                                 amount: 123,
                                 code: TransferCodes.admin_debit,
@@ -1739,7 +1740,7 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
-                            accountId: account1.id.toString(),
+                            accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
@@ -1748,7 +1749,7 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
-                            accountId: account2.id.toString(),
+                            accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
                     },
@@ -1774,6 +1775,242 @@ describe('SubscriptionController', () => {
                         },
                     ],
                 });
+            });
+        });
+    });
+
+    describe.only('listAccountTransfers()', () => {
+        let user: AuthUser;
+
+        beforeEach(async () => {
+            user = await store.findUserByAddress('test@example.com', 'email');
+            expect(user.stripeCustomerId).toBeFalsy();
+        });
+
+        describe('user', () => {
+            let account: AccountWithDetails;
+
+            beforeEach(async () => {
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            amount: 123,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            debitAccountId: account.account.id,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                            pending: true,
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to list the transfers for the user', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId,
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            userId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should allow super users to list the transfers for any account', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: 'some_other_user',
+                    userRole: 'superUser',
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            userId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user doesnt own the account', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: 'other_user',
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
             });
         });
     });
@@ -6931,7 +7168,7 @@ describe('SubscriptionController', () => {
                     transfers: [
                         {
                             debitAccountId: ACCOUNT_IDS.assets_cash,
-                            creditAccountId: userAccount!.id,
+                            creditAccountId: userAccount!.account.id,
                             amount: 1000n,
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
@@ -7000,7 +7237,7 @@ describe('SubscriptionController', () => {
                     // contract account
                     credit_account_id: 4n,
                     // User account
-                    debit_account_id: userAccount!.id,
+                    debit_account_id: userAccount!.account.id,
                     flags: TransferFlags.linked,
                     ledger: LEDGERS.usd,
 
@@ -7013,7 +7250,7 @@ describe('SubscriptionController', () => {
                     // revenue account
                     credit_account_id: ACCOUNT_IDS.revenue_xp_platform_fees,
                     // User account
-                    debit_account_id: userAccount!.id,
+                    debit_account_id: userAccount!.account.id,
                     flags: TransferFlags.none,
                     ledger: LEDGERS.usd,
 
@@ -7037,7 +7274,7 @@ describe('SubscriptionController', () => {
                     debits_pending: 0n,
                 },
                 {
-                    id: userAccount!.id,
+                    id: userAccount!.account.id,
                     credits_posted: 1000n,
                     debits_posted: 110n,
                     credits_pending: 0n,
@@ -7082,7 +7319,7 @@ describe('SubscriptionController', () => {
                         },
                         {
                             debitAccountId: ACCOUNT_IDS.liquidity_credits,
-                            creditAccountId: userAccount!.id,
+                            creditAccountId: userAccount!.account.id,
                             amount: 1000n * USD_TO_CREDITS,
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.credits,
@@ -7151,7 +7388,7 @@ describe('SubscriptionController', () => {
                         amount: 110n * USD_TO_CREDITS,
                         code: TransferCodes.exchange,
                         credit_account_id: ACCOUNT_IDS.liquidity_credits,
-                        debit_account_id: userAccount!.id,
+                        debit_account_id: userAccount!.account.id,
                         flags: TransferFlags.linked,
                         ledger: LEDGERS.credits,
 
@@ -7202,7 +7439,7 @@ describe('SubscriptionController', () => {
                     debits_pending: 0n,
                 },
                 {
-                    id: userAccount!.id,
+                    id: userAccount!.account.id,
                     credits_posted: 1000n * USD_TO_CREDITS,
                     debits_posted: 110n * USD_TO_CREDITS,
                     credits_pending: 0n,
@@ -8771,8 +9008,8 @@ describe('SubscriptionController', () => {
         });
 
         describe('USD', () => {
-            let contractAccount: Account | null;
-            let userAccount: Account | null;
+            let contractAccount: AccountWithDetails | null;
+            let userAccount: AccountWithDetails | null;
             beforeEach(async () => {
                 userAccount = unwrap(
                     await financialController.getOrCreateFinancialAccount({
@@ -8796,22 +9033,22 @@ describe('SubscriptionController', () => {
                                 amount: 200,
                                 code: TransferCodes.contract_payment,
                                 debitAccountId: ACCOUNT_IDS.assets_stripe,
-                                creditAccountId: userAccount!.id,
+                                creditAccountId: userAccount!.account.id,
                                 currency: CurrencyCodes.usd,
                             },
                             {
                                 transferId: '201',
                                 amount: 100,
                                 code: TransferCodes.contract_payment,
-                                debitAccountId: userAccount!.id,
-                                creditAccountId: contractAccount!.id,
+                                debitAccountId: userAccount!.account.id,
+                                creditAccountId: contractAccount!.account.id,
                                 currency: CurrencyCodes.usd,
                             },
                             {
                                 transferId: '202',
                                 amount: 10,
                                 code: TransferCodes.xp_platform_fee,
-                                debitAccountId: userAccount!.id,
+                                debitAccountId: userAccount!.account.id,
                                 creditAccountId:
                                     ACCOUNT_IDS.revenue_xp_platform_fees,
                                 currency: CurrencyCodes.usd,
@@ -8853,8 +9090,8 @@ describe('SubscriptionController', () => {
                             id: 4n,
                             amount: 100n,
                             code: TransferCodes.contract_refund,
-                            credit_account_id: userAccount!.id,
-                            debit_account_id: contractAccount!.id,
+                            credit_account_id: userAccount!.account.id,
+                            debit_account_id: contractAccount!.account.id,
                             flags:
                                 TransferFlags.linked |
                                 TransferFlags.balancing_debit,
@@ -8865,8 +9102,8 @@ describe('SubscriptionController', () => {
                             id: 5n,
                             amount: 0n,
                             code: TransferCodes.account_closing,
-                            credit_account_id: userAccount!.id,
-                            debit_account_id: contractAccount!.id,
+                            credit_account_id: userAccount!.account.id,
+                            debit_account_id: contractAccount!.account.id,
                             flags:
                                 TransferFlags.closing_debit |
                                 TransferFlags.pending,
@@ -8878,14 +9115,14 @@ describe('SubscriptionController', () => {
 
                 checkAccounts(financialInterface, [
                     {
-                        id: userAccount!.id,
+                        id: userAccount!.account.id,
                         credits_posted: 300n,
                         credits_pending: 0n,
                         debits_posted: 110n,
                         debits_pending: 0n,
                     },
                     {
-                        id: contractAccount!.id,
+                        id: contractAccount!.account.id,
                         credits_posted: 100n,
                         credits_pending: 0n,
                         debits_posted: 100n,
@@ -8940,7 +9177,7 @@ describe('SubscriptionController', () => {
 
                 checkAccounts(financialInterface, [
                     {
-                        id: userAccount!.id,
+                        id: userAccount!.account.id,
                         credits_posted: 200n,
                         credits_pending: 0n,
                         debits_posted: 110n,
@@ -8991,14 +9228,14 @@ describe('SubscriptionController', () => {
 
                 checkAccounts(financialInterface, [
                     {
-                        id: userAccount!.id,
+                        id: userAccount!.account.id,
                         credits_posted: 200n,
                         credits_pending: 0n,
                         debits_posted: 110n,
                         debits_pending: 0n,
                     },
                     {
-                        id: contractAccount!.id,
+                        id: contractAccount!.account.id,
                         credits_posted: 100n,
                         credits_pending: 0n,
                         debits_posted: 0n,
@@ -9405,7 +9642,7 @@ describe('SubscriptionController', () => {
                                 amount: 100,
                                 code: TransferCodes.contract_payment,
                                 debitAccountId: ACCOUNT_IDS.assets_stripe,
-                                creditAccountId: contractAccount!.id,
+                                creditAccountId: contractAccount!.account.id,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
                             },
@@ -9513,7 +9750,7 @@ describe('SubscriptionController', () => {
                             id: 10n,
                             amount: 100n,
                             code: TransferCodes.contract_payment,
-                            credit_account_id: contractAccount!.id,
+                            credit_account_id: contractAccount!.account.id,
                             debit_account_id: ACCOUNT_IDS.assets_stripe,
                             flags: TransferFlags.linked | TransferFlags.pending,
                             ledger: LEDGERS.usd,
@@ -9563,7 +9800,7 @@ describe('SubscriptionController', () => {
                         debits_pending: 0n,
                     },
                     {
-                        id: contractAccount!.id,
+                        id: contractAccount!.account.id,
                         credits_posted: 100n,
                         debits_posted: 0n,
                         credits_pending: 0n,
@@ -10081,7 +10318,7 @@ describe('SubscriptionController', () => {
         });
     });
 
-    describe.only('handleStripeWebhook()', () => {
+    describe('handleStripeWebhook()', () => {
         describe('user', () => {
             let user: AuthUser;
 
@@ -10480,7 +10717,7 @@ describe('SubscriptionController', () => {
 
                     checkAccounts(financialInterface, [
                         {
-                            id: userAccount.id,
+                            id: userAccount.account.id,
                             credits_pending: 0n,
                             credits_posted: 1000n * USD_TO_CREDITS,
                             debits_pending: 0n,
@@ -10503,7 +10740,7 @@ describe('SubscriptionController', () => {
                                 amount: 1000n * USD_TO_CREDITS,
                                 code: TransferCodes.purchase_credits,
                                 debit_account_id: ACCOUNT_IDS.liquidity_credits,
-                                credit_account_id: userAccount.id,
+                                credit_account_id: userAccount.account.id,
                             },
                         ]
                     );
@@ -10589,7 +10826,7 @@ describe('SubscriptionController', () => {
 
                     checkAccounts(financialInterface, [
                         {
-                            id: userAccount.id,
+                            id: userAccount.account.id,
                             credits_pending: 0n,
                             credits_posted: 500n,
                             debits_pending: 0n,
@@ -10612,7 +10849,7 @@ describe('SubscriptionController', () => {
                                 amount: 500n,
                                 code: TransferCodes.purchase_credits,
                                 debit_account_id: ACCOUNT_IDS.liquidity_credits,
-                                credit_account_id: userAccount.id,
+                                credit_account_id: userAccount.account.id,
                             },
                         ]
                     );
@@ -10950,7 +11187,7 @@ describe('SubscriptionController', () => {
 
                         checkAccounts(financialInterface, [
                             {
-                                id: studioAccount.id,
+                                id: studioAccount.account.id,
                                 credits_pending: 0n,
                                 credits_posted: 1000n * USD_TO_CREDITS,
                                 debits_pending: 0n,
@@ -10975,7 +11212,7 @@ describe('SubscriptionController', () => {
                                     code: TransferCodes.purchase_credits,
                                     debit_account_id:
                                         ACCOUNT_IDS.liquidity_credits,
-                                    credit_account_id: studioAccount.id,
+                                    credit_account_id: studioAccount.account.id,
                                 },
                             ]
                         );
@@ -11061,7 +11298,7 @@ describe('SubscriptionController', () => {
 
                         checkAccounts(financialInterface, [
                             {
-                                id: studioAccount.id,
+                                id: studioAccount.account.id,
                                 credits_pending: 0n,
                                 credits_posted: 500n,
                                 debits_pending: 0n,
@@ -11086,7 +11323,7 @@ describe('SubscriptionController', () => {
                                     code: TransferCodes.purchase_credits,
                                     debit_account_id:
                                         ACCOUNT_IDS.liquidity_credits,
-                                    credit_account_id: studioAccount.id,
+                                    credit_account_id: studioAccount.account.id,
                                 },
                             ]
                         );
@@ -11845,7 +12082,8 @@ describe('SubscriptionController', () => {
                                     amount: 100,
                                     code: TransferCodes.contract_payment,
                                     debitAccountId: ACCOUNT_IDS.assets_stripe,
-                                    creditAccountId: contractAccount!.id,
+                                    creditAccountId:
+                                        contractAccount!.account.id,
                                     currency: CurrencyCodes.usd,
                                     pending: true,
                                 },
@@ -11944,7 +12182,7 @@ describe('SubscriptionController', () => {
                                 id: 10n,
                                 amount: 100n,
                                 code: TransferCodes.contract_payment,
-                                credit_account_id: contractAccount!.id,
+                                credit_account_id: contractAccount!.account.id,
                                 debit_account_id: ACCOUNT_IDS.assets_stripe,
                                 // Should no longer be pending
                                 flags:
@@ -11995,7 +12233,7 @@ describe('SubscriptionController', () => {
                             debits_pending: 0n,
                         },
                         {
-                            id: contractAccount!.id,
+                            id: contractAccount!.account.id,
                             credits_posted: 100n,
                             debits_posted: 0n,
                             credits_pending: 0n,
@@ -12460,5 +12698,197 @@ describe('parseActivationKey()', () => {
 
     it('should return null if given a string with invalid base64', () => {
         expect(parseActivationKey('vAK1.id.password')).toBeNull();
+    });
+});
+
+describe.only('charactarizeTransfer()', () => {
+    const cases = [
+        [
+            'Admin credit from Stripe',
+            TransferCodes.admin_credit,
+            ACCOUNT_IDS.assets_stripe,
+            1n,
+        ] as const,
+        [
+            'Admin credit from Cash',
+            TransferCodes.admin_credit,
+            ACCOUNT_IDS.assets_cash,
+            1n,
+        ] as const,
+        [
+            'Admin credit to Stripe',
+            TransferCodes.admin_credit,
+            1n,
+            ACCOUNT_IDS.assets_stripe,
+        ] as const,
+        [
+            'Admin credit to Cash',
+            TransferCodes.admin_credit,
+            1n,
+            ACCOUNT_IDS.assets_cash,
+        ] as const,
+
+        [
+            'Admin debit from Stripe',
+            TransferCodes.admin_debit,
+            ACCOUNT_IDS.assets_stripe,
+            1n,
+        ] as const,
+        [
+            'Admin debit from Cash',
+            TransferCodes.admin_debit,
+            ACCOUNT_IDS.assets_cash,
+            1n,
+        ] as const,
+        [
+            'Admin debit to Stripe',
+            TransferCodes.admin_debit,
+            1n,
+            ACCOUNT_IDS.assets_stripe,
+        ] as const,
+        [
+            'Admin debit to Cash',
+            TransferCodes.admin_debit,
+            1n,
+            ACCOUNT_IDS.assets_cash,
+        ] as const,
+
+        ['Account closing', TransferCodes.account_closing, 1n, 2n] as const,
+        [
+            'Account closing from Stripe',
+            TransferCodes.account_closing,
+            ACCOUNT_IDS.assets_stripe,
+            1n,
+        ] as const,
+        [
+            'Account closing from Cash',
+            TransferCodes.account_closing,
+            ACCOUNT_IDS.assets_cash,
+            1n,
+        ] as const,
+        [
+            'Account closing to Stripe',
+            TransferCodes.account_closing,
+            1n,
+            ACCOUNT_IDS.assets_stripe,
+        ] as const,
+        [
+            'Account closing to Cash',
+            TransferCodes.account_closing,
+            1n,
+            ACCOUNT_IDS.assets_cash,
+        ] as const,
+
+        ['Credit purchase', TransferCodes.purchase_credits, 1n, 2n] as const,
+        [
+            'Exchange from USD to Credits',
+            TransferCodes.exchange,
+            1n,
+            ACCOUNT_IDS.liquidity_usd,
+        ] as const,
+        [
+            'Exchange from Credits to USD',
+            TransferCodes.exchange,
+            ACCOUNT_IDS.liquidity_usd,
+            1n,
+        ] as const,
+
+        [
+            'Contract payment from Stripe',
+            TransferCodes.contract_payment,
+            ACCOUNT_IDS.assets_stripe,
+            1n,
+        ] as const,
+        [
+            'Contract payment from Cash',
+            TransferCodes.contract_payment,
+            ACCOUNT_IDS.assets_cash,
+            1n,
+        ] as const,
+
+        [
+            'Contract refund to Stripe',
+            TransferCodes.contract_refund,
+            1n,
+            ACCOUNT_IDS.assets_stripe,
+        ] as const,
+        [
+            'Contract refund to Cash',
+            TransferCodes.contract_refund,
+            1n,
+            ACCOUNT_IDS.assets_cash,
+        ] as const,
+
+        [
+            'Item payment from Stripe',
+            TransferCodes.item_payment,
+            ACCOUNT_IDS.assets_stripe,
+            1n,
+        ] as const,
+        [
+            'Item payment from Cash',
+            TransferCodes.item_payment,
+            ACCOUNT_IDS.assets_cash,
+            1n,
+        ] as const,
+
+        [
+            'Invoice payment from Stripe',
+            TransferCodes.invoice_payment,
+            ACCOUNT_IDS.assets_stripe,
+            1n,
+        ] as const,
+        [
+            'Invoice payment from Cash',
+            TransferCodes.invoice_payment,
+            ACCOUNT_IDS.assets_cash,
+            1n,
+        ] as const,
+
+        [
+            'Platform fee',
+            TransferCodes.xp_platform_fee,
+            1n,
+            ACCOUNT_IDS.revenue_xp_platform_fees,
+        ] as const,
+        [
+            'Platform fee',
+            TransferCodes.store_platform_fee,
+            1n,
+            ACCOUNT_IDS.revenue_store_platform_fees,
+        ] as const,
+
+        [
+            'Payout to Stripe',
+            TransferCodes.user_payout,
+            1n,
+            ACCOUNT_IDS.assets_stripe,
+        ] as const,
+        [
+            'Payout to Cash',
+            TransferCodes.user_payout,
+            1n,
+            ACCOUNT_IDS.assets_cash,
+        ] as const,
+    ];
+
+    it.each(cases)('should support %s', (note, code, debit, credit) => {
+        const calculated = charactarizeTransfer({
+            amount: 500n,
+            code: code,
+            debit_account_id: debit,
+            credit_account_id: credit,
+            timestamp: 1234n,
+            flags: TransferFlags.none,
+            id: 9n,
+            ledger: LEDGERS.credits,
+            user_data_32: 0,
+            user_data_64: 0n,
+            user_data_128: 0n,
+            timeout: 0,
+            pending_id: 0n,
+        });
+
+        expect(calculated).toBe(note);
     });
 });

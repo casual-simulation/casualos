@@ -390,6 +390,37 @@ export class FinancialController {
     }
 
     /**
+     * Gets the details for the financial account with the given ID.
+     * @param accountId The ID of the account to get details for.
+     */
+    @traced(TRACE_NAME)
+    async getAccountDetails(
+        accountId: bigint | string
+    ): Promise<GetFinancialAccountResult> {
+        const financialAccount = await this._financialStore.getAccountById(
+            accountId.toString()
+        );
+
+        if (!financialAccount) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: `The financial account does not exist.`,
+            });
+        }
+
+        const account = await this.getAccount(financialAccount.id);
+
+        if (isFailure(account)) {
+            return account;
+        }
+
+        return success({
+            account: account.value,
+            financialAccount,
+        });
+    }
+
+    /**
      * Attempts to get the financial account for the given filter.
      * @param filter The filter to use.
      */
@@ -1077,13 +1108,12 @@ export type CreateFinancialAccountResult = Result<
     SimpleError
 >;
 
-export type GetFinancialAccountResult = Result<
-    {
-        account: Account;
-        financialAccount: FinancialAccount;
-    },
-    SimpleError
->;
+export interface AccountWithDetails {
+    account: Account;
+    financialAccount: FinancialAccount;
+}
+
+export type GetFinancialAccountResult = Result<AccountWithDetails, SimpleError>;
 
 export type GetAccountsResult = Result<
     {
