@@ -27,6 +27,7 @@ import {
     ACCOUNT_IDS,
     AccountCodes,
     AMOUNT_MAX,
+    CurrencyCodes,
     LEDGERS,
     TransferCodes,
 } from './FinancialInterface';
@@ -244,21 +245,29 @@ describe('FinancialController', () => {
             });
             expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1,
-                    debits_pending: 0,
-                    debits_posted: 0,
-                    credits_pending: 0,
-                    credits_posted: 0,
-                    user_data_128: 0,
-                    user_data_64: 0,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: LEDGERS.credits,
-                    flags:
-                        AccountFlags.debits_must_not_exceed_credits |
-                        AccountFlags.history,
-                    code: AccountCodes.liabilities_user,
-                    timestamp: expect.any(Number),
+                    account: {
+                        id: 1,
+                        debits_pending: 0,
+                        debits_posted: 0,
+                        credits_pending: 0,
+                        credits_posted: 0,
+                        user_data_128: 0,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                        reserved: 0,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.history,
+                        code: AccountCodes.liabilities_user,
+                        timestamp: expect.any(Number),
+                    },
+                    financialAccount: {
+                        userId: 'user1',
+                        currency: CurrencyCodes.credits,
+                        id: '1',
+                        ledger: LEDGERS.credits,
+                    },
                 })
             );
 
@@ -292,21 +301,29 @@ describe('FinancialController', () => {
             });
             expect(mapBigInts(account)).toEqual(
                 success({
-                    id: Number(result.id),
-                    debits_pending: 0,
-                    debits_posted: 0,
-                    credits_pending: 0,
-                    credits_posted: 0,
-                    user_data_128: 0,
-                    user_data_64: 0,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: LEDGERS.credits,
-                    flags:
-                        AccountFlags.debits_must_not_exceed_credits |
-                        AccountFlags.history,
-                    code: AccountCodes.liabilities_user,
-                    timestamp: expect.any(Number),
+                    account: {
+                        id: Number(result.id),
+                        debits_pending: 0,
+                        debits_posted: 0,
+                        credits_pending: 0,
+                        credits_posted: 0,
+                        user_data_128: 0,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                        reserved: 0,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.history,
+                        code: AccountCodes.liabilities_user,
+                        timestamp: expect.any(Number),
+                    },
+                    financialAccount: {
+                        userId: 'user1',
+                        currency: CurrencyCodes.credits,
+                        id: String(result.id),
+                        ledger: LEDGERS.credits,
+                    },
                 })
             );
 
@@ -327,21 +344,29 @@ describe('FinancialController', () => {
             });
             expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1,
-                    debits_pending: 0,
-                    debits_posted: 0,
-                    credits_pending: 0,
-                    credits_posted: 0,
-                    user_data_128: 0,
-                    user_data_64: 0,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: LEDGERS.credits,
-                    flags:
-                        AccountFlags.debits_must_not_exceed_credits |
-                        AccountFlags.history,
-                    code: AccountCodes.liabilities_studio,
-                    timestamp: expect.any(Number),
+                    account: {
+                        id: 1,
+                        debits_pending: 0,
+                        debits_posted: 0,
+                        credits_pending: 0,
+                        credits_posted: 0,
+                        user_data_128: 0,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                        reserved: 0,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.history,
+                        code: AccountCodes.liabilities_studio,
+                        timestamp: expect.any(Number),
+                    },
+                    financialAccount: {
+                        studioId: 'studio1',
+                        currency: CurrencyCodes.credits,
+                        id: '1',
+                        ledger: LEDGERS.credits,
+                    },
                 })
             );
 
@@ -375,21 +400,29 @@ describe('FinancialController', () => {
             });
             expect(mapBigInts(account)).toEqual(
                 success({
-                    id: Number(result.id),
-                    debits_pending: 0,
-                    debits_posted: 0,
-                    credits_pending: 0,
-                    credits_posted: 0,
-                    user_data_128: 0,
-                    user_data_64: 0,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: LEDGERS.credits,
-                    flags:
-                        AccountFlags.debits_must_not_exceed_credits |
-                        AccountFlags.history,
-                    code: AccountCodes.liabilities_studio,
-                    timestamp: expect.any(Number),
+                    account: {
+                        id: Number(result.id),
+                        debits_pending: 0,
+                        debits_posted: 0,
+                        credits_pending: 0,
+                        credits_posted: 0,
+                        user_data_128: 0,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                        reserved: 0,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.history,
+                        code: AccountCodes.liabilities_studio,
+                        timestamp: expect.any(Number),
+                    },
+                    financialAccount: {
+                        studioId: 'studio1',
+                        currency: CurrencyCodes.credits,
+                        id: String(result.id),
+                        ledger: LEDGERS.credits,
+                    },
                 })
             );
 
@@ -410,21 +443,29 @@ describe('FinancialController', () => {
             });
             expect(mapBigInts(account)).toEqual(
                 success({
-                    id: 1,
-                    debits_pending: 0,
-                    debits_posted: 0,
-                    credits_pending: 0,
-                    credits_posted: 0,
-                    user_data_128: 0,
-                    user_data_64: 0,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: LEDGERS.credits,
-                    flags:
-                        AccountFlags.debits_must_not_exceed_credits |
-                        AccountFlags.history,
-                    code: AccountCodes.liabilities_contract,
-                    timestamp: expect.any(Number),
+                    account: {
+                        id: 1,
+                        debits_pending: 0,
+                        debits_posted: 0,
+                        credits_pending: 0,
+                        credits_posted: 0,
+                        user_data_128: 0,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                        reserved: 0,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.history,
+                        code: AccountCodes.liabilities_contract,
+                        timestamp: expect.any(Number),
+                    },
+                    financialAccount: {
+                        contractId: 'contract1',
+                        currency: CurrencyCodes.credits,
+                        id: '1',
+                        ledger: LEDGERS.credits,
+                    },
                 })
             );
 
@@ -458,21 +499,29 @@ describe('FinancialController', () => {
             });
             expect(mapBigInts(account)).toEqual(
                 success({
-                    id: Number(result.id),
-                    debits_pending: 0,
-                    debits_posted: 0,
-                    credits_pending: 0,
-                    credits_posted: 0,
-                    user_data_128: 0,
-                    user_data_64: 0,
-                    user_data_32: 0,
-                    reserved: 0,
-                    ledger: LEDGERS.credits,
-                    flags:
-                        AccountFlags.debits_must_not_exceed_credits |
-                        AccountFlags.history,
-                    code: AccountCodes.liabilities_contract,
-                    timestamp: expect.any(Number),
+                    account: {
+                        id: Number(result.id),
+                        debits_pending: 0,
+                        debits_posted: 0,
+                        credits_pending: 0,
+                        credits_posted: 0,
+                        user_data_128: 0,
+                        user_data_64: 0,
+                        user_data_32: 0,
+                        reserved: 0,
+                        ledger: LEDGERS.credits,
+                        flags:
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.history,
+                        code: AccountCodes.liabilities_contract,
+                        timestamp: expect.any(Number),
+                    },
+                    financialAccount: {
+                        contractId: 'contract1',
+                        currency: CurrencyCodes.credits,
+                        id: String(result.id),
+                        ledger: LEDGERS.credits,
+                    },
                 })
             );
 

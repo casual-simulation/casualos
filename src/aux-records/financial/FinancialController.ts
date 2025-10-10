@@ -54,6 +54,7 @@ import {
 } from 'tigerbeetle-node';
 import { traced } from '../tracing/TracingDecorators';
 import type {
+    FinancialAccount,
     FinancialAccountFilter,
     FinancialStore,
     UniqueFinancialAccountFilter,
@@ -348,7 +349,7 @@ export class FinancialController {
     @traced(TRACE_NAME)
     async getAccount(
         accountId: bigint | string
-    ): Promise<GetFinancialAccountResult> {
+    ): Promise<Result<Account, SimpleError>> {
         if (typeof accountId === 'string') {
             accountId = BigInt(accountId);
         }
@@ -396,16 +397,27 @@ export class FinancialController {
     async getFinancialAccount(
         filter: UniqueFinancialAccountFilter
     ): Promise<GetFinancialAccountResult> {
-        const account = await this._financialStore.getAccountByFilter(filter);
+        const financialAccount = await this._financialStore.getAccountByFilter(
+            filter
+        );
 
-        if (!account) {
+        if (!financialAccount) {
             return failure({
                 errorCode: 'not_found',
                 errorMessage: `The financial account does not exist.`,
             });
         }
 
-        return await this.getAccount(account.id);
+        const account = await this.getAccount(financialAccount.id);
+
+        if (isFailure(account)) {
+            return account;
+        }
+
+        return success({
+            account: account.value,
+            financialAccount,
+        });
     }
 
     /**
@@ -416,8 +428,9 @@ export class FinancialController {
     async getOrCreateFinancialAccount(
         filter: UniqueFinancialAccountFilter
     ): Promise<GetFinancialAccountResult> {
-        const account = await this._financialStore.getAccountByFilter(filter);
+        let account = await this._financialStore.getAccountByFilter(filter);
 
+        let accountResult: Result<Account, SimpleError>;
         if (!account) {
             console.log(
                 `[FinancialController] [getOrCreateFinancialAccount] Creating account for filter [userId: ${filter.userId}, studioId: ${filter.studioId}, contractId: ${filter.contractId}] on ledger ${filter.ledger}`
@@ -445,19 +458,29 @@ export class FinancialController {
                 return result;
             }
 
-            await this._financialStore.createAccount({
+            account = {
                 id: result.value.id.toString(),
                 userId: filter.userId,
                 studioId: filter.studioId,
                 contractId: filter.contractId,
                 ledger: filter.ledger,
                 currency: CURRENCIES.get(filter.ledger),
-            });
+            };
+            await this._financialStore.createAccount(account);
 
-            return await this.getAccount(result.value.id);
+            accountResult = await this.getAccount(result.value.id);
+        } else {
+            accountResult = await this.getAccount(account.id);
         }
 
-        return await this.getAccount(account.id);
+        if (isFailure(accountResult)) {
+            return accountResult;
+        }
+
+        return success({
+            account: accountResult.value,
+            financialAccount: account,
+        });
     }
 
     /**
@@ -1054,7 +1077,13 @@ export type CreateFinancialAccountResult = Result<
     SimpleError
 >;
 
-export type GetFinancialAccountResult = Result<Account, SimpleError>;
+export type GetFinancialAccountResult = Result<
+    {
+        account: Account;
+        financialAccount: FinancialAccount;
+    },
+    SimpleError
+>;
 
 export type GetAccountsResult = Result<
     {
