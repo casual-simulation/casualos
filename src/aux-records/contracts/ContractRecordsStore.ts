@@ -51,6 +51,15 @@ export interface ContractRecordsStore extends CrudRecordsStore<ContractRecord> {
      * @param address The address of the contract.
      */
     markContractAsClosed(recordName: string, address: string): Promise<void>;
+
+    /**
+     * Getes the contract record with the given ID.
+     * @param id The ID of the contract to get.
+     */
+    getItemById(id: string): Promise<{
+        recordName: string;
+        contract: ContractRecord;
+    } | null>;
 }
 
 /**
@@ -102,7 +111,7 @@ export interface ContractRecord extends CrudRecord {
 
     /**
      * The initial value of the contract.
-     * This is the total amount of money that the contract was worth when it was created.
+     * This is the total value of what the contract was worth when it was created.
      */
     initialValue: number;
 

@@ -438,20 +438,83 @@ export class SubscriptionController {
         // Check if the user has permission to access this account
         if (!isSuperUserRole(request.userRole)) {
             // Users can only access their own accounts
-            if (
-                financialAccount.userId &&
-                financialAccount.userId !== request.userId
-            ) {
-                return failure({
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                });
-            }
+            if (financialAccount.userId) {
+                if (financialAccount.userId !== request.userId) {
+                    return failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    });
+                }
+            } else if (financialAccount.studioId) {
+                const assignments =
+                    await this._recordsStore.listStudioAssignments(
+                        financialAccount.studioId,
+                        {
+                            role: 'admin',
+                        }
+                    );
 
-            // Users cannot access studio accounts they don't belong to
-            if (financialAccount.studioId || financialAccount.contractId) {
-                // TODO: Check if the user is a member of the studio
+                const userAssignment = assignments.find(
+                    (a) => a.userId === request.userId
+                );
+
+                if (!userAssignment || userAssignment.role !== 'admin') {
+                    return failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    });
+                }
+            } else if (financialAccount.contractId) {
+                const contract = await this._contractRecords.getItemById(
+                    financialAccount.contractId
+                );
+
+                if (!contract) {
+                    console.error(
+                        '[SubscriptionController] Contract not found for account:',
+                        financialAccount.id
+                    );
+                    return failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                    });
+                }
+
+                // Holding and issuing users can read contract accounts.
+                if (
+                    contract.contract.holdingUserId !== request.userId &&
+                    contract.contract.issuingUserId !== request.userId
+                ) {
+                    const context =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: contract.recordName,
+                            userId: request.userId,
+                            userRole: request.userRole,
+                        });
+
+                    if (context.success === false) {
+                        return failure(context);
+                    }
+
+                    const authorization = await this._policies.authorizeSubject(
+                        context,
+                        {
+                            action: 'read',
+                            resourceKind: 'contract',
+                            resourceId: contract.contract.address,
+                            subjectType: 'user',
+                            subjectId: request.userId,
+                            markers: contract.contract.markers,
+                        }
+                    );
+
+                    if (authorization.success === false) {
+                        return failure(authorization);
+                    }
+                }
+            } else {
                 return failure({
                     errorCode: 'not_authorized',
                     errorMessage:

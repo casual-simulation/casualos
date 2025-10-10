@@ -30,6 +30,21 @@ export class MemoryContractRecordsStore
     extends MemoryCrudRecordsStore<ContractRecord>
     implements ContractRecordsStore
 {
+    async getItemById(
+        id: string
+    ): Promise<{ recordName: string; contract: ContractRecord } | null> {
+        const records = await this.getItemRecords();
+        for (let [recordName, items] of records) {
+            for (let item of items.values()) {
+                if (item.id === id) {
+                    return { recordName, contract: item };
+                }
+            }
+        }
+
+        return null;
+    }
+
     async markPendingContractAsOpen(
         recordName: string,
         address: string

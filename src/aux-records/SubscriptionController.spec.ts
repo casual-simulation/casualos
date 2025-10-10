@@ -1779,7 +1779,7 @@ describe('SubscriptionController', () => {
         });
     });
 
-    describe.only('listAccountTransfers()', () => {
+    describe('listAccountTransfers()', () => {
         let user: AuthUser;
 
         beforeEach(async () => {
@@ -2009,6 +2009,629 @@ describe('SubscriptionController', () => {
                         errorCode: 'not_authorized',
                         errorMessage:
                             'You are not authorized to perform this action.',
+                    })
+                );
+            });
+        });
+
+        describe('studio', () => {
+            let account: AccountWithDetails;
+            let studioId: string = 'studioId';
+
+            beforeEach(async () => {
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'Test Studio',
+                    },
+                    userId
+                );
+
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        studioId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            amount: 123,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            debitAccountId: account.account.id,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                            pending: true,
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to list the transfers for the studio if the user is an admin in the studio', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId,
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            studioId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should allow super users to list the transfers for any account', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: 'some_other_user',
+                    userRole: 'superUser',
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            studioId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user doesnt own the account', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: 'other_user',
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user is not an admin of the studio', async () => {
+                const otherUserId = 'other_user';
+                await store.saveUser({
+                    id: otherUserId,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    email: 'other_user@example.com',
+                    phoneNumber: null,
+                });
+
+                await store.addStudioAssignment({
+                    userId: otherUserId,
+                    studioId,
+                    role: 'member',
+                    isPrimaryContact: false,
+                });
+
+                const result = await controller.listAccountTransfers({
+                    userId: otherUserId,
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+        });
+
+        describe('contract', () => {
+            let account: AccountWithDetails;
+            let contractId: string = 'contractId';
+            let recordName: string = 'testRecord';
+            let xpUserId: string = 'xpUserId';
+
+            beforeEach(async () => {
+                nowMock.mockReturnValue(101);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    studioId: null,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveUser({
+                    id: xpUserId,
+                    email: 'xpUser@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                });
+
+                await contractStore.putItem(recordName, {
+                    id: contractId,
+                    address: 'item1',
+                    initialValue: 100,
+                    holdingUserId: xpUserId,
+                    issuingUserId: userId,
+                    issuedAtMs: 100,
+                    rate: 1,
+                    status: 'open',
+                    markers: [PRIVATE_MARKER],
+                });
+
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            amount: 123,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            debitAccountId: account.account.id,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                            pending: true,
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to list the transfers for the contract if the user is the issuer of the contract', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId,
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            contractId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should be able to list the transfers for the contract if the user is the holder of the contract', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: xpUserId,
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            contractId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should allow super users to list the transfers for any account', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: 'some_other_user',
+                    userRole: 'superUser',
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        accountDetails: {
+                            contractId,
+                            id: account.account.id.toString(),
+                            ledger: LEDGERS.usd,
+                            currency: 'usd',
+                        },
+                        account: {
+                            pendingCreditsN: '99',
+                            pendingDebitsN: '0',
+                            creditsN: '5123',
+                            debitsN: '500',
+                            displayFactorN: '100',
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        },
+                        transfers: [
+                            {
+                                id: '3',
+                                amountN: '5000',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '4',
+                                amountN: '123',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '2',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '6',
+                                amountN: '500',
+                                creditAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                debitAccountId: account.account.id.toString(),
+                                code: TransferCodes.admin_debit,
+                                note: 'Admin debit to Stripe',
+                                transactionId: '5',
+                                timeMs: expect.any(Number),
+                                pending: false,
+                            },
+                            {
+                                id: '8',
+                                amountN: '99',
+                                creditAccountId: account.account.id.toString(),
+                                debitAccountId:
+                                    ACCOUNT_IDS.assets_stripe.toString(),
+                                code: TransferCodes.admin_credit,
+                                pending: true,
+                                note: 'Admin credit from Stripe',
+                                transactionId: '7',
+                                timeMs: expect.any(Number),
+                            },
+                        ],
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user doesnt own the account', async () => {
+                const result = await controller.listAccountTransfers({
+                    userId: 'other_user',
+                    accountId: account.account.id,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            action: 'read',
+                            recordName: 'testRecord',
+                            resourceId: 'item1',
+                            resourceKind: 'contract',
+                            subjectId: 'other_user',
+                            subjectType: 'user',
+                            type: 'missing_permission',
+                        },
                     })
                 );
             });
@@ -12701,7 +13324,7 @@ describe('parseActivationKey()', () => {
     });
 });
 
-describe.only('charactarizeTransfer()', () => {
+describe('charactarizeTransfer()', () => {
     const cases = [
         [
             'Admin credit from Stripe',

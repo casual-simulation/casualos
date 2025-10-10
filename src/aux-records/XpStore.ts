@@ -111,6 +111,9 @@ export interface ModelBase extends GenericTimeKeys {
     id: string;
 }
 
+/**
+ * @deprecated
+ */
 export interface XpUser {
     /**
      * The id of the user in the xp system.
@@ -140,6 +143,7 @@ export interface XpUserWithUserInfo extends XpUser, AuthUser {}
 
 /**
  * Mimics a "Smart Contract" (crypto/blockchain) data model for the xp system
+ * @deprecated Use ContractRecord instead
  */
 export interface XpContract extends ModelBase {
     /** The id of the account associated with the contract */
@@ -160,6 +164,8 @@ export interface XpContract extends ModelBase {
 
 /**
  * Represents an invoice for a contract
+ *
+ * @deprecated Use ContractInvoice instead
  */
 export interface XpInvoice extends ModelBase {
     /** The id of the contract the invoice is made for */
