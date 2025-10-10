@@ -130,7 +130,7 @@ export const LEDGER_EXCHANGE_RATES = new Map<
  * Gets the currency code for the given account.
  * @param account The account to get the currency code for.
  */
-export function getAccountCurrency(account: Account): string {
+export function getAccountCurrency(account: Account): CurrencyCodesType {
     return CURRENCIES.get(account.ledger);
 }
 

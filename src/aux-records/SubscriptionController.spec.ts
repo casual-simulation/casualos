@@ -885,6 +885,8 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
+                            accountId: account1.id.toString(),
+                            currency: 'usd',
                         },
                         credits: {
                             pendingCreditsN: '0',
@@ -892,6 +894,8 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            accountId: account2.id.toString(),
+                            currency: 'credits',
                         },
                     },
                     purchasableSubscriptions: [
@@ -1022,6 +1026,8 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
+                            accountId: account1.id.toString(),
+                            currency: 'usd',
                         },
                         credits: {
                             pendingCreditsN: '2000',
@@ -1029,6 +1035,8 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            accountId: account2.id.toString(),
+                            currency: 'credits',
                         },
                     },
                     purchasableSubscriptions: [
@@ -1589,6 +1597,8 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
+                            accountId: account1.id.toString(),
+                            currency: 'usd',
                         },
                         credits: {
                             pendingCreditsN: '0',
@@ -1596,6 +1606,8 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            accountId: account2.id.toString(),
+                            currency: 'credits',
                         },
                     },
                     purchasableSubscriptions: [
@@ -1727,6 +1739,8 @@ describe('SubscriptionController', () => {
                             creditsN: '5000',
                             debitsN: '0',
                             displayFactorN: '100',
+                            accountId: account1.id.toString(),
+                            currency: 'usd',
                         },
                         credits: {
                             pendingCreditsN: '2000',
@@ -1734,6 +1748,8 @@ describe('SubscriptionController', () => {
                             creditsN: '2000',
                             debitsN: '0',
                             displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            accountId: account2.id.toString(),
+                            currency: 'credits',
                         },
                     },
                     purchasableSubscriptions: [

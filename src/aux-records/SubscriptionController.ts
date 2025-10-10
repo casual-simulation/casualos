@@ -104,6 +104,7 @@ import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import type {
+    CurrencyCodesType,
     FinancialController,
     InternalTransfer,
     UniqueFinancialAccountFilter,
@@ -116,6 +117,7 @@ import {
     CURRENCIES,
     CurrencyCodes,
     getAccountBalance,
+    getAccountCurrency,
     getLiquidityAccountByLedger,
     LEDGERS,
     TransferCodes,
@@ -475,6 +477,8 @@ export class SubscriptionController {
                 ? CREDITS_DISPLAY_FACTOR
                 : USD_DISPLAY_FACTOR
             ).toString(),
+            currency: getAccountCurrency(result.value),
+            accountId: result.value.id.toString(),
         });
     }
 
@@ -3807,6 +3811,11 @@ export interface AccountBalances {
  */
 export interface AccountBalance {
     /**
+     * The ID of the account.
+     */
+    accountId: string;
+
+    /**
      * The number of credits in the account as a string.
      */
     creditsN: string;
@@ -3830,6 +3839,11 @@ export interface AccountBalance {
      * The factor that should be used to convert between credits and USD as a string.
      */
     displayFactorN: string;
+
+    /**
+     * The currency that the account is in.
+     */
+    currency: CurrencyCodesType;
 }
 
 export interface SubscriptionStatus {
