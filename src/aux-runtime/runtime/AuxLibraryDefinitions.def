@@ -13936,6 +13936,12 @@ interface Os {
     hideQRCode(): ShowQRCodeAction;
 
     /**
+     * Generates a QR Code for the given data and returns a Data URL.
+     * @param code The text or data that the generated QR Code should represent.
+     */
+    generateQRCode(code: string): Promise<string>;
+
+    /**
      * Opens the barcode scanner.
      * @param camera The camera that should be used.
      */

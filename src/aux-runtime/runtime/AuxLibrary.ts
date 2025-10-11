@@ -433,6 +433,7 @@ import {
 import { Vector3 as ThreeVector3, Plane, Ray } from '@casual-simulation/three';
 import mime from 'mime';
 import TWEEN from '@tweenjs/tween.js';
+import QRCode from 'qrcode';
 import './PerformanceNowPolyfill';
 import '@casual-simulation/aux-common/BlobPolyfill';
 import type { AuxDevice } from './AuxDevice';
@@ -3575,6 +3576,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeQRCodeScanner,
                 showQRCode,
                 hideQRCode,
+                generateQRCode,
                 openBarcodeScanner,
                 closeBarcodeScanner,
                 showBarcode,
@@ -7438,6 +7440,29 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function hideQRCode(): ShowQRCodeAction {
         const event = calcShowQRCode(false);
         return addAction(event);
+    }
+
+    /**
+     * Generates a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data and returns a [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) that can be used in an img tag or as a {@tag formAddress}.
+     *
+     * Returns a promise that resolves with the data URL string.
+     *
+     * @param code the text or data that the generated QR Code should represent.
+     *
+     * @example Generate a QR Code that contains the data "hello".
+     * const qrCodeUrl = await os.generateQRCode("hello");
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @example Generate a QR Code that links to https://example.com
+     * const qrCodeUrl = await os.generateQRCode("https://example.com");
+     * masks.formAddress = qrCodeUrl;
+     *
+     * @dochash actions/os/barcodes
+     * @docname os.generateQRCode
+     * @docgroup 10-qr-code
+     */
+    function generateQRCode(code: string): Promise<string> {
+        return QRCode.toDataURL(code);
     }
 
     /**

@@ -5134,6 +5134,25 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.generateQRCode()', () => {
+            it('should return a promise that resolves to a data URL', async () => {
+                const result = await library.api.os.generateQRCode('hello');
+                expect(result).toMatch(/^data:image\/png;base64,/);
+            });
+
+            it('should generate a QR code for URLs', async () => {
+                const result = await library.api.os.generateQRCode(
+                    'https://example.com'
+                );
+                expect(result).toMatch(/^data:image\/png;base64,/);
+            });
+
+            it('should not emit any actions', async () => {
+                await library.api.os.generateQRCode('test');
+                expect(context.actions).toEqual([]);
+            });
+        });
+
         describe('os.openBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
                 const action = library.api.os.openBarcodeScanner();
