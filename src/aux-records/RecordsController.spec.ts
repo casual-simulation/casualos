@@ -2055,6 +2055,31 @@ describe('RecordsController', () => {
                 ],
             });
         });
+
+        it('should reject the request if the user does not have allowPublicData enabled', async () => {
+            const user = await store.findUser('userId');
+            await store.saveUser({
+                ...user,
+                privacyFeatures: {
+                    allowAI: true,
+                    allowPublicData: false,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await manager.listStudioRecords(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to access studio records. The allowPublicData privacy feature must be enabled.',
+            });
+        });
     });
 
     describe('createStudio()', () => {
@@ -2097,6 +2122,55 @@ describe('RecordsController', () => {
                     },
                 },
             ]);
+        });
+
+        it('should reject the request if the user does not have allowPublicData enabled', async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: true,
+                    allowPublicData: false,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            uuidMock.mockReturnValueOnce('studioId1');
+            const result = await manager.createStudio('my studio', 'userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to create studios. The allowPublicData privacy feature must be enabled.',
+            });
+        });
+
+        it('should reject the request if the user has no privacy features set', async () => {
+            await store.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: null,
+            });
+
+            uuidMock.mockReturnValueOnce('studioId1');
+            const result = await manager.createStudio('my studio', 'userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to create studios. The allowPublicData privacy feature must be enabled.',
+            });
         });
     });
 
@@ -3208,6 +3282,30 @@ describe('RecordsController', () => {
                 ],
             });
         });
+
+        it('should return an empty list if the user does not have allowPublicData enabled', async () => {
+            await store.saveUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: true,
+                    allowPublicData: false,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await manager.listStudios('userId');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [],
+            });
+        });
     });
 
     describe('listStudiosByComId()', () => {
@@ -3762,6 +3860,55 @@ describe('RecordsController', () => {
                 expect(privoMock.getUserInfo).toHaveBeenCalledTimes(2);
             });
         });
+
+        it('should filter out members who do not have allowPublicData enabled', async () => {
+            await store.saveUser({
+                id: 'userId2',
+                name: 'test user 2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: true,
+                    allowPublicData: false,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await manager.listStudioMembers(studioId, 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                members: [
+                    {
+                        studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId3',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'userId3',
+                            name: 'test user 3',
+                            email: null,
+                            phoneNumber: '555',
+                        },
+                    },
+                ],
+            });
+        });
     });
 
     describe('addStudioMember()', () => {
@@ -4196,6 +4343,37 @@ describe('RecordsController', () => {
                 success: false,
                 errorCode: 'user_not_found',
                 errorMessage: 'The user was not able to be found.',
+            });
+        });
+
+        it('should reject the request if the user being added does not have allowPublicData enabled', async () => {
+            await store.saveNewUser({
+                id: 'userId4',
+                name: 'test user 4',
+                email: 'test4@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                privacyFeatures: {
+                    allowAI: true,
+                    allowPublicData: false,
+                    allowPublicInsts: true,
+                    publishData: true,
+                },
+            });
+
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                addedUserId: 'userId4',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The user cannot be added to the studio. The allowPublicData privacy feature must be enabled for the user.',
             });
         });
     });
