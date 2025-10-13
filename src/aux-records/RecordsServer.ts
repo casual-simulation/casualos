@@ -156,7 +156,6 @@ import { getPackageVersionSpecifier } from './packages/version/PackageVersionRec
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/records/RecordKeys';
 import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
-import { genericResult } from '@casual-simulation/aux-common';
 import type { DatabaseRecordsController, DatabaseStatement } from './database';
 import type { XpController } from './XpController';
 import type { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
@@ -3053,34 +3052,34 @@ export class RecordsServer {
                     }
                 ),
 
-            getXpUserInfo: procedure()
-                .origins('api')
-                .http('GET', '/api/v2/xp/user')
-                .inputs(
-                    z.object({
-                        userId: z.string().min(1).optional().nullable(),
-                    })
-                )
-                .handler(async ({ userId }, context) => {
-                    if (!this._xpController) {
-                        return XP_API_NOT_SUPPORTED_RESULT;
-                    }
+            // getXpUserInfo: procedure()
+            //     .origins('api')
+            //     .http('GET', '/api/v2/xp/user')
+            //     .inputs(
+            //         z.object({
+            //             userId: z.string().min(1).optional().nullable(),
+            //         })
+            //     )
+            //     .handler(async ({ userId }, context) => {
+            //         if (!this._xpController) {
+            //             return XP_API_NOT_SUPPORTED_RESULT;
+            //         }
 
-                    const authUser = await this._validateSessionKey(
-                        context.sessionKey
-                    );
-                    if (authUser.success === false) {
-                        return authUser;
-                    }
+            //         const authUser = await this._validateSessionKey(
+            //             context.sessionKey
+            //         );
+            //         if (authUser.success === false) {
+            //             return authUser;
+            //         }
 
-                    //* An empty string for any of the query types will be treated as the current logged in user
-                    const result = await this._xpController.getXpUser({
-                        userId: authUser.userId,
-                        userRole: authUser.role,
-                        requestedUserId: userId,
-                    });
-                    return genericResult(result);
-                }),
+            //         //* An empty string for any of the query types will be treated as the current logged in user
+            //         const result = await this._xpController.getXpUser({
+            //             userId: authUser.userId,
+            //             userRole: authUser.role,
+            //             requestedUserId: userId,
+            //         });
+            //         return genericResult(result);
+            //     }),
 
             // TODO:
             // createXpContract: procedure()
@@ -4827,7 +4826,7 @@ export class RecordsServer {
                             userId: sessionKeyValidation.userId,
                         });
 
-                    return result;
+                    return genericResult(result);
                 }),
 
             getPlayerConfig: procedure()

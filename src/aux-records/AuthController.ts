@@ -95,7 +95,6 @@ import type {
     StripeAccountStatus,
     StripeRequirementsStatus,
 } from './StripeInterface';
-import type { FinancialController } from './financial';
 
 const TRACE_NAME = 'AuthController';
 
@@ -205,7 +204,6 @@ export class AuthController {
     private _messenger: AuthMessenger;
     private _config: ConfigurationStore;
     private _privoClient: PrivoClientInterface = null;
-    private _financialController: FinancialController = null;
     private _webAuthNRelyingParties: RelyingParty[];
     private _privoEnabled: boolean;
 
@@ -222,14 +220,12 @@ export class AuthController {
         messenger: AuthMessenger,
         configStore: ConfigurationStore,
         privoClient: PrivoClientInterface = null,
-        financialController: FinancialController = null,
         relyingParties: RelyingParty[] = []
     ) {
         this._store = authStore;
         this._messenger = messenger;
         this._config = configStore;
         this._privoClient = privoClient;
-        this._financialController = financialController;
         this._webAuthNRelyingParties = relyingParties;
         this._privoEnabled = this._privoClient !== null;
     }

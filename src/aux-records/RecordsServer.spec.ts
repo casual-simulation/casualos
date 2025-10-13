@@ -203,8 +203,8 @@ import {
 } from './database';
 import { MemoryDatabaseInterface } from './database/MemoryDatabaseInterface';
 import type { FinancialInterface } from './financial';
+import { FinancialController } from './financial';
 import { MemoryFinancialInterface } from './financial';
-import { XpController } from './XpController';
 import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
@@ -213,6 +213,7 @@ import type {
     SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
 import { allowAllFeatures } from './SubscriptionConfiguration';
+import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -463,8 +464,11 @@ describe('RecordsServer', () => {
     let stripe: StripeInterface;
     let subscriptionController: SubscriptionController;
 
-    let finanacialInterface: FinancialInterface;
-    let xpController: XpController;
+    let financialInterface: FinancialInterface;
+    let financialController: FinancialController;
+    // let xpController: XpController;
+
+    let contractRecordsStore: MemoryContractRecordsStore;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -557,6 +561,7 @@ describe('RecordsServer', () => {
             name: 'Relying Party',
             origin: accountOrigin,
         };
+
         authController = new AuthController(
             store,
             authMessenger,
@@ -753,6 +758,13 @@ describe('RecordsServer', () => {
             return null;
         });
 
+        contractRecordsStore = new MemoryContractRecordsStore(store);
+        financialInterface = new MemoryFinancialInterface();
+        financialController = new FinancialController(
+            financialInterface,
+            store
+        );
+
         subscriptionController = new SubscriptionController(
             stripe,
             authController,
@@ -761,7 +773,9 @@ describe('RecordsServer', () => {
             store,
             policyController,
             store,
-            purchasableItemsStore
+            purchasableItemsStore,
+            financialController,
+            contractRecordsStore
         );
 
         chatInterface = {
@@ -875,14 +889,12 @@ describe('RecordsServer', () => {
             databaseInterfaceProviderName: 'sqlite',
             policies: policyController,
         });
-
-        finanacialInterface = new MemoryFinancialInterface();
-        xpController = new XpController({
-            authStore: store,
-            xpStore: store,
-            authController,
-            financialInterface: finanacialInterface,
-        });
+        // xpController = new XpController({
+        //     authStore: store,
+        //     xpStore: store,
+        //     authController,
+        //     financialInterface: finanacialInterface,
+        // });
 
         server = new RecordsServer({
             allowedAccountOrigins,
@@ -908,7 +920,6 @@ describe('RecordsServer', () => {
             packageVersionController: packageVersionController,
             searchRecordsController: searchRecordsController,
             databaseRecordsController: databaseController,
-            xpController: xpController,
             purchasableItemsController,
         });
         defaultHeaders = {
@@ -4813,7 +4824,7 @@ describe('RecordsServer', () => {
         );
     });
 
-    describe('GET /api/v2/xp/user', () => {
+    describe.skip('GET /api/v2/xp/user', () => {
         it('should return not_supported if the server doesnt have an XpController', async () => {
             server = new RecordsServer({
                 allowedAccountOrigins,
@@ -10774,7 +10785,7 @@ describe('RecordsServer', () => {
         testUrl(
             'GET',
             `/api/v2/records/webhook/runs/list?recordName=${recordName}&address=testAddress`,
-            () => undefined,
+            () => null,
             () => apiHeaders
         );
     });
@@ -10924,7 +10935,7 @@ describe('RecordsServer', () => {
         testUrl(
             'GET',
             `/api/v2/records/webhook/runs/info?runId=${'run1'}`,
-            () => undefined,
+            () => null,
             () => apiHeaders
         );
     });
@@ -22831,7 +22842,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records/activationKey/claim', () => {
         const recordName = 'studioId';
-        let activationKey: string;
+        let activationKey: string | undefined;
 
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(
@@ -26117,7 +26128,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             it('should include default subscriptions in the list of purchasable subscriptions', async () => {
-                store.subscriptionConfiguration.subscriptions = [
+                store.subscriptionConfiguration!.subscriptions = [
                     {
                         id: 'sub_id',
                         eligibleProducts: ['product_id'],
@@ -26484,7 +26495,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             it('should include default subscriptions in the list of purchasable subscriptions', async () => {
-                store.subscriptionConfiguration.subscriptions = [
+                store.subscriptionConfiguration!.subscriptions = [
                     {
                         id: 'sub_id',
                         eligibleProducts: ['product_id'],
@@ -29474,7 +29485,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
     function testUrl(
         method: GenericHttpRequest['method'],
         url: string,
-        createBody: () => string,
+        createBody?: () => string | null,
         getHeaders: () => GenericHttpHeaders = () => authenticatedHeaders
     ) {
         testOrigin(method, url, createBody);
@@ -29793,7 +29804,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
     function httpRequest(
         method: GenericHttpRequest['method'],
         url: string,
-        body: GenericHttpRequest['body'] | null,
+        body: GenericHttpRequest['body'] | null | undefined,
         headers: GenericHttpHeaders = defaultHeaders,
         ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
@@ -29801,7 +29812,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
 
         return {
             path,
-            body,
+            body: body ?? null,
             headers,
             pathParams,
             method,
