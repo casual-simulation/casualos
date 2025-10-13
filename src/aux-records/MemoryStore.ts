@@ -786,6 +786,7 @@ export class MemoryStore
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     privoServiceId: user.privoServiceId,
+                    privacyFeatures: user.privacyFeatures,
                 },
             });
         }

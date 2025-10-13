@@ -17,7 +17,10 @@
  */
 import { z } from 'zod';
 import type { ComIdConfig, ComIdPlayerConfig } from './ComIdConfig';
-import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
+import type {
+    PublicRecordKeyPolicy,
+    PrivacyFeatures,
+} from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for objects that can store records.
@@ -501,6 +504,11 @@ export interface ListedStudioAssignmentUser {
      * The ID of the privo service that the user is associated with.
      */
     privoServiceId: string | null;
+
+    /**
+     * The privacy features that the user has access to.
+     */
+    privacyFeatures?: PrivacyFeatures | null;
 }
 
 /**

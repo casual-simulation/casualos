@@ -2151,7 +2151,7 @@ describe('RecordsController', () => {
             });
         });
 
-        it('should reject the request if the user has no privacy features set', async () => {
+        it('should allow the request if the user has no privacy features set (for backward compatibility)', async () => {
             await store.saveNewUser({
                 id: 'userId',
                 email: 'test@example.com',
@@ -2166,10 +2166,8 @@ describe('RecordsController', () => {
             const result = await manager.createStudio('my studio', 'userId');
 
             expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage:
-                    'You are not authorized to create studios. The allowPublicData privacy feature must be enabled.',
+                success: true,
+                studioId: 'studioId1',
             });
         });
     });
@@ -2211,6 +2209,20 @@ describe('RecordsController', () => {
         });
 
         it('should be able to create a studio in a comId', async () => {
+            // Increase maxStudios to allow another studio to be created
+            store.subscriptionConfiguration = buildSubscriptionConfig(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withComId({
+                                allowed: true,
+                                maxStudios: 2,
+                            })
+                    )
+            );
+
             uuidMock.mockReturnValueOnce('studioId2');
             const result = await manager.createStudioInComId(
                 'my studio',
@@ -3088,7 +3100,7 @@ describe('RecordsController', () => {
         });
 
         it('should send a request_com_id notification for the studio', async () => {
-            uuidMock.mockReturnValueOnce('requestId');
+            uuidMock.mockReturnValueOnce('studioId3');
             const result = await manager.requestComId({
                 studioId: 'studioId',
                 userId: 'userId',
@@ -3108,7 +3120,7 @@ describe('RecordsController', () => {
                     recordName: null,
                     timeMs: expect.any(Number),
                     request: {
-                        id: 'requestId',
+                        id: 'studioId3',
                         studioId: 'studioId',
                         userId: 'userId',
                         requestingIpAddress: '127.0.0.1',

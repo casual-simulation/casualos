@@ -687,7 +687,10 @@ export class RecordsController {
                     // Check if the user has allowPublicData enabled
                     if (userId) {
                         const user = await this._auth.findUser(userId);
-                        if (!user?.privacyFeatures?.allowPublicData) {
+                        if (
+                            user?.privacyFeatures &&
+                            !user.privacyFeatures.allowPublicData
+                        ) {
                             return {
                                 success: false,
                                 errorCode: 'not_authorized',
@@ -805,7 +808,10 @@ export class RecordsController {
             // Check if the user has allowPublicData enabled when accessing studio records
             if (studioMembers && studioMembers.length > 0 && userId) {
                 const user = await this._auth.findUser(userId);
-                if (!user?.privacyFeatures?.allowPublicData) {
+                if (
+                    user?.privacyFeatures &&
+                    !user.privacyFeatures.allowPublicData
+                ) {
                     return {
                         success: false,
                         errorCode: 'not_authorized',
@@ -941,7 +947,10 @@ export class RecordsController {
             }
 
             const user = await this._auth.findUser(userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_authorized',
@@ -997,7 +1006,10 @@ export class RecordsController {
     ): Promise<CreateStudioResult> {
         try {
             const user = await this._auth.findUser(userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_authorized',
@@ -1051,7 +1063,10 @@ export class RecordsController {
     ): Promise<CreateStudioInComIdResult> {
         try {
             const user = await this._auth.findUser(userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_authorized',
@@ -1161,7 +1176,10 @@ export class RecordsController {
     ): Promise<UpdateStudioResult> {
         try {
             const user = await this._auth.findUser(request.userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_authorized',
@@ -1247,7 +1265,10 @@ export class RecordsController {
     ): Promise<GetStudioResult> {
         try {
             const user = await this._auth.findUser(userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_authorized',
@@ -1422,7 +1443,10 @@ export class RecordsController {
     async listStudios(userId: string): Promise<ListStudiosResult> {
         try {
             const user = await this._auth.findUser(userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: true,
                     studios: [],
@@ -1479,7 +1503,10 @@ export class RecordsController {
     ): Promise<ListStudiosResult> {
         try {
             const user = await this._auth.findUser(userId);
-            if (!user?.privacyFeatures?.allowPublicData) {
+            if (
+                user?.privacyFeatures &&
+                !user.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: true,
                     studios: [],
@@ -1753,7 +1780,10 @@ export class RecordsController {
 
             // Check if the user being added has allowPublicData enabled
             const addedUser = await this._auth.findUser(addedUserId);
-            if (!addedUser?.privacyFeatures?.allowPublicData) {
+            if (
+                addedUser?.privacyFeatures &&
+                !addedUser.privacyFeatures.allowPublicData
+            ) {
                 return {
                     success: false,
                     errorCode: 'not_authorized',
