@@ -9,6 +9,12 @@
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 -   Changed webhooks to record logs to the same record that the webhook is stored in.
+-   Added privacy feature enforcement for studio operations. Users now must have the `allowPublicData` privacy feature enabled to:
+    -   Create studios
+    -   Join or be invited to studios
+    -   Access studio records and data
+    -   List studios they are members of
+    -   Studio member lists now automatically filter out users without `allowPublicData` enabled
 
 ### :bug: Bug Fixes
 
