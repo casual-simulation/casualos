@@ -981,12 +981,12 @@ export function testCrudRecordsController<
             }
 
             it('should return items after the given starting address', async () => {
-                const result = await manager.listItems({
+                const result = (await manager.listItems({
                     recordName: recordName,
                     userId,
                     startingAddress: 'address3',
                     instances: [],
-                });
+                })) as CrudListItemsSuccess<any>;
 
                 expect(result).toEqual({
                     success: true,

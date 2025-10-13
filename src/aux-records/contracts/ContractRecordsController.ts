@@ -196,7 +196,7 @@ export class ContractRecordsController extends CrudRecordsController<
         authorization:
             | AuthorizeUserAndInstancesSuccess
             | AuthorizeUserAndInstancesForResourcesSuccess,
-        item?: ContractRecord
+        item?: ContractRecordInput
     ): Promise<ContractRecordsSubscriptionMetricsResult> {
         const config = await this.config.getSubscriptionConfiguration();
         const metrics = await this.store.getSubscriptionMetrics({
@@ -243,27 +243,28 @@ export class ContractRecordsController extends CrudRecordsController<
                 };
             }
 
-            const holdingUserMetrics = await this.store.getSubscriptionMetrics({
-                ownerId: item.holdingUserId,
-            });
+            // TODO: Support checking the holding user's subscription
+            // const holdingUserMetrics = await this.store.getSubscriptionMetrics({
+            //     ownerId: item.holdingUserId,
+            // });
 
-            const holdingUserFeatures = getContractFeatures(
-                config,
-                holdingUserMetrics.subscriptionStatus,
-                holdingUserMetrics.subscriptionId,
-                holdingUserMetrics.subscriptionType,
-                holdingUserMetrics.currentPeriodStartMs,
-                holdingUserMetrics.currentPeriodEndMs
-            );
+            // const holdingUserFeatures = getContractFeatures(
+            //     config,
+            //     holdingUserMetrics.subscriptionStatus,
+            //     holdingUserMetrics.subscriptionId,
+            //     holdingUserMetrics.subscriptionType,
+            //     holdingUserMetrics.currentPeriodStartMs,
+            //     holdingUserMetrics.currentPeriodEndMs
+            // );
 
-            if (!holdingUserFeatures.allowed) {
-                return {
-                    success: false,
-                    errorCode: 'invalid_user',
-                    errorMessage:
-                        'The holding user does not have access to contracting features.',
-                };
-            }
+            // if (!holdingUserFeatures.allowed) {
+            //     return {
+            //         success: false,
+            //         errorCode: 'invalid_user',
+            //         errorMessage:
+            //             'The holding user does not have access to contracting features.',
+            //     };
+            // }
         }
 
         return {

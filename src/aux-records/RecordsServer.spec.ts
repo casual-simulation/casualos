@@ -214,6 +214,7 @@ import type {
 } from './SubscriptionConfiguration';
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
+import { ContractRecordsController } from './contracts/ContractRecordsController';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -469,6 +470,7 @@ describe('RecordsServer', () => {
     // let xpController: XpController;
 
     let contractRecordsStore: MemoryContractRecordsStore;
+    let contractsController: ContractRecordsController;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -759,6 +761,13 @@ describe('RecordsServer', () => {
         });
 
         contractRecordsStore = new MemoryContractRecordsStore(store);
+        contractsController = new ContractRecordsController({
+            authStore: store,
+            config: store,
+            policies: policyController,
+            store: contractRecordsStore,
+            privo: privoClient,
+        });
         financialInterface = new MemoryFinancialInterface();
         financialController = new FinancialController(
             financialInterface,
@@ -921,6 +930,7 @@ describe('RecordsServer', () => {
             searchRecordsController: searchRecordsController,
             databaseRecordsController: databaseController,
             purchasableItemsController,
+            contractRecordsController: contractsController,
         });
         defaultHeaders = {
             origin: 'test.com',
@@ -27663,6 +27673,663 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 JSON.stringify({}),
                 apiHeaders
             )
+        );
+    });
+
+    describe('POST /api/v2/records/contract', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return not_supported if the server does not have a contract records controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test1',
+                            holdingUser: 'user1',
+                            rate: 100,
+                            initialValue: 500,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should successfully create a contract', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test1',
+                            holdingUser: userId,
+                            rate: 100,
+                            initialValue: 500,
+                            description: 'Test contract',
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'test1',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await contractRecordsStore.getItemByAddress(
+                recordName,
+                'test1'
+            );
+            expect(item).toEqual({
+                id: expect.any(String),
+                address: 'test1',
+                holdingUserId: userId,
+                issuingUserId: userId,
+                rate: 100,
+                initialValue: 500,
+                description: 'Test contract',
+                markers: [PRIVATE_MARKER],
+                issuedAtMs: expect.any(Number),
+                status: 'pending',
+            });
+        });
+
+        it('should create a contract with default markers if not provided', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test1',
+                            holdingUser: userId,
+                            rate: 50,
+                            initialValue: 250,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'test1',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await contractRecordsStore.getItemByAddress(
+                recordName,
+                'test1'
+            );
+            expect(item?.markers).toEqual([PRIVATE_MARKER]);
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        item: {
+                            address: 'test1',
+                            holdingUser: userId,
+                            rate: 100,
+                            initialValue: 500,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'test1',
+                        action: 'create',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testUrl(
+            'POST',
+            '/api/v2/records/contract',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    item: {
+                        address: 'test1',
+                        holdingUser: userId,
+                        rate: 100,
+                        initialValue: 500,
+                    },
+                }),
+            () => apiHeaders
+        );
+    });
+
+    describe('GET /api/v2/records/contract', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await contractRecordsStore.createItem(recordName, {
+                address: 'test1',
+                holdingUserId: userId,
+                rate: 100,
+                initialValue: 500,
+                description: 'Test contract',
+                markers: [PRIVATE_MARKER],
+            } as any);
+        });
+
+        it('should return not_supported if the server does not have a contract records controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract?recordName=${recordName}&address=test1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should successfully retrieve a contract', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract?recordName=${recordName}&address=test1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    item: {
+                        address: 'test1',
+                        holdingUserId: userId,
+                        rate: 100,
+                        initialValue: 500,
+                        description: 'Test contract',
+                        markers: [PRIVATE_MARKER],
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract?recordName=${recordName}&address=test1`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'test1',
+                        action: 'read',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/contract?recordName=${recordName}&address=test1`,
+                apiHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/records/contract');
+    });
+
+    describe('GET /api/v2/records/contract/list', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            await contractRecordsStore.createItem(recordName, {
+                address: 'user1',
+                holdingUserId: 'user1',
+                rate: 100,
+                initialValue: 500,
+                description: 'First contract',
+                markers: [PRIVATE_MARKER],
+            } as any);
+            await contractRecordsStore.createItem(recordName, {
+                address: 'user2',
+                holdingUserId: 'user2',
+                rate: 200,
+                initialValue: 1000,
+                description: 'Second contract',
+                markers: [PRIVATE_MARKER],
+            } as any);
+        });
+
+        it('should return not_supported if the server does not have a contract records controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should successfully list all contracts', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'user1',
+                            holdingUserId: 'user1',
+                            rate: 100,
+                            initialValue: 500,
+                            description: 'First contract',
+                            markers: [PRIVATE_MARKER],
+                        },
+                        {
+                            address: 'user2',
+                            holdingUserId: 'user2',
+                            rate: 200,
+                            initialValue: 1000,
+                            description: 'Second contract',
+                            markers: [PRIVATE_MARKER],
+                        },
+                    ],
+                    totalCount: 2,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'contract',
+                        action: 'list',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                `/api/v2/records/contract/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/records/contract/list');
+    });
+
+    describe('DELETE /api/v2/records/contract', () => {
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await contractRecordsStore.createItem(recordName, {
+                address: 'test1',
+                holdingUserId: userId,
+                rate: 100,
+                initialValue: 500,
+                description: 'Test contract',
+                markers: [PRIVATE_MARKER],
+                id: 'contract1',
+                issuedAtMs: 1234,
+                issuingUserId: userId,
+                status: 'pending',
+            });
+        });
+
+        it('should return not_supported if the server does not have a contract records controller', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                policyController,
+            });
+
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This feature is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await contractRecordsStore.getItemByAddress(
+                recordName,
+                'test1'
+            );
+            expect(item).not.toBe(null);
+        });
+
+        it('should prevent contract deletion (for now)', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Deleting contracts is not supported.',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await contractRecordsStore.getItemByAddress(
+                recordName,
+                'test1'
+            );
+            expect(item).not.toBe(null);
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleHttpRequest(
+                httpDelete(
+                    `/api/v2/records/contract`,
+                    JSON.stringify({
+                        recordName,
+                        address: 'test1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'test1',
+                        action: 'delete',
+                        subjectType: 'user',
+                        subjectId: userId,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const item = await contractRecordsStore.getItemByAddress(
+                recordName,
+                'test1'
+            );
+            expect(item).not.toBe(null);
+        });
+
+        testUrl(
+            'DELETE',
+            '/api/v2/records/contract',
+            () =>
+                JSON.stringify({
+                    recordName,
+                    address: 'test1',
+                }),
+            () => apiHeaders
         );
     });
 

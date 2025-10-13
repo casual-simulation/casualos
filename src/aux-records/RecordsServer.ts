@@ -157,9 +157,9 @@ import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common/record
 import type { SearchQuery, SearchRecordsController } from './search';
 import { SEARCH_COLLECTION_SCHEMA, SEARCH_DOCUMENT_SCHEMA } from './search';
 import type { DatabaseRecordsController, DatabaseStatement } from './database';
-import type { XpController } from './XpController';
 import type { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItem } from './purchasable-items/PurchasableItemRecordsStore';
+import type { ContractRecordsController } from './contracts/ContractRecordsController';
 
 declare const GIT_TAG: string;
 declare const GIT_HASH: string;
@@ -434,10 +434,10 @@ export interface RecordsServerOptions {
     databaseRecordsController?: DatabaseRecordsController | null;
 
     /**
-     * The controller that should be used for handling XP requests.
-     * If null, then XP is not supported.
+     * The controller that should be used for handling contracts..
+     * If null, then contracts are not supported.
      */
-    xpController?: XpController | null; // TODO: Determine whether or not this should be optional
+    contractRecordsController?: ContractRecordsController | null;
 
     /**
      * The controller that should be used for handling purchasable items.
@@ -468,7 +468,7 @@ export class RecordsServer {
     private _packageVersionController: PackageVersionRecordsController | null;
     private _searchRecordsController: SearchRecordsController | null;
     private _databaseRecordsController: DatabaseRecordsController | null;
-    private _xpController: XpController | null;
+    private _contractRecordsController: ContractRecordsController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -541,7 +541,7 @@ export class RecordsServer {
         packageVersionController,
         searchRecordsController,
         databaseRecordsController,
-        xpController,
+        contractRecordsController,
         purchasableItemsController,
     }: RecordsServerOptions) {
         this._allowedAccountOrigins = allowedAccountOrigins;
@@ -568,7 +568,7 @@ export class RecordsServer {
         this._packageVersionController = packageVersionController;
         this._searchRecordsController = searchRecordsController;
         this._databaseRecordsController = databaseRecordsController;
-        this._xpController = xpController;
+        this._contractRecordsController = contractRecordsController;
         this._tracer = trace.getTracer(
             'RecordsServer',
             typeof GIT_TAG === 'undefined' ? undefined : GIT_TAG
@@ -5099,6 +5099,66 @@ export class RecordsServer {
 
                     return genericResult(result);
                 }),
+
+            recordContract: recordItemProcedure(
+                this._auth,
+                this._contractRecordsController,
+                z.object({
+                    address: ADDRESS_VALIDATION,
+                    holdingUser: z
+                        .string({
+                            invalid_type_error: 'holdingUser must be a string.',
+                            required_error: 'holdingUser is required.',
+                        })
+                        .min(1, 'holdingUser must not be empty.'),
+                    rate: z
+                        .number({
+                            invalid_type_error: 'rate must be a number.',
+                            required_error: 'rate is required.',
+                        })
+                        .int('rate must be an integer.')
+                        .positive('rate must be positive.'),
+                    initialValue: z
+                        .number({
+                            invalid_type_error:
+                                'initialValue must be a number.',
+                            required_error: 'initialValue is required.',
+                        })
+                        .int('initialValue must be an integer.')
+                        .nonnegative('initialValue must be non-negative.'),
+                    description: z.string().optional().nullable(),
+                    markers: MARKERS_VALIDATION.optional().default([
+                        PRIVATE_MARKER,
+                    ]),
+                }),
+                procedure()
+                    .origins('api')
+                    .http('POST', '/api/v2/records/contract')
+            ),
+
+            getContract: getItemProcedure(
+                this._auth,
+                this._contractRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/contract')
+            ),
+
+            listContracts: listItemsProcedure(
+                this._auth,
+                this._contractRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('GET', '/api/v2/records/contract/list')
+            ),
+
+            eraseContract: eraseItemProcedure(
+                this._auth,
+                this._contractRecordsController,
+                procedure()
+                    .origins('api')
+                    .http('DELETE', '/api/v2/records/contract')
+            ),
 
             listInsts: procedure()
                 .origins('api')
