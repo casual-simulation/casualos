@@ -130,7 +130,10 @@ export default class AuthApp extends Vue {
         this.logoUrl = null;
         this.displayName = null;
         this.usePrivoLogin = authManager.usePrivoLogin;
-        this.allowCreateStudio = authManager.studiosSupported;
+        this.allowCreateStudio =
+            authManager.studiosSupported &&
+            (!authManager.privacyFeatures ||
+                authManager.privacyFeatures.allowPublicData);
         authManager.loginState
             .pipe(distinctUntilChanged())
             .subscribe((state) => {
@@ -140,6 +143,12 @@ export default class AuthApp extends Vue {
                 if (state) {
                     this.loadStudios();
                 }
+
+                // Update allowCreateStudio based on privacy features
+                this.allowCreateStudio =
+                    authManager.studiosSupported &&
+                    (!authManager.privacyFeatures ||
+                        authManager.privacyFeatures.allowPublicData);
             });
 
         this.comId = authManager.getComIdFromUrl();
