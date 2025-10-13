@@ -8342,14 +8342,14 @@ describe('SubscriptionController', () => {
                 },
                 {
                     id: 4n,
-                    amount: 0n,
-                    code: 0,
+                    amount: 100n,
+                    code: TransferCodes.contract_payment,
                     // contract account
                     credit_account_id: 1n,
                     // Stripe account
                     debit_account_id: ACCOUNT_IDS.assets_stripe,
                     flags: TransferFlags.void_pending_transfer,
-                    ledger: LEDGERS.credits,
+                    ledger: LEDGERS.usd,
 
                     pending_id: 3n,
                     user_data_128: 2n,
