@@ -5069,6 +5069,37 @@ export class RecordsServer {
                     }
                 ),
 
+            getManageXpAccountLink: procedure()
+                .origins('api')
+                .http('POST', '/api/v2/xp/account/manage')
+                .inputs(z.object({}))
+                .handler(async (input, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKey = context.sessionKey;
+
+                    if (!sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._subscriptions.createManageXpAccountLink({
+                            userId: validation.userId,
+                        });
+
+                    return genericResult(result);
+                }),
+
             listInsts: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/insts/list')

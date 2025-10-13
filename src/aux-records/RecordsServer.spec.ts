@@ -27538,6 +27538,134 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         });
     });
 
+    describe('POST /api/v2/xp/account/manage', () => {
+        let user: AuthUser;
+
+        beforeEach(async () => {
+            user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+                stripeAccountId: 'stripeAccountId',
+            });
+            user = await store.findUser(userId);
+        });
+
+        it('should return not_supported if the subscription controller is null', async () => {
+            server = new RecordsServer({
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                policyController,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/xp/account/manage',
+                    JSON.stringify({}),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'Subscriptions are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the URL that the user should be redirected to manage their XP account', async () => {
+            stripeMock.createAccountLink.mockResolvedValueOnce({
+                url: 'account_link',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/xp/account/manage',
+                    JSON.stringify({}),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'account_link',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in if no session key is provided', async () => {
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/xp/account/manage',
+                    JSON.stringify({}),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return unacceptable_session_key if the session key is invalid', async () => {
+            apiHeaders['authorization'] = 'Bearer invalid_session_key';
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    '/api/v2/xp/account/manage',
+                    JSON.stringify({}),
+                    apiHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/xp/account/manage', () =>
+            JSON.stringify({})
+        );
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/xp/account/manage',
+                JSON.stringify({}),
+                apiHeaders
+            )
+        );
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({

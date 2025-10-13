@@ -2813,6 +2813,9 @@ Object {
                   "package.version",
                   "search",
                   "database",
+                  "purchasableItem",
+                  "contract",
+                  "invoice",
                 ],
               },
             },
@@ -3201,24 +3204,6 @@ Object {
         "type": "object",
       },
       "name": "queryDatabase",
-      "origins": "api",
-    },
-    Object {
-      "http": Object {
-        "method": "GET",
-        "path": "/api/v2/xp/user",
-      },
-      "inputs": Object {
-        "schema": Object {
-          "userId": Object {
-            "nullable": true,
-            "optional": true,
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "getXpUserInfo",
       "origins": "api",
     },
     Object {
@@ -4054,6 +4039,98 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "contract",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "approve",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "invoice",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -4130,6 +4207,8 @@ Object {
               "search",
               "database",
               "purchasableItem",
+              "contract",
+              "invoice",
             ],
           },
         },
@@ -5544,6 +5623,18 @@ Object {
       },
       "name": "updateSubscription",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/xp/account/manage",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getManageXpAccountLink",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -8783,6 +8874,9 @@ Object {
                   "package.version",
                   "search",
                   "database",
+                  "purchasableItem",
+                  "contract",
+                  "invoice",
                 ],
               },
             },
@@ -9171,24 +9265,6 @@ Object {
         "type": "object",
       },
       "name": "queryDatabase",
-      "origins": "api",
-    },
-    Object {
-      "http": Object {
-        "method": "GET",
-        "path": "/api/v2/xp/user",
-      },
-      "inputs": Object {
-        "schema": Object {
-          "userId": Object {
-            "nullable": true,
-            "optional": true,
-            "type": "string",
-          },
-        },
-        "type": "object",
-      },
-      "name": "getXpUserInfo",
       "origins": "api",
     },
     Object {
@@ -10024,6 +10100,98 @@ Object {
                 },
                 "type": "object",
               },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "purchase",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "contract",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
+              Object {
+                "schema": Object {
+                  "action": Object {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": Array [
+                      "create",
+                      "read",
+                      "update",
+                      "delete",
+                      "list",
+                      "approve",
+                      "cancel",
+                    ],
+                  },
+                  "expireTimeMs": Object {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "marker": Object {
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceId": Object {
+                    "nullable": true,
+                    "optional": true,
+                    "type": "string",
+                  },
+                  "resourceKind": Object {
+                    "type": "literal",
+                    "value": "invoice",
+                  },
+                  "subjectId": Object {
+                    "type": "string",
+                  },
+                  "subjectType": Object {
+                    "type": "enum",
+                    "values": Array [
+                      "user",
+                      "inst",
+                      "role",
+                    ],
+                  },
+                },
+                "type": "object",
+              },
             ],
             "type": "union",
           },
@@ -10100,6 +10268,8 @@ Object {
               "search",
               "database",
               "purchasableItem",
+              "contract",
+              "invoice",
             ],
           },
         },
@@ -11514,6 +11684,18 @@ Object {
       },
       "name": "updateSubscription",
       "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/xp/account/manage",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "getManageXpAccountLink",
+      "origins": "api",
     },
     Object {
       "http": Object {
