@@ -684,6 +684,19 @@ export class RecordsController {
                 );
 
                 if (studioMembers.length > 0) {
+                    // Check if the user has allowPublicData enabled
+                    if (userId) {
+                        const user = await this._auth.findUser(userId);
+                        if (!user?.privacyFeatures?.allowPublicData) {
+                            return {
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage:
+                                    'You are not authorized to access studio records. The allowPublicData privacy feature must be enabled.',
+                            };
+                        }
+                    }
+
                     const allowed =
                         await this._doesSubscriptionAllowToCreateRecord({
                             studioId: name,
@@ -787,6 +800,19 @@ export class RecordsController {
                 studioMembers = await this._store.listStudioAssignments(
                     record.studioId
                 );
+            }
+
+            // Check if the user has allowPublicData enabled when accessing studio records
+            if (studioMembers && studioMembers.length > 0 && userId) {
+                const user = await this._auth.findUser(userId);
+                if (!user?.privacyFeatures?.allowPublicData) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to access studio records. The allowPublicData privacy feature must be enabled.',
+                    };
+                }
             }
 
             return {
@@ -915,6 +941,15 @@ export class RecordsController {
             }
 
             const user = await this._auth.findUser(userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to access studio records. The allowPublicData privacy feature must be enabled.',
+                };
+            }
+
             if (isSuperUserRole(user?.role)) {
                 const records = await this._store.listRecordsByStudioId(
                     studioId
@@ -961,6 +996,16 @@ export class RecordsController {
         userId: string
     ): Promise<CreateStudioResult> {
         try {
+            const user = await this._auth.findUser(userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to create studios. The allowPublicData privacy feature must be enabled.',
+                };
+            }
+
             const studioId = uuid();
 
             await this._store.createStudioForUser(
@@ -1005,6 +1050,16 @@ export class RecordsController {
         comId: string
     ): Promise<CreateStudioInComIdResult> {
         try {
+            const user = await this._auth.findUser(userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to create studios. The allowPublicData privacy feature must be enabled.',
+                };
+            }
+
             const studioId = uuid();
 
             const existingStudio = await this._store.getStudioByComId(comId);
@@ -1105,6 +1160,16 @@ export class RecordsController {
         request: UpdateStudioRequest
     ): Promise<UpdateStudioResult> {
         try {
+            const user = await this._auth.findUser(request.userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to update studios. The allowPublicData privacy feature must be enabled.',
+                };
+            }
+
             const { id, loomConfig, humeConfig, ...updates } = request.studio;
             const existingStudio = await this._store.getStudioById(
                 request.studio.id
@@ -1181,6 +1246,16 @@ export class RecordsController {
         userId: string
     ): Promise<GetStudioResult> {
         try {
+            const user = await this._auth.findUser(userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to access studios. The allowPublicData privacy feature must be enabled.',
+                };
+            }
+
             const studio = await this._store.getStudioById(studioId);
 
             if (!studio) {
@@ -1346,6 +1421,14 @@ export class RecordsController {
     @traced(TRACE_NAME)
     async listStudios(userId: string): Promise<ListStudiosResult> {
         try {
+            const user = await this._auth.findUser(userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: true,
+                    studios: [],
+                };
+            }
+
             const studios = await this._store.listStudiosForUser(userId);
             const config = await this._config.getSubscriptionConfiguration();
             return {
@@ -1395,6 +1478,14 @@ export class RecordsController {
         comId: string
     ): Promise<ListStudiosResult> {
         try {
+            const user = await this._auth.findUser(userId);
+            if (!user?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: true,
+                    studios: [],
+                };
+            }
+
             const studios = await this._store.listStudiosForUserAndComId(
                 userId,
                 comId
@@ -1468,8 +1559,13 @@ export class RecordsController {
                 role = userAssignment.role;
             }
 
+            // Filter members based on allowPublicData privacy feature
+            const filteredMembers = members.filter((m) => {
+                return m.user.privacyFeatures?.allowPublicData !== false;
+            });
+
             const resultMembers: ListedStudioMember[] = await Promise.all(
-                members.map(async (m) => {
+                filteredMembers.map(async (m) => {
                     if (this._privo && m.user.privoServiceId) {
                         const result = await this._privo.getUserInfo(
                             m.user.privoServiceId
@@ -1652,6 +1748,17 @@ export class RecordsController {
                     success: false,
                     errorCode: 'user_not_found',
                     errorMessage: 'The user was not able to be found.',
+                };
+            }
+
+            // Check if the user being added has allowPublicData enabled
+            const addedUser = await this._auth.findUser(addedUserId);
+            if (!addedUser?.privacyFeatures?.allowPublicData) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The user cannot be added to the studio. The allowPublicData privacy feature must be enabled for the user.',
                 };
             }
 
