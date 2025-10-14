@@ -522,7 +522,7 @@ export function testCrudRecordsController<
                             ).resolves.toMatchObject(
                                 createStoreItem({
                                     address: 'address',
-                                    markers: [PUBLIC_READ_MARKER],
+                                    markers: [PRIVATE_MARKER],
                                 })
                             );
                         });
@@ -553,7 +553,7 @@ export function testCrudRecordsController<
                             ).resolves.toMatchObject(
                                 createStoreItem({
                                     address: 'address',
-                                    markers: [PUBLIC_READ_MARKER],
+                                    markers: [PRIVATE_MARKER],
                                 })
                             );
                         });
