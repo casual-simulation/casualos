@@ -476,13 +476,40 @@ export default class PlayerHome extends Vue {
 
     private async _deleteInst(inst: string) {
         if (window.confirm(`Are you sure you want to delete ${inst}?`)) {
+            let cleanupSuccessful = false;
+
+            try {
+                cleanupSuccessful = await appManager.cleanupStaticInstData(
+                    inst
+                );
+
+                if (cleanupSuccessful) {
+                    console.log(
+                        `[PlayerHome] Successfully cleaned up inst data: ${inst}`
+                    );
+                } else {
+                    await appManager.markInstForCleanup(inst);
+                    console.log(
+                        `[PlayerHome] Inst ${inst} marked for cleanup on next load`
+                    );
+                }
+            } catch (error) {
+                console.error('[PlayerHome] Cleanup error:', error);
+                await appManager.markInstForCleanup(inst);
+            }
             await appManager.deleteStaticInst(inst);
             this.instSelection = 'new-inst';
             this.instOptions = await appManager.listStaticInsts();
+
+            if (!cleanupSuccessful) {
+                console.info(
+                    `Static inst "${inst}" removed. Data will be cleaned when next accessed.`
+                );
+            }
         }
+
         this.showBios = true;
     }
-
     async executeBiosOption(
         option: BiosOption,
         recordName: string,
@@ -530,8 +557,7 @@ export default class PlayerHome extends Vue {
         await appManager.authCoordinator.showAccountInfo(null);
     }
 
-    private _loadStaticInst(instSelection: string) {
-        const update: Dictionary<string | string[]> = {};
+    private async _loadStaticInst(instSelection: string) {
         const inst =
             !instSelection || instSelection === 'new-inst'
                 ? this.instName && this.instName.trim() !== ''
@@ -539,6 +565,16 @@ export default class PlayerHome extends Vue {
                     : this.generatedName
                 : instSelection;
 
+        // Check if this inst has a pending cleanup
+        const hasPendingCleanup = await appManager.checkPendingCleanup(inst);
+
+        if (hasPendingCleanup) {
+            console.log(
+                `[PlayerHome] Inst ${inst} has pending cleanup, will be handled during load`
+            );
+        }
+
+        const update: Dictionary<string | string[]> = {};
         update.staticInst = inst;
         update.bios = null;
 
@@ -548,7 +584,24 @@ export default class PlayerHome extends Vue {
             this._updateQuery(update);
         }
 
-        this._setServer(null, inst, true);
+        try {
+            await this._setServer(null, inst, true);
+        } catch (error) {
+            // Check for the correct error message
+            if (error?.message?.includes('was deleted and cleaned up')) {
+                console.info(
+                    `Static inst "${inst}" was previously deleted and has been cleaned up.`
+                );
+
+                // Refresh the inst list
+                this.instOptions = await appManager.listStaticInsts();
+                this.instSelection = 'new-inst';
+                this.showBios = true;
+                this.biosSelection = 'local inst';
+                return;
+            }
+            throw error;
+        }
     }
 
     private async _loadJoinCode(joinCode: string) {
