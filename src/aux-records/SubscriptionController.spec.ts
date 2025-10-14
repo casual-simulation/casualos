@@ -293,6 +293,11 @@ describe('SubscriptionController', () => {
     });
 
     afterAll(() => {
+        if (tbClient) {
+            const client = tbClient;
+            tbClient = null!;
+            client.destroy();
+        }
         if (tbProcess) {
             tbProcess.kill();
         }
