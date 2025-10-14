@@ -61,11 +61,6 @@ describe('PackageRecordsController', () => {
             markers: item.markers,
             id: item.address,
         }),
-        (item) => ({
-            address: item.address,
-            markers: item.markers,
-            id: item.address,
-        }),
         async (context) => {
             const builder = subscriptionConfigBuilder().withUserDefaultFeatures(
                 (features) =>
@@ -73,7 +68,12 @@ describe('PackageRecordsController', () => {
             );
 
             context.store.subscriptionConfiguration = builder.config;
-        }
+        },
+        (item) =>
+            ({
+                address: item.address,
+                markers: item.markers,
+            } as any)
     );
 
     let store: MemoryStore;
