@@ -179,6 +179,27 @@ export class AppManager {
         this._simulationFactory = async (id, origin, config, isStatic) => {
             const configBotId = uuid();
 
+            if (isStatic && (await this.checkPendingCleanup(id))) {
+                console.log(
+                    `[AppManager] Executing pending cleanup for inst: ${id}`
+                );
+
+                await this.clearPendingCleanup(id);
+
+                const cleanupSuccessful = await this.cleanupStaticInstData(id);
+
+                if (cleanupSuccessful) {
+                    console.log(
+                        `[AppManager] Successfully cleaned up inst: ${id}`
+                    );
+                } else {
+                    console.warn(
+                        `[AppManager] Cleanup failed for inst: ${id}, but proceeding with error`
+                    );
+                }
+
+                throw new Error(`Static inst ${id} was deleted and cleaned up`);
+            }
             let initialState: BotsState = undefined;
             if (import.meta.env.MODE === 'static') {
                 const injectedAux = document.querySelector(
@@ -852,6 +873,186 @@ export class AppManager {
         return sim;
     }
 
+    async cleanupStaticInstData(inst: string): Promise<boolean> {
+        console.log(
+            `[AppManager] Attempting to cleanup all databases for inst: ${inst}`
+        );
+
+        const vmOrigin = this._config.vmOrigin || location.origin;
+
+        if (vmOrigin === location.origin) {
+            return await this._directCleanup(inst);
+        }
+
+        console.log(
+            `[AppManager] Using iframe cleanup for cross-origin database deletion`
+        );
+        return await this._iframeCleanup(inst, vmOrigin);
+    }
+
+    private async _iframeCleanup(
+        inst: string,
+        vmOrigin: string
+    ): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            const cleanupUrl = `${vmOrigin}/cleanup-indexeddb.html?inst=${encodeURIComponent(
+                inst
+            )}`;
+
+            console.log(`[AppManager] Loading cleanup iframe: ${cleanupUrl}`);
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.src = cleanupUrl;
+            iframe.sandbox = 'allow-scripts allow-same-origin';
+
+            let timeoutId: NodeJS.Timeout;
+            let messageHandler: (event: MessageEvent) => void;
+
+            const cleanup = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                window.removeEventListener('message', messageHandler);
+                if (iframe.parentNode) {
+                    document.body.removeChild(iframe);
+                }
+            };
+
+            messageHandler = (event: MessageEvent) => {
+                if (event.origin !== vmOrigin) {
+                    console.warn(
+                        `[AppManager] Ignoring message from unexpected origin: ${event.origin}`
+                    );
+                    return;
+                }
+
+                console.log(
+                    `[AppManager] Received cleanup message:`,
+                    event.data
+                );
+
+                if (event.data.type === 'CLEANUP_COMPLETE') {
+                    console.log(
+                        `[AppManager] Cleanup complete for ${inst}:`,
+                        event.data
+                    );
+                    cleanup();
+                    resolve(event.data.success);
+                } else if (event.data.type === 'CLEANUP_ERROR') {
+                    console.error(
+                        `[AppManager] Cleanup error for ${inst}:`,
+                        event.data.error
+                    );
+                    cleanup();
+                    resolve(false);
+                }
+            };
+            window.addEventListener('message', messageHandler);
+            iframe.onerror = (error) => {
+                console.error(
+                    `[AppManager] Failed to load cleanup iframe:`,
+                    error
+                );
+                cleanup();
+                resolve(false);
+            };
+
+            document.body.appendChild(iframe);
+
+            timeoutId = setTimeout(() => {
+                console.error(
+                    `[AppManager] Cleanup iframe timeout for inst: ${inst}`
+                );
+                cleanup();
+                resolve(false);
+            }, 15000);
+        });
+    }
+
+    private async _directCleanup(inst: string): Promise<boolean> {
+        try {
+            const dbNames = [`/${inst}/default`, `/${inst}/shared`];
+            let deletedAny = false;
+
+            for (const dbName of dbNames) {
+                try {
+                    await indexedDB.deleteDatabase(dbName);
+                    console.log(`[AppManager] Deleted database: ${dbName}`);
+                    deletedAny = true;
+                } catch (err) {
+                    console.warn(
+                        `[AppManager] Could not delete ${dbName}:`,
+                        err
+                    );
+                }
+            }
+
+            return deletedAny;
+        } catch (err) {
+            console.error(`[AppManager] Direct cleanup failed:`, err);
+            return false;
+        }
+    }
+
+    /**
+     * Marks a static inst for cleanup on next load
+     */
+    async markInstForCleanup(inst: string): Promise<void> {
+        if (!this._db) {
+            console.error(
+                '[AppManager] Cannot mark inst for cleanup - no DB connection'
+            );
+            return;
+        }
+
+        await putItem(this._db, 'keyval', {
+            key: `pending_deletion_${inst}`,
+            value: {
+                inst,
+                timestamp: Date.now(),
+            },
+        });
+    }
+
+    /**
+     * Checks if an inst is marked for cleanup
+     */
+    async checkPendingCleanup(inst: string): Promise<boolean> {
+        if (!this._db) {
+            return false;
+        }
+
+        try {
+            const pending = await getItem<
+                StoredValue<{
+                    inst: string;
+                    timestamp: number;
+                }>
+            >(this._db, 'keyval', `pending_deletion_${inst}`);
+
+            return !!pending;
+        } catch (err) {
+            console.error('[AppManager] Error checking pending cleanup:', err);
+            return false;
+        }
+    }
+
+    /**
+     * Removes the pending cleanup marker for an inst
+     */
+    async clearPendingCleanup(inst: string): Promise<void> {
+        if (!this._db) {
+            return;
+        }
+
+        try {
+            await deleteItem(this._db, 'keyval', `pending_deletion_${inst}`);
+        } catch (err) {
+            console.error('[AppManager] Error clearing pending cleanup:', err);
+        }
+    }
+
     async getConnectionIndicator(
         connectionId: string,
         recordName: string | null,
@@ -906,8 +1107,10 @@ export class AppManager {
                 '[AppManager] Could not connect db to delete inst',
                 inst
             );
+            return;
         }
         await deleteItem(this._db, STATIC_INSTS_STORE, inst);
+        await this.clearPendingCleanup(inst);
     }
 
     private async _getComIdConfig(): Promise<GetPlayerConfigSuccess> {

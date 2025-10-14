@@ -117,6 +117,7 @@ import type {
     HideLoadingScreenAction,
     AddBotMapLayerAction,
     RemoveBotMapLayerAction,
+    TrackConfigBotTagsAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -280,6 +281,7 @@ import {
     GET_DYNAMIC_LISTENERS_SYMBOL,
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
+    trackConfigBotTags as calcTrackConfigBotTags,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -304,10 +306,12 @@ import type {
     GrantEntitlementsResult,
     InstallPackageResult,
     ListPermissionsRequest,
+    ListedChatModel,
 } from './RecordsEvents';
 import {
     aiChat,
     aiChatStream,
+    aiListChatModels,
     aiGenerateSkybox,
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
@@ -382,6 +386,7 @@ import type {
     VersionNumber,
     GenericResult,
     SimpleError,
+    GenericSuccess,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -480,6 +485,7 @@ import type {
     PackageRecord,
     ListInstalledPackagesResult,
     ListInstsResult,
+    EraseInstResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3488,6 +3494,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             ai: {
                 chat,
+                listChatModels,
                 generateSkybox,
                 generateImage,
                 hume: {
@@ -3700,6 +3707,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 goToDimension,
                 goToURL,
                 openURL,
+                syncConfigBotTagsToURL,
                 openDevConsole,
                 playSound,
                 bufferSound,
@@ -3771,6 +3779,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 listInsts,
                 listInstsByMarker,
+                eraseInst,
 
                 recordWebhook,
                 runWebhook,
@@ -5717,6 +5726,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         (promise as any)[ORIGINAL_OBJECT] = action;
         return promise;
+    }
+
+    /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    function listChatModels(
+        options?: RecordActionOptions
+    ): Promise<ListedChatModel[]> {
+        const task = context.createTask();
+        const action = aiListChatModels(options, task.taskId);
+        const final = addAsyncResultAction(task, action).then(
+            (result: GenericSuccess<ListedChatModel[]>) => result.items
+        );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
     }
 
     /**
@@ -8508,6 +8541,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Tells CasualOS to sync the given list of config bot tags in the URL query.
+     *
+     * @param tags The tags that should be synced to the URL.
+     * @param fullHistory Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+     *
+     * @example Sync the "page" config bot tag to the URL
+     * os.syncConfigBotTagsToURL(['page']);
+     *
+     * @example Sync the "scrollPosition" config bot tag to the URL, but don't create a history entry for every change
+     * os.syncConfigBotTagsToURL(['scrollPosition'], false);
+     *
+     * @dochash actions/os/portals
+     * @docname os.syncConfigBotTagsToURL
+     * @docgroup 10-go-to
+     */
+    function syncConfigBotTagsToURL(
+        tags: string[],
+        fullHistory: boolean = true
+    ): TrackConfigBotTagsAction {
+        const event = calcTrackConfigBotTags(tags, fullHistory);
+        return addAction(event);
+    }
+
+    /**
      * Instructs CasualOS to open the built-in developer console.
      * The dev console provides easy access to error messages and debug logs for formulas and actions.
      *
@@ -10236,6 +10293,66 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the inst with the given name from the given record.
+     * Returns a promise that resolves with an object that indicates if the operation was successful or not.
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param instName the name of the inst that should be deleted.
+     * @param options the options for the request.
+     *
+     * @example Erase an inst from a record
+     * const result = await os.eraseInst('myRecord', 'myInst');
+     *
+     * if (result.success) {
+     *     os.toast("Inst deleted!");
+     * } else {
+     *     os.toast("Failed: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.eraseInst
+     * @docid eraseInst
+     */
+    function eraseInst(
+        recordKeyOrName: string,
+        instName: string,
+        options: RecordActionOptions = {}
+    ): Promise<EraseInstResult> {
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
+        }
+
+        if (!hasValue(instName)) {
+            throw new Error('instName must be provided.');
+        } else if (typeof instName !== 'string') {
+            throw new Error('instName must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                deleteInst: {
+                    input: {
+                        recordKey: isRecordKey(recordKeyOrName)
+                            ? recordKeyOrName
+                            : undefined,
+                        recordName: !isRecordKey(recordKeyOrName)
+                            ? recordKeyOrName
+                            : undefined,
+                        inst: instName,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
         return addAsyncAction(task, event);
     }
 

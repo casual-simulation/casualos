@@ -355,6 +355,14 @@ describe('WebhookRecordsController', () => {
                 secretSalt: 'salt',
                 studioId: null,
             });
+
+            // request to record the data file
+            setResponse({
+                status: 200,
+                data: {
+                    success: true,
+                },
+            });
         });
 
         it('should return not_authorized if the user doesnt have the ability to run the webhook', async () => {
@@ -496,10 +504,8 @@ describe('WebhookRecordsController', () => {
                         statusCode: 200,
                         errorResult: null,
 
-                        // Cannot record run data because the webhook
-                        // has an anonymous user.
-                        infoRecordName: null,
-                        infoFileName: null,
+                        infoRecordName: recordName,
+                        infoFileName: expect.any(String),
                         stateSha256: expect.any(String),
                         options: {
                             initTimeoutMs: 5000,
@@ -515,14 +521,6 @@ describe('WebhookRecordsController', () => {
         });
 
         it('should record webhook runs', async () => {
-            // request to record the data file
-            setResponse({
-                status: 200,
-                data: {
-                    success: true,
-                },
-            });
-
             const webhookUserId = 'webhookUser';
             await store.saveUser({
                 id: webhookUserId,
@@ -603,7 +601,7 @@ describe('WebhookRecordsController', () => {
                         responseTimeMs: expect.any(Number),
                         statusCode: 200,
                         errorResult: null,
-                        infoRecordName: webhookUserId,
+                        infoRecordName: recordName,
                         infoFileName: expect.any(String),
                         stateSha256: expect.any(String),
                         options: {
@@ -619,20 +617,20 @@ describe('WebhookRecordsController', () => {
             });
 
             const file = await store.getFileRecord(
-                webhookUserId,
+                recordName,
                 runs.items[0].infoFileName!
             );
             expect(file).toEqual({
                 success: true,
-                recordName: webhookUserId,
+                recordName: recordName,
                 fileName: runs.items[0].infoFileName,
                 description: expect.stringContaining('Webhook data for run'),
-                url: `http://localhost:9191/${webhookUserId}/${runs.items[0].infoFileName}`,
+                url: `http://localhost:9191/${recordName}/${runs.items[0].infoFileName}`,
                 sizeInBytes: expect.any(Number),
                 uploaded: false,
                 markers: ['private:logs'],
-                publisherId: webhookUserId,
-                subjectId: webhookUserId,
+                publisherId: userId,
+                subjectId: null,
             });
 
             const [url, data] = getLastPost();
@@ -640,7 +638,7 @@ describe('WebhookRecordsController', () => {
             const json = new TextDecoder().decode(data);
 
             expect([url, JSON.parse(json)]).toEqual([
-                `http://localhost:9191/${webhookUserId}/${runs.items[0].infoFileName}`,
+                `http://localhost:9191/${recordName}/${runs.items[0].infoFileName}`,
                 {
                     runId: expect.any(String),
                     version: 1,

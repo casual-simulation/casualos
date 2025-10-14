@@ -3737,6 +3737,51 @@ export interface GrantRoleFailure {
 }
 
 /**
+ * Defines the possible results of erasing an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstResult
+ */
+export type EraseInstResult = EraseInstSuccess | EraseInstFailure;
+
+/**
+ * Defines an interface that represents a successful request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstSuccess
+ */
+export interface EraseInstSuccess {
+    success: true;
+}
+
+/**
+ * Defines an interface that represents a failed request to erase an inst.
+ *
+ * @dochash types/records/extra
+ * @docname EraseInstFailure
+ */
+export interface EraseInstFailure {
+    success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
+    errorCode:
+        | ServerError
+        | 'inst_not_found'
+        | NotSupportedError
+        | NotLoggedInError
+        | InvalidRecordKey
+        | RecordNotFoundError
+        | 'not_authorized';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
+    errorMessage: string;
+}
+
+/**
  * The options for data record actions.
  */
  export interface RecordDataOptions {
@@ -12983,6 +13028,22 @@ interface Ai {
     ): Promise<AIChatMessage | string>;
 
     /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @param options The options that should be used.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    listChatModels(options?: RecordActionOptions): Promise<ListedChatModel[]>;
+
+    /**
      * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
      * 
      * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
@@ -14318,6 +14379,24 @@ interface Os {
     openURL(url: string): OpenURLAction;
 
     /**
+     * Tells CasualOS to sync the given list of config bot tags in the URL query.
+     * 
+     * @param tags The tags that should be synced to the URL.
+     * @param fullHistory Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+     * 
+     * @example Sync the "page" config bot tag to the URL
+     * os.syncConfigBotTagsToURL(['page']);
+     * 
+     * @example Sync the "scrollPosition" config bot tag to the URL, but don't create a history entry for every change
+     * os.syncConfigBotTagsToURL(['scrollPosition'], false);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.syncConfigBotTagsToURL
+     * @docgroup 10-go-to
+     */
+    syncConfigBotTagsToURL(tags: string[], fullHistory?: boolean): any;
+
+    /**
      * Shows an input box to edit the given bot and tag.
      *
      * @param bot The bot or bot ID that should be edited.
@@ -14854,6 +14933,18 @@ interface Os {
         inst: string,
         options?: RecordActionOptions
     ): Promise<RevokeRoleResult>;
+
+    /**
+     * Erases the inst with the given name from the given record.
+     * @param recordKeyOrName The record key or record name that should be used to access the record.
+     * @param instName The name of the inst that should be deleted.
+     * @param options The options for the request.
+     */
+    eraseInst(
+        recordKeyOrName: string,
+        instName: string,
+        options?: RecordActionOptions
+    ): Promise<EraseInstResult>;
 
     /**
      * Determines if the given value is a record key.
