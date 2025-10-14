@@ -2,12 +2,17 @@
 
 ## V3.8.0
 
-#### Date: 10/2/2025
+#### Date: 10/14/2025
 
 ### :rocket: Features
 
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
+-   Changed webhooks to record logs to the same record that the webhook is stored in.
+-   Add the `os.syncConfigBotTagsToURL(tags, fullHistory?)` function.
+    -   Tells CasualOS to sync the given list of config bot tags in the URL query.
+    -   `tags` - The tags that should be synced to the URL.
+    -   `fullHistory` - Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
 
 ### :bug: Bug Fixes
 
@@ -15,6 +20,9 @@
 -   Fixed an issue where tag masks in the shared space might be ignored after the server runs some cleanup.
 -   Fixed an issue where the `from` position values in `onDrag`, `onDrop`, `onAnyBotDrag`, and `onAnyBotDrop` events were being incorrectly rounded to integers, causing non-integer bot positions (e.g., 0.5, 0.4) to be rounded before being passed to event handlers.
 -   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
+-   Fixed an issue where it was not possible to publish packages to studios.
+-   Changed to ensure that the "Sign In" dialog is shown to unauthenticated users who are trying to access a public inst on Privo-enabled deployments.
+-   Static inst deletion now properly removes all associated data from browser storage. Previously, deleting a local inst would only remove it from the list while leaving bot data behind, causing old data to reappear when creating a new inst with the same name.
 
 ## V3.7.1
 

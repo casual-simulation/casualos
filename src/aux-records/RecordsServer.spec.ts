@@ -10219,7 +10219,32 @@ describe('RecordsServer', () => {
     describe('POST /api/v2/records/webhook/run', () => {
         let aux: StoredAuxVersion1;
 
+        function setResponse(response: any) {
+            require('axios').__setResponse(response);
+        }
+
+        function setNextResponse(response: any) {
+            require('axios').__setNextResponse(response);
+        }
+
+        function getLastPost() {
+            return require('axios').__getLastPost();
+        }
+
+        function getLastGet() {
+            return require('axios').__getLastGet();
+        }
+
+        function getLastDelete() {
+            return require('axios').__getLastDelete();
+        }
+
+        function getRequests() {
+            return require('axios').__getRequests();
+        }
+
         beforeEach(async () => {
+            require('axios').__reset();
             aux = {
                 version: 1,
                 state: {
@@ -10244,6 +10269,14 @@ describe('RecordsServer', () => {
                 targetAddress: 'data1',
                 targetRecordName: recordName,
                 userId: null,
+            });
+
+            // request to record the data file
+            setResponse({
+                status: 200,
+                data: {
+                    success: true,
+                },
             });
         });
 
