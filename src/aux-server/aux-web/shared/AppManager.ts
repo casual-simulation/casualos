@@ -186,58 +186,18 @@ export class AppManager {
 
                 await this.clearPendingCleanup(id);
 
-                const dbNames = [`/${id}/default`, `/${id}/shared`];
+                const cleanupSuccessful = await this.cleanupStaticInstData(id);
 
-                console.log(
-                    `[AppManager] Attempting to delete databases:`,
-                    dbNames
-                );
-
-                if (!config.vmOrigin || config.vmOrigin === location.origin) {
-                    let deletedAny = false;
-
-                    for (const dbName of dbNames) {
-                        try {
-                            const deleteReq = indexedDB.deleteDatabase(dbName);
-                            await new Promise((resolve, reject) => {
-                                deleteReq.onsuccess = () => {
-                                    console.log(
-                                        `[AppManager] Deleted database: ${dbName}`
-                                    );
-                                    deletedAny = true;
-                                    resolve('success');
-                                };
-                                deleteReq.onerror = () => {
-                                    console.warn(
-                                        `[AppManager] Failed to delete database: ${dbName}`
-                                    );
-                                    resolve('error');
-                                };
-                                deleteReq.onblocked = () => {
-                                    console.warn(
-                                        `[AppManager] Database deletion blocked: ${dbName}`
-                                    );
-                                    setTimeout(() => resolve('blocked'), 1000);
-                                };
-                            });
-                        } catch (err) {
-                            console.error(
-                                `[AppManager] Error deleting ${dbName}:`,
-                                err
-                            );
-                        }
-                    }
-
-                    if (deletedAny) {
-                        console.log(
-                            `[AppManager] Successfully cleaned up inst: ${id}`
-                        );
-                    }
-
-                    throw new Error(
-                        `Static inst ${id} was deleted and cleaned up`
+                if (cleanupSuccessful) {
+                    console.log(
+                        `[AppManager] Successfully cleaned up inst: ${id}`
+                    );
+                } else {
+                    console.warn(
+                        `[AppManager] Cleanup failed for inst: ${id}, but proceeding with error`
                     );
                 }
+
                 throw new Error(`Static inst ${id} was deleted and cleaned up`);
             }
             let initialState: BotsState = undefined;
