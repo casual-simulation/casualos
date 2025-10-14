@@ -304,10 +304,12 @@ import type {
     GrantEntitlementsResult,
     InstallPackageResult,
     ListPermissionsRequest,
+    ListedChatModel,
 } from './RecordsEvents';
 import {
     aiChat,
     aiChatStream,
+    aiListChatModels,
     aiGenerateSkybox,
     aiGenerateImage,
     grantRecordPermission as calcGrantRecordPermission,
@@ -382,6 +384,7 @@ import type {
     VersionNumber,
     GenericResult,
     SimpleError,
+    GenericSuccess,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -480,6 +483,7 @@ import type {
     PackageRecord,
     ListInstalledPackagesResult,
     ListInstsResult,
+    EraseInstResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3488,6 +3492,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             ai: {
                 chat,
+                listChatModels,
                 generateSkybox,
                 generateImage,
                 hume: {
@@ -3771,6 +3776,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 listInsts,
                 listInstsByMarker,
+                eraseInst,
 
                 recordWebhook,
                 runWebhook,
@@ -5717,6 +5723,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         (promise as any)[ORIGINAL_OBJECT] = action;
         return promise;
+    }
+
+    /**
+     * Lists the available chat models that the user can use.
+     * Returns a promise that resolves with an array of available chat models.
+     * Throws a {@link CasualOSError} if an error occurs.
+     *
+     * @example List available chat models
+     * const models = await ai.listChatModels();
+     * console.log(models);
+     *
+     * @dochash actions/ai
+     * @docname ai.listChatModels
+     */
+    function listChatModels(
+        options?: RecordActionOptions
+    ): Promise<ListedChatModel[]> {
+        const task = context.createTask();
+        const action = aiListChatModels(options, task.taskId);
+        const final = addAsyncResultAction(task, action).then(
+            (result: GenericSuccess<ListedChatModel[]>) => result.items
+        );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
     }
 
     /**
@@ -10236,6 +10266,66 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Erases the inst with the given name from the given record.
+     * Returns a promise that resolves with an object that indicates if the operation was successful or not.
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param instName the name of the inst that should be deleted.
+     * @param options the options for the request.
+     *
+     * @example Erase an inst from a record
+     * const result = await os.eraseInst('myRecord', 'myInst');
+     *
+     * if (result.success) {
+     *     os.toast("Inst deleted!");
+     * } else {
+     *     os.toast("Failed: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.eraseInst
+     * @docid eraseInst
+     */
+    function eraseInst(
+        recordKeyOrName: string,
+        instName: string,
+        options: RecordActionOptions = {}
+    ): Promise<EraseInstResult> {
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
+        }
+
+        if (!hasValue(instName)) {
+            throw new Error('instName must be provided.');
+        } else if (typeof instName !== 'string') {
+            throw new Error('instName must be a string.');
+        }
+
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                deleteInst: {
+                    input: {
+                        recordKey: isRecordKey(recordKeyOrName)
+                            ? recordKeyOrName
+                            : undefined,
+                        recordName: !isRecordKey(recordKeyOrName)
+                            ? recordKeyOrName
+                            : undefined,
+                        inst: instName,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
         return addAsyncAction(task, event);
     }
 

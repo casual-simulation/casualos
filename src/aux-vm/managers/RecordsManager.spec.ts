@@ -7655,6 +7655,21 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'deleteInst',
+                    recordsCallProcedure(
+                        {
+                            deleteInst: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    inst: 'testInst',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

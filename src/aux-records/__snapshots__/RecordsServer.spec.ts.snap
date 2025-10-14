@@ -4576,6 +4576,18 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/chat/models",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "aiListChatModels",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
         "method": "POST",
         "path": "/api/v2/ai/skybox",
       },
@@ -10183,6 +10195,18 @@ Object {
         "type": "object",
       },
       "name": "aiChatStream",
+      "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/ai/chat/models",
+      },
+      "inputs": Object {
+        "schema": Object {},
+        "type": "object",
+      },
+      "name": "aiListChatModels",
       "origins": "api",
     },
     Object {

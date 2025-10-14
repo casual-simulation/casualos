@@ -3756,6 +3756,37 @@ export class RecordsServer {
                     return result;
                 }),
 
+            aiListChatModels: procedure()
+                .origins('api')
+                .http('GET', '/api/v2/ai/chat/models')
+                .inputs(z.object({}))
+                .handler(async (_, context) => {
+                    if (!this._aiController) {
+                        return AI_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKeyValidation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (sessionKeyValidation.success === false) {
+                        if (
+                            sessionKeyValidation.errorCode === 'no_session_key'
+                        ) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+                        return sessionKeyValidation;
+                    }
+
+                    const result = await this._aiController.listChatModels({
+                        userId: sessionKeyValidation.userId,
+                        userSubscriptionTier:
+                            sessionKeyValidation.subscriptionTier,
+                        userRole: sessionKeyValidation.role,
+                    });
+
+                    return genericResult(result);
+                }),
+
             createAiSkybox: procedure()
                 .origins('api')
                 .http('POST', '/api/v2/ai/skybox')

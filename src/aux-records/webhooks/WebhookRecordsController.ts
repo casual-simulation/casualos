@@ -390,6 +390,11 @@ export class WebhookRecordsController extends CrudRecordsController<
                     checkMetrics.features.addStateTimeoutMs ?? 1000,
             };
 
+            console.log(
+                `[WebhookRecordsController] [recordName: ${recordName} address: ${webhook.address}] Running webhook with options`,
+                options
+            );
+
             const result = await this._environment.handleHttpRequest({
                 state: state,
                 recordName: stateRecordName,
@@ -408,59 +413,58 @@ export class WebhookRecordsController extends CrudRecordsController<
 
             let infoFileName: string | null = null;
             let infoRecordName: string | null = null;
-            if (webhook.userId) {
-                const recordName = webhook.userId;
-                const dataFile: WebhookInfoFile = {
-                    runId,
-                    version: 1,
-                    request: request.request,
-                    requestUserId: request.userId,
-                    response: result.success === true ? result.response : null,
-                    logs: result.success === true ? result.logs : [],
-                    state,
-                    stateSha256: stateHash,
-                    authorization: webhookAuthorization,
-                };
-                const json = stringify(dataFile);
-                const data = new TextEncoder().encode(json);
-                const recordResult = await this._files.recordFile(
-                    recordName,
-                    recordName,
-                    {
-                        fileSha256Hex: sha256().update(data).digest('hex'),
-                        fileByteLength: data.byteLength,
-                        fileDescription: `Webhook data for run ${runId}`,
-                        fileMimeType: 'application/json',
-                        headers: {},
-                        markers: [`private:logs`],
-                    }
+            // const recordName = webhook.userId;
+            const dataFile: WebhookInfoFile = {
+                runId,
+                version: 1,
+                request: request.request,
+                requestUserId: request.userId,
+                response: result.success === true ? result.response : null,
+                logs: result.success === true ? result.logs : [],
+                state,
+                stateSha256: stateHash,
+                authorization: webhookAuthorization,
+            };
+            const json = stringify(dataFile);
+            const data = new TextEncoder().encode(json);
+            const recordResult = await this._files.recordFile(
+                recordName,
+                null,
+                {
+                    fileSha256Hex: sha256().update(data).digest('hex'),
+                    fileByteLength: data.byteLength,
+                    fileDescription: `Webhook data for run ${runId}`,
+                    fileMimeType: 'application/json',
+                    headers: {},
+                    markers: [`private:logs`],
+                    userRole: 'system',
+                }
+            );
+
+            if (recordResult.success === false) {
+                console.error(
+                    '[WebhookRecordsController] Error recording webhook info file:',
+                    recordResult
                 );
+            } else {
+                infoRecordName = recordName;
+                infoFileName = recordResult.fileName;
+                const requestResult = await axios.request({
+                    method: recordResult.uploadMethod,
+                    headers: recordResult.uploadHeaders,
+                    url: recordResult.uploadUrl,
+                    data: data,
+                    validateStatus: () => true,
+                });
 
-                if (recordResult.success === false) {
+                if (
+                    requestResult.status <= 199 ||
+                    requestResult.status >= 300
+                ) {
                     console.error(
-                        '[WebhookRecordsController] Error recording webhook info file:',
-                        recordResult
+                        '[WebhookRecordsController] Error uploading webhook info file:',
+                        requestResult
                     );
-                } else {
-                    infoRecordName = recordName;
-                    infoFileName = recordResult.fileName;
-                    const requestResult = await axios.request({
-                        method: recordResult.uploadMethod,
-                        headers: recordResult.uploadHeaders,
-                        url: recordResult.uploadUrl,
-                        data: data,
-                        validateStatus: () => true,
-                    });
-
-                    if (
-                        requestResult.status <= 199 ||
-                        requestResult.status >= 300
-                    ) {
-                        console.error(
-                            '[WebhookRecordsController] Error uploading webhook info file:',
-                            requestResult
-                        );
-                    }
                 }
             }
 

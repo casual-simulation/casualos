@@ -662,8 +662,8 @@ model FileRecord {
     record Record @relation(fields: [recordName], references: [name])
     fileName String
 
-    publisherId String
-    publisher User @relation("PublishedFileRecords", fields: [publisherId], references: [id])
+    publisherId String?
+    publisher User? @relation("PublishedFileRecords", fields: [publisherId], references: [id])
 
     subjectId String?
     subject User? @relation("SubjectFileRecords", fields: [subjectId], references: [id])

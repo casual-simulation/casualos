@@ -2958,7 +2958,9 @@ export class WebsocketController {
             }
         } else {
             // null record name means public temporary inst
-            const userInfo = await this._authStore.findUser(userId);
+            const userInfo = userId
+                ? await this._authStore.findUser(userId)
+                : null;
             if (userInfo) {
                 const userPrivacyFeatures = userInfo.privacyFeatures;
                 if (userPrivacyFeatures) {
@@ -2975,8 +2977,8 @@ export class WebsocketController {
                 if (privoConfig) {
                     return {
                         success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: 'Public insts are not allowed.',
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'Please log in to access public insts.',
                     };
                 }
             }
