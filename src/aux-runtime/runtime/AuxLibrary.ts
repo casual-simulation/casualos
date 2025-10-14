@@ -117,6 +117,7 @@ import type {
     HideLoadingScreenAction,
     AddBotMapLayerAction,
     RemoveBotMapLayerAction,
+    TrackConfigBotTagsAction,
 } from '@casual-simulation/aux-common/bots';
 import {
     hasValue,
@@ -280,6 +281,7 @@ import {
     GET_DYNAMIC_LISTENERS_SYMBOL,
     ADD_BOT_LISTENER_SYMBOL,
     REMOVE_BOT_LISTENER_SYMBOL,
+    trackConfigBotTags as calcTrackConfigBotTags,
 } from '@casual-simulation/aux-common/bots';
 import type {
     AIChatOptions,
@@ -3705,6 +3707,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 goToDimension,
                 goToURL,
                 openURL,
+                syncConfigBotTagsToURL,
                 openDevConsole,
                 playSound,
                 bufferSound,
@@ -8534,6 +8537,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function openURL(url: string): OpenURLAction {
         const event = calcOpenURL(url);
+        return addAction(event);
+    }
+
+    /**
+     * Tells CasualOS to sync the given list of config bot tags in the URL query.
+     *
+     * @param tags The tags that should be synced to the URL.
+     * @param fullHistory Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+     *
+     * @example Sync the "page" config bot tag to the URL
+     * os.syncConfigBotTagsToURL(['page']);
+     *
+     * @example Sync the "scrollPosition" config bot tag to the URL, but don't create a history entry for every change
+     * os.syncConfigBotTagsToURL(['scrollPosition'], false);
+     *
+     * @dochash actions/os/portals
+     * @docname os.syncConfigBotTagsToURL
+     * @docgroup 10-go-to
+     */
+    function syncConfigBotTagsToURL(
+        tags: string[],
+        fullHistory: boolean = true
+    ): TrackConfigBotTagsAction {
+        const event = calcTrackConfigBotTags(tags, fullHistory);
         return addAction(event);
     }
 
