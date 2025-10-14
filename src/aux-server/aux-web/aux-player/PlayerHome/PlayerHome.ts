@@ -43,7 +43,7 @@ import {
     PUBLIC_OWNER,
     appManager,
 } from '../../shared/AppManager';
-import { first } from 'rxjs/operators';
+import { first, tap } from 'rxjs/operators';
 import type { Dictionary } from 'vue-router/types/router';
 import type { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
@@ -51,7 +51,7 @@ import {
     userBotTagsChanged,
 } from '@casual-simulation/aux-vm-browser';
 import type { UpdatedBotInfo } from '@casual-simulation/aux-vm';
-import { intersection, isEqual } from 'es-toolkit/compat';
+import { intersection, isEqual, without, union } from 'es-toolkit/compat';
 import type { Subscription } from 'rxjs';
 import type { Config } from 'unique-names-generator';
 import { uniqueNamesGenerator } from 'unique-names-generator';
@@ -179,7 +179,8 @@ export default class PlayerHome extends Vue {
     errors: FormError[] = [];
 
     private _loadedStaticInst: boolean = false;
-
+    private _partialHistoryQueryParams: string[] = [];
+    private _fullHistoryQueryParams: string[] = [];
     private _simulations: Map<BrowserSimulation, Subscription>;
 
     get isPrivoCertified() {
@@ -350,6 +351,8 @@ export default class PlayerHome extends Vue {
         this.biosOptions = [];
         this.errors = [];
         this._simulations = new Map();
+        this._fullHistoryQueryParams = [];
+        this._partialHistoryQueryParams = [];
         this.logoUrl = appManager.comIdConfig?.logoUrl;
         this.generatedName = uniqueNamesGenerator(namesConfig);
         this.logoTitle =
@@ -682,7 +685,8 @@ export default class PlayerHome extends Vue {
 
     private _setupSimulation(sim: BrowserSimulation): Subscription {
         let setInitialValues = false;
-        return userBotTagsChanged(sim).subscribe({
+
+        let sub = userBotTagsChanged(sim).subscribe({
             next: (update) => {
                 if (!setInitialValues) {
                     setInitialValues = true;
@@ -782,6 +786,40 @@ export default class PlayerHome extends Vue {
             },
             error: (err) => console.log(err),
         });
+
+        sub.add(
+            sim.localEvents
+                .pipe(
+                    tap((e) => {
+                        if (e.type === 'track_config_bot_tags') {
+                            if (e.fullHistory) {
+                                this._fullHistoryQueryParams = union(
+                                    this._fullHistoryQueryParams,
+                                    e.tags
+                                );
+                                this._partialHistoryQueryParams = without(
+                                    this._partialHistoryQueryParams,
+                                    ...this._fullHistoryQueryParams
+                                );
+                            } else {
+                                this._partialHistoryQueryParams.push(...e.tags);
+                                this._fullHistoryQueryParams = without(
+                                    this._fullHistoryQueryParams,
+                                    ...this._partialHistoryQueryParams
+                                );
+                            }
+
+                            this._handleQueryUpdates(sim, {
+                                bot: sim.helper.configBot,
+                                tags: new Set(e.tags),
+                            });
+                        }
+                    })
+                )
+                .subscribe()
+        );
+
+        return sub;
     }
 
     private async _sendPortalChangedEvents(
@@ -986,13 +1024,21 @@ export default class PlayerHome extends Vue {
             [...update.tags],
 
             // Include the known portals so that they always update the URL
-            [...Object.keys(this.query), ...QUERY_PORTALS]
+            [
+                ...Object.keys(this.query),
+                ...QUERY_PORTALS,
+                ...this._fullHistoryQueryParams,
+                ...this._partialHistoryQueryParams,
+            ]
         );
         let changes: Dictionary<any> = {};
         for (let tag of tags) {
             const oldValue = this.query[tag];
             const newValue = calculateBotValue(calc, update.bot, tag);
-            if (!isEqual(newValue, oldValue)) {
+            if (
+                !isEqual(newValue, oldValue) &&
+                String(newValue) !== String(oldValue)
+            ) {
                 // The inst and staticInst tags are handled by the userBotTagsChanged handler
                 if (tag === 'inst' || tag === 'staticInst') {
                     continue;
@@ -1016,10 +1062,16 @@ export default class PlayerHome extends Vue {
 
             let pushState = false;
             for (let tag in changes) {
-                if (QUERY_FULL_HISTORY_TAGS.has(tag)) {
+                if (
+                    QUERY_FULL_HISTORY_TAGS.has(tag) ||
+                    this._fullHistoryQueryParams.includes(tag)
+                ) {
                     pushState = true;
                     break;
-                } else if (QUERY_PARTIAL_HISTORY_TAGS.has(tag)) {
+                } else if (
+                    QUERY_PARTIAL_HISTORY_TAGS.has(tag) ||
+                    this._partialHistoryQueryParams.includes(tag)
+                ) {
                     const value = changes[tag];
                     const url = new URL(location.href);
                     const hasSearch = url.searchParams.has(tag);
