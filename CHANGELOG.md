@@ -18,6 +18,7 @@
 -   Fixed an issue where clicking the sheetPortal button in the systemPortal would only infer the dimension from gridPortal. Now it checks mapPortal first, then gridPortal, before requesting user input.
 -   Fixed an issue where it was not possible to publish packages to studios.
 -   Changed to ensure that the "Sign In" dialog is shown to unauthenticated users who are trying to access a public inst on Privo-enabled deployments.
+-   Static inst deletion now properly removes all associated data from browser storage. Previously, deleting a local inst would only remove it from the list while leaving bot data behind, causing old data to reappear when creating a new inst with the same name.
 
 ## V3.7.1
 
