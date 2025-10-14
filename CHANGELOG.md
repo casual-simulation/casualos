@@ -9,6 +9,10 @@
 -   Added the `os.eraseInst(recordKeyOrName, instName, options?)` function to delete insts programmatically.
 -   Added the `ai.listChatModels()` function to list the available chat models that the user can use based on their subscription.
 -   Changed webhooks to record logs to the same record that the webhook is stored in.
+-   Add the `os.syncConfigBotTagsToURL(tags, fullHistory?)` function.
+    -   Tells CasualOS to sync the given list of config bot tags in the URL query.
+    -   `tags` - The tags that should be synced to the URL.
+    -   `fullHistory` - Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
 
 ### :bug: Bug Fixes
 
