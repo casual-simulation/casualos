@@ -87,7 +87,7 @@ export class PrismaDatabaseRecordsStore implements DatabaseRecordsStore {
         recordName: string,
         item: Partial<DatabaseRecord>
     ): Promise<void> {
-        await this._client.searchRecord.update({
+        await this._client.databaseRecord.update({
             where: {
                 recordName_address: {
                     recordName: recordName,
