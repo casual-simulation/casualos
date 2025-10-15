@@ -645,6 +645,24 @@ describe('Transpiler', () => {
 
                 expect(result).toBe(`h("span",null,'',)`);
             });
+
+            it('should support comment expressions', () => {
+                const result = transpiler.transpile(
+                    `<span>{/**This is a comment*/}</span>`
+                );
+
+                expect(result).toBe(`h("span",null,'',)`);
+            });
+
+            it('should support multi-line comment expressions', () => {
+                const result = transpiler.transpile(
+                    `<span>{/**This is a comment
+                        that spans multiple lines
+                    */}</span>`
+                );
+
+                expect(result).toBe(`h("span",null,'',)`);
+            });
         });
 
         it('should support dynamic import statements', () => {
