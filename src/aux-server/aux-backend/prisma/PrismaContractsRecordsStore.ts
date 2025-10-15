@@ -314,7 +314,7 @@ export class PrismaContractsRecordsStore implements ContractRecordsStore {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
             totalCount: count,
-            marker: null,
+            marker: request.marker,
         };
     }
 

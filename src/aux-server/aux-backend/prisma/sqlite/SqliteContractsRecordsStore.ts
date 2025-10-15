@@ -310,7 +310,7 @@ export class SqliteContractsRecordsStore implements ContractRecordsStore {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
             totalCount: count[0].count,
-            marker: null,
+            marker: request.marker,
         };
     }
 

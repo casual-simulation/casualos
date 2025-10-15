@@ -32,8 +32,8 @@ import type {
     StudioComIdRequest,
     LoomConfig,
     HumeConfig,
-    StudioStripeAccountStatus,
-    StudioStripeRequirementsStatus,
+    StripeAccountStatus,
+    StripeRequirementsStatus,
 } from '@casual-simulation/aux-records';
 import {
     COM_ID_PLAYER_CONFIG,
@@ -660,6 +660,9 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     private _convertToStudio(studio: PrismaStudio): Studio {
+        if (!studio) {
+            return null;
+        }
         return {
             id: studio.id,
             displayName: studio.displayName,
@@ -686,9 +689,9 @@ export class PrismaRecordsStore implements RecordsStore {
             ),
             stripeAccountId: studio.stripeAccountId,
             stripeAccountStatus:
-                studio.stripeAccountStatus as StudioStripeAccountStatus,
+                studio.stripeAccountStatus as StripeAccountStatus,
             stripeAccountRequirementsStatus:
-                studio.stripeAccountRequirementsStatus as StudioStripeRequirementsStatus,
+                studio.stripeAccountRequirementsStatus as StripeRequirementsStatus,
         };
     }
 }

@@ -48,6 +48,11 @@ model User {
 
     role String?
 
+    stripeAccountId String? @unique
+    stripeAccountRequirementsStatus String?
+    stripeAccountStatus String?
+    requestedRate Int?
+
     loginRequests LoginRequest[]
     webauthnLoginRequests WebAuthnLoginRequest[]
     sessions AuthSession[]
@@ -289,6 +294,10 @@ model Studio {
     subscriptionId String?
     subscriptionPeriodStart Decimal?
     subscriptionPeriodEnd Decimal?
+
+    stripeAccountId String? @unique
+    stripeAccountRequirementsStatus String?
+    stripeAccountStatus String?
 
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
@@ -1557,7 +1566,7 @@ model FinancialAccount {
     createdAt Decimal
     updatedAt Decimal
 
-    @@unique([userId, studioId, ledger])
+    @@unique([userId, studioId, contractId, ledger])
 }
 
 

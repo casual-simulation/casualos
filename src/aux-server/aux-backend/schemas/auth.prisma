@@ -51,6 +51,7 @@ model User {
     stripeAccountId String? @unique
     stripeAccountRequirementsStatus String?
     stripeAccountStatus String?
+    requestedRate Int?
 
     accounts FinancialAccount[]
 
@@ -1566,7 +1567,7 @@ model FinancialAccount {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@unique([userId, studioId, ledger])
+    @@unique([userId, studioId, contractId, ledger])
 }
 
 // A contract record is a promise of work at a certain rate

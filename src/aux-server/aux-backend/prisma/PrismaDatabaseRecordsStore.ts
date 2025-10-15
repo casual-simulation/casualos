@@ -236,7 +236,7 @@ export class PrismaDatabaseRecordsStore implements DatabaseRecordsStore {
             success: true,
             items: records.map((r) => this._convertRecord(r)),
             totalCount: count,
-            marker: null,
+            marker: request.marker,
         };
     }
 

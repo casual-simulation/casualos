@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type { StripeAccountStatus } from 'StripeInterface';
 import type { CreateRealtimeSessionTokenRequest } from './AIOpenAIRealtimeInterface';
 
 export interface MetricsStore {
@@ -167,6 +168,18 @@ export interface SubscriptionMetrics {
      * The unix time in miliseconds of the end of the current subscription period.
      */
     currentPeriodEndMs: number | null;
+
+    /**
+     * The ID of the stripe account that the record is associated with.
+     * Null if a stripe account is not associated with the record.
+     */
+    stripeAccountId: string | null;
+
+    /**
+     * The status of the stripe account that the record is associated with.
+     * Null if a stripe account is not associated with the record.
+     */
+    stripeAccountStatus: StripeAccountStatus | null;
 }
 
 export interface DataSubscriptionMetrics extends SubscriptionMetrics {
