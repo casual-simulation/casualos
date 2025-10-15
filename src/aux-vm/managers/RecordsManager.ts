@@ -267,9 +267,9 @@ export class RecordsManager {
         ['listDatabases', false],
         ['getDatabase', true],
         ['queryDatabase', true],
-        ['getXpUserMeta', true],
-        ['createXpContract', true],
-        ['updateXpContract', true],
+        // ['getXpUserMeta', true],
+        // ['createXpContract', true],
+        // ['updateXpContract', true],
     ]);
 
     /**
@@ -540,7 +540,7 @@ export class RecordsManager {
     }
 
     private async _recordStoreItem(event: RecordStoreItemAction) {
-        const info = await this._resolveInfoForEvent(event, false);
+        const info = await this._resolveInfoForEvent(event, true);
 
         if (info.error) {
             return;
@@ -567,7 +567,7 @@ export class RecordsManager {
                 instances,
             },
             {
-                endpoint: await info.auth.getRecordsOrigin(),
+                endpoint: info.recordsOrigin,
                 headers: info.headers,
             }
         );
@@ -601,7 +601,7 @@ export class RecordsManager {
                 instances,
             },
             {
-                endpoint: await info.auth.getRecordsOrigin(),
+                endpoint: info.recordsOrigin,
                 headers: info.headers,
             }
         );
@@ -612,7 +612,7 @@ export class RecordsManager {
     }
 
     private async _eraseStoreItem(event: EraseStoreItemAction) {
-        const info = await this._resolveInfoForEvent(event, false);
+        const info = await this._resolveInfoForEvent(event, true);
 
         if (info.error) {
             return;
@@ -635,7 +635,7 @@ export class RecordsManager {
                 instances,
             },
             {
-                endpoint: await info.auth.getRecordsOrigin(),
+                endpoint: info.recordsOrigin,
                 headers: info.headers,
             }
         );
@@ -669,7 +669,7 @@ export class RecordsManager {
                 instances,
             },
             {
-                endpoint: await info.auth.getRecordsOrigin(),
+                endpoint: info.recordsOrigin,
                 headers: info.headers,
             }
         );
@@ -704,7 +704,7 @@ export class RecordsManager {
                 instances,
             },
             {
-                endpoint: await info.auth.getRecordsOrigin(),
+                endpoint: info.recordsOrigin,
                 headers: info.headers,
             }
         );
