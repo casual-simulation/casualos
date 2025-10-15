@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>IndexedDB Cleanup</title>
+        <script>
+            // Security check 1: Must be in an iframe
+            if (window.self === window.top) {
+                console.error(
+                    '[Cleanup] Security: Not in iframe, refusing to run'
+                );
+                document.body.innerHTML =
+                    'This page must be loaded in an iframe.';
+                throw new Error('Security check failed: Not in iframe');
+            }
+
+            // Security check 2: Validate inst name from query params
+            const params = new URLSearchParams(window.location.search);
+            const inst = params.get('inst');
+
+            if (!inst) {
+                console.error('[Cleanup] No inst specified');
+                window.parent.postMessage(
+                    {
+                        type: 'CLEANUP_ERROR',
+                        error: 'No inst specified',
+                    },
+                    '*'
+                );
+                throw new Error('No inst specified');
+            }
+
+            // Security check 3: Validate inst name format (alphanumeric, hyphens, underscores only)
+            const instRegex = /^[a-zA-Z0-9_-]+$/;
+            if (!instRegex.test(inst)) {
+                console.error('[Cleanup] Invalid inst name format:', inst);
+                window.parent.postMessage(
+                    {
+                        type: 'CLEANUP_ERROR',
+                        inst: inst,
+                        error: 'Invalid inst name format',
+                    },
+                    '*'
+                );
+                throw new Error('Invalid inst name format');
+            }
+
+            console.log('[Cleanup] Starting cleanup for inst:', inst);
+
+            async function cleanupInst() {
+                const dbNames = [
+                    `/${inst}/default`,
+                    `/${inst}/shared`,
+                    inst,
+                    `${inst}`,
+                ];
+
+                let deletedDatabases = [];
+                let failedDatabases = [];
+
+                if (typeof indexedDB.databases === 'function') {
+                    try {
+                        const allDbs = await indexedDB.databases();
+                        console.log(
+                            '[Cleanup] All databases:',
+                            allDbs.map((db) => db.name)
+                        );
+
+                        const instDbs = allDbs.filter(
+                            (db) =>
+                                dbNames.includes(db.name) ||
+                                db.name.includes(`/${inst}/`) ||
+                                db.name === inst
+                        );
+
+                        console.log(
+                            '[Cleanup] Found inst databases:',
+                            instDbs.map((db) => db.name)
+                        );
+
+                        for (const db of instDbs) {
+                            if (!dbNames.includes(db.name)) {
+                                dbNames.push(db.name);
+                            }
+                        }
+                    } catch (err) {
+                        console.warn(
+                            '[Cleanup] Could not list databases:',
+                            err
+                        );
+                    }
+                }
+
+                for (const dbName of dbNames) {
+                    try {
+                        console.log('[Cleanup] Attempting to delete:', dbName);
+                        const deleteReq = indexedDB.deleteDatabase(dbName);
+
+                        await new Promise((resolve, reject) => {
+                            deleteReq.onsuccess = () => {
+                                console.log(
+                                    '[Cleanup] Successfully deleted:',
+                                    dbName
+                                );
+                                deletedDatabases.push(dbName);
+                                resolve('success');
+                            };
+
+                            deleteReq.onerror = () => {
+                                console.error(
+                                    '[Cleanup] Failed to delete:',
+                                    dbName,
+                                    deleteReq.error
+                                );
+                                failedDatabases.push(dbName);
+                                resolve('error');
+                            };
+
+                            deleteReq.onblocked = () => {
+                                console.warn(
+                                    '[Cleanup] Deletion blocked for:',
+                                    dbName
+                                );
+                                setTimeout(() => {
+                                    failedDatabases.push(dbName);
+                                    resolve('blocked');
+                                }, 2000);
+                            };
+                        });
+                    } catch (err) {
+                        console.error(
+                            '[Cleanup] Exception deleting:',
+                            dbName,
+                            err
+                        );
+                        failedDatabases.push(dbName);
+                    }
+                }
+
+                return {
+                    inst: inst,
+                    deletedDatabases: deletedDatabases,
+                    failedDatabases: failedDatabases,
+                    success: deletedDatabases.length > 0,
+                };
+            }
+
+            window.addEventListener('load', async () => {
+                try {
+                    const result = await cleanupInst();
+
+                    window.parent.postMessage(
+                        {
+                            type: 'CLEANUP_COMPLETE',
+                            ...result,
+                        },
+                        '*'
+                    );
+                } catch (err) {
+                    console.error('[Cleanup] Unexpected error:', err);
+                    window.parent.postMessage(
+                        {
+                            type: 'CLEANUP_ERROR',
+                            inst: inst,
+                            error: err.message || 'Unknown error',
+                        },
+                        '*'
+                    );
+                }
+            });
+
+            setTimeout(() => {
+                console.warn(
+                    '[Cleanup] Timeout reached, sending timeout message'
+                );
+                window.parent.postMessage(
+                    {
+                        type: 'CLEANUP_ERROR',
+                        inst: inst,
+                        error: 'Cleanup timeout',
+                    },
+                    '*'
+                );
+            }, 10000);
+        </script>
+    </head>
+    <body>
+        <p>Cleaning up IndexedDB...</p>
+    </body>
+</html>

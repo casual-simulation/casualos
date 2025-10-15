@@ -89,6 +89,7 @@ export type ExtraActions =
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
+    | TrackConfigBotTagsAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | ShellAction
@@ -1534,6 +1535,42 @@ export interface OpenURLAction extends Action {
      * The URL to open.
      */
     url: string;
+}
+
+/**
+ * Defines an event that notifies the system that a config bot tag should be tracked in the URL.
+ *
+ * @dochash types/os/portals
+ * @docname TrackConfigBotTagsAction
+ */
+export interface TrackConfigBotTagsAction extends Action {
+    type: 'track_config_bot_tags';
+
+    /**
+     * The tag names that should be tracked.
+     */
+    tags: string[];
+
+    /**
+     * Whether the a history entry should be created for every change to these tags.
+     * If false, then the URL will be updated but no additional history entries will be created.
+     * If true, then each change to the parameters will create a new history entry.
+     */
+    fullHistory: boolean;
+}
+
+/**
+ * Creates a TrackConfigBotTagsAction that notifies the system that a config bot tag should be tracked in the URL.
+ */
+export function trackConfigBotTags(
+    tags: string[],
+    fullHistory: boolean
+): TrackConfigBotTagsAction {
+    return {
+        type: 'track_config_bot_tags',
+        tags,
+        fullHistory,
+    };
 }
 
 /**

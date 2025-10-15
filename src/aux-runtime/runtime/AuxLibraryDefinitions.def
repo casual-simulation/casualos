@@ -15088,6 +15088,24 @@ interface Os {
     openURL(url: string): OpenURLAction;
 
     /**
+     * Tells CasualOS to sync the given list of config bot tags in the URL query.
+     * 
+     * @param tags The tags that should be synced to the URL.
+     * @param fullHistory Whether the a history entry should be created for every change to these tags. If false, then the URL will be updated but no additional history entries will be created. If true, then each change to the parameters will create a new history entry. Defaults to true.
+     * 
+     * @example Sync the "page" config bot tag to the URL
+     * os.syncConfigBotTagsToURL(['page']);
+     * 
+     * @example Sync the "scrollPosition" config bot tag to the URL, but don't create a history entry for every change
+     * os.syncConfigBotTagsToURL(['scrollPosition'], false);
+     * 
+     * @dochash actions/os/portals
+     * @docname os.syncConfigBotTagsToURL
+     * @docgroup 10-go-to
+     */
+    syncConfigBotTagsToURL(tags: string[], fullHistory?: boolean): any;
+
+    /**
      * Shows an input box to edit the given bot and tag.
      *
      * @param bot The bot or bot ID that should be edited.

@@ -599,7 +599,7 @@ describe('WebsocketController', () => {
                     );
                 });
 
-                it('should return a not_authorized error if the user is not logged in and privo is configured to deny public insts by default', async () => {
+                it('should return a not_logged_in error if the user is not logged in and privo is configured to deny public insts by default', async () => {
                     store.privoConfiguration = {
                         gatewayEndpoint: 'endpoint',
                         featureIds: {
@@ -649,8 +649,9 @@ describe('WebsocketController', () => {
                             recordName: null,
                             inst,
                             branch: 'doesNotExist',
-                            errorCode: 'not_authorized',
-                            errorMessage: 'Public insts are not allowed.',
+                            errorCode: 'not_logged_in',
+                            errorMessage:
+                                'Please log in to access public insts.',
                         },
                     ]);
 
