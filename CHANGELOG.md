@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.8.1
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
+
 ## V3.8.0
 
 #### Date: 10/14/2025
