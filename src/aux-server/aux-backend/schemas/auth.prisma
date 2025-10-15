@@ -1569,7 +1569,6 @@ model FinancialAccount {
     @@unique([userId, studioId, ledger])
 }
 
-
 // A contract record is a promise of work at a certain rate
 model ContractRecord {
     id String @db.Uuid @id

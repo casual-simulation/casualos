@@ -88,6 +88,15 @@ model User {
     grantedPackageEntitlements GrantedPackageEntitlement[]
     loadedPackages LoadedPackage[]
 
+    checkoutSessions AuthCheckoutSession[]
+    purchasedItems PurchasedItem[]
+
+    accounts FinancialAccount[]
+
+    issuedContracts ContractRecord[] @relation("IssuerUser")
+    heldContracts ContractRecord[] @relation("HoldingUser")
+    externalPayouts ExternalPayout[]
+
     createdAt Decimal
     updatedAt Decimal
 }
@@ -287,6 +296,8 @@ model Studio {
     aiSloydMetrics AiSloydMetrics[]
     aiOpenAIRealtimeMetrics AiOpenAIRealtimeMetrics[]
 
+    accounts FinancialAccount[]
+
     childStudios Studio[] @relation("OwnerStudio")
     comIdRequests StudioComIdRequest[]
 
@@ -347,6 +358,10 @@ model Record {
     notificationRecords NotificationRecord[]
     notificationSubscriptions NotificationSubscription[]
     sentNotifications SentNotification[]
+    purchasableItems PurchasableItemRecord[]
+    purchasedItems PurchasedItem[]
+
+    contracts ContractRecord[]
 
     resourceAssignments ResourcePermissionAssignment[]
     markerAssignments MarkerPermissionAssignment[]
@@ -450,7 +465,7 @@ model RoleAssignment {
 //     // The ID of the user that the assignment grants permission to.
 //     // Null if the subjectType is "role" or "inst"
 //     userId String?
-//     user User? @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GlobalPermissionAssignment_userId_fkey1")
+//     user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
 //     // The time that the assignment expires.
 //     // Null means that the assignment never expires.
@@ -1159,6 +1174,100 @@ model DatabaseRecord {
     updatedAt Decimal
 }
 
+
+model PurchasableItemRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    address String
+    name String
+    description String
+    imageUrls Json
+
+    currency String
+    cost Int
+    taxCode String?
+
+    roleName String
+    roleGrantTimeMs Int?
+
+    // redirectUrl String
+    markers Json
+    purchasedItems PurchasedItem[]
+
+    createdAt Decimal 
+    updatedAt Decimal
+}
+
+model AuthCheckoutSession {
+    id String @id
+
+    paid Boolean
+    fulfilledAt Decimal?
+    items Json
+
+    // returnUrl String
+    // successUrl String
+    
+    stripeStatus String
+    stripePaymentStatus String
+    stripeCheckoutSessionId String @unique
+
+    invoiceId String? @unique
+    invoice Invoice?
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    purchasedItems PurchasedItem[]
+
+    createdAt Decimal 
+    updatedAt Decimal
+}
+
+model PurchasedItem {
+    id String @id
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    purchasableItemAddress String
+    purchasableItem PurchasableItemRecord @relation(fields: [recordName, purchasableItemAddress], references: [recordName, address], onDelete: Restrict)
+
+    checkoutSessionId String?
+    checkoutSession AuthCheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: SetNull)
+
+    roleName String
+    roleGrantTimeMs Int?
+
+    // The time that the item was activated
+    activatedTime Decimal?
+    
+    // The activation key that was used to activate the item
+    activationKeyId String?
+    activationKey ActivationKey? @relation(fields: [activationKeyId], references: [id], onDelete: SetNull)
+
+    createdAt Decimal 
+    updatedAt Decimal
+}
+
+model ActivationKey {
+    id String @id
+
+    // The hash that can be used to associate the item with a user account
+    secretHash String
+
+    purchasedItems PurchasedItem[]
+
+    createdAt Decimal 
+    updatedAt Decimal
+}
+
 model Configuration {
     key String @id
     data Json
@@ -1215,6 +1324,9 @@ model Invoice {
 
     periodId String @unique
     period SubscriptionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+    checkoutSessionId String? @unique
+    checkoutSession AuthCheckoutSession? @relation(fields: [checkoutSessionId], references: [id], onDelete: Cascade)
 
     description String?
     status String
@@ -1427,3 +1539,156 @@ model StudioComIdRequest {
     updatedAt Decimal
 }
 
+model FinancialAccount {
+    id String @id
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id], onDelete: Restrict)
+
+    contractId String? @unique
+    contract ContractRecord? @relation(fields: [contractId], references: [id], onUpdate: Restrict, onDelete: Restrict)
+
+    ledger Int
+    currency String
+
+    createdAt Decimal
+    updatedAt Decimal
+
+    @@unique([userId, studioId, ledger])
+}
+
+
+// A contract record is a promise of work at a certain rate
+model ContractRecord {
+    id String @id
+
+    // The record that owns the contract.
+    // That is, the record that the contract was issued from.
+    recordName String
+    record Record @relation(fields: [recordName], references: [name], onDelete: Cascade)
+    address String
+
+    // The user that issued the contract
+    // That is, the user who created the contract in the record.
+    // (Similar to subjectId in other record types)
+    issuerUserId String
+    issuer User @relation(fields: [issuerUserId], references: [id], onDelete: Restrict, name: "IssuerUser")
+
+    // The user that is holding the contract
+    // That is, the user who is doing the work and getting paid
+    holdingUserId String
+    holdingUser User @relation(fields: [holdingUserId], references: [id], onDelete: Restrict, name: "HoldingUser")
+
+    // The rate at which gigs are paid in the contract
+    // The rate is in the smallest unit of the currency (e.g. cents for USD)
+    // The currency should always be the same as the account
+    rate Int
+
+    // The initial value of the contract in the smallest unit of the currency (all gigs) if the contract is a draft
+    // This is what would appear in the contract's account if the contract was opened
+    initialValue Int
+
+    // The description of the contract
+    description String?
+
+    // The status of the contract
+    // "open" - the contract is open and can be invoiced
+    // "closed" - the contract is closed and cannot be invoiced
+    status String
+
+    account FinancialAccount?
+
+    // The ID of the stripe checkout session that was used to pay for the contract
+    stripeCheckoutSessionId String? @unique
+
+    // The ID of the stripe payment intent that was used to pay for the contract
+    stripePaymentIntentId String? @unique
+
+    issuedAt Decimal
+    closedAt Decimal?
+
+    markers Json
+
+    invoices ContractInvoice[]
+
+    createdAt Decimal
+    updatedAt Decimal
+
+    @@unique([recordName, address])
+}
+
+// An invoice is a request for payment for part of a contract
+model ContractInvoice {
+    id String @id
+
+    contractId String
+    contract ContractRecord @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+    // The amount charged in the invoice, in the smallest unit of the currency used in the contracts account
+    amount Int
+
+    // The status of the invoice
+    // "open" - the invoice has been created but not yet paid
+    // "paid" - the invoice has been paid
+    // "void" - the invoice has been cancelled
+    status String
+
+    // Where the invoice payment should end up.
+    // "stripe" - the invoice should be paid out to the contract holder's stripe account
+    // "xpExchange - the invoice should be paid out to the contract holder's xp exchange account
+    payoutDestination String
+
+    // The reason why the invoice was voided
+    // "rejected" - the invoice was rejected by the receiver
+    // "cancelled" - the invoice was cancelled by the issuer
+    voidReason String?
+
+    // The ID of the transaction that paid the invoice
+    transactionId String?
+
+    // Additional information about the invoice
+    note String?
+
+    openedAt Decimal
+    paidAt Decimal?
+    voidedAt Decimal?
+
+    externalPayoutId String? @unique
+    externalPayout ExternalPayout? @relation()
+
+    createdAt Decimal
+    updatedAt Decimal
+}
+
+
+model ExternalPayout {
+    id String @id
+
+    invoiceId String? @unique
+    invoice ContractInvoice? @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+    userId String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    transferId String @unique
+    transactionId String
+    externalDestination String
+
+    stripeTransferId String?
+    destinationStripeAccountId String?
+
+    amount Int
+
+    postedTransferId String?
+    voidedTransferId String?
+
+    initiatedAt Decimal
+    postedAt Decimal?
+    voidedAt Decimal?
+
+    createdAt Decimal
+    updatedAt Decimal
+}
