@@ -42,11 +42,10 @@ import type {
     PrivoStore,
     PackageRecordsStore,
     PackageVersionRecordsStore,
-    XpStore,
     FinancialInterface,
     PurchasableItemRecordsStore,
-    PurchasableItemRecordsController,
 } from '@casual-simulation/aux-records';
+import { PurchasableItemRecordsController } from '@casual-simulation/aux-records';
 import {
     AuthController,
     DataRecordsController,
@@ -74,7 +73,6 @@ import {
     cleanupObject,
     NotificationRecordsController,
     PackageRecordsController,
-    XpController,
 } from '@casual-simulation/aux-records';
 import type { SimpleEmailServiceAuthMessengerOptions } from '@casual-simulation/aux-records-aws';
 import {
@@ -181,7 +179,6 @@ import { RemoteSimulationImpl } from '@casual-simulation/aux-vm-client';
 import type { AuxConfigParameters } from '@casual-simulation/aux-vm';
 import { WebPushImpl } from '../notifications/WebPushImpl';
 import { PrismaNotificationRecordsStore } from '../prisma/PrismaNotificationRecordsStore';
-import { PrismaXpStore } from '../prisma/PrismaXpStore';
 import { createClient, id } from 'tigerbeetle-node';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client/vm/RemoteAuxChannel';
 import { OpenAIRealtimeInterface } from '@casual-simulation/aux-records/AIOpenAIRealtimeInterface';
@@ -231,8 +228,9 @@ import {
     SqliteDatabaseInterface,
     TursoDatabaseInterface,
 } from '@casual-simulation/aux-records/database';
-import { SqliteDatabaseRecordsStore } from 'aux-backend/prisma/sqlite/SqliteDatabaseRecordsStore';
-import { PrismaDatabaseRecordsStore } from 'aux-backend/prisma/PrismaDatabaseRecordsStore';
+import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
+import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
+import type { FinancialStore } from '@casual-simulation/aux-records/financial';
 import {
     FinancialController,
     TigerBeetleFinancialInterface,
@@ -241,7 +239,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import xpApiPlugins from '../../../../xpexchange/xp-api/*.server.plugin.ts';
-import { PrismaPurchasableItemRecordsStore } from 'aux-backend/prisma/casualware/PrismaPurchasableItemsStore';
+import { PrismaPurchasableItemRecordsStore } from '../prisma/PrismaPurchasableItemsStore';
+import { SqliteFinancialStore } from '../prisma/sqlite/SqliteFinancialStore';
+import { PrismaFinancialStore } from '../prisma/PrismaFinancialStore';
+import { SqliteContractsRecordsStore } from '../prisma/sqlite/SqliteContractsRecordsStore';
+import { PrismaContractsRecordsStore } from '../prisma/PrismaContractsRecordsStore';
+import type { ContractRecordsStore } from '@casual-simulation/aux-records/contracts';
+import { ContractRecordsController } from '@casual-simulation/aux-records/contracts';
 
 const automaticPlugins: ServerPlugin[] = [
     ...xpApiPlugins.map((p: any) => p.default),
@@ -345,10 +349,12 @@ export class ServerBuilder implements SubscriptionLike {
     private _pushInterface: WebPushInterface;
     private _notificationsController: NotificationRecordsController;
 
-    private _xpStore: XpStore;
-    private _xpController: XpController;
     private _financialInterface: FinancialInterface;
     private _financialController: FinancialController;
+    private _financialStore: FinancialStore;
+
+    private _contractsStore: ContractRecordsStore;
+    private _contractsController: ContractRecordsController;
 
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
@@ -779,6 +785,11 @@ export class ServerBuilder implements SubscriptionLike {
                 client,
                 metricsStore
             );
+            this._financialStore = new SqliteFinancialStore(client);
+            this._contractsStore = new SqliteContractsRecordsStore(
+                client,
+                metricsStore
+            );
         } else {
             const metricsStore = (this._metricsStore = new PrismaMetricsStore(
                 prismaClient,
@@ -810,7 +821,6 @@ export class ServerBuilder implements SubscriptionLike {
                 prismaClient,
                 metricsStore
             );
-            this._xpStore = new PrismaXpStore(prismaClient);
             this._searchStore = new PrismaSearchRecordsStore(
                 prismaClient,
                 metricsStore
@@ -820,6 +830,11 @@ export class ServerBuilder implements SubscriptionLike {
                 metricsStore
             );
             this._purchasableItemsStore = new PrismaPurchasableItemRecordsStore(
+                prismaClient,
+                metricsStore
+            );
+            this._financialStore = new PrismaFinancialStore(prismaClient);
+            this._contractsStore = new PrismaContractsRecordsStore(
                 prismaClient,
                 metricsStore
             );
@@ -1494,41 +1509,40 @@ export class ServerBuilder implements SubscriptionLike {
                     cluster_id: options.tigerBeetle.clusterId,
                     replica_addresses: options.tigerBeetle.replicaAddresses,
                 });
-                console.log(
-                    '[ServerBuilder] Connecting to tigerbeetle server.'
+                // console.log(
+                //     '[ServerBuilder] Connecting to tigerbeetle server.'
+                // );
+                // try {
+                // await Promise.race([
+                //     client.lookupAccounts([0n]),
+                //     new Promise((_, rej) => {
+                //         setTimeout(() => {
+                //             rej(
+                //                 new Error(
+                //                     'Failed to connect to tigerbeetle server in time.'
+                //                 )
+                //             );
+                //         }, 3000);
+                //     }),
+                // ]);
+                console.log('[ServerBuilder] Connected to tigerbeetle server.');
+                this._financialInterface = new TigerBeetleFinancialInterface({
+                    client,
+                    id,
+                });
+                this._financialController = new FinancialController(
+                    this._financialInterface,
+                    this._financialStore
                 );
-                try {
-                    await Promise.race([
-                        client.lookupAccounts([0n]),
-                        new Promise((_, rej) => {
-                            setTimeout(() => {
-                                rej(
-                                    new Error(
-                                        'Failed to connect to tigerbeetle server in time.'
-                                    )
-                                );
-                            }, 3000);
-                        }),
-                    ]);
-                    console.log(
-                        '[ServerBuilder] Connected to tigerbeetle server.'
-                    );
-                    this._financialInterface =
-                        new TigerBeetleFinancialInterface({
-                            client,
-                            id,
-                        });
-                    this._financialController = new FinancialController(
-                        this._financialInterface
-                    );
-                } catch (e) {
-                    this._financialInterface = null;
-                    this._financialController = null;
-                    client.destroy();
-                    console.error(
-                        '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
-                    );
-                }
+                // } catch (e) {
+                //     this._financialInterface = null;
+                //     this._financialController = null;
+                //     this._financialStore = null;
+                //     client.destroy();
+                //     console.error(
+                //         '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
+                //     );
+                // }
             },
         });
 
@@ -2023,18 +2037,8 @@ export class ServerBuilder implements SubscriptionLike {
             throw new Error('A config store must be configured!');
         }
 
-        if (
-            !this._xpStore ||
-            !this._financialInterface ||
-            !this._financialController
-        ) {
-            console.warn(
-                `[ServerBuilder] Not using XP API. The following required are missing in configuration: ${
-                    !this._financialController ? 'Financial Controller' : ''
-                } ${!this._financialInterface ? 'Financial Interface, ' : ''}${
-                    !this._xpStore ? 'XP Store' : ''
-                }`
-            );
+        if (!this._financialInterface || !this._financialController) {
+            console.warn(`[ServerBuilder] Not using XP API.`);
         }
 
         if (!this._rateLimitController) {
@@ -2106,13 +2110,21 @@ export class ServerBuilder implements SubscriptionLike {
                 });
         }
 
-        if (this._purchasableItemsStore) {
-            this._purchasableItemsController =
-                new PurchasableItemRecordsController({
-                    store: this._purchasableItemsStore,
-                    config: this._configStore,
-                    policies: this._policyController,
-                });
+        if (this._contractsStore) {
+            this._contractsController = new ContractRecordsController({
+                authStore: this._authStore,
+                config: this._configStore,
+                policies: this._policyController,
+                privo: this._privoClient,
+                store: this._contractsStore,
+            });
+        }
+
+        if (this._financialStore && this._financialInterface) {
+            this._financialController = new FinancialController(
+                this._financialInterface,
+                this._financialStore
+            );
         }
 
         if (this._subscriptionConfig) {
@@ -2122,9 +2134,11 @@ export class ServerBuilder implements SubscriptionLike {
                 this._authStore,
                 this._recordsStore,
                 this._configStore,
-                this._purchasableItemsStore,
                 this._policyController,
-                this._policyStore
+                this._policyStore,
+                this._purchasableItemsStore,
+                this._financialController,
+                this._contractsStore
             );
         }
 
@@ -2226,19 +2240,6 @@ export class ServerBuilder implements SubscriptionLike {
             });
         }
 
-        if (
-            this._xpStore &&
-            this._financialInterface &&
-            this._financialController
-        ) {
-            this._xpController = new XpController({
-                xpStore: this._xpStore,
-                authController: this._authController,
-                authStore: this._authStore,
-                financialController: this._financialController,
-            });
-        }
-
         const server = new RecordsServer({
             allowedAccountOrigins: this._allowedAccountOrigins,
             allowedApiOrigins: this._allowedApiOrigins,
@@ -2257,14 +2258,14 @@ export class ServerBuilder implements SubscriptionLike {
             moderationController: this._moderationController,
             loomController: this._loomController,
             websocketRateLimitController: this._websocketRateLimitController,
-            purchasableItems: this._purchasableItemsController,
             webhooksController: this._webhooksController,
             notificationsController: this._notificationsController,
             packagesController: this._packagesController,
             packageVersionController: this._packageVersionController,
             searchRecordsController: this._searchController,
             databaseRecordsController: this._databasesController,
-            xpController: this._xpController,
+            contractRecordsController: this._contractsController,
+            purchasableItemsController: this._purchasableItemsController,
         });
 
         const buildReturn: BuildReturn = {
