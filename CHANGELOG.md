@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
+-   Fixed an issue where empty JSX expressions with comments weren't supported.
 
 ## V3.8.0
 
