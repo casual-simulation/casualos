@@ -47,15 +47,13 @@ export class PrismaFinancialStore implements FinancialStore {
     async getAccountByFilter(
         filter: UniqueFinancialAccountFilter
     ): Promise<FinancialAccount | null> {
-        return await this._client.financialAccount.findUnique({
-            where: {
-                userId_studioId_contractId_ledger: {
-                    ledger: filter.ledger,
-                    userId: filter.userId,
-                    studioId: filter.studioId,
-                    contractId: filter.contractId,
-                },
-            },
+        return await this._client.financialAccount.findFirst({
+            where: cleanupObject({
+                ledger: filter.ledger,
+                userId: filter.userId,
+                contractId: filter.contractId,
+                studioId: filter.studioId,
+            }),
         });
     }
 
