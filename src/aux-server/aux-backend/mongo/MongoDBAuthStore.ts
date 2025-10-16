@@ -1046,6 +1046,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 
@@ -1096,6 +1097,7 @@ export class MongoDBAuthStore implements AuthStore, RecordsStore {
                 id: invoiceId,
                 periodId: periodId,
                 subscriptionId: subscription.id,
+                checkoutSessionId: null,
                 ...request.invoice,
             });
 

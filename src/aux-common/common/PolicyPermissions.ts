@@ -381,7 +381,9 @@ export type AvailablePermissions =
     | PackagePermission
     | PackageVersionPermission
     | SearchPermission
-    | DatabasePermission;
+    | DatabasePermission
+    | ContractPermission
+    | InvoicePermission;
 
 export const SUBJECT_TYPE_VALIDATION = z.enum(['user', 'inst', 'role']);
 

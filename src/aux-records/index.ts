@@ -95,7 +95,5 @@ export * from './PrivoStore';
 
 export * from './purchasable-items';
 
-export * from './XpController';
-export * from './XpStore';
 export type * from './TypeUtils';
-export * from './financial/FinancialInterface';
+export * from './financial';

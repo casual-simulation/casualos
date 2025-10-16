@@ -29,8 +29,8 @@ import type {
     StudioAssignmentRole,
     StudioComIdFeaturesConfiguration,
     StudioLoomFeaturesConfiguration,
-    StudioStripeAccountStatus,
-    StudioStripeRequirementsStatus,
+    StripeAccountStatus,
+    StripeRequirementsStatus,
     UpdateStudioRequest,
 } from '@casual-simulation/aux-records';
 import { getFormErrors } from '@casual-simulation/aux-common';
@@ -95,8 +95,8 @@ export default class AuthStudio extends Vue {
     storeFeatures: PurchasableItemFeaturesConfiguration = {
         allowed: false,
     };
-    stripeAccountStatus: StudioStripeAccountStatus = null;
-    stripeRequirementsStatus: StudioStripeRequirementsStatus = null;
+    stripeAccountStatus: StripeAccountStatus = null;
+    stripeRequirementsStatus: StripeRequirementsStatus = null;
 
     originalAllowedStudioCreators: AllowedStudioCreators = 'anyone';
     allowedStudioCreators: AllowedStudioCreators = 'anyone';

@@ -17,7 +17,6 @@
  */
 import { cloneDeep, orderBy, sortBy } from 'es-toolkit/compat';
 import { type RegexRule } from './Utils';
-import { cloneDeepNull } from './Utils';
 import type {
     AddressType,
     AuthInvoice,
@@ -169,13 +168,6 @@ import type {
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import type {
-    XpContract,
-    XpInvoice,
-    XpStore,
-    XpUser,
-    XpUserWithUserInfo,
-} from './XpStore';
-import type {
     FinancialAccount,
     FinancialAccountFilter,
     FinancialStore,
@@ -201,7 +193,6 @@ export class MemoryStore
         InstRecordsStore,
         ModerationStore,
         SystemNotificationMessenger,
-        XpStore,
         FinancialStore
 {
     private _users: AuthUser[] = [];
@@ -251,10 +242,6 @@ export class MemoryStore
     private _studioHumeConfigs: Map<string, HumeConfig> = new Map();
 
     private _loadedPackages: Map<string, LoadedPackage> = new Map();
-
-    private _xpUsers: Map<string, XpUser> = new Map();
-    private _xpContracts: Map<XpContract['id'], XpContract> = new Map();
-    private _xpInvoices: Map<XpInvoice['id'], XpInvoice> = new Map();
 
     private _financialAccounts: FinancialAccount[] = [];
 
@@ -472,122 +459,6 @@ export class MemoryStore
         this._financialAccounts.push({
             ...account,
         });
-    }
-
-    // async batchQueryXpUsers(
-    //     queryOptions:
-    //         | {
-    //               xpId: XpUser['id'][];
-    //               authId?: AuthUser['id'][];
-    //           }
-    //         | {
-    //               authId: AuthUser['id'][];
-    //               xpId?: XpUser['id'][];
-    //           }
-    // ): Promise<XpUser[]> {
-    //     const users = [];
-    //     if ('xpId' in queryOptions) {
-    //         for (const id of queryOptions.xpId) {
-    //             const user = this._xpUsers.get(id);
-    //             if (user) {
-    //                 users.push(cloneDeep(user));
-    //             }
-    //         }
-    //     }
-    //     if ('authId' in queryOptions) {
-    //         const xpUsers = Array.from(this._xpUsers.values());
-    //         for (const id of queryOptions.authId) {
-    //             const user = xpUsers.find((u: XpUser) => u.userId === id);
-    //             if (user) {
-    //                 users.push(cloneDeep(user));
-    //             }
-    //         }
-    //     }
-    //     return users;
-    // }
-
-    async saveXpUser(user: XpUser) {
-        const u = cloneDeep(user);
-        this._xpUsers.set(u.xpId, u);
-    }
-
-    async saveXpContract(contract: XpContract) {
-        const c = cloneDeep(contract);
-        this._xpContracts.set(contract.id, c);
-        return c;
-    }
-
-    async updateXpContract(
-        id: XpContract['id'],
-        config: Partial<Omit<XpContract, 'id' | 'createdAt'>>
-    ): ReturnType<XpStore['updateXpContract']> {
-        const contract = this._xpContracts.get(id);
-        if (!contract)
-            throw new Error(`Contract with id ${id} not found in memory store`);
-        for (const key in config) {
-            if (config[key as keyof typeof config] !== undefined) {
-                (contract as any)[key] = config[key as keyof typeof config];
-            }
-        }
-        return cloneDeep(contract);
-    }
-
-    async saveXpInvoice(invoice: XpInvoice) {
-        const i = cloneDeep(invoice);
-        this._xpInvoices.set(invoice.id, i);
-        return i;
-    }
-
-    async getXpUserByUserId(id: string): Promise<XpUserWithUserInfo> {
-        const authUser = this._users.find((u) => u.id === id);
-
-        if (!authUser) {
-            return null;
-        }
-
-        let xpUser = null;
-        for (let user of this._xpUsers.values()) {
-            if (user.userId === id) {
-                xpUser = user;
-                break;
-            }
-        }
-
-        if (!xpUser) {
-            return null;
-        }
-
-        return {
-            ...xpUser,
-            ...authUser,
-        };
-    }
-
-    async getXpUserByXpId(id: string): Promise<XpUserWithUserInfo> {
-        const xpUser = this._xpUsers.get(id);
-        if (!xpUser) {
-            return null;
-        }
-
-        const authUser = this._users.find((u) => u.id === xpUser.userId);
-
-        if (!authUser) {
-            console.warn('No auth user found for xp user', xpUser);
-            return null;
-        }
-
-        return {
-            ...xpUser,
-            ...authUser,
-        };
-    }
-
-    async getXpContract(contractId: XpContract['id']): Promise<XpContract> {
-        return cloneDeepNull(this._xpContracts.get(contractId) ?? undefined);
-    }
-
-    async getXpInvoice(invoiceId: XpInvoice['id']): Promise<XpInvoice> {
-        return cloneDeepNull(this._xpInvoices.get(invoiceId) ?? undefined);
     }
 
     init?(): Promise<void>;
@@ -3280,6 +3151,8 @@ export class MemoryStore
             currentPeriodStartMs: currentPeriodStart,
             currentPeriodEndMs: currentPeriodEnd,
             subscriptionType: filter.ownerId ? 'user' : 'studio',
+            stripeAccountId: null,
+            stripeAccountStatus: null,
         };
 
         if (filter.ownerId) {
@@ -3290,6 +3163,8 @@ export class MemoryStore
                 metrics.subscriptionId = user.subscriptionId;
                 metrics.currentPeriodEndMs = user.subscriptionPeriodEndMs;
                 metrics.currentPeriodStartMs = user.subscriptionPeriodStartMs;
+                metrics.stripeAccountId = user.stripeAccountId;
+                metrics.stripeAccountStatus = user.stripeAccountStatus;
             }
         } else if (filter.studioId) {
             const studio = await this.getStudioById(filter.studioId);
@@ -3299,6 +3174,8 @@ export class MemoryStore
                 metrics.subscriptionStatus = studio.subscriptionStatus;
                 metrics.currentPeriodEndMs = studio.subscriptionPeriodEndMs;
                 metrics.currentPeriodStartMs = studio.subscriptionPeriodStartMs;
+                metrics.stripeAccountId = studio.stripeAccountId;
+                metrics.stripeAccountStatus = studio.stripeAccountStatus;
             }
         }
 

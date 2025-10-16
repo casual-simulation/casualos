@@ -35,7 +35,6 @@ import {
 import { FileRecordsController } from './FileRecordsController';
 import type { PublicRecordKeyPolicy } from '@casual-simulation/aux-common';
 import { mapValuesDeep, parseSessionKey } from '@casual-simulation/aux-common';
-import { XpController } from './XpController';
 import type { FinancialInterface } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
 import type { Account, Transfer } from 'tigerbeetle-node';
@@ -146,13 +145,6 @@ export function createTestControllers(
         recordItemStore: packagesStore,
         store: packageVersionStore,
     });
-    const xpController = new XpController({
-        authController: auth,
-        authStore: store,
-        xpStore: store,
-        financialInterface,
-        // financialController,
-    });
 
     return {
         store,
@@ -169,7 +161,6 @@ export function createTestControllers(
         packages,
         packageVersionStore,
         packageVersions,
-        xpController,
         financialController,
         financialInterface,
     };

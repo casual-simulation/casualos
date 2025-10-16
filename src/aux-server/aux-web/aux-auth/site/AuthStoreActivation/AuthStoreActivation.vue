@@ -2,14 +2,25 @@
     <div>
         <md-card class="fulfillment-card">
             <md-card-header>
-                <h1 class="md-title">Do you want to activate your key?</h1>
+                <h1 class="md-title">Claim activation key</h1>
             </md-card-header>
             <md-card-content>
                 <div v-if="activated">
                     <p>The key has been activated!</p>
+                    <p v-if="sessionKey">
+                        <strong>Session Key:</strong>
+                        <code>{{ sessionKey }}</code>
+                    </p>
+                    <p v-if="connectionKey">
+                        <strong>Connection Key:</strong>
+                        <code>{{ connectionKey }}</code>
+                    </p>
+                    <span v-if="expiresAtMs"
+                        >Expires <relative-time :millis="expiresAtMs" v-if="expiresAtMs"
+                    /></span>
                 </div>
-                <div v-else-if="loggedIn">
-                    <p>How do you want to use your purchase?</p>
+                <div v-else-if="!processing && loggedIn">
+                    <p>How do you want to claim this purchase?</p>
                 </div>
                 <div v-else>
                     <md-progress-spinner
@@ -22,8 +33,8 @@
                 </div>
                 <field-errors :field="null" :errors="errors" />
             </md-card-content>
-            <md-card-actions>
-                <md-button v-if="!activated && loggedIn" class="md-raised md-primary" @click="activatePurchase('now')">
+            <md-card-actions v-if="!activated">
+                <md-button @click="activatePurchase('guest')">
                     <md-progress-spinner
                         md-mode="indeterminate"
                         :md-diameter="20"
@@ -31,9 +42,13 @@
                         v-if="processing"
                     >
                     </md-progress-spinner>
-                    <span v-else>For myself</span>
+                    <span v-else>Claim as guest</span>
                 </md-button>
-                <md-button v-if="!activated && loggedIn" class="md-raised" @click="activatePurchase('later')">
+                <md-button
+                    v-if="loggedIn"
+                    class="md-raised md-primary"
+                    @click="activatePurchase('self')"
+                >
                     <md-progress-spinner
                         md-mode="indeterminate"
                         :md-diameter="20"
@@ -41,7 +56,17 @@
                         v-if="processing"
                     >
                     </md-progress-spinner>
-                    <span v-else>For someone else</span>
+                    <span v-else>Claim myself</span>
+                </md-button>
+                <md-button v-else-if="!loggedIn" class="md-raised md-primary" @click="signIn()">
+                    <md-progress-spinner
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                        v-if="processing"
+                    >
+                    </md-progress-spinner>
+                    <span v-else>Sign in</span>
                 </md-button>
             </md-card-actions>
         </md-card>
