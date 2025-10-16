@@ -934,13 +934,6 @@ const telemetrySchema = z.object({
 
 const tigerBeetleSchema = z
     .object({
-        _enabled: z
-            .boolean()
-            .optional()
-            .default(false)
-            .describe(
-                'Whether TigerBeetle is enabled, this allows for pre-defining and shipping default configuration.'
-            ),
         clusterId: z
             .bigint({ coerce: true })
             .min(0n, 'The cluster ID must be a non-negative integer.')

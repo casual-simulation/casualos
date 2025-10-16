@@ -1485,7 +1485,7 @@ export class ServerBuilder implements SubscriptionLike {
     useTigerBeetle(
         options: Pick<ServerConfig, 'tigerBeetle'> = this._options
     ): this {
-        if (!options.tigerBeetle || !options.tigerBeetle._enabled) {
+        if (!options.tigerBeetle) {
             console.warn(
                 '[ServerBuilder] TigerBeetle is explicitly disabled or lacks necessary config.'
             );
@@ -1509,6 +1509,8 @@ export class ServerBuilder implements SubscriptionLike {
                     cluster_id: options.tigerBeetle.clusterId,
                     replica_addresses: options.tigerBeetle.replicaAddresses,
                 });
+
+                this._subscription.add(() => client.destroy());
                 // console.log(
                 //     '[ServerBuilder] Connecting to tigerbeetle server.'
                 // );
@@ -1530,10 +1532,6 @@ export class ServerBuilder implements SubscriptionLike {
                     client,
                     id,
                 });
-                this._financialController = new FinancialController(
-                    this._financialInterface,
-                    this._financialStore
-                );
                 // } catch (e) {
                 //     this._financialInterface = null;
                 //     this._financialController = null;
@@ -1543,6 +1541,19 @@ export class ServerBuilder implements SubscriptionLike {
                 //         '[ServerBuilder] Failed to connect to tigerbeetle server during server build, disabling financial interface.'
                 //     );
                 // }
+            },
+        });
+
+        this._initActions.push({
+            priority: 0,
+            action: async () => {
+                if (!this._financialController) {
+                    throw new Error(
+                        'Financial controller is not available when it should be.'
+                    );
+                }
+
+                await this._financialController.init();
             },
         });
 

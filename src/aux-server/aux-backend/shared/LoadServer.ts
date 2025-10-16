@@ -255,6 +255,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.useRekognitionModeration();
     }
 
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
+    }
+
     if (config.webhooks) {
         if (config.privo) {
             console.log(

@@ -4,6 +4,7 @@ volumes:
     mongodata:
     minio-data:
     typesense-data:
+    tigerbeetle-data:
 
 networks:
     # ensure additional services are added to this network if they are expected to communicate with each other
@@ -65,3 +66,26 @@ services:
         volumes:
             - typesense-data:/data
         command: '--data-dir /data --api-key=xyz --enable-cors'
+
+    tigerbeetle_format:
+        image: 'ghcr.io/tigerbeetle/tigerbeetle:0.16.61'
+        restart: 'no'
+        volumes:
+            - tigerbeetle-data:/data
+        command: format --replica-count=1 --replica=0 /data/0_0.tigerbeetle || true
+        security_opt:
+            - seccomp=unconfined
+    tigerbeetle:
+        image: 'ghcr.io/tigerbeetle/tigerbeetle:0.16.61'
+        restart: always
+        ports:
+            - '8101:3000'
+        networks:
+            - enable_ipv6
+        volumes:
+            - tigerbeetle-data:/data
+        depends_on:
+            - tigerbeetle_format
+        command: start --cache-grid=256MiB --addresses=0.0.0.0:3000 --development /data/0_0.tigerbeetle
+        security_opt:
+            - seccomp=unconfined
