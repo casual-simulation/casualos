@@ -5660,6 +5660,42 @@ export class RecordsServer {
                     }
                 ),
 
+            getContractPricing: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/contract/pricing')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.getContractPricing({
+                                userId: sessionKeyValidation.userId,
+
+                                contract: {
+                                    recordName,
+                                    address,
+                                },
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
             fulfillCheckoutSession: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/records/checkoutSession/fulfill')

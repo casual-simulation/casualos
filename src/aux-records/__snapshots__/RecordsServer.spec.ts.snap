@@ -6218,6 +6218,34 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/contract/pricing",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getContractPricing",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/checkoutSession/fulfill",
       },
       "inputs": Object {
@@ -12479,6 +12507,34 @@ Object {
         "type": "object",
       },
       "name": "purchaseContract",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/pricing",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "address": Object {
+            "type": "string",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getContractPricing",
       "origins": "account",
     },
     Object {

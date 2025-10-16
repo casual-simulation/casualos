@@ -28717,6 +28717,288 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('POST /api/v2/records/contract/pricing', () => {
+        const purchaseRecordName = 'studioId';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: purchaseRecordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            // Create a contract to purchase
+            await contractRecordsStore.createItem(purchaseRecordName, {
+                id: 'contract1',
+                address: 'contract1',
+                holdingUserId: 'holder1',
+                rate: 50,
+                initialValue: 1000,
+                description: 'Test contract for purchase',
+                markers: [PUBLIC_READ_MARKER],
+                status: 'pending',
+                issuedAtMs: Date.now(),
+                issuingUserId: ownerId,
+            });
+
+            store.roles[purchaseRecordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return the checkout URL when purchasing a contract', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/pricing`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        address: 'contract1',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    contract: {
+                        address: 'contract1',
+                        id: 'contract1',
+                        description: 'Test contract for purchase',
+                        initialValue: 1000,
+                        issuedAtMs: expect.any(Number),
+                        issuingUserId: ownerId,
+                        markers: [PUBLIC_READ_MARKER],
+                        holdingUserId: 'holder1',
+                        rate: 50,
+                        status: 'pending',
+                    },
+                    currency: 'usd',
+                    lineItems: [
+                        {
+                            name: 'Contract',
+                            amount: 1000,
+                        },
+                    ],
+                    total: 1000,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to purchase as a guest', async () => {
+            // Create a contract to purchase
+            await contractRecordsStore.putItem(purchaseRecordName, {
+                id: 'contract1',
+                address: 'contract1',
+                holdingUserId: 'holder1',
+                rate: 50,
+                initialValue: 1000,
+                description: 'Test contract for purchase',
+                markers: [PUBLIC_WRITE_MARKER],
+                status: 'pending',
+                issuedAtMs: Date.now(),
+                issuingUserId: ownerId,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/pricing`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        address: 'contract1',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    contract: {
+                        address: 'contract1',
+                        id: 'contract1',
+                        description: 'Test contract for purchase',
+                        initialValue: 1000,
+                        issuedAtMs: expect.any(Number),
+                        issuingUserId: ownerId,
+                        markers: [PUBLIC_WRITE_MARKER],
+                        holdingUserId: 'holder1',
+                        rate: 50,
+                        status: 'pending',
+                    },
+                    currency: 'usd',
+                    lineItems: [
+                        {
+                            name: 'Contract',
+                            amount: 1000,
+                        },
+                    ],
+                    total: 1000,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in and not allowed to purchase the contract', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/pricing`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        address: 'contract1',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized when the user not allowed to purchase the contract', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete store.roles[purchaseRecordName][userId];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/pricing`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        address: 'contract1',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        action: 'purchase',
+                        recordName: 'studioId',
+                        resourceId: 'contract1',
+                        resourceKind: 'contract',
+                        subjectId: userId,
+                        subjectType: 'user',
+                        type: 'missing_permission',
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/contract/pricing`, () =>
+            JSON.stringify({
+                recordName: purchaseRecordName,
+                address: 'contract1',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(
+                `/api/v2/records/contract/pricing`,
+                body,
+                authenticatedHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/contract/pricing`,
+                JSON.stringify({
+                    recordName: purchaseRecordName,
+                    address: 'contract1',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({
