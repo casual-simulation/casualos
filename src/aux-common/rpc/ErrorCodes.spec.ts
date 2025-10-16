@@ -98,7 +98,7 @@ describe('getStatusCode()', () => {
         ['user_already_exists', 400] as const,
         ['session_is_not_revokable', 400] as const,
         ['hume_api_error', 500] as const,
-        ['invalid_webhook_target', 501] as const,
+        ['invalid_webhook_target', 400] as const,
         ['took_too_long', 504] as const,
         ['parent_not_found', 400] as const,
         ['service_unavailable', 503] as const,

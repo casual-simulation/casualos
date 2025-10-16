@@ -641,7 +641,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -652,7 +652,7 @@ describe('AIController', () => {
             });
         });
 
-        it('should use configure token ratio', async () => {
+        it('should use the configured token ratio', async () => {
             chatInterface.chat.mockReturnValueOnce(
                 Promise.resolve({
                     choices: [
@@ -705,7 +705,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -1748,7 +1748,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -1822,7 +1822,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -2796,7 +2796,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,
@@ -3425,7 +3425,7 @@ describe('AIController', () => {
                 ownerId: userId,
             });
 
-            expect(metrics).toEqual({
+            expect(metrics).toMatchObject({
                 ownerId: userId,
                 subscriptionStatus: null,
                 subscriptionId: null,

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { StripeAccountStatus } from 'StripeInterface';
+import type { StripeAccountStatus } from './StripeInterface';
 import type { CreateRealtimeSessionTokenRequest } from './AIOpenAIRealtimeInterface';
 
 export interface MetricsStore {
