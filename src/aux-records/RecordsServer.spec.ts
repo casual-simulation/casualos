@@ -80,6 +80,7 @@ import {
     ADMIN_ROLE_NAME,
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
+    PUBLIC_WRITE_MARKER,
 } from '@casual-simulation/aux-common';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
@@ -89,6 +90,7 @@ import {
     createTestControllers,
     createTestSubConfiguration,
     createTestUser,
+    randomBigInt,
     unwindAndCaptureAsync,
 } from './TestUtils';
 import { AIController } from './AIController';
@@ -203,8 +205,10 @@ import {
 } from './database';
 import { MemoryDatabaseInterface } from './database/MemoryDatabaseInterface';
 import type { FinancialInterface } from './financial';
-import { FinancialController } from './financial';
-import { MemoryFinancialInterface } from './financial';
+import {
+    FinancialController,
+    TigerBeetleFinancialInterface,
+} from './financial';
 import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
 import { MemoryPurchasableItemRecordsStore } from './purchasable-items/MemoryPurchasableItemRecordsStore';
@@ -215,6 +219,9 @@ import type {
 import { allowAllFeatures } from './SubscriptionConfiguration';
 import { MemoryContractRecordsStore } from './contracts/MemoryContractRecordsStore';
 import { ContractRecordsController } from './contracts/ContractRecordsController';
+import { runTigerBeetle } from './financial/TigerBeetleTestUtils';
+import { createClient, type Client as TBClient } from 'tigerbeetle-node';
+import type { ChildProcess } from 'node:child_process';
 
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
@@ -280,7 +287,22 @@ describe('RecordsServer', () => {
     let savedSessionSecret: string;
     let savedRecordKey: string;
 
+    let tbClient: TBClient;
+    let tbProcess: ChildProcess;
+
     beforeAll(async () => {
+        const { port, process } = await runTigerBeetle('records-server');
+
+        tbProcess = process;
+        if (!port) {
+            throw new Error('Failed to start TigerBeetle!');
+        }
+
+        tbClient = createClient({
+            replica_addresses: [port],
+            cluster_id: 0n,
+        });
+
         const services = createTestControllers();
         let requestResult = await services.auth.requestLogin({
             address: 'test@example.com',
@@ -348,6 +370,18 @@ describe('RecordsServer', () => {
         });
 
         savedMemoryStore = services.store;
+    });
+
+    afterAll(() => {
+        if (tbClient) {
+            const client = tbClient;
+            tbClient = null!;
+            client.destroy();
+        }
+        if (tbProcess) {
+            tbProcess.kill();
+            tbProcess = null!;
+        }
     });
 
     let store: MemoryStore;
@@ -505,6 +539,8 @@ describe('RecordsServer', () => {
     const recordName = 'testRecord';
     let privoClient: PrivoClientInterface;
     let privoClientMock: jest.MockedObject<PrivoClientInterface>;
+
+    let currentId: bigint;
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -768,7 +804,13 @@ describe('RecordsServer', () => {
             store: contractRecordsStore,
             privo: privoClient,
         });
-        financialInterface = new MemoryFinancialInterface();
+        currentId = 1n;
+        const idOffset = randomBigInt();
+        financialInterface = new TigerBeetleFinancialInterface({
+            client: tbClient,
+            id: () => currentId++,
+            idOffset: idOffset,
+        });
         financialController = new FinancialController(
             financialInterface,
             store
@@ -28330,6 +28372,348 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     address: 'test1',
                 }),
             () => apiHeaders
+        );
+    });
+
+    describe('POST /api/v2/records/contract/purchase', () => {
+        const purchaseRecordName = 'studioId';
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                    )
+            );
+
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+
+            await store.createStudioForUser(
+                {
+                    id: purchaseRecordName,
+                    displayName: 'my studio',
+                    comId: 'comId',
+                    logoUrl: 'logoUrl',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'ab1BootstrapURL',
+                    },
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                    stripeCustomerId: 'customerId',
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                },
+                ownerId
+            );
+
+            // Create a contract to purchase
+            await contractRecordsStore.createItem(purchaseRecordName, {
+                id: 'contract1',
+                address: 'contract1',
+                holdingUserId: 'holder1',
+                rate: 50,
+                initialValue: 1000,
+                description: 'Test contract for purchase',
+                markers: [PUBLIC_READ_MARKER],
+                status: 'pending',
+                issuedAtMs: Date.now(),
+                issuingUserId: ownerId,
+            });
+
+            store.roles[purchaseRecordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return the checkout URL when purchasing a contract', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/purchase`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        contract: {
+                            address: 'contract1',
+                            expectedCost: 1000,
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: expect.any(String),
+                    url: 'checkoutUrl',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to purchase as a guest', async () => {
+            // Create a contract to purchase
+            await contractRecordsStore.putItem(purchaseRecordName, {
+                id: 'contract1',
+                address: 'contract1',
+                holdingUserId: 'holder1',
+                rate: 50,
+                initialValue: 1000,
+                description: 'Test contract for purchase',
+                markers: [PUBLIC_WRITE_MARKER],
+                status: 'pending',
+                issuedAtMs: Date.now(),
+                issuingUserId: ownerId,
+            });
+
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/purchase`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        contract: {
+                            address: 'contract1',
+                            expectedCost: 1000,
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    sessionId: expect.any(String),
+                    url: 'checkoutUrl',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_logged_in when the user is not logged in and not allowed to purchase the contract', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete authenticatedHeaders['authorization'];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/purchase`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        contract: {
+                            address: 'contract1',
+                            expectedCost: 500, // Wrong cost
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return not_authorized when the user not allowed to purchase the contract', async () => {
+            stripeMock.createCheckoutSession.mockResolvedValue({
+                id: 'sessionId',
+                url: 'checkoutUrl',
+                payment_status: 'unpaid',
+                status: 'open',
+            });
+
+            delete store.roles[purchaseRecordName][userId];
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/purchase`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        contract: {
+                            address: 'contract1',
+                            expectedCost: 500, // Wrong cost
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        action: 'purchase',
+                        recordName: 'studioId',
+                        resourceId: 'contract1',
+                        resourceKind: 'contract',
+                        subjectId: userId,
+                        subjectType: 'user',
+                        type: 'missing_permission',
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return price_does_not_match when expected cost does not match', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/purchase`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        contract: {
+                            address: 'contract1',
+                            expectedCost: 500, // Wrong cost
+                            currency: 'usd',
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 412,
+                body: {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price of the contract.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return price_does_not_match when currency does not match', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/purchase`,
+                    JSON.stringify({
+                        recordName: purchaseRecordName,
+                        contract: {
+                            address: 'contract1',
+                            expectedCost: 1000,
+                            currency: 'eur', // Wrong currency
+                        },
+                        returnUrl: 'http://example.com',
+                        successUrl: 'http://example.com/success',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 412,
+                body: {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price of the contract.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/contract/purchase`, () =>
+            JSON.stringify({
+                recordName: purchaseRecordName,
+                contract: {
+                    address: 'contract1',
+                    expectedCost: 1000,
+                    currency: 'usd',
+                },
+                returnUrl: 'http://example.com',
+                successUrl: 'http://example.com/success',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost(
+                `/api/v2/records/contract/purchase`,
+                body,
+                authenticatedHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/contract/purchase`,
+                JSON.stringify({
+                    recordName: purchaseRecordName,
+                    contract: {
+                        address: 'contract1',
+                        expectedCost: 1000,
+                        currency: 'usd',
+                    },
+                    returnUrl: 'http://example.com',
+                    successUrl: 'http://example.com/success',
+                }),
+                defaultHeaders
+            )
         );
     });
 

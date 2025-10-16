@@ -5600,6 +5600,66 @@ export class RecordsServer {
                     }
                 ),
 
+            purchaseContract: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/contract/purchase')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        contract: z.object({
+                            address: ADDRESS_VALIDATION,
+                            expectedCost: z.number().gte(0).int(),
+                            currency: z
+                                .string()
+                                .min(1)
+                                .max(15)
+                                .toLowerCase()
+                                .default('usd'),
+                        }),
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                        returnUrl: z.string().url(),
+                        successUrl: z.string().url(),
+                    })
+                )
+                .handler(
+                    async (
+                        {
+                            recordName,
+                            contract,
+                            instances,
+                            returnUrl,
+                            successUrl,
+                        },
+                        context
+                    ) => {
+                        const sessionKeyValidation =
+                            await this._validateSessionKey(context.sessionKey);
+                        if (
+                            sessionKeyValidation.success === false &&
+                            sessionKeyValidation.errorCode !== 'no_session_key'
+                        ) {
+                            return sessionKeyValidation;
+                        }
+
+                        const result =
+                            await this._subscriptions.purchaseContract({
+                                userId: sessionKeyValidation.userId,
+
+                                contract: {
+                                    recordName,
+                                    address: contract.address,
+                                    currency: contract.currency,
+                                    expectedCost: contract.expectedCost,
+                                },
+                                returnUrl,
+                                successUrl,
+                                instances,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
             fulfillCheckoutSession: procedure()
                 .origins('account')
                 .http('POST', '/api/v2/records/checkoutSession/fulfill')

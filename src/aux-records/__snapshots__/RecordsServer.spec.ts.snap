@@ -6171,6 +6171,53 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/records/contract/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contract": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "currency": Object {
+                "defaultValue": "usd",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "expectedCost": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseContract",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/checkoutSession/fulfill",
       },
       "inputs": Object {
@@ -12385,6 +12432,53 @@ Object {
         "type": "object",
       },
       "name": "purchaseItem",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/purchase",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contract": Object {
+            "schema": Object {
+              "address": Object {
+                "type": "string",
+              },
+              "currency": Object {
+                "defaultValue": "usd",
+                "hasDefault": true,
+                "type": "string",
+              },
+              "expectedCost": Object {
+                "type": "number",
+              },
+            },
+            "type": "object",
+          },
+          "instances": Object {
+            "maxLength": 3,
+            "minLength": 1,
+            "optional": true,
+            "schema": Object {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "recordName": Object {
+            "type": "string",
+          },
+          "returnUrl": Object {
+            "type": "string",
+          },
+          "successUrl": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "purchaseContract",
       "origins": "account",
     },
     Object {
