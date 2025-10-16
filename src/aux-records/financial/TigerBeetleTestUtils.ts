@@ -70,7 +70,7 @@ export async function downloadAndUnzipIfNeeded(url: string): Promise<string> {
             await writeFile(
                 outputPath,
                 new Uint8Array(await blob.arrayBuffer()),
-                { flag: 'wx' }
+                { flag: 'wx', mode: '755' }
             );
         }
     }
