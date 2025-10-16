@@ -49,6 +49,7 @@ import type {
 import { isActiveSubscription } from './Utils';
 import type {
     APISubscription,
+    ContractFeaturesConfiguration,
     SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
 import {
@@ -96,6 +97,7 @@ import { v4 as uuid } from 'uuid';
 import type {
     AuthorizationContext,
     AuthorizeSubjectFailure,
+    AuthorizeUserAndInstancesSuccess,
     ConstructAuthorizationContextFailure,
     PolicyController,
 } from './PolicyController';
@@ -128,6 +130,7 @@ import {
 import type {
     ContractRecord,
     ContractRecordsStore,
+    ContractSubscriptionMetrics,
 } from './contracts/ContractRecordsStore';
 import type { Account, Transfer } from 'tigerbeetle-node';
 import { TransferFlags } from 'tigerbeetle-node';
@@ -1779,6 +1782,200 @@ export class SubscriptionController {
     }
 
     /**
+     * Gets the details required for purchasing a contract.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    private async _getContractPurchaseDetails(
+        request: GetContractPricingRequest
+    ): Promise<
+        Result<
+            {
+                totalCost: number;
+                applicationFee: number;
+                item: ContractRecord;
+                features: ContractFeaturesConfiguration;
+                metrics: ContractSubscriptionMetrics;
+                limits: ContractFeaturesConfiguration['currencyLimits'];
+                currency: string;
+                context: AuthorizationContext;
+                authorization: AuthorizeUserAndInstancesSuccess;
+            },
+            SimpleError
+        >
+    > {
+        const context = await this._policies.constructAuthorizationContext({
+            recordKeyOrRecordName: request.contract.recordName,
+            userId: request.userId,
+        });
+
+        if (context.success === false) {
+            return failure(context);
+        }
+
+        const item = await this._contractRecords.getItemByAddress(
+            request.contract.recordName,
+            request.contract.address
+        );
+
+        if (!item) {
+            return failure({
+                errorCode: 'item_not_found',
+                errorMessage: 'The item could not be found.',
+            });
+        }
+
+        if (item.status !== 'pending') {
+            return failure({
+                errorCode: 'item_already_purchased',
+                errorMessage: 'The contract has already been purchased.',
+            });
+        }
+
+        // TODO: Pull this from the contract.
+        const currency = 'usd';
+
+        const authorization = await this._policies.authorizeUserAndInstances(
+            context.context,
+            {
+                userId: request.userId,
+                resourceKind: 'contract',
+                resourceId: item.address,
+                markers: item.markers,
+                action: 'purchase',
+                instances: request.instances,
+            }
+        );
+
+        if (authorization.success === false) {
+            return failure(authorization);
+        }
+
+        const metrics = await this._contractRecords.getSubscriptionMetrics({
+            ownerId: context.context.recordOwnerId,
+            studioId: context.context.recordStudioId,
+        });
+        const config = await this._getConfig();
+        const features = getContractFeatures(
+            config,
+            metrics.subscriptionStatus,
+            metrics.subscriptionId,
+            metrics.subscriptionType,
+            metrics.currentPeriodStartMs,
+            metrics.currentPeriodEndMs
+        );
+
+        if (!features.allowed) {
+            console.log(
+                `[SubscriptionController] [_getContractPurchaseDetails studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`
+            );
+            return failure({
+                errorCode: 'store_disabled',
+                errorMessage:
+                    "The account you are trying to purchase the contract for doesn't have access to contracting features.",
+            });
+        }
+
+        const limits = features.currencyLimits[currency];
+
+        if (!limits) {
+            console.log(
+                `[SubscriptionController] [_getContractPurchaseDetails studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${currency}] Currency not supported.`
+            );
+            return failure({
+                errorCode: 'currency_not_supported',
+                errorMessage: 'The currency is not supported.',
+            });
+        }
+
+        if (
+            item.initialValue !== 0 &&
+            (item.initialValue < limits.minCost ||
+                item.initialValue > limits.maxCost)
+        ) {
+            console.log(
+                `[SubscriptionController] [_getContractPurchaseDetails studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} initialValue: ${item.initialValue}] Cost not valid.`
+            );
+            return failure({
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The contract you are trying to purchase has a price that is not allowed.',
+            });
+        }
+
+        let applicationFee = 0;
+        if (item.initialValue !== 0 && limits.fee) {
+            if (limits.fee.type === 'percent') {
+                // calculate percent when fee is between 1 - 100
+                applicationFee = Math.ceil(
+                    item.initialValue * (limits.fee.percent / 100)
+                );
+            } else {
+                // if (limits.fee.amount > item.initialValue) {
+                //     console.warn(
+                //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${currency} fee: ${limits.fee.amount} initialValue: ${item.initialValue}] Fee greater than cost.`
+                //     );
+                //     return {
+                //         success: false,
+                //         errorCode: 'server_error',
+                //         errorMessage:
+                //             'The application fee is greater than the cost of the item.',
+                //     };
+                // }
+                applicationFee = limits.fee.amount;
+            }
+        }
+
+        const totalCost = item.initialValue + applicationFee;
+
+        return success({
+            totalCost,
+            applicationFee,
+            item,
+            features,
+            metrics,
+            limits,
+            currency,
+            context: context.context,
+            authorization,
+        });
+    }
+
+    /**
+     * Gets the pricing information for a contract.
+     * @param request The request.
+     */
+    async getContractPricing(
+        request: GetContractPricingRequest
+    ): Promise<Result<ContractPricing, SimpleError>> {
+        const details = await this._getContractPurchaseDetails(request);
+        if (isFailure(details)) {
+            return details;
+        }
+
+        const lineItems: ContractPricingLineItem[] = [];
+
+        lineItems.push({
+            name: 'Contract',
+            amount: details.value.item.initialValue,
+        });
+
+        if (details.value.applicationFee > 0) {
+            lineItems.push({
+                name: 'Application Fee',
+                amount: details.value.applicationFee,
+            });
+        }
+
+        return success({
+            total: details.value.totalCost,
+            currency: details.value.currency,
+            lineItems,
+            contract: details.value.item,
+        });
+    }
+
+    /**
      * Creates a link that the user can be redirected to in order to purchase a contract.
      * @param request The request to purchase the contract.
      * @returns A promise that resolves to the result of the purchase contract operation.
@@ -1788,36 +1985,15 @@ export class SubscriptionController {
         request: PurchaseContractRequest
     ): Promise<PurchaseContractResult> {
         try {
-            const context = await this._policies.constructAuthorizationContext({
-                recordKeyOrRecordName: request.contract.recordName,
-                userId: request.userId,
-            });
+            const details = await this._getContractPurchaseDetails(request);
 
-            if (context.success === false) {
-                return failure(context);
+            if (isFailure(details)) {
+                return details;
             }
 
-            const item = await this._contractRecords.getItemByAddress(
-                request.contract.recordName,
-                request.contract.address
-            );
+            const item = details.value.item;
+            const currency = details.value.currency;
 
-            if (!item) {
-                return failure({
-                    errorCode: 'item_not_found',
-                    errorMessage: 'The item could not be found.',
-                });
-            }
-
-            if (item.status !== 'pending') {
-                return failure({
-                    errorCode: 'item_already_purchased',
-                    errorMessage: 'The contract has already been purchased.',
-                });
-            }
-
-            // TODO: Pull this from the contract.
-            const currency = 'usd';
             if (currency !== request.contract.currency) {
                 return failure({
                     errorCode: 'price_does_not_match',
@@ -1826,126 +2002,15 @@ export class SubscriptionController {
                 });
             }
 
-            const recordName = context.context.recordName;
-            const authorization =
-                await this._policies.authorizeUserAndInstances(
-                    context.context,
-                    {
-                        userId: request.userId,
-                        resourceKind: 'contract',
-                        resourceId: item.address,
-                        markers: item.markers,
-                        action: 'purchase',
-                        instances: request.instances,
-                    }
-                );
+            const recordName = details.value.context.recordName;
 
-            if (authorization.success === false) {
-                return failure(authorization);
-            }
-
-            const metrics = await this._contractRecords.getSubscriptionMetrics({
-                ownerId: context.context.recordOwnerId,
-                studioId: context.context.recordStudioId,
-            });
+            const metrics = details.value.metrics;
             const config = await this._getConfig();
-            const features = getContractFeatures(
-                config,
-                metrics.subscriptionStatus,
-                metrics.subscriptionId,
-                metrics.subscriptionType,
-                metrics.currentPeriodStartMs,
-                metrics.currentPeriodEndMs
-            );
+            const features = details.value.features;
 
-            if (!features.allowed) {
-                console.log(
-                    `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus}] Store features not allowed.`
-                );
-                return failure({
-                    errorCode: 'store_disabled',
-                    errorMessage:
-                        "The account you are trying to purchase the contract for doesn't have access to contracting features.",
-                });
-            }
-
-            // TODO: Validate that the holding user has setup stripe and is active.
-
-            // if (!metrics.stripeAccountId || !metrics.stripeAccountStatus) {
-            //     console.log(
-            //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store has no stripe account.`
-            //     );
-            //     return {
-            //         success: false,
-            //         errorCode: 'store_disabled',
-            //         errorMessage:
-            //             'The store you are trying to purchase from is disabled.',
-            //     };
-            // }
-
-            // if (metrics.stripeAccountStatus !== 'active') {
-            //     console.log(
-            //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} subscriptionStatus: ${metrics.subscriptionStatus} stripeAccountId: ${metrics.stripeAccountId} stripeAccountStatus: ${metrics.stripeAccountStatus}] Store stripe account is not active.`
-            //     );
-            //     return {
-            //         success: false,
-            //         errorCode: 'store_disabled',
-            //         errorMessage:
-            //             'The store you are trying to purchase from is disabled.',
-            //     };
-            // }
-
-            const limits = features.currencyLimits[currency];
-
-            if (!limits) {
-                console.log(
-                    `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency}] Currency not supported.`
-                );
-                return failure({
-                    errorCode: 'currency_not_supported',
-                    errorMessage: 'The currency is not supported.',
-                });
-            }
-
-            if (
-                item.initialValue !== 0 &&
-                (item.initialValue < limits.minCost ||
-                    item.initialValue > limits.maxCost)
-            ) {
-                console.log(
-                    `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} minCost: ${limits.minCost} maxCost: ${limits.maxCost} initialValue: ${item.initialValue}] Cost not valid.`
-                );
-                return failure({
-                    errorCode: 'subscription_limit_reached',
-                    errorMessage:
-                        'The contract you are trying to purchase has a price that is not allowed.',
-                });
-            }
-
-            let applicationFee = 0;
-            if (item.initialValue !== 0 && limits.fee) {
-                if (limits.fee.type === 'percent') {
-                    // calculate percent when fee is between 1 - 100
-                    applicationFee = Math.ceil(
-                        item.initialValue * (limits.fee.percent / 100)
-                    );
-                } else {
-                    // if (limits.fee.amount > item.initialValue) {
-                    //     console.warn(
-                    //         `[SubscriptionController] [purchaseContract studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} currency: ${request.contract.currency} fee: ${limits.fee.amount} initialValue: ${item.initialValue}] Fee greater than cost.`
-                    //     );
-                    //     return {
-                    //         success: false,
-                    //         errorCode: 'server_error',
-                    //         errorMessage:
-                    //             'The application fee is greater than the cost of the item.',
-                    //     };
-                    // }
-                    applicationFee = limits.fee.amount;
-                }
-            }
-
-            const totalCost = item.initialValue + applicationFee;
+            const limits = details.value.limits;
+            const totalCost = details.value.totalCost;
+            const applicationFee = details.value.applicationFee;
 
             if (totalCost !== request.contract.expectedCost) {
                 return failure({
@@ -4489,6 +4554,61 @@ export interface CreatePurchaseItemLinkFailure {
         | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
     reason?: DenialReason;
+}
+
+export interface GetContractPricingRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The instances that the request is being made from.
+     */
+    instances: string[];
+
+    /**
+     * The contract that is being purchased.
+     */
+    contract: {
+        /**
+         * The name of the record that the contract is stored in.
+         */
+        recordName: string;
+
+        /**
+         * The address of the contract.
+         */
+        address: string;
+    };
+}
+
+export interface ContractPricing {
+    /**
+     * The information for the contract.
+     */
+    contract: ContractRecord;
+
+    /**
+     * The total cost to purchase the contract.
+     */
+    total: number;
+
+    /**
+     * The line items that make up the total cost.
+     */
+    lineItems: ContractPricingLineItem[];
+
+    /**
+     * The currency that the cost is in.
+     */
+    currency: string;
+}
+
+export interface ContractPricingLineItem {
+    name: string;
+    amount: number;
 }
 
 export interface PurchaseContractRequest {

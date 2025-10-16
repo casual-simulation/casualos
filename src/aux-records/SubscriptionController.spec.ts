@@ -7553,6 +7553,355 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('getContractPricing()', () => {
+        const recordName = 'recordName';
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                                fee: {
+                                    type: 'fixed',
+                                    amount: 10,
+                                },
+                            })
+                    )
+            );
+
+            nowMock.mockReturnValue(101);
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.saveUser({
+                id: 'xpUserId',
+                email: 'xpUser@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+        });
+
+        it('should return the pricing details for the contract', async () => {
+            const result = await controller.getContractPricing({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    currency: 'usd',
+                    total: 110,
+                    lineItems: [
+                        {
+                            name: 'Contract',
+                            amount: 100,
+                        },
+                        {
+                            name: 'Application Fee',
+                            amount: 10,
+                        },
+                    ],
+                    contract: {
+                        id: 'contract1',
+                        address: 'item1',
+                        holdingUserId: 'xpUserId',
+                        initialValue: 100,
+                        issuedAtMs: 100,
+                        issuingUserId: userId,
+                        markers: [PRIVATE_MARKER],
+                        rate: 1,
+                        status: 'pending',
+                    },
+                })
+            );
+        });
+
+        it('should support users that are not logged in for publicWrite contracts', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PUBLIC_WRITE_MARKER],
+            });
+
+            const result = await controller.getContractPricing({
+                userId: null,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                success({
+                    currency: 'usd',
+                    total: 110,
+                    lineItems: [
+                        {
+                            name: 'Contract',
+                            amount: 100,
+                        },
+                        {
+                            name: 'Application Fee',
+                            amount: 10,
+                        },
+                    ],
+                    contract: {
+                        id: 'contract1',
+                        address: 'item1',
+                        holdingUserId: 'xpUserId',
+                        initialValue: 100,
+                        issuedAtMs: 100,
+                        issuingUserId: userId,
+                        markers: [PUBLIC_WRITE_MARKER],
+                        rate: 1,
+                        status: 'pending',
+                    },
+                })
+            );
+        });
+
+        it('should return store_disabled if store subscription doesnt allow contract features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withAllDefaultFeatures()
+                    )
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.getContractPricing({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'store_disabled',
+                    errorMessage:
+                        "The account you are trying to purchase the contract for doesn't have access to contracting features.",
+                })
+            );
+        });
+
+        it('should return subscription_limit_reached if the item cost is greater than the max cost for the subscription', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 10001,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+
+            const result = await controller.getContractPricing({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The contract you are trying to purchase has a price that is not allowed.',
+                })
+            );
+        });
+
+        it('should return not_authorized if the user does not have the purchase permission for the item', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await controller.getContractPricing({
+                userId: 'xpUserId',
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: [],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'item1',
+                        action: 'purchase',
+                        subjectType: 'user',
+                        subjectId: 'xpUserId',
+                    },
+                })
+            );
+        });
+
+        it('should return not_authorized if the inst does not have the purchase permission for the item', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'pending',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await controller.getContractPricing({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        recordName: recordName,
+                        resourceKind: 'contract',
+                        resourceId: 'item1',
+                        action: 'purchase',
+                        subjectType: 'inst',
+                        subjectId: '/myInst',
+                    },
+                })
+            );
+        });
+
+        it('should return item_already_purchased if the contract has a status other than pending', async () => {
+            await contractStore.putItem(recordName, {
+                id: 'contract1',
+                address: 'item1',
+                initialValue: 100,
+                holdingUserId: 'xpUserId',
+                issuingUserId: userId,
+                issuedAtMs: 100,
+                rate: 1,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            const result = await controller.getContractPricing({
+                userId: userId,
+                contract: {
+                    recordName: recordName,
+                    address: 'item1',
+                },
+                instances: ['myInst'],
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'item_already_purchased',
+                    errorMessage: 'The contract has already been purchased.',
+                })
+            );
+        });
+    });
+
     describe('purchaseContract()', () => {
         const recordName = 'recordName';
 
