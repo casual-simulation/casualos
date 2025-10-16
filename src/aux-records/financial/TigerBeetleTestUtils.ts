@@ -152,7 +152,13 @@ export async function runTigerBeetle(label: string): Promise<{
     let process: ChildProcess | null = null;
     process = spawn(
         exePath,
-        ['start', `--addresses=0`, '--development', tbFile],
+        [
+            'start',
+            `--cache-grid=256MiB`,
+            `--addresses=0`,
+            '--development',
+            tbFile,
+        ],
         {
             cwd: tbDir,
             detached: true,
