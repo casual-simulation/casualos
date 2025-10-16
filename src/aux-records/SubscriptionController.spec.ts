@@ -8074,6 +8074,7 @@ describe('SubscriptionController', () => {
                     transferIds: ['3', '4'],
                     transfersPending: true,
                     transactionId: '2',
+                    shouldBeAutomaticallyFulfilled: true,
                 },
             ]);
 

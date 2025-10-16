@@ -1231,6 +1231,8 @@ model AuthCheckoutSession {
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "PurchasableItemCheckoutSession_userId_fkey1")
 
+    shouldBeAutomaticallyFulfilled Boolean?
+
     purchasedItems PurchasedItem[]
 
     createdAt DateTime @default(now())

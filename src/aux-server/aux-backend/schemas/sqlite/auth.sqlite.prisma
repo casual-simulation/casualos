@@ -1230,6 +1230,8 @@ model AuthCheckoutSession {
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+    shouldBeAutomaticallyFulfilled Boolean?
+
     purchasedItems PurchasedItem[]
 
     createdAt Decimal 

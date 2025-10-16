@@ -2105,6 +2105,7 @@ export class SubscriptionController {
                 ],
                 transactionId: null,
                 transferIds: null,
+                shouldBeAutomaticallyFulfilled: true,
             };
             if (isFailure(userUsdAccount)) {
                 logError(
