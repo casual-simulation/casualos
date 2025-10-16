@@ -27,7 +27,7 @@
         "build:server": "lerna exec --scope @casual-simulation/aux-server -- npm run build",
         "build:web": "lerna exec --scope @casual-simulation/aux-server -- npm run build:web",
         "build:web:player:static": "lerna exec --scope @casual-simulation/aux-server -- npm run build:web:player:static",
-        "build:proxy": "lerna exec --scope @casual-simulation/aux-proxy -- npm run build",
+        "build:proxy": "pnpm --filter @casual-simulation/aux-proxy build",
         "build:redirector": "lerna exec --scope @casual-simulation/aux-redirector -- npm run build",
         "build:docs": "npm run clean && cd docs && npm run build",
         "build:profile": "npm run clean && npm run build:libs && lerna exec --scope @casual-simulation/aux-server -- npm run build:profile",
