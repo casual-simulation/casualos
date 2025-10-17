@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    AccountBalance,
     MultiError,
     Result,
     ServerError,
@@ -29,7 +30,6 @@ import {
     unwrap,
 } from '@casual-simulation/aux-common';
 import type {
-    CurrencyCodesType,
     InterfaceTransferError,
     TransferCodes,
 } from './FinancialInterface';
@@ -1374,127 +1374,4 @@ export interface AccountBalances {
      * This will be undefined if the user does not have a credits account.
      */
     credits: AccountBalance | undefined;
-}
-
-/**
- * Represents the balance of a financial account.
- */
-export class AccountBalance {
-    /**
-     * The ID of the account.
-     */
-    accountId: string;
-
-    /**
-     * The number of credits to the account.
-     */
-    credits: bigint;
-
-    /**
-     * The number of pending credits to the account.
-     */
-    pendingCredits: bigint;
-
-    /**
-     * The number of debits to the account.
-     */
-    debits: bigint;
-
-    /**
-     * The number of pending debits to the account.
-     */
-    pendingDebits: bigint;
-
-    /**
-     * The factor that should be used to convert between credits and USD.
-     */
-    displayFactor: bigint;
-
-    /**
-     * The currency that the account is in.
-     */
-    currency: CurrencyCodesType;
-
-    constructor(data: {
-        accountId: string;
-        credits: bigint | string;
-        pendingCredits: bigint | string;
-        debits: bigint | string;
-        pendingDebits: bigint | string;
-        displayFactor: bigint | string;
-        currency: CurrencyCodesType;
-    }) {
-        this.accountId = data.accountId;
-        this.credits =
-            typeof data.credits === 'string'
-                ? BigInt(data.credits)
-                : data.credits;
-        this.pendingCredits =
-            typeof data.pendingCredits === 'string'
-                ? BigInt(data.pendingCredits)
-                : data.pendingCredits;
-        this.debits =
-            typeof data.debits === 'string' ? BigInt(data.debits) : data.debits;
-        this.pendingDebits =
-            typeof data.pendingDebits === 'string'
-                ? BigInt(data.pendingDebits)
-                : data.pendingDebits;
-        this.displayFactor =
-            typeof data.displayFactor === 'string'
-                ? BigInt(data.displayFactor)
-                : data.displayFactor;
-        this.currency = data.currency;
-    }
-
-    toJSON(): JSONAccountBalance {
-        return {
-            accountId: this.accountId,
-            credits: this.credits.toString(),
-            pendingCredits: this.pendingCredits.toString(),
-            debits: this.debits.toString(),
-            pendingDebits: this.pendingDebits.toString(),
-            displayFactor: this.displayFactor.toString(),
-            currency: this.currency,
-        };
-    }
-}
-
-/**
- * Represents the balance of a financial account in a JSON-compatible format.
- */
-export interface JSONAccountBalance {
-    /**
-     * The ID of the account.
-     */
-    accountId: string;
-
-    /**
-     * The number of credits to the account.
-     */
-    credits: string;
-
-    /**
-     * The number of pending credits to the account.
-     */
-    pendingCredits: string;
-
-    /**
-     * The number of debits to the account.
-     */
-    debits: string;
-
-    /**
-     * The number of pending debits to the account.
-     */
-    pendingDebits: string;
-
-    /**
-     * The factor that should be used to convert between credits and USD.
-     */
-    displayFactor: string;
-
-    /**
-     * The currency that the account is in.
-     */
-    currency: CurrencyCodesType;
 }

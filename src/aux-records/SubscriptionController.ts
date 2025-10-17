@@ -74,6 +74,7 @@ import type {
     Result,
     SimpleError,
     KnownErrorCodes,
+    AccountBalance,
 } from '@casual-simulation/aux-common';
 import {
     failure,
@@ -106,7 +107,6 @@ import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import type {
-    AccountBalance,
     AccountBalances,
     FinancialAccount,
     FinancialAccountFilter,
