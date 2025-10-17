@@ -27,6 +27,8 @@ import type {
     SubscriptionStatus,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import RelativeTime from '../RelativeTime/RelativeTime';
+import type { AccountBalances } from '@casual-simulation/aux-records';
+import { AccountBalance } from '@casual-simulation/aux-common';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
@@ -46,6 +48,7 @@ export default class AuthSubscription extends Vue {
     loading: boolean = false;
 
     maybeSupported: boolean = false;
+    accountBalances: AccountBalances;
 
     @Watch('studioId')
     studioIdChanged() {
@@ -55,6 +58,7 @@ export default class AuthSubscription extends Vue {
     created() {
         this.maybeSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
         this.loading = false;
+        this.accountBalances = undefined;
         this.subscriptions = [];
     }
 
@@ -139,6 +143,16 @@ export default class AuthSubscription extends Vue {
             } else {
                 this.subscriptions = result.subscriptions;
                 this.purchasableSubscriptions = result.purchasableSubscriptions;
+                this.accountBalances = result.accountBalances
+                    ? {
+                          usd: convertAccountBalance(
+                              result.accountBalances.usd
+                          ),
+                          credits: convertAccountBalance(
+                              result.accountBalances.credits
+                          ),
+                      }
+                    : undefined;
             }
         } catch (err) {
             console.error(
@@ -151,4 +165,19 @@ export default class AuthSubscription extends Vue {
             this.loading = false;
         }
     }
+}
+
+function convertAccountBalance(balance: AccountBalance): AccountBalance {
+    if (!balance) {
+        return undefined;
+    }
+    return new AccountBalance({
+        accountId: balance.accountId,
+        credits: balance.credits,
+        debits: balance.debits,
+        pendingCredits: balance.pendingCredits,
+        pendingDebits: balance.pendingDebits,
+        displayFactor: balance.displayFactor,
+        currency: balance.currency,
+    });
 }

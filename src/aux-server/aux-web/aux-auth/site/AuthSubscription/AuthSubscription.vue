@@ -182,6 +182,22 @@
                 </md-card>
             </div>
 
+            <div v-if="accountBalances">
+                <div v-if="accountBalances.usd">
+                    <h3 class="md-subheading">USD Balance</h3>
+                    <div class="account-balance">
+                        {{ accountBalances.usd.credits - accountBalances.usd.debits }}
+                    </div>
+                </div>
+
+                <div v-if="accountBalances.credits">
+                    <h3 class="md-subheading">Credits Balance</h3>
+                    <div class="account-balance">
+                        {{ accountBalances.credits.credits - accountBalances.credits.debits }}
+                    </div>
+                </div>
+            </div>
+
             <!-- <md-card v-else class="subscription-card">
                 <md-card-header>
                     <h3 class="md-title">Beta Program</h3>
