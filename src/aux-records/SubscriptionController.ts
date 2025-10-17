@@ -106,7 +106,10 @@ import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import type {
+    AccountBalance,
+    AccountBalances,
     FinancialAccount,
+    FinancialAccountFilter,
     FinancialController,
     InternalTransfer,
     UniqueFinancialAccountFilter,
@@ -116,15 +119,12 @@ import {
     ACCOUNT_NAMES,
     AMOUNT_MAX,
     convertBetweenLedgers,
-    CREDITS_DISPLAY_FACTOR,
     CURRENCIES,
     CurrencyCodes,
     getAccountBalance,
-    getAccountCurrency,
     getLiquidityAccountByLedger,
     LEDGERS,
     TransferCodes,
-    USD_DISPLAY_FACTOR,
 } from './financial';
 import type {
     ContractRecord,
@@ -279,9 +279,10 @@ export class SubscriptionController {
                     customerId = user.stripeCustomerId;
                     role = 'user';
 
-                    accountBalances = await this._getAccountBalances({
-                        userId: request.userId,
-                    });
+                    accountBalances =
+                        await this._financialController.getAccountBalances({
+                            userId: request.userId,
+                        });
                 } else if (request.studioId) {
                     const assignments =
                         await this._recordsStore.listStudioAssignments(
@@ -312,9 +313,10 @@ export class SubscriptionController {
                     customerId = studio.stripeCustomerId;
                     role = 'studio';
 
-                    accountBalances = await this._getAccountBalances({
-                        studioId: request.studioId,
-                    });
+                    accountBalances =
+                        await this._financialController.getAccountBalances({
+                            studioId: request.studioId,
+                        });
                 }
             }
 
@@ -414,6 +416,134 @@ export class SubscriptionController {
         }
     }
 
+    /**
+     * Gets the account balances for the user/studio/contract.
+     * @param request
+     */
+    @traced(TRACE_NAME)
+    async getBalances(
+        request: GetBalancesRequest
+    ): Promise<Result<AccountBalances, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            });
+        }
+
+        const authorizationResult = await this._checkAuthorizationForFilter(
+            request.filter,
+            request.userId,
+            request.userRole
+        );
+
+        if (isFailure(authorizationResult)) {
+            return authorizationResult;
+        }
+
+        return await this._financialController.getAccountBalances(
+            request.filter
+        );
+    }
+
+    private async _checkAuthorizationForFilter(
+        filter: FinancialAccountFilter,
+        userId: string,
+        userRole: UserRole | null
+    ): Promise<Result<void, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This feature is not supported.',
+            });
+        }
+
+        // Check if the user has permission to access this account
+        if (!isSuperUserRole(userRole)) {
+            // Users can only access their own accounts
+            if ('userId' in filter && filter.userId) {
+                if (filter.userId !== userId) {
+                    return failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    });
+                }
+            } else if ('studioId' in filter && filter.studioId) {
+                const assignments =
+                    await this._recordsStore.listStudioAssignments(
+                        filter.studioId,
+                        {
+                            role: 'admin',
+                        }
+                    );
+
+                const userAssignment = assignments.find(
+                    (a) => a.userId === userId
+                );
+
+                if (!userAssignment || userAssignment.role !== 'admin') {
+                    return failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    });
+                }
+            } else if ('contractId' in filter && filter.contractId) {
+                const contract = await this._contractRecords.getItemById(
+                    filter.contractId
+                );
+
+                if (!contract) {
+                    return failure({
+                        errorCode: 'not_found',
+                        errorMessage: 'The contract was not found.',
+                    });
+                }
+
+                // Holding and issuing users can read contract accounts by default.
+                // Other users need an explicit check
+                if (
+                    contract.contract.holdingUserId !== userId &&
+                    contract.contract.issuingUserId !== userId
+                ) {
+                    const context =
+                        await this._policies.constructAuthorizationContext({
+                            recordKeyOrRecordName: contract.recordName,
+                            userId: userId,
+                            userRole: userRole,
+                        });
+
+                    if (context.success === false) {
+                        return failure(context);
+                    }
+
+                    const authorization = await this._policies.authorizeSubject(
+                        context,
+                        {
+                            action: 'read',
+                            resourceKind: 'contract',
+                            resourceId: contract.contract.address,
+                            subjectType: 'user',
+                            subjectId: userId,
+                            markers: contract.contract.markers,
+                        }
+                    );
+
+                    if (authorization.success === false) {
+                        return failure(authorization);
+                    }
+                }
+            }
+        }
+
+        return success();
+    }
+
+    /**
+     * Lists the transfers for the given account.
+     * @param request The request.
+     */
     @traced(TRACE_NAME)
     async listAccountTransfers(
         request: ListAccountTransfersRequest
@@ -437,92 +567,14 @@ export class SubscriptionController {
 
         const { account, financialAccount } = accountDetailsResult.value;
 
-        // Check if the user has permission to access this account
-        if (!isSuperUserRole(request.userRole)) {
-            // Users can only access their own accounts
-            if (financialAccount.userId) {
-                if (financialAccount.userId !== request.userId) {
-                    return failure({
-                        errorCode: 'not_authorized',
-                        errorMessage:
-                            'You are not authorized to perform this action.',
-                    });
-                }
-            } else if (financialAccount.studioId) {
-                const assignments =
-                    await this._recordsStore.listStudioAssignments(
-                        financialAccount.studioId,
-                        {
-                            role: 'admin',
-                        }
-                    );
+        const authorizationResult = await this._checkAuthorizationForFilter(
+            financialAccount,
+            request.userId,
+            request.userRole
+        );
 
-                const userAssignment = assignments.find(
-                    (a) => a.userId === request.userId
-                );
-
-                if (!userAssignment || userAssignment.role !== 'admin') {
-                    return failure({
-                        errorCode: 'not_authorized',
-                        errorMessage:
-                            'You are not authorized to perform this action.',
-                    });
-                }
-            } else if (financialAccount.contractId) {
-                const contract = await this._contractRecords.getItemById(
-                    financialAccount.contractId
-                );
-
-                if (!contract) {
-                    console.error(
-                        '[SubscriptionController] Contract not found for account:',
-                        financialAccount.id
-                    );
-                    return failure({
-                        errorCode: 'server_error',
-                        errorMessage: 'A server error occurred.',
-                    });
-                }
-
-                // Holding and issuing users can read contract accounts.
-                if (
-                    contract.contract.holdingUserId !== request.userId &&
-                    contract.contract.issuingUserId !== request.userId
-                ) {
-                    const context =
-                        await this._policies.constructAuthorizationContext({
-                            recordKeyOrRecordName: contract.recordName,
-                            userId: request.userId,
-                            userRole: request.userRole,
-                        });
-
-                    if (context.success === false) {
-                        return failure(context);
-                    }
-
-                    const authorization = await this._policies.authorizeSubject(
-                        context,
-                        {
-                            action: 'read',
-                            resourceKind: 'contract',
-                            resourceId: contract.contract.address,
-                            subjectType: 'user',
-                            subjectId: request.userId,
-                            markers: contract.contract.markers,
-                        }
-                    );
-
-                    if (authorization.success === false) {
-                        return failure(authorization);
-                    }
-                }
-            } else {
-                return failure({
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
-                });
-            }
+        if (isFailure(authorizationResult)) {
+            return authorizationResult;
         }
 
         // Get the transfers for this account
@@ -541,7 +593,7 @@ export class SubscriptionController {
             (transfer) =>
                 ({
                     id: transfer.id.toString(),
-                    amountN: transfer.amount.toString(),
+                    amount: transfer.amount,
                     debitAccountId: transfer.debit_account_id.toString(),
                     creditAccountId: transfer.credit_account_id.toString(),
                     pending: (transfer.flags & TransferFlags.pending) !== 0,
@@ -557,85 +609,9 @@ export class SubscriptionController {
 
         return success({
             accountDetails: financialAccount,
-            account: this._convertToAccountBalance(account),
+            account: this._financialController.convertToAccountBalance(account),
             transfers: accountTransfers,
         });
-    }
-
-    @traced(TRACE_NAME)
-    private async _getAccountBalances(
-        filter: Omit<UniqueFinancialAccountFilter, 'ledger'>
-    ): Promise<Result<AccountBalances | undefined, SimpleError>> {
-        if (!this._financialController) {
-            return success(undefined);
-        }
-
-        const [usdResult, creditsResult] = await Promise.all([
-            this._getAccountBalance({
-                ...filter,
-                ledger: LEDGERS.usd,
-            }),
-            this._getAccountBalance({
-                ...filter,
-                ledger: LEDGERS.credits,
-            }),
-        ]);
-
-        if (isFailure(usdResult)) {
-            return usdResult;
-        } else if (isFailure(creditsResult)) {
-            return creditsResult;
-        }
-
-        if (!usdResult.value && !creditsResult.value) {
-            return success(undefined);
-        }
-
-        return success({
-            usd: usdResult.value,
-            credits: creditsResult.value,
-        });
-    }
-
-    @traced(TRACE_NAME)
-    private async _getAccountBalance(
-        filter: UniqueFinancialAccountFilter
-    ): Promise<Result<AccountBalance | undefined, SimpleError>> {
-        if (!this._financialController) {
-            return success(undefined);
-        }
-
-        const result = await this._financialController.getFinancialAccount(
-            filter
-        );
-        if (isFailure(result)) {
-            if (result.error.errorCode === 'not_found') {
-                return success(undefined);
-            } else {
-                logError(
-                    result.error,
-                    `[SubscriptionController] [_getAccountBalance userId: ${filter.userId} studioId: ${filter.studioId} contractId: ${filter.contractId} ledger: ${filter.ledger}] Failed to get financial account:`
-                );
-                return result;
-            }
-        }
-
-        return success(this._convertToAccountBalance(result.value.account));
-    }
-
-    private _convertToAccountBalance(account: Account): AccountBalance {
-        return {
-            creditsN: account.credits_posted.toString(),
-            debitsN: account.debits_posted.toString(),
-            pendingCreditsN: account.credits_pending.toString(),
-            pendingDebitsN: account.debits_pending.toString(),
-            displayFactorN: (account.ledger === LEDGERS.credits
-                ? CREDITS_DISPLAY_FACTOR
-                : USD_DISPLAY_FACTOR
-            ).toString(),
-            currency: getAccountCurrency(account),
-            accountId: account.id.toString(),
-        };
     }
 
     /**
@@ -5012,7 +4988,7 @@ export interface AccountTransfer {
     /**
      * The amount of the transfer in the smallest unit of the currency.
      */
-    amountN: string;
+    amount: bigint;
 
     /**
      * The ID of the account that the transfer was debited from.
@@ -5048,4 +5024,21 @@ export interface AccountTransfer {
      * A helpful note for the transfer.
      */
     note?: string;
+}
+
+export interface GetBalancesRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole?: UserRole | null;
+
+    /**
+     * The filter that should be used to find the accounts.
+     */
+    filter: FinancialAccountFilter;
 }

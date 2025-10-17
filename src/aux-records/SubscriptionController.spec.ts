@@ -73,6 +73,7 @@ import {
 import type { AccountWithDetails, FinancialController } from './financial';
 import {
     ACCOUNT_IDS,
+    AccountBalance,
     AccountCodes,
     CREDITS_DISPLAY_FACTOR,
     CurrencyCodes,
@@ -886,20 +887,20 @@ describe('SubscriptionController', () => {
                     subscriptions: [],
                     accountBalances: {
                         usd: {
-                            pendingCreditsN: '0',
-                            pendingDebitsN: '0',
-                            creditsN: '5000',
-                            debitsN: '0',
-                            displayFactorN: '100',
+                            pendingCredits: 0n,
+                            pendingDebits: 0n,
+                            credits: 5000n,
+                            debits: 0n,
+                            displayFactor: 100n,
                             accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
-                            pendingCreditsN: '0',
-                            pendingDebitsN: '0',
-                            creditsN: '2000',
-                            debitsN: '0',
-                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            pendingCredits: 0n,
+                            pendingDebits: 0n,
+                            credits: 2000n,
+                            debits: 0n,
+                            displayFactor: CREDITS_DISPLAY_FACTOR,
                             accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
@@ -1027,20 +1028,20 @@ describe('SubscriptionController', () => {
                     subscriptions: [],
                     accountBalances: {
                         usd: {
-                            pendingCreditsN: '5000',
-                            pendingDebitsN: '123',
-                            creditsN: '5000',
-                            debitsN: '0',
-                            displayFactorN: '100',
+                            pendingCredits: 5000n,
+                            pendingDebits: 123n,
+                            credits: 5000n,
+                            debits: 0n,
+                            displayFactor: 100n,
                             accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
-                            pendingCreditsN: '2000',
-                            pendingDebitsN: '123',
-                            creditsN: '2000',
-                            debitsN: '0',
-                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            pendingCredits: 2000n,
+                            pendingDebits: 123n,
+                            credits: 2000n,
+                            debits: 0n,
+                            displayFactor: CREDITS_DISPLAY_FACTOR,
                             accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
@@ -1598,20 +1599,20 @@ describe('SubscriptionController', () => {
                     subscriptions: [],
                     accountBalances: {
                         usd: {
-                            pendingCreditsN: '0',
-                            pendingDebitsN: '0',
-                            creditsN: '5000',
-                            debitsN: '0',
-                            displayFactorN: '100',
+                            pendingCredits: 0n,
+                            pendingDebits: 0n,
+                            credits: 5000n,
+                            debits: 0n,
+                            displayFactor: 100n,
                             accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
-                            pendingCreditsN: '0',
-                            pendingDebitsN: '0',
-                            creditsN: '2000',
-                            debitsN: '0',
-                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            pendingCredits: 0n,
+                            pendingDebits: 0n,
+                            credits: 2000n,
+                            debits: 0n,
+                            displayFactor: CREDITS_DISPLAY_FACTOR,
                             accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
@@ -1740,20 +1741,20 @@ describe('SubscriptionController', () => {
                     subscriptions: [],
                     accountBalances: {
                         usd: {
-                            pendingCreditsN: '5000',
-                            pendingDebitsN: '123',
-                            creditsN: '5000',
-                            debitsN: '0',
-                            displayFactorN: '100',
+                            pendingCredits: 5000n,
+                            pendingDebits: 123n,
+                            credits: 5000n,
+                            debits: 0n,
+                            displayFactor: 100n,
                             accountId: account1.account.id.toString(),
                             currency: 'usd',
                         },
                         credits: {
-                            pendingCreditsN: '2000',
-                            pendingDebitsN: '123',
-                            creditsN: '2000',
-                            debitsN: '0',
-                            displayFactorN: CREDITS_DISPLAY_FACTOR.toString(),
+                            pendingCredits: 2000n,
+                            pendingDebits: 123n,
+                            credits: 2000n,
+                            debits: 0n,
+                            displayFactor: CREDITS_DISPLAY_FACTOR,
                             accountId: account2.account.id.toString(),
                             currency: 'credits',
                         },
@@ -1780,6 +1781,495 @@ describe('SubscriptionController', () => {
                         },
                     ],
                 });
+            });
+        });
+    });
+
+    describe('getBalances()', () => {
+        let user: AuthUser;
+
+        beforeEach(async () => {
+            user = await store.findUserByAddress('test@example.com', 'email');
+            expect(user.stripeCustomerId).toBeFalsy();
+        });
+
+        describe('user', () => {
+            let account: AccountWithDetails;
+
+            beforeEach(async () => {
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            amount: 123,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            debitAccountId: account.account.id,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                            pending: true,
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to list the transfers for the user', async () => {
+                const result = await controller.getBalances({
+                    userId,
+                    filter: {
+                        userId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should allow super users to get the balance for any account', async () => {
+                const result = await controller.getBalances({
+                    userId: 'some_other_user',
+                    userRole: 'superUser',
+                    filter: {
+                        userId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user doesnt own the account', async () => {
+                const result = await controller.getBalances({
+                    userId: 'other_user',
+                    filter: {
+                        userId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+        });
+
+        describe('studio', () => {
+            let account: AccountWithDetails;
+            let studioId: string = 'studioId';
+
+            beforeEach(async () => {
+                await store.createStudioForUser(
+                    {
+                        id: studioId,
+                        displayName: 'Test Studio',
+                    },
+                    userId
+                );
+
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        studioId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            amount: 123,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            debitAccountId: account.account.id,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                            pending: true,
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to get the balances for the studio if the user is an admin in the studio', async () => {
+                const result = await controller.getBalances({
+                    userId,
+                    filter: {
+                        studioId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should allow super users to get the balance for any studio account', async () => {
+                const result = await controller.getBalances({
+                    userId: 'some_other_user',
+                    userRole: 'superUser',
+                    filter: {
+                        studioId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user doesnt own the account', async () => {
+                const result = await controller.getBalances({
+                    userId: 'other_user',
+                    filter: {
+                        studioId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user is not an admin of the studio', async () => {
+                const otherUserId = 'other_user';
+                await store.saveUser({
+                    id: otherUserId,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    email: 'other_user@example.com',
+                    phoneNumber: null,
+                });
+
+                await store.addStudioAssignment({
+                    userId: otherUserId,
+                    studioId,
+                    role: 'member',
+                    isPrimaryContact: false,
+                });
+
+                const result = await controller.getBalances({
+                    userId: otherUserId,
+                    filter: {
+                        studioId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                    })
+                );
+            });
+        });
+
+        describe('contract', () => {
+            let account: AccountWithDetails;
+            let contractId: string = 'contractId';
+            let recordName: string = 'testRecord';
+            let xpUserId: string = 'xpUserId';
+
+            beforeEach(async () => {
+                nowMock.mockReturnValue(101);
+
+                await store.addRecord({
+                    name: recordName,
+                    ownerId: userId,
+                    studioId: null,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+
+                const user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveUser({
+                    id: xpUserId,
+                    email: 'xpUser@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'accountId',
+                    stripeAccountStatus: 'active',
+                    stripeAccountRequirementsStatus: 'complete',
+                });
+
+                await contractStore.putItem(recordName, {
+                    id: contractId,
+                    address: 'item1',
+                    initialValue: 100,
+                    holdingUserId: xpUserId,
+                    issuingUserId: userId,
+                    issuedAtMs: 100,
+                    rate: 1,
+                    status: 'open',
+                    markers: [PRIVATE_MARKER],
+                });
+
+                account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        contractId,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                        {
+                            amount: 123,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            debitAccountId: account.account.id,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                });
+
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 99,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: account.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                            pending: true,
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to get the balances for the contract if the user is the issuer of the contract', async () => {
+                const result = await controller.getBalances({
+                    userId,
+                    filter: {
+                        contractId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should be able to get the balances for the contract if the user is the holder of the contract', async () => {
+                const result = await controller.getBalances({
+                    userId: xpUserId,
+                    filter: {
+                        contractId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should allow super users to get the balance for any contract account', async () => {
+                const result = await controller.getBalances({
+                    userId: 'some_other_user',
+                    userRole: 'superUser',
+                    filter: {
+                        contractId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    success({
+                        usd: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
+                            accountId: account.account.id.toString(),
+                            currency: 'usd',
+                        }),
+                    })
+                );
+            });
+
+            it('should return not_authorized if the user doesnt own the account', async () => {
+                const result = await controller.getBalances({
+                    userId: 'other_user',
+                    filter: {
+                        contractId,
+                    },
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            action: 'read',
+                            recordName: 'testRecord',
+                            resourceId: 'item1',
+                            resourceKind: 'contract',
+                            subjectId: 'other_user',
+                            subjectType: 'user',
+                        },
+                    })
+                );
             });
         });
     });
@@ -1862,19 +2352,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
                             accountId: account.account.id.toString(),
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -1886,7 +2376,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -1898,7 +2388,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -1910,7 +2400,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -1940,19 +2430,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             accountId: account.account.id.toString(),
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -1964,7 +2454,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -1976,7 +2466,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -1988,7 +2478,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2098,19 +2588,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             accountId: account.account.id.toString(),
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2122,7 +2612,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2134,7 +2624,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -2146,7 +2636,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2176,19 +2666,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             accountId: account.account.id.toString(),
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2200,7 +2690,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2212,7 +2702,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -2224,7 +2714,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2399,19 +2889,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             accountId: account.account.id.toString(),
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2423,7 +2913,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2435,7 +2925,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -2447,7 +2937,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2476,19 +2966,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             accountId: account.account.id.toString(),
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2500,7 +2990,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2512,7 +3002,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -2524,7 +3014,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2554,19 +3044,19 @@ describe('SubscriptionController', () => {
                             ledger: LEDGERS.usd,
                             currency: 'usd',
                         },
-                        account: {
-                            pendingCreditsN: '99',
-                            pendingDebitsN: '0',
-                            creditsN: '5123',
-                            debitsN: '500',
-                            displayFactorN: '100',
+                        account: new AccountBalance({
+                            pendingCredits: 99n,
+                            pendingDebits: 0n,
+                            credits: 5123n,
+                            debits: 500n,
+                            displayFactor: 100n,
                             accountId: account.account.id.toString(),
                             currency: 'usd',
-                        },
+                        }),
                         transfers: [
                             {
                                 id: '3',
-                                amountN: '5000',
+                                amount: 5000n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2578,7 +3068,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '4',
-                                amountN: '123',
+                                amount: 123n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
@@ -2590,7 +3080,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '6',
-                                amountN: '500',
+                                amount: 500n,
                                 creditAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),
                                 debitAccountId: account.account.id.toString(),
@@ -2602,7 +3092,7 @@ describe('SubscriptionController', () => {
                             },
                             {
                                 id: '8',
-                                amountN: '99',
+                                amount: 99n,
                                 creditAccountId: account.account.id.toString(),
                                 debitAccountId:
                                     ACCOUNT_IDS.assets_stripe.toString(),

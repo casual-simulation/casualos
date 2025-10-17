@@ -598,10 +598,14 @@ export class FinancialController {
             }
         }
 
-        return success(this._convertToAccountBalance(result.value.account));
+        return success(this.convertToAccountBalance(result.value.account));
     }
 
-    private _convertToAccountBalance(account: Account): AccountBalance {
+    /**
+     * Converts the given account data to an account balance.
+     * @param account The account to convert.
+     */
+    convertToAccountBalance(account: Account): AccountBalance {
         return new AccountBalance({
             accountId: account.id.toString(),
             credits: account.credits_posted,
