@@ -1737,6 +1737,111 @@ describe('RecordsServer', () => {
             });
         });
 
+        it('should return the account balances for the user', async () => {
+            await financialController.init();
+
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    userId,
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [
+                        {
+                            id: 'subscription_id',
+                            status: 'active',
+                            start_date: 123,
+                            ended_at: null,
+                            cancel_at: null,
+                            canceled_at: null,
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            items: [
+                                {
+                                    id: 'item_id',
+                                    price: {
+                                        id: 'price_id',
+                                        interval: 'month',
+                                        interval_count: 1,
+                                        currency: 'usd',
+                                        unit_amount: 123,
+
+                                        product: {
+                                            id: 'product_id',
+                                            name: 'Product Name',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                }
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                            featureList: ['Feature 1', 'Feature 2'],
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                    accountBalances: {
+                        usd: {
+                            credits: '500',
+                            debits: '0',
+                            pendingCredits: '0',
+                            pendingDebits: '0',
+                            currency: 'usd',
+                            accountId: account.id.toString(),
+                            displayFactor: USD_DISPLAY_FACTOR.toString(),
+                        },
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
         it('should return the list of subscriptions if the current user is a super user', async () => {
             const owner = await store.findUser(ownerId);
             await store.saveUser({
@@ -26312,6 +26417,111 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                             },
                         ],
                         purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return the account balances for the user', async () => {
+                await financialController.init();
+
+                const { account } = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        ledger: LEDGERS.usd,
+                        userId,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 500,
+                                code: TransferCodes.admin_credit,
+                                creditAccountId: account.id,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                currency: 'usd',
+                            },
+                        ],
+                    })
+                );
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleHttpRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                await expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                        accountBalances: {
+                            usd: {
+                                credits: '500',
+                                debits: '0',
+                                pendingCredits: '0',
+                                pendingDebits: '0',
+                                currency: 'usd',
+                                accountId: account.id.toString(),
+                                displayFactor: USD_DISPLAY_FACTOR.toString(),
+                            },
+                        },
                     },
                     headers: accountCorsHeaders,
                 });

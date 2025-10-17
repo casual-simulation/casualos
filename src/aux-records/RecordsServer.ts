@@ -4963,6 +4963,13 @@ export class RecordsServer {
                                 prices: s.prices,
                                 defaultSubscription: s.defaultSubscription,
                             })),
+                        accountBalances: result.accountBalances
+                            ? {
+                                  usd: result.accountBalances?.usd?.toJSON(),
+                                  credits:
+                                      result.accountBalances?.credits?.toJSON(),
+                              }
+                            : undefined,
                     } as const;
                 }),
 
@@ -9325,6 +9332,12 @@ export class RecordsServer {
                     defaultSubscription: s.defaultSubscription,
                 })
             ),
+            accountBalances: result.accountBalances
+                ? {
+                      usd: result.accountBalances?.usd?.toJSON(),
+                      credits: result.accountBalances?.credits?.toJSON(),
+                  }
+                : undefined,
         });
     }
 
