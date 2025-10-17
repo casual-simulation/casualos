@@ -1231,6 +1231,9 @@ model AuthCheckoutSession {
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: SetNull, map: "PurchasableItemCheckoutSession_userId_fkey1")
 
+    transactionId String?
+    transferIds String[]
+    transfersPending Boolean?
     shouldBeAutomaticallyFulfilled Boolean?
 
     purchasedItems PurchasedItem[]

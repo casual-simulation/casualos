@@ -141,6 +141,9 @@ export class PrismaAuthStore implements AuthStore {
             items: request.items as any[],
             shouldBeAutomaticallyFulfilled:
                 request.shouldBeAutomaticallyFulfilled,
+            transactionId: request.transactionId,
+            transferIds: request.transferIds,
+            transfersPending: request.transfersPending,
         };
         let updateData: Prisma.AuthCheckoutSessionUpsertArgs['update'] = {
             paid: request.paid,
@@ -152,6 +155,9 @@ export class PrismaAuthStore implements AuthStore {
             items: request.items as any[],
             shouldBeAutomaticallyFulfilled:
                 request.shouldBeAutomaticallyFulfilled,
+            transactionId: request.transactionId,
+            transferIds: request.transferIds,
+            transfersPending: request.transfersPending,
         };
         if (request.invoice) {
             const invoiceId = uuid();
@@ -244,6 +250,9 @@ export class PrismaAuthStore implements AuthStore {
             items: session.items as unknown as AuthCheckoutSessionItem[],
             shouldBeAutomaticallyFulfilled:
                 session.shouldBeAutomaticallyFulfilled,
+            transactionId: session.transactionId,
+            transferIds: session.transferIds,
+            transfersPending: session.transfersPending,
         };
     }
 

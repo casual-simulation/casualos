@@ -8032,9 +8032,8 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(
-                    /^https:\/\/return-url\/store\/fulfillment\//
-                ),
+                // should redirect the user to the success URL because it is automatically fulfilled
+                success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -8192,7 +8191,7 @@ describe('SubscriptionController', () => {
                     stripeCheckoutSessionId: null,
                     invoiceId: null,
                     userId: userId,
-                    fulfilledAtMs: null,
+                    fulfilledAtMs: Date.now(),
                     items: [
                         {
                             type: 'contract',
@@ -8204,6 +8203,8 @@ describe('SubscriptionController', () => {
                     ],
                     transferIds: ['6', '7'],
                     transactionId: '5',
+                    shouldBeAutomaticallyFulfilled: true,
+                    transfersPending: false,
                 },
             ]);
 
@@ -8343,7 +8344,7 @@ describe('SubscriptionController', () => {
                     stripeCheckoutSessionId: null,
                     invoiceId: null,
                     userId: userId,
-                    fulfilledAtMs: null,
+                    fulfilledAtMs: expect.any(Number),
                     items: [
                         {
                             type: 'contract',
@@ -8355,6 +8356,8 @@ describe('SubscriptionController', () => {
                     ],
                     transferIds: ['7', '8', '9'],
                     transactionId: '6',
+                    shouldBeAutomaticallyFulfilled: true,
+                    transfersPending: false,
                 },
             ]);
 
@@ -8532,9 +8535,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(
-                    /^https:\/\/return-url\/store\/fulfillment\//
-                ),
+                success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: null,
                 metadata: {
@@ -8574,6 +8575,7 @@ describe('SubscriptionController', () => {
                     transferIds: ['3', '4'],
                     transfersPending: true,
                     transactionId: '2',
+                    shouldBeAutomaticallyFulfilled: true,
                 },
             ]);
 
@@ -8804,9 +8806,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(
-                    /^https:\/\/return-url\/store\/fulfillment\//
-                ),
+                success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -8846,6 +8846,7 @@ describe('SubscriptionController', () => {
                     transferIds: ['3'],
                     transfersPending: true,
                     transactionId: '2',
+                    shouldBeAutomaticallyFulfilled: true,
                 },
             ]);
 
@@ -8979,9 +8980,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(
-                    /^https:\/\/return-url\/store\/fulfillment\//
-                ),
+                success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -9021,6 +9020,7 @@ describe('SubscriptionController', () => {
                     transferIds: ['3', '4'],
                     transfersPending: true,
                     transactionId: '2',
+                    shouldBeAutomaticallyFulfilled: true,
                 },
             ]);
 
@@ -9167,9 +9167,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(
-                    /^https:\/\/return-url\/store\/fulfillment\//
-                ),
+                success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -9209,6 +9207,7 @@ describe('SubscriptionController', () => {
                     transferIds: ['3', '4'],
                     transfersPending: true,
                     transactionId: '2',
+                    shouldBeAutomaticallyFulfilled: true,
                 },
             ]);
 
@@ -9367,9 +9366,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
-                success_url: expect.stringMatching(
-                    /^https:\/\/return-url\/store\/fulfillment\//
-                ),
+                success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
                 metadata: {
@@ -9409,6 +9406,7 @@ describe('SubscriptionController', () => {
                     transferIds: ['3', '4'],
                     transfersPending: true,
                     transactionId: '2',
+                    shouldBeAutomaticallyFulfilled: true,
                 },
             ]);
 

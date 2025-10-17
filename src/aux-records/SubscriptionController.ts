@@ -2085,6 +2085,7 @@ export class SubscriptionController {
                     ledger: LEDGERS.usd,
                 });
 
+            let immediateFulfillment = false;
             const checkoutSession: UpdateCheckoutSessionRequest = {
                 id: sessionId,
                 stripeCheckoutSessionId: null,
@@ -2160,6 +2161,7 @@ export class SubscriptionController {
                             transferResult.value.transferIds;
                         checkoutSession.transactionId =
                             transferResult.value.transactionId;
+                        immediateFulfillment = true;
                     }
                 }
             }
@@ -2260,6 +2262,7 @@ export class SubscriptionController {
                                 transferResult.value.transferIds;
                             checkoutSession.transactionId =
                                 transferResult.value.transactionId;
+                            immediateFulfillment = true;
                         }
                     }
                 }
@@ -2311,10 +2314,10 @@ export class SubscriptionController {
                     this._stripe.createCheckoutSession({
                         mode: 'payment',
                         line_items: builder.lineItems,
-                        success_url: fulfillmentRoute(
-                            config.returnUrl,
-                            sessionId
-                        ),
+                        success_url:
+                            checkoutSession.shouldBeAutomaticallyFulfilled
+                                ? request.successUrl
+                                : fulfillmentRoute(config.returnUrl, sessionId),
                         cancel_url: request.returnUrl,
                         client_reference_id: sessionId,
                         customer_email: customerEmail,
@@ -2392,9 +2395,27 @@ export class SubscriptionController {
                 checkoutSession.transferIds = transferResult.value.transferIds;
                 checkoutSession.transfersPending = true;
                 url = session.url;
+
+                // Do not immediately fulfill since we need to wait for Stripe webhook
+                immediateFulfillment = false;
             }
 
             await this._authStore.updateCheckoutSessionInfo(checkoutSession);
+
+            if (immediateFulfillment) {
+                const fulfillmentResult = await this.fulfillCheckoutSession({
+                    sessionId: checkoutSession.id,
+                    activation: 'now',
+                    userId: request.userId,
+                });
+
+                if (fulfillmentResult.success === false) {
+                    console.error(
+                        `[SubscriptionController] [purchaseContract] Failed to immediately fulfill checkout session for contract: ${item.id}:`,
+                        fulfillmentResult.errorMessage
+                    );
+                }
+            }
 
             return success({
                 url,

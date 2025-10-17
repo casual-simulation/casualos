@@ -1317,6 +1317,8 @@ export interface AuthCheckoutSession {
     /**
      * The unix time in miliseconds that the checkout session has been fulfilled at by
      * granting the user access to their items.
+     *
+     * For contracts, this means opening the contract.
      */
     fulfilledAtMs: number | null;
 
