@@ -84,6 +84,7 @@ import AuthCodeOfConduct from './AuthCodeOfConduct/AuthCodeOfConduct';
 import AuthRecordsWebhooks from './AuthRecordsWebhooks/AuthRecordsWebhooks';
 import AuthRecordsNotifications from './AuthRecordsNotifications/AuthRecordsNotifications';
 import AuthRecordsPackages from './AuthRecordsPackages/AuthRecordsPackages';
+import AuthRecordsContracts from './AuthRecordsContracts/AuthRecordsContracts';
 import AuthGrantedEntitlements from './AuthGrantedEntitlements/AuthGrantedEntitlements';
 import AuthUserNotifications from './AuthUserNotifications/AuthUserNotifications';
 import AuthStoreFulfillment from './AuthStoreFulfillment/AuthStoreFulfillment';
@@ -239,6 +240,11 @@ const routes: RouteConfig[] = [
                 path: 'packages',
                 name: 'records-packages',
                 component: AuthRecordsPackages,
+            },
+            {
+                path: 'contracts',
+                name: 'records-contracts',
+                component: AuthRecordsContracts,
             },
         ],
     },

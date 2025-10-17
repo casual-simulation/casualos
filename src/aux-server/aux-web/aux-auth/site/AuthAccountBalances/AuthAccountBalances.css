@@ -1,0 +1,76 @@
+/* CasualOS is a set of web-based tools designed to facilitate the creation of real-time, multi-user, context-aware interactive experiences.
+ *
+ * Copyright (c) 2019-2025 Casual Simulation, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.auth-account-balances {
+    padding: 16px;
+}
+
+.loading {
+    width: 100%;
+}
+
+.error {
+    margin-bottom: 16px;
+}
+
+.error-message {
+    color: #f44336;
+    margin: 0;
+    padding: 16px;
+}
+
+.balances-container {
+    margin-bottom: 16px;
+}
+
+.balances-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+
+.balances-table thead {
+    background-color: #f5f5f5;
+}
+
+.balances-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.balances-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.balances-table tbody tr:hover {
+    background-color: #fafafa;
+}
+
+.account-id {
+    font-family: monospace;
+    font-size: 0.85em;
+    word-break: break-all;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 32px;
+}
