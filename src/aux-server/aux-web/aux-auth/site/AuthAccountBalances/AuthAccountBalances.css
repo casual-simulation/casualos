@@ -64,6 +64,12 @@
     background-color: #fafafa;
 }
 
+.balance {
+    font-weight: 600;
+    font-size: 1.05em;
+    text-align: right;
+}
+
 .account-id {
     font-family: monospace;
     font-size: 0.85em;

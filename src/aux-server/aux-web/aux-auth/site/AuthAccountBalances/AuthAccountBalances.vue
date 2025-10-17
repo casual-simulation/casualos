@@ -26,20 +26,14 @@
                         <thead>
                             <tr>
                                 <th>Currency</th>
-                                <th>Credits</th>
-                                <th>Debits</th>
-                                <th>Pending Credits</th>
-                                <th>Pending Debits</th>
+                                <th>Balance</th>
                                 <th>Account ID</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="item in filteredBalances" :key="item.currency">
                                 <td>{{ item.currency }}</td>
-                                <td>{{ formatBalance(item.balance.credits) }}</td>
-                                <td>{{ formatBalance(item.balance.debits) }}</td>
-                                <td>{{ formatBalance(item.balance.pendingCredits) }}</td>
-                                <td>{{ formatBalance(item.balance.pendingDebits) }}</td>
+                                <td class="balance">{{ calculateNetBalance(item.balance) }}</td>
                                 <td class="account-id">{{ item.balance.accountId }}</td>
                             </tr>
                         </tbody>

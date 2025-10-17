@@ -20,6 +20,7 @@ import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
+import type { AccountBalance } from '@casual-simulation/aux-common';
 
 @Component({
     components: {
@@ -38,9 +39,12 @@ export default class AuthAccountBalances extends Vue {
 
     loading: boolean = false;
     error: string | null = null;
-    balances: Record<string, any> = {};
+    balances: Record<string, AccountBalance> = {};
 
-    get filteredBalances(): Array<{ currency: string; balance: any }> {
+    get filteredBalances(): Array<{
+        currency: string;
+        balance: AccountBalance;
+    }> {
         return Object.entries(this.balances)
             .filter(([currency]) => currency !== 'success')
             .map(([currency, balance]) => ({
@@ -105,5 +109,21 @@ export default class AuthAccountBalances extends Vue {
             return value.toString();
         }
         return String(value);
+    }
+
+    calculateNetBalance(balance: AccountBalance): string {
+        try {
+            let credits = BigInt(balance.credits);
+            let debits = BigInt(balance.debits);
+            let displayFactor = BigInt(balance.displayFactor);
+
+            // Calculate net balance: (credits - debits) / displayFactor
+            const netBalance = (credits - debits) / displayFactor;
+
+            // Format to 2 decimal places
+            return Number(netBalance).toFixed(2);
+        } catch (err) {
+            return 'N/A';
+        }
     }
 }
