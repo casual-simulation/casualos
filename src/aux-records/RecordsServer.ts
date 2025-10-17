@@ -4847,11 +4847,11 @@ export class RecordsServer {
                 .origins('account')
                 .http('GET', '/api/v2/balances')
                 .inputs(
-                    z.union([
-                        z.object({ studioId: z.string() }),
-                        z.object({ contractId: z.string() }),
-                        z.object({ userId: z.string().optional() }),
-                    ])
+                    z.object({
+                        studioId: z.string().min(1).max(255).optional(),
+                        contractId: z.string().min(1).max(255).optional(),
+                        userId: z.string().min(1).max(255).optional(),
+                    })
                 )
                 .handler(async (input, context) => {
                     if (!this._subscriptions) {
@@ -4866,12 +4866,19 @@ export class RecordsServer {
                     }
 
                     if (
-                        !(
-                            'userId' in input ||
-                            'studioId' in input ||
-                            'contractId' in input
-                        )
+                        (input.userId && input.studioId) ||
+                        (input.contractId && input.studioId) ||
+                        (input.contractId && input.userId)
                     ) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'You must only specify one of userId, studioId, or contractId.',
+                        };
+                    }
+
+                    if (!input.userId && !input.studioId && !input.contractId) {
                         input = {
                             userId: validation.userId,
                         };
@@ -4884,10 +4891,14 @@ export class RecordsServer {
                     });
 
                     return genericResult(
-                        mapResult(result, (balance) => ({
-                            usd: balance.usd?.toJSON(),
-                            credits: balance.credits?.toJSON(),
-                        }))
+                        mapResult(result, (balance) =>
+                            balance
+                                ? {
+                                      usd: balance.usd?.toJSON(),
+                                      credits: balance.credits?.toJSON(),
+                                  }
+                                : undefined
+                        )
                     );
                 }),
 
