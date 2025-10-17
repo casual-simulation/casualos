@@ -5509,6 +5509,44 @@ Object {
     Object {
       "http": Object {
         "method": "GET",
+        "path": "/api/v2/balances",
+      },
+      "inputs": Object {
+        "options": Array [
+          Object {
+            "schema": Object {
+              "studioId": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "contractId": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "userId": Object {
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        ],
+        "type": "union",
+      },
+      "name": "getBalances",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
         "path": "/api/v2/subscriptions",
       },
       "inputs": Object {
@@ -11799,6 +11837,44 @@ Object {
       },
       "name": "getPlayerConfig",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/balances",
+      },
+      "inputs": Object {
+        "options": Array [
+          Object {
+            "schema": Object {
+              "studioId": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "contractId": Object {
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          Object {
+            "schema": Object {
+              "userId": Object {
+                "optional": true,
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+        ],
+        "type": "union",
+      },
+      "name": "getBalances",
+      "origins": "account",
     },
     Object {
       "http": Object {
