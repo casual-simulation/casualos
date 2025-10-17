@@ -17,7 +17,9 @@
  */
 
 import { failure, success, unwrap } from '@casual-simulation/aux-common';
+import type { AccountWithDetails } from './FinancialController';
 import {
+    AccountBalance,
     FinancialController,
     getAccountBalance,
     getAssetAccountBalance,
@@ -27,9 +29,11 @@ import {
     ACCOUNT_IDS,
     AccountCodes,
     AMOUNT_MAX,
+    CREDITS_DISPLAY_FACTOR,
     CurrencyCodes,
     LEDGERS,
     TransferCodes,
+    USD_DISPLAY_FACTOR,
 } from './FinancialInterface';
 import type { Account } from 'tigerbeetle-node';
 import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
@@ -538,6 +542,583 @@ describe('FinancialController', () => {
                     currency: 'credits',
                 },
             ]);
+        });
+    });
+
+    describe('getAccountBalances()', () => {
+        let account1: AccountWithDetails;
+        let account2: AccountWithDetails;
+
+        beforeEach(async () => {
+            await controller.init();
+            account1 = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    userId: 'user1',
+                    ledger: LEDGERS.credits,
+                })
+            );
+            account2 = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    userId: 'user1',
+                    ledger: LEDGERS.usd,
+                })
+            );
+        });
+
+        it('should return the balances for the users accounts', async () => {
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: account1.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 1000,
+                            currency: 'credits',
+                        },
+                        {
+                            creditAccountId: account1.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 123,
+                            currency: 'credits',
+                        },
+                        {
+                            creditAccountId: account2.account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_credit,
+                            amount: 456,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalances({
+                userId: 'user1',
+            });
+
+            expect(balanceResult).toEqual(
+                success({
+                    credits: new AccountBalance({
+                        accountId: account1.account.id.toString(),
+                        credits: 1123n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    }),
+                    usd: new AccountBalance({
+                        accountId: account2.account.id.toString(),
+                        credits: 456n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: USD_DISPLAY_FACTOR,
+                        currency: 'usd',
+                    }),
+                })
+            );
+        });
+
+        it('should return the balances for studio accounts', async () => {
+            await controller.init();
+            const studioUsdAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    studioId: 'studio1',
+                    ledger: LEDGERS.usd,
+                })
+            );
+            const studioCreditsAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    studioId: 'studio1',
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: studioUsdAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_credit,
+                            amount: 5000,
+                            currency: 'usd',
+                        },
+                        {
+                            creditAccountId: studioCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 2000,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalances({
+                studioId: 'studio1',
+            });
+
+            expect(balanceResult).toEqual(
+                success({
+                    usd: new AccountBalance({
+                        accountId: studioUsdAccount.account.id.toString(),
+                        credits: 5000n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: USD_DISPLAY_FACTOR,
+                        currency: 'usd',
+                    }),
+                    credits: new AccountBalance({
+                        accountId: studioCreditsAccount.account.id.toString(),
+                        credits: 2000n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    }),
+                })
+            );
+        });
+
+        it('should return the balances for contract accounts', async () => {
+            await controller.init();
+            const contractUsdAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    contractId: 'contract1',
+                    ledger: LEDGERS.usd,
+                })
+            );
+            const contractCreditsAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    contractId: 'contract1',
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: contractUsdAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_credit,
+                            amount: 1500,
+                            currency: 'usd',
+                        },
+                        {
+                            creditAccountId: contractCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 750,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalances({
+                contractId: 'contract1',
+            });
+
+            expect(balanceResult).toEqual(
+                success({
+                    usd: new AccountBalance({
+                        accountId: contractUsdAccount.account.id.toString(),
+                        credits: 1500n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: USD_DISPLAY_FACTOR,
+                        currency: 'usd',
+                    }),
+                    credits: new AccountBalance({
+                        accountId: contractCreditsAccount.account.id.toString(),
+                        credits: 750n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    }),
+                })
+            );
+        });
+
+        it('should return undefined when no accounts exist for the given studio', async () => {
+            await controller.init();
+            const balanceResult = await controller.getAccountBalances({
+                studioId: 'nonexistent-studio',
+            });
+
+            expect(balanceResult).toEqual(success(undefined));
+        });
+
+        it('should return undefined when no accounts exist for the given contract', async () => {
+            await controller.init();
+            const balanceResult = await controller.getAccountBalances({
+                contractId: 'nonexistent-contract',
+            });
+
+            expect(balanceResult).toEqual(success(undefined));
+        });
+
+        it('should return only usd balance when credits account does not exist', async () => {
+            await controller.init();
+            const studioUsdAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    studioId: 'studio2',
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: studioUsdAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_credit,
+                            amount: 3000,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalances({
+                studioId: 'studio2',
+            });
+
+            expect(balanceResult).toEqual(
+                success({
+                    usd: new AccountBalance({
+                        accountId: studioUsdAccount.account.id.toString(),
+                        credits: 3000n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: USD_DISPLAY_FACTOR,
+                        currency: 'usd',
+                    }),
+                })
+            );
+        });
+
+        it('should return only credits balance when usd account does not exist', async () => {
+            await controller.init();
+            const contractCreditsAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    contractId: 'contract2',
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: contractCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 1000,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalances({
+                contractId: 'contract2',
+            });
+
+            expect(balanceResult).toEqual(
+                success({
+                    credits: new AccountBalance({
+                        accountId: contractCreditsAccount.account.id.toString(),
+                        credits: 1000n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    }),
+                })
+            );
+        });
+    });
+
+    describe('getAccountBalance()', () => {
+        let account1: AccountWithDetails;
+        let account2: AccountWithDetails;
+
+        beforeEach(async () => {
+            await controller.init();
+            account1 = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    userId: 'user1',
+                    ledger: LEDGERS.credits,
+                })
+            );
+            account2 = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    userId: 'user2',
+                    ledger: LEDGERS.credits,
+                })
+            );
+        });
+
+        it('should return the balance for the given user account', async () => {
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: account1.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 1000,
+                            currency: 'credits',
+                        },
+                        {
+                            creditAccountId: account1.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 123,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalance({
+                userId: 'user1',
+                ledger: LEDGERS.credits,
+            });
+
+            expect(balanceResult).toEqual(
+                success(
+                    new AccountBalance({
+                        accountId: account1.account.id.toString(),
+                        credits: 1123n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    })
+                )
+            );
+        });
+
+        it('should return the balance for a studio account in usd', async () => {
+            await controller.init();
+            const studioUsdAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    studioId: 'studio1',
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: studioUsdAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_credit,
+                            amount: 2500,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalance({
+                studioId: 'studio1',
+                ledger: LEDGERS.usd,
+            });
+
+            expect(balanceResult).toEqual(
+                success(
+                    new AccountBalance({
+                        accountId: studioUsdAccount.account.id.toString(),
+                        credits: 2500n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: USD_DISPLAY_FACTOR,
+                        currency: 'usd',
+                    })
+                )
+            );
+        });
+
+        it('should return the balance for a studio account in credits', async () => {
+            await controller.init();
+            const studioCreditsAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    studioId: 'studio2',
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: studioCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 5000,
+                            currency: 'credits',
+                        },
+                        {
+                            creditAccountId: studioCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 500,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalance({
+                studioId: 'studio2',
+                ledger: LEDGERS.credits,
+            });
+
+            expect(balanceResult).toEqual(
+                success(
+                    new AccountBalance({
+                        accountId: studioCreditsAccount.account.id.toString(),
+                        credits: 5500n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    })
+                )
+            );
+        });
+
+        it('should return the balance for a contract account in usd', async () => {
+            await controller.init();
+            const contractUsdAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    contractId: 'contract1',
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: contractUsdAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            code: TransferCodes.admin_credit,
+                            amount: 1000,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalance({
+                contractId: 'contract1',
+                ledger: LEDGERS.usd,
+            });
+
+            expect(balanceResult).toEqual(
+                success(
+                    new AccountBalance({
+                        accountId: contractUsdAccount.account.id.toString(),
+                        credits: 1000n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: USD_DISPLAY_FACTOR,
+                        currency: 'usd',
+                    })
+                )
+            );
+        });
+
+        it('should return the balance for a contract account in credits', async () => {
+            await controller.init();
+            const contractCreditsAccount = unwrap(
+                await controller.getOrCreateFinancialAccount({
+                    contractId: 'contract2',
+                    ledger: LEDGERS.credits,
+                })
+            );
+
+            unwrap(
+                await controller.internalTransaction({
+                    transfers: [
+                        {
+                            creditAccountId: contractCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 3000,
+                            currency: 'credits',
+                        },
+                        {
+                            creditAccountId: contractCreditsAccount.account.id,
+                            debitAccountId: ACCOUNT_IDS.liquidity_credits,
+                            code: TransferCodes.admin_credit,
+                            amount: 200,
+                            currency: 'credits',
+                        },
+                    ],
+                })
+            );
+
+            const balanceResult = await controller.getAccountBalance({
+                contractId: 'contract2',
+                ledger: LEDGERS.credits,
+            });
+
+            expect(balanceResult).toEqual(
+                success(
+                    new AccountBalance({
+                        accountId: contractCreditsAccount.account.id.toString(),
+                        credits: 3200n,
+                        debits: 0n,
+                        pendingCredits: 0n,
+                        pendingDebits: 0n,
+                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        currency: 'credits',
+                    })
+                )
+            );
+        });
+
+        it('should return undefined when studio account does not exist', async () => {
+            await controller.init();
+            const balanceResult = await controller.getAccountBalance({
+                studioId: 'nonexistent-studio',
+                ledger: LEDGERS.usd,
+            });
+
+            expect(balanceResult).toEqual(success(undefined));
+        });
+
+        it('should return undefined when contract account does not exist', async () => {
+            await controller.init();
+            const balanceResult = await controller.getAccountBalance({
+                contractId: 'nonexistent-contract',
+                ledger: LEDGERS.credits,
+            });
+
+            expect(balanceResult).toEqual(success(undefined));
         });
     });
 

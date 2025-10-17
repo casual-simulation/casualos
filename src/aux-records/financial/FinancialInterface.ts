@@ -94,7 +94,7 @@ export const CREDITS_DISPLAY_FACTOR = USD_TO_CREDITS * 100n; // 1 display credit
 /**
  * The factor for displaying USD to users.
  */
-export const USD_DISPLAY_FACTOR = 100; // 1 display USD = 100 cents
+export const USD_DISPLAY_FACTOR = 100n; // 1 display USD = 100 cents
 
 /**
  * The exchange rates between ledgers.

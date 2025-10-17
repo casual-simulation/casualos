@@ -29,6 +29,7 @@ import {
     unwrap,
 } from '@casual-simulation/aux-common';
 import type {
+    CurrencyCodesType,
     InterfaceTransferError,
     TransferCodes,
 } from './FinancialInterface';
@@ -36,13 +37,16 @@ import {
     ACCOUNT_IDS,
     AccountCodes,
     AMOUNT_MAX,
+    CREDITS_DISPLAY_FACTOR,
     CURRENCIES,
+    getAccountCurrency,
     getFlagsForAccountCode,
     getFlagsForTransferCode,
     getMessageForAccountError,
     LEDGERS,
     processAccountErrors,
     processTransferErrors,
+    USD_DISPLAY_FACTOR,
     type FinancialInterface,
 } from './FinancialInterface';
 import type { Account, CreateTransferError, Transfer } from 'tigerbeetle-node';
@@ -539,6 +543,76 @@ export class FinancialController {
 
         return success({
             accounts: results.map((r) => unwrap(r)),
+        });
+    }
+
+    /**
+     * Gets the account balances for the given account filter.
+     * @param filter The filter to use.
+     */
+    @traced(TRACE_NAME)
+    async getAccountBalances(
+        filter: Omit<UniqueFinancialAccountFilter, 'ledger'>
+    ): Promise<Result<AccountBalances | undefined, SimpleError>> {
+        const [usdResult, creditsResult] = await Promise.all([
+            this.getAccountBalance({
+                ...filter,
+                ledger: LEDGERS.usd,
+            }),
+            this.getAccountBalance({
+                ...filter,
+                ledger: LEDGERS.credits,
+            }),
+        ]);
+
+        if (isFailure(usdResult)) {
+            return usdResult;
+        } else if (isFailure(creditsResult)) {
+            return creditsResult;
+        }
+
+        if (!usdResult.value && !creditsResult.value) {
+            return success(undefined);
+        }
+
+        return success({
+            usd: usdResult.value,
+            credits: creditsResult.value,
+        });
+    }
+
+    /**
+     * Gets the balance for the account matching the given filter.
+     * @param filter The filter to use.
+     */
+    @traced(TRACE_NAME)
+    async getAccountBalance(
+        filter: UniqueFinancialAccountFilter
+    ): Promise<Result<AccountBalance | undefined, SimpleError>> {
+        const result = await this.getFinancialAccount(filter);
+        if (isFailure(result)) {
+            if (result.error.errorCode === 'not_found') {
+                return success(undefined);
+            } else {
+                return result;
+            }
+        }
+
+        return success(this._convertToAccountBalance(result.value.account));
+    }
+
+    private _convertToAccountBalance(account: Account): AccountBalance {
+        return new AccountBalance({
+            accountId: account.id.toString(),
+            credits: account.credits_posted,
+            debits: account.debits_posted,
+            pendingCredits: account.credits_pending,
+            pendingDebits: account.debits_pending,
+            currency: getAccountCurrency(account),
+            displayFactor:
+                account.ledger === LEDGERS.credits
+                    ? CREDITS_DISPLAY_FACTOR
+                    : USD_DISPLAY_FACTOR,
         });
     }
 
@@ -1277,4 +1351,146 @@ export interface TransfersQuery {
      * The code to fitler transfers by.
      */
     code?: TransferCodes;
+}
+
+/**
+ * Represents the balances of a user/studio/contract's financial accounts.
+ */
+export interface AccountBalances {
+    /**
+     * The USD account balance.
+     *
+     * This will be undefined if the user does not have a USD account.
+     */
+    usd: AccountBalance | undefined;
+
+    /**
+     * The credits account balance.
+     *
+     * This will be undefined if the user does not have a credits account.
+     */
+    credits: AccountBalance | undefined;
+}
+
+/**
+ * Represents the balance of a financial account.
+ */
+export class AccountBalance {
+    /**
+     * The ID of the account.
+     */
+    accountId: string;
+
+    /**
+     * The number of credits to the account.
+     */
+    credits: bigint;
+
+    /**
+     * The number of pending credits to the account.
+     */
+    pendingCredits: bigint;
+
+    /**
+     * The number of debits to the account.
+     */
+    debits: bigint;
+
+    /**
+     * The number of pending debits to the account.
+     */
+    pendingDebits: bigint;
+
+    /**
+     * The factor that should be used to convert between credits and USD.
+     */
+    displayFactor: bigint;
+
+    /**
+     * The currency that the account is in.
+     */
+    currency: CurrencyCodesType;
+
+    constructor(data: {
+        accountId: string;
+        credits: bigint | string;
+        pendingCredits: bigint | string;
+        debits: bigint | string;
+        pendingDebits: bigint | string;
+        displayFactor: bigint | string;
+        currency: CurrencyCodesType;
+    }) {
+        this.accountId = data.accountId;
+        this.credits =
+            typeof data.credits === 'string'
+                ? BigInt(data.credits)
+                : data.credits;
+        this.pendingCredits =
+            typeof data.pendingCredits === 'string'
+                ? BigInt(data.pendingCredits)
+                : data.pendingCredits;
+        this.debits =
+            typeof data.debits === 'string' ? BigInt(data.debits) : data.debits;
+        this.pendingDebits =
+            typeof data.pendingDebits === 'string'
+                ? BigInt(data.pendingDebits)
+                : data.pendingDebits;
+        this.displayFactor =
+            typeof data.displayFactor === 'string'
+                ? BigInt(data.displayFactor)
+                : data.displayFactor;
+        this.currency = data.currency;
+    }
+
+    toJSON(): JSONAccountBalance {
+        return {
+            accountId: this.accountId,
+            credits: this.credits.toString(),
+            pendingCredits: this.pendingCredits.toString(),
+            debits: this.debits.toString(),
+            pendingDebits: this.pendingDebits.toString(),
+            displayFactor: this.displayFactor.toString(),
+            currency: this.currency,
+        };
+    }
+}
+
+/**
+ * Represents the balance of a financial account in a JSON-compatible format.
+ */
+export interface JSONAccountBalance {
+    /**
+     * The ID of the account.
+     */
+    accountId: string;
+
+    /**
+     * The number of credits to the account.
+     */
+    credits: string;
+
+    /**
+     * The number of pending credits to the account.
+     */
+    pendingCredits: string;
+
+    /**
+     * The number of debits to the account.
+     */
+    debits: string;
+
+    /**
+     * The number of pending debits to the account.
+     */
+    pendingDebits: string;
+
+    /**
+     * The factor that should be used to convert between credits and USD.
+     */
+    displayFactor: string;
+
+    /**
+     * The currency that the account is in.
+     */
+    currency: CurrencyCodesType;
 }

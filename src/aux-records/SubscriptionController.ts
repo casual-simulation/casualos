@@ -106,7 +106,6 @@ import { hashHighEntropyPasswordWithSalt } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import type {
-    CurrencyCodesType,
     FinancialAccount,
     FinancialController,
     InternalTransfer,
@@ -4119,62 +4118,6 @@ export interface GetSubscriptionStatusSuccess {
      * This will be undefined if the financial controller is not enabled.
      */
     accountBalances?: AccountBalances;
-}
-
-export interface AccountBalances {
-    /**
-     * The USD account balance.
-     *
-     * This will be undefined if the user does not have a USD account.
-     */
-    usd: AccountBalance | undefined;
-
-    /**
-     * The credits account balance.
-     *
-     * This will be undefined if the user does not have a credits account.
-     */
-    credits: AccountBalance | undefined;
-}
-
-/**
- * Represents the balance of a financial account.
- */
-export interface AccountBalance {
-    /**
-     * The ID of the account.
-     */
-    accountId: string;
-
-    /**
-     * The number of credits in the account as a string.
-     */
-    creditsN: string;
-
-    /**
-     * The number of pending credits in the account as a string.
-     */
-    pendingCreditsN: string;
-
-    /**
-     * The number of debits in the account as a string.
-     */
-    debitsN: string;
-
-    /**
-     * The number of pending debits in the account as a string.
-     */
-    pendingDebitsN: string;
-
-    /**
-     * The factor that should be used to convert between credits and USD as a string.
-     */
-    displayFactorN: string;
-
-    /**
-     * The currency that the account is in.
-     */
-    currency: CurrencyCodesType;
 }
 
 export interface SubscriptionStatus {
