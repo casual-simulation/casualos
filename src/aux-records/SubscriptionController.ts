@@ -2695,6 +2695,9 @@ export class SubscriptionController {
             );
 
             if (session.transferIds && session.transfersPending) {
+                console.log(
+                    `[SubscriptionController] [fulfillCheckoutSession sessionId: ${session.id} userId: ${session.userId} transactionId: ${session.transactionId}] Posting pending transfers.`
+                );
                 const transferResult =
                     await this._financialController.completePendingTransfers({
                         transfers: session.transferIds,
