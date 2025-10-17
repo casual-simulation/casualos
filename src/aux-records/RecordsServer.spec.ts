@@ -40,6 +40,7 @@ import {
     merge,
     parseSessionKey,
     SUBSCRIPTION_ID_NAMESPACE,
+    unwrap,
 } from '@casual-simulation/aux-common';
 import type { RelyingParty } from './AuthController';
 import {
@@ -206,8 +207,12 @@ import {
 import { MemoryDatabaseInterface } from './database/MemoryDatabaseInterface';
 import type { FinancialInterface } from './financial';
 import {
+    ACCOUNT_IDS,
     FinancialController,
+    LEDGERS,
     TigerBeetleFinancialInterface,
+    TransferCodes,
+    USD_DISPLAY_FACTOR,
 } from './financial';
 import { PurchasableItemRecordsController } from './purchasable-items/PurchasableItemRecordsController';
 import type { PurchasableItemRecordsStore } from './purchasable-items/PurchasableItemRecordsStore';
@@ -1473,6 +1478,181 @@ describe('RecordsServer', () => {
                 name: 'Kal',
             })
         );
+    });
+
+    describe('GET /api/v2/balances', () => {
+        beforeEach(async () => {
+            await financialController.init();
+        });
+
+        it('should return the balances for the user', async () => {
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    userId,
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/balances?userId=${encodeURIComponent(userId)}`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    usd: {
+                        credits: '500',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'usd',
+                        accountId: account.id.toString(),
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return the balances for the studio', async () => {
+            await store.addStudio({
+                id: 'studio1',
+                displayName: 'Test Studio',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studio1',
+                isPrimaryContact: true,
+                role: 'admin',
+                userId,
+            });
+
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    studioId: 'studio1',
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/balances?studioId=${encodeURIComponent(
+                        'studio1'
+                    )}`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    usd: {
+                        credits: '500',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'usd',
+                        accountId: account.id.toString(),
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return the balances for the contract', async () => {
+            await contractRecordsStore.createItem(recordName, {
+                id: 'contract1',
+                address: 'test',
+                holdingUserId: userId,
+                initialValue: 1000,
+                rate: 10,
+                issuedAtMs: 123,
+                markers: [PUBLIC_READ_MARKER],
+                issuingUserId: userId,
+                status: 'open',
+            });
+
+            const { account } = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    ledger: LEDGERS.usd,
+                    contractId: 'contract1',
+                })
+            );
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 500,
+                            code: TransferCodes.admin_credit,
+                            creditAccountId: account.id,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            currency: 'usd',
+                        },
+                    ],
+                })
+            );
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/balances?contractId=${encodeURIComponent(
+                        'contract1'
+                    )}`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    usd: {
+                        credits: '500',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        currency: 'usd',
+                        accountId: account.id.toString(),
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    },
+                },
+                headers: accountCorsHeaders,
+            });
+        });
     });
 
     describe('GET /api/{userId}/subscription', () => {

@@ -32,6 +32,7 @@ import {
 import {
     genericResult,
     isSuperUserRole,
+    mapResult,
     parseSessionKey,
 } from '@casual-simulation/aux-common';
 import type { LivekitController } from './LivekitController';
@@ -4840,6 +4841,54 @@ export class RecordsServer {
                 .handler(async ({ comId }, context) => {
                     const result = await this._records.getPlayerConfig(comId);
                     return result;
+                }),
+
+            getBalances: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/balances')
+                .inputs(
+                    z.union([
+                        z.object({ studioId: z.string() }),
+                        z.object({ contractId: z.string() }),
+                        z.object({ userId: z.string().optional() }),
+                    ])
+                )
+                .handler(async (input, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    if (
+                        !(
+                            'userId' in input ||
+                            'studioId' in input ||
+                            'contractId' in input
+                        )
+                    ) {
+                        input = {
+                            userId: validation.userId,
+                        };
+                    }
+
+                    const result = await this._subscriptions.getBalances({
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        filter: input,
+                    });
+
+                    return genericResult(
+                        mapResult(result, (balance) => ({
+                            usd: balance.usd?.toJSON(),
+                            credits: balance.credits?.toJSON(),
+                        }))
+                    );
                 }),
 
             getSubscriptions: procedure()
