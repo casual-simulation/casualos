@@ -598,22 +598,26 @@ export class FinancialController {
             }
         }
 
-        return success(this._convertToAccountBalance(result.value.account));
+        return success(this.convertToAccountBalance(result.value.account));
     }
 
-    private _convertToAccountBalance(account: Account): AccountBalance {
-        return new AccountBalance({
+    /**
+     * Converts a TigerBeetle account to an AccountBalance.
+     * @param account The account to convert.
+     */
+    convertToAccountBalance(account: Account): AccountBalance {
+        return {
             accountId: account.id.toString(),
-            credits: account.credits_posted,
-            debits: account.debits_posted,
-            pendingCredits: account.credits_pending,
-            pendingDebits: account.debits_pending,
+            credits: account.credits_posted.toString(),
+            debits: account.debits_posted.toString(),
+            pendingCredits: account.credits_pending.toString(),
+            pendingDebits: account.debits_pending.toString(),
             currency: getAccountCurrency(account),
-            displayFactor:
-                account.ledger === LEDGERS.credits
-                    ? CREDITS_DISPLAY_FACTOR
-                    : USD_DISPLAY_FACTOR,
-        });
+            displayFactor: (account.ledger === LEDGERS.credits
+                ? CREDITS_DISPLAY_FACTOR
+                : USD_DISPLAY_FACTOR
+            ).toString(),
+        };
     }
 
     /**
@@ -1375,84 +1379,41 @@ export interface AccountBalances {
 /**
  * Represents the balance of a financial account.
  */
-export class AccountBalance {
+export interface AccountBalance {
     /**
      * The ID of the account.
      */
     accountId: string;
 
     /**
-     * The number of credits to the account.
+     * The number of credits to the account as a string.
      */
-    credits: bigint;
+    credits: string;
 
     /**
-     * The number of pending credits to the account.
+     * The number of pending credits to the account as a string.
      */
-    pendingCredits: bigint;
+    pendingCredits: string;
 
     /**
-     * The number of debits to the account.
+     * The number of debits to the account as a string.
      */
-    debits: bigint;
+    debits: string;
 
     /**
-     * The number of pending debits to the account.
+     * The number of pending debits to the account as a string.
      */
-    pendingDebits: bigint;
+    pendingDebits: string;
 
     /**
      * The factor that should be used to convert between credits and USD.
      */
-    displayFactor: bigint;
+    displayFactor: string;
 
     /**
      * The currency that the account is in.
      */
     currency: CurrencyCodesType;
-
-    constructor(data: {
-        accountId: string;
-        credits: bigint | string;
-        pendingCredits: bigint | string;
-        debits: bigint | string;
-        pendingDebits: bigint | string;
-        displayFactor: bigint | string;
-        currency: CurrencyCodesType;
-    }) {
-        this.accountId = data.accountId;
-        this.credits =
-            typeof data.credits === 'string'
-                ? BigInt(data.credits)
-                : data.credits;
-        this.pendingCredits =
-            typeof data.pendingCredits === 'string'
-                ? BigInt(data.pendingCredits)
-                : data.pendingCredits;
-        this.debits =
-            typeof data.debits === 'string' ? BigInt(data.debits) : data.debits;
-        this.pendingDebits =
-            typeof data.pendingDebits === 'string'
-                ? BigInt(data.pendingDebits)
-                : data.pendingDebits;
-        this.displayFactor =
-            typeof data.displayFactor === 'string'
-                ? BigInt(data.displayFactor)
-                : data.displayFactor;
-        this.currency = data.currency;
-    }
-
-    toJSON(): JSONAccountBalance {
-        return {
-            accountId: this.accountId,
-            credits: this.credits.toString(),
-            pendingCredits: this.pendingCredits.toString(),
-            debits: this.debits.toString(),
-            pendingDebits: this.pendingDebits.toString(),
-            displayFactor: this.displayFactor.toString(),
-            currency: this.currency,
-        };
-    }
 }
 
 /**

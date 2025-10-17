@@ -19,7 +19,6 @@
 import { failure, success, unwrap } from '@casual-simulation/aux-common';
 import type { AccountWithDetails } from './FinancialController';
 import {
-    AccountBalance,
     FinancialController,
     getAccountBalance,
     getAssetAccountBalance,
@@ -600,24 +599,24 @@ describe('FinancialController', () => {
 
             expect(balanceResult).toEqual(
                 success({
-                    credits: new AccountBalance({
+                    credits: {
                         accountId: account1.account.id.toString(),
-                        credits: 1123n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        credits: '1123',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
                         currency: 'credits',
-                    }),
-                    usd: new AccountBalance({
+                    },
+                    usd: {
                         accountId: account2.account.id.toString(),
-                        credits: 456n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: USD_DISPLAY_FACTOR,
+                        credits: '456',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
                         currency: 'usd',
-                    }),
+                    },
                 })
             );
         });
@@ -664,24 +663,24 @@ describe('FinancialController', () => {
 
             expect(balanceResult).toEqual(
                 success({
-                    usd: new AccountBalance({
+                    usd: {
                         accountId: studioUsdAccount.account.id.toString(),
-                        credits: 5000n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: USD_DISPLAY_FACTOR,
+                        credits: '5000',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
                         currency: 'usd',
-                    }),
-                    credits: new AccountBalance({
+                    },
+                    credits: {
                         accountId: studioCreditsAccount.account.id.toString(),
-                        credits: 2000n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        credits: '2000',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
                         currency: 'credits',
-                    }),
+                    },
                 })
             );
         });
@@ -728,24 +727,24 @@ describe('FinancialController', () => {
 
             expect(balanceResult).toEqual(
                 success({
-                    usd: new AccountBalance({
+                    usd: {
                         accountId: contractUsdAccount.account.id.toString(),
-                        credits: 1500n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: USD_DISPLAY_FACTOR,
+                        credits: '1500',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
                         currency: 'usd',
-                    }),
-                    credits: new AccountBalance({
+                    },
+                    credits: {
                         accountId: contractCreditsAccount.account.id.toString(),
-                        credits: 750n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        credits: '750',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
                         currency: 'credits',
-                    }),
+                    },
                 })
             );
         });
@@ -797,15 +796,15 @@ describe('FinancialController', () => {
 
             expect(balanceResult).toEqual(
                 success({
-                    usd: new AccountBalance({
+                    usd: {
                         accountId: studioUsdAccount.account.id.toString(),
-                        credits: 3000n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: USD_DISPLAY_FACTOR,
+                        credits: '3000',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: USD_DISPLAY_FACTOR.toString(),
                         currency: 'usd',
-                    }),
+                    },
                 })
             );
         });
@@ -839,15 +838,15 @@ describe('FinancialController', () => {
 
             expect(balanceResult).toEqual(
                 success({
-                    credits: new AccountBalance({
+                    credits: {
                         accountId: contractCreditsAccount.account.id.toString(),
-                        credits: 1000n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
+                        credits: '1000',
+                        debits: '0',
+                        pendingCredits: '0',
+                        pendingDebits: '0',
+                        displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
                         currency: 'credits',
-                    }),
+                    },
                 })
             );
         });
@@ -901,17 +900,15 @@ describe('FinancialController', () => {
             });
 
             expect(balanceResult).toEqual(
-                success(
-                    new AccountBalance({
-                        accountId: account1.account.id.toString(),
-                        credits: 1123n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
-                        currency: 'credits',
-                    })
-                )
+                success({
+                    accountId: account1.account.id.toString(),
+                    credits: '1123',
+                    debits: '0',
+                    pendingCredits: '0',
+                    pendingDebits: '0',
+                    displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
+                    currency: 'credits',
+                })
             );
         });
 
@@ -944,17 +941,15 @@ describe('FinancialController', () => {
             });
 
             expect(balanceResult).toEqual(
-                success(
-                    new AccountBalance({
-                        accountId: studioUsdAccount.account.id.toString(),
-                        credits: 2500n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: USD_DISPLAY_FACTOR,
-                        currency: 'usd',
-                    })
-                )
+                success({
+                    accountId: studioUsdAccount.account.id.toString(),
+                    credits: '2500',
+                    debits: '0',
+                    pendingCredits: '0',
+                    pendingDebits: '0',
+                    displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    currency: 'usd',
+                })
             );
         });
 
@@ -994,17 +989,15 @@ describe('FinancialController', () => {
             });
 
             expect(balanceResult).toEqual(
-                success(
-                    new AccountBalance({
-                        accountId: studioCreditsAccount.account.id.toString(),
-                        credits: 5500n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
-                        currency: 'credits',
-                    })
-                )
+                success({
+                    accountId: studioCreditsAccount.account.id.toString(),
+                    credits: '5500',
+                    debits: '0',
+                    pendingCredits: '0',
+                    pendingDebits: '0',
+                    displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
+                    currency: 'credits',
+                })
             );
         });
 
@@ -1037,17 +1030,15 @@ describe('FinancialController', () => {
             });
 
             expect(balanceResult).toEqual(
-                success(
-                    new AccountBalance({
-                        accountId: contractUsdAccount.account.id.toString(),
-                        credits: 1000n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: USD_DISPLAY_FACTOR,
-                        currency: 'usd',
-                    })
-                )
+                success({
+                    accountId: contractUsdAccount.account.id.toString(),
+                    credits: '1000',
+                    debits: '0',
+                    pendingCredits: '0',
+                    pendingDebits: '0',
+                    displayFactor: USD_DISPLAY_FACTOR.toString(),
+                    currency: 'usd',
+                })
             );
         });
 
@@ -1087,17 +1078,15 @@ describe('FinancialController', () => {
             });
 
             expect(balanceResult).toEqual(
-                success(
-                    new AccountBalance({
-                        accountId: contractCreditsAccount.account.id.toString(),
-                        credits: 3200n,
-                        debits: 0n,
-                        pendingCredits: 0n,
-                        pendingDebits: 0n,
-                        displayFactor: CREDITS_DISPLAY_FACTOR,
-                        currency: 'credits',
-                    })
-                )
+                success({
+                    accountId: contractCreditsAccount.account.id.toString(),
+                    credits: '3200',
+                    debits: '0',
+                    pendingCredits: '0',
+                    pendingDebits: '0',
+                    displayFactor: CREDITS_DISPLAY_FACTOR.toString(),
+                    currency: 'credits',
+                })
             );
         });
 
