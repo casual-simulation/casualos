@@ -136,6 +136,13 @@ export default class AuthRecordsContracts extends Vue {
 
     onItemClick(item: ContractRecord) {
         this.selectedItem = item;
+
+        if (!item) {
+            this.permissionsMarker = null;
+            this.permissionsResourceKind = null;
+            this.permissionsResourceId = null;
+            return;
+        }
         this.permissionsResourceKind = 'contract';
         this.permissionsResourceId = item.address;
     }

@@ -29,12 +29,14 @@ import type {
 import RelativeTime from '../RelativeTime/RelativeTime';
 import type { AccountBalances } from '@casual-simulation/aux-records';
 import { AccountBalance } from '@casual-simulation/aux-common';
+import AccountBalancesVue from '../AccountBalances/AccountBalances.vue';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
 @Component({
     components: {
         'relative-time': RelativeTime,
+        'account-balances': AccountBalancesVue,
     },
 })
 export default class AuthSubscription extends Vue {

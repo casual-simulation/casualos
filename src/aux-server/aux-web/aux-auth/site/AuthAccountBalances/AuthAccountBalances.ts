@@ -20,11 +20,17 @@ import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import type { AccountBalance } from '@casual-simulation/aux-common';
+import type {
+    AccountBalance,
+    JSONAccountBalance,
+} from '@casual-simulation/aux-common';
+import type { RecordsClientSuccessfulOutputs } from '@casual-simulation/aux-records/RecordsClient';
+import AccountBalancesVue from '../AccountBalances/AccountBalances.vue';
 
 @Component({
     components: {
         'svg-icon': SvgIcon,
+        'account-balances': AccountBalancesVue,
     },
 })
 export default class AuthAccountBalances extends Vue {
@@ -39,18 +45,10 @@ export default class AuthAccountBalances extends Vue {
 
     loading: boolean = false;
     error: string | null = null;
-    balances: Record<string, AccountBalance> = {};
+    balances: RecordsClientSuccessfulOutputs['getBalances'] = null;
 
-    get filteredBalances(): Array<{
-        currency: string;
-        balance: AccountBalance;
-    }> {
-        return Object.entries(this.balances)
-            .filter(([currency]) => currency !== 'success')
-            .map(([currency, balance]) => ({
-                currency,
-                balance,
-            }));
+    get hasBalance() {
+        return this.balances?.usd || this.balances?.credits;
     }
 
     @Watch('userId')
@@ -69,13 +67,21 @@ export default class AuthAccountBalances extends Vue {
         if (!this.userId && !this.contractId && !this.studioId) {
             this.error =
                 'At least one of userId, contractId, or studioId must be provided';
-            this.balances = {};
+            this.balances = {
+                success: true,
+                usd: null as JSONAccountBalance,
+                credits: null as JSONAccountBalance,
+            };
             return;
         }
 
         this.loading = true;
         this.error = null;
-        this.balances = {};
+        this.balances = {
+            success: true,
+            usd: null as JSONAccountBalance,
+            credits: null as JSONAccountBalance,
+        };
 
         try {
             const params: any = {};

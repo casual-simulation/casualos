@@ -12,37 +12,9 @@
             </md-card>
         </div>
 
-        <div
-            v-if="!loading && !error && Object.keys(balances).length > 0"
-            class="balances-container"
-        >
-            <md-card>
-                <md-card-header data-background-color="green">
-                    <h4 class="title">Account Balances</h4>
-                </md-card-header>
+        <account-balances v-if="hasBalance" :balances="balances"></account-balances>
 
-                <md-card-content>
-                    <table class="balances-table">
-                        <thead>
-                            <tr>
-                                <th>Currency</th>
-                                <th>Balance</th>
-                                <th>Account ID</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="item in filteredBalances" :key="item.currency">
-                                <td>{{ item.currency }}</td>
-                                <td class="balance">{{ calculateNetBalance(item.balance) }}</td>
-                                <td class="account-id">{{ item.balance.accountId }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </md-card-content>
-            </md-card>
-        </div>
-
-        <div v-if="!loading && !error && Object.keys(balances).length === 0" class="empty-state">
+        <div v-if="!loading && !error && !hasBalance" class="empty-state">
             <md-card>
                 <md-card-content>
                     <p>No account balances found.</p>

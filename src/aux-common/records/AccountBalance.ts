@@ -136,5 +136,5 @@ export interface JSONAccountBalance {
     /**
      * The currency that the account is in.
      */
-    currency: CurrencyCodesType;
+    currency: string;
 }
