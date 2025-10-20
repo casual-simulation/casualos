@@ -5512,34 +5512,21 @@ Object {
         "path": "/api/v2/balances",
       },
       "inputs": Object {
-        "options": Array [
-          Object {
-            "schema": Object {
-              "studioId": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+        "schema": Object {
+          "contractId": Object {
+            "optional": true,
+            "type": "string",
           },
-          Object {
-            "schema": Object {
-              "contractId": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
           },
-          Object {
-            "schema": Object {
-              "userId": Object {
-                "optional": true,
-                "type": "string",
-              },
-            },
-            "type": "object",
+          "userId": Object {
+            "optional": true,
+            "type": "string",
           },
-        ],
-        "type": "union",
+        },
+        "type": "object",
       },
       "name": "getBalances",
       "origins": "account",
@@ -11844,34 +11831,21 @@ Object {
         "path": "/api/v2/balances",
       },
       "inputs": Object {
-        "options": Array [
-          Object {
-            "schema": Object {
-              "studioId": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+        "schema": Object {
+          "contractId": Object {
+            "optional": true,
+            "type": "string",
           },
-          Object {
-            "schema": Object {
-              "contractId": Object {
-                "type": "string",
-              },
-            },
-            "type": "object",
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
           },
-          Object {
-            "schema": Object {
-              "userId": Object {
-                "optional": true,
-                "type": "string",
-              },
-            },
-            "type": "object",
+          "userId": Object {
+            "optional": true,
+            "type": "string",
           },
-        ],
-        "type": "union",
+        },
+        "type": "object",
       },
       "name": "getBalances",
       "origins": "account",

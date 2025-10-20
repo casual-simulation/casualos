@@ -74,6 +74,61 @@
                     </md-card>
                 </div>
 
+                <div v-if="showXpFeatures">
+                    <h2 class="md-title">XP</h2>
+                    <div v-if="!stripeAccountStatus">
+                        <p>Your XP account is not setup.</p>
+                    </div>
+                    <div v-else-if="stripeAccountStatus === 'active'">
+                        <div v-if="stripeRequirementsStatus === 'complete'">
+                            <p>Your XP account is active.</p>
+                        </div>
+                        <div v-else>
+                            <p>
+                                Your XP account has been created, but we need some additional
+                                information before it can be fully activated.
+                            </p>
+                        </div>
+                    </div>
+                    <div v-else-if="stripeAccountStatus === 'pending'">
+                        <div v-if="stripeRequirementsStatus === 'complete'">
+                            <p>Your XP account is awaiting approval.</p>
+                        </div>
+                        <div v-else>
+                            <p>
+                                Your XP account has been created, but we need some additional
+                                information before it can be fully approved.
+                            </p>
+                        </div>
+                    </div>
+                    <div v-else-if="stripeAccountStatus === 'rejected'">
+                        <p>Your XP account has been rejected.</p>
+                    </div>
+                    <div v-else-if="stripeAccountStatus === 'disabled'">
+                        <p>Your XP account is disabled.</p>
+
+                        <div v-if="stripeRequirementsStatus === 'complete'"></div>
+                        <div v-else>
+                            <p>
+                                Your XP account has been created, but we need some additional
+                                information before it can be fully activated.
+                            </p>
+                            <p>Click "Manage" below to provide the required information.</p>
+                        </div>
+                    </div>
+                    <md-button class="md-primary" @click="manageXpAccount()">
+                        <md-progress-spinner
+                            md-mode="indeterminate"
+                            :md-diameter="20"
+                            :md-stroke="2"
+                            v-if="isManagingStore"
+                        >
+                        </md-progress-spinner>
+                        <span v-else-if="!stripeAccountStatus">Setup</span>
+                        <span v-else>Manage</span>
+                    </md-button>
+                </div>
+
                 <subscription />
                 <security />
 

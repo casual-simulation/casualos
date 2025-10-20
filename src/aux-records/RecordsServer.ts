@@ -623,6 +623,10 @@ export class RecordsServer {
                         displayName: result.displayName,
                         role: result.role,
                         contractFeatures: result.contractFeatures,
+                        stripeAccountId: result.stripeAccountId,
+                        stripeAccountStatus: result.stripeAccountStatus,
+                        stripeAccountRequirementsStatus:
+                            result.stripeAccountRequirementsStatus,
                     } as const;
                 }),
 
@@ -9488,6 +9492,10 @@ export class RecordsServer {
             displayName: result.displayName,
             role: result.role,
             contractFeatures: result.contractFeatures,
+            stripeAccountId: result.stripeAccountId,
+            stripeAccountStatus: result.stripeAccountStatus,
+            stripeAccountRequirementsStatus:
+                result.stripeAccountRequirementsStatus,
         });
     }
 
