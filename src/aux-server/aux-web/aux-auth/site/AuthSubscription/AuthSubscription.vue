@@ -182,10 +182,6 @@
                 </md-card>
             </div>
 
-            <div v-if="accountBalances">
-                <account-balances :balances="accountBalances"></account-balances>
-            </div>
-
             <!-- <md-card v-else class="subscription-card">
                 <md-card-header>
                     <h3 class="md-title">Beta Program</h3>

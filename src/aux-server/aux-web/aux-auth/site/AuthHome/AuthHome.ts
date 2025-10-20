@@ -34,14 +34,14 @@ import type {
     StripeAccountRequirements,
     StripeAccountStatus,
 } from '@casual-simulation/aux-records';
-import AccountBalancesVue from '../AccountBalances/AccountBalances.vue';
+import AuthAccountBalances from '../AuthAccountBalances/AuthAccountBalances';
 
 @Component({
     components: {
         security: Security,
         subscription: AuthSubscription,
         'privacy-item': PrivacyItem,
-        'account-balances': AccountBalancesVue,
+        'account-balances': AuthAccountBalances,
     },
 })
 export default class AuthHome extends Vue {
@@ -67,6 +67,7 @@ export default class AuthHome extends Vue {
     stripeAccountStatus: StripeAccountStatus = null;
     stripeRequirementsStatus: StripeAccountRequirements = null;
     isManagingXpAccount: boolean = false;
+    userId: string = null;
 
     private _sub: Subscription;
 
@@ -89,6 +90,7 @@ export default class AuthHome extends Vue {
         this.stripeRequirementsStatus = null;
         this.contractFeatures = null;
         this.isManagingXpAccount = false;
+        this.userId = authManager.userId;
 
         this._updateMetadata = this._updateMetadata.bind(this);
         this._updateMetadata = debounce(this._updateMetadata, 500);
@@ -96,6 +98,7 @@ export default class AuthHome extends Vue {
 
     mounted() {
         this._sub = authManager.loginState.subscribe((state) => {
+            this.userId = authManager.userId;
             this.originalEmail = authManager.email;
             this.originalName = authManager.name;
             this.originalAvatarUrl = authManager.avatarUrl;
