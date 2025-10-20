@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`serverConfigSchema should be able to parse a BrandPlayer-style config 1`] = `
 Object {

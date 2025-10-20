@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`.rejects fails for promise that resolves 1`] = `
 <d>expect(</><r>received</><d>).</>rejects<d>.</>toBe<d>()</>
@@ -310,6 +310,19 @@ string" 1`] = `
 <d>  string</>
 `;
 
+exports[`.toBe() fails for: "four\\n4\\nline\\nstring" and "3\\nline\\nstring" 1`] = `
+<d>expect(</><r>received</><d>).</>toBe<d>(</><g>expected</><d>) // Object.is equality</>
+
+<g>- Expected  - 1</>
+<r>+ Received  + 2</>
+
+<g>- 3</>
+<r>+ four</>
+<r>+ 4</>
+<d>  line</>
+<d>  string</>
+`;
+
 exports[`.toBe() fails for: "painless JavaScript testing" and "delightful JavaScript testing" 1`] = `
 <d>expect(</><r>received</><d>).</>toBe<d>(</><g>expected</><d>) // Object.is equality</>
 
@@ -319,6 +332,17 @@ Received: <r>"<i>painless</i> JavaScript testing"</>
 
 exports[`.toBe() fails for: "with 
 trailing space" and "without trailing space" 1`] = `
+<d>expect(</><r>received</><d>).</>toBe<d>(</><g>expected</><d>) // Object.is equality</>
+
+<g>- Expected  - 1</>
+<r>+ Received  + 2</>
+
+<g>- with<i>out</i> trailing space</>
+<r>+ with<Y> </></>
+<r>+ trailing space</>
+`;
+
+exports[`.toBe() fails for: "with \\ntrailing space" and "without trailing space" 1`] = `
 <d>expect(</><r>received</><d>).</>toBe<d>(</><g>expected</><d>) // Object.is equality</>
 
 <g>- Expected  - 1</>
@@ -2064,6 +2088,18 @@ exports[`.toEqual() {pass: false} expect("type TypeName<T> = T extends Function 
 <r>+ type TypeName<T> = T extends Function<i> </i>? "function"<i> </i>: "object";</>
 `;
 
+exports[`.toEqual() {pass: false} expect("type TypeName<T> = T extends Function ? \\"function\\" : \\"object\\";").toEqual("type TypeName<T> = T extends Function\\n? \\"function\\"\\n: \\"object\\";") 1`] = `
+<d>expect(</><r>received</><d>).</>toEqual<d>(</><g>expected</><d>) // deep equality</>
+
+<g>- Expected  - 3</>
+<r>+ Received  + 1</>
+
+<g>- type TypeName<T> = T extends Function</>
+<g>- ? "function"</>
+<g>- : "object";</>
+<r>+ type TypeName<T> = T extends Function<i> </i>? "function"<i> </i>: "object";</>
+`;
+
 exports[`.toEqual() {pass: false} expect(/abc/gsy).toEqual(/abc/g) 1`] = `
 <d>expect(</><r>received</><d>).</>toEqual<d>(</><g>expected</><d>) // deep equality</>
 
@@ -3428,6 +3464,22 @@ Violets are blue.
 Testing with Jest is good for you."], "props": null, "type": "pre"}).toHaveProperty('children,0', "Roses are red, violets are blue.
 Testing with Jest
 Is good for you.") 1`] = `
+<d>expect(</><r>received</><d>).</>toHaveProperty<d>(</><g>path</><d>, </><g>value</><d>)</>
+
+Expected path: <g>["children", 0]</>
+
+<g>- Expected value  - 3</>
+<r>+ Received value  + 3</>
+
+<g>- Roses are red<i>, v</i>iolets are blue.</>
+<r>+ Roses are red<i>.</i></>
+<r>+ <i>V</i>iolets are blue.</>
+<g>- Testing with Jest</>
+<g>- <i>I</i>s good for you.</>
+<r>+ Testing with Jest<i> i</i>s good for you.</>
+`;
+
+exports[`.toHaveProperty() {pass: false} expect({"children": ["Roses are red.\\nViolets are blue.\\nTesting with Jest is good for you."], "props": null, "type": "pre"}).toHaveProperty('children,0', "Roses are red, violets are blue.\\nTesting with Jest\\nIs good for you.") 1`] = `
 <d>expect(</><r>received</><d>).</>toHaveProperty<d>(</><g>path</><d>, </><g>value</><d>)</>
 
 Expected path: <g>["children", 0]</>
