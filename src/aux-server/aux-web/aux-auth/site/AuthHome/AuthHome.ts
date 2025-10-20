@@ -217,7 +217,9 @@ export default class AuthHome extends Vue {
     async manageXpAccount() {
         this.isManagingXpAccount = true;
         try {
-            const result = await authManager.client.getManageXpAccountLink({});
+            const result = this.stripeAccountStatus
+                ? await authManager.client.getStripeLoginLink({})
+                : await authManager.client.getManageXpAccountLink({});
 
             if (result.success === true) {
                 location.href = result.url;

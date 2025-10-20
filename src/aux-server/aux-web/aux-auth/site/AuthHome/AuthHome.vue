@@ -126,7 +126,7 @@
                         >
                         </md-progress-spinner>
                         <span v-else-if="!stripeAccountStatus">Setup</span>
-                        <span v-else>Manage</span>
+                        <span v-else>Dashboard</span>
                     </md-button>
                 </div>
 

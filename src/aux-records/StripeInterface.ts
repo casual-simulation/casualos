@@ -103,11 +103,27 @@ export interface StripeInterface {
 
     /**
      * Creates a new account link for the given account ID.
-     * @param accountId
+     * @param accountId The account ID.
      */
     createAccountLink(
         request: StripeCreateAccountLinkRequest
     ): Promise<StripeAccountLink>;
+
+    /**
+     * Creates a new login link for the given account ID.
+     * @param accountId The account ID.
+     */
+    createLoginLink(
+        request: StripeCreateLoginLinkRequest
+    ): Promise<StripeAccountLink>;
+
+    /**
+     * Creates a new account session for the given account ID.
+     * @param accountId The account ID.
+     */
+    createAccountSession(
+        request: CreateStripeAccountSessionRequest
+    ): Promise<StripeAccountSession>;
 
     /**
      * Creates a new stripe account.
@@ -635,6 +651,13 @@ export interface StripeCreateAccountLinkRequest {
     return_url: string;
 }
 
+export interface StripeCreateLoginLinkRequest {
+    /**
+     * The ID of the account.
+     */
+    account: string;
+}
+
 export interface StripeCreateAccountRequest {
     /**
      * The type of stripe account to create.
@@ -781,6 +804,63 @@ export interface StripeAccountLink {
      * The URL that the user can visit to open their account.
      */
     url: string;
+}
+
+export interface CreateStripeAccountSessionRequest {
+    account: string;
+    components: StripeAccountComponents;
+}
+
+export interface StripeAccountComponents {
+    account_onboarding?: StripeAccountComponent;
+    balances?: StripeAccountComponent;
+    disputes_list?: StripeAccountComponent;
+    documents?: StripeAccountComponent;
+    financial_account?: StripeAccountComponent;
+    financial_account_transactions?: StripeAccountComponent;
+    instant_payouts_promotion?: StripeAccountComponent;
+    issuing_card?: StripeAccountComponent;
+    issuing_cards_list?: StripeAccountComponent;
+    notification_banner?: StripeAccountComponent;
+    payments?: StripeAccountComponent;
+    payment_disputes?: StripeAccountComponent;
+    payment_details?: StripeAccountComponent;
+    payout_details?: StripeAccountComponent;
+    payouts?: StripePayoutsComponent;
+    payouts_list?: StripeAccountComponent;
+    tax_registrations?: StripeAccountComponent;
+    tax_settings?: StripeAccountComponent;
+}
+
+export interface StripePayoutsComponent extends StripeAccountComponent {
+    features: {
+        disable_stripe_user_authentication?: boolean;
+        edit_payout_schedule?: boolean;
+        external_account_collection?: boolean;
+        instant_payouts?: boolean;
+        standard_payouts?: boolean;
+    };
+}
+
+export interface StripeAccountComponent {
+    enabled: boolean;
+}
+
+export interface StripeAccountSession {
+    /**
+     * The ID of the account.
+     */
+    account: string;
+
+    /**
+     * The client secret that can be used to access the session.
+     */
+    client_secret: string;
+
+    /**
+     * The Unix time in seconds when the session expires.
+     */
+    expires_at: number;
 }
 
 export const STRIPE_INVOICE_SCHEMA = z.object({

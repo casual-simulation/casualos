@@ -1369,6 +1369,203 @@ export class SubscriptionController {
         });
     }
 
+    /**
+     * Creates a link that the user can be redirected to in order to login to their stripe account.
+     * @param request The request to create the manage xp account link.
+     */
+    @traced(TRACE_NAME)
+    async createStripeLoginLink(
+        request: CreateStripeLoginLinkRequest
+    ): Promise<ManageAccountLinkResult> {
+        if (!this._stripe || !this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            });
+        }
+
+        let user = await this._authStore.findUser(request.userId);
+
+        if (!user) {
+            console.log(
+                '[SubscriptionController] [createStripeLoginLink] User not found.'
+            );
+            return failure({
+                errorCode: 'user_not_found',
+                errorMessage: 'The user was not found.',
+            });
+        }
+
+        let accountId: string;
+        if (request.studioId) {
+            let studio = await this._recordsStore.getStudioById(
+                request.studioId
+            );
+
+            if (!studio) {
+                return failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                });
+            }
+
+            const assignments = await this._recordsStore.listStudioAssignments(
+                studio.id,
+                {
+                    userId: request.userId,
+                    role: ADMIN_ROLE_NAME,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getPurchasableItemsFeatures(
+                config,
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                'studio',
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs
+            );
+
+            if (!features.allowed) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+
+            accountId = studio.stripeAccountId;
+        } else {
+            accountId = user.stripeAccountId;
+        }
+
+        if (!accountId) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'No Stripe account found for the user.',
+            });
+        }
+
+        const session = await this._stripe.createLoginLink({
+            account: user.stripeAccountId,
+        });
+
+        return success({
+            url: session.url,
+        });
+    }
+
+    /**
+     * Creates a session that can be used to display stripe embedded components for the user.
+     * @param request The request to create the account session.
+     */
+    @traced(TRACE_NAME)
+    async createStripeAccountSession(
+        request: CreateStripeLoginLinkRequest
+    ): Promise<CreateStripeAccountSessionResult> {
+        if (!this._stripe || !this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            });
+        }
+
+        let user = await this._authStore.findUser(request.userId);
+
+        if (!user) {
+            console.log(
+                '[SubscriptionController] [createStripeAccountSession] User not found.'
+            );
+            return failure({
+                errorCode: 'user_not_found',
+                errorMessage: 'The user was not found.',
+            });
+        }
+
+        let accountId: string;
+        if (request.studioId) {
+            let studio = await this._recordsStore.getStudioById(
+                request.studioId
+            );
+
+            if (!studio) {
+                return failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                });
+            }
+
+            const assignments = await this._recordsStore.listStudioAssignments(
+                studio.id,
+                {
+                    userId: request.userId,
+                    role: ADMIN_ROLE_NAME,
+                }
+            );
+
+            if (assignments.length <= 0) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getPurchasableItemsFeatures(
+                config,
+                studio.subscriptionStatus,
+                studio.subscriptionId,
+                'studio',
+                studio.subscriptionPeriodStartMs,
+                studio.subscriptionPeriodEndMs
+            );
+
+            if (!features.allowed) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            }
+
+            accountId = studio.stripeAccountId;
+        } else {
+            accountId = user.stripeAccountId;
+        }
+
+        if (!accountId) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'No Stripe account found for the user.',
+            });
+        }
+
+        const session = await this._stripe.createAccountSession({
+            account: user.stripeAccountId,
+            components: {
+                payouts: {
+                    enabled: true,
+                    features: {},
+                },
+            },
+        });
+
+        return success({
+            clientSecret: session.client_secret,
+            expiresAt: session.expires_at,
+        });
+    }
+
     @traced(TRACE_NAME)
     private async _createCheckoutSession(
         request: CreateManageSubscriptionRequest,
@@ -4363,12 +4560,40 @@ export interface CreateManageXpAccountLinkRequest {
     userId: string;
 }
 
+export interface CreateStripeLoginLinkRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the studio that the link should be created for.
+     * If not provided, the link will be created for the user's personal account.
+     */
+    studioId?: string;
+}
+
 export type ManageAccountLinkResult = Result<
     {
         /**
          * The URL that the user can visit to manage their account.
          */
         url: string;
+    },
+    SimpleError
+>;
+
+export type CreateStripeAccountSessionResult = Result<
+    {
+        /**
+         * The secret token that can be used to access the Stripe account session.
+         */
+        clientSecret: string;
+
+        /**
+         * The unix time in seconds that the session expires at.
+         */
+        expiresAt: number;
     },
     SimpleError
 >;

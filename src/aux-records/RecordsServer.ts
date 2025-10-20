@@ -5172,6 +5172,42 @@ export class RecordsServer {
                     return genericResult(result);
                 }),
 
+            getStripeLoginLink: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/stripe/login')
+                .inputs(
+                    z.object({
+                        studioId: z.string().min(1).optional(),
+                    })
+                )
+                .handler(async ({ studioId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const sessionKey = context.sessionKey;
+
+                    if (!sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._subscriptions.createStripeLoginLink({
+                            userId: validation.userId,
+                            studioId: studioId,
+                        });
+
+                    return genericResult(result);
+                }),
+
             recordContract: recordItemProcedure(
                 this._auth,
                 this._contractRecordsController,
