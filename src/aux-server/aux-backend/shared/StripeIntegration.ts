@@ -16,14 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type {
+    CreateStripeAccountSessionRequest,
     StripeAccount,
     StripeAccountLink,
+    StripeAccountSession,
     StripeCheckoutRequest,
     StripeCheckoutResponse,
     StripeCreateAccountLinkRequest,
     StripeCreateAccountRequest,
     StripeCreateCustomerRequest,
     StripeCreateCustomerResponse,
+    StripeCreateLoginLinkRequest,
     StripeEvent,
     StripeInterface,
     StripeListActiveSubscriptionsResponse,
@@ -69,8 +72,10 @@ export class StripeIntegration implements StripeInterface {
         this._publishableKey = publishableKey;
         this._testClock = testClock;
     }
+
     test?: StripeInterface;
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async getCheckoutSessionById(id: string): Promise<StripeCheckoutResponse> {
         const session = await this._stripe.checkout.sessions.retrieve(id, {
             expand: ['invoice'],
@@ -79,6 +84,7 @@ export class StripeIntegration implements StripeInterface {
         return this._convertCheckoutSession(session);
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createAccountLink(
         request: StripeCreateAccountLinkRequest
     ): Promise<StripeAccountLink> {
@@ -94,6 +100,36 @@ export class StripeIntegration implements StripeInterface {
         };
     }
 
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async createLoginLink(
+        request: StripeCreateLoginLinkRequest
+    ): Promise<StripeAccountLink> {
+        const link = await this._stripe.accounts.createLoginLink(
+            request.account
+        );
+
+        return {
+            url: link.url,
+        };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
+    async createAccountSession(
+        request: CreateStripeAccountSessionRequest
+    ): Promise<StripeAccountSession> {
+        const session = await this._stripe.accountSessions.create({
+            account: request.account,
+            components: request.components,
+        });
+
+        return {
+            account: session.account,
+            client_secret: session.client_secret,
+            expires_at: session.expires_at,
+        };
+    }
+
+    @traced(TRACE_NAME, SPAN_OPTIONS)
     async createAccount(
         request: StripeCreateAccountRequest
     ): Promise<StripeAccount> {
@@ -200,8 +236,8 @@ export class StripeIntegration implements StripeInterface {
                 id: s.id,
                 status: s.status,
                 start_date: s.start_date,
-                current_period_start: s.current_period_start,
-                current_period_end: s.current_period_end,
+                current_period_start: s.items.data[0].current_period_start,
+                current_period_end: s.items.data[0].current_period_end,
                 cancel_at: s.cancel_at,
                 canceled_at: s.canceled_at,
                 ended_at: s.ended_at,
@@ -239,7 +275,18 @@ export class StripeIntegration implements StripeInterface {
     async getSubscriptionById(
         id: string
     ): Promise<Omit<StripeSubscription, 'items'>> {
-        return await this._stripe.subscriptions.retrieve(id);
+        const s = await this._stripe.subscriptions.retrieve(id);
+
+        return {
+            id: s.id,
+            status: s.status,
+            start_date: s.start_date,
+            current_period_start: s.items.data[0].current_period_start,
+            current_period_end: s.items.data[0].current_period_end,
+            cancel_at: s.cancel_at,
+            canceled_at: s.canceled_at,
+            ended_at: s.ended_at,
+        };
     }
 
     private _convertToAccount(
@@ -276,23 +323,23 @@ export class StripeIntegration implements StripeInterface {
                           hosted_invoice_url:
                               session.invoice.hosted_invoice_url,
                           invoice_pdf: session.invoice.invoice_pdf,
-                          paid: session.invoice.paid,
+                          paid: session.invoice.status === 'paid',
                           subscription:
-                              typeof session.invoice.subscription === 'string'
-                                  ? session.invoice.subscription
-                                  : session.invoice.subscription.id,
+                              typeof session.invoice.parent.subscription_details
+                                  .subscription === 'string'
+                                  ? session.invoice.parent.subscription_details
+                                        .subscription
+                                  : session.invoice.parent.subscription_details
+                                        .subscription.id,
                           subtotal: session.invoice.subtotal,
                           total: session.invoice.total,
-                          tax: session.invoice.tax,
+                          tax: session.invoice.total_taxes[0].amount,
                           lines: {
                               data: session.invoice.lines.data.map((l) => ({
                                   id: l.id,
                                   price: {
-                                      id: l.price.id,
-                                      product:
-                                          typeof l.price.product === 'string'
-                                              ? l.price.product
-                                              : l.price.product.id,
+                                      id: l.pricing.price_details.price,
+                                      product: l.pricing.price_details.product,
                                   },
                               })),
                           },
