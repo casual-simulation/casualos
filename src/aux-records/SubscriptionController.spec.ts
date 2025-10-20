@@ -6315,7 +6315,7 @@ describe('SubscriptionController', () => {
                 account: 'accountId',
                 refresh_url: 'https://return-url/',
                 return_url: 'https://return-url/',
-                type: 'account_update',
+                type: 'account_onboarding',
             });
         });
 
@@ -6605,7 +6605,7 @@ describe('SubscriptionController', () => {
                 account: 'accountId',
                 refresh_url: 'https://return-url/',
                 return_url: 'https://return-url/',
-                type: 'account_update',
+                type: 'account_onboarding',
             });
 
             const user = await store.findUser(userId);

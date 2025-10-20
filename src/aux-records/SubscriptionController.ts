@@ -1314,12 +1314,10 @@ export class SubscriptionController {
             });
         }
 
-        let type: StripeCreateAccountLinkRequest['type'] = 'account_update';
         if (!user.stripeAccountId) {
             console.log(
                 '[SubscriptionController] [createManageXpAccountLink] User does not have a stripe account. Creating one.'
             );
-            type = 'account_onboarding';
             const account = await this._stripe.createAccount({
                 controller: {
                     fees: {
@@ -1357,15 +1355,13 @@ export class SubscriptionController {
             await this._authStore.saveUser(user);
         }
 
-        if (user.stripeAccountRequirementsStatus === 'incomplete') {
-            type = 'account_onboarding';
-        }
-
         const session = await this._stripe.createAccountLink({
             account: user.stripeAccountId,
             refresh_url: config.returnUrl,
             return_url: config.returnUrl,
-            type,
+
+            // We have to always use onboarding because Stripe is responsible for collecting requirements
+            type: 'account_onboarding',
         });
 
         return success({
