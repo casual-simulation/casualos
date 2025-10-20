@@ -45,7 +45,9 @@ import type { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import { randomCode } from './CryptoUtils';
+import type { ContractFeaturesConfiguration } from './SubscriptionConfiguration';
 import {
+    getContractFeatures,
     getSubscription,
     type SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
@@ -2591,6 +2593,17 @@ export class AuthController {
         //     }
         // }
 
+        const subscriptionConfig: SubscriptionConfiguration =
+            await this._config.getSubscriptionConfiguration();
+        const contractFeatures = getContractFeatures(
+            subscriptionConfig,
+            user.subscriptionStatus,
+            user.subscriptionId,
+            'user',
+            user.subscriptionPeriodStartMs,
+            user.subscriptionPeriodEndMs
+        );
+
         return {
             success: true,
             userId: user.id,
@@ -2612,6 +2625,9 @@ export class AuthController {
             stripeAccountRequirementsStatus:
                 user.stripeAccountRequirementsStatus,
             stripeAccountStatus: user.stripeAccountStatus,
+            contractFeatures: contractFeatures.allowed
+                ? contractFeatures
+                : undefined,
         };
     }
 
@@ -4102,6 +4118,11 @@ export interface UserInfo {
      * The role that the user has in the system.
      */
     role: UserRole;
+
+    /**
+     * The contracting features that the user has access to.
+     */
+    contractFeatures?: ContractFeaturesConfiguration;
 
     // /**
     //  * The ID of the associated financial account.

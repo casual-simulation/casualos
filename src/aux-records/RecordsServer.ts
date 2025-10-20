@@ -622,6 +622,7 @@ export class RecordsServer {
                         privacyFeatures: result.privacyFeatures,
                         displayName: result.displayName,
                         role: result.role,
+                        contractFeatures: result.contractFeatures,
                     } as const;
                 }),
 
@@ -9486,6 +9487,7 @@ export class RecordsServer {
             privacyFeatures: result.privacyFeatures,
             displayName: result.displayName,
             role: result.role,
+            contractFeatures: result.contractFeatures,
         });
     }
 

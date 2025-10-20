@@ -71,6 +71,7 @@ import type {
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import type { UserLoginMetadata } from './AuthStore';
+import { createTestSubConfiguration } from './TestUtils';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -7964,6 +7965,67 @@ describe('AuthController', () => {
                     allowPublicInsts: true,
                 },
                 role: 'none',
+            });
+        });
+
+        it('should include the contract features for the account', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withContracts()
+                    )
+            );
+
+            await store.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+                privacyFeatures: {
+                    publishData: true,
+                    allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+            });
+
+            const result = await controller.getUserInfo({
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: true,
+                subscriptionTier: 'tier1',
+                displayName: null,
+                privacyFeatures: {
+                    publishData: true,
+                    allowPublicData: false,
+                    allowAI: true,
+                    allowPublicInsts: true,
+                },
+                role: 'none',
+                contractFeatures: {
+                    allowed: true,
+                    currencyLimits: {
+                        usd: {
+                            maxCost: 100000,
+                            minCost: 50,
+                        },
+                    },
+                },
             });
         });
 
