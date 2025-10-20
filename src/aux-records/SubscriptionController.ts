@@ -2888,6 +2888,8 @@ export class SubscriptionController {
                 payoutUserId: holdingUser.id,
                 payoutDestination: 'stripe',
                 payoutAmount: invoice.invoice.amount,
+                contractId: invoice.contract.id,
+                invoiceId: invoice.invoice.id,
             });
 
             if (isFailure(result)) {
@@ -2911,7 +2913,7 @@ export class SubscriptionController {
      */
     @traced(TRACE_NAME)
     async payoutAccount(
-        request: PayoutAccountRequest
+        request: InternalPayoutRequest
     ): Promise<Result<{ payoutId: string }, SimpleError>> {
         if (!this._financialController) {
             return failure({
@@ -2935,11 +2937,6 @@ export class SubscriptionController {
                 return failure({
                     errorCode: 'not_supported',
                     errorMessage: 'Studio payouts are not supported yet.',
-                });
-            } else {
-                return failure({
-                    errorCode: 'invalid_request',
-                    errorMessage: 'Invalid payout request.',
                 });
             }
         }
@@ -3123,36 +3120,89 @@ export class SubscriptionController {
                 errorCode: 'server_error',
                 errorMessage: 'The server encountered an error.',
             });
+        } else if (transfer.value.amount <= 0) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'There are no funds to transfer.',
+            });
         }
 
         // TODO: save external payout
         const payoutId = uuid();
 
-        const result = await this._stripe.createTransfer({
-            currency: 'usd',
-            destination: destinationStripeAccount,
-            amount: Number(transfer.value.amount),
-            description: 'Account Payout',
-            metadata: {
-                transactionId: transactionResult.value.transactionId,
-                payoutId: payoutId,
-                payoutUserId: request.payoutUserId,
-                payoutStudioId: request.payoutStudioId,
-            },
-        });
+        try {
+            let sourceTransaction: string = undefined;
+            if (request.contractId) {
+                const contract = await this._contractRecords.getItemById(
+                    request.contractId
+                );
 
-        // TODO: update external payout with stripe transfer id
+                if (contract?.contract.stripePaymentIntentId) {
+                    const paymentIntent =
+                        await this._stripe.getPaymentIntentById(
+                            contract.contract.stripePaymentIntentId
+                        );
 
-        const postResult =
-            await this._financialController.completePendingTransfers({
-                transfers: transactionResult.value.transferIds,
-                transactionId: transactionResult.value.transactionId,
+                    sourceTransaction = paymentIntent.latest_charge;
+                }
+            }
+
+            const result = await this._stripe.createTransfer({
+                currency: 'usd',
+                destination: destinationStripeAccount,
+                amount: Number(transfer.value.amount),
+                description: 'Account Payout',
+                transferGroup: request.contractId,
+                sourceTransaction,
+                metadata: {
+                    transactionId: transactionResult.value.transactionId,
+                    payoutId: payoutId,
+                    payoutUserId: request.payoutUserId,
+                    payoutStudioId: request.payoutStudioId,
+                },
             });
 
-        if (isFailure(postResult)) {
-            logError(
-                postResult.error,
-                `[SubscriptionController] [payoutAccount] Failed to complete pending transfers for payout:`
+            // TODO: update external payout with stripe transfer id
+
+            const postResult =
+                await this._financialController.completePendingTransfers({
+                    transfers: transactionResult.value.transferIds,
+                    transactionId: transactionResult.value.transactionId,
+                });
+
+            if (isFailure(postResult)) {
+                logError(
+                    postResult.error,
+                    `[SubscriptionController] [payoutAccount] Failed to complete pending transfers for payout:`
+                );
+
+                const voidResult =
+                    await this._financialController.completePendingTransfers({
+                        transfers: transactionResult.value.transferIds,
+                        transactionId: transactionResult.value.transactionId,
+                        flags: TransferFlags.void_pending_transfer,
+                    });
+
+                if (isFailure(voidResult)) {
+                    logError(
+                        voidResult.error,
+                        `[SubscriptionController] [payoutAccount] Failed to void pending transfers for payout:`
+                    );
+                }
+
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'The server encountered an error.',
+                });
+            }
+
+            return success({
+                payoutId,
+            });
+        } catch (err) {
+            console.error(
+                `[SubscriptionController] [payoutAccount] Failed to create Stripe transfer for payout:`,
+                err
             );
 
             const voidResult =
@@ -3174,10 +3224,6 @@ export class SubscriptionController {
                 errorMessage: 'The server encountered an error.',
             });
         }
-
-        return success({
-            payoutId,
-        });
     }
 
     @traced(TRACE_NAME)
@@ -5981,4 +6027,9 @@ interface InternalPayoutRequest extends PayoutAccountRequest {
      * The ID of the invoice that the payout is for.
      */
     invoiceId?: string;
+
+    /**
+     * The ID of the contract that the payout is for.
+     */
+    contractId?: string;
 }

@@ -39,6 +39,7 @@ export class SqliteFinancialStore implements FinancialStore {
     createExternalPayout(payout: ExternalPayout): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     markPayoutAsPosted(
         payoutId: string,
         postedTransferId: string,
@@ -46,6 +47,7 @@ export class SqliteFinancialStore implements FinancialStore {
     ): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     markPayoutAsVoided(
         payoutId: string,
         voidedTransferId: string,
@@ -53,6 +55,7 @@ export class SqliteFinancialStore implements FinancialStore {
     ): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
     updateExternalPayout(
         payout: PartialExcept<ExternalPayout, 'id'>
     ): Promise<void> {

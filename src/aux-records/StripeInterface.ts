@@ -102,6 +102,12 @@ export interface StripeInterface {
     getSubscriptionById(id: string): Promise<Omit<StripeSubscription, 'items'>>;
 
     /**
+     * Gets the payment intent with the given ID.
+     * @param id The ID of the payment intent.
+     */
+    getPaymentIntentById(id: string): Promise<StripePaymentIntent>;
+
+    /**
      * Creates a new account link for the given account ID.
      * @param accountId The account ID.
      */
@@ -994,8 +1000,21 @@ export interface StripeCreateTransferRequest {
      * The metadata to include with the transfer.
      */
     metadata?: Record<string, string>;
+
+    /**
+     * The group for the transfer.
+     */
+    transferGroup?: string;
+
+    /**
+     * The ID of the charge that should be used as the source for the transfer.
+     */
+    sourceTransaction?: string;
 }
 
 export interface StripeTransfer {
     id: string;
 }
+
+// TODO:
+export type StripePaymentIntent = any;

@@ -27,15 +27,18 @@ import type {
     StripeCreateCustomerRequest,
     StripeCreateCustomerResponse,
     StripeCreateLoginLinkRequest,
+    StripeCreateTransferRequest,
     StripeEvent,
     StripeInterface,
     StripeListActiveSubscriptionsResponse,
+    StripePaymentIntent,
     StripePortalRequest,
     StripePortalResponse,
     StripePrice,
     StripeProduct,
     StripeSubscription,
     StripeSubscriptionItem,
+    StripeTransfer,
 } from '@casual-simulation/aux-records';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { SpanOptions } from '@opentelemetry/api';
@@ -71,6 +74,10 @@ export class StripeIntegration implements StripeInterface {
         this._stripe = stripe;
         this._publishableKey = publishableKey;
         this._testClock = testClock;
+    }
+
+    async getPaymentIntentById(id: string): Promise<StripePaymentIntent> {
+        return await this._stripe.paymentIntents.retrieve(id);
     }
 
     test?: StripeInterface;
@@ -192,6 +199,22 @@ export class StripeIntegration implements StripeInterface {
         return {
             url: result.url,
         };
+    }
+
+    async createTransfer(
+        request: StripeCreateTransferRequest
+    ): Promise<StripeTransfer> {
+        const result = await this._stripe.transfers.create({
+            amount: request.amount,
+            currency: request.currency,
+            destination: request.destination,
+            transfer_group: request.transferGroup,
+            source_transaction: request.sourceTransaction,
+            description: request.description,
+            metadata: request.metadata,
+        });
+
+        return result;
     }
 
     @traced(TRACE_NAME, SPAN_OPTIONS)
