@@ -86,6 +86,14 @@ export class AccountBalance {
         this.currency = data.currency;
     }
 
+    /**
+     * Gets the amount of credit that can be used for new transfers.
+     * @returns `credits - (debits + pendingDebits)`
+     */
+    freeCreditBalance(): bigint {
+        return this.credits - this.debits - this.pendingDebits;
+    }
+
     toJSON(): JSONAccountBalance {
         return {
             accountId: this.accountId,

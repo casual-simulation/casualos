@@ -18,12 +18,14 @@
 import type { PrismaClient } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type {
+    ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
     FinancialStore,
     UniqueFinancialAccountFilter,
 } from '@casual-simulation/aux-records/financial';
 import { cleanupObject } from '@casual-simulation/aux-records';
+import type { PartialExcept } from '@casual-simulation/aux-records/crud';
 
 const TRACE_NAME = 'PrismaFinancialStore';
 
@@ -83,5 +85,31 @@ export class PrismaFinancialStore implements FinancialStore {
                 currency: account.currency,
             },
         });
+    }
+
+    async createExternalPayout(payout: ExternalPayout): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async markPayoutAsPosted(
+        payoutId: string,
+        postedTransferId: string,
+        postedAtMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async markPayoutAsVoided(
+        payoutId: string,
+        voidedTransferId: string,
+        voidedAtMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async updateExternalPayout(
+        payout: PartialExcept<ExternalPayout, 'id'>
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 }

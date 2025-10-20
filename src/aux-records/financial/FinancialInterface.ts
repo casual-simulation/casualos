@@ -357,6 +357,11 @@ export enum AccountCodes {
     assets_cash = 1001, // flags.credits_must_not_exceed_debits
 
     /**
+     * Stripe accounts for the system
+     */
+    assets_stripe = 1002, // flags.credits_must_not_exceed_debits
+
+    /**
      * liabilities held by users.
      */
     liabilities_user = 2101, // flags.debits_must_not_exceed_credits
@@ -530,6 +535,7 @@ export interface FinancialInterface {
  */
 export function getFlagsForAccountCode(code: AccountCodes): AccountFlags {
     switch (code) {
+        case AccountCodes.assets_stripe:
         case AccountCodes.assets_cash:
             return (
                 AccountFlags.credits_must_not_exceed_debits |

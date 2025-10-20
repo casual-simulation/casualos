@@ -100,8 +100,8 @@ export class FinancialController {
             },
             {
                 id: ACCOUNT_IDS.assets_stripe,
-                code: AccountCodes.assets_cash,
-                flags: getFlagsForAccountCode(AccountCodes.assets_cash),
+                code: AccountCodes.assets_stripe,
+                flags: getFlagsForAccountCode(AccountCodes.assets_stripe),
                 credits_pending: 0n,
                 credits_posted: 0n,
                 debits_pending: 0n,

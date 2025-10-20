@@ -5308,6 +5308,125 @@ export class RecordsServer {
                     return result;
                 }),
 
+            invoiceContract: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/contract/invoice')
+                .inputs(
+                    z.object({
+                        contractId: z.string().min(1),
+                        amount: z.number().int().positive(),
+                        note: z.string().min(1).optional(),
+                        payoutDestination: z.enum(['account', 'stripe']),
+                    })
+                )
+                .handler(
+                    async (
+                        { contractId, amount, note, payoutDestination },
+                        context
+                    ) => {
+                        if (!this._subscriptions) {
+                            return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        const result =
+                            await this._subscriptions.invoiceContract({
+                                userId: validation.userId,
+                                userRole: validation.role,
+                                contractId,
+                                amount,
+                                note,
+                                payoutDestination,
+                            });
+
+                        return genericResult(result);
+                    }
+                ),
+
+            payContractInvoice: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/contract/invoice/pay')
+                .inputs(
+                    z.object({
+                        invoiceId: z.string().min(1),
+                    })
+                )
+                .handler(async ({ invoiceId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.payContractInvoice(
+                        {
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            invoiceId,
+                        }
+                    );
+
+                    return genericResult(result);
+                }),
+
+            payoutAccount: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/financial/payouts')
+                .inputs(
+                    z.object({
+                        userId: z.string().min(1).optional(),
+                        studioId: z.string().min(1).optional(),
+                        amount: z.number().int().positive().optional(),
+                        destination: z.enum(['stripe', 'cash']),
+                    })
+                )
+                .handler(async (input, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    if (input.userId && input.studioId) {
+                        return {
+                            success: false,
+                            errorCode: 'unacceptable_request',
+                            errorMessage:
+                                'You must only specify one of userId or studioId.',
+                        };
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.payoutAccount({
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        payoutUserId: input.userId,
+                        payoutStudioId: input.studioId,
+                        payoutAmount: input.amount,
+                        payoutDestination: input.destination,
+                    });
+
+                    return genericResult(result);
+                }),
+
             deleteInst: procedure()
                 .origins('account')
                 .http('DELETE', '/api/v2/records/insts')

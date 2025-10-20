@@ -18,12 +18,14 @@
 import type { PrismaClient } from '../generated-sqlite';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type {
+    ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
     FinancialStore,
     UniqueFinancialAccountFilter,
 } from '@casual-simulation/aux-records/financial';
 import { cleanupObject } from '@casual-simulation/aux-records';
+import type { PartialExcept } from '@casual-simulation/aux-records/crud';
 
 const TRACE_NAME = 'SqliteFinancialStore';
 
@@ -32,6 +34,29 @@ export class SqliteFinancialStore implements FinancialStore {
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    createExternalPayout(payout: ExternalPayout): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    markPayoutAsPosted(
+        payoutId: string,
+        postedTransferId: string,
+        postedAtMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    markPayoutAsVoided(
+        payoutId: string,
+        voidedTransferId: string,
+        voidedAtMs: number
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    updateExternalPayout(
+        payout: PartialExcept<ExternalPayout, 'id'>
+    ): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     @traced(TRACE_NAME)

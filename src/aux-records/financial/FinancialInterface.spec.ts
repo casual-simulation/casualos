@@ -27,6 +27,13 @@ import {
 import { AccountFlags, TransferFlags } from 'tigerbeetle-node';
 
 describe('getFlagsForAccountCode()', () => {
+    it('should require that assets_stripe cannot carry a credit balance', () => {
+        const flags = getFlagsForAccountCode(AccountCodes.assets_stripe);
+        expect(flags).toBe(
+            AccountFlags.credits_must_not_exceed_debits | AccountFlags.history
+        );
+    });
+
     it('should require that assets_cash cannot carry a credit balance', () => {
         const flags = getFlagsForAccountCode(AccountCodes.assets_cash);
         expect(flags).toBe(

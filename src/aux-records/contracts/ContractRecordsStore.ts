@@ -20,6 +20,7 @@ import type {
     CrudRecord,
     CrudRecordsStore,
     CrudSubscriptionMetrics,
+    PartialExcept,
 } from '../crud';
 import type { SubscriptionFilter } from '../MetricsStore';
 
@@ -60,6 +61,49 @@ export interface ContractRecordsStore extends CrudRecordsStore<ContractRecord> {
         recordName: string;
         contract: ContractRecord;
     } | null>;
+
+    /**
+     * Creates a new invoice.
+     * @param invoice The invoice to create.
+     */
+    createInvoice(invoice: ContractInvoice): Promise<void>;
+
+    /**
+     * Gets the invoice with the given ID.
+     * @param id The ID of the invoice to get.
+     */
+    getInvoiceById(id: string): Promise<{
+        invoice: ContractInvoice;
+        contract: ContractRecord;
+    } | null>;
+
+    /**
+     * Updates the given invoice.
+     * @param invoice The invoice to update.
+     */
+    updateInvoice(invoice: PartialExcept<ContractInvoice, 'id'>): Promise<void>;
+
+    /**
+     * Deletes the invoice with the given ID.
+     * @param id The ID of the invoice to delete.
+     */
+    deleteInvoice(id: string): Promise<void>;
+
+    /**
+     * Gets the list of invoices for the given contract.
+     * @param contractId The ID of the contract to get invoices for.
+     */
+    listInvoicesForContract(contractId: string): Promise<ContractInvoice[]>;
+
+    /**
+     * Marks the open invoice with the given ID as paid or void.
+     * @param invoiceId The ID of the invoice to update.
+     * @param status The status to mark the invoice as. Must be either "paid" or "void".
+     */
+    markOpenInvoiceAs(
+        invoiceId: string,
+        status: 'paid' | 'void'
+    ): Promise<void>;
 }
 
 /**

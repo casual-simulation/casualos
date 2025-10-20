@@ -20,8 +20,10 @@ import type {
     ContractRecordsStore,
     ContractRecord,
     ContractSubscriptionMetrics,
+    ContractInvoice,
 } from './ContractRecordsStore';
 import type { SubscriptionFilter } from '../MetricsStore';
+import type { PartialExcept } from '../crud';
 
 /**
  * A Memory-based implementation of the ContractRecordsStore.
@@ -30,10 +32,76 @@ export class MemoryContractRecordsStore
     extends MemoryCrudRecordsStore<ContractRecord>
     implements ContractRecordsStore
 {
+    private _invoices: Map<string, ContractInvoice> = new Map();
+
+    async createInvoice(invoice: ContractInvoice): Promise<void> {
+        this._invoices.set(invoice.id, { ...invoice });
+    }
+
+    async getInvoiceById(id: string): Promise<{
+        invoice: ContractInvoice;
+        contract: ContractRecord;
+    } | null> {
+        const invoice = this._invoices.get(id) || null;
+
+        if (!invoice) {
+            return null;
+        }
+
+        const contract = await this.getItemById(invoice.contractId);
+
+        if (!contract) {
+            return null;
+        }
+
+        return {
+            invoice,
+            contract: contract.contract,
+        };
+    }
+
+    async updateInvoice(
+        invoice: PartialExcept<ContractInvoice, 'id'>
+    ): Promise<void> {
+        let existing = this._invoices.get(invoice.id);
+        if (!existing) {
+            throw new Error('Invoice not found: ' + invoice.id);
+        }
+        this._invoices.set(invoice.id, {
+            ...existing,
+            ...invoice,
+        });
+    }
+
+    async deleteInvoice(id: string): Promise<void> {
+        this._invoices.delete(id);
+    }
+
+    async listInvoicesForContract(
+        contractId: string
+    ): Promise<ContractInvoice[]> {
+        return Array.from(this._invoices.values()).filter(
+            (i) => i.contractId === contractId
+        );
+    }
+
+    async markOpenInvoiceAs(
+        invoiceId: string,
+        status: 'paid' | 'void'
+    ): Promise<void> {
+        const invoice = this._invoices.get(invoiceId);
+        if (invoice && invoice.status === 'open') {
+            this._invoices.set(invoiceId, {
+                ...invoice,
+                status,
+            });
+        }
+    }
+
     async getItemById(
         id: string
     ): Promise<{ recordName: string; contract: ContractRecord } | null> {
-        const records = await this.getItemRecords();
+        const records = this.getItemRecords();
         for (let [recordName, items] of records) {
             for (let item of items.values()) {
                 if (item.id === id) {

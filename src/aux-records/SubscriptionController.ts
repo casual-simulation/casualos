@@ -112,6 +112,7 @@ import type {
     FinancialAccountFilter,
     FinancialController,
     InternalTransfer,
+    PayoutDestination,
     UniqueFinancialAccountFilter,
 } from './financial';
 import {
@@ -130,6 +131,7 @@ import type {
     ContractRecord,
     ContractRecordsStore,
     ContractSubscriptionMetrics,
+    InvoicePayoutDestination,
 } from './contracts/ContractRecordsStore';
 import type { Account, Transfer } from 'tigerbeetle-node';
 import { TransferFlags } from 'tigerbeetle-node';
@@ -2669,6 +2671,617 @@ export class SubscriptionController {
         }
 
         return refundResult;
+    }
+
+    /**
+     * Issues a new invoice for a contract.
+     * @param request The request to invoice the contract.
+     */
+    @traced(TRACE_NAME)
+    async invoiceContract(
+        request: InvoiceContractRequest
+    ): Promise<Result<{ invoiceId: string }, SimpleError>> {
+        const contract = await this._contractRecords.getItemById(
+            request.contractId
+        );
+        if (!contract?.contract) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The contract could not be found.',
+            });
+        }
+
+        if (!isSuperUserRole(request.userRole)) {
+            if (contract.contract.holdingUserId !== request.userId) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to invoice for the contract.',
+                });
+            }
+        }
+
+        const balance = await this._financialController.getAccountBalance({
+            contractId: contract.contract.id,
+            ledger: LEDGERS.usd,
+        });
+
+        if (isFailure(balance)) {
+            logError(
+                balance.error,
+                `[SubscriptionController] [invoiceContract] Failed to get account balance for contract: ${contract.contract.id}`
+            );
+            return balance;
+        }
+
+        if (balance.value.freeCreditBalance() < request.amount) {
+            return failure({
+                errorCode: 'insufficient_funds',
+                errorMessage:
+                    'The contract does not have sufficient funds to cover the invoice amount.',
+            });
+        }
+
+        const now = Date.now();
+        const invoiceId = uuid();
+        await this._contractRecords.createInvoice({
+            id: invoiceId,
+            contractId: contract.contract.id,
+            amount: request.amount,
+            status: 'open',
+            payoutDestination: request.payoutDestination,
+            note: request.note,
+            openedAtMs: now,
+            createdAtMs: now,
+            updatedAtMs: now,
+        });
+
+        return success({
+            invoiceId,
+        });
+    }
+
+    // async listContractInvoices(request: ListContractInvoicesRequest): Promise<Result<ContractInvoice[], SimpleError>> {
+
+    // }
+
+    /**
+     * Pays an invoice for a contract.
+     * @param request The request to pay the invoice.
+     */
+    @traced(TRACE_NAME)
+    async payContractInvoice(
+        request: PayContractInvoiceRequest
+    ): Promise<Result<void, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        }
+
+        const invoice = await this._contractRecords.getInvoiceById(
+            request.invoiceId
+        );
+        if (!invoice) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The invoice could not be found.',
+            });
+        }
+
+        if (!isSuperUserRole(request.userRole)) {
+            if (invoice.contract.issuingUserId !== request.userId) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to pay invoices for the contract.',
+                });
+            }
+        }
+
+        // transfer from contract account to payout destination
+
+        if (invoice.invoice.status !== 'open') {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'The invoice is not open and cannot be paid.',
+            });
+        }
+
+        const holdingUser = await this._authStore.findUser(
+            invoice.contract.holdingUserId
+        );
+        if (!holdingUser) {
+            console.error(
+                `[SubscriptionController] [payInvoice] Failed to find holding user for contract: ${invoice.contract.id}`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        const [userAccount, contractAccount] = await Promise.all([
+            this._financialController.getOrCreateFinancialAccount({
+                userId: holdingUser.id,
+                ledger: LEDGERS.usd,
+            }),
+            this._financialController.getFinancialAccount({
+                contractId: invoice.contract.id,
+                ledger: LEDGERS.usd,
+            }),
+        ]);
+
+        if (isFailure(userAccount)) {
+            logError(
+                userAccount.error,
+                `[SubscriptionController] [payInvoice] Failed to get or create financial account for user: ${holdingUser.id}`
+            );
+            return userAccount;
+        } else if (isFailure(contractAccount)) {
+            logError(
+                contractAccount.error,
+                `[SubscriptionController] [payInvoice] Failed to get financial account for contract: ${invoice.contract.id}`
+            );
+            return contractAccount;
+        }
+
+        if (invoice.invoice.payoutDestination === 'stripe') {
+            if (!holdingUser.stripeAccountId) {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The user to be paid does not have a Stripe account connected.',
+                });
+            }
+            if (holdingUser.stripeAccountStatus !== 'active') {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The user to be paid does not have an active Stripe account.',
+                });
+            }
+        }
+
+        const transactionResult =
+            await this._financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: invoice.invoice.amount,
+                        creditAccountId: userAccount.value.account.id,
+                        debitAccountId: contractAccount.value.account.id,
+                        code: TransferCodes.contract_payment,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+
+        if (isFailure(transactionResult)) {
+            if (transactionResult.error.errorCode === 'debits_exceed_credits') {
+                return failure({
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'The contract does not have sufficient funds to pay the invoice.',
+                });
+            }
+
+            logError(
+                transactionResult.error,
+                `[SubscriptionController] [payInvoice] Failed to pay invoice: ${invoice.invoice.id}`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        await this._contractRecords.markOpenInvoiceAs(
+            request.invoiceId,
+            'paid'
+        );
+
+        if (invoice.invoice.payoutDestination === 'stripe') {
+            const result = await this.payoutAccount({
+                userId: null,
+                userRole: 'system',
+                payoutUserId: holdingUser.id,
+                payoutDestination: 'stripe',
+                payoutAmount: invoice.invoice.amount,
+            });
+
+            if (isFailure(result)) {
+                return result;
+            }
+        } else if (invoice.invoice.payoutDestination === 'account') {
+            // Nothing to do since we already transferred to the user's account
+        } else {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'The invoice has an invalid payout destination.',
+            });
+        }
+
+        return success();
+    }
+
+    /**
+     * Attempts to payout an account.
+     * @param request The request.
+     */
+    @traced(TRACE_NAME)
+    async payoutAccount(
+        request: PayoutAccountRequest
+    ): Promise<Result<{ payoutId: string }, SimpleError>> {
+        if (!this._financialController) {
+            return failure({
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        }
+
+        if (!isSuperUserRole(request.userRole)) {
+            if (
+                request.payoutUserId &&
+                request.userId !== request.payoutUserId
+            ) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to payout this account.',
+                });
+            } else if (request.payoutStudioId) {
+                // TODO: Check studio permissions
+                return failure({
+                    errorCode: 'not_supported',
+                    errorMessage: 'Studio payouts are not supported yet.',
+                });
+            } else {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Invalid payout request.',
+                });
+            }
+        }
+
+        if (request.payoutDestination === 'stripe') {
+            return this._payoutToStripe(request);
+        } else if (request.payoutDestination === 'cash') {
+            if (!isSuperUserRole(request.userRole)) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage: 'You are not authorized to payout to cash.',
+                });
+            }
+            return this._payoutToCash(request);
+        }
+    }
+
+    @traced(TRACE_NAME)
+    private async _payoutToStripe(
+        request: InternalPayoutRequest
+    ): Promise<Result<{ payoutId: string }, SimpleError>> {
+        if (request.payoutStudioId && request.payoutUserId) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage:
+                    'Cannot payout to both a user and a studio at the same time.',
+            });
+        }
+
+        let destinationStripeAccount: string;
+        if (request.payoutUserId) {
+            const user = await this._authStore.findUser(request.payoutUserId);
+
+            if (!user) {
+                return failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The user could not be found.',
+                });
+            }
+
+            if (!user.stripeAccountId) {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The user does not have a Stripe account connected.',
+                });
+            }
+            if (user.stripeAccountStatus !== 'active') {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The user does not have an active Stripe account.',
+                });
+            }
+
+            destinationStripeAccount = user.stripeAccountId;
+        } else if (request.payoutStudioId) {
+            const studio = await this._recordsStore.getStudioById(
+                request.payoutStudioId
+            );
+
+            if (!studio) {
+                return failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The studio could not be found.',
+                });
+            }
+
+            if (!studio.stripeAccountId) {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The studio does not have a Stripe account connected.',
+                });
+            }
+            if (studio.stripeAccountStatus !== 'active') {
+                return failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The studio does not have an active Stripe account.',
+                });
+            }
+
+            destinationStripeAccount = studio.stripeAccountId;
+        }
+
+        const [debitAccount] = await Promise.all([
+            this._financialController.getOrCreateFinancialAccount({
+                userId: request.payoutUserId,
+                studioId: request.payoutStudioId,
+                ledger: LEDGERS.usd,
+            }),
+        ]);
+
+        if (isFailure(debitAccount)) {
+            logError(
+                debitAccount.error,
+                `[SubscriptionController] [payoutAccount] Failed to get or create financial account:`
+            );
+            return debitAccount;
+        }
+
+        let amount: number | bigint;
+        let balancingDebit = false;
+        if (request.payoutAmount) {
+            amount = request.payoutAmount;
+        } else {
+            amount = AMOUNT_MAX;
+            balancingDebit = true;
+        }
+        const transactionResult =
+            await this._financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: amount,
+                        creditAccountId: ACCOUNT_IDS.assets_stripe,
+                        debitAccountId: debitAccount.value.account.id,
+                        code: TransferCodes.user_payout,
+                        currency: CurrencyCodes.usd,
+                        pending: true,
+                        balancingDebit: balancingDebit,
+                    },
+                ],
+            });
+
+        if (isFailure(transactionResult)) {
+            if (transactionResult.error.errorCode === 'debits_exceed_credits') {
+                return failure({
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'The account does not have sufficient funds to complete the payout.',
+                });
+            } else if (
+                transactionResult.error.errorCode === 'credits_exceed_debits'
+            ) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [payoutAccount] Unable to payout to Stripe due to insufficient funds:`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'The server encountered an error.',
+                });
+            }
+
+            logError(
+                transactionResult.error,
+                `[SubscriptionController] [payoutAccount] Failed to create payout transaction:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        const transfer = await this._financialController.getTransfer(
+            transactionResult.value.transferIds[0]
+        );
+
+        if (isFailure(transfer)) {
+            logError(
+                transfer.error,
+                `[SubscriptionController] [payoutAccount] Failed to get transfer for payout:`
+            );
+
+            const voidResult =
+                await this._financialController.completePendingTransfers({
+                    transfers: transactionResult.value.transferIds,
+                    transactionId: transactionResult.value.transactionId,
+                    flags: TransferFlags.void_pending_transfer,
+                });
+
+            if (isFailure(voidResult)) {
+                logError(
+                    voidResult.error,
+                    `[SubscriptionController] [payoutAccount] Failed to void pending transfers for payout:`
+                );
+            }
+
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        // TODO: save external payout
+        const payoutId = uuid();
+
+        const result = await this._stripe.createTransfer({
+            currency: 'usd',
+            destination: destinationStripeAccount,
+            amount: Number(transfer.value.amount),
+            description: 'Account Payout',
+            metadata: {
+                transactionId: transactionResult.value.transactionId,
+                payoutId: payoutId,
+                payoutUserId: request.payoutUserId,
+                payoutStudioId: request.payoutStudioId,
+            },
+        });
+
+        // TODO: update external payout with stripe transfer id
+
+        const postResult =
+            await this._financialController.completePendingTransfers({
+                transfers: transactionResult.value.transferIds,
+                transactionId: transactionResult.value.transactionId,
+            });
+
+        if (isFailure(postResult)) {
+            logError(
+                postResult.error,
+                `[SubscriptionController] [payoutAccount] Failed to complete pending transfers for payout:`
+            );
+
+            const voidResult =
+                await this._financialController.completePendingTransfers({
+                    transfers: transactionResult.value.transferIds,
+                    transactionId: transactionResult.value.transactionId,
+                    flags: TransferFlags.void_pending_transfer,
+                });
+
+            if (isFailure(voidResult)) {
+                logError(
+                    voidResult.error,
+                    `[SubscriptionController] [payoutAccount] Failed to void pending transfers for payout:`
+                );
+            }
+
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        return success({
+            payoutId,
+        });
+    }
+
+    @traced(TRACE_NAME)
+    private async _payoutToCash(
+        request: InternalPayoutRequest
+    ): Promise<Result<{ payoutId: string }, SimpleError>> {
+        if (request.payoutStudioId && request.payoutUserId) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage:
+                    'Cannot payout to both a user and a studio at the same time.',
+            });
+        }
+
+        const [debitAccount] = await Promise.all([
+            this._financialController.getOrCreateFinancialAccount({
+                userId: request.payoutUserId,
+                studioId: request.payoutStudioId,
+                ledger: LEDGERS.usd,
+            }),
+        ]);
+
+        if (isFailure(debitAccount)) {
+            logError(
+                debitAccount.error,
+                `[SubscriptionController] [payoutAccount] Failed to get or create financial account:`
+            );
+            return debitAccount;
+        }
+
+        let amount: number | bigint;
+        let balancingDebit = false;
+        if (request.payoutAmount) {
+            amount = request.payoutAmount;
+        } else {
+            amount = AMOUNT_MAX;
+            balancingDebit = true;
+        }
+        const transactionResult =
+            await this._financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: amount,
+                        creditAccountId: ACCOUNT_IDS.assets_cash,
+                        debitAccountId: debitAccount.value.account.id,
+                        code: TransferCodes.user_payout,
+                        currency: CurrencyCodes.usd,
+                        balancingDebit: balancingDebit,
+                    },
+                ],
+            });
+
+        if (isFailure(transactionResult)) {
+            if (transactionResult.error.errorCode === 'debits_exceed_credits') {
+                return failure({
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'The account does not have sufficient funds to complete the payout.',
+                });
+            } else if (
+                transactionResult.error.errorCode === 'credits_exceed_debits'
+            ) {
+                logError(
+                    transactionResult.error,
+                    `[SubscriptionController] [payoutAccount] Unable to payout to Stripe due to insufficient funds:`
+                );
+                return failure({
+                    errorCode: 'server_error',
+                    errorMessage: 'The server encountered an error.',
+                });
+            }
+
+            logError(
+                transactionResult.error,
+                `[SubscriptionController] [payoutAccount] Failed to create payout transaction:`
+            );
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        const transfer = await this._financialController.getTransfer(
+            transactionResult.value.transferIds[0]
+        );
+
+        if (isFailure(transfer)) {
+            logError(
+                transfer.error,
+                `[SubscriptionController] [payoutAccount] Failed to get transfer for payout:`
+            );
+
+            return failure({
+                errorCode: 'server_error',
+                errorMessage: 'The server encountered an error.',
+            });
+        }
+
+        // TODO: save external payout
+        const payoutId = uuid();
+
+        return success({
+            payoutId,
+        });
     }
 
     /**
@@ -5262,4 +5875,110 @@ export interface GetBalancesRequest {
      * The filter that should be used to find the accounts.
      */
     filter: FinancialAccountFilter;
+}
+
+export interface InvoiceContractRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+
+    /**
+     * The ID of the contract that should be invoiced.
+     */
+    contractId: string;
+
+    /**
+     * The amount charged in the invoice.
+     */
+    amount: number;
+
+    /**
+     * The note that should be included with the invoice.
+     */
+    note: string | null;
+
+    /**
+     * Where the invoice payment should end up.
+     */
+    payoutDestination: InvoicePayoutDestination;
+}
+
+export interface PayContractInvoiceRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+
+    /**
+     * The ID of the invoice that should be paid.
+     */
+    invoiceId: string;
+}
+
+export interface VoidContractInvoiceRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+
+    /**
+     * The ID of the invoice that should be voided.
+     */
+    invoiceId: string;
+}
+
+export interface PayoutAccountRequest {
+    /**
+     * The ID of the currently logged in user.
+     */
+    userId: string | null;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+
+    /**
+     * The ID of the user that the payout is for.
+     */
+    payoutUserId?: string;
+
+    /**
+     * The ID of the studio that the payout is for.
+     */
+    payoutStudioId?: string;
+
+    /**
+     * The amount to payout in the smallest unit of the currency.
+     * If omitted, then the full available balance will be paid out.
+     */
+    payoutAmount?: number;
+
+    /**
+     * The destination that the payout should be sent to.
+     */
+    payoutDestination: PayoutDestination;
+}
+
+interface InternalPayoutRequest extends PayoutAccountRequest {
+    /**
+     * The ID of the invoice that the payout is for.
+     */
+    invoiceId?: string;
 }

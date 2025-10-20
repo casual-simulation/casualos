@@ -23,18 +23,23 @@ import type {
     Prisma,
     PrismaClient,
     ContractRecord as PrismaContractRecord,
+    ContractInvoice as PrismaContractInvoice,
 } from './generated';
 import { traced } from '@casual-simulation/aux-records/tracing/TracingDecorators';
 import type { PrismaMetricsStore } from './PrismaMetricsStore';
 import type {
+    ContractInvoice,
     ContractRecord,
     ContractRecordsStore,
     ContractStatus,
     ContractSubscriptionMetrics,
+    InvoicePayoutDestination,
+    InvoiceStatus,
 } from '@casual-simulation/aux-records/contracts';
 import type {
     ListCrudStoreSuccess,
     ListCrudStoreByMarkerRequest,
+    PartialExcept,
 } from '@casual-simulation/aux-records/crud';
 import { convertToDate, convertToMillis } from './Utils';
 
@@ -47,6 +52,118 @@ export class PrismaContractsRecordsStore implements ContractRecordsStore {
     constructor(client: PrismaClient, metrics: PrismaMetricsStore) {
         this._client = client;
         this._metrics = metrics;
+    }
+
+    async createInvoice(invoice: ContractInvoice): Promise<void> {
+        await this._client.contractInvoice.create({
+            data: {
+                id: invoice.id,
+                contractId: invoice.contractId,
+                amount: invoice.amount,
+                status: invoice.status,
+                openedAt: convertToDate(invoice.openedAtMs),
+                note: invoice.note,
+                paidAt: convertToDate(invoice.paidAtMs),
+                voidedAt: convertToDate(invoice.voidedAtMs),
+                payoutDestination: invoice.payoutDestination,
+            },
+        });
+    }
+
+    async getInvoiceById(
+        id: string
+    ): Promise<{ invoice: ContractInvoice; contract: ContractRecord } | null> {
+        const invoice = await this._client.contractInvoice.findUnique({
+            where: {
+                id: id,
+            },
+            include: {
+                contract: true,
+            },
+        });
+
+        if (!invoice) {
+            return null;
+        }
+
+        return {
+            invoice: this._convertInvoice(invoice),
+            contract: this._convertRecord(invoice.contract),
+        };
+    }
+
+    private _convertInvoice(invoice: PrismaContractInvoice): ContractInvoice {
+        return {
+            id: invoice.id,
+            contractId: invoice.contractId,
+            amount: invoice.amount,
+            status: invoice.status as InvoiceStatus,
+            openedAtMs: convertToMillis(invoice.openedAt),
+            note: invoice.note,
+            paidAtMs: convertToMillis(invoice.paidAt),
+            voidedAtMs: convertToMillis(invoice.voidedAt),
+            payoutDestination:
+                invoice.payoutDestination as InvoicePayoutDestination,
+            createdAtMs: convertToMillis(invoice.createdAt),
+            updatedAtMs: convertToMillis(invoice.updatedAt),
+        };
+    }
+
+    async updateInvoice(
+        invoice: PartialExcept<ContractInvoice, 'id'>
+    ): Promise<void> {
+        await this._client.contractInvoice.update({
+            where: {
+                id: invoice.id,
+            },
+            data: cleanupObject({
+                contractId: invoice.contractId,
+                amount: invoice.amount,
+                status: invoice.status,
+                openedAt: convertToDate(invoice.openedAtMs),
+                note: invoice.note,
+                paidAt: convertToDate(invoice.paidAtMs),
+                voidedAt: convertToDate(invoice.voidedAtMs),
+                payoutDestination: invoice.payoutDestination,
+            }),
+        });
+    }
+
+    async deleteInvoice(id: string): Promise<void> {
+        await this._client.contractInvoice.delete({
+            where: {
+                id,
+            },
+        });
+    }
+
+    async listInvoicesForContract(
+        contractId: string
+    ): Promise<ContractInvoice[]> {
+        const invoices = await this._client.contractInvoice.findMany({
+            where: {
+                contractId,
+            },
+        });
+
+        return invoices.map((i) => this._convertInvoice(i));
+    }
+
+    async markOpenInvoiceAs(
+        invoiceId: string,
+        status: 'paid' | 'void'
+    ): Promise<void> {
+        await this._client.contractInvoice.update({
+            where: {
+                id: invoiceId,
+                status: 'open',
+            },
+            data: cleanupObject({
+                status: status,
+                voidedAt: status === 'void' ? new Date() : undefined,
+                paidAt: status === 'paid' ? new Date() : undefined,
+            }),
+        });
     }
 
     @traced(TRACE_NAME)

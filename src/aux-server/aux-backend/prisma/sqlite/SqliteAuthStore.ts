@@ -138,6 +138,12 @@ export class SqliteAuthStore implements AuthStore {
             userId: request.userId,
             items: request.items as any[],
 
+            transferIds: request.transferIds,
+            transfersPending: request.transfersPending,
+            transactionId: request.transactionId,
+            shouldBeAutomaticallyFulfilled:
+                request.shouldBeAutomaticallyFulfilled,
+
             createdAt: Date.now(),
             updatedAt: Date.now(),
         };

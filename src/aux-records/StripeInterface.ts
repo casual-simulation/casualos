@@ -136,6 +136,14 @@ export interface StripeInterface {
      * @param id The ID of the account.
      */
     getAccountById(id: string): Promise<StripeAccount | null>;
+
+    /**
+     * Creates a new transfer.
+     * @param request The request.
+     */
+    createTransfer(
+        request: StripeCreateTransferRequest
+    ): Promise<StripeTransfer>;
 }
 
 export interface StripePrice {
@@ -960,3 +968,34 @@ export type StripeAccountStatus =
  * If 'complete', then the studio has a stripe account that is fully set up.
  */
 export type StripeRequirementsStatus = 'incomplete' | 'complete' | null;
+
+export interface StripeCreateTransferRequest {
+    /**
+     * The three-letter ISO currency code representing the currency to transfer.
+     */
+    currency: string;
+
+    /**
+     * The stripe account ID that is the destination of the transfer.
+     */
+    destination: string;
+
+    /**
+     * The amount to transfer in cents.
+     */
+    amount: number;
+
+    /**
+     * The description of the transfer.
+     */
+    description?: string;
+
+    /**
+     * The metadata to include with the transfer.
+     */
+    metadata?: Record<string, string>;
+}
+
+export interface StripeTransfer {
+    id: string;
+}
