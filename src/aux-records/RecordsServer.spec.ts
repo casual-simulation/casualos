@@ -61,15 +61,7 @@ import { FileRecordsController } from './FileRecordsController';
 import { getHash } from '@casual-simulation/crypto';
 import type { FulfillCheckoutSessionSuccess } from './SubscriptionController';
 import { SubscriptionController } from './SubscriptionController';
-import type {
-    StripeAccount,
-    StripeAccountLink,
-    StripeCheckoutResponse,
-    StripeCreateCustomerResponse,
-    StripeInterface,
-    StripeProduct,
-} from './StripeInterface';
-
+import type { StripeInterface } from './StripeInterface';
 import { MemoryNotificationRecordsStore } from './notifications/MemoryNotificationRecordsStore';
 import { MemoryPackageRecordsStore } from './packages/MemoryPackageRecordsStore';
 import { MemoryPackageVersionRecordsStore } from './packages/version/MemoryPackageVersionRecordsStore';
@@ -88,6 +80,7 @@ import { MemoryRateLimiter } from './MemoryRateLimiter';
 import type { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import {
     asyncIterable,
+    createStripeMock,
     createTestControllers,
     createTestSubConfiguration,
     createTestUser,
@@ -446,21 +439,7 @@ describe('RecordsServer', () => {
 
     let filesController: FileRecordsController;
 
-    let stripeMock: {
-        publishableKey: string;
-        getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
-        listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
-        createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<Promise<StripeCreateCustomerResponse>>;
-        listActiveSubscriptionsForCustomer: jest.Mock<any>;
-        constructWebhookEvent: jest.Mock<any>;
-        getSubscriptionById: jest.Mock<any>;
-        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
-        createAccount: jest.Mock<Promise<StripeAccount>>;
-        getAccountById: jest.Mock<Promise<StripeAccount>>;
-        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>;
-    };
+    let stripeMock: jest.Mocked<StripeInterface>;
 
     let aiController: AIController;
     let chatInterface: {
@@ -765,21 +744,7 @@ describe('RecordsServer', () => {
             store: purchasableItemsStore,
         });
 
-        stripe = stripeMock = {
-            publishableKey: 'publishable_key',
-            getProductAndPriceInfo: jest.fn(),
-            listPricesForProduct: jest.fn(),
-            createCheckoutSession: jest.fn(),
-            createPortalSession: jest.fn(),
-            createCustomer: jest.fn(),
-            listActiveSubscriptionsForCustomer: jest.fn(),
-            constructWebhookEvent: jest.fn(),
-            getSubscriptionById: jest.fn(),
-            createAccountLink: jest.fn(),
-            createAccount: jest.fn(),
-            getAccountById: jest.fn(),
-            getCheckoutSessionById: jest.fn(),
-        };
+        stripe = stripeMock = createStripeMock();
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
             if (id === 'product_id') {

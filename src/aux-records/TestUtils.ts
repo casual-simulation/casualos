@@ -39,6 +39,7 @@ import type { FinancialInterface } from './financial';
 import { FinancialController, MemoryFinancialInterface } from './financial';
 import type { Account, Transfer } from 'tigerbeetle-node';
 import { v4 as uuidv4, parse } from 'uuid';
+import type { StripeInterface } from './StripeInterface';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -386,4 +387,29 @@ export function randomBigInt() {
     const uuidBytes = parse(uuid);
     // get bigint from uuid bytes
     return BigInt('0x' + Buffer.from(uuidBytes).toString('hex'));
+}
+
+/**
+ * Creates a new stripe interface mock.
+ */
+export function createStripeMock(): jest.Mocked<StripeInterface> {
+    return {
+        publishableKey: 'publishable_key',
+        getProductAndPriceInfo: jest.fn(),
+        listPricesForProduct: jest.fn(),
+        createCheckoutSession: jest.fn(),
+        createPortalSession: jest.fn(),
+        createCustomer: jest.fn(),
+        listActiveSubscriptionsForCustomer: jest.fn(),
+        constructWebhookEvent: jest.fn(),
+        getSubscriptionById: jest.fn(),
+        createAccountLink: jest.fn(),
+        createAccount: jest.fn(),
+        getAccountById: jest.fn(),
+        getCheckoutSessionById: jest.fn(),
+        createAccountSession: jest.fn(),
+        createLoginLink: jest.fn(),
+        createTransfer: jest.fn(),
+        getPaymentIntentById: jest.fn(),
+    };
 }

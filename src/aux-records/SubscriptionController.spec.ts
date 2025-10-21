@@ -31,6 +31,7 @@ import { INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import type { AuthUser } from './AuthStore';
 import type { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
+    AccountBalance,
     failure,
     formatV1SessionKey,
     generateV1ConnectionToken,
@@ -40,11 +41,7 @@ import {
     unwrap,
 } from '@casual-simulation/aux-common';
 import type {
-    StripeAccount,
-    StripeAccountLink,
     StripeAccountStatus,
-    StripeCheckoutResponse,
-    StripeCreateCustomerResponse,
     StripeInterface,
     StripeProduct,
 } from './StripeInterface';
@@ -58,6 +55,7 @@ import type { MemoryStore } from './MemoryStore';
 import {
     checkAccounts,
     checkTransfers,
+    createStripeMock,
     createTestControllers,
     createTestSubConfiguration,
     createTestUser,
@@ -73,7 +71,6 @@ import {
 import type { AccountWithDetails, FinancialController } from './financial';
 import {
     ACCOUNT_IDS,
-    AccountBalance,
     AccountCodes,
     CREDITS_DISPLAY_FACTOR,
     CurrencyCodes,
@@ -104,21 +101,7 @@ describe('SubscriptionController', () => {
     let purchasableItemsStore: MemoryPurchasableItemRecordsStore;
     let contractStore: MemoryContractRecordsStore;
 
-    let stripeMock: {
-        publishableKey: string;
-        getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
-        listPricesForProduct: jest.Mock<any>;
-        createCheckoutSession: jest.Mock<Promise<StripeCheckoutResponse>>;
-        createPortalSession: jest.Mock<any>;
-        createCustomer: jest.Mock<Promise<StripeCreateCustomerResponse>>;
-        listActiveSubscriptionsForCustomer: jest.Mock<any>;
-        constructWebhookEvent: jest.Mock<any>;
-        getSubscriptionById: jest.Mock<any>;
-        createAccountLink: jest.Mock<Promise<StripeAccountLink>>;
-        createAccount: jest.Mock<Promise<StripeAccount>>;
-        getAccountById: jest.Mock<Promise<StripeAccount>>;
-        getCheckoutSessionById: jest.Mock<Promise<StripeCheckoutResponse>>;
-    };
+    let stripeMock: jest.Mocked<StripeInterface>;
 
     let stripe: StripeInterface;
     let userId: string;
@@ -202,21 +185,7 @@ describe('SubscriptionController', () => {
 
         await financialController.init();
 
-        stripe = stripeMock = {
-            publishableKey: 'publishable_key',
-            getProductAndPriceInfo: jest.fn(),
-            listPricesForProduct: jest.fn(),
-            createCheckoutSession: jest.fn(),
-            createPortalSession: jest.fn(),
-            createCustomer: jest.fn(),
-            listActiveSubscriptionsForCustomer: jest.fn(),
-            constructWebhookEvent: jest.fn(),
-            getSubscriptionById: jest.fn(),
-            createAccountLink: jest.fn(),
-            createAccount: jest.fn(),
-            getAccountById: jest.fn(),
-            getCheckoutSessionById: jest.fn(),
-        };
+        stripe = stripeMock = createStripeMock();
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
             if (id === 'product_99_id') {
@@ -250,7 +219,7 @@ describe('SubscriptionController', () => {
                     },
                 };
             }
-            return null;
+            return null as StripeProduct;
         });
 
         controller = new SubscriptionController(
@@ -11865,7 +11834,7 @@ describe('SubscriptionController', () => {
                                     },
                                     livemode: true,
                                     pending_webhooks: 1,
-                                    request: {},
+                                    request: {} as any,
                                     type: type,
                                 }
                             );
@@ -11946,7 +11915,7 @@ describe('SubscriptionController', () => {
                                     },
                                     livemode: true,
                                     pending_webhooks: 1,
-                                    request: {},
+                                    request: {} as any,
                                     type: type,
                                 }
                             );
@@ -12020,13 +11989,17 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
                     stripeMock.getSubscriptionById.mockResolvedValueOnce({
                         id: 'sub',
                         status: 'active',
                         current_period_start: 456,
                         current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -12146,13 +12119,17 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
                     stripeMock.getSubscriptionById.mockResolvedValueOnce({
                         id: 'sub',
                         status: 'active',
                         current_period_start: 456,
                         current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -12255,13 +12232,17 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
                     stripeMock.getSubscriptionById.mockResolvedValueOnce({
                         id: 'sub',
                         status: 'active',
                         current_period_start: 456,
                         current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -12400,7 +12381,7 @@ describe('SubscriptionController', () => {
                             },
                             livemode: true,
                             pending_webhooks: 1,
-                            request: {},
+                            request: {} as any,
                             type: type,
                         });
 
@@ -12474,7 +12455,7 @@ describe('SubscriptionController', () => {
                             },
                             livemode: true,
                             pending_webhooks: 1,
-                            request: {},
+                            request: {} as any,
                             type: type,
                         });
 
@@ -12544,13 +12525,17 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
                     stripeMock.getSubscriptionById.mockResolvedValueOnce({
                         id: 'sub',
                         status: 'active',
                         current_period_start: 456,
                         current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -12616,13 +12601,17 @@ describe('SubscriptionController', () => {
                             },
                             livemode: true,
                             pending_webhooks: 1,
-                            request: {},
+                            request: {} as any,
                         });
                         stripeMock.getSubscriptionById.mockResolvedValueOnce({
                             id: 'sub',
                             status: 'active',
                             current_period_start: 456,
                             current_period_end: 999,
+                            cancel_at: 7777,
+                            canceled_at: null,
+                            ended_at: null,
+                            start_date: 123,
                         });
 
                         const result = await controller.handleStripeWebhook({
@@ -12727,13 +12716,17 @@ describe('SubscriptionController', () => {
                             },
                             livemode: true,
                             pending_webhooks: 1,
-                            request: {},
+                            request: {} as any,
                         });
                         stripeMock.getSubscriptionById.mockResolvedValueOnce({
                             id: 'sub',
                             status: 'active',
                             current_period_start: 456,
                             current_period_end: 999,
+                            cancel_at: 7777,
+                            canceled_at: null,
+                            ended_at: null,
+                            start_date: 123,
                         });
 
                         const result = await controller.handleStripeWebhook({
@@ -12832,7 +12825,7 @@ describe('SubscriptionController', () => {
                 },
                 livemode: true,
                 pending_webhooks: 1,
-                request: {},
+                request: {} as any,
                 type: 'customer.subscription.created',
             });
 
@@ -12940,7 +12933,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     stripeMock.getAccountById.mockResolvedValueOnce({
@@ -12989,7 +12982,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     stripeMock.getAccountById.mockResolvedValueOnce({
@@ -13041,7 +13034,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await store.updateCheckoutSessionInfo({
@@ -13117,7 +13110,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await store.updateCheckoutSessionInfo({
@@ -13211,7 +13204,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await store.updateCheckoutSessionInfo({
@@ -13328,7 +13321,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     stripeMock.getAccountById.mockResolvedValueOnce({
@@ -13377,7 +13370,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     stripeMock.getAccountById.mockResolvedValueOnce({
@@ -13429,7 +13422,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await contractStore.createItem(recordName, {
@@ -13518,7 +13511,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await contractStore.createItem(recordName, {
@@ -13729,7 +13722,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await contractStore.createItem(recordName, {
@@ -13815,7 +13808,7 @@ describe('SubscriptionController', () => {
                         },
                         livemode: true,
                         pending_webhooks: 1,
-                        request: {},
+                        request: {} as any,
                     });
 
                     await contractStore.createItem(recordName, {
@@ -13986,7 +13979,7 @@ describe('SubscriptionController', () => {
             //             },
             //             livemode: true,
             //             pending_webhooks: 1,
-            //             request: {},
+            //             request: {} as any,
             //         });
 
             //         await store.updateCheckoutSessionInfo({

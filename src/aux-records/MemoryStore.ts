@@ -168,11 +168,13 @@ import type {
 } from './SystemNotificationMessenger';
 import type { ModerationConfiguration } from './ModerationConfiguration';
 import type {
+    ExternalPayout,
     FinancialAccount,
     FinancialAccountFilter,
     FinancialStore,
     UniqueFinancialAccountFilter,
 } from './financial/FinancialStore';
+import type { PartialExcept } from './crud';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -251,6 +253,9 @@ export class MemoryStore
 
     private _purchasedItems: PurchasedItem[] = [];
     private _activationKeys: ActivationKey[] = [];
+
+    private _externalPayouts: ExternalPayout[] = [];
+
     // TODO: Support global permissions
     // private _globalPermissionAssignments: GlobalPermissionAssignment[] = [];
 
@@ -400,6 +405,10 @@ export class MemoryStore
         return this._financialAccounts;
     }
 
+    get externalPayouts() {
+        return this._externalPayouts;
+    }
+
     constructor(config: MemoryConfiguration) {
         this._subscriptionConfiguration = config.subscriptions;
         this._privoConfiguration = config.privo ?? null;
@@ -407,6 +416,61 @@ export class MemoryStore
         this.policies = {};
         this.roles = {};
         this.roleAssignments = {};
+    }
+
+    async createExternalPayout(payout: ExternalPayout): Promise<void> {
+        const index = this._externalPayouts.findIndex(
+            (p) => p.id === payout.id
+        );
+        if (index === -1) {
+            this._externalPayouts.push(payout);
+        } else {
+            this._externalPayouts[index] = payout;
+        }
+    }
+
+    async markPayoutAsPosted(
+        payoutId: string,
+        postedTransferId: string,
+        postedAtMs: number
+    ): Promise<void> {
+        const index = this._externalPayouts.findIndex((p) => p.id === payoutId);
+        if (index >= 0) {
+            this._externalPayouts[index] = {
+                ...this._externalPayouts[index],
+                postedTransferId,
+                postedAtMs,
+            };
+        }
+    }
+
+    async markPayoutAsVoided(
+        payoutId: string,
+        voidedTransferId: string,
+        voidedAtMs: number
+    ): Promise<void> {
+        const index = this._externalPayouts.findIndex((p) => p.id === payoutId);
+        if (index >= 0) {
+            this._externalPayouts[index] = {
+                ...this._externalPayouts[index],
+                voidedTransferId,
+                voidedAtMs,
+            };
+        }
+    }
+
+    async updateExternalPayout(
+        payout: PartialExcept<ExternalPayout, 'id'>
+    ): Promise<void> {
+        const index = this._externalPayouts.findIndex(
+            (p) => p.id === payout.id
+        );
+        if (index >= 0) {
+            this._externalPayouts[index] = {
+                ...this._externalPayouts[index],
+                ...payout,
+            };
+        }
     }
 
     async getAccountById(id: string): Promise<FinancialAccount | null> {
