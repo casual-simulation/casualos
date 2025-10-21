@@ -5664,6 +5664,23 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/stripe/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getStripeLoginLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/contract",
       },
       "inputs": Object {
@@ -5843,6 +5860,84 @@ Object {
       },
       "name": "listInsts",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "type": "number",
+          },
+          "contractId": Object {
+            "type": "string",
+          },
+          "note": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "payoutDestination": Object {
+            "type": "enum",
+            "values": Array [
+              "account",
+              "stripe",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "invoiceContract",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice/pay",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "invoiceId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payContractInvoice",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/financial/payouts",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "destination": Object {
+            "type": "enum",
+            "values": Array [
+              "stripe",
+              "cash",
+            ],
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payoutAccount",
+      "origins": "account",
     },
     Object {
       "http": Object {
@@ -11983,6 +12078,23 @@ Object {
     Object {
       "http": Object {
         "method": "POST",
+        "path": "/api/v2/stripe/login",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "getStripeLoginLink",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
         "path": "/api/v2/records/contract",
       },
       "inputs": Object {
@@ -12162,6 +12274,84 @@ Object {
       },
       "name": "listInsts",
       "origins": "api",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "type": "number",
+          },
+          "contractId": Object {
+            "type": "string",
+          },
+          "note": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "payoutDestination": Object {
+            "type": "enum",
+            "values": Array [
+              "account",
+              "stripe",
+            ],
+          },
+        },
+        "type": "object",
+      },
+      "name": "invoiceContract",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/records/contract/invoice/pay",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "invoiceId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payContractInvoice",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "POST",
+        "path": "/api/v2/financial/payouts",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "amount": Object {
+            "optional": true,
+            "type": "number",
+          },
+          "destination": Object {
+            "type": "enum",
+            "values": Array [
+              "stripe",
+              "cash",
+            ],
+          },
+          "studioId": Object {
+            "optional": true,
+            "type": "string",
+          },
+          "userId": Object {
+            "optional": true,
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "payoutAccount",
+      "origins": "account",
     },
     Object {
       "http": Object {
