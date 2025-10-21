@@ -6284,7 +6284,7 @@ describe('SubscriptionController', () => {
                 account: 'accountId',
                 refresh_url: 'https://return-url/',
                 return_url: 'https://return-url/',
-                type: 'account_onboarding',
+                type: 'account_update',
             });
         });
 
