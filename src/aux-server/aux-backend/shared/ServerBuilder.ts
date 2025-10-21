@@ -2149,6 +2149,7 @@ export class ServerBuilder implements SubscriptionLike {
                 this._policyStore,
                 this._purchasableItemsStore,
                 this._financialController,
+                this._financialStore,
                 this._contractsStore
             );
         }
