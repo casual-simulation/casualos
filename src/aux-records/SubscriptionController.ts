@@ -2681,6 +2681,13 @@ export class SubscriptionController {
     async invoiceContract(
         request: InvoiceContractRequest
     ): Promise<Result<{ invoiceId: string }, SimpleError>> {
+        if (request.amount <= 0) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'The invoice amount must be greater than zero.',
+            });
+        }
+
         const contract = await this._contractRecords.getItemById(
             request.contractId
         );
@@ -2699,6 +2706,13 @@ export class SubscriptionController {
                         'You are not authorized to invoice for the contract.',
                 });
             }
+        }
+
+        if (contract.contract.status !== 'open') {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'The contract is not open for invoicing.',
+            });
         }
 
         const balance = await this._financialController.getAccountBalance({

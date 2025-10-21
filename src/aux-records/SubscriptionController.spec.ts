@@ -10691,6 +10691,302 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('invoiceContract()', () => {
+        const recordName = 'recordName';
+        let contractId: string;
+        let holdingUserId: string;
+        let issuingUserId: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            holdingUserId = 'holdingUser';
+            issuingUserId = userId;
+
+            await store.saveUser({
+                id: holdingUserId,
+                email: 'holding@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Create a contract
+            contractId = 'contract1';
+            await contractStore.putItem(recordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: holdingUserId,
+                issuingUserId: issuingUserId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            // Create contract financial account and fund it
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 5000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+        });
+
+        it('should create an invoice for a contract', async () => {
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Test invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                success({
+                    invoiceId: expect.any(String),
+                })
+            );
+        });
+
+        it('should create multiple invoices for a contract', async () => {
+            const result1 = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Invoice 1',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            const result2 = await controller.invoiceContract({
+                contractId,
+                amount: 200,
+                payoutDestination: 'stripe',
+                note: 'Invoice 2',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result1).toEqual(
+                success({
+                    invoiceId: expect.any(String),
+                })
+            );
+
+            expect(result2).toEqual(
+                success({
+                    invoiceId: expect.any(String),
+                })
+            );
+
+            // Verify invoices have different IDs
+            if (result1.success && result2.success) {
+                expect(result1.value.invoiceId).not.toEqual(
+                    result2.value.invoiceId
+                );
+            }
+        });
+
+        it('should return an error for negative amounts', async () => {
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: -100,
+                payoutDestination: 'stripe',
+                note: 'Invalid invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The invoice amount must be greater than zero.',
+                })
+            );
+        });
+
+        it('should return an error for zero amounts', async () => {
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: 0,
+                payoutDestination: 'stripe',
+                note: 'Invalid invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage:
+                        'The invoice amount must be greater than zero.',
+                })
+            );
+        });
+
+        it('should return an error if the contract does not exist', async () => {
+            const result = await controller.invoiceContract({
+                contractId: 'nonexistent',
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Test invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The contract could not be found.',
+                })
+            );
+        });
+
+        it('should return an error if the amount is greater than the contract amount', async () => {
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: 10000,
+                payoutDestination: 'stripe',
+                note: 'Too much',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'The contract does not have sufficient funds to cover the invoice amount.',
+                })
+            );
+        });
+
+        it('should return an error if the user is not the holding user or a super user', async () => {
+            const otherUserId = 'otherUser';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Unauthorized invoice',
+                userId: otherUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to invoice for the contract.',
+                })
+            );
+        });
+
+        it('should allow super users to create invoices', async () => {
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Super user invoice',
+                userId: 'someOtherUser',
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(
+                success({
+                    invoiceId: expect.any(String),
+                })
+            );
+        });
+
+        it('should return an error if the contract status is not open', async () => {
+            // Mark contract as closed
+            await contractStore.putItem(recordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: holdingUserId,
+                issuingUserId: issuingUserId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'closed',
+                markers: [PRIVATE_MARKER],
+                closedAtMs: Date.now(),
+            });
+
+            const result = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Invoice for closed contract',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            // The implementation doesn't explicitly check contract status in invoiceContract,
+            // but we should still be able to invoice it. Let's verify it succeeds.
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The contract is not open for invoicing.',
+                })
+            );
+        });
+    });
+
     describe('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(
