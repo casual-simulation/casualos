@@ -15,10 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { failure, success, unwrap } from '@casual-simulation/aux-common';
+import {
+    failure,
+    success,
+    unwrap,
+    AccountBalance,
+} from '@casual-simulation/aux-common';
 import type { AccountWithDetails } from './FinancialController';
 import {
-    AccountBalance,
     FinancialController,
     getAccountBalance,
     getAssetAccountBalance,

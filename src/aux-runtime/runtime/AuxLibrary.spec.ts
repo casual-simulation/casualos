@@ -4758,7 +4758,7 @@ describe('AuxLibrary', () => {
                 const action = () =>
                     library.api.os.downloadBots([bot1, bot2], undefined);
 
-                expect(action).toThrowError(
+                expect(action).toThrow(
                     new Error('Filename must be provided. Try again.')
                 );
             });
@@ -6123,7 +6123,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if not given an options object', () => {
                 expect(() => {
                     (library.api.os.showConfirm as any)();
-                }).toThrowError();
+                }).toThrow();
             });
         });
 
@@ -6584,7 +6584,7 @@ describe('AuxLibrary', () => {
 
             it('should pipe everything to console.log', () => {
                 library.api.os.log('This', 'is', 'a', 'test');
-                expect(logMock).toBeCalledWith('This', 'is', 'a', 'test');
+                expect(logMock).toHaveBeenCalledWith('This', 'is', 'a', 'test');
             });
         });
 
@@ -13168,7 +13168,7 @@ describe('AuxLibrary', () => {
                         toValue: 2,
                         duration: 1,
                     })
-                ).rejects.toThrowError();
+                ).rejects.toThrow();
             });
         });
 
@@ -15964,7 +15964,7 @@ describe('AuxLibrary', () => {
                 );
                 handleResult(library.api.shout('abc'));
 
-                expect(abc).toBeCalled();
+                expect(abc).toHaveBeenCalled();
             });
 
             const listeningTagCases = ['auxListening', 'listening'];
@@ -15980,7 +15980,7 @@ describe('AuxLibrary', () => {
                     );
                     handleResult(library.api.shout('abc'));
 
-                    expect(abc).toBeCalled();
+                    expect(abc).toHaveBeenCalled();
                 });
             });
 
@@ -16003,7 +16003,7 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('create'));
                 handleResult(library.api.shout('abc'));
 
-                expect(abc).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
             });
 
             it('should be able to shout multiple times to a bot that was created during another shout', () => {
@@ -16029,8 +16029,8 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('abc'));
                 handleResult(library.api.shout('def'));
 
-                expect(abc).toBeCalledTimes(1);
-                expect(def).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
+                expect(def).toHaveBeenCalledTimes(1);
             });
 
             it('should be able to whisper to a bot that was created during another shout', () => {
@@ -16052,7 +16052,7 @@ describe('AuxLibrary', () => {
                 let [newBot] = handleResult(library.api.shout('create'));
                 handleResult(library.api.whisper(newBot, 'abc'));
 
-                expect(abc).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
             });
 
             it('should be able to whisper to itself after being created', () => {
@@ -16078,8 +16078,8 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('create'));
                 handleResult(library.api.shout('abc'));
 
-                expect(abc).toBeCalledTimes(1);
-                expect(def).toBeCalledTimes(1);
+                expect(abc).toHaveBeenCalledTimes(1);
+                expect(def).toHaveBeenCalledTimes(1);
             });
 
             it('should support complicated setup expressions', () => {
@@ -16119,9 +16119,9 @@ describe('AuxLibrary', () => {
                 handleResult(library.api.shout('ensureCreated'));
                 handleResult(library.api.shout('ensureCreated'));
 
-                expect(ensureCreated).toBeCalledTimes(2);
-                expect(setup).toBeCalledTimes(1);
-                expect(otherPart).toBeCalledTimes(1);
+                expect(ensureCreated).toHaveBeenCalledTimes(2);
+                expect(setup).toHaveBeenCalledTimes(1);
+                expect(otherPart).toHaveBeenCalledTimes(1);
             });
 
             it('should ignore null mods', () => {
@@ -16462,7 +16462,7 @@ describe('AuxLibrary', () => {
 
                 handleResult(destroy(['test1']));
 
-                expect(onDestroy1).toBeCalledTimes(1);
+                expect(onDestroy1).toHaveBeenCalledTimes(1);
             });
 
             it('should not destroy bots that are not destroyable', () => {
@@ -16624,7 +16624,7 @@ describe('AuxLibrary', () => {
                 );
                 handleResult(changeState(bot1, 'Abc'));
 
-                expect(enter).toBeCalledTimes(1);
+                expect(enter).toHaveBeenCalledTimes(1);
             });
 
             it('should send an @onExit whisper to the bot', () => {
@@ -16633,7 +16633,7 @@ describe('AuxLibrary', () => {
                 bot1.tags.state = 'Xyz';
                 handleResult(changeState(bot1, 'Abc'));
 
-                expect(exit).toBeCalledTimes(1);
+                expect(exit).toHaveBeenCalledTimes(1);
             });
 
             it('should use the given group name', () => {
@@ -16645,8 +16645,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.fun = 'Xyz';
                 handleResult(changeState(bot1, 'Abc', 'fun'));
 
-                expect(enter).toBeCalledTimes(1);
-                expect(exit).toBeCalledTimes(1);
+                expect(enter).toHaveBeenCalledTimes(1);
+                expect(exit).toHaveBeenCalledTimes(1);
             });
 
             it('should do nothing if the state does not change', () => {
@@ -16662,8 +16662,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.state = 'Xyz';
                 handleResult(changeState(bot1, 'Xyz'));
 
-                expect(enter).not.toBeCalled();
-                expect(exit).not.toBeCalled();
+                expect(enter).not.toHaveBeenCalled();
+                expect(exit).not.toHaveBeenCalled();
             });
         });
 
@@ -18537,7 +18537,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
+            expect(fn).toHaveBeenCalledTimes(1);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18563,8 +18563,8 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
-            expect(context.processBotTimerResult).toBeCalledWith('abc');
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(context.processBotTimerResult).toHaveBeenCalledWith('abc');
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18588,7 +18588,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18612,7 +18612,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18636,7 +18636,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18647,7 +18647,7 @@ describe('AuxLibrary', () => {
         it('should throw an error if not given a handler', () => {
             expect(() => {
                 (library.tagSpecificApi.setTimeout(tagContext) as any)();
-            }).toThrowError(new Error('A handler function must be provided.'));
+            }).toThrow(new Error('A handler function must be provided.'));
         });
 
         it('should not throw an error if not given a timeout', () => {
@@ -18721,7 +18721,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
+            expect(fn).toHaveBeenCalledTimes(1);
 
             expect(context.getBotTimers(bot1.id)).toEqual([
                 {
@@ -18731,7 +18731,7 @@ describe('AuxLibrary', () => {
             ]);
 
             jest.advanceTimersByTime(500);
-            expect(fn).toBeCalledTimes(2);
+            expect(fn).toHaveBeenCalledTimes(2);
         });
 
         it('should call context.processBotTimerResult() with the result of the function', () => {
@@ -18756,9 +18756,9 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(1);
-            expect(context.processBotTimerResult).toBeCalledTimes(1);
-            expect(context.processBotTimerResult).toBeCalledWith(1);
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(context.processBotTimerResult).toHaveBeenCalledTimes(1);
+            expect(context.processBotTimerResult).toHaveBeenCalledWith(1);
 
             expect(context.getBotTimers(bot1.id)).toEqual([
                 {
@@ -18768,9 +18768,9 @@ describe('AuxLibrary', () => {
             ]);
 
             jest.advanceTimersByTime(500);
-            expect(fn).toBeCalledTimes(2);
-            expect(context.processBotTimerResult).toBeCalledTimes(2);
-            expect(context.processBotTimerResult).toBeCalledWith(2);
+            expect(fn).toHaveBeenCalledTimes(2);
+            expect(context.processBotTimerResult).toHaveBeenCalledTimes(2);
+            expect(context.processBotTimerResult).toHaveBeenCalledWith(2);
         });
 
         it('should clear the timer when the bot is destroyed', () => {
@@ -18793,7 +18793,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18817,7 +18817,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18841,7 +18841,7 @@ describe('AuxLibrary', () => {
 
             jest.advanceTimersByTime(500);
 
-            expect(fn).toBeCalledTimes(0);
+            expect(fn).toHaveBeenCalledTimes(0);
             expect(context.getBotTimers(bot1.id)).toEqual([]);
         });
 
@@ -18852,7 +18852,7 @@ describe('AuxLibrary', () => {
         it('should throw an error if not given a handler', () => {
             expect(() => {
                 (library.tagSpecificApi.setInterval(tagContext) as any)();
-            }).toThrowError(new Error('A handler function must be provided.'));
+            }).toThrow(new Error('A handler function must be provided.'));
         });
 
         it('should not throw an error if not given a timeout', () => {
@@ -18868,19 +18868,19 @@ describe('AuxLibrary', () => {
         it('should throw an error if the given condition is false', () => {
             expect(() => {
                 library.api.assert(false);
-            }).toThrowError('Assertion failed.');
+            }).toThrow('Assertion failed.');
         });
 
         it('should not throw an error if the given condition is true', () => {
             expect(() => {
                 library.api.assert(true);
-            }).not.toThrowError('Assertion failed.');
+            }).not.toThrow('Assertion failed.');
         });
 
         it('should throw errors with the given message', () => {
             expect(() => {
                 library.api.assert(false, 'Failed with reason.');
-            }).toThrowError('Assertion failed. Failed with reason.');
+            }).toThrow('Assertion failed. Failed with reason.');
         });
     });
 
@@ -18911,7 +18911,7 @@ describe('AuxLibrary', () => {
             (name, value1, value2) => {
                 expect(() => {
                     library.api.assertEqual(value1, value2);
-                }).not.toThrowError();
+                }).not.toThrow();
             }
         );
 
@@ -20849,9 +20849,7 @@ describe('AuxLibrary', () => {
             const invalidValue: any = 'invalid value';
             expect(() => {
                 library.api.bytes.toBase64String(invalidValue);
-            }).toThrowError(
-                'Invalid input. Expected Uint8Array or ArrayBuffer.'
-            );
+            }).toThrow('Invalid input. Expected Uint8Array or ArrayBuffer.');
         });
     });
 
@@ -20907,9 +20905,7 @@ describe('AuxLibrary', () => {
             const invalidInput: any = new Blob();
             expect(() => {
                 library.api.bytes.toBase64Url(invalidInput);
-            }).toThrowError(
-                'Invalid input. Expected Uint8Array or ArrayBuffer.'
-            );
+            }).toThrow('Invalid input. Expected Uint8Array or ArrayBuffer.');
         });
 
         it('should use the given MIME Type', () => {
