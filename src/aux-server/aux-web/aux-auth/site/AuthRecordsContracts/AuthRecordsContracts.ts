@@ -198,10 +198,6 @@ export default class AuthRecordsContracts extends Vue {
             });
 
             if (result.success === true) {
-                // Remove the cancelled contract from the list
-                this.items.mdData = this.items.mdData.filter(
-                    (i) => i.address !== this.cancelContractItem.address
-                );
                 // Clear selection if the cancelled contract was selected
                 if (
                     this.selectedItem?.address ===
