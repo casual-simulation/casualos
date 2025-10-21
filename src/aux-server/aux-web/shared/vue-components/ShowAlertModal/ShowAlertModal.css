@@ -1,0 +1,19 @@
+.alert-dialog-content {
+    padding-bottom: 0;
+}
+
+.alert-dialog .md-dialog-title {
+    margin-bottom: 0;
+}
+
+.alert-dialog {
+    transition-duration: 0.1s, 0.1s;
+}
+
+.alert-dialog .md-dialog-title {
+    display: inline-block;
+}
+
+.md-dialog.alert-dialog {
+    z-index: 20;
+}
