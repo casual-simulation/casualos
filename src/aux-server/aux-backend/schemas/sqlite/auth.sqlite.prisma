@@ -1230,6 +1230,9 @@ model AuthCheckoutSession {
     userId String?
     user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+    transactionId String?
+    transferIds Json?
+    transfersPending Boolean?
     shouldBeAutomaticallyFulfilled Boolean?
 
     purchasedItems PurchasedItem[]

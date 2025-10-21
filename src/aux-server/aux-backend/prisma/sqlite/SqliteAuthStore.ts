@@ -252,6 +252,11 @@ export class SqliteAuthStore implements AuthStore {
             fulfilledAtMs: session.fulfilledAt.toNumber(),
             userId: session.userId,
             items: session.items as unknown as AuthCheckoutSessionItem[],
+            shouldBeAutomaticallyFulfilled:
+                session.shouldBeAutomaticallyFulfilled,
+            transactionId: session.transactionId,
+            transferIds: session.transferIds as string[],
+            transfersPending: session.transfersPending,
         };
     }
 
