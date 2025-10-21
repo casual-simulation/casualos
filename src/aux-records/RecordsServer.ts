@@ -5328,8 +5328,14 @@ export class RecordsServer {
                             return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
                         }
 
+                        const sessionKey = context.sessionKey;
+
+                        if (!sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
                         const validation = await this._validateSessionKey(
-                            context.sessionKey
+                            sessionKey
                         );
 
                         if (validation.success === false) {
