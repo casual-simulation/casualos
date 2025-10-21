@@ -1393,7 +1393,7 @@ export class ServerBuilder implements SubscriptionLike {
         }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
-                apiVersion: '2024-04-10',
+                apiVersion: '2025-09-30.clover',
             }),
             options.stripe.publishableKey,
             options.stripe.testClock
