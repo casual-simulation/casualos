@@ -43,6 +43,9 @@
                                 <md-tooltip>Item Options</md-tooltip>
                             </md-button>
                             <md-menu-content>
+                                <md-menu-item @click="openInvoiceDialog(item)"
+                                    >Invoice Contract</md-menu-item
+                                >
                                 <md-menu-item @click="deleteItem(item)"
                                     >Delete Contract</md-menu-item
                                 >
@@ -75,7 +78,101 @@
             </template>
         </md-table>
 
-        <auth-balances v-if="selectedItem" :contractId="selectedItem.id"></auth-balances>
+        <div v-if="selectedItem" class="contract-details-container">
+            <md-card>
+                <md-card-header>
+                    <div class="md-title">Contract Details: {{ selectedItem.id }}</div>
+                </md-card-header>
+
+                <md-card-content>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <strong>Status:</strong>
+                            <span>{{ selectedItem.status }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Issuing User:</strong>
+                            <span>{{ selectedItem.issuingUserId }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Holding User:</strong>
+                            <span>{{ selectedItem.holdingUserId }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Rate:</strong>
+                            <span>{{ selectedItem.rate }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Initial Value:</strong>
+                            <span>{{ selectedItem.initialValue }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Issued At:</strong>
+                            <span>{{ new Date(selectedItem.issuedAtMs).toLocaleString() }}</span>
+                        </div>
+                        <div v-if="selectedItem.closedAtMs" class="detail-item">
+                            <strong>Closed At:</strong>
+                            <span>{{ new Date(selectedItem.closedAtMs).toLocaleString() }}</span>
+                        </div>
+                        <div v-if="selectedItem.description" class="detail-item">
+                            <strong>Description:</strong>
+                            <span>{{ selectedItem.description }}</span>
+                        </div>
+                    </div>
+                </md-card-content>
+                <md-card-actions>
+                    <md-button class="md-primary" @click="openInvoiceDialog(selectedItem)">
+                        Create Invoice
+                    </md-button>
+                </md-card-actions>
+            </md-card>
+
+            <auth-balances :contractId="selectedItem.id"></auth-balances>
+
+            <md-card class="invoices-card">
+                <md-card-header>
+                    <div class="md-title">Invoices</div>
+                </md-card-header>
+
+                <md-progress-bar v-if="invoicesLoading" md-mode="indeterminate"></md-progress-bar>
+
+                <md-card-content>
+                    <div
+                        v-if="contractInvoices.length === 0 && !invoicesLoading"
+                        class="no-invoices"
+                    >
+                        <p>No invoices for this contract</p>
+                    </div>
+
+                    <md-table
+                        v-else-if="contractInvoices.length > 0"
+                        v-model="contractInvoices"
+                        md-card
+                    >
+                        <template v-slot:md-table-row="{ item: invoice }">
+                            <md-table-row>
+                                <md-table-cell md-label="ID">{{ invoice.id }}</md-table-cell>
+                                <md-table-cell md-label="Amount">{{
+                                    invoice.amount
+                                }}</md-table-cell>
+                                <md-table-cell md-label="Status">{{
+                                    invoice.status
+                                }}</md-table-cell>
+                                <md-table-cell md-label="Payout Destination">{{
+                                    invoice.payoutDestination
+                                }}</md-table-cell>
+                                <md-table-cell md-label="Opened At">{{
+                                    new Date(invoice.openedAtMs).toLocaleString()
+                                }}</md-table-cell>
+                                <md-table-cell md-label="Note" v-if="invoice.note">{{
+                                    invoice.note
+                                }}</md-table-cell>
+                            </md-table-row>
+                        </template>
+                    </md-table>
+                </md-card-content>
+            </md-card>
+        </div>
 
         <auth-permissions
             :recordName="recordName"
@@ -84,6 +181,59 @@
             :resourceId="permissionsResourceId"
         >
         </auth-permissions>
+
+        <md-dialog :md-active.sync="showInvoiceDialog" @md-closed="closeInvoiceDialog()">
+            <md-dialog-title>Invoice Contract</md-dialog-title>
+            <md-dialog-content>
+                <p v-if="invoiceContractItem">
+                    Invoicing Contract ID: <strong>{{ invoiceContractItem.id }}</strong>
+                </p>
+
+                <md-field class="md-block">
+                    <label>Amount (must be positive integer)</label>
+                    <md-input
+                        v-model.number="invoiceAmount"
+                        type="number"
+                        min="1"
+                        step="1"
+                    ></md-input>
+                </md-field>
+
+                <md-field class="md-block">
+                    <label>Note (optional)</label>
+                    <md-textarea v-model="invoiceNote"></md-textarea>
+                </md-field>
+
+                <md-field class="md-block">
+                    <label>Payout Destination</label>
+                    <md-select v-model="invoicePayoutDestination">
+                        <md-option value="account">Account</md-option>
+                        <md-option value="stripe">Stripe</md-option>
+                    </md-select>
+                </md-field>
+
+                <div v-if="invoiceErrorCode" class="md-error-message">
+                    <p>Error: {{ invoiceErrorCode }}</p>
+                </div>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button @click="closeInvoiceDialog()">Cancel</md-button>
+                <md-button
+                    class="md-primary"
+                    @click="submitInvoice()"
+                    :disabled="!invoiceAmount || invoiceLoading"
+                >
+                    <md-progress-spinner
+                        v-if="invoiceLoading"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                    ></md-progress-spinner>
+                    <span v-else>Invoice</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
     </div>
 </template>
 <script src="./AuthRecordsContracts.ts"></script>

@@ -23,7 +23,10 @@ import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
 import AuthPermissions from '../AuthPermissions/AuthPermissions';
-import type { ContractRecord } from '@casual-simulation/aux-records/contracts';
+import type {
+    ContractRecord,
+    ContractInvoice,
+} from '@casual-simulation/aux-records/contracts';
 import AuthAccountBalances from '../AuthAccountBalances/AuthAccountBalances';
 
 const PAGE_SIZE = 10;
@@ -62,6 +65,17 @@ export default class AuthRecordsContracts extends Vue {
     permissionsMarker: string = null;
     permissionsResourceKind: string = null;
     permissionsResourceId: string = null;
+
+    showInvoiceDialog: boolean = false;
+    invoiceContractItem: ContractRecord = null;
+    invoiceAmount: number = null;
+    invoiceNote: string = '';
+    invoicePayoutDestination: 'account' | 'stripe' = 'account';
+    invoiceLoading: boolean = false;
+    invoiceErrorCode: string = null;
+
+    contractInvoices: ContractInvoice[] = [];
+    invoicesLoading: boolean = false;
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
@@ -102,6 +116,15 @@ export default class AuthRecordsContracts extends Vue {
             endIndex: 0,
         };
         this.loading = false;
+        this.showInvoiceDialog = false;
+        this.invoiceContractItem = null;
+        this.invoiceAmount = null;
+        this.invoiceNote = '';
+        this.invoicePayoutDestination = 'account';
+        this.invoiceErrorCode = null;
+        this.invoicePayoutDestination = 'account';
+        this.invoiceLoading = false;
+        this.invoiceErrorCode = null;
         this.updatePagination(1, PAGE_SIZE);
     }
 
@@ -130,6 +153,53 @@ export default class AuthRecordsContracts extends Vue {
         }
     }
 
+    openInvoiceDialog(item: ContractRecord) {
+        this.invoiceContractItem = item;
+        this.invoiceAmount = null;
+        this.invoiceNote = '';
+        this.invoicePayoutDestination = 'account';
+        this.invoiceErrorCode = null;
+        this.showInvoiceDialog = true;
+    }
+
+    closeInvoiceDialog() {
+        this.showInvoiceDialog = false;
+        this.invoiceContractItem = null;
+        this.invoiceAmount = null;
+        this.invoiceNote = '';
+        this.invoicePayoutDestination = 'account';
+        this.invoiceErrorCode = null;
+    }
+
+    async submitInvoice() {
+        if (!this.invoiceContractItem || !this.invoiceAmount) {
+            return;
+        }
+
+        this.invoiceLoading = true;
+        this.invoiceErrorCode = null;
+
+        try {
+            const result = await authManager.client.invoiceContract({
+                contractId: this.invoiceContractItem.id,
+                amount: this.invoiceAmount,
+                note: this.invoiceNote || undefined,
+                payoutDestination: this.invoicePayoutDestination,
+            });
+
+            if (result.success === true) {
+                this.closeInvoiceDialog();
+            } else {
+                this.invoiceErrorCode = result.errorCode;
+            }
+        } catch (err) {
+            console.error('Error invoicing contract:', err);
+            this.invoiceErrorCode = 'error';
+        } finally {
+            this.invoiceLoading = false;
+        }
+    }
+
     onMarkerClick(marker: string) {
         this.permissionsMarker = marker;
     }
@@ -141,9 +211,31 @@ export default class AuthRecordsContracts extends Vue {
             this.permissionsMarker = null;
             this.permissionsResourceKind = null;
             this.permissionsResourceId = null;
+            this.contractInvoices = [];
             return;
         }
         this.permissionsResourceKind = 'contract';
         this.permissionsResourceId = item.address;
+        this.loadInvoices(item);
+    }
+
+    private async loadInvoices(item: ContractRecord) {
+        this.invoicesLoading = true;
+        try {
+            const result = await authManager.client.listContractInvoices({
+                contractId: item.id,
+            });
+
+            if (result.success === true) {
+                this.contractInvoices = result.items;
+            } else {
+                this.contractInvoices = [];
+            }
+        } catch (err) {
+            console.error('Error loading invoices:', err);
+            this.contractInvoices = [];
+        } finally {
+            this.invoicesLoading = false;
+        }
     }
 }
