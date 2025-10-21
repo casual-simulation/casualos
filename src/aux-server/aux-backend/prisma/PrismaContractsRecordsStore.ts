@@ -193,19 +193,34 @@ export class PrismaContractsRecordsStore implements ContractRecordsStore {
         recordName: string,
         address: string
     ): Promise<void> {
-        await this._client.contractRecord.update({
-            where: {
-                recordName_address: {
-                    recordName: recordName,
-                    address: address,
+        await this._client.$transaction([
+            this._client.contractRecord.update({
+                where: {
+                    recordName_address: {
+                        recordName: recordName,
+                        address: address,
+                    },
+                    status: { not: 'closed' },
                 },
-                status: { not: 'closed' },
-            },
-            data: {
-                status: 'closed',
-                closedAt: new Date(),
-            },
-        });
+                data: {
+                    status: 'closed',
+                    closedAt: new Date(),
+                },
+            }),
+            this._client.contractInvoice.updateMany({
+                where: {
+                    contract: {
+                        recordName: recordName,
+                        address: address,
+                    },
+                    status: 'open',
+                },
+                data: {
+                    status: 'void',
+                    voidedAt: new Date(),
+                },
+            }),
+        ]);
     }
 
     @traced(TRACE_NAME)

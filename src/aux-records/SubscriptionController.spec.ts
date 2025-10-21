@@ -10578,6 +10578,99 @@ describe('SubscriptionController', () => {
                 ]);
             });
 
+            it('should cancel all open invoices', async () => {
+                // Create an invoice
+                const invoiceResult = await controller.invoiceContract({
+                    contractId: 'contract1',
+                    amount: 100,
+                    payoutDestination: 'stripe',
+                    note: 'Test invoice',
+                    userId: null,
+                    userRole: 'system',
+                });
+
+                const invoiceId = unwrap(invoiceResult).invoiceId;
+
+                const result = await controller.cancelContract({
+                    recordName: recordName,
+                    address: 'item1',
+                    userId,
+                    instances: [],
+                });
+
+                expect(result).toEqual(
+                    success({
+                        refundedAmount: 100,
+                        refundCurrency: 'usd',
+                    })
+                );
+
+                const invoice = await contractStore.getInvoiceById(invoiceId);
+
+                expect(invoice?.invoice).toMatchObject({
+                    status: 'void',
+                    voidedAtMs: 101,
+                });
+
+                checkTransfers(
+                    await financialInterface.lookupTransfers([4n, 5n]),
+                    [
+                        {
+                            id: 4n,
+                            amount: 100n,
+                            code: TransferCodes.contract_refund,
+                            credit_account_id: userAccount!.account.id,
+                            debit_account_id: contractAccount!.account.id,
+                            flags:
+                                TransferFlags.linked |
+                                TransferFlags.balancing_debit,
+                            ledger: LEDGERS.usd,
+                            user_data_128: 6n,
+                        },
+                        {
+                            id: 5n,
+                            amount: 0n,
+                            code: TransferCodes.account_closing,
+                            credit_account_id: userAccount!.account.id,
+                            debit_account_id: contractAccount!.account.id,
+                            flags:
+                                TransferFlags.closing_debit |
+                                TransferFlags.pending,
+                            ledger: LEDGERS.usd,
+                            user_data_128: 6n,
+                        },
+                    ]
+                );
+
+                checkAccounts(financialInterface, [
+                    {
+                        id: userAccount!.account.id,
+                        credits_posted: 300n,
+                        credits_pending: 0n,
+                        debits_posted: 110n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: contractAccount!.account.id,
+                        credits_posted: 100n,
+                        credits_pending: 0n,
+                        debits_posted: 100n,
+                        debits_pending: 0n,
+                        flags:
+                            AccountFlags.history |
+                            AccountFlags.debits_must_not_exceed_credits |
+                            AccountFlags.closed,
+                    },
+                    {
+                        id: ACCOUNT_IDS.revenue_xp_platform_fees,
+                        credits_posted: 10n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
             it('should be able to cancel pending contracts', async () => {
                 await contractStore.updateItem(recordName, {
                     id: 'differentContractId',
@@ -12260,9 +12353,12 @@ describe('SubscriptionController', () => {
             });
 
             // Set up admin role for user on studio
-            store.roles[studioId] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
-            };
+            await store.addStudioAssignment({
+                studioId,
+                userId,
+                role: 'admin',
+                isPrimaryContact: true,
+            });
 
             store.subscriptionConfiguration = createTestSubConfiguration(
                 (config) =>

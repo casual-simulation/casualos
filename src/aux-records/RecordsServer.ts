@@ -5268,6 +5268,49 @@ export class RecordsServer {
                     .http('DELETE', '/api/v2/records/contract')
             ),
 
+            cancelContract: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/contract/cancel')
+                .inputs(
+                    z.object({
+                        recordName: RECORD_NAME_VALIDATION,
+                        address: ADDRESS_VALIDATION,
+                        instances: INSTANCES_ARRAY_VALIDATION.optional(),
+                    })
+                )
+                .handler(
+                    async ({ recordName, address, instances }, context) => {
+                        if (!this._websocketController) {
+                            return INSTS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        const sessionKey = context.sessionKey;
+
+                        if (!sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        const result = await this._subscriptions.cancelContract(
+                            {
+                                userId: validation.userId,
+                                recordName,
+                                address,
+                                instances,
+                            }
+                        );
+
+                        return genericResult(result);
+                    }
+                ),
+
             listInsts: procedure()
                 .origins('api')
                 .http('GET', '/api/v2/records/insts/list')

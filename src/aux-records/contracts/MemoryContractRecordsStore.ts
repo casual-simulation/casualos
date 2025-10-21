@@ -94,6 +94,8 @@ export class MemoryContractRecordsStore
             this._invoices.set(invoiceId, {
                 ...invoice,
                 status,
+                voidedAtMs: status === 'void' ? Date.now() : invoice.voidedAtMs,
+                paidAtMs: status === 'paid' ? Date.now() : invoice.paidAtMs,
             });
         }
     }
@@ -139,6 +141,14 @@ export class MemoryContractRecordsStore
                 status: 'closed',
                 closedAtMs: Date.now(),
             });
+
+            const invoices = await this.listInvoicesForContract(item.id);
+
+            for (let invoice of invoices) {
+                if (invoice.status === 'open') {
+                    await this.markOpenInvoiceAs(invoice.id, 'void');
+                }
+            }
         }
     }
 
