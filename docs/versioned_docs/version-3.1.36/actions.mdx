@@ -4730,53 +4730,6 @@ let confirmed = await os.showConfirm({
 os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
 ```
 
-### `os.showAlert(options)`
- 
-Shows an alert dialog using the given options.
-Alert dialogs are useful for displaying important information to users that requires acknowledgment.
- 
-Returns a promise that resolves when the user dismisses the dialog by clicking the button or closing it.
- 
-The **first parameter** is the options that should be used. It should be an object with the following structure:
-```typescript
-let options: {
-    /**
-     * The title that should be shown for the dialog.
-     */
-    title: string;
- 
-    /**
-     * The content of the dialog.
-     */
-    content: string;
- 
-    /**
-     * The text that should be shown on the dismiss button.
-     * Defaults to "OK" if not specified.
-     */
-    dismissText?: string;
-};
-```
- 
-#### Examples:
-```typescript title='Show an alert dialog'
-await os.showAlert({
-    title: 'Notice',
-    content: 'Your action has been completed successfully.'
-});
- 
-os.toast('Alert dismissed');
-```
-```typescript title='Show an alert dialog with custom button text'
-await os.showAlert({
-    title: 'Warning',
-    content: 'Please review your settings before continuing.',
-    dismissText: 'Got it'
-});
- 
-os.toast('User acknowledged the warning');
-```
-
 ### `os.setClipboard(text)`
 
 Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
