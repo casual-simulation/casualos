@@ -329,6 +329,12 @@ export class FeaturesBuilder {
     withStore(features?: PurchasableItemFeaturesConfiguration): this {
         this._features.store = features ?? {
             allowed: true,
+            currencyLimits: {
+                usd: {
+                    maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+                    minCost: 50, // $0.50 US Dollars (USD)
+                },
+            },
         };
         return this;
     }

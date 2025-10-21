@@ -12098,6 +12098,208 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('createStripeLoginLink()', () => {
+        beforeEach(async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeAccountId: 'acct_user123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            stripeMock.createLoginLink.mockResolvedValueOnce({
+                url: 'https://stripe.com/login/test123',
+            });
+        });
+
+        it('should return a stripe login link for user', async () => {
+            const result = await controller.createStripeLoginLink({
+                userId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'https://stripe.com/login/test123',
+                })
+            );
+
+            // Verify stripe was called with the correct account
+            expect(stripeMock.createLoginLink).toHaveBeenCalledWith({
+                account: 'acct_user123',
+            });
+        });
+
+        it('should return a stripe login link for studio', async () => {
+            const studioId = 'testStudio';
+            await store.addStudio({
+                id: studioId,
+                comId: 'comId1',
+                displayName: 'Test Studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 0,
+                subscriptionPeriodEndMs: 1000000000,
+                stripeAccountId: 'acct_studio123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Set up admin role for user on studio
+            await store.addStudioAssignment({
+                studioId,
+                userId,
+                role: 'admin',
+                isPrimaryContact: true,
+            });
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub_id', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                    )
+            );
+
+            const result = await controller.createStripeLoginLink({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                success({
+                    url: 'https://stripe.com/login/test123',
+                })
+            );
+
+            // Verify stripe was called with the studio account
+            expect(stripeMock.createLoginLink).toHaveBeenCalledWith({
+                account: 'acct_studio123',
+            });
+        });
+
+        it('should return not_found if user does not have stripe account', async () => {
+            const userWithoutStripe = await createTestUser(
+                {
+                    auth: auth,
+                    authMessenger: authMessenger,
+                },
+                'nostripe@example.com'
+            );
+
+            const result = await controller.createStripeLoginLink({
+                userId: userWithoutStripe.userId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'No Stripe account found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if user is not admin of studio', async () => {
+            const studioId = 'testStudio';
+            await store.addStudio({
+                id: studioId,
+                comId: 'comId1',
+                displayName: 'Test Studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 0,
+                subscriptionPeriodEndMs: 1000000000,
+                stripeAccountId: 'acct_studio123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Don't set up any roles - user has no access
+
+            const result = await controller.createStripeLoginLink({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
+        });
+
+        it('should return not_authorized if studio subscription features are not allowed', async () => {
+            const studioId = 'testStudio';
+            await store.addStudio({
+                id: studioId,
+                comId: 'comId1',
+                displayName: 'Test Studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'expired',
+                subscriptionPeriodStartMs: 0,
+                subscriptionPeriodEndMs: 100, // Expired
+                stripeAccountId: 'acct_studio123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Set up admin role for user on studio
+            store.roles[studioId] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub_id', (sub) =>
+                        sub.withTier('tier1').withAllDefaultFeatures()
+                    )
+            );
+
+            const result = await controller.createStripeLoginLink({
+                userId,
+                studioId,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                })
+            );
+        });
+
+        it('should return studio_not_found if studio does not exist', async () => {
+            const result = await controller.createStripeLoginLink({
+                userId,
+                studioId: 'nonexistent',
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'The given studio was not found.',
+                })
+            );
+        });
+    });
+
     describe('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(

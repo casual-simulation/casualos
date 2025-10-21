@@ -30136,6 +30136,145 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('POST /api/v2/stripe/login', () => {
+        beforeEach(async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeAccountId: 'acct_test123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            stripeMock.createLoginLink.mockResolvedValueOnce({
+                url: 'https://stripe.com/login/test123',
+            });
+        });
+
+        it('should return a stripe login link for user', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/stripe/login`,
+                    JSON.stringify({}),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'https://stripe.com/login/test123',
+                },
+                headers: corsHeaders(authenticatedHeaders['origin']),
+            });
+
+            // Verify stripe was called with the correct account
+            expect(stripeMock.createLoginLink).toHaveBeenCalledWith({
+                account: 'acct_test123',
+            });
+        });
+
+        it('should return a stripe login link for studio', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                    )
+            );
+
+            const studioId = 'testStudio';
+            await store.addStudio({
+                id: studioId,
+                comId: 'comId1',
+                displayName: 'Test Studio',
+                logoUrl: 'https://example.com/logo.png',
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                subscriptionPeriodStartMs: 0,
+                subscriptionPeriodEndMs: 1000000000,
+                stripeAccountId: 'acct_studio123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            await store.addStudioAssignment({
+                studioId,
+                userId,
+                role: 'admin',
+                isPrimaryContact: true,
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/stripe/login`,
+                    JSON.stringify({
+                        studioId: studioId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    url: 'https://stripe.com/login/test123',
+                },
+                headers: corsHeaders(authenticatedHeaders['origin']),
+            });
+
+            // Verify stripe was called with the studio account
+            expect(stripeMock.createLoginLink).toHaveBeenCalledWith({
+                account: 'acct_studio123',
+            });
+        });
+
+        it('should return not_found if user does not have stripe account', async () => {
+            // Create new user without stripe setup
+            const testUser = await createTestUser(
+                {
+                    auth: authController,
+                    authMessenger: authMessenger,
+                },
+                'nostripe@example.com'
+            );
+
+            const headers = {
+                ...defaultHeaders,
+                origin: accountOrigin,
+                authorization: `Bearer ${testUser.sessionKey}`,
+            };
+
+            const result = await server.handleHttpRequest(
+                httpPost(`/api/v2/stripe/login`, JSON.stringify({}), headers)
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'not_found',
+                    errorMessage: 'No Stripe account found.',
+                },
+                headers: corsHeaders(headers['origin']),
+            });
+        });
+
+        testUrl(
+            'POST',
+            `/api/v2/stripe/login`,
+            () => JSON.stringify({}),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({

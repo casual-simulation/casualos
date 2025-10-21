@@ -1458,12 +1458,12 @@ export class SubscriptionController {
         if (!accountId) {
             return failure({
                 errorCode: 'not_found',
-                errorMessage: 'No Stripe account found for the user.',
+                errorMessage: 'No Stripe account found.',
             });
         }
 
         const session = await this._stripe.createLoginLink({
-            account: user.stripeAccountId,
+            account: accountId,
         });
 
         return success({
