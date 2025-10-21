@@ -2761,6 +2761,54 @@ export class SubscriptionController {
     }
 
     /**
+     * Cancels an invoice for a contract.
+     * @param request The request to cancel the invoice.
+     */
+    @traced(TRACE_NAME)
+    async cancelInvoice(
+        request: CancelInvoiceRequest
+    ): Promise<Result<void, SimpleError>> {
+        const invoice = await this._contractRecords.getInvoiceById(
+            request.invoiceId
+        );
+
+        if (!invoice?.invoice) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The invoice could not be found.',
+            });
+        }
+
+        // TODO: Use the permissions system for viewing invoices
+        if (!isSuperUserRole(request.userRole)) {
+            if (
+                invoice.contract.issuingUserId !== request.userId &&
+                invoice.contract.holdingUserId !== request.userId
+            ) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                });
+            }
+        }
+
+        if (invoice.invoice.status !== 'open') {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'Only open invoices can be cancelled.',
+            });
+        }
+
+        await this._contractRecords.markOpenInvoiceAs(
+            request.invoiceId,
+            'void'
+        );
+
+        return success();
+    }
+
+    /**
      * Lists all invoices for a contract.
      * @param request The request to list the invoices.
      */
@@ -6137,4 +6185,21 @@ export interface ListContractInvoicesRequest {
     //  * If not provided, then all invoices will be returned.
     //  */
     // status?: InvoiceStatus;
+}
+
+export interface CancelInvoiceRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+
+    /**
+     * The ID of the invoice to cancel.
+     */
+    invoiceId: string;
 }

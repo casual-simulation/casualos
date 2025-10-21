@@ -11894,6 +11894,210 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('cancelInvoice()', () => {
+        const recordName = 'recordName';
+        let contractId: string;
+        let holdingUserId: string;
+        let issuingUserId: string;
+        let invoiceId: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            holdingUserId = 'holdingUser';
+            issuingUserId = userId;
+
+            await store.saveUser({
+                id: holdingUserId,
+                email: 'holding@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Create a contract
+            contractId = 'contract1';
+            await contractStore.putItem(recordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: holdingUserId,
+                issuingUserId: issuingUserId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            // Create contract financial account and fund it
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 5000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+
+            // Create an invoice
+            const invoiceResult = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Test invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            invoiceId = unwrap(invoiceResult).invoiceId;
+        });
+
+        it('should mark the invoice as void', async () => {
+            const result = await controller.cancelInvoice({
+                invoiceId,
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(success());
+
+            // Verify the invoice is now void
+            const invoice = await contractStore.getInvoiceById(invoiceId);
+            expect(invoice?.invoice?.status).toBe('void');
+        });
+
+        it('should allow issuing user to cancel invoices', async () => {
+            const result = await controller.cancelInvoice({
+                invoiceId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(success());
+
+            // Verify the invoice is now void
+            const invoice = await contractStore.getInvoiceById(invoiceId);
+            expect(invoice?.invoice?.status).toBe('void');
+        });
+
+        it('should return not_found if invoice does not exist', async () => {
+            const result = await controller.cancelInvoice({
+                invoiceId: 'nonexistent',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The invoice could not be found.',
+                })
+            );
+        });
+
+        it('should return not_authorized if user cannot access the contract', async () => {
+            const otherUserId = 'otherUser';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await controller.cancelInvoice({
+                invoiceId,
+                userId: otherUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                })
+            );
+        });
+
+        it('should allow super users to cancel any invoice', async () => {
+            const result = await controller.cancelInvoice({
+                invoiceId,
+                userId: 'someOtherUser',
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(success());
+
+            // Verify the invoice is now void
+            const invoice = await contractStore.getInvoiceById(invoiceId);
+            expect(invoice?.invoice?.status).toBe('void');
+        });
+
+        it('should return invalid_request if invoice is already void', async () => {
+            // First cancellation should succeed
+            await controller.cancelInvoice({
+                invoiceId,
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            // Second cancellation should fail
+            const result = await controller.cancelInvoice({
+                invoiceId,
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'Only open invoices can be cancelled.',
+                })
+            );
+        });
+    });
+
     describe('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(

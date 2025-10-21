@@ -29979,6 +29979,163 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('POST /api/v2/records/contract/invoice/cancel', () => {
+        let contractId: string;
+        let invoiceId: string;
+        let otherUserId: string;
+
+        beforeEach(async () => {
+            const testRecordName = 'testContractRecord';
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await store.addRecord({
+                name: testRecordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            // Create a contract
+            contractId = 'contract1';
+            await contractRecordsStore.putItem(testRecordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: userId,
+                issuingUserId: userId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            // Create contract financial account and fund it
+            await financialController.init();
+
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 5000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+
+            // Create an invoice
+            const invoiceResult = await subscriptionController.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Test invoice',
+                userId: userId,
+                userRole: null,
+            });
+
+            invoiceId = unwrap(invoiceResult).invoiceId;
+
+            // Create another user for authorization testing
+            otherUserId = ownerId;
+        });
+
+        it('should cancel an invoice and mark it as void', async () => {
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/invoice/cancel`,
+                    JSON.stringify({
+                        invoiceId: invoiceId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: corsHeaders(authenticatedHeaders['origin']),
+            });
+
+            // Verify the invoice is now void
+            const invoice = await contractRecordsStore.getInvoiceById(
+                invoiceId
+            );
+            expect(invoice?.invoice?.status).toBe('void');
+        });
+
+        it('should return not_authorized when user is not authorized to cancel the invoice', async () => {
+            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/records/contract/invoice/cancel`,
+                    JSON.stringify({
+                        invoiceId: invoiceId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                },
+                headers: corsHeaders(authenticatedHeaders['origin']),
+            });
+
+            // Verify the invoice is still open
+            const invoice = await contractRecordsStore.getInvoiceById(
+                invoiceId
+            );
+            expect(invoice?.invoice?.status).toBe('open');
+        });
+
+        testUrl(
+            'POST',
+            `/api/v2/records/contract/invoice/cancel`,
+            () =>
+                JSON.stringify({
+                    invoiceId: invoiceId,
+                }),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({

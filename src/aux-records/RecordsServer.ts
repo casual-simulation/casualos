@@ -5485,6 +5485,40 @@ export class RecordsServer {
                     return genericResult(result);
                 }),
 
+            cancelInvoice: procedure()
+                .origins('account')
+                .http('POST', '/api/v2/records/contract/invoice/cancel')
+                .inputs(
+                    z.object({
+                        invoiceId: z.string().min(1),
+                    })
+                )
+                .handler(async ({ invoiceId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    if (!context.sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result = await this._subscriptions.cancelInvoice({
+                        userId: validation.userId,
+                        userRole: validation.role,
+                        invoiceId,
+                    });
+
+                    return genericResult(result);
+                }),
+
             deleteInst: procedure()
                 .origins('account')
                 .http('DELETE', '/api/v2/records/insts')
