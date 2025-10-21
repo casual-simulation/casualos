@@ -11670,6 +11670,230 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('listContractInvoices()', () => {
+        const recordName = 'recordName';
+        let contractId: string;
+        let holdingUserId: string;
+        let issuingUserId: string;
+        let invoiceId1: string;
+        let invoiceId2: string;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            holdingUserId = 'holdingUser';
+            issuingUserId = userId;
+
+            await store.saveUser({
+                id: holdingUserId,
+                email: 'holding@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Create a contract
+            contractId = 'contract1';
+            await contractStore.putItem(recordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: holdingUserId,
+                issuingUserId: issuingUserId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            // Create contract financial account and fund it
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 5000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+
+            // Create first invoice
+            const invoiceResult1 = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'First invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            invoiceId1 = unwrap(invoiceResult1).invoiceId;
+
+            // Create second invoice
+            const invoiceResult2 = await controller.invoiceContract({
+                contractId,
+                amount: 200,
+                payoutDestination: 'stripe',
+                note: 'Second invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            invoiceId2 = unwrap(invoiceResult2).invoiceId;
+        });
+
+        it('should return all invoices for the contract', async () => {
+            const result = await controller.listContractInvoices({
+                contractId,
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        id: invoiceId1,
+                        contractId: contractId,
+                        amount: 100,
+                        status: 'open',
+                        payoutDestination: 'stripe',
+                        note: 'First invoice',
+                    },
+                    {
+                        id: invoiceId2,
+                        contractId: contractId,
+                        amount: 200,
+                        status: 'open',
+                        payoutDestination: 'stripe',
+                        note: 'Second invoice',
+                    },
+                ])
+            );
+        });
+
+        it('should allow issuing user to view invoices', async () => {
+            const result = await controller.listContractInvoices({
+                contractId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        id: invoiceId1,
+                        contractId: contractId,
+                        amount: 100,
+                        status: 'open',
+                        payoutDestination: 'stripe',
+                        note: 'First invoice',
+                    },
+                    {
+                        id: invoiceId2,
+                        contractId: contractId,
+                        amount: 200,
+                        status: 'open',
+                        payoutDestination: 'stripe',
+                        note: 'Second invoice',
+                    },
+                ])
+            );
+        });
+
+        it('should return not_authorized if user cannot access the contract', async () => {
+            const otherUserId = 'otherUser';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await controller.listContractInvoices({
+                contractId,
+                userId: otherUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to view invoices for the contract.',
+                })
+            );
+        });
+
+        it('should allow super users to view invoices for any contract', async () => {
+            const result = await controller.listContractInvoices({
+                contractId,
+                userId: 'someOtherUser',
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(
+                success([
+                    {
+                        id: invoiceId1,
+                        contractId: contractId,
+                        amount: 100,
+                        status: 'open',
+                        payoutDestination: 'stripe',
+                        note: 'First invoice',
+                    },
+                    {
+                        id: invoiceId2,
+                        contractId: contractId,
+                        amount: 200,
+                        status: 'open',
+                        payoutDestination: 'stripe',
+                        note: 'Second invoice',
+                    },
+                ])
+            );
+        });
+    });
+
     describe('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(

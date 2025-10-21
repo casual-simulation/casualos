@@ -129,6 +129,7 @@ import {
     TransferCodes,
 } from './financial';
 import type {
+    ContractInvoice,
     ContractRecord,
     ContractRecordsStore,
     ContractSubscriptionMetrics,
@@ -2759,9 +2760,44 @@ export class SubscriptionController {
         });
     }
 
-    // async listContractInvoices(request: ListContractInvoicesRequest): Promise<Result<ContractInvoice[], SimpleError>> {
+    /**
+     * Lists all invoices for a contract.
+     * @param request The request to list the invoices.
+     */
+    @traced(TRACE_NAME)
+    async listContractInvoices(
+        request: ListContractInvoicesRequest
+    ): Promise<Result<ContractInvoice[], SimpleError>> {
+        const contract = await this._contractRecords.getItemById(
+            request.contractId
+        );
+        if (!contract?.contract) {
+            return failure({
+                errorCode: 'not_found',
+                errorMessage: 'The contract could not be found.',
+            });
+        }
 
-    // }
+        // TODO: Use the permissions system for viewing invoices
+        if (!isSuperUserRole(request.userRole)) {
+            if (
+                contract.contract.issuingUserId !== request.userId &&
+                contract.contract.holdingUserId !== request.userId
+            ) {
+                return failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to view invoices for the contract.',
+                });
+            }
+        }
+
+        const invoices = await this._contractRecords.listInvoicesForContract(
+            request.contractId
+        );
+
+        return success(invoices);
+    }
 
     /**
      * Pays an invoice for a contract.
@@ -6078,4 +6114,27 @@ interface InternalPayoutRequest extends PayoutAccountRequest {
      * The ID of the contract that the payout is for.
      */
     contractId?: string;
+}
+
+export interface ListContractInvoicesRequest {
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The role of the user that is currently logged in.
+     */
+    userRole: UserRole | null;
+
+    /**
+     * The ID of the contract to list invoices for.
+     */
+    contractId: string;
+
+    // /**
+    //  * The status filter for the invoices.
+    //  * If not provided, then all invoices will be returned.
+    //  */
+    // status?: InvoiceStatus;
 }

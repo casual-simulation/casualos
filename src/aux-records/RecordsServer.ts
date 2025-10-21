@@ -5450,6 +5450,41 @@ export class RecordsServer {
                     }
                 ),
 
+            listContractInvoices: procedure()
+                .origins('account')
+                .http('GET', '/api/v2/records/contract/invoices')
+                .inputs(
+                    z.object({
+                        contractId: z.string().min(1),
+                    })
+                )
+                .handler(async ({ contractId }, context) => {
+                    if (!this._subscriptions) {
+                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                    }
+
+                    if (!context.sessionKey) {
+                        return NOT_LOGGED_IN_RESULT;
+                    }
+
+                    const validation = await this._validateSessionKey(
+                        context.sessionKey
+                    );
+
+                    if (validation.success === false) {
+                        return validation;
+                    }
+
+                    const result =
+                        await this._subscriptions.listContractInvoices({
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            contractId,
+                        });
+
+                    return genericResult(result);
+                }),
+
             deleteInst: procedure()
                 .origins('account')
                 .http('DELETE', '/api/v2/records/insts')

@@ -29807,6 +29807,178 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('GET /api/v2/records/contract/invoices', () => {
+        const contractId: string = 'contractId';
+        let invoiceId1: string;
+        let invoiceId2: string;
+
+        beforeEach(async () => {
+            const testRecordName = 'testContractRecord';
+
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await store.addRecord({
+                name: testRecordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            // Create a contract
+            await contractRecordsStore.putItem(testRecordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: userId,
+                issuingUserId: userId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            // Create contract financial account and fund it
+            await financialController.init();
+
+            const account = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 5000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: account.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+
+            // Create first invoice
+            const invoiceResult1 = await subscriptionController.invoiceContract(
+                {
+                    contractId,
+                    amount: 100,
+                    payoutDestination: 'stripe',
+                    note: 'First invoice',
+                    userId: userId,
+                    userRole: null,
+                }
+            );
+
+            invoiceId1 = unwrap(invoiceResult1).invoiceId;
+
+            // Create second invoice
+            const invoiceResult2 = await subscriptionController.invoiceContract(
+                {
+                    contractId,
+                    amount: 200,
+                    payoutDestination: 'stripe',
+                    note: 'Second invoice',
+                    userId: userId,
+                    userRole: null,
+                }
+            );
+
+            invoiceId2 = unwrap(invoiceResult2).invoiceId;
+        });
+
+        it('should return all invoices for the contract', async () => {
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract/invoices?contractId=${contractId}`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    items: [
+                        {
+                            id: invoiceId1,
+                            contractId: contractId,
+                            amount: 100,
+                            status: 'open',
+                            payoutDestination: 'stripe',
+                            note: 'First invoice',
+                            openedAtMs: expect.any(Number),
+                            createdAtMs: expect.any(Number),
+                            updatedAtMs: expect.any(Number),
+                        },
+                        {
+                            id: invoiceId2,
+                            contractId: contractId,
+                            amount: 200,
+                            status: 'open',
+                            payoutDestination: 'stripe',
+                            note: 'Second invoice',
+                            openedAtMs: expect.any(Number),
+                            createdAtMs: expect.any(Number),
+                            updatedAtMs: expect.any(Number),
+                        },
+                    ],
+                },
+                headers: corsHeaders(authenticatedHeaders['origin']),
+            });
+        });
+
+        it('should return not_authorized when user cannot access the contract', async () => {
+            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+
+            const result = await server.handleHttpRequest(
+                httpGet(
+                    `/api/v2/records/contract/invoices?contractId=${contractId}`,
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to view invoices for the contract.',
+                },
+                headers: corsHeaders(authenticatedHeaders['origin']),
+            });
+        });
+
+        testUrl(
+            'GET',
+            `/api/v2/records/contract/invoices?contractId=${contractId}`,
+            () => null,
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({

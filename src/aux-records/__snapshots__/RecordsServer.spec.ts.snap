@@ -5941,6 +5941,22 @@ Object {
     },
     Object {
       "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract/invoices",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listContractInvoices",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
         "method": "DELETE",
         "path": "/api/v2/records/insts",
       },
@@ -12351,6 +12367,22 @@ Object {
         "type": "object",
       },
       "name": "payoutAccount",
+      "origins": "account",
+    },
+    Object {
+      "http": Object {
+        "method": "GET",
+        "path": "/api/v2/records/contract/invoices",
+      },
+      "inputs": Object {
+        "schema": Object {
+          "contractId": Object {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "name": "listContractInvoices",
       "origins": "account",
     },
     Object {
