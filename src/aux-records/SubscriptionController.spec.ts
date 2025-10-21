@@ -10987,6 +10987,264 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('payContractInvoice()', () => {
+        const recordName = 'recordName';
+        let contractId: string;
+        let holdingUserId: string;
+        let issuingUserId: string;
+        let invoiceId: string;
+        let contractAccount: AccountWithDetails;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withContracts()
+                            .withContractsCurrencyLimit('usd', {
+                                maxCost: 10000,
+                                minCost: 10,
+                            })
+                    )
+            );
+
+            await store.addRecord({
+                name: recordName,
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            holdingUserId = 'holdingUser';
+            issuingUserId = userId;
+
+            await store.saveUser({
+                id: holdingUserId,
+                email: 'holding@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'accountId',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Create a contract
+            contractId = 'contract1';
+            await contractStore.putItem(recordName, {
+                id: contractId,
+                address: 'item1',
+                initialValue: 1000,
+                holdingUserId: holdingUserId,
+                issuingUserId: issuingUserId,
+                issuedAtMs: Date.now(),
+                rate: 100,
+                status: 'open',
+                markers: [PRIVATE_MARKER],
+            });
+
+            // Create contract financial account and fund it
+            contractAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    contractId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 5000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: contractAccount.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+
+            // Create an invoice
+            const invoiceResult = await controller.invoiceContract({
+                contractId,
+                amount: 100,
+                payoutDestination: 'stripe',
+                note: 'Test invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            invoiceId = unwrap(invoiceResult).invoiceId;
+        });
+
+        it('should pay an invoice for a contract', async () => {
+            stripeMock.createTransfer.mockResolvedValueOnce({
+                id: 'transfer_id',
+            });
+
+            const result = await controller.payContractInvoice({
+                invoiceId: invoiceId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(success());
+
+            // Verify stripe transfer was created
+            expect(stripeMock.createTransfer).toHaveBeenCalled();
+        });
+
+        it('should mark the invoice as paid', async () => {
+            stripeMock.createTransfer.mockResolvedValueOnce({
+                id: 'transfer_id',
+            });
+
+            const result = await controller.payContractInvoice({
+                invoiceId: invoiceId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(success());
+
+            const invoice = await contractStore.getInvoiceById(invoiceId);
+
+            expect(invoice?.invoice.status).toBe('paid');
+        });
+
+        it('should return an error if the invoice does not exist', async () => {
+            const result = await controller.payContractInvoice({
+                invoiceId: 'nonexistent',
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_found',
+                    errorMessage: 'The invoice could not be found.',
+                })
+            );
+        });
+
+        it('should return an error if the contract account does not have enough funds', async () => {
+            // Create another invoice with a large amount
+            const largeInvoiceResult = await controller.invoiceContract({
+                contractId,
+                amount: 4000,
+                payoutDestination: 'stripe',
+                note: 'Large invoice',
+                userId: holdingUserId,
+                userRole: null,
+            });
+
+            const largeInvoiceId = unwrap(largeInvoiceResult).invoiceId;
+
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 5000,
+                            creditAccountId: ACCOUNT_IDS.assets_stripe,
+                            debitAccountId: contractAccount.account.id,
+                            code: TransferCodes.admin_debit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+
+            const result = await controller.payContractInvoice({
+                invoiceId: largeInvoiceId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'insufficient_funds',
+                    errorMessage:
+                        'The contract does not have sufficient funds to pay the invoice.',
+                })
+            );
+        });
+
+        it('should return an error if the user is not the issuing user or a super user', async () => {
+            const otherUserId = 'otherUser';
+            await store.saveUser({
+                id: otherUserId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            const result = await controller.payContractInvoice({
+                invoiceId: invoiceId,
+                userId: otherUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to pay invoices for the contract.',
+                })
+            );
+        });
+
+        it('should allow super users to pay invoices', async () => {
+            stripeMock.createTransfer.mockResolvedValueOnce({
+                id: 'transfer_id',
+            });
+
+            const result = await controller.payContractInvoice({
+                invoiceId: invoiceId,
+                userId: 'someOtherUser',
+                userRole: 'superUser',
+            });
+
+            expect(result).toEqual(success());
+        });
+
+        it('should return an error if the invoice status is not open', async () => {
+            stripeMock.createTransfer.mockResolvedValueOnce({
+                id: 'transfer_id',
+            });
+
+            // Pay the invoice once
+            await controller.payContractInvoice({
+                invoiceId: invoiceId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            // Try to pay it again
+            const result = await controller.payContractInvoice({
+                invoiceId: invoiceId,
+                userId: issuingUserId,
+                userRole: null,
+            });
+
+            expect(result).toEqual(
+                failure({
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The invoice is not open and cannot be paid.',
+                })
+            );
+        });
+    });
+
     describe('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(
