@@ -1,21 +1,14 @@
 <template>
     <div>
-        <md-dialog
+        <md-dialog-alert
             :md-active.sync="showAlertDialog"
+            :md-content="content"
+            :md-title="title"
+            :md-confirm-text="dismissText"
             :md-fullscreen="true"
             class="alert-dialog"
-            @md-closed="onDismiss"
-        >
-            <md-dialog-title>{{ title }}</md-dialog-title>
-
-            <md-dialog-content>{{ content }}</md-dialog-content>
-
-            <md-dialog-actions>
-                <md-button class="md-primary" @click="onDismiss">
-                    {{ dismissText }}
-                </md-button>
-            </md-dialog-actions>
-        </md-dialog>
+            @md-confirm="onDismiss"
+        />
     </div>
 </template>
 <script src="./ShowAlertModal.ts"></script>

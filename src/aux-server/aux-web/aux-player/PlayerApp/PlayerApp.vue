@@ -137,7 +137,6 @@
                 @md-cancel="onDialogCancel()"
             />
 
-            <!-- Should this be removed? -->
             <md-dialog-alert
                 class="alert-dialog"
                 :md-active.sync="showAlertDialog"
