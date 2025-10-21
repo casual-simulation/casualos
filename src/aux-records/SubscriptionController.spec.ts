@@ -232,6 +232,7 @@ describe('SubscriptionController', () => {
             store,
             purchasableItemsStore,
             services.financialController,
+            store,
             contractStore
         );
 
@@ -11250,6 +11251,8 @@ describe('SubscriptionController', () => {
         let userAccount: AccountWithDetails;
 
         beforeEach(async () => {
+            nowMock.mockReturnValue(555);
+
             store.subscriptionConfiguration = createTestSubConfiguration(
                 (config) =>
                     config.addSubscription('sub1', (sub) =>
@@ -11336,6 +11339,21 @@ describe('SubscriptionController', () => {
                         credits_pending: 0n,
                         debits_posted: 1000n,
                         debits_pending: 0n,
+                    },
+                ]);
+
+                expect(store.externalPayouts).toEqual([
+                    {
+                        id: expect.any(String),
+                        userId: payoutUserId,
+                        externalDestination: 'stripe',
+                        amount: 500,
+                        initatedAtMs: 555,
+                        postedTransferId: expect.any(String),
+                        postedAtMs: 555,
+                        stripeTransferId: 'transfer_id',
+                        transferId: expect.any(String),
+                        transactionId: expect.any(String),
                     },
                 ]);
             });
@@ -11595,6 +11613,20 @@ describe('SubscriptionController', () => {
                         payoutId: expect.any(String),
                     })
                 );
+
+                expect(store.externalPayouts).toEqual([
+                    {
+                        id: expect.any(String),
+                        userId: payoutUserId,
+                        externalDestination: 'cash',
+                        amount: 500,
+                        initatedAtMs: 555,
+                        postedTransferId: expect.any(String),
+                        postedAtMs: 555,
+                        transferId: expect.any(String),
+                        transactionId: expect.any(String),
+                    },
+                ]);
             });
         });
 

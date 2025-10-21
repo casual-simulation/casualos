@@ -191,7 +191,7 @@ export interface ExternalPayout {
     /**
      * The ID of the transfer that makes the payout.
      */
-    tranferId: string;
+    transferId: string;
 
     /**
      * The ID of the transaction that this payout is part of.

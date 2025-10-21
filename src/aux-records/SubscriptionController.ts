@@ -111,6 +111,7 @@ import type {
     FinancialAccount,
     FinancialAccountFilter,
     FinancialController,
+    FinancialStore,
     InternalTransfer,
     PayoutDestination,
     UniqueFinancialAccountFilter,
@@ -159,6 +160,7 @@ export class SubscriptionController {
     private _policyStore: PolicyStore;
     private _purchasableItems: PurchasableItemRecordsStore;
     private _financialController: FinancialController | null;
+    private _financialStore: FinancialStore | null;
     private _contractRecords: ContractRecordsStore;
 
     constructor(
@@ -171,6 +173,7 @@ export class SubscriptionController {
         policyStore: PolicyStore,
         purchasableItems: PurchasableItemRecordsStore,
         financialController: FinancialController | null,
+        financialStore: FinancialStore | null,
         contractRecords: ContractRecordsStore
     ) {
         this._stripe = stripe;
@@ -182,6 +185,7 @@ export class SubscriptionController {
         this._policyStore = policyStore;
         this._purchasableItems = purchasableItems;
         this._financialController = financialController;
+        this._financialStore = financialStore;
         this._contractRecords = contractRecords;
     }
 
@@ -3116,16 +3120,7 @@ export class SubscriptionController {
             });
         }
 
-        const transfer = await this._financialController.getTransfer(
-            transactionResult.value.transferIds[0]
-        );
-
-        if (isFailure(transfer)) {
-            logError(
-                transfer.error,
-                `[SubscriptionController] [payoutAccount] Failed to get transfer for payout:`
-            );
-
+        const voidTransfers = async (payoutId?: string) => {
             const voidResult =
                 await this._financialController.completePendingTransfers({
                     transfers: transactionResult.value.transferIds,
@@ -3138,7 +3133,26 @@ export class SubscriptionController {
                     voidResult.error,
                     `[SubscriptionController] [payoutAccount] Failed to void pending transfers for payout:`
                 );
+            } else if (payoutId) {
+                await this._financialStore.markPayoutAsVoided(
+                    payoutId,
+                    voidResult.value.transferIds[0],
+                    Date.now()
+                );
             }
+        };
+
+        const transfer = await this._financialController.getTransfer(
+            transactionResult.value.transferIds[0]
+        );
+
+        if (isFailure(transfer)) {
+            logError(
+                transfer.error,
+                `[SubscriptionController] [payoutAccount] Failed to get transfer for payout:`
+            );
+
+            await voidTransfers();
 
             return failure({
                 errorCode: 'server_error',
@@ -3151,8 +3165,18 @@ export class SubscriptionController {
             });
         }
 
-        // TODO: save external payout
         const payoutId = uuid();
+        await this._financialStore.createExternalPayout({
+            id: payoutId,
+            amount: Number(transfer.value.amount),
+            externalDestination: 'stripe',
+            initatedAtMs: Date.now(),
+            transferId: transfer.value.id.toString(),
+            transactionId: transactionResult.value.transactionId,
+            invoiceId: request.invoiceId,
+            userId: request.payoutUserId,
+            studioId: request.payoutStudioId,
+        });
 
         try {
             let sourceTransaction: string = undefined;
@@ -3187,6 +3211,10 @@ export class SubscriptionController {
             });
 
             // TODO: update external payout with stripe transfer id
+            await this._financialStore.updateExternalPayout({
+                id: payoutId,
+                stripeTransferId: result.id,
+            });
 
             const postResult =
                 await this._financialController.completePendingTransfers({
@@ -3200,25 +3228,19 @@ export class SubscriptionController {
                     `[SubscriptionController] [payoutAccount] Failed to complete pending transfers for payout:`
                 );
 
-                const voidResult =
-                    await this._financialController.completePendingTransfers({
-                        transfers: transactionResult.value.transferIds,
-                        transactionId: transactionResult.value.transactionId,
-                        flags: TransferFlags.void_pending_transfer,
-                    });
-
-                if (isFailure(voidResult)) {
-                    logError(
-                        voidResult.error,
-                        `[SubscriptionController] [payoutAccount] Failed to void pending transfers for payout:`
-                    );
-                }
+                await voidTransfers(payoutId);
 
                 return failure({
                     errorCode: 'server_error',
                     errorMessage: 'The server encountered an error.',
                 });
             }
+
+            await this._financialStore.markPayoutAsPosted(
+                payoutId,
+                postResult.value.transferIds[0],
+                Date.now()
+            );
 
             return success({
                 payoutId,
@@ -3229,19 +3251,7 @@ export class SubscriptionController {
                 err
             );
 
-            const voidResult =
-                await this._financialController.completePendingTransfers({
-                    transfers: transactionResult.value.transferIds,
-                    transactionId: transactionResult.value.transactionId,
-                    flags: TransferFlags.void_pending_transfer,
-                });
-
-            if (isFailure(voidResult)) {
-                logError(
-                    voidResult.error,
-                    `[SubscriptionController] [payoutAccount] Failed to void pending transfers for payout:`
-                );
-            }
+            await voidTransfers(payoutId);
 
             return failure({
                 errorCode: 'server_error',
@@ -3346,8 +3356,20 @@ export class SubscriptionController {
             });
         }
 
-        // TODO: save external payout
         const payoutId = uuid();
+        await this._financialStore.createExternalPayout({
+            id: payoutId,
+            amount: Number(transfer.value.amount),
+            externalDestination: 'cash',
+            initatedAtMs: Date.now(),
+            transferId: transfer.value.id.toString(),
+            transactionId: transactionResult.value.transactionId,
+            invoiceId: request.invoiceId,
+            userId: request.payoutUserId,
+            studioId: request.payoutStudioId,
+            postedAtMs: Date.now(),
+            postedTransferId: transfer.value.id.toString(),
+        });
 
         return success({
             payoutId,
