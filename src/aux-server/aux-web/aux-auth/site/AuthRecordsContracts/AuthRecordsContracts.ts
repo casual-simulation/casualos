@@ -77,6 +77,16 @@ export default class AuthRecordsContracts extends Vue {
     contractInvoices: ContractInvoice[] = [];
     invoicesLoading: boolean = false;
 
+    showCancelInvoiceDialog: boolean = false;
+    cancelInvoiceItem: ContractInvoice = null;
+    cancelInvoiceLoading: boolean = false;
+    cancelInvoiceErrorMessage: string = null;
+
+    showCancelContractDialog: boolean = false;
+    cancelContractItem: ContractRecord = null;
+    cancelContractLoading: boolean = false;
+    cancelContractErrorMessage: string = null;
+
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
         if (last !== next) {
@@ -125,6 +135,14 @@ export default class AuthRecordsContracts extends Vue {
         this.invoicePayoutDestination = 'account';
         this.invoiceLoading = false;
         this.invoiceErrorCode = null;
+        this.showCancelInvoiceDialog = false;
+        this.cancelInvoiceItem = null;
+        this.cancelInvoiceErrorMessage = null;
+        this.cancelInvoiceLoading = false;
+        this.showCancelContractDialog = false;
+        this.cancelContractItem = null;
+        this.cancelContractErrorMessage = null;
+        this.cancelContractLoading = false;
         this.updatePagination(1, PAGE_SIZE);
     }
 
@@ -150,6 +168,57 @@ export default class AuthRecordsContracts extends Vue {
             this.items.mdData = this.items.mdData.filter(
                 (i) => i.address !== item.address
             );
+        }
+    }
+
+    openCancelContractDialog(item: ContractRecord) {
+        this.cancelContractItem = item;
+        this.cancelContractErrorMessage = null;
+        this.showCancelContractDialog = true;
+    }
+
+    closeCancelContractDialog() {
+        this.showCancelContractDialog = false;
+        this.cancelContractItem = null;
+        this.cancelContractErrorMessage = null;
+    }
+
+    async submitCancelContract() {
+        if (!this.cancelContractItem) {
+            return;
+        }
+
+        this.cancelContractLoading = true;
+        this.cancelContractErrorMessage = null;
+
+        try {
+            const result = await authManager.client.cancelContract({
+                recordName: this.recordName,
+                address: this.cancelContractItem.address,
+            });
+
+            if (result.success === true) {
+                // Remove the cancelled contract from the list
+                this.items.mdData = this.items.mdData.filter(
+                    (i) => i.address !== this.cancelContractItem.address
+                );
+                // Clear selection if the cancelled contract was selected
+                if (
+                    this.selectedItem?.address ===
+                    this.cancelContractItem.address
+                ) {
+                    this.selectedItem = null;
+                    this.contractInvoices = [];
+                }
+                this.closeCancelContractDialog();
+            } else {
+                this.cancelContractErrorMessage = result.errorCode;
+            }
+        } catch (err) {
+            console.error('Error cancelling contract:', err);
+            this.cancelContractErrorMessage = 'error';
+        } finally {
+            this.cancelContractLoading = false;
         }
     }
 
@@ -236,6 +305,50 @@ export default class AuthRecordsContracts extends Vue {
             this.contractInvoices = [];
         } finally {
             this.invoicesLoading = false;
+        }
+    }
+
+    openCancelInvoiceDialog(invoice: ContractInvoice) {
+        this.cancelInvoiceItem = invoice;
+        this.cancelInvoiceErrorMessage = null;
+        this.showCancelInvoiceDialog = true;
+    }
+
+    closeCancelInvoiceDialog() {
+        this.showCancelInvoiceDialog = false;
+        this.cancelInvoiceItem = null;
+        this.cancelInvoiceErrorMessage = null;
+    }
+
+    async submitCancelInvoice() {
+        if (!this.cancelInvoiceItem) {
+            return;
+        }
+
+        this.cancelInvoiceLoading = true;
+        this.cancelInvoiceErrorMessage = null;
+
+        try {
+            const result = await authManager.client.cancelInvoice({
+                invoiceId: this.cancelInvoiceItem.id,
+            });
+
+            if (result.success === true) {
+                // Remove the cancelled invoice from the list
+                // this.contractInvoices = this.contractInvoices.filter(
+                //     (i) => i.id !== this.cancelInvoiceItem.id
+                // );
+                this.loadInvoices(this.selectedItem);
+                this.closeCancelInvoiceDialog();
+            } else {
+                this.cancelInvoiceErrorMessage = result.errorMessage;
+            }
+        } catch (err) {
+            console.error('Error cancelling invoice:', err);
+            this.cancelInvoiceErrorMessage =
+                'An error occurred while cancelling the invoice.';
+        } finally {
+            this.cancelInvoiceLoading = false;
         }
     }
 }

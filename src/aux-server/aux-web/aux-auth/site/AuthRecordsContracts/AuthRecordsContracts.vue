@@ -23,7 +23,9 @@
                     <md-table-cell md-label="Holder" md-sort-by="holdingUserId">{{
                         item.holdingUserId
                     }}</md-table-cell>
-                    <md-table-cell md-label="Rate" md-sort-by="rate">{{ item.rate }}</md-table-cell>
+                    <md-table-cell md-label="Rate" md-sort-by="rate"
+                        >${{ (item.rate / 100).toFixed(2) }}</md-table-cell
+                    >
                     <!-- <md-table-cell md-label="Balance" md-sort-by="initialValue">{{
                         item.
                     }}</md-table-cell> -->
@@ -46,8 +48,8 @@
                                 <md-menu-item @click="openInvoiceDialog(item)"
                                     >Invoice Contract</md-menu-item
                                 >
-                                <md-menu-item @click="deleteItem(item)"
-                                    >Delete Contract</md-menu-item
+                                <md-menu-item @click="openCancelContractDialog(item)"
+                                    >Cancel Contract</md-menu-item
                                 >
                             </md-menu-content>
                         </md-menu>
@@ -100,11 +102,11 @@
                         </div>
                         <div class="detail-item">
                             <strong>Rate:</strong>
-                            <span>{{ selectedItem.rate }}</span>
+                            <span>${{ (selectedItem.rate / 100).toFixed(2) }}</span>
                         </div>
                         <div class="detail-item">
                             <strong>Initial Value:</strong>
-                            <span>{{ selectedItem.initialValue }}</span>
+                            <span>${{ (selectedItem.initialValue / 100).toFixed(2) }}</span>
                         </div>
                         <div class="detail-item">
                             <strong>Issued At:</strong>
@@ -121,7 +123,11 @@
                     </div>
                 </md-card-content>
                 <md-card-actions>
-                    <md-button class="md-primary" @click="openInvoiceDialog(selectedItem)">
+                    <md-button
+                        v-if="selectedItem.status === 'open'"
+                        class="md-primary"
+                        @click="openInvoiceDialog(selectedItem)"
+                    >
                         Create Invoice
                     </md-button>
                 </md-card-actions>
@@ -152,9 +158,9 @@
                         <template v-slot:md-table-row="{ item: invoice }">
                             <md-table-row>
                                 <md-table-cell md-label="ID">{{ invoice.id }}</md-table-cell>
-                                <md-table-cell md-label="Amount">{{
-                                    invoice.amount
-                                }}</md-table-cell>
+                                <md-table-cell md-label="Amount"
+                                    >${{ (invoice.amount / 100).toFixed(2) }}</md-table-cell
+                                >
                                 <md-table-cell md-label="Status">{{
                                     invoice.status
                                 }}</md-table-cell>
@@ -167,6 +173,20 @@
                                 <md-table-cell md-label="Note" v-if="invoice.note">{{
                                     invoice.note
                                 }}</md-table-cell>
+                                <md-table-cell md-label="Options" class="options-cell">
+                                    <md-menu v-if="invoice.status === 'open'" md-align-trigger>
+                                        <md-button md-menu-trigger class="md-icon-button">
+                                            <md-icon>more_vert</md-icon>
+                                            <span class="sr-only">Invoice Options</span>
+                                            <md-tooltip>Invoice Options</md-tooltip>
+                                        </md-button>
+                                        <md-menu-content>
+                                            <md-menu-item @click="openCancelInvoiceDialog(invoice)"
+                                                >Cancel Invoice</md-menu-item
+                                            >
+                                        </md-menu-content>
+                                    </md-menu>
+                                </md-table-cell>
                             </md-table-row>
                         </template>
                     </md-table>
@@ -231,6 +251,88 @@
                         :md-stroke="2"
                     ></md-progress-spinner>
                     <span v-else>Invoice</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showCancelInvoiceDialog"
+            @md-closed="closeCancelInvoiceDialog()"
+        >
+            <md-dialog-title>Cancel Invoice</md-dialog-title>
+            <md-dialog-content>
+                <p v-if="cancelInvoiceItem">
+                    Are you sure you want to cancel invoice
+                    <strong>{{ cancelInvoiceItem.id }}</strong
+                    >?
+                </p>
+                <p v-if="cancelInvoiceItem">
+                    Amount: <strong>${{ cancelInvoiceItem.amount }}</strong>
+                </p>
+                <p v-if="cancelInvoiceItem && cancelInvoiceItem.note">
+                    Note: <strong>{{ cancelInvoiceItem.note }}</strong>
+                </p>
+
+                <div v-if="cancelInvoiceErrorMessage" class="md-error-message">
+                    <p>Error: {{ cancelInvoiceErrorMessage }}</p>
+                </div>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button @click="closeCancelInvoiceDialog()">Keep Invoice</md-button>
+                <md-button
+                    class="md-primary md-danger"
+                    @click="submitCancelInvoice()"
+                    :disabled="cancelInvoiceLoading"
+                >
+                    <md-progress-spinner
+                        v-if="cancelInvoiceLoading"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                    ></md-progress-spinner>
+                    <span v-else>Cancel Invoice</span>
+                </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showCancelContractDialog"
+            @md-closed="closeCancelContractDialog()"
+        >
+            <md-dialog-title>Cancel Contract</md-dialog-title>
+            <md-dialog-content>
+                <p v-if="cancelContractItem">
+                    Are you sure you want to cancel contract
+                    <strong>{{ cancelContractItem.id }}</strong
+                    >?
+                </p>
+                <p v-if="cancelContractItem">
+                    Status: <strong>{{ cancelContractItem.status }}</strong>
+                </p>
+                <p v-if="cancelContractItem">
+                    Holder: <strong>{{ cancelContractItem.holdingUserId }}</strong>
+                </p>
+
+                <div v-if="cancelContractErrorMessage" class="md-error-message">
+                    <p>Error: {{ cancelContractErrorMessage }}</p>
+                </div>
+            </md-dialog-content>
+
+            <md-dialog-actions>
+                <md-button @click="closeCancelContractDialog()">Keep Contract</md-button>
+                <md-button
+                    class="md-primary md-danger"
+                    @click="submitCancelContract()"
+                    :disabled="cancelContractLoading"
+                >
+                    <md-progress-spinner
+                        v-if="cancelContractLoading"
+                        md-mode="indeterminate"
+                        :md-diameter="20"
+                        :md-stroke="2"
+                    ></md-progress-spinner>
+                    <span v-else>Cancel Contract</span>
                 </md-button>
             </md-dialog-actions>
         </md-dialog>

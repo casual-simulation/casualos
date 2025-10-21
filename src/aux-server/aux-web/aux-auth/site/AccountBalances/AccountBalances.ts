@@ -54,8 +54,10 @@ export default class AccountBalancesVue extends Vue {
             // Calculate net balance: (credits - debits) / displayFactor
             const netBalance = (credits - debits) / displayFactor;
 
+            const symbol = balance.currency === 'usd' ? '$' : '';
+
             // Format to 2 decimal places
-            return Number(netBalance).toFixed(2);
+            return symbol + Number(netBalance).toFixed(2);
         } catch (err) {
             return 'N/A';
         }

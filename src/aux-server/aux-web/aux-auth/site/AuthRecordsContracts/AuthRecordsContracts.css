@@ -68,3 +68,19 @@
     padding: 2rem;
     color: #999;
 }
+
+.options-cell {
+    text-align: center;
+}
+
+.md-danger {
+    color: #f44336;
+}
+
+.md-danger:not(:disabled) {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.md-danger:not(:disabled):hover {
+    background-color: rgba(244, 67, 54, 0.2);
+}
