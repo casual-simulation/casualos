@@ -2936,6 +2936,16 @@ export class SubscriptionController {
             });
         }
 
+        if (
+            typeof request.payoutAmount === 'number' &&
+            request.payoutAmount <= 0
+        ) {
+            return failure({
+                errorCode: 'invalid_request',
+                errorMessage: 'The payout amount must be greater than zero.',
+            });
+        }
+
         if (!isSuperUserRole(request.userRole)) {
             if (
                 request.payoutUserId &&

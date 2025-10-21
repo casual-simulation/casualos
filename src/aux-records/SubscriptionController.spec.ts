@@ -11245,6 +11245,399 @@ describe('SubscriptionController', () => {
         });
     });
 
+    describe('payoutAccount()', () => {
+        let payoutUserId: string;
+        let userAccount: AccountWithDetails;
+
+        beforeEach(async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub.withTier('tier1').withAllDefaultFeatures()
+                    )
+            );
+
+            payoutUserId = 'payoutUser';
+            await store.saveUser({
+                id: payoutUserId,
+                email: 'payout@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                stripeAccountId: 'acct_test123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            // Create and fund a user financial account
+            userAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: payoutUserId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            // Fund the user account with 1000 USD
+            unwrap(
+                await financialController.internalTransaction({
+                    transfers: [
+                        {
+                            amount: 1000,
+                            debitAccountId: ACCOUNT_IDS.assets_stripe,
+                            creditAccountId: userAccount.account.id,
+                            code: TransferCodes.admin_credit,
+                            currency: CurrencyCodes.usd,
+                        },
+                    ],
+                })
+            );
+        });
+
+        describe('stripe payouts', () => {
+            it('should payout to stripe with a specified amount', async () => {
+                stripeMock.createTransfer.mockResolvedValueOnce({
+                    id: 'transfer_id',
+                });
+
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutDestination: 'stripe',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        payoutId: expect.any(String),
+                    })
+                );
+
+                // Verify stripe transfer was created
+                expect(stripeMock.createTransfer).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        currency: 'usd',
+                        destination: 'acct_test123',
+                        amount: 500,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: userAccount.account.id,
+                        credits_posted: 1000n,
+                        credits_pending: 0n,
+                        debits_posted: 500n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.assets_stripe,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 1000n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should payout to stripe without a specified amount using balancing debit', async () => {
+                stripeMock.createTransfer.mockResolvedValueOnce({
+                    id: 'transfer_id',
+                });
+
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutDestination: 'stripe',
+                });
+
+                expect(result).toEqual(
+                    success({
+                        payoutId: expect.any(String),
+                    })
+                );
+
+                // Verify stripe transfer was created for the full balance (1000)
+                expect(stripeMock.createTransfer).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        currency: 'usd',
+                        destination: 'acct_test123',
+                        amount: 1000,
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: userAccount.account.id,
+                        credits_posted: 1000n,
+                        credits_pending: 0n,
+                        debits_posted: 1000n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.assets_stripe,
+                        credits_posted: 1000n,
+                        credits_pending: 0n,
+                        debits_posted: 1000n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should return an error if the user does not have a stripe account', async () => {
+                const userWithoutStripe = 'userWithoutStripe';
+                await store.saveUser({
+                    id: userWithoutStripe,
+                    email: 'no-stripe@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                });
+
+                // Create and fund account
+                const account = unwrap(
+                    await financialController.getOrCreateFinancialAccount({
+                        userId: userWithoutStripe,
+                        ledger: LEDGERS.usd,
+                    })
+                );
+
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                amount: 500,
+                                debitAccountId: ACCOUNT_IDS.assets_stripe,
+                                creditAccountId: account.account.id,
+                                code: TransferCodes.admin_credit,
+                                currency: CurrencyCodes.usd,
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId: userWithoutStripe,
+                    payoutDestination: 'stripe',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The user does not have a Stripe account connected.',
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: account.account.id,
+                        credits_posted: 500n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.assets_stripe,
+                        credits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_posted: 1500n,
+                        debits_pending: 0n,
+                    },
+                ]);
+            });
+
+            it('should return an error if the user stripe account is not active', async () => {
+                await store.saveUser({
+                    id: payoutUserId,
+                    email: 'payout@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    stripeAccountId: 'acct_test123',
+                    stripeAccountStatus: 'pending',
+                    stripeAccountRequirementsStatus: 'incomplete',
+                });
+
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutDestination: 'stripe',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The user does not have an active Stripe account.',
+                    })
+                );
+            });
+
+            it('should return an error if assets stripe account does not have sufficient funds', async () => {
+                stripeMock.createTransfer.mockResolvedValueOnce({
+                    id: 'transfer_id',
+                });
+
+                // Try to payout more than available in user account
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutDestination: 'stripe',
+                    payoutAmount: 2000,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'insufficient_funds',
+                        errorMessage:
+                            'The account does not have sufficient funds to complete the payout.',
+                    })
+                );
+
+                // Verify stripe transfer was NOT created
+                expect(stripeMock.createTransfer).not.toHaveBeenCalled();
+            });
+
+            it('should return an error and void pending transfers when stripe transfer fails', async () => {
+                stripeMock.createTransfer.mockRejectedValueOnce(
+                    new Error('Stripe API error')
+                );
+
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutDestination: 'stripe',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'server_error',
+                        errorMessage: 'The server encountered an error.',
+                    })
+                );
+
+                await checkAccounts(financialInterface, [
+                    {
+                        id: userAccount.account.id,
+                        credits_posted: 1000n,
+                        credits_pending: 0n,
+                        debits_posted: 0n,
+                        debits_pending: 0n,
+                    },
+                    {
+                        id: ACCOUNT_IDS.assets_stripe,
+                        credits_posted: 0n,
+                        credits_pending: 0n,
+                        debits_posted: 1000n,
+                        debits_pending: 0n,
+                    },
+                ]);
+
+                // Verify stripe transfer was attempted
+                expect(stripeMock.createTransfer).toHaveBeenCalled();
+            });
+        });
+
+        describe('cash payouts', () => {
+            it('should return an error if requesting user is not a super user', async () => {
+                const result = await controller.payoutAccount({
+                    userId: payoutUserId,
+                    userRole: null,
+                    payoutUserId,
+                    payoutDestination: 'cash',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to payout to cash.',
+                    })
+                );
+            });
+
+            it('should allow cash payouts for super users', async () => {
+                unwrap(
+                    await financialController.internalTransaction({
+                        transfers: [
+                            {
+                                debitAccountId: ACCOUNT_IDS.assets_cash,
+                                creditAccountId: ACCOUNT_IDS.liquidity_usd,
+                                amount: 1000,
+                                currency: CurrencyCodes.usd,
+                                code: TransferCodes.admin_credit,
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'superUser',
+                    payoutUserId,
+                    payoutDestination: 'cash',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    success({
+                        payoutId: expect.any(String),
+                    })
+                );
+            });
+        });
+
+        describe('validation', () => {
+            it('should return an error if amount is 0', async () => {
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutDestination: 'stripe',
+                    payoutAmount: 0,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'The payout amount must be greater than zero.',
+                    })
+                );
+            });
+
+            it('should return an error if both payoutUserId and payoutStudioId are provided', async () => {
+                const result = await controller.payoutAccount({
+                    userId: null,
+                    userRole: 'system',
+                    payoutUserId,
+                    payoutStudioId: 'studioId',
+                    payoutDestination: 'stripe',
+                    payoutAmount: 500,
+                });
+
+                expect(result).toEqual(
+                    failure({
+                        errorCode: 'invalid_request',
+                        errorMessage:
+                            'Cannot payout to both a user and a studio at the same time.',
+                    })
+                );
+            });
+        });
+    });
+
     describe('fulfillCheckoutSession()', () => {
         beforeEach(async () => {
             store.subscriptionConfiguration = merge(

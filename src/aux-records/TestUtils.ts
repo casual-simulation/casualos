@@ -354,8 +354,8 @@ export async function checkAccounts(
         accounts.map((a) => a.id)
     );
 
-    expect(mapBigInts(accountValues)).toEqual(
-        accounts.map((a) => expect.objectContaining(mapBigInts(a)))
+    expect(accountValues).toEqual(
+        accounts.map((a) => expect.objectContaining(a))
     );
 
     // for(let i = 0; i < accounts.length; i++) {
@@ -370,9 +370,7 @@ export function checkTransfers(
     actual: Transfer[],
     expected: Partial<Transfer>[]
 ) {
-    expect(mapBigInts(actual)).toEqual(
-        expected.map((t) => expect.objectContaining(mapBigInts(t)))
-    );
+    expect(actual).toEqual(expected.map((t) => expect.objectContaining(t)));
 
     // for(let i = 0; i < accounts.length; i++) {
     //     const expected = accounts[i];
