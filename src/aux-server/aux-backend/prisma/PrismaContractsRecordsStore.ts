@@ -144,6 +144,9 @@ export class PrismaContractsRecordsStore implements ContractRecordsStore {
             where: {
                 contractId,
             },
+            orderBy: {
+                openedAt: 'desc',
+            },
         });
 
         return invoices.map((i) => this._convertInvoice(i));
