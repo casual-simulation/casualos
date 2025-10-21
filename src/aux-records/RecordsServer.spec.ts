@@ -29686,6 +29686,127 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         );
     });
 
+    describe('POST /api/v2/financial/payouts', () => {
+        let payoutUserId: string;
+        let userAccount: any;
+
+        beforeEach(async () => {
+            await financialController.init();
+
+            payoutUserId = userId;
+
+            // Create and fund a user financial account
+            userAccount = unwrap(
+                await financialController.getOrCreateFinancialAccount({
+                    userId: payoutUserId,
+                    ledger: LEDGERS.usd,
+                })
+            );
+
+            // Fund the user account with 1000 USD
+            await financialController.internalTransaction({
+                transfers: [
+                    {
+                        amount: 1000,
+                        debitAccountId: ACCOUNT_IDS.assets_stripe,
+                        creditAccountId: userAccount.account.id,
+                        code: TransferCodes.admin_credit,
+                        currency: CurrencyCodes.usd,
+                    },
+                ],
+            });
+        });
+
+        it('should create a stripe transfer', async () => {
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                stripeAccountId: 'acct_test123',
+                stripeAccountStatus: 'active',
+                stripeAccountRequirementsStatus: 'complete',
+            });
+
+            stripeMock.createTransfer.mockResolvedValueOnce({
+                id: 'transfer_id',
+            });
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/financial/payouts`,
+                    JSON.stringify({
+                        destination: 'stripe',
+                        amount: 500,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    payoutId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+
+            // Verify stripe transfer was created
+            expect(stripeMock.createTransfer).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    currency: 'usd',
+                    amount: 500,
+                })
+            );
+        });
+
+        it('should return not_authorized when the user is not the owner of the account', async () => {
+            stripeMock.createTransfer.mockResolvedValueOnce({
+                id: 'transfer_id',
+            });
+
+            // Use a different user's session
+            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+
+            const result = await server.handleHttpRequest(
+                httpPost(
+                    `/api/v2/financial/payouts`,
+                    JSON.stringify({
+                        destination: 'stripe',
+                        amount: 500,
+                        userId: payoutUserId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            await expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to payout this account.',
+                },
+                headers: accountCorsHeaders,
+            });
+
+            // Verify stripe transfer was NOT created
+            expect(stripeMock.createTransfer).not.toHaveBeenCalled();
+        });
+
+        testUrl(
+            'POST',
+            `/api/v2/financial/payouts`,
+            () =>
+                JSON.stringify({
+                    destination: 'stripe',
+                    amount: 500,
+                    userId: payoutUserId,
+                }),
+            () => authenticatedHeaders
+        );
+    });
+
     describe('GET /instData', () => {
         it('should return the inst data that is stored', async () => {
             const update = constructInitializationUpdate({
@@ -31670,14 +31791,14 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 })
             );
 
-            expect(result).toEqual({
+            await expectResponseBodyToEqual(result, {
                 statusCode: 403,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'invalid_origin',
                     errorMessage:
                         'The request must be made from an authorized origin.',
-                }),
+                },
                 headers: {
                     ...(allowHeaders
                         ? corsHeaders(defaultHeaders['origin'])
@@ -31772,14 +31893,14 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             const request = getRequest('{');
             const result = await server.handleHttpRequest(request);
 
-            expect(result).toEqual({
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
                         'The request body was not properly formatted. It should be valid JSON.',
-                }),
+                },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
                     'Access-Control-Allow-Headers':
@@ -31792,14 +31913,14 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             const request = getRequest('true');
             const result = await server.handleHttpRequest(request);
 
-            expect(result).toEqual({
+            await expectResponseBodyToEqual(result, {
                 statusCode: 400,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
                         'The request body was not properly formatted. It should be valid JSON.',
-                }),
+                },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
                     'Access-Control-Allow-Headers':
@@ -31846,15 +31967,15 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             const request = createRequest();
             const result = await server.handleHttpRequest(request);
 
-            expect(result).toEqual({
+            await expectResponseBodyToEqual(result, {
                 statusCode: 429,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'rate_limit_exceeded',
                     errorMessage: 'Rate limit exceeded.',
                     retryAfterSeconds: 1,
                     totalHits: 101,
-                }),
+                },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
                     'Access-Control-Allow-Headers':

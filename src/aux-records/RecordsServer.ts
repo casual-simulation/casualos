@@ -5403,39 +5403,52 @@ export class RecordsServer {
                         destination: z.enum(['stripe', 'cash']),
                     })
                 )
-                .handler(async (input, context) => {
-                    if (!this._subscriptions) {
-                        return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                .handler(
+                    async (
+                        { userId, studioId, amount, destination },
+                        context
+                    ) => {
+                        if (!this._subscriptions) {
+                            return SUBSCRIPTIONS_NOT_SUPPORTED_RESULT;
+                        }
+
+                        if (userId && studioId) {
+                            return {
+                                success: false,
+                                errorCode: 'unacceptable_request',
+                                errorMessage:
+                                    'You must only specify one of userId or studioId.',
+                            };
+                        }
+
+                        if (!context.sessionKey) {
+                            return NOT_LOGGED_IN_RESULT;
+                        }
+
+                        const validation = await this._validateSessionKey(
+                            context.sessionKey
+                        );
+
+                        if (validation.success === false) {
+                            return validation;
+                        }
+
+                        if (!userId && !studioId) {
+                            userId = validation.userId;
+                        }
+
+                        const result = await this._subscriptions.payoutAccount({
+                            userId: validation.userId,
+                            userRole: validation.role,
+                            payoutUserId: userId,
+                            payoutStudioId: studioId,
+                            payoutAmount: amount,
+                            payoutDestination: destination,
+                        });
+
+                        return genericResult(result);
                     }
-
-                    if (input.userId && input.studioId) {
-                        return {
-                            success: false,
-                            errorCode: 'unacceptable_request',
-                            errorMessage:
-                                'You must only specify one of userId or studioId.',
-                        };
-                    }
-
-                    const validation = await this._validateSessionKey(
-                        context.sessionKey
-                    );
-
-                    if (validation.success === false) {
-                        return validation;
-                    }
-
-                    const result = await this._subscriptions.payoutAccount({
-                        userId: validation.userId,
-                        userRole: validation.role,
-                        payoutUserId: input.userId,
-                        payoutStudioId: input.studioId,
-                        payoutAmount: input.amount,
-                        payoutDestination: input.destination,
-                    });
-
-                    return genericResult(result);
-                }),
+                ),
 
             deleteInst: procedure()
                 .origins('account')
