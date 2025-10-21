@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Features
+
+-   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
+-   Accepts `title`, `content`, and optional `dismissText` parameters
+-   Returns a promise that resolves when the dialog is dismissed
+-   Useful for displaying important information that requires user acknowledgment
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.

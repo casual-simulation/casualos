@@ -95,6 +95,7 @@ import { getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
 import ShowConfirmModal from '../../shared/vue-components/ShowConfirmModal/ShowConfirmModal';
+import ShowAlertModal from '../../shared/vue-components/ShowAlertModal/ShowAlertModal';
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
@@ -164,6 +165,7 @@ declare function sa_event(name: string, callback: () => void): void;
         'upload-files': UploadFiles,
         'show-input': ShowInputModal,
         'show-confirm': ShowConfirmModal,
+        'show-alert': ShowAlertModal,
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
         'custom-portals': CustomPortals,

@@ -131,6 +131,7 @@ export type AsyncActions =
     | IterableCompleteAction
     | IterableThrowAction
     | ShowInputAction
+    | ShowAlertAction
     | ShowConfirmAction
     | ShareAction
     | ImportAUXAction
@@ -1489,6 +1490,44 @@ export interface ShowConfirmOptions {
      * The text that should be shown on the "Cancel" button.
      */
     cancelText?: string;
+}
+
+/**
+ * Defines an event that is used to show an alert/info dialog.
+ * @dochash types/os/input
+ * @docname ShowAlertAction
+ */
+export interface ShowAlertAction extends AsyncAction {
+    type: 'show_alert';
+
+    /**
+     * The options for the alert dialog.
+     */
+    options: ShowAlertOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for an alert dialog.
+ *
+ * @dochash types/os/input
+ * @docname ShowAlertOptions
+ */
+export interface ShowAlertOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Dismiss" button.
+     * Defaults to "OK".
+     */
+    dismissText?: string;
 }
 
 /**
@@ -4747,6 +4786,22 @@ export function showConfirm(
 ): ShowConfirmAction {
     return {
         type: 'show_confirm',
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a new ShowAlertAction.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function showAlert(
+    options: ShowAlertOptions,
+    taskId?: number | string
+): ShowAlertAction {
+    return {
+        type: 'show_alert',
         options,
         taskId,
     };
