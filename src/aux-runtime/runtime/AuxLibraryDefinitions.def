@@ -10459,6 +10459,11 @@ interface DebuggerBase {
     os: Os;
 
     /**
+     * Defines a set of functions that relate to the xpExchange.
+     */
+    xp: Xp;
+
+    /**
      * Defines a set of functions that relate to AI operations.
      */
     ai: Ai;
@@ -17668,110 +17673,6 @@ interface Web {
     hook: MaskFunc<(options: WebhookOptions) => Promise<WebhookResult>>;
 }
 
-/**
- * The interface that provides programmatic access to the Xp system in CasualOS.
- */
-interface Xp {
-    /**
-     * Gets the user meta for the given user.
-     * * Defaults to the current logged in user if no user is specified.
-     * @param useId Search criteria for getting the associated xp user.
-     */
-    getUserMeta(useId?: {
-        /**
-         * The id of the auth user to get the xp meta for.
-         * (Mutually exclusive with xpId)
-         */
-        userId?: string;
-        /**
-         * The id of the xp user to get the xp meta for.
-         * (Mutually exclusive with userId)
-         */
-        xpId?: string;
-    }): Promise<XpUser>;
-    /**
-     * Gets the user meta for the given user.
-     * * Defaults to the current logged in user if no user is specified.
-     * @param userId The id of the auth user to get the xp meta for.
-     */
-    getUserMeta(userId?: string): Promise<XpUser>;
-    /**
-     * Create a contract between logged in user (yourself) and another user.
-     * @param forUser Search criteria for specifying the user to create the contract with.
-     * @param contract The meta data for the contract
-     */
-    createContract(contractMeta: {
-        /**
-         * Search criteria for specifying the user to create the contract with.
-         * If a string is provided, then it will be used as the userId.
-         */
-        forUser:
-            | {
-                  /**
-                   * The id of the auth user to get the xp meta for.
-                   * (Mutually exclusive with xpId)
-                   */
-                  userId?: string;
-                  /**
-                   * The id of the xp user to get the xp meta for.
-                   * (Mutually exclusive with userId)
-                   */
-                  xpId?: string;
-              }
-            | string;
-        /**
-         * The description of the contract.
-         */
-        description: string;
-        /**
-         * The rate at which each gig (6 minutes of work) will be paid in the smallest unit of currency.
-         * * E.G. In USD: 200 for 200¢ ($2.00 per gig ($2.00/6 minutes) -> ($20.00/hour))
-         * * rate: 200 = 2000¢/hour = $20.00/hour
-         */
-        gigRate: number;
-        /**
-         * The maximum number of gigs that the contract is invoicable for.
-         * * This value multiplied by the rate yeilds the maximum amount that can be invoiced in the account currency's smallest unit.
-         * * 1 gig = 6 minutes of work
-         * * 10 gigs = 1 hour of work
-         * * 100 gigs = 10 hours of work
-         * * 1440 gigs = 1 day (24 hours) of work
-         */
-        gigs: number;
-        /**
-         * The currency that the contract is issued and invoicable in.
-         * * Tip: Use intellisense to find available currency codes!
-         * * E.G. USD, CAD, EUR, JPY, etc.
-         */
-        accountCurrency: XpAccount['currency'];
-    }): Promise<XpContract>;
-    /**
-     * Drafts a contract to be issued later.
-     * @param contract The meta data for the contract
-     */
-    draftContract(contractMeta: {
-        /**
-         * The description of the contract.
-         */
-        description: string;
-        /**
-         * The rate at which each gig (6 minutes of work) will be paid in the smallest unit of currency.
-         * * E.G. In USD: 200 for 200¢ ($2.00 per gig ($2.00/6 minutes -> $20.00/hour))
-         * * rate: 200 = 2000¢/hour = $20.00/hour
-         */
-        gigRate: number;
-        /**
-         * The maximum number of gigs that the contract is invoicable for.
-         * * This value multiplied by the rate yeilds the maximum amount that can be invoiced in the account currency's smallest unit.
-         * * 1 gig = 6 minutes of work
-         * * 10 gigs = 1 hour of work
-         * * 100 gigs = 10 hours of work
-         * * 1440 gigs = 1 day (24 hours) of work
-         */
-        gigs: number;
-    }): Promise<XpContract>;
-}
-
 interface Actions {
     /**
      * Performs the given action.
@@ -18691,6 +18592,416 @@ interface Loom {
     getVideoEmbedMetadata(
         sharedUrlOrVideo: string | LoomVideo
     ): Promise<LoomVideoEmbedMetadata>;
+}
+
+/**
+ * Defines an interface for contract-related data structures.
+ */
+export interface ContractRecord {
+    /**
+     * The unique identifier of the contract.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that issued the contract.
+     */
+    issuingUserId: string;
+
+    /**
+     * The ID of the user that is holding/owning the contract.
+     */
+    holdingUserId: string;
+
+    /**
+     * The status of the contract. Can be "open", "closed", or "cancelled".
+     */
+    status: 'open' | 'closed' | 'cancelled';
+
+    /**
+     * The time in milliseconds since the Unix epoch when the contract was issued.
+     */
+    issuedAtMs: number;
+
+    /**
+     * The rate for the contract.
+     */
+    rate: number;
+
+    /**
+     * The initial value of the contract.
+     */
+    initialValue: number;
+}
+
+/**
+ * Defines an interface for contract invoice data.
+ */
+export interface ContractInvoice {
+    /**
+     * The unique identifier of the invoice.
+     */
+    id: string;
+
+    /**
+     * The ID of the contract associated with this invoice.
+     */
+    contractId: string;
+
+    /**
+     * The amount of the invoice.
+     */
+    amount: number;
+
+    /**
+     * Optional note about the invoice.
+     */
+    note?: string;
+
+    /**
+     * The destination for the payout (e.g., "stripe", "account").
+     */
+    payoutDestination: string;
+
+    /**
+     * The status of the invoice (e.g., "pending", "paid", "cancelled").
+     */
+    status: string;
+
+    /**
+     * The time in milliseconds since the Unix epoch when the invoice was created.
+     */
+    createdAtMs: number;
+}
+
+/**
+ * Defines an interface for contract record input.
+ */
+export interface ContractRecordInput {
+    /**
+     * The unique identifier of the contract.
+     */
+    id: string;
+
+    /**
+     * The ID of the user that issued the contract.
+     */
+    issuingUserId: string;
+
+    /**
+     * The ID of the user that is holding/owning the contract.
+     */
+    holdingUserId: string;
+
+    /**
+     * The status of the contract.
+     */
+    status: 'open' | 'closed' | 'cancelled';
+
+    /**
+     * The time in milliseconds since the Unix epoch when the contract was issued.
+     */
+    issuedAtMs: number;
+
+    /**
+     * The rate for the contract.
+     */
+    rate: number;
+
+    /**
+     * The initial value of the contract.
+     */
+    initialValue: number;
+}
+
+/**
+ * Defines an interface for XP (Experience Points/Exchange) contract operations.
+ */
+interface Xp {
+    /**
+     * Records a new contract in the given record.
+     *
+     * @param recordName The name of the record that the contract should be stored in.
+     * @param contract The contract data to record.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the contract is recorded.
+     *
+     * @example Record a new contract
+     * await xp.recordContract('myRecord', {
+     *     id: 'contract1',
+     *     issuingUserId: 'user1',
+     *     holdingUserId: 'user2',
+     *     status: 'open',
+     *     issuedAtMs: Date.now(),
+     *     rate: 100,
+     *     initialValue: 1000
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.recordContract
+     */
+    recordContract(
+        recordName: string,
+        contract: ContractRecordInput,
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Gets the contract with the given address.
+     *
+     * @param recordName The name of the record that the contract is stored in.
+     * @param address The address of the contract.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the contract or null if not found.
+     *
+     * @example Get a contract
+     * const contract = await xp.getContract('myRecord', 'address1');
+     *
+     * @dochash actions/xp
+     * @docname xp.getContract
+     */
+    getContract(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<ContractRecord | null>;
+
+    /**
+     * Gets a list of contracts from the given record.
+     *
+     * @param recordName The name of the record that the contracts are stored in.
+     * @param address The address that the contracts should be listed after. If null, then the first page of contracts will be returned.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the list of contracts.
+     *
+     * @example List all contracts
+     * const contracts = await xp.listContracts('myRecord');
+     *
+     * @example List contracts after a specific address
+     * const contracts = await xp.listContracts('myRecord', 'address1');
+     *
+     * @dochash actions/xp
+     * @docname xp.listContracts
+     */
+    listContracts(
+        recordName: string,
+        address?: string,
+        options?: RecordActionOptions
+    ): Promise<ContractRecord[]>;
+
+    /**
+     * Gets the pricing for the given contract.
+     *
+     * @param request The pricing request data.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the pricing details for the contract.
+     *
+     * @example Get contract pricing
+     * const pricing = await xp.getContractPricing({
+     *     contractId: 'contract1',
+     *     issuingUserId: 'user1',
+     *     holdingUserId: 'user2',
+     *     rate: 100,
+     *     initialValue: 1000
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.getContractPricing
+     */
+    getContractPricing(
+        request: {
+            contractId: string;
+            issuingUserId: string;
+            holdingUserId: string;
+            rate: number;
+            initialValue: number;
+        },
+        options?: RecordActionOptions
+    ): Promise<any>;
+
+    /**
+     * Attempts to purchase a contract via the xpExchange.
+     *
+     * @param request The request for the purchase.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the purchase is complete.
+     *
+     * @example Purchase a contract
+     * await xp.purchaseContract({
+     *     recordName: 'myRecord',
+     *     address: 'address1',
+     *     paymentInfo: { type: 'stripe', token: 'token1' }
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseContract
+     */
+    purchaseContract(
+        request: {
+            recordName: string;
+            address: string;
+            paymentInfo: {
+                type: 'stripe' | 'paypal';
+                token: string;
+            };
+        },
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Cancels a contract via the xpExchange and refunds any funds.
+     *
+     * @param recordName The name of the record that the contract is stored in.
+     * @param address The address of the contract to cancel.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the contract is cancelled.
+     *
+     * @example Cancel a contract
+     * await xp.cancelContract('myRecord', 'address1');
+     *
+     * @dochash actions/xp
+     * @docname xp.cancelContract
+     */
+    cancelContract(
+        recordName: string,
+        address: string,
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Creates a new invoice for the given contract.
+     *
+     * @param request The request for the invoice.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is created.
+     *
+     * @example Create an invoice for a contract
+     * await xp.invoiceContract({
+     *     contractId: 'contract1',
+     *     amount: 500,
+     *     note: 'Payment for services',
+     *     payoutDestination: 'stripe'
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.invoiceContract
+     */
+    invoiceContract(
+        request: {
+            contractId: string;
+            amount: number;
+            note?: string;
+            payoutDestination: 'stripe' | 'account';
+        },
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Voids (cancels) an invoice.
+     *
+     * @param invoiceId The ID of the invoice to void.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is voided.
+     *
+     * @example Cancel an invoice
+     * await xp.cancelInvoice('invoice1');
+     *
+     * @dochash actions/xp
+     * @docname xp.cancelInvoice
+     */
+    cancelInvoice(
+        invoiceId: string,
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Lists the invoices for the given contract.
+     *
+     * @param contractId The ID of the contract to list invoices for.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the invoices for the contract.
+     *
+     * @example List invoices for a contract
+     * const invoices = await xp.listInvoices('contract1');
+     *
+     * @dochash actions/xp
+     * @docname xp.listInvoices
+     */
+    listInvoices(
+        contractId: string,
+        options?: RecordActionOptions
+    ): Promise<ContractInvoice[]>;
+
+    /**
+     * Pays an invoice. This will attempt to transfer funds from the contract account to the user holding the contract.
+     *
+     * @param request The payment request.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is paid.
+     *
+     * @example Pay an invoice
+     * await xp.payInvoice({
+     *     invoiceId: 'invoice1',
+     *     paymentInfo: { type: 'stripe', token: 'token1' }
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.payInvoice
+     */
+    payInvoice(
+        request: {
+            invoiceId: string;
+            paymentInfo: {
+                type: 'stripe' | 'paypal';
+                token: string;
+            };
+        },
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Attempts to payout funds from the user's account to their linked payout destination.
+     *
+     * @param request The payout request.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the payout is complete.
+     *
+     * @example Payout funds
+     * await xp.payout({
+     *     destination: 'stripe',
+     *     amount: 1000,
+     *     description: 'Monthly payout'
+     * });
+     *
+     * @dochash actions/xp
+     * @docname xp.payout
+     */
+    payout(
+        request: {
+            destination: 'stripe' | 'paypal';
+            amount?: number;
+            description?: string;
+        },
+        options?: RecordActionOptions
+    ): Promise<void>;
+
+    /**
+     * Attempts to retrieve the account balances for the user's account.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @example Get account balances
+     * const balances = await xp.getAccountBalances();
+     *
+     * @dochash actions/xp
+     * @docname xp.getAccountBalances
+     */
+    getAccountBalances(
+        options?: RecordActionOptions
+    ): Promise<{
+        [key: string]: number;
+    }>;
 }
 
 interface Perf {
