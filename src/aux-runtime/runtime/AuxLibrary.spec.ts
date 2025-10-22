@@ -322,6 +322,7 @@ import {
     formatV2RecordKey,
 } from '@casual-simulation/aux-common/records/RecordKeys';
 import type { HideLoadingScreenAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import type { ContractRecordInput } from '@casual-simulation/aux-records/contracts/ContractRecordsController';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -22894,6 +22895,593 @@ describe('AuxLibrary', () => {
                             bot: alsoBot1,
                         });
                 }).not.toThrow();
+            });
+        });
+
+        describe('xp', () => {
+            describe('xp.recordContract()', () => {
+                it('should emit a recordsCallProcedure action with recordContract', async () => {
+                    const contract: ContractRecordInput = {
+                        address: 'contract1',
+                        holdingUser: 'user1',
+                        markers: [PUBLIC_READ_MARKER],
+                        rate: 100,
+                        initialValue: 1000,
+                    };
+
+                    const action: any = library.api.xp.recordContract(
+                        'myRecord',
+                        contract
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            recordContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    item: contract as any,
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const contract: ContractRecordInput = {
+                        address: 'contract1',
+                        holdingUser: 'user1',
+                        markers: [PUBLIC_READ_MARKER],
+                        rate: 100,
+                        initialValue: 1000,
+                    };
+                    const action: any = library.api.xp.recordContract(
+                        'myRecord',
+                        contract,
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            recordContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    item: contract as any,
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.getContract()', () => {
+                it('should emit a recordsCallProcedure action with getContract', async () => {
+                    const action: any = library.api.xp.getContract(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.getContract(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.listContracts()', () => {
+                it('should emit a recordsCallProcedure action with listContracts', async () => {
+                    const action: any =
+                        library.api.xp.listContracts('myRecord');
+                    const expected = recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: null,
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept address parameter', async () => {
+                    const action: any = library.api.xp.listContracts(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.listContracts(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.getContractPricing()', () => {
+                it('should emit a recordsCallProcedure action with getContractPricing', async () => {
+                    const action: any = library.api.xp.getContractPricing(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContractPricing: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.getContractPricing(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            getContractPricing: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.purchaseContract()', () => {
+                it('should emit a recordsCallProcedure action with purchaseContract', async () => {
+                    const request = {
+                        recordName: 'myRecord',
+                        address: 'address1',
+                        currency: 'usd' as const,
+                        expectedCost: 1000,
+                        returnUrl: 'abc',
+                        successUrl: 'def',
+                    };
+
+                    const action: any =
+                        library.api.xp.purchaseContract(request);
+                    const expected = recordsCallProcedure(
+                        {
+                            purchaseContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    contract: {
+                                        address: 'address1',
+                                        currency: 'usd',
+                                        expectedCost: 1000,
+                                    },
+                                    returnUrl: 'abc',
+                                    successUrl: 'def',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const request = {
+                        recordName: 'myRecord',
+                        address: 'address1',
+                        currency: 'usd' as const,
+                        expectedCost: 1000,
+                        returnUrl: 'abc',
+                        successUrl: 'def',
+                    };
+
+                    const action: any = library.api.xp.purchaseContract(
+                        request,
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            purchaseContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    contract: {
+                                        address: 'address1',
+                                        currency: 'usd',
+                                        expectedCost: 1000,
+                                    },
+                                    returnUrl: 'abc',
+                                    successUrl: 'def',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.cancelContract()', () => {
+                it('should emit a recordsCallProcedure action with cancelContract', async () => {
+                    const action: any = library.api.xp.cancelContract(
+                        'myRecord',
+                        'address1'
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.cancelContract(
+                        'myRecord',
+                        'address1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelContract: {
+                                input: {
+                                    recordName: 'myRecord',
+                                    address: 'address1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.invoiceContract()', () => {
+                it('should emit a recordsCallProcedure action with invoiceContract', async () => {
+                    const request = {
+                        contractId: 'contract1',
+                        amount: 500,
+                        note: 'Test invoice',
+                        payoutDestination: 'account' as const,
+                    };
+
+                    const action: any = library.api.xp.invoiceContract(request);
+                    const expected = recordsCallProcedure(
+                        {
+                            invoiceContract: {
+                                input: {
+                                    contractId: 'contract1',
+                                    amount: 500,
+                                    note: 'Test invoice',
+                                    payoutDestination: 'account',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const request = {
+                        contractId: 'contract1',
+                        amount: 500,
+                        note: 'Test invoice',
+                        payoutDestination: 'stripe' as const,
+                    };
+                    const action: any = library.api.xp.invoiceContract(
+                        request,
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            invoiceContract: {
+                                input: {
+                                    contractId: 'contract1',
+                                    amount: 500,
+                                    note: 'Test invoice',
+                                    payoutDestination: 'stripe',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.cancelInvoice()', () => {
+                it('should emit a recordsCallProcedure action with cancelInvoice', async () => {
+                    const action: any =
+                        library.api.xp.cancelInvoice('invoice1');
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.cancelInvoice(
+                        'invoice1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            cancelInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.listInvoices()', () => {
+                it('should emit a recordsCallProcedure action with listInvoices', async () => {
+                    const action: any =
+                        library.api.xp.listInvoices('contract1');
+                    const expected = recordsCallProcedure(
+                        {
+                            listContractInvoices: {
+                                input: {
+                                    contractId: 'contract1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.listInvoices(
+                        'contract1',
+                        { endpoint: 'aux-test' }
+                    );
+                    const expected = recordsCallProcedure(
+                        {
+                            listContractInvoices: {
+                                input: {
+                                    contractId: 'contract1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.payInvoice()', () => {
+                it('should emit a recordsCallProcedure action with payInvoice', async () => {
+                    const action: any = library.api.xp.payInvoice('invoice1');
+                    const expected = recordsCallProcedure(
+                        {
+                            payContractInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.payInvoice('invoice1', {
+                        endpoint: 'aux-test',
+                    });
+                    const expected = recordsCallProcedure(
+                        {
+                            payContractInvoice: {
+                                input: {
+                                    invoiceId: 'invoice1',
+                                },
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.payout()', () => {
+                it('should emit a recordsCallProcedure action with payout', async () => {
+                    const request = {
+                        destination: 'stripe' as const,
+                        amount: 1000,
+                    };
+
+                    const action: any = library.api.xp.payout(request);
+                    const expected = recordsCallProcedure(
+                        {
+                            payoutAccount: {
+                                input: request,
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const request = {
+                        destination: 'stripe' as const,
+                        amount: 1000,
+                    };
+
+                    const action: any = library.api.xp.payout(request, {
+                        endpoint: 'aux-test',
+                    });
+                    const expected = recordsCallProcedure(
+                        {
+                            payoutAccount: {
+                                input: request,
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+            });
+
+            describe('xp.getAccountBalances()', () => {
+                it('should emit a recordsCallProcedure action with getAccountBalances', async () => {
+                    const action: any = library.api.xp.getAccountBalances();
+                    const expected = recordsCallProcedure(
+                        {
+                            getBalances: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
+
+                it('should accept options', async () => {
+                    const action: any = library.api.xp.getAccountBalances({
+                        endpoint: 'aux-test',
+                    });
+                    const expected = recordsCallProcedure(
+                        {
+                            getBalances: {
+                                input: {},
+                            },
+                        },
+                        { endpoint: 'aux-test' },
+                        context.tasks.size
+                    );
+                    expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                    expect(context.actions).toEqual([expected]);
+                });
             });
         });
     });

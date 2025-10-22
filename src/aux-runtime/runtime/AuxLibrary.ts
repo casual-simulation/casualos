@@ -497,6 +497,7 @@ import type {
     ListInstsResult,
     EraseInstResult,
     PurchasableItem,
+    PayoutDestination,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -562,6 +563,11 @@ import type {
     QueryResult,
 } from '@casual-simulation/aux-records/database';
 import { query as q } from './database/DatabaseUtils';
+import type {
+    ContractRecord,
+    InvoicePayoutDestination,
+} from '@casual-simulation/aux-records/contracts/ContractRecordsStore';
+import type { ContractRecordInput } from '@casual-simulation/aux-records/contracts/ContractRecordsController';
 // import type { PurchasableItem } from '@casual-simulation/aux-records/casualware/PurchasableItemRecordsStore';
 
 const _html: HtmlFunction = htm.bind(h) as any;
@@ -3915,6 +3921,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 _getExecutingDebugger,
                 _attachDebugger,
                 _detachDebugger,
+            },
+
+            xp: {
+                recordContract: xpRecordContract,
+                getContract: xpGetContract,
+                listContracts: xpListContracts,
+                getContractPricing: xpGetContractPricing,
+                purchaseContract: xpPurchaseContract,
+                cancelContract: xpCancelContract,
+                invoiceContract: xpInvoiceContract,
+                cancelInvoice: xpCancelInvoice,
+                listInvoices: xpListInvoices,
+                payInvoice: xpPayInvoice,
+                payout: xpPayout,
+                getAccountBalances: xpGetAccountBalances,
             },
 
             portal: {
@@ -9107,6 +9128,397 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getGeolocation(): Promise<Geolocation> {
         const task = context.createTask();
         const event = calcGetGeolocation(task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Creates a new contract record in the XP system.
+     *
+     * @param recordName The name of the record that the contract should be stored in.
+     * @param contract The contract record data.
+     * @param options The options for the request.
+     *
+     * @dochash actions/xp
+     * @doctitle xpExchange Actions
+     * @docsidebar xpExchange
+     * @docdescription Actions for working with the xpExchange.
+     * @docname xp.recordContract
+     */
+    function xpRecordContract(
+        recordName: string,
+        contract: ContractRecordInput,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                recordContract: {
+                    input: {
+                        recordName,
+                        item: contract as any,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the contract with the given address.
+     *
+     * @param recordName The name of the record that the contract is stored in.
+     * @param address The address of the contract.
+     * @param options The options for the request.
+     *
+     * @dochash actions/xp
+     * @docname xp.getContract
+     */
+    function xpGetContract(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<ContractRecord | null> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getContract: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets a list of contracts from the given record.
+     *
+     * @param recordName The name of the record that the contracts are stored in.
+     * @param address The address that the contracts should be listed after. If null, then the first page of contracts will be returned.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the list of contracts.
+     *
+     * @dochash actions/xp
+     * @docname xp.listContracts
+     */
+    function xpListContracts(
+        recordName: string,
+        address: string = null,
+        options: RecordActionOptions = {}
+    ): Promise<ContractRecord[]> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listContracts: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the pricing for the given contract.
+     *
+     * @param recordName The name of the record that the contracts are stored in.
+     * @param address The address of the contract.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the pricing details for the contract.
+     *
+     * @dochash actions/xp
+     * @docname xp.getContractPricing
+     */
+    function xpGetContractPricing(
+        recordName: string,
+        address: string = null,
+        options: RecordActionOptions = {}
+    ): Promise<ContractRecord[]> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getContractPricing: {
+                    input: {
+                        recordName,
+                        address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    interface PurchaseContractRequest {
+        recordName: string;
+        address: string;
+        expectedCost: number;
+        currency: 'usd';
+
+        returnUrl: string;
+        successUrl: string;
+    }
+
+    /**
+     * Attempts to purchase a contract via the xpExchange.
+     *
+     * @param request The request for the purchase.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the purchase is complete. Returns a URL to redirect the user to if additional payment details need to be collected.
+     *
+     * @dochash actions/xp
+     * @docname xp.purchaseContract
+     */
+    function xpPurchaseContract(
+        request: PurchaseContractRequest,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                purchaseContract: {
+                    input: {
+                        recordName: request.recordName,
+                        contract: {
+                            address: request.address,
+                            expectedCost: request.expectedCost,
+                            currency: request.currency,
+                        },
+                        returnUrl: request.returnUrl,
+                        successUrl: request.successUrl,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Cancels a contract contract via the xpExchange and refunds any funds.
+     *
+     * @param recordName The name of the record that the contract is stored in.
+     * @param address The address of the contract to cancel.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the contract is cancelled.
+     *
+     * @dochash actions/xp
+     * @docname xp.cancelContract
+     */
+    function xpCancelContract(
+        recordName: string,
+        address: string,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                cancelContract: {
+                    input: {
+                        recordName: recordName,
+                        address: address,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    interface InvoiceContractRequest {
+        contractId: string;
+        amount: number;
+        note?: string;
+        payoutDestination: InvoicePayoutDestination;
+    }
+
+    /**
+     * Creates a new invoice for the given contract.
+     *
+     * @param request The request for the invoice.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is created.
+     *
+     * @dochash actions/xp
+     * @docname xp.invoiceContract
+     */
+    function xpInvoiceContract(
+        request: InvoiceContractRequest,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                invoiceContract: {
+                    input: {
+                        contractId: request.contractId,
+                        amount: request.amount,
+                        note: request.note,
+                        payoutDestination: request.payoutDestination,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Voids (cancels) an invoice.
+     *
+     * @param invoiceId The ID of the invoice to void.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is voided.
+     *
+     * @dochash actions/xp
+     * @docname xp.voidInvoice
+     */
+    function xpCancelInvoice(
+        invoiceId: string,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                cancelInvoice: {
+                    input: {
+                        invoiceId,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Lists the invoices for the given contract.
+     *
+     * @param contractId The ID of the contract to list invoices for.
+     * @param options The options for the request.
+     * @returns A promise that resolves with the invoices for the contract.
+     *
+     * @dochash actions/xp
+     * @docname xp.listInvoices
+     */
+    function xpListInvoices(
+        contractId: string,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                listContractInvoices: {
+                    input: {
+                        contractId,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Pays an invoice. This will attempt to transfer funds from the contract account to the user holding the contract.
+     *
+     * @param invoiceId The ID of the invoice to pay.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the invoice is paid.
+     */
+    function xpPayInvoice(
+        invoiceId: string,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                payContractInvoice: {
+                    input: {
+                        invoiceId,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    interface PayoutRequest {
+        amount?: number;
+        destination?: PayoutDestination;
+    }
+
+    /**
+     * Attempts to payout funds from the user's account to their linked payout destination.
+     *
+     * @param request The payout request.
+     * @param options The options for the request.
+     * @returns A promise that resolves when the payout is complete.
+     *
+     * @dochash actions/xp
+     * @docname xp.payout
+     */
+    function xpPayout(
+        request: PayoutRequest,
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                payoutAccount: {
+                    input: {
+                        amount: request.amount,
+                        destination: request.destination,
+                    },
+                },
+            },
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to retrieve the account balances for the user's account.
+     *
+     * @param options The options for the request.
+     * @returns A promise that resolves with the account balances.
+     *
+     * @dochash actions/xp
+     * @docname xp.getAccountBalances
+     */
+    function xpGetAccountBalances(
+        options: RecordActionOptions = {}
+    ): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                getBalances: {
+                    input: {},
+                },
+            },
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 
