@@ -28823,7 +28823,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         returnUrl: 'http://example.com',
                         successUrl: 'http://example.com/success',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -28834,7 +28834,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     sessionId: expect.any(String),
                     url: 'checkoutUrl',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -28860,7 +28860,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 status: 'open',
             });
 
-            delete authenticatedHeaders['authorization'];
+            delete apiHeaders['authorization'];
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -28875,7 +28875,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         returnUrl: 'http://example.com',
                         successUrl: 'http://example.com/success',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -28886,7 +28886,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     sessionId: expect.any(String),
                     url: 'checkoutUrl',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -28898,7 +28898,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 status: 'open',
             });
 
-            delete authenticatedHeaders['authorization'];
+            delete apiHeaders['authorization'];
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -28913,7 +28913,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         returnUrl: 'http://example.com',
                         successUrl: 'http://example.com/success',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -28925,7 +28925,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -28952,7 +28952,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         returnUrl: 'http://example.com',
                         successUrl: 'http://example.com/success',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -28973,7 +28973,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         type: 'missing_permission',
                     },
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -28991,7 +28991,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         returnUrl: 'http://example.com',
                         successUrl: 'http://example.com/success',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29003,7 +29003,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'The expected price does not match the actual price of the contract.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29021,7 +29021,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         returnUrl: 'http://example.com',
                         successUrl: 'http://example.com/success',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29033,7 +29033,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'The expected price does not match the actual price of the contract.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29050,11 +29050,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             })
         );
         testBodyIsJson((body) =>
-            httpPost(
-                `/api/v2/records/contract/purchase`,
-                body,
-                authenticatedHeaders
-            )
+            httpPost(`/api/v2/records/contract/purchase`, body, apiHeaders)
         );
         testRateLimit(() =>
             httpPost(
@@ -29159,7 +29155,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         recordName: purchaseRecordName,
                         address: 'contract1',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29188,7 +29184,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     ],
                     total: 1000,
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29214,7 +29210,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 status: 'open',
             });
 
-            delete authenticatedHeaders['authorization'];
+            delete apiHeaders['authorization'];
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -29223,7 +29219,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         recordName: purchaseRecordName,
                         address: 'contract1',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29252,7 +29248,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     ],
                     total: 1000,
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29264,7 +29260,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 status: 'open',
             });
 
-            delete authenticatedHeaders['authorization'];
+            delete apiHeaders['authorization'];
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -29273,7 +29269,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         recordName: purchaseRecordName,
                         address: 'contract1',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29285,7 +29281,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29306,7 +29302,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         recordName: purchaseRecordName,
                         address: 'contract1',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29327,7 +29323,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         type: 'missing_permission',
                     },
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29338,11 +29334,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             })
         );
         testBodyIsJson((body) =>
-            httpPost(
-                `/api/v2/records/contract/pricing`,
-                body,
-                authenticatedHeaders
-            )
+            httpPost(`/api/v2/records/contract/pricing`, body, apiHeaders)
         );
         testRateLimit(() =>
             httpPost(
@@ -29459,7 +29451,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         payoutDestination: 'stripe',
                         note: 'Test invoice',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29469,12 +29461,12 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     success: true,
                     invoiceId: expect.any(String),
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
         it('should return not_authorized when the user is not the holding user', async () => {
-            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+            apiHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -29486,7 +29478,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         payoutDestination: 'stripe',
                         note: 'Unauthorized invoice',
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29498,7 +29490,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'You are not authorized to invoice for the contract.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29513,7 +29505,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     payoutDestination: 'stripe',
                     note: 'Unauthorized invoice',
                 }),
-            () => authenticatedHeaders
+            () => apiHeaders
         );
     });
 
@@ -29633,7 +29625,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     JSON.stringify({
                         invoiceId: invoiceId,
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29642,7 +29634,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 body: {
                     success: true,
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29651,7 +29643,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 id: 'transfer_id',
             });
 
-            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+            apiHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -29659,7 +29651,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     JSON.stringify({
                         invoiceId: invoiceId,
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29671,7 +29663,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'You are not authorized to pay invoices for the contract.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
@@ -29682,7 +29674,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 JSON.stringify({
                     invoiceId: invoiceId,
                 }),
-            () => authenticatedHeaders
+            () => apiHeaders
         );
     });
 
@@ -29737,7 +29729,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         destination: 'stripe',
                         amount: 500,
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29747,7 +29739,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     success: true,
                     payoutId: expect.any(String),
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
 
             // Verify stripe transfer was created
@@ -29765,7 +29757,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             });
 
             // Use a different user's session
-            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+            apiHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -29775,7 +29767,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         amount: 500,
                         userId: payoutUserId,
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29787,7 +29779,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'You are not authorized to payout this account.',
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
 
             // Verify stripe transfer was NOT created
@@ -29803,7 +29795,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     amount: 500,
                     userId: payoutUserId,
                 }),
-            () => authenticatedHeaders
+            () => apiHeaders
         );
     });
 
@@ -29912,7 +29904,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/contract/invoices?contractId=${contractId}`,
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29945,17 +29937,17 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                         },
                     ],
                 },
-                headers: corsHeaders(authenticatedHeaders['origin']),
+                headers: corsHeaders(apiHeaders['origin']),
             });
         });
 
         it('should return not_authorized when user cannot access the contract', async () => {
-            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+            apiHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
 
             const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/contract/invoices?contractId=${contractId}`,
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -29967,7 +29959,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'You are not authorized to view invoices for the contract.',
                 },
-                headers: corsHeaders(authenticatedHeaders['origin']),
+                headers: corsHeaders(apiHeaders['origin']),
             });
         });
 
@@ -29975,7 +29967,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
             'GET',
             `/api/v2/records/contract/invoices?contractId=${contractId}`,
             () => null,
-            () => authenticatedHeaders
+            () => apiHeaders
         );
     });
 
@@ -30075,7 +30067,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     JSON.stringify({
                         invoiceId: invoiceId,
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -30084,7 +30076,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 body: {
                     success: true,
                 },
-                headers: corsHeaders(authenticatedHeaders['origin']),
+                headers: corsHeaders(apiHeaders['origin']),
             });
 
             // Verify the invoice is now void
@@ -30095,7 +30087,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
         });
 
         it('should return not_authorized when user is not authorized to cancel the invoice', async () => {
-            authenticatedHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
+            apiHeaders['authorization'] = `Bearer ${ownerSessionKey}`;
 
             const result = await server.handleHttpRequest(
                 httpPost(
@@ -30103,7 +30095,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     JSON.stringify({
                         invoiceId: invoiceId,
                     }),
-                    authenticatedHeaders
+                    apiHeaders
                 )
             );
 
@@ -30115,7 +30107,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                     errorMessage:
                         'You are not authorized to perform this operation.',
                 },
-                headers: corsHeaders(authenticatedHeaders['origin']),
+                headers: corsHeaders(apiHeaders['origin']),
             });
 
             // Verify the invoice is still open
@@ -30132,7 +30124,7 @@ iW7ByiIykfraimQSzn7Il6dpcvug0Io=
                 JSON.stringify({
                     invoiceId: invoiceId,
                 }),
-            () => authenticatedHeaders
+            () => apiHeaders
         );
     });
 

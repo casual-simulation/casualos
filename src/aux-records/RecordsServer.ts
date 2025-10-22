@@ -5494,7 +5494,7 @@ export class RecordsServer {
                 ),
 
             listContractInvoices: procedure()
-                .origins('account')
+                .origins('api')
                 .http('GET', '/api/v2/records/contract/invoices')
                 .inputs(
                     z.object({
@@ -5529,7 +5529,7 @@ export class RecordsServer {
                 }),
 
             cancelInvoice: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/records/contract/invoice/cancel')
                 .inputs(
                     z.object({

@@ -5862,7 +5862,7 @@ Object {
         "type": "object",
       },
       "name": "cancelContract",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5917,7 +5917,7 @@ Object {
         "type": "object",
       },
       "name": "invoiceContract",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5933,7 +5933,7 @@ Object {
         "type": "object",
       },
       "name": "payContractInvoice",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5965,7 +5965,7 @@ Object {
         "type": "object",
       },
       "name": "payoutAccount",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5981,7 +5981,7 @@ Object {
         "type": "object",
       },
       "name": "listContractInvoices",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -5997,7 +5997,7 @@ Object {
         "type": "object",
       },
       "name": "cancelInvoice",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -6393,7 +6393,7 @@ Object {
         "type": "object",
       },
       "name": "purchaseContract",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -6421,7 +6421,7 @@ Object {
         "type": "object",
       },
       "name": "getContractPricing",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12336,7 +12336,7 @@ Object {
         "type": "object",
       },
       "name": "cancelContract",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12391,7 +12391,7 @@ Object {
         "type": "object",
       },
       "name": "invoiceContract",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12407,7 +12407,7 @@ Object {
         "type": "object",
       },
       "name": "payContractInvoice",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12439,7 +12439,7 @@ Object {
         "type": "object",
       },
       "name": "payoutAccount",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12455,7 +12455,7 @@ Object {
         "type": "object",
       },
       "name": "listContractInvoices",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12471,7 +12471,7 @@ Object {
         "type": "object",
       },
       "name": "cancelInvoice",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12867,7 +12867,7 @@ Object {
         "type": "object",
       },
       "name": "purchaseContract",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
@@ -12895,7 +12895,7 @@ Object {
         "type": "object",
       },
       "name": "getContractPricing",
-      "origins": "account",
+      "origins": "api",
     },
     Object {
       "http": Object {
