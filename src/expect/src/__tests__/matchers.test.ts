@@ -80,7 +80,7 @@ describe('.rejects', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -103,7 +103,7 @@ describe('.rejects', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -115,7 +115,7 @@ describe('.rejects', () => {
             error = e;
         }
         expect(error).toBeDefined();
-        expect(error.message).toMatchSnapshot();
+        expect((error as any).message).toMatchSnapshot();
     });
 });
 
@@ -151,7 +151,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
 
         it(`fails non-promise value ${stringify(value)}`, async () => {
@@ -162,7 +162,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -175,7 +175,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
 
         it(`fails non-promise value ${stringify(value)}`, async () => {
@@ -186,7 +186,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -198,7 +198,7 @@ describe('.resolves', () => {
             error = e;
         }
         expect(error).toBeDefined();
-        expect(error.message).toMatchSnapshot();
+        expect((error as any).message).toMatchSnapshot();
     });
 });
 
@@ -284,7 +284,7 @@ describe('.toBe()', () => {
         try {
             jestExpect(actual).toBe(expected);
         } catch (error) {
-            expect(error.matcherResult).toEqual(
+            expect((error as any).matcherResult).toEqual(
                 expect.objectContaining({
                     actual,
                     expected,
@@ -899,7 +899,7 @@ describe('.toEqual()', () => {
         try {
             jestExpect(actual).toEqual(expected);
         } catch (error) {
-            expect(error.matcherResult).toEqual(
+            expect((error as any).matcherResult).toEqual(
                 expect.objectContaining({
                     actual,
                     expected,
@@ -2276,7 +2276,7 @@ describe('toMatchObject()', () => {
             n2
         )})`, () => {
             expect(() =>
-                jestExpect(n1).toMatchObject(n2)
+                jestExpect(n1).toMatchObject(n2 as any)
             ).toThrowErrorMatchingSnapshot();
         });
     });
