@@ -588,6 +588,26 @@ export interface HtmlFunction {
     f: any;
 }
 
+export interface PurchaseContractRequest {
+    recordName: string;
+    address: string;
+    expectedCost: number;
+    currency: 'usd';
+
+    returnUrl: string;
+    successUrl: string;
+}
+export interface InvoiceContractRequest {
+    contractId: string;
+    amount: number;
+    note?: string;
+    payoutDestination: InvoicePayoutDestination;
+}
+export interface PayoutRequest {
+    amount?: number;
+    destination?: PayoutDestination;
+}
+
 /**
  * Creates a new interpretable function based on the given function.
  * @param interpretableFunc
@@ -9261,16 +9281,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
-    interface PurchaseContractRequest {
-        recordName: string;
-        address: string;
-        expectedCost: number;
-        currency: 'usd';
-
-        returnUrl: string;
-        successUrl: string;
-    }
-
     /**
      * Attempts to purchase a contract via the xpExchange.
      *
@@ -9337,13 +9347,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
-    }
-
-    interface InvoiceContractRequest {
-        contractId: string;
-        amount: number;
-        note?: string;
-        payoutDestination: InvoicePayoutDestination;
     }
 
     /**
@@ -9460,11 +9463,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
-    }
-
-    interface PayoutRequest {
-        amount?: number;
-        destination?: PayoutDestination;
     }
 
     /**
