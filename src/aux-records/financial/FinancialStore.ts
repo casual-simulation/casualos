@@ -204,7 +204,12 @@ export interface ExternalPayout {
     stripeTransferId?: string;
 
     /**
-     * The destionation that the payout is sent to.
+     * The ID of the Stripe account that the payout is sent to.
+     */
+    destinationStripeAccountId?: string;
+
+    /**
+     * The destination that the payout is sent to.
      */
     externalDestination: PayoutDestination;
 

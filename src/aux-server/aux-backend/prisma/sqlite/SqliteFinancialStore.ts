@@ -36,32 +36,6 @@ export class SqliteFinancialStore implements FinancialStore {
         this._client = client;
     }
 
-    createExternalPayout(payout: ExternalPayout): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    markPayoutAsPosted(
-        payoutId: string,
-        postedTransferId: string,
-        postedAtMs: number
-    ): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    markPayoutAsVoided(
-        payoutId: string,
-        voidedTransferId: string,
-        voidedAtMs: number
-    ): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    updateExternalPayout(
-        payout: PartialExcept<ExternalPayout, 'id'>
-    ): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
     @traced(TRACE_NAME)
     async getAccountById(id: string): Promise<FinancialAccount | null> {
         return await this._client.financialAccount.findUnique({
@@ -113,6 +87,93 @@ export class SqliteFinancialStore implements FinancialStore {
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async createExternalPayout(payout: ExternalPayout): Promise<void> {
+        await this._client.externalPayout.create({
+            data: {
+                id: payout.id,
+                invoiceId: payout.invoiceId,
+                userId: payout.userId,
+                transferId: payout.transferId,
+                transactionId: payout.transactionId,
+                stripeTransferId: payout.stripeTransferId,
+                destinationStripeAccountId: payout.destinationStripeAccountId,
+                externalDestination: payout.externalDestination,
+                amount: payout.amount,
+                initiatedAt: payout.initatedAtMs,
+                postedTransferId: payout.postedTransferId,
+                voidedTransferId: payout.voidedTransferId,
+                postedAt: payout.postedAtMs,
+                voidedAt: payout.voidedAtMs,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async markPayoutAsPosted(
+        payoutId: string,
+        postedTransferId: string,
+        postedAtMs: number
+    ): Promise<void> {
+        await this._client.externalPayout.update({
+            where: {
+                id: payoutId,
+            },
+            data: {
+                postedTransferId,
+                postedAt: postedAtMs,
+                updatedAt: Date.now(),
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async markPayoutAsVoided(
+        payoutId: string,
+        voidedTransferId: string,
+        voidedAtMs: number
+    ): Promise<void> {
+        await this._client.externalPayout.update({
+            where: {
+                id: payoutId,
+            },
+            data: {
+                voidedTransferId,
+                voidedAt: voidedAtMs,
+                updatedAt: Date.now(),
+            },
+        });
+    }
+
+    @traced(TRACE_NAME)
+    async updateExternalPayout(
+        payout: PartialExcept<ExternalPayout, 'id'>
+    ): Promise<void> {
+        await this._client.externalPayout.update({
+            where: {
+                id: payout.id,
+            },
+            data: cleanupObject({
+                invoiceId: payout.invoiceId,
+                userId: payout.userId,
+                transferId: payout.transferId,
+                transactionId: payout.transactionId,
+                stripeTransferId: payout.stripeTransferId,
+                destinationStripeAccountId: payout.destinationStripeAccountId,
+                externalDestination: payout.externalDestination,
+                amount: payout.amount,
+                postedTransferId: payout.postedTransferId,
+                voidedTransferId: payout.voidedTransferId,
+                initiatedAt: payout.initatedAtMs,
+                postedAt: payout.postedAtMs,
+                voidedAt: payout.voidedAtMs,
+                updatedAt: Date.now(),
+            }),
         });
     }
 }

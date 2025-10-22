@@ -26,6 +26,7 @@ import type {
 } from '@casual-simulation/aux-records/financial';
 import { cleanupObject } from '@casual-simulation/aux-records';
 import type { PartialExcept } from '@casual-simulation/aux-records/crud';
+import { convertToDate } from './Utils';
 
 const TRACE_NAME = 'PrismaFinancialStore';
 
@@ -87,29 +88,85 @@ export class PrismaFinancialStore implements FinancialStore {
         });
     }
 
+    @traced(TRACE_NAME)
     async createExternalPayout(payout: ExternalPayout): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._client.externalPayout.create({
+            data: {
+                id: payout.id,
+                invoiceId: payout.invoiceId,
+                userId: payout.userId,
+                transferId: payout.transferId,
+                transactionId: payout.transactionId,
+                stripeTransferId: payout.stripeTransferId,
+                destinationStripeAccountId: payout.destinationStripeAccountId,
+                externalDestination: payout.externalDestination,
+                amount: payout.amount,
+                initiatedAt: convertToDate(payout.initatedAtMs),
+                postedTransferId: payout.postedTransferId,
+                voidedTransferId: payout.voidedTransferId,
+                postedAt: convertToDate(payout.postedAtMs),
+                voidedAt: convertToDate(payout.voidedAtMs),
+            },
+        });
     }
 
+    @traced(TRACE_NAME)
     async markPayoutAsPosted(
         payoutId: string,
         postedTransferId: string,
         postedAtMs: number
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._client.externalPayout.update({
+            where: {
+                id: payoutId,
+            },
+            data: {
+                postedTransferId,
+                postedAt: new Date(postedAtMs),
+            },
+        });
     }
 
+    @traced(TRACE_NAME)
     async markPayoutAsVoided(
         payoutId: string,
         voidedTransferId: string,
         voidedAtMs: number
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._client.externalPayout.update({
+            where: {
+                id: payoutId,
+            },
+            data: {
+                voidedTransferId,
+                voidedAt: new Date(voidedAtMs),
+            },
+        });
     }
 
+    @traced(TRACE_NAME)
     async updateExternalPayout(
         payout: PartialExcept<ExternalPayout, 'id'>
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await this._client.externalPayout.update({
+            where: {
+                id: payout.id,
+            },
+            data: cleanupObject({
+                invoiceId: payout.invoiceId,
+                userId: payout.userId,
+                transferId: payout.transferId,
+                transactionId: payout.transactionId,
+                stripeTransferId: payout.stripeTransferId,
+                destinationStripeAccountId: payout.destinationStripeAccountId,
+                externalDestination: payout.externalDestination,
+                amount: payout.amount,
+                postedTransferId: payout.postedTransferId,
+                voidedTransferId: payout.voidedTransferId,
+                initiatedAt: convertToDate(payout.initatedAtMs),
+                postedAt: convertToDate(payout.postedAtMs),
+                voidedAt: convertToDate(payout.voidedAtMs),
+            }),
+        });
     }
 }
