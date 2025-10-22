@@ -167,7 +167,6 @@ export async function runTigerBeetle(label: string): Promise<{
         ],
         {
             cwd: tbDir,
-            detached: true,
             stdio: ['pipe', 'pipe', 'pipe'],
         }
     ) as ChildProcess;
