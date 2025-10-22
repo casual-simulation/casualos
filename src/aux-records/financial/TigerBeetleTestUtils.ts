@@ -108,8 +108,14 @@ export async function runTigerBeetle(label: string): Promise<{
             tbDir = await downloadAndUnzipIfNeeded(
                 'https://github.com/tigerbeetle/tigerbeetle/releases/latest/download/tigerbeetle-x86_64-linux.zip'
             );
+        } else {
+            throw new Error(
+                `Unsupported Linux architecture for TigerBeetle: ${os.arch()}`
+            );
         }
         exePath = path.join(tbDir, 'tigerbeetle');
+    } else {
+        throw new Error(`Unsupported TigerBeetle platform: ${os.platform()}`);
     }
 
     const tbFile = path.join(tbDir, `0_0.tigerbeetle.${label}`);
