@@ -4217,6 +4217,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 InterpreterContinuation
             > = {
                 [Symbol.iterator]: () => generatorWrapper,
+                [Symbol.dispose]: () => {},
                 next(value) {
                     if (!valid) {
                         return {
