@@ -12,6 +12,9 @@ patchedDependencies:
   '@mdx-js/mdx@3.0.0':
     hash: 23fce79a8d279fa75dfece17d731fccaaa071ece72fe7b3d44db9e33c63d2b1a
     path: patches/@mdx-js/mdx@3.0.0.patch
+  '@types/mongodb':
+    hash: 261c68fb0bca872960bfd9ea63f0fa1643a7de8e56ec369cb826d23d6919fab3
+    path: patches/@types__mongodb.patch
   acorn-typescript@1.4.13:
     hash: e33eda9c7cfd22b7e4812106f09b26f342e947fb663155be1f12c5323f7a10f3
     path: patches/acorn-typescript@1.4.13.patch
@@ -121,7 +124,7 @@ importers:
         version: 4.13.1
       '@types/mongodb':
         specifier: ^3.5.32
-        version: 3.6.20
+        version: 3.6.20(patch_hash=261c68fb0bca872960bfd9ea63f0fa1643a7de8e56ec369cb826d23d6919fab3)
       '@types/mustache':
         specifier: ^4.2.2
         version: 4.2.6
@@ -23860,7 +23863,7 @@ snapshots:
     dependencies:
       '@types/node': 18.19.98
 
-  '@types/mongodb@3.6.20':
+  '@types/mongodb@3.6.20(patch_hash=261c68fb0bca872960bfd9ea63f0fa1643a7de8e56ec369cb826d23d6919fab3)':
     dependencies:
       '@types/bson': 4.0.5
       '@types/node': 18.19.98
