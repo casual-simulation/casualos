@@ -7691,6 +7691,194 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'recordContract',
+                    recordsCallProcedure(
+                        {
+                            recordContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    item: {
+                                        address: 'contractAddress',
+                                        holdingUser: 'holdingUserId',
+                                        markers: ['marker'],
+                                        rate: 100,
+                                        initialValue: 1000,
+                                        description: 'Test contract',
+                                    },
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getContract',
+                    recordsCallProcedure(
+                        {
+                            getContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listContracts',
+                    recordsCallProcedure(
+                        {
+                            listContracts: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'purchaseContract',
+                    recordsCallProcedure(
+                        {
+                            purchaseContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    contract: {
+                                        address: 'contractAddress',
+                                        currency: 'usd',
+                                        expectedCost: 1100,
+                                    },
+                                    returnUrl: 'https://example.com/return',
+                                    successUrl: 'https://example.com/success',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getContractPricing',
+                    recordsCallProcedure(
+                        {
+                            getContractPricing: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'cancelContract',
+                    recordsCallProcedure(
+                        {
+                            cancelContract: {
+                                input: {
+                                    recordName: 'testRecord',
+                                    address: 'address',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'invoiceContract',
+                    recordsCallProcedure(
+                        {
+                            invoiceContract: {
+                                input: {
+                                    contractId: 'contractId',
+                                    amount: 5000,
+                                    payoutDestination: 'stripe',
+                                    note: 'invoice note',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'payContractInvoice',
+                    recordsCallProcedure(
+                        {
+                            payContractInvoice: {
+                                input: {
+                                    invoiceId: 'invoiceId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'listContractInvoices',
+                    recordsCallProcedure(
+                        {
+                            listContractInvoices: {
+                                input: {
+                                    contractId: 'contractId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'cancelInvoice',
+                    recordsCallProcedure(
+                        {
+                            cancelInvoice: {
+                                input: {
+                                    invoiceId: 'invoiceId',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'payoutAccount',
+                    recordsCallProcedure(
+                        {
+                            payoutAccount: {
+                                input: {
+                                    destination: 'stripe',
+                                },
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
+                [
+                    'getBalances',
+                    recordsCallProcedure(
+                        {
+                            getBalances: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

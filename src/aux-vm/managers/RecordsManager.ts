@@ -267,9 +267,20 @@ export class RecordsManager {
         ['listDatabases', false],
         ['getDatabase', true],
         ['queryDatabase', true],
-        // ['getXpUserMeta', true],
-        // ['createXpContract', true],
-        // ['updateXpContract', true],
+
+        // XP Contract Procedures
+        ['recordContract', true],
+        ['getContract', true],
+        ['listContracts', true],
+        ['getContractPricing', true],
+        ['purchaseContract', true],
+        ['cancelContract', true],
+        ['invoiceContract', true],
+        ['cancelInvoice', true],
+        ['listContractInvoices', true],
+        ['payContractInvoice', true],
+        ['payoutAccount', true],
+        ['getBalances', true],
     ]);
 
     /**
