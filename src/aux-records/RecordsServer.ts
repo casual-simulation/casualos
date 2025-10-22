@@ -5269,7 +5269,7 @@ export class RecordsServer {
             ),
 
             cancelContract: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/records/contract/cancel')
                 .inputs(
                     z.object({
@@ -5352,7 +5352,7 @@ export class RecordsServer {
                 }),
 
             invoiceContract: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/records/contract/invoice')
                 .inputs(
                     z.object({
@@ -5400,7 +5400,7 @@ export class RecordsServer {
                 ),
 
             payContractInvoice: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/records/contract/invoice/pay')
                 .inputs(
                     z.object({
@@ -5436,7 +5436,7 @@ export class RecordsServer {
                 }),
 
             payoutAccount: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/financial/payouts')
                 .inputs(
                     z.object({
@@ -5963,7 +5963,7 @@ export class RecordsServer {
                 ),
 
             purchaseContract: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/records/contract/purchase')
                 .inputs(
                     z.object({
@@ -6023,7 +6023,7 @@ export class RecordsServer {
                 ),
 
             getContractPricing: procedure()
-                .origins('account')
+                .origins('api')
                 .http('POST', '/api/v2/records/contract/pricing')
                 .inputs(
                     z.object({
