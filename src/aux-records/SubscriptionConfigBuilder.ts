@@ -44,7 +44,11 @@ import type {
     TiersConfiguration,
     WebhooksFeaturesConfiguration,
 } from './SubscriptionConfiguration';
-import { allowAllFeatures, denyAllFeatures } from './SubscriptionConfiguration';
+import {
+    allowAllDefaultFeatures,
+    allowAllFeatures,
+    denyAllFeatures,
+} from './SubscriptionConfiguration';
 
 export class FeaturesBuilder {
     private _features: FeaturesConfiguration = denyAllFeatures();
@@ -52,7 +56,7 @@ export class FeaturesBuilder {
     constructor() {}
 
     withAllDefaultFeatures(): this {
-        this._features = merge(this._features, allowAllFeatures());
+        this._features = merge(this._features, allowAllDefaultFeatures());
         return this;
     }
 

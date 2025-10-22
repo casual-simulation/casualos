@@ -1631,6 +1631,63 @@ export function allowAllFeatures(): FeaturesConfiguration {
         databases: {
             allowed: true,
         },
+        contracts: {
+            allowed: true,
+        },
+    };
+}
+
+export function allowAllDefaultFeatures(): FeaturesConfiguration {
+    return {
+        records: {
+            allowed: true,
+        },
+        ai: {
+            chat: {
+                allowed: true,
+            },
+            images: {
+                allowed: true,
+            },
+            skyboxes: {
+                allowed: true,
+            },
+            hume: {
+                allowed: true,
+            },
+            sloyd: {
+                allowed: true,
+            },
+            openai: {
+                realtime: {
+                    allowed: true,
+                },
+            },
+        },
+        data: {
+            allowed: true,
+        },
+        events: {
+            allowed: true,
+        },
+        files: {
+            allowed: true,
+        },
+        insts: {
+            allowed: true,
+        },
+        notifications: {
+            allowed: true,
+        },
+        packages: {
+            allowed: true,
+        },
+        search: {
+            allowed: true,
+        },
+        databases: {
+            allowed: true,
+        },
     };
 }
 
@@ -1683,6 +1740,9 @@ export function denyAllFeatures(): FeaturesConfiguration {
             allowed: false,
         },
         databases: {
+            allowed: false,
+        },
+        contracts: {
             allowed: false,
         },
     };
