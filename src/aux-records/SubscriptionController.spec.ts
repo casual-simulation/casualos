@@ -11440,6 +11440,7 @@ describe('SubscriptionController', () => {
                         id: expect.any(String),
                         userId: payoutUserId,
                         externalDestination: 'stripe',
+                        destinationStripeAccountId: 'acct_test123',
                         amount: 500,
                         initatedAtMs: 555,
                         postedTransferId: expect.any(String),
@@ -13743,6 +13744,148 @@ describe('SubscriptionController', () => {
                         stripeSubscriptionId: 'sub',
                         subscriptionStatus: 'active',
                         subscriptionId: 'sub_1',
+                        userId: user?.id,
+                        studioId: null,
+                        currentPeriodStartMs: 456000,
+                        currentPeriodEndMs: 999000,
+                    });
+
+                    const subPeriods =
+                        await store.listSubscriptionPeriodsBySubscriptionId(
+                            sub.id
+                        );
+                    expect(subPeriods).toEqual([
+                        {
+                            id: expect.any(String),
+                            subscriptionId: sub.id,
+                            periodStartMs: 456000,
+                            periodEndMs: 999000,
+                            invoiceId: expect.any(String),
+                        },
+                    ]);
+
+                    const invoice = await store.getInvoiceById(
+                        subPeriods[0].invoiceId
+                    );
+                    expect(invoice).toEqual({
+                        id: expect.any(String),
+                        stripeInvoiceId: 'invoiceId',
+                        stripeHostedInvoiceUrl: 'invoiceUrl',
+                        stripeInvoicePdfUrl: 'pdfUrl',
+                        periodId: subPeriods[0].id,
+                        subscriptionId: sub.id,
+                        description: 'description',
+                        status: 'paid',
+                        paid: true,
+                        currency: 'usd',
+                        total: 1000,
+                        subtotal: 1000,
+                        tax: 0,
+                        checkoutSessionId: null,
+                    });
+                });
+
+                it('should support matching subscriptions based on product', async () => {
+                    store.subscriptionConfiguration =
+                        createTestSubConfiguration((config) =>
+                            config.addSubscription('expectedSub', (sub) =>
+                                sub
+                                    .withTier('tier1')
+                                    .withProduct('product_1_id')
+                                    .withEligibleProducts([
+                                        'other_product1',
+                                        'other_product2',
+                                    ])
+                                    .withAllDefaultFeatures()
+                            )
+                        );
+
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {} as any,
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                        cancel_at: 7777,
+                        canceled_at: null,
+                        ended_at: null,
+                        start_date: 123,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook-secret'
+                    );
+                    expect(stripeMock.getSubscriptionById).toHaveBeenCalledWith(
+                        'sub'
+                    );
+
+                    const user = await store.findUser(userId);
+                    expect(user?.subscriptionPeriodStartMs).toBe(456000);
+                    expect(user?.subscriptionPeriodEndMs).toBe(999000);
+
+                    // Should create subscription info
+                    const sub = await store.getSubscriptionById(
+                        user?.subscriptionInfoId
+                    );
+                    expect(sub).toEqual({
+                        id: expect.any(String),
+                        stripeCustomerId: 'customer_id',
+                        stripeSubscriptionId: 'sub',
+                        subscriptionStatus: 'active',
+                        subscriptionId: 'expectedSub',
                         userId: user?.id,
                         studioId: null,
                         currentPeriodStartMs: 456000,

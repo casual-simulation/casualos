@@ -3250,19 +3250,20 @@ export class SubscriptionController {
         }
 
         const payoutId = uuid();
-        await this._financialStore.createExternalPayout({
-            id: payoutId,
-            amount: Number(transfer.value.amount),
-            externalDestination: 'stripe',
-            initatedAtMs: Date.now(),
-            transferId: transfer.value.id.toString(),
-            transactionId: transactionResult.value.transactionId,
-            invoiceId: request.invoiceId,
-            userId: request.payoutUserId,
-            studioId: request.payoutStudioId,
-        });
-
         try {
+            await this._financialStore.createExternalPayout({
+                id: payoutId,
+                amount: Number(transfer.value.amount),
+                externalDestination: 'stripe',
+                destinationStripeAccountId: destinationStripeAccount,
+                initatedAtMs: Date.now(),
+                transferId: transfer.value.id.toString(),
+                transactionId: transactionResult.value.transactionId,
+                invoiceId: request.invoiceId,
+                userId: request.payoutUserId,
+                studioId: request.payoutStudioId,
+            });
+
             let sourceTransaction: string = undefined;
             if (request.contractId) {
                 const contract = await this._contractRecords.getItemById(
@@ -4132,7 +4133,7 @@ export class SubscriptionController {
             };
         } catch (err) {
             const span = trace.getActiveSpan();
-            span.recordException(err);
+            span?.recordException(err);
 
             console.error(
                 '[SubscriptionController] An error occurred while handling a stripe webhook:',
@@ -4424,6 +4425,17 @@ export class SubscriptionController {
                 `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
             );
 
+            if (!sub) {
+                console.error(
+                    `[SubscriptionController] [handleStripeWebhook] No matching subscription found for invoice (${invoice.id}).`
+                );
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'No matching subscription found.',
+                };
+            }
+
             const user = await this._authStore.findUserByStripeCustomerId(
                 customerId
             );
@@ -4505,10 +4517,11 @@ export class SubscriptionController {
                 items_loop: for (let i of lineItems) {
                     for (let s of config.subscriptions) {
                         if (
-                            s.eligibleProducts &&
-                            s.eligibleProducts.some(
-                                (p) => p === i.price.product
-                            )
+                            (s.eligibleProducts &&
+                                s.eligibleProducts.some(
+                                    (p) => p === i.price.product
+                                )) ||
+                            s.product === i.price.product
                         ) {
                             sub = s;
                             item = i;
