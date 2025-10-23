@@ -377,6 +377,7 @@ export class PrismaContractsRecordsStore implements ContractRecordsStore {
     ): Promise<ListCrudStoreSuccess<ContractRecord>> {
         const filter: Prisma.ContractRecordWhereInput = {
             recordName: recordName,
+            closedAt: { equals: null },
         };
 
         if (address) {
