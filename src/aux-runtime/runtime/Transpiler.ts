@@ -1575,7 +1575,7 @@ export class Transpiler {
         const length =
             absoluteValueEndEnd.index - absoluteValueStartBegin.index;
         text.delete(absoluteValueStartBegin.index, length);
-        text.insert(absoluteValueEndEnd.index, "''");
+        text.insert(absoluteValueStartBegin.index, "''");
     }
 
     private _insertJSXFactoryCall(

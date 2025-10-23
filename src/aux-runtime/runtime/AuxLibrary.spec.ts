@@ -3300,10 +3300,7 @@ describe('AuxLibrary', () => {
             it('should emit a RecordsCallProcedureAction', () => {
                 const promise: any = library.api.ai.listChatModels();
 
-                const expected = aiListChatModels(
-                    undefined,
-                    context.tasks.size
-                );
+                const expected = aiListChatModels({}, context.tasks.size);
 
                 expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);

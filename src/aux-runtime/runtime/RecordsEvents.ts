@@ -1557,7 +1557,7 @@ export function aiListChatModels(
                 input: {},
             },
         },
-        options,
+        options ?? {},
         taskId
     );
 }

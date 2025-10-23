@@ -1,5 +1,22 @@
 # CasualOS Changelog
 
+## V3.8.1
+
+#### Date: 10/23/2025
+
+### :rocket: Features
+
+-   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
+-   Accepts `title`, `content`, and optional `dismissText` parameters
+-   Returns a promise that resolves when the dialog is dismissed
+-   Useful for displaying important information that requires user acknowledgment
+-   Increased the number of segments on `skybox` form spheres.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
+-   Fixed an issue where empty JSX expressions with comments weren't supported.
+
 ## V3.8.0
 
 #### Date: 10/14/2025
