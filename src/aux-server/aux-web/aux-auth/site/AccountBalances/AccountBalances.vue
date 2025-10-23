@@ -1,29 +1,17 @@
 <template>
     <div v-if="accountBalances.length > 0" class="balances-container">
-        <md-card>
-            <md-card-header data-background-color="green">
-                <h4 class="title">Account Balances</h4>
-            </md-card-header>
+        <h3 class="title">Account Balances</h3>
 
-            <md-card-content>
-                <table class="balances-table">
-                    <thead>
-                        <tr>
-                            <th>Currency</th>
-                            <th>Balance</th>
-                            <th>Account ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="item in accountBalances" :key="item.currency">
-                            <td>{{ item.currency }}</td>
-                            <td class="balance">{{ calculateNetBalance(item) }}</td>
-                            <td class="account-id">{{ item.accountId }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </md-card-content>
-        </md-card>
+        <div class="balances-list">
+            <md-card v-for="item in accountBalances" :key="item.currency" class="balance-card">
+                <md-card-header
+                    ><h3 class="md-title">{{ getCurrencyName(item.currency) }}</h3></md-card-header
+                >
+                <md-card-content>
+                    <div class="balance">{{ calculateNetBalance(item) }}</div>
+                </md-card-content>
+            </md-card>
+        </div>
     </div>
 </template>
 

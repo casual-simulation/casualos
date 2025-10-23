@@ -34,7 +34,7 @@ import type {
     StripeAccountRequirements,
     StripeAccountStatus,
 } from '@casual-simulation/aux-records';
-import AuthAccountBalances from '../AuthAccountBalances/AuthAccountBalances';
+import AuthAccountBalances from '../AccountBalances/AccountBalances';
 
 @Component({
     components: {

@@ -116,7 +116,6 @@
                             <p>Click "Manage" below to provide the required information.</p>
                         </div>
                     </div>
-                    <account-balances :userId="userId"></account-balances>
                     <md-button class="md-primary" @click="manageXpAccount()">
                         <md-progress-spinner
                             md-mode="indeterminate"

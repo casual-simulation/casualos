@@ -62,4 +62,13 @@ export default class AccountBalancesVue extends Vue {
             return 'N/A';
         }
     }
+
+    getCurrencyName(currency: string) {
+        if (currency === 'usd') {
+            return 'USD';
+        } else if (currency === 'credits') {
+            return 'Credits';
+        }
+        return currency.toUpperCase();
+    }
 }
