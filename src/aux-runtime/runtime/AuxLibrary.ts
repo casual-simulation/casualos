@@ -397,6 +397,7 @@ import type {
     GenericResult,
     SimpleError,
     GenericSuccess,
+    JSONAccountBalance,
 } from '@casual-simulation/aux-common';
 import {
     remote as calcRemote,
@@ -498,6 +499,7 @@ import type {
     EraseInstResult,
     PurchasableItem,
     PayoutDestination,
+    ContractPricing,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -564,6 +566,7 @@ import type {
 } from '@casual-simulation/aux-records/database';
 import { query as q } from './database/DatabaseUtils';
 import type {
+    ContractInvoice,
     ContractRecord,
     InvoicePayoutDestination,
 } from '@casual-simulation/aux-records/contracts/ContractRecordsStore';
@@ -588,7 +591,7 @@ export interface HtmlFunction {
     f: any;
 }
 
-export interface PurchaseContractRequest {
+export interface APIPurchaseContractRequest {
     recordName: string;
     address: string;
     expectedCost: number;
@@ -597,13 +600,13 @@ export interface PurchaseContractRequest {
     returnUrl: string;
     successUrl: string;
 }
-export interface InvoiceContractRequest {
+export interface APIInvoiceContractRequest {
     contractId: string;
     amount: number;
     note?: string;
     payoutDestination: InvoicePayoutDestination;
 }
-export interface PayoutRequest {
+export interface APIPayoutRequest {
     amount?: number;
     destination?: PayoutDestination;
 }
@@ -9264,7 +9267,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string = null,
         options: RecordActionOptions = {}
-    ): Promise<ContractRecord[]> {
+    ): Promise<GenericResult<ContractPricing, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9292,9 +9295,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname xp.purchaseContract
      */
     function xpPurchaseContract(
-        request: PurchaseContractRequest,
+        request: APIPurchaseContractRequest,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<
+        GenericResult<
+            {
+                /**
+                 * The URL that the user should be directed to to complete the purchase.
+                 */
+                url?: string;
+
+                /**
+                 * The ID of the checkout session.
+                 */
+                sessionId: string;
+            },
+            SimpleError
+        >
+    > {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9332,7 +9350,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordName: string,
         address: string,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<void, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9360,9 +9378,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname xp.invoiceContract
      */
     function xpInvoiceContract(
-        request: InvoiceContractRequest,
+        request: APIInvoiceContractRequest,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<{ invoiceId: string }, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9394,7 +9412,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function xpCancelInvoice(
         invoiceId: string,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<void, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9423,7 +9441,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function xpListInvoices(
         contractId: string,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<ContractInvoice[], SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9449,7 +9467,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function xpPayInvoice(
         invoiceId: string,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<void, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9476,9 +9494,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname xp.payout
      */
     function xpPayout(
-        request: PayoutRequest,
+        request: APIPayoutRequest,
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<void, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {
@@ -9506,7 +9524,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function xpGetAccountBalances(
         options: RecordActionOptions = {}
-    ): Promise<void> {
+    ): Promise<GenericResult<JSONAccountBalance, SimpleError>> {
         const task = context.createTask();
         const event = recordsCallProcedure(
             {

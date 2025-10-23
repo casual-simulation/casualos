@@ -18635,43 +18635,141 @@ export interface ContractRecord {
 }
 
 /**
+ * The status of an invoice.
+ * - "open" means the invoice is pending payment.
+ * - "paid" means the invoice has been paid.
+ * - "void" means the invoice has been voided and is no longer valid.
+ */
+export type InvoiceStatus = 'open' | 'paid' | 'void';
+
+/**
+ * The reason why an invoice was voided.
+ * - "rejected" means the invoice was rejected by the contract issuer, the system, or an admin.
+ * - "cancelled" means the invoice was cancelled by the user, the system, or an admin.
+ */
+export type InvoiceVoidReason = 'rejected' | 'cancelled';
+
+/**
  * Defines an interface for contract invoice data.
  */
 export interface ContractInvoice {
     /**
-     * The unique identifier of the invoice.
+     * The ID of the invoice.
      */
     id: string;
 
     /**
-     * The ID of the contract associated with this invoice.
+     * The ID of the contract that this invoice is for.
      */
     contractId: string;
 
     /**
-     * The amount of the invoice.
+     * The amount charged in the invoice.
      */
     amount: number;
 
     /**
-     * Optional note about the invoice.
+     * The current status of the invoice.
      */
-    note?: string;
+    status: InvoiceStatus;
 
     /**
-     * The destination for the payout (e.g., "stripe", "account").
+     * The unix time in milliseconds when the invoice was opened.
      */
-    payoutDestination: string;
+    openedAtMs: number;
 
     /**
-     * The status of the invoice (e.g., "pending", "paid", "cancelled").
+     * The unix time in miliseconds when the invoice was paid, if applicable.
      */
-    status: string;
+    paidAtMs?: number | null;
 
     /**
-     * The time in milliseconds since the Unix epoch when the invoice was created.
+     * The unix time in milliseconds when the invoice was voided, if applicable.
+     */
+    voidedAtMs?: number | null;
+
+    /**
+     * The destination for the payout of the invoice.
+     */
+    payoutDestination: InvoicePayoutDestination;
+
+    /**
+     * The ID of the external transfer that was created to payout the invoice, if applicable.
+     * Null if the invoice is not paid or the payout destination is "account".
+     */
+    destinationTransferId?: string | null;
+
+    /**
+     * The reason why the invoice was voided, if applicable.
+     */
+    voidReason?: InvoiceVoidReason | null;
+
+    /**
+     * The ID of the transaction that paid the invoice, if applicable.
+     */
+    transactionId?: string | null;
+
+    /**
+     * The ID of the external payout that was created as part of the invoice payment process, if applicatble.
+     * Null if the invoice is not paid or the payout destination is "account".
+     */
+    externalPayoutId?: string | null;
+
+    /**
+     * An additional note about the invoice.
+     */
+    note?: string | null;
+
+    /**
+     * The unix time in milliseconds when the invoice was created.
      */
     createdAtMs: number;
+
+    /**
+     * The unix time in milliseconds when the invoice was last updated.
+     */
+    updatedAtMs: number;
+}
+
+
+/**
+ * Represents the balance of a financial account in a JSON-compatible format.
+ */
+export interface JSONAccountBalance {
+    /**
+     * The ID of the account.
+     */
+    accountId: string;
+
+    /**
+     * The number of credits to the account.
+     */
+    credits: string;
+
+    /**
+     * The number of pending credits to the account.
+     */
+    pendingCredits: string;
+
+    /**
+     * The number of debits to the account.
+     */
+    debits: string;
+
+    /**
+     * The number of pending debits to the account.
+     */
+    pendingDebits: string;
+
+    /**
+     * The factor that should be used to convert between credits and USD.
+     */
+    displayFactor: string;
+
+    /**
+     * The currency that the account is in.
+     */
+    currency: string;
 }
 
 /**
@@ -18712,6 +18810,70 @@ export interface ContractRecordInput {
      * The initial value of the contract.
      */
     initialValue: number;
+}
+
+export interface ContractPricingLineItem {
+    name: string;
+    amount: number;
+}
+
+export interface ContractPricing {
+    /**
+     * The information for the contract.
+     */
+    contract: ContractRecord;
+
+    /**
+     * The total cost to purchase the contract.
+     */
+    total: number;
+
+    /**
+     * The line items that make up the total cost.
+     */
+    lineItems: ContractPricingLineItem[];
+
+    /**
+     * The currency that the cost is in.
+     */
+    currency: string;
+}
+
+
+export interface APIPurchaseContractRequest {
+    recordName: string;
+    address: string;
+    expectedCost: number;
+    currency: 'usd';
+
+    returnUrl: string;
+    successUrl: string;
+}
+export interface APIInvoiceContractRequest {
+    contractId: string;
+    amount: number;
+    note?: string;
+    payoutDestination: InvoicePayoutDestination;
+}
+
+/**
+ * The destination for the payout of an invoice.
+ * - "stripe" means that the invoiced amount will be transfered to the users Stripe account once paid.
+ * - "account" means that the invoiced amount will remain in thier CasualOS account.
+ */
+export type InvoicePayoutDestination = 'stripe' | 'account';
+
+/**
+ * The list of possible payout destinations.
+ *
+ * - `stripe` indicates that the payout should be sent to the user's Stripe account.
+ * - `cash` indicates that the payout was sent as cash (e.g. check, manual bank transfer, cash, etc.)
+ */
+export type PayoutDestination = 'stripe' | 'cash';
+
+export interface APIPayoutRequest {
+    amount?: number;
+    destination?: PayoutDestination;
 }
 
 /**
@@ -18817,7 +18979,7 @@ interface Xp {
             initialValue: number;
         },
         options?: RecordActionOptions
-    ): Promise<any>;
+    ): Promise<GenericResult<ContractPricing, SimpleError>>;
 
     /**
      * Attempts to purchase a contract via the xpExchange.
@@ -18846,7 +19008,17 @@ interface Xp {
             };
         },
         options?: RecordActionOptions
-    ): Promise<void>;
+    ): Promise<GenericResult<{
+            /**
+             * The URL that the user should be directed to to complete the purchase.
+             */
+            url?: string;
+    
+            /**
+             * The ID of the checkout session.
+             */
+            sessionId: string;
+        }, SimpleError>>;
 
     /**
      * Cancels a contract via the xpExchange and refunds any funds.
@@ -18866,7 +19038,7 @@ interface Xp {
         recordName: string,
         address: string,
         options?: RecordActionOptions
-    ): Promise<void>;
+    ): Promise<GenericResult<void, SimpleError>>;
 
     /**
      * Creates a new invoice for the given contract.
@@ -18887,14 +19059,9 @@ interface Xp {
      * @docname xp.invoiceContract
      */
     invoiceContract(
-        request: {
-            contractId: string;
-            amount: number;
-            note?: string;
-            payoutDestination: 'stripe' | 'account';
-        },
+        request: APIInvoiceContractRequest,
         options?: RecordActionOptions
-    ): Promise<void>;
+    ): Promise<GenericResult<{ invoiceId: string }, SimpleError>>;
 
     /**
      * Voids (cancels) an invoice.
@@ -18912,7 +19079,7 @@ interface Xp {
     cancelInvoice(
         invoiceId: string,
         options?: RecordActionOptions
-    ): Promise<void>;
+    ): Promise<GenericResult<void, SimpleError>>;
 
     /**
      * Lists the invoices for the given contract.
@@ -18930,7 +19097,7 @@ interface Xp {
     listInvoices(
         contractId: string,
         options?: RecordActionOptions
-    ): Promise<ContractInvoice[]>;
+    ): Promise<GenericResult<ContractInvoice[], SimpleError>>;
 
     /**
      * Pays an invoice. This will attempt to transfer funds from the contract account to the user holding the contract.
@@ -18949,15 +19116,9 @@ interface Xp {
      * @docname xp.payInvoice
      */
     payInvoice(
-        request: {
-            invoiceId: string;
-            paymentInfo: {
-                type: 'stripe' | 'paypal';
-                token: string;
-            };
-        },
+        invoiceId: string,
         options?: RecordActionOptions
-    ): Promise<void>;
+    ): Promise<GenericResult<void, SimpleError>>;
 
     /**
      * Attempts to payout funds from the user's account to their linked payout destination.
@@ -18977,13 +19138,9 @@ interface Xp {
      * @docname xp.payout
      */
     payout(
-        request: {
-            destination: 'stripe' | 'paypal';
-            amount?: number;
-            description?: string;
-        },
+        request: APIPayoutRequest,
         options?: RecordActionOptions
-    ): Promise<void>;
+    ): Promise<GenericResult<void, SimpleError>>;
 
     /**
      * Attempts to retrieve the account balances for the user's account.
@@ -18997,11 +19154,9 @@ interface Xp {
      * @dochash actions/xp
      * @docname xp.getAccountBalances
      */
-    getAccountBalances(
-        options?: RecordActionOptions
-    ): Promise<{
-        [key: string]: number;
-    }>;
+    getAccountBalances(options?: RecordActionOptions): Promise<GenericResult<{
+        [key: string]: JSONAccountBalance;
+    }, SimpleError>>;
 }
 
 interface Perf {
