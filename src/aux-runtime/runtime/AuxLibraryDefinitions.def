@@ -260,6 +260,7 @@ declare type AsyncActions =
     | AsyncErrorAction
     | ShowInputAction
     | ShowConfirmAction
+    | ShowAlertAction
     | ShareAction
     | CreateCertificateAction
     | SignTagAction
@@ -1506,6 +1507,38 @@ declare interface ShowConfirmOptions {
      * The text that should be shown on the "Cancel" button.
      */
     cancelText?: string;
+}
+
+/**
+ * Defines an event that is used to show an alert dialog.
+ */
+declare interface ShowAlertAction extends AsyncAction {
+    type: 'show_alert';
+
+    /**
+     * The options for the alert dialog.
+     */
+    options: ShowAlertOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for an alert dialog.
+ */
+declare interface ShowAlertOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the dismiss button.
+     */
+    dismissText?: string;
 }
 
 /**
@@ -3060,14 +3093,14 @@ export interface CreatePublicRecordKeyFailure {
      * The type of error that occurred.
      */
     errorCode:
-        | UnauthorizedToCreateRecordKeyError
-        | NotLoggedInError
-        | 'unacceptable_session_key'
-        | 'invalid_key'
-        | 'session_expired'
-        | 'invalid_policy'
-        | ServerError
-        | 'not_supported';
+    | UnauthorizedToCreateRecordKeyError
+    | NotLoggedInError
+    | 'unacceptable_session_key'
+    | 'invalid_key'
+    | 'session_expired'
+    | 'invalid_policy'
+    | ServerError
+    | 'not_supported';
 
     /**
      * The error message.
@@ -3078,12 +3111,12 @@ export interface CreatePublicRecordKeyFailure {
      * The unique reason as to why the error occurred.
      */
     errorReason:
-        | 'user_denied'
-        | NotLoggedInError
-        | 'record_owned_by_different_user'
-        | 'invalid_policy'
-        | 'not_supported'
-        | ServerError;
+    | 'user_denied'
+    | NotLoggedInError
+    | 'record_owned_by_different_user'
+    | 'invalid_policy'
+    | 'not_supported'
+    | ServerError;
 }
 
 /**
@@ -3497,7 +3530,9 @@ export interface GrantMarkerPermissionFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode: ServerError | AuthorizeDeniedError;
+    errorCode:
+    | ServerError
+    | AuthorizeDeniedError;
 
     /**
      * The error message that indicates why the request failed.
@@ -3541,7 +3576,9 @@ export interface GrantResourcePermissionFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode: ServerError | AuthorizeDeniedError;
+    errorCode:
+    | ServerError
+    | AuthorizeDeniedError;
 
     /**
      * The error message that indicates why the request failed.
@@ -3587,7 +3624,10 @@ export interface RevokePermissionFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode: ServerError | 'permission_not_found' | AuthorizeDeniedError;
+    errorCode:
+    | ServerError
+    | 'permission_not_found'
+    | AuthorizeDeniedError;
 
     /**
      * The error message that indicates why the request failed.
@@ -3667,9 +3707,9 @@ export interface ListPermissionsSuccess {
 export interface ListPermissionsFailure {
     success: false;
     errorCode:
-        | ServerError
-        | ValidatePublicRecordKeyFailure['errorCode']
-        | AuthorizeSubjectFailure['errorCode'];
+    | ServerError
+    | ValidatePublicRecordKeyFailure['errorCode']
+    | AuthorizeSubjectFailure['errorCode'];
     errorMessage: string;
 }
 
@@ -3709,7 +3749,9 @@ export interface RevokeRoleFailure {
     /**
      * The error code that indicates why the request failed.
      */
-    errorCode: ServerError | AuthorizeDeniedError;
+    errorCode:
+    | ServerError
+    | AuthorizeDeniedError;
 
     /**
      * The error message that indicates why the request failed.
@@ -3805,13 +3847,13 @@ export interface EraseInstFailure {
      * The error code that indicates why the request failed.
      */
     errorCode:
-        | ServerError
-        | 'inst_not_found'
-        | NotSupportedError
-        | NotLoggedInError
-        | InvalidRecordKey
-        | RecordNotFoundError
-        | 'not_authorized';
+    | ServerError
+    | 'inst_not_found'
+    | NotSupportedError
+    | NotLoggedInError
+    | InvalidRecordKey
+    | RecordNotFoundError
+    | 'not_authorized';
 
     /**
      * The error message that indicates why the request failed.
@@ -3945,24 +3987,24 @@ export interface SearchCollectionField {
      * The type of the field.
      */
     type:
-        | 'string'
-        | 'string[]'
-        | 'int32'
-        | 'int32[]'
-        | 'int64'
-        | 'int64[]'
-        | 'float'
-        | 'float[]'
-        | 'bool'
-        | 'bool[]'
-        | 'geopoint'
-        | 'geopoint[]'
-        | 'geopolygon'
-        | 'object'
-        | 'object[]'
-        | 'string*'
-        | 'image'
-        | 'auto';
+    | 'string'
+    | 'string[]'
+    | 'int32'
+    | 'int32[]'
+    | 'int64'
+    | 'int64[]'
+    | 'float'
+    | 'float[]'
+    | 'bool'
+    | 'bool[]'
+    | 'geopoint'
+    | 'geopoint[]'
+    | 'geopolygon'
+    | 'object'
+    | 'object[]'
+    | 'string*'
+    | 'image'
+    | 'auto';
 
     /**
      * Enables faceting on the field.
@@ -11181,11 +11223,11 @@ export interface AIHumeGetAccessTokenFailure {
     success: false;
 
     errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSupportedError
-        | NotAuthorizedError
-        | 'hume_api_error';
+    | ServerError
+    | NotLoggedInError
+    | NotSupportedError
+    | NotAuthorizedError
+    | 'hume_api_error';
     errorMessage: string;
 }
 
@@ -11254,10 +11296,10 @@ export interface AISloydGenerateModelFailure {
      * The error code.
      */
     errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotSupportedError
-        | NotAuthorizedError;
+    | ServerError
+    | NotLoggedInError
+    | NotSupportedError
+    | NotAuthorizedError;
 
     /**
      * The error message.
@@ -11701,17 +11743,17 @@ export interface CrudListItemsSuccess<T> {
 export interface CrudListItemsFailure {
     success: false;
     errorCode:
-        | ServerError
-        | NotLoggedInError
-        | NotAuthorizedError
-        | 'data_not_found';
+    | ServerError
+    | NotLoggedInError
+    | NotAuthorizedError
+    | 'data_not_found';
     errorMessage: string;
 }
 
 /**
  * Defines a record that represents a database that can be queried using SQL.
  */
-export interface DatabaseRecord extends CrudRecord {}
+export interface DatabaseRecord extends CrudRecord { }
 
 /**
  * Defines a statement that can be sent to the database.
@@ -11742,12 +11784,12 @@ export type GenericSuccess<T> = T extends Array<any>
     ? { success: true; items: T }
     : T extends object
     ? {
-          success: true;
-      } & T
+        success: true;
+    } & T
     : {
-          success: true;
-          value: T;
-      };
+        success: true;
+        value: T;
+    };
 
 export type GenericFailure<E extends ErrorType> = {
     success: false;
@@ -11950,10 +11992,10 @@ export interface HandleWebhookFailure {
      * The error code if the webhook was not successfully handled.
      */
     errorCode:
-        | ServerError
-        | 'not_found'
-        | NotAuthorizedError
-        | 'invalid_webhook_target';
+    | ServerError
+    | 'not_found'
+    | NotAuthorizedError
+    | 'invalid_webhook_target';
 
     /**
      * The error message if the webhook was not successfully handled.
@@ -12795,7 +12837,7 @@ export interface SharedTextDeleteOp {
     count: number;
 }
 
-export interface RelativePosition {}
+export interface RelativePosition { }
 
 /**
  * Defines a record that represents a notification.
@@ -14067,7 +14109,7 @@ interface Os {
      * @docid os.addBotListener
      */
     addBotListener(bot: Bot, tagName: string, listener: DynamicListener): void;
-    
+
     /**
      * Removes the given listener from a bot for a specific tag.
      * @param bot The bot that the listener should be removed from.
@@ -14519,7 +14561,7 @@ interface Os {
      * Exits fullscreen mode.
      */
     exitFullscreenMode(): ExitFullscreenAction;
-    
+
     /**
      * Hides the loading screen.
      * 
@@ -15020,7 +15062,7 @@ interface Os {
      * @docgroup 10-load-inst
      */
     unloadServer(id: string): UnloadServerAction | void;
-    
+
     /**
      * Unloads the given inst from the current browser tab. When the inst is unloaded, the {@tag @onInstLeave} shout will be triggered.
      *
@@ -15163,6 +15205,12 @@ interface Os {
      * @param options The options that indicate how the confirmation dialog shold be customized.
      */
     showConfirm(options: ShowConfirmOptions): Promise<boolean>;
+
+    /**
+     * Shows an alert dialog. Returns a promise that resolves when the dialog is dismissed.
+     * @param options The options that indicate how the alert dialog should be customized.
+     */
+    showAlert(options: ShowAlertOptions): Promise<void>;
 
     /**
      * Gets the dimension that the player is currently viewing.
@@ -16571,7 +16619,7 @@ interface Os {
         address: string,
         key?: string | PackageRecordVersionKeySpecifier,
     ): Promise<InstallPackageResult>;
-    
+
     /**
      * Gets the list of packages that are installed in the inst.
      * @param options the options for the request.
@@ -17567,7 +17615,7 @@ interface Os {
      * @docid os.addMapLayer
      */
     addMapLayer(portal: 'map' | 'miniMap', layer: MapLayer): Promise<string>;
-    
+
     /**
      * Removes a layer from the map or miniMap portal.
      * 
