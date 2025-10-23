@@ -1996,7 +1996,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionLost(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.displayName} lost. You are now working offline.`,
+            message: `Connection lost.`,
         };
     }
 
@@ -2015,7 +2015,7 @@ export default class PlayerApp extends Vue {
     private _showConnectionRegained(info: SimulationInfo) {
         this.snackbar = {
             visible: true,
-            message: `Connection to ${info.displayName} regained. You are connected to the inst.`,
+            message: `Connection regained.`,
         };
     }
 
