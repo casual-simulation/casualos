@@ -6893,6 +6893,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: expect.stringMatching(
                     /^https:\/\/return-url\/store\/fulfillment\//
                 ),
@@ -6985,6 +6986,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: expect.stringMatching(
                     /^https:\/\/return-url\/store\/fulfillment\//
                 ),
@@ -7113,6 +7115,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: expect.stringMatching(
                     /^https:\/\/return-url\/store\/fulfillment\//
                 ),
@@ -7241,6 +7244,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: expect.stringMatching(
                     /^https:\/\/return-url\/store\/fulfillment\//
                 ),
@@ -7368,6 +7372,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: expect.stringMatching(
                     /^https:\/\/return-url\/store\/fulfillment\//
                 ),
@@ -8506,6 +8511,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 // should redirect the user to the success URL because it is automatically fulfilled
                 success_url: 'success-url',
                 cancel_url: 'return-url',
@@ -9009,6 +9015,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: null,
@@ -9280,6 +9287,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
@@ -9454,6 +9462,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
@@ -9641,6 +9650,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',
@@ -9840,6 +9850,7 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                expires_at: 3600,
                 success_url: 'success-url',
                 cancel_url: 'return-url',
                 customer_email: 'test@example.com',

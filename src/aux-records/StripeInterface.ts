@@ -286,6 +286,11 @@ export interface StripeCheckoutRequest {
     metadata?: any;
 
     /**
+     * The unix time (in seconds) that the checkout session should expire at.
+     */
+    expires_at?: number;
+
+    /**
      * Data about the payment intent.
      */
     payment_intent_data?: {

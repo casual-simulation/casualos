@@ -1870,6 +1870,7 @@ export class SubscriptionController {
             console.log(
                 `[SubscriptionController] [createPurchaseItemLink studioId: ${metrics.studioId} subscriptionId: ${metrics.subscriptionId} sessionId: ${sessionId} currency: ${request.item.currency} cost: ${item.cost} applicationFee: ${applicationFee}] Creating checkout session.`
             );
+            const expirationSeconds = 60 * 60; // 1 hour
             const session = await this._stripe.createCheckoutSession({
                 mode: 'payment',
                 line_items: [
@@ -1891,6 +1892,7 @@ export class SubscriptionController {
                         quantity: 1,
                     },
                 ],
+                expires_at: Math.floor(Date.now() / 1000) + expirationSeconds,
                 success_url: fulfillmentRoute(config.returnUrl, sessionId),
                 cancel_url: request.returnUrl,
                 client_reference_id: sessionId,
@@ -2449,6 +2451,7 @@ export class SubscriptionController {
             }
 
             let url: string = undefined;
+            let voidTransfers: () => Promise<void> = async () => {};
             if (!checkoutSession.paid) {
                 console.log(
                     `[SubscriptionController] [purchaseContract] Attempting to pay out of Stripe.`
@@ -2491,6 +2494,28 @@ export class SubscriptionController {
                     });
                 }
 
+                voidTransfers = async () => {
+                    console.log(
+                        `[SubscriptionController] [purchaseContract] Voiding pending transfers for failed purchase.`
+                    );
+                    const voidResult =
+                        await this._financialController.completePendingTransfers(
+                            {
+                                transfers: transferResult.value.transferIds,
+                                transactionId:
+                                    transferResult.value.transactionId,
+                                flags: TransferFlags.void_pending_transfer,
+                            }
+                        );
+
+                    if (isFailure(voidResult)) {
+                        logError(
+                            voidResult.error,
+                            `[SubscriptionController] [purchaseContract] Failed to void pending transfers for purchase:`
+                        );
+                    }
+                };
+
                 const sessionResult = await wrap(() =>
                     this._stripe.createCheckoutSession({
                         mode: 'payment',
@@ -2502,6 +2527,8 @@ export class SubscriptionController {
                         cancel_url: request.returnUrl,
                         client_reference_id: sessionId,
                         customer_email: customerEmail,
+                        expires_at:
+                            Math.floor(Date.now() / 1000) + expirationSeconds,
                         metadata: {
                             userId: request.userId,
                             checkoutSessionId: sessionId,
@@ -2523,22 +2550,7 @@ export class SubscriptionController {
                         `[SubscriptionController] [purchaseContract] Failed to create checkout session for contract: ${item.id}`
                     );
 
-                    const result =
-                        await this._financialController.completePendingTransfers(
-                            {
-                                transfers: transferResult.value.transferIds,
-                                flags: TransferFlags.void_pending_transfer,
-                                transactionId:
-                                    transferResult.value.transactionId,
-                            }
-                        );
-
-                    if (isFailure(result)) {
-                        logError(
-                            result.error,
-                            `[SubscriptionController] [purchaseContract] Failed to void pending transfers for contract: ${item.id}`
-                        );
-                    }
+                    await voidTransfers();
 
                     return failure({
                         errorCode: 'server_error',
@@ -3212,6 +3224,9 @@ export class SubscriptionController {
         }
 
         const voidTransfers = async (payoutId?: string) => {
+            console.log(
+                `[SubscriptionController] [payoutAccount] Voiding pending transfers for failed payout.`
+            );
             const voidResult =
                 await this._financialController.completePendingTransfers({
                     transfers: transactionResult.value.transferIds,
