@@ -49,7 +49,7 @@ import {
 } from '@casual-simulation/crypto';
 import { toBase64String } from '@casual-simulation/aux-common';
 import { padStart } from 'es-toolkit/compat';
-import { allowAllFeatures } from './SubscriptionConfiguration';
+import { allowAllDefaultFeatures } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 import { DateTime } from 'luxon';
 import type { PrivoClientInterface } from './PrivoClient';
@@ -180,8 +180,8 @@ describe('AuthController', () => {
                 returnUrl: 'return_url',
                 tiers: {},
                 defaultFeatures: {
-                    user: allowAllFeatures(),
-                    studio: allowAllFeatures(),
+                    user: allowAllDefaultFeatures(),
+                    studio: allowAllDefaultFeatures(),
                 },
             },
         });
@@ -8114,6 +8114,9 @@ describe('AuthController', () => {
                     allowPublicData: true,
                     allowAI: true,
                     allowPublicInsts: true,
+                },
+                contractFeatures: {
+                    allowed: true,
                 },
                 role: 'none',
             });

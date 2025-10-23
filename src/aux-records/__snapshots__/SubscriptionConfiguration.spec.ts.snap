@@ -24,6 +24,9 @@ Object {
       "allowed": true,
     },
   },
+  "contracts": Object {
+    "allowed": true,
+  },
   "data": Object {
     "allowed": true,
   },
