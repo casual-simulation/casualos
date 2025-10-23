@@ -47,20 +47,62 @@ export default class AccountBalancesVue extends Vue {
 
     calculateNetBalance(balance: AccountBalance): string {
         try {
-            let credits = BigInt(balance.credits);
-            let debits = BigInt(balance.debits);
-            let displayFactor = BigInt(balance.displayFactor);
-
-            // Calculate net balance: (credits - debits) / displayFactor
-            const netBalance = (credits - debits) / displayFactor;
-
-            const symbol = balance.currency === 'usd' ? '$' : '';
-
-            // Format to 2 decimal places
-            return symbol + Number(netBalance).toFixed(2);
+            // Calculate net balance: (credits - (debits)) / displayFactor
+            const netBalance = balance.freeCreditBalance();
+            return this.formatCurrency(
+                balance.currency,
+                netBalance,
+                balance.displayFactor
+            );
         } catch (err) {
             return 'N/A';
         }
+    }
+
+    hasPendingBalance(balance: AccountBalance): boolean {
+        return (
+            BigInt(balance.pendingDebits) > 0n ||
+            BigInt(balance.pendingCredits) > 0n
+        );
+    }
+
+    calculatePendingBalance(balance: AccountBalance): string {
+        try {
+            const pendingCredits = BigInt(balance.pendingCredits);
+            const pendingDebits = BigInt(balance.pendingDebits);
+            const displayFactor = BigInt(balance.displayFactor);
+            return this.formatCurrency(
+                balance.currency,
+                pendingCredits - pendingDebits,
+                displayFactor
+            );
+        } catch (err) {
+            return 'N/A';
+        }
+    }
+
+    formatCurrency(
+        currency: string,
+        value: bigint,
+        displayFactor: bigint
+    ): string {
+        let remainder = value % displayFactor;
+        let displayValue = value / displayFactor;
+        const symbol = currency === 'usd' ? '$' : '';
+
+        // Format to 2 decimal places
+        const sign = value < 0n ? '-' : '';
+
+        if (remainder < 0n) {
+            remainder = -remainder;
+        }
+        if (displayValue < 0n) {
+            displayValue = -displayValue;
+        }
+
+        return `${sign}${symbol}${displayValue.toString()}.${remainder
+            .toString()
+            .padStart(2, '0')}`;
     }
 
     getCurrencyName(currency: string) {

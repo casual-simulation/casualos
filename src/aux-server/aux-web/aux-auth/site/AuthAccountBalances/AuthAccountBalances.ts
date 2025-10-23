@@ -20,12 +20,9 @@ import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import type {
-    AccountBalance,
-    JSONAccountBalance,
-} from '@casual-simulation/aux-common';
-import type { RecordsClientSuccessfulOutputs } from '@casual-simulation/aux-records/RecordsClient';
 import AccountBalancesVue from '../AccountBalances/AccountBalances.vue';
+import { AccountBalance } from '@casual-simulation/aux-common';
+import type { AccountBalances } from '@casual-simulation/aux-records';
 
 @Component({
     components: {
@@ -45,7 +42,7 @@ export default class AuthAccountBalances extends Vue {
 
     loading: boolean = false;
     error: string | null = null;
-    balances: RecordsClientSuccessfulOutputs['getBalances'] = null;
+    balances: AccountBalances | null = null;
 
     get hasBalance() {
         return this.balances?.usd || this.balances?.credits;
@@ -67,21 +64,13 @@ export default class AuthAccountBalances extends Vue {
         if (!this.userId && !this.contractId && !this.studioId) {
             this.error =
                 'At least one of userId, contractId, or studioId must be provided';
-            this.balances = {
-                success: true,
-                usd: null as JSONAccountBalance,
-                credits: null as JSONAccountBalance,
-            };
+            this.balances = null;
             return;
         }
 
         this.loading = true;
         this.error = null;
-        this.balances = {
-            success: true,
-            usd: null as JSONAccountBalance,
-            credits: null as JSONAccountBalance,
-        };
+        this.balances = null;
 
         try {
             const params: any = {};
@@ -98,7 +87,14 @@ export default class AuthAccountBalances extends Vue {
             const result = await authManager.client.getBalances(params);
 
             if (result.success === true) {
-                this.balances = result;
+                this.balances = {
+                    usd: result.usd
+                        ? new AccountBalance(result.usd)
+                        : undefined,
+                    credits: result.credits
+                        ? new AccountBalance(result.credits)
+                        : undefined,
+                };
             } else {
                 this.error = result.errorMessage || 'Failed to load balances';
             }

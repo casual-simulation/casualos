@@ -7,8 +7,15 @@
                 <md-card-header
                     ><h3 class="md-title">{{ getCurrencyName(item.currency) }}</h3></md-card-header
                 >
-                <md-card-content>
-                    <div class="balance">{{ calculateNetBalance(item) }}</div>
+                <md-card-content class="balances-list">
+                    <div>
+                        <span class="balance">{{ calculateNetBalance(item) }}</span>
+                        <span class="balance-description">Available</span>
+                    </div>
+                    <div v-if="hasPendingBalance(item)">
+                        <span class="pending-balance">{{ calculatePendingBalance(item) }}</span>
+                        <span class="balance-description">Pending</span>
+                    </div>
                 </md-card-content>
             </md-card>
         </div>

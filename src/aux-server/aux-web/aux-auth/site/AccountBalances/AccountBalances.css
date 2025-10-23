@@ -40,18 +40,27 @@
 
 .balances-list {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .balance-card {
-    flex: 1 1 300px;
-    max-width: 300px;
+    width: 300px;
 }
 
 .balance {
     font-weight: 600;
     font-size: 26px;
+}
+
+.balance-description {
+    color: #000;
+    opacity: 0.5;
+}
+
+.pending-balance {
+    font-weight: 500;
+    font-size: 16px;
 }
 
 .account-id {
