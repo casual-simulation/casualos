@@ -238,7 +238,7 @@ export function createSkybox(
     color: number,
     size: number = 0.1
 ) {
-    const geometry = new SphereBufferGeometry(size, 20, 18);
+    const geometry = new SphereBufferGeometry(size, 40, 40);
     let material = baseAuxSkyboxMeshMaterial();
     material.color = new Color(color);
 
