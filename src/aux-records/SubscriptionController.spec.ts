@@ -947,6 +947,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                             {
                                 transferId: 204n,
@@ -956,6 +957,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.credits,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                         ],
                     })
@@ -972,6 +974,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_debit,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                             {
                                 transferId: 206n,
@@ -981,6 +984,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_debit,
                                 currency: CurrencyCodes.credits,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                         ],
                     })
@@ -1659,6 +1663,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                             {
                                 transferId: 204n,
@@ -1668,6 +1673,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_credit,
                                 currency: CurrencyCodes.credits,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                         ],
                     })
@@ -1684,6 +1690,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_debit,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                             {
                                 transferId: 206n,
@@ -1693,6 +1700,7 @@ describe('SubscriptionController', () => {
                                 code: TransferCodes.admin_debit,
                                 currency: CurrencyCodes.credits,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                         ],
                     })
@@ -1814,6 +1822,7 @@ describe('SubscriptionController', () => {
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
                             pending: true,
+                            timeoutSeconds: 300,
                         },
                     ],
                 });
@@ -1944,6 +1953,7 @@ describe('SubscriptionController', () => {
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
                             pending: true,
+                            timeoutSeconds: 300,
                         },
                     ],
                 });
@@ -2141,6 +2151,7 @@ describe('SubscriptionController', () => {
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
                             pending: true,
+                            timeoutSeconds: 300,
                         },
                     ],
                 });
@@ -2303,6 +2314,7 @@ describe('SubscriptionController', () => {
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
                             pending: true,
+                            timeoutSeconds: 300,
                         },
                     ],
                 });
@@ -2539,6 +2551,7 @@ describe('SubscriptionController', () => {
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
                             pending: true,
+                            timeoutSeconds: 300,
                         },
                     ],
                 });
@@ -2840,6 +2853,7 @@ describe('SubscriptionController', () => {
                             code: TransferCodes.admin_credit,
                             currency: CurrencyCodes.usd,
                             pending: true,
+                            timeoutSeconds: 300,
                         },
                     ],
                 });
@@ -12786,6 +12800,7 @@ describe('SubscriptionController', () => {
                                 creditAccountId: contractAccount!.account.id,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                             {
                                 transferId: '11',
@@ -12796,6 +12811,7 @@ describe('SubscriptionController', () => {
                                     ACCOUNT_IDS.revenue_xp_platform_fees,
                                 currency: CurrencyCodes.usd,
                                 pending: true,
+                                timeoutSeconds: 300,
                             },
                         ],
                         transactionId: '9',
@@ -15393,6 +15409,7 @@ describe('SubscriptionController', () => {
                                         contractAccount!.account.id,
                                     currency: CurrencyCodes.usd,
                                     pending: true,
+                                    timeoutSeconds: 300,
                                 },
                                 {
                                     transferId: '11',
@@ -15403,6 +15420,7 @@ describe('SubscriptionController', () => {
                                         ACCOUNT_IDS.revenue_xp_platform_fees,
                                     currency: CurrencyCodes.usd,
                                     pending: true,
+                                    timeoutSeconds: 300,
                                 },
                             ],
                         })
@@ -15683,6 +15701,7 @@ describe('SubscriptionController', () => {
                                         ACCOUNT_IDS.revenue_xp_platform_fees,
                                     debitAccountId: ACCOUNT_IDS.assets_stripe,
                                     pending: true,
+                                    timeoutSeconds: 300,
                                 },
                                 {
                                     transferId: '11',
@@ -15693,6 +15712,7 @@ describe('SubscriptionController', () => {
                                         ACCOUNT_IDS.revenue_xp_platform_fees,
                                     debitAccountId: ACCOUNT_IDS.assets_stripe,
                                     pending: true,
+                                    timeoutSeconds: 300,
                                 },
                             ],
                             transactionId: '9',

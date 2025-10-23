@@ -661,13 +661,25 @@ export class FinancialController {
             }
 
             let flags = getFlagsForTransferCode(transfer.code);
+            let timeout = 0;
 
             if (i < request.transfers.length - 1) {
                 flags |= TransferFlags.linked;
             }
 
-            if (transfer.pending) {
+            if ('pending' in transfer && transfer.pending) {
                 flags |= TransferFlags.pending;
+
+                if (transfer.timeoutSeconds <= 0) {
+                    return failure({
+                        errorCode: 'invalid_transfer',
+                        errorMessage:
+                            'Pending transfers must have a positive timeoutSeconds value.',
+                        errors: [],
+                    });
+                }
+
+                timeout = transfer.timeoutSeconds;
             }
 
             if (transfer.balancingCredit) {
@@ -1205,9 +1217,11 @@ export type TransferError = {
         | ServerError
         | 'debits_exceed_credits'
         | 'credits_exceed_debits'
+        | 'invalid_transfer'
         | 'unsupported_currency'
         | 'transfer_already_exists'
         | 'transfer_already_completed';
+
     errorMessage: string;
 
     /**
@@ -1221,7 +1235,9 @@ export type TransferError = {
     errors: Omit<InterfaceTransferError, 'transfer'>[];
 };
 
-export interface InternalTransfer {
+export type InternalTransfer = PendingTransfer | NonPendingTransfer;
+
+export interface InternalTransferBase {
     /**
      * The ID of the transfer that should be created.
      * If null, then a new transfer will be created.
@@ -1254,12 +1270,6 @@ export interface InternalTransfer {
     code: TransferCodes;
 
     /**
-     * Wether the transfer is pending or not.
-     * Defaults to false.
-     */
-    pending?: boolean;
-
-    /**
      * Whether the transfer is a balancing credit or not.
      *
      * Balancing credits are used to transfer at most amount — automatically transferring less than amount as necessary such that `credit_account.credits_pending + credit_account.credits_posted ≤ credit_account.debits_posted`.
@@ -1288,6 +1298,31 @@ export interface InternalTransfer {
      * If set, then the transfer will automatically be marked as pending.
      */
     closingCredit?: boolean;
+}
+
+export interface NonPendingTransfer extends InternalTransferBase {
+    /**
+     * Non-pending transfers cannot have a pending state.
+     */
+    pending?: never;
+    timeoutSeconds?: never;
+}
+
+/**
+ * A transfer that is pending completion.
+ */
+export interface PendingTransfer extends InternalTransferBase {
+    /**
+     * Wether the transfer is pending or not.
+     */
+    pending: true;
+
+    /**
+     * The number of seconds before the pending transfer times out.
+     *
+     * All pending transfers must have a timeout.
+     */
+    timeoutSeconds: number;
 }
 
 export interface InternalTransferRequest {

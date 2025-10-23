@@ -149,6 +149,11 @@ export const ACCESS_KEY_SECRET_BYTE_LENGTH = 16; // 128-bit
 export const ACCESS_KEY_ID_BYTE_LENGTH = 16; // 128-bit
 
 /**
+ * The number of seconds to wait before a Stripe payout transfer times out.
+ */
+export const STRIPE_PAYOUT_TIMEOUT_SECONDS = 60 * 5; // 5 minutes
+
+/**
  * Defines a class that is able to handle subscriptions.
  */
 export class SubscriptionController {
@@ -2299,7 +2304,7 @@ export class SubscriptionController {
                     );
 
                     const builder = new TransactionBuilder();
-                    builder.usePendingTransfers(false);
+                    builder.disablePendingTransfers();
                     builder.addContract({
                         recordName,
                         item,
@@ -2383,7 +2388,7 @@ export class SubscriptionController {
                         }
 
                         const builder = new TransactionBuilder();
-                        builder.usePendingTransfers(false);
+                        builder.disablePendingTransfers();
                         builder.addTransfer({
                             debitAccountId: userCreditAccount.value.account.id,
                             creditAccountId: getLiquidityAccountByLedger(
@@ -2449,8 +2454,9 @@ export class SubscriptionController {
                     `[SubscriptionController] [purchaseContract] Attempting to pay out of Stripe.`
                 );
 
+                const expirationSeconds = 60 * 60; // 1 hour
                 const builder = new TransactionBuilder();
-                builder.usePendingTransfers(true);
+                builder.usePendingTransfers(expirationSeconds);
                 builder.addContract({
                     recordName,
                     item,
@@ -3169,6 +3175,7 @@ export class SubscriptionController {
                         code: TransferCodes.user_payout,
                         currency: CurrencyCodes.usd,
                         pending: true,
+                        timeoutSeconds: STRIPE_PAYOUT_TIMEOUT_SECONDS,
                         balancingDebit: balancingDebit,
                     },
                 ],
@@ -5788,9 +5795,16 @@ class TransactionBuilder {
     transfers: InternalTransfer[] = [];
     lineItems: StripeCheckoutRequest['line_items'] = [];
     private _pending = false;
+    private _timeoutSeconds: number = 60 * 60; // 1 hour
 
-    usePendingTransfers(pending: boolean = true) {
-        this._pending = pending;
+    usePendingTransfers(timeoutSeconds: number) {
+        this._pending = true;
+        this._timeoutSeconds = timeoutSeconds;
+        return this;
+    }
+
+    disablePendingTransfers() {
+        this._pending = false;
         return this;
     }
 
@@ -5800,15 +5814,27 @@ class TransactionBuilder {
     }
 
     addItem(item: SimpleItem): this {
-        this.transfers.push({
-            transferId: item.transferId,
-            amount: item.amount,
-            currency: item.currency,
-            code: item.code,
-            creditAccountId: item.creditAccountId,
-            debitAccountId: item.debitAccountId,
-            pending: item.pending ?? this._pending,
-        });
+        if (item.pending ?? this._pending) {
+            this.transfers.push({
+                transferId: item.transferId,
+                amount: item.amount,
+                currency: item.currency,
+                code: item.code,
+                creditAccountId: item.creditAccountId,
+                debitAccountId: item.debitAccountId,
+                pending: true,
+                timeoutSeconds: item.timeoutSeconds ?? this._timeoutSeconds,
+            });
+        } else {
+            this.transfers.push({
+                transferId: item.transferId,
+                amount: item.amount,
+                currency: item.currency,
+                code: item.code,
+                creditAccountId: item.creditAccountId,
+                debitAccountId: item.debitAccountId,
+            });
+        }
 
         this.lineItems.push({
             price_data: {
@@ -5928,6 +5954,7 @@ interface SimpleItem {
     creditAccountId: bigint;
     debitAccountId: bigint;
     pending?: boolean;
+    timeoutSeconds?: number;
     currency: string;
     name: string;
     description?: string;

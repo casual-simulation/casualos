@@ -1479,6 +1479,7 @@ describe('FinancialController', () => {
                         amount: 100n,
                         code: TransferCodes.admin_credit,
                         pending: true,
+                        timeoutSeconds: 60,
                     },
                     {
                         transferId: 101n,
@@ -1488,6 +1489,7 @@ describe('FinancialController', () => {
                         amount: 100n,
                         code: TransferCodes.admin_credit,
                         pending: true,
+                        timeoutSeconds: 60,
                     },
                 ],
             });
@@ -1986,6 +1988,7 @@ describe('FinancialController', () => {
                             amount: 100n,
                             code: TransferCodes.admin_credit,
                             pending: true,
+                            timeoutSeconds: 60,
                         },
                         {
                             transferId: transfer2,
@@ -1995,6 +1998,7 @@ describe('FinancialController', () => {
                             amount: 100n,
                             code: TransferCodes.admin_credit,
                             pending: true,
+                            timeoutSeconds: 60,
                         },
                     ],
                 })
