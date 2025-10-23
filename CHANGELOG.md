@@ -10,6 +10,7 @@
 -   Accepts `title`, `content`, and optional `dismissText` parameters
 -   Returns a promise that resolves when the dialog is dismissed
 -   Useful for displaying important information that requires user acknowledgment
+-   Increased the number of segments on `skybox` form spheres.
 
 ### :bug: Bug Fixes
 
