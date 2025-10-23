@@ -1220,9 +1220,9 @@ model AuthCheckoutSession {
     // returnUrl String
     // successUrl String
     
-    stripeStatus String
-    stripePaymentStatus String
-    stripeCheckoutSessionId String @unique
+    stripeStatus String?
+    stripePaymentStatus String?
+    stripeCheckoutSessionId String? @unique
 
     invoiceId String? @unique
     invoice Invoice?
