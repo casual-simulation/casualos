@@ -48,13 +48,15 @@ export async function downloadAndUnzipIfNeeded(url: string): Promise<string> {
     const targetDir = path.join(os.tmpdir(), 'casualos-downloads', urlHash);
 
     if (existsSync(targetDir) && (await readdir(targetDir)).length > 0) {
-        console.log(`Download already exists at ${targetDir}\n`);
+        process.stdout.write(
+            `Download already exists at ${targetDir}${os.EOL}`
+        );
         return targetDir;
     }
 
     await mkdir(targetDir, { recursive: true });
 
-    console.log(`Downloading ${url} to ${targetDir}...`);
+    process.stdout.write(`Downloading ${url} to ${targetDir}...${os.EOL}`);
     const resp = await fetch(url);
     const reader = new BlobReader(await resp.blob());
     const zip = new ZipReader(reader);
@@ -148,7 +150,7 @@ export async function formatTigerBeetle(
     const tbFile = path.join(tbDir, `0_0.tigerbeetle.${label}`);
 
     try {
-        console.log('TigerBeetle file: ' + tbFile);
+        process.stdout.write(`Formatting TigerBeetle file: ${tbFile}${os.EOL}`);
         if (!existsSync(tbFile)) {
             await execFile(
                 exePath,
@@ -168,7 +170,9 @@ export async function formatTigerBeetle(
 
         return tbFile;
     } catch (err) {
-        console.error('Failed to format TigerBeetle file: ' + err);
+        process.stderr.write(
+            `Failed to format TigerBeetle file: ${err}${os.EOL}`
+        );
         throw err;
     }
 }
@@ -204,7 +208,9 @@ export async function runTigerBeetle(label: string): Promise<{
         }
     ) as ChildProcess;
 
-    console.log('TigerBeetle started with PID: ' + process.pid);
+    globalThis.process.stdout.write(
+        `TigerBeetle started with PID: ${process.pid}${os.EOL}`
+    );
     // read first line from stdout to get the port
     const stdout = process.stdout;
 
@@ -212,7 +218,6 @@ export async function runTigerBeetle(label: string): Promise<{
         let line = '';
         const dataListener = (data: Buffer) => {
             const chunk = data.toString();
-            // console.log('TigerBeetle:', chunk);
             let newline = chunk.indexOf('\n');
             if (newline < 0) {
                 line += chunk;
@@ -227,7 +232,9 @@ export async function runTigerBeetle(label: string): Promise<{
 
     const closePromise = new Promise<void>((resolve) => {
         process.on('close', () => {
-            console.log('TigerBeetle process closed\n');
+            globalThis.process.stdout.write(
+                `TigerBeetle process closed${os.EOL}`
+            );
             resolve();
         });
     });
