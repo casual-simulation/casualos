@@ -17,6 +17,7 @@
 
 -   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
 -   Fixed an issue where empty JSX expressions with comments weren't supported.
+-   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
 
 ## V3.8.0
 
