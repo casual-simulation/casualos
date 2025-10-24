@@ -701,7 +701,11 @@ export class YjsSharedArray<T>
         }
 
         if (containsSharedType) {
-            items = items.map((i) => (i instanceof YjsSharedType || i instanceof YjsSharedText ? i.type : i));
+            items = items.map((i) =>
+                i instanceof YjsSharedType || i instanceof YjsSharedText
+                    ? i.type
+                    : i
+            );
         }
         return items;
     }
@@ -818,7 +822,16 @@ export class YjsSharedText implements SharedText {
 
 function valueOrSharedType(val: any) {
     if (val instanceof YType) {
-        return (val as any).__sharedType;
+        const sharedType = (val as any).__sharedType;
+        if (sharedType) {
+            return sharedType;
+        } else if (val instanceof YMap) {
+            return new YjsSharedMap(val);
+        } else if (val instanceof YArray) {
+            return new YjsSharedArray(val);
+        } else if (val instanceof YText) {
+            return new YjsSharedText(val);
+        }
     }
     return val;
 }

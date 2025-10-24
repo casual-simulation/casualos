@@ -27,6 +27,62 @@ describe('YjsSharedDocument', () => {
         });
     });
 
+    it('should be able to properly reload sub documents from arrays', async () => {
+        const first = new YjsSharedDocument({
+            branch: 'testBranch',
+        });
+
+        const firstArr = first.getArray('items');
+        const firstMap = first.createMap();
+        const firstText = first.createText();
+        firstMap.set('value', 42);
+        firstText.insert(0, 'Hello, world!');
+        firstArr.push(firstMap);
+        firstArr.push(firstText);
+
+        const update = first.getStateUpdate();
+
+        const second = new YjsSharedDocument({
+            branch: 'otherBranch',
+        });
+        await second.applyStateUpdates([update]);
+
+        const secondArr = second.getArray('items');
+        expect(secondArr.length).toBe(2);
+        const secondMap = secondArr.get(0);
+        expect(secondMap.get('value')).toBe(42);
+        const secondText = secondArr.get(1);
+        expect(secondText.toString()).toBe('Hello, world!');
+    });
+
+    it('should be able to properly reload sub documents from maps', async () => {
+        const first = new YjsSharedDocument({
+            branch: 'testBranch',
+        });
+
+        const firstMap = first.getMap('map');
+        const firstArr = first.createArray();
+        const firstText = first.createText();
+        firstText.insert(0, 'Hello, world!');
+        firstArr.push(42);
+        firstMap.set('array', firstArr);
+        firstMap.set('text', firstText);
+
+        const update = first.getStateUpdate();
+
+        const second = new YjsSharedDocument({
+            branch: 'otherBranch',
+        });
+        await second.applyStateUpdates([update]);
+
+        const secondMap = second.getMap('map');
+        const secondArray = secondMap.get('array');
+        expect(secondArray.length).toBe(1);
+        expect(secondArray.get(0)).toBe(42);
+        const secondText = secondMap.get('text');
+        expect(secondText.toString()).toBe('Hello, world!');
+    });
+
     // function setupPartition(config: SharedDocumentConfig) {
     //     document = new RemoteYjsSharedDocument(
     //         client,
