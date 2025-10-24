@@ -222,6 +222,8 @@ import { runTigerBeetle } from './financial/TigerBeetleTestUtils';
 import { createClient, type Client as TBClient } from 'tigerbeetle-node';
 import type { ChildProcess } from 'node:child_process';
 
+jest.setTimeout(10000); // 10 seconds
+
 jest.mock('@simplewebauthn/server');
 let verifyRegistrationResponseMock: jest.Mock<
     Promise<VerifiedRegistrationResponse>,

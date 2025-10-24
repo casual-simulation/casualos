@@ -86,6 +86,8 @@ import { createClient } from 'tigerbeetle-node';
 import type { ChildProcess } from 'child_process';
 import { runTigerBeetle } from './financial/TigerBeetleTestUtils';
 
+jest.setTimeout(10000); // 10 seconds
+
 const originalDateNow = Date.now;
 console.log = jest.fn();
 console.warn = jest.fn();

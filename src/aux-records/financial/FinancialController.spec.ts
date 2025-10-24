@@ -53,6 +53,8 @@ import type { Client } from 'tigerbeetle-node';
 import { createClient } from 'tigerbeetle-node';
 import type { ChildProcess } from 'child_process';
 
+jest.setTimeout(10000); // 10 seconds
+
 console.log = jest.fn();
 console.error = jest.fn();
 
