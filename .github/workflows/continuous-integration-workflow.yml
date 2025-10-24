@@ -39,8 +39,9 @@ jobs:
             - name: npm install and test
               run: |
                   corepack enable
-                  npm run bootstrap
-                  npx --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
+                  pnpm bootstrap
+                  pnpm pretest
+                  pnpm --node-options="--max_old_space_size=4096" jest --detectOpenHandles --forceExit --no-cache
               env:
                   CI: true
     build:

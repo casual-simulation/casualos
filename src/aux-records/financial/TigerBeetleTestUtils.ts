@@ -48,6 +48,7 @@ export async function downloadAndUnzipIfNeeded(url: string): Promise<string> {
     const targetDir = path.join(os.tmpdir(), 'casualos-downloads', urlHash);
 
     if (existsSync(targetDir) && (await readdir(targetDir)).length > 0) {
+        console.log(`Download already exists at ${targetDir}\n`);
         return targetDir;
     }
 
@@ -78,15 +79,23 @@ export async function downloadAndUnzipIfNeeded(url: string): Promise<string> {
     return targetDir;
 }
 
+export interface TigerBeetleInfo {
+    /**
+     * The directory where TigerBeetle is located
+     */
+    tbDir: string;
+
+    /**
+     * The path to the TigerBeetle executable
+     */
+    exePath: string;
+}
+
 /**
- * Downloads and executes TigerBeetle, returning the process and port number.
- * @param label The label to use for the TigerBeetle database file. Ensure that this is unique if you are running multiple instances.
- * @returns A promise that resolves to an object containing the port number and the ChildProcess instance.
+ * Downloads the proper TigerBeetle executable for the current platform.
+ * @returns A TigerBeetleInfo object containing the directory and executable path
  */
-export async function runTigerBeetle(label: string): Promise<{
-    port: string | null;
-    process: ChildProcess;
-}> {
+export async function getTigerBeetleInfo(): Promise<TigerBeetleInfo> {
     let tbDir: string;
     let exePath: string;
     if (os.platform() === 'win32') {
@@ -118,10 +127,28 @@ export async function runTigerBeetle(label: string): Promise<{
         throw new Error(`Unsupported TigerBeetle platform: ${os.platform()}`);
     }
 
+    return {
+        tbDir,
+        exePath,
+    };
+}
+
+/**
+ * Formats a TigerBeetle database file if it doesn't already exist.
+ * @param info The TigerBeetleInfo object containing the directory and executable path
+ * @param label The label to use for the TigerBeetle database file
+ * @returns The path to the formatted TigerBeetle database file
+ */
+export async function formatTigerBeetle(
+    info: TigerBeetleInfo,
+    label: string
+): Promise<string> {
+    const { tbDir, exePath } = info;
+
     const tbFile = path.join(tbDir, `0_0.tigerbeetle.${label}`);
 
     try {
-        console.log('TigerBeetle file:', tbFile);
+        console.log('TigerBeetle file: ' + tbFile);
         if (!existsSync(tbFile)) {
             await execFile(
                 exePath,
@@ -138,26 +165,29 @@ export async function runTigerBeetle(label: string): Promise<{
                 }
             );
         }
+
+        return tbFile;
     } catch (err) {
-        console.error('Failed to format TigerBeetle file:', err);
+        console.error('Failed to format TigerBeetle file: ' + err);
         throw err;
     }
+}
 
-    // const tbFileHash = sha256()
-    //     .update(tbFile)
-    //     .digest('hex');
-
-    // // get bigint from the first 8 bytes of the hash
-    // const tbFileId = BigInt(
-    //     '0x' + tbFileHash.slice(0, 16)
-    // );
-
-    // // calculate port number from the hash
-    // const port = String((tbFileId % 10000n) + 50000n); // Port range 50000-59999
+/**
+ * Downloads and executes TigerBeetle, returning the process and port number.
+ * @param label The label to use for the TigerBeetle database file. Ensure that this is unique if you are running multiple instances.
+ * @returns A promise that resolves to an object containing the port number and the ChildProcess instance.
+ */
+export async function runTigerBeetle(label: string): Promise<{
+    port: string | null;
+    process: ChildProcess;
+}> {
+    const info = await getTigerBeetleInfo();
+    const tbFile = await formatTigerBeetle(info, label);
 
     let process: ChildProcess | null = null;
     process = spawn(
-        exePath,
+        info.exePath,
         [
             'start',
             `--cache-grid=256MiB`,
@@ -166,12 +196,12 @@ export async function runTigerBeetle(label: string): Promise<{
             tbFile,
         ],
         {
-            cwd: tbDir,
+            cwd: info.tbDir,
             stdio: ['pipe', 'pipe', 'pipe'],
         }
     ) as ChildProcess;
 
-    console.log('TigerBeetle started with PID:', process.pid);
+    console.log('TigerBeetle started with PID: ' + process.pid);
     // read first line from stdout to get the port
     const stdout = process.stdout;
 
@@ -194,7 +224,7 @@ export async function runTigerBeetle(label: string): Promise<{
 
     const closePromise = new Promise<void>((resolve) => {
         process.on('close', () => {
-            console.log('TigerBeetle process closed');
+            console.log('TigerBeetle process closed\n');
             resolve();
         });
     });
