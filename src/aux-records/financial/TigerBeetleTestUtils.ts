@@ -202,9 +202,6 @@ export async function runTigerBeetle(label: string): Promise<{
         {
             cwd: info.tbDir,
             stdio: ['pipe', 'pipe', 'pipe'],
-
-            // Run detached on windows for GitHub Actions
-            detached: os.platform() === 'win32' ? true : false,
         }
     ) as ChildProcess;
 
