@@ -169,6 +169,10 @@ export class AuthManager {
         return this._appMetadata?.privacyFeatures;
     }
 
+    get contractFeatures() {
+        return this._appMetadata?.contractFeatures;
+    }
+
     get subscriptionsSupported() {
         return this._subscriptionsSupported;
     }
@@ -187,6 +191,10 @@ export class AuthManager {
 
     get usePrivoLogin() {
         return this._usePrivoLogin;
+    }
+
+    get metadata(): AppMetadata {
+        return this._appMetadata;
     }
 
     get supportsSms() {

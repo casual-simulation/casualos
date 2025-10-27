@@ -15,7 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { ErrorType, Failure, Result, Success } from './Result';
+import type {
+    ErrorType,
+    Failure,
+    Result,
+    Success,
+    WrappedError,
+} from './Result';
 import {
     failure,
     flatMapResult,
@@ -23,6 +29,7 @@ import {
     mapResult,
     matchResult,
     success,
+    wrap,
 } from './Result';
 
 describe('Result', () => {
@@ -184,5 +191,73 @@ describe('Result', () => {
         const result = success('Success!');
         const str = result.toString();
         expect(str).toBe('Result(true, "Success!")');
+    });
+
+    describe('wrap()', () => {
+        it('should wrap a synchronous successful function', () => {
+            const result = wrap(() => 'Success!');
+            expect(result.success).toBe(true);
+            expect((result as Success<string>).value).toBe('Success!');
+        });
+
+        it('should wrap a synchronous failing function', () => {
+            const result = wrap((): string => {
+                throw new Error('Failure!');
+            });
+            expect(result.success).toBe(false);
+            expect((result as Failure<WrappedError>).error).toEqual({
+                errorCode: 'wrapped_error',
+                errorMessage: 'Failure!',
+                error: new Error('Failure!'),
+            });
+        });
+
+        it('should wrap an asynchronous successful function', async () => {
+            const result = await wrap(async () => {
+                return 'Success!';
+            });
+            expect(result.success).toBe(true);
+            expect((result as Success<string>).value).toBe('Success!');
+        });
+
+        it('should wrap an asynchronous failing function', async () => {
+            const result = await wrap(async () => {
+                throw new Error('Failure!');
+            });
+            expect(result.success).toBe(false);
+            expect((result as Failure<WrappedError>).error).toEqual({
+                errorCode: 'wrapped_error',
+                errorMessage: 'Failure!',
+                error: new Error('Failure!'),
+            });
+        });
+
+        it('should wrap a successful promise', async () => {
+            const result = await wrap(Promise.resolve('Success!'));
+            expect(result.success).toBe(true);
+            expect((result as Success<string>).value).toBe('Success!');
+        });
+
+        it('should wrap a failing promise', async () => {
+            const result = await wrap(Promise.reject(new Error('Failure!')));
+            expect(result.success).toBe(false);
+            expect((result as Failure<WrappedError>).error).toEqual({
+                errorCode: 'wrapped_error',
+                errorMessage: 'Failure!',
+                error: new Error('Failure!'),
+            });
+        });
+
+        it('should wrap a value', () => {
+            const result = wrap(42);
+            expect(result.success).toBe(true);
+            expect((result as Success<number>).value).toBe(42);
+        });
+
+        it('should wrap falsy values', () => {
+            const result = wrap(false);
+            expect(result.success).toBe(true);
+            expect((result as Success<boolean>).value).toBe(false);
+        });
     });
 });

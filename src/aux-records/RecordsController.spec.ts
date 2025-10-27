@@ -2692,6 +2692,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2735,6 +2740,67 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the configured store features', async () => {
+            store.subscriptionConfiguration = createTestSubConfiguration(
+                (config) =>
+                    config.addSubscription('sub1', (sub) =>
+                        sub
+                            .withTier('tier1')
+                            .withAllDefaultFeatures()
+                            .withStore()
+                            .withStoreMaxItems(100)
+                            .withStoreCurrencyLimit('usd', {
+                                minCost: 10,
+                                maxCost: 10000,
+                            })
+                    )
+            );
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: true,
+                        maxItems: 100,
+                        currencyLimits: {
+                            usd: {
+                                maxCost: 10000,
+                                minCost: 10,
+                            },
+                        },
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2776,6 +2842,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2795,7 +2866,6 @@ describe('RecordsController', () => {
                 appId: 'appId',
                 privateKey: 'privateKey',
             });
-
             const result = await manager.getStudio('studioId', 'userId');
 
             expect(result).toEqual({
@@ -2817,12 +2887,69 @@ describe('RecordsController', () => {
                     loomFeatures: {
                         allowed: true,
                     },
-                    humeFeatures: {
-                        allowed: true,
-                    },
                     loomConfig: {
                         appId: 'appId',
                     },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
+                },
+            });
+        });
+
+        it('should include the studio stripe account status', async () => {
+            await store.updateStudio({
+                id: 'studioId',
+                displayName: 'studio',
+                logoUrl: 'https://example.com/logo.png',
+                comId: 'comId1',
+                comIdConfig: {
+                    allowedStudioCreators: 'anyone',
+                },
+                playerConfig: {
+                    ab1BootstrapURL: 'https://example.com/ab1',
+                },
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+                stripeAccountId: 'acct_123',
+                stripeAccountRequirementsStatus: 'incomplete',
+                stripeAccountStatus: 'pending',
+            });
+
+            const result = await manager.getStudio('studioId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studio: {
+                    id: 'studioId',
+                    displayName: 'studio',
+                    logoUrl: 'https://example.com/logo.png',
+                    comId: 'comId1',
+                    comIdConfig: {
+                        allowedStudioCreators: 'anyone',
+                    },
+                    playerConfig: {
+                        ab1BootstrapURL: 'https://example.com/ab1',
+                    },
+                    comIdFeatures: {
+                        allowed: false,
+                    },
+                    loomFeatures: {
+                        allowed: false,
+                    },
+                    humeFeatures: {
+                        allowed: true,
+                    },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: 'pending',
+                    stripeRequirementsStatus: 'incomplete',
                 },
             });
         });
@@ -2862,6 +2989,11 @@ describe('RecordsController', () => {
                     humeFeatures: {
                         allowed: true,
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });
@@ -2909,6 +3041,11 @@ describe('RecordsController', () => {
                     humeConfig: {
                         apiKey: 'apiKey',
                     },
+                    storeFeatures: {
+                        allowed: false,
+                    },
+                    stripeAccountStatus: null,
+                    stripeRequirementsStatus: null,
                 },
             });
         });

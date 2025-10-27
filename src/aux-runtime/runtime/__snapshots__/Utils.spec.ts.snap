@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`embedBase64InPdf() should reference the given data in the PDF 1`] = `
 "%PDF-1.3

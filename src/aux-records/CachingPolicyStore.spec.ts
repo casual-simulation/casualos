@@ -70,7 +70,7 @@ describe('CachingPolicyStore', () => {
             const result2 = await store.listRolesForUser('test', 'user1');
             expect(result2).toEqual(result);
 
-            expect(inner.listRolesForUser).toBeCalledTimes(1);
+            expect(inner.listRolesForUser).toHaveBeenCalledTimes(1);
 
             expect(cache.items).toEqual(
                 new Map([
@@ -102,7 +102,7 @@ describe('CachingPolicyStore', () => {
             const result2 = await store.listRolesForUser('test', 'user1');
             expect(result2).toEqual(result);
 
-            expect(inner.listRolesForUser).toBeCalledTimes(1);
+            expect(inner.listRolesForUser).toHaveBeenCalledTimes(1);
 
             expect(cache.items).toEqual(
                 new Map([
@@ -144,7 +144,7 @@ describe('CachingPolicyStore', () => {
                 },
             ]);
 
-            expect(inner.listRolesForUser).toBeCalledTimes(0);
+            expect(inner.listRolesForUser).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -170,7 +170,7 @@ describe('CachingPolicyStore', () => {
             const result2 = await store.listRolesForInst('test', 'inst1');
             expect(result2).toEqual(result);
 
-            expect(inner.listRolesForInst).toBeCalledTimes(1);
+            expect(inner.listRolesForInst).toHaveBeenCalledTimes(1);
 
             expect(cache.items).toEqual(
                 new Map([
@@ -202,7 +202,7 @@ describe('CachingPolicyStore', () => {
             const result2 = await store.listRolesForInst('test', 'inst1');
             expect(result2).toEqual(result);
 
-            expect(inner.listRolesForInst).toBeCalledTimes(1);
+            expect(inner.listRolesForInst).toHaveBeenCalledTimes(1);
 
             expect(cache.items).toEqual(
                 new Map([
@@ -244,7 +244,7 @@ describe('CachingPolicyStore', () => {
                 },
             ]);
 
-            expect(inner.listRolesForInst).toBeCalledTimes(0);
+            expect(inner.listRolesForInst).toHaveBeenCalledTimes(0);
         });
     });
 
@@ -282,7 +282,7 @@ describe('CachingPolicyStore', () => {
             const list2 = await store.listAssignmentsForRole('test', 'role1');
             expect(list2).toEqual(list);
 
-            expect(inner.listAssignmentsForRole).toBeCalledTimes(2);
+            expect(inner.listAssignmentsForRole).toHaveBeenCalledTimes(2);
         });
     });
 
@@ -328,7 +328,7 @@ describe('CachingPolicyStore', () => {
             const list2 = await store.listAssignments('test', null as any);
             expect(list2).toEqual(list);
 
-            expect(inner.listAssignments).toBeCalledTimes(2);
+            expect(inner.listAssignments).toHaveBeenCalledTimes(2);
         });
     });
 

@@ -282,6 +282,8 @@ export class MongoDBMetricsStore implements MetricsStore {
             subscriptionType: record.ownerId ? 'user' : 'studio',
             recordName: record.name,
             totalItems: count,
+            stripeAccountId: null,
+            stripeAccountStatus: null,
             ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
         };
     }
@@ -330,6 +332,8 @@ export class MongoDBMetricsStore implements MetricsStore {
             recordName: record.name,
             totalFiles: count,
             totalFileBytesReserved: reservedSize,
+            stripeAccountId: null,
+            stripeAccountStatus: null,
             ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
         };
     }
@@ -361,6 +365,8 @@ export class MongoDBMetricsStore implements MetricsStore {
             subscriptionType: record.ownerId ? 'user' : 'studio',
             recordName: record.name,
             totalEventNames: count,
+            stripeAccountId: null,
+            stripeAccountStatus: null,
             ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
         };
     }
@@ -385,6 +391,8 @@ export class MongoDBMetricsStore implements MetricsStore {
                 subscriptionStatus: user.subscriptionStatus,
                 subscriptionType: 'user',
                 totalRecords: count,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
                 ...(await this._getSubscriptionPeriod(
                     user.subscriptionPeriodStartMs,
                     user.subscriptionPeriodEndMs
@@ -407,6 +415,8 @@ export class MongoDBMetricsStore implements MetricsStore {
                 subscriptionStatus: studio.subscriptionStatus,
                 subscriptionType: 'studio',
                 totalRecords: count,
+                stripeAccountId: null,
+                stripeAccountStatus: null,
                 ...(await this._getSubscriptionPeriod(
                     studio.subscriptionPeriodStartMs,
                     studio.subscriptionPeriodEndMs

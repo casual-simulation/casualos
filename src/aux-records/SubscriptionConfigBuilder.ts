@@ -26,6 +26,7 @@ import type {
     AISloydFeaturesConfiguration,
     APISubscription,
     DatabasesFeaturesConfiguration,
+    ContractFeaturesConfiguration,
     DataFeaturesConfiguration,
     EventFeaturesConfiguration,
     FeaturesConfiguration,
@@ -34,6 +35,7 @@ import type {
     NotificationFeaturesConfiguration,
     PackageFeaturesConfiguration,
     PublicInstsConfiguration,
+    PurchasableItemFeaturesConfiguration,
     RecordFeaturesConfiguration,
     SearchFeaturesConfiguration,
     StudioComIdFeaturesConfiguration,
@@ -42,7 +44,11 @@ import type {
     TiersConfiguration,
     WebhooksFeaturesConfiguration,
 } from './SubscriptionConfiguration';
-import { allowAllFeatures, denyAllFeatures } from './SubscriptionConfiguration';
+import {
+    allowAllDefaultFeatures,
+    allowAllFeatures,
+    denyAllFeatures,
+} from './SubscriptionConfiguration';
 
 export class FeaturesBuilder {
     private _features: FeaturesConfiguration = denyAllFeatures();
@@ -50,7 +56,7 @@ export class FeaturesBuilder {
     constructor() {}
 
     withAllDefaultFeatures(): this {
-        this._features = merge(this._features, allowAllFeatures());
+        this._features = merge(this._features, allowAllDefaultFeatures());
         return this;
     }
 
@@ -321,6 +327,64 @@ export class FeaturesBuilder {
 
     withDatabasesMaxBytesPerDatabase(maxBytes: number): this {
         this._features.databases.maxBytesPerDatabase = maxBytes;
+        return this;
+    }
+
+    withStore(features?: PurchasableItemFeaturesConfiguration): this {
+        this._features.store = features ?? {
+            allowed: true,
+            currencyLimits: {
+                usd: {
+                    maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+                    minCost: 50, // $0.50 US Dollars (USD)
+                },
+            },
+        };
+        return this;
+    }
+
+    withStoreMaxItems(maxItems: number): this {
+        this._features.store.maxItems = maxItems;
+        return this;
+    }
+
+    withStoreCurrencyLimit(
+        currency: string,
+        limit: PurchasableItemFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.store.currencyLimits) {
+            this._features.store.currencyLimits = {};
+        }
+        this._features.store.currencyLimits[currency] = limit;
+        return this;
+    }
+
+    withContracts(features?: ContractFeaturesConfiguration): this {
+        this._features.contracts = features ?? {
+            allowed: true,
+            currencyLimits: {
+                usd: {
+                    maxCost: 100 * 1000, /// $1,000 US Dollars (USD)
+                    minCost: 50, // $0.50 US Dollars (USD)
+                },
+            },
+        };
+        return this;
+    }
+
+    withContractsMaxItems(maxItems: number): this {
+        this._features.contracts.maxItems = maxItems;
+        return this;
+    }
+
+    withContractsCurrencyLimit(
+        currency: string,
+        limit: ContractFeaturesConfiguration['currencyLimits']['_']
+    ): this {
+        if (!this._features.contracts.currencyLimits) {
+            this._features.contracts.currencyLimits = {};
+        }
+        this._features.contracts.currencyLimits[currency] = limit;
         return this;
     }
 

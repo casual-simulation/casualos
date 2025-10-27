@@ -845,8 +845,8 @@ describe('prettyFormat()', () => {
                 name +
                 '],\n  },\n}'
         );
-        expect((set as any).toJSON).not.toBeCalled();
-        expect(value.toJSON).not.toBeCalled();
+        expect((set as any).toJSON).not.toHaveBeenCalled();
+        expect(value.toJSON).not.toHaveBeenCalled();
     });
 
     describe('min', () => {

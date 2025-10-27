@@ -1,6 +1,6 @@
 'use strict';
 
-const axios = jest.genMockFromModule('axios');
+const axios = jest.createMockFromModule('axios');
 
 let shouldFail = false;
 let lastPost;

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`generateV1ConnectionToken() should generate a connection token from the given connection key 1`] = `"OTkxMWY3NDllNmE4NzEzMzMyZjIzNDgzYmJmZGFjYjg2YzU3OWM4YjA0YjMyMWYyNGY0YWMyMzlhYzY0Y2NiYw=="`;
 

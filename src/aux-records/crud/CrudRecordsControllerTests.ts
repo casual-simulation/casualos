@@ -30,7 +30,7 @@ import {
     createTestRecordKey,
     createTestUser,
 } from '../TestUtils';
-import type { ResourceKinds } from '@casual-simulation/aux-common';
+import type { ActionKinds, ResourceKinds } from '@casual-simulation/aux-common';
 import {
     PRIVATE_MARKER,
     PUBLIC_READ_MARKER,
@@ -189,7 +189,14 @@ export function testCrudRecordsController<
     createOutputItem: (item: CrudRecord) => TResult = createStoreItem as any,
     cleanup?: (
         context: TestContext<TItem, TStoreItem, TStore, TController, TResult>
-    ) => void
+    ) => void,
+    allowedActions: ActionKinds[] = [
+        'create',
+        'update',
+        'read',
+        'delete',
+        'list',
+    ]
 ) {
     let context: TestContext<TItem, TStoreItem, TStore, TController, TResult>;
     let services: TestControllers;
@@ -233,554 +240,567 @@ export function testCrudRecordsController<
         }
     });
 
-    describe('recordItem()', () => {
-        describe('create', () => {
-            it('should store the item in the store', async () => {
-                const item = createInputItem({
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
-                const result = (await manager.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    userId,
-                    item,
-                    instances: [],
-                })) as CrudRecordItemSuccess;
-
-                expect(result).toEqual({
-                    success: true,
-                    recordName: recordName,
-                    address: 'address',
-                });
-
-                await expect(
-                    itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toMatchObject(
-                    createStoreItem({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    })
-                );
-            });
-
-            it('should reject the request if given an invalid key', async () => {
-                const result = (await manager.recordItem({
-                    recordKeyOrRecordName: 'not_a_key',
-                    userId,
-                    item: createInputItem({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    }),
-                    instances: [],
-                })) as CrudRecordItemSuccess;
-
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'record_not_found',
-                    errorMessage: expect.any(String),
-                });
-
-                await expect(
-                    itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toBeFalsy();
-            });
-
-            if (allowRecordKeys) {
-                it('should support using a record key', async () => {
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: key,
-                        userId: otherUserId,
-                        item: createInputItem({
+    if (
+        allowedActions.includes('create') ||
+        allowedActions.includes('update')
+    ) {
+        describe('recordItem()', () => {
+            if (allowedActions.includes('create')) {
+                describe('create', () => {
+                    it('should store the item in the store', async () => {
+                        const item = createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
-                        }),
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
+                        });
+                        const result = (await manager.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            item,
+                            instances: [],
+                        })) as CrudRecordItemSuccess;
 
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        address: 'address',
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            address: 'address',
+                        });
+
+                        await expect(
+                            itemsStore.getItemByAddress(recordName, 'address')
+                        ).resolves.toMatchObject(
+                            createStoreItem({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            })
+                        );
                     });
 
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
+                    it('should reject the request if given an invalid key', async () => {
+                        const result = (await manager.recordItem({
+                            recordKeyOrRecordName: 'not_a_key',
+                            userId,
+                            item: createInputItem({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            }),
+                            instances: [],
+                        })) as CrudRecordItemSuccess;
+
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'record_not_found',
+                            errorMessage: expect.any(String),
+                        });
+
+                        await expect(
+                            itemsStore.getItemByAddress(recordName, 'address')
+                        ).resolves.toBeFalsy();
                     });
+
+                    if (allowRecordKeys) {
+                        it('should support using a record key', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId: otherUserId,
+                                item: createInputItem({
+                                    address: 'address',
+                                    markers: [PUBLIC_READ_MARKER],
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
+
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toEqual({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+
+                        it('should be able to use subjectless keys', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId: otherUserId,
+                                item: createInputItem({
+                                    address: 'address',
+                                    markers: [PUBLIC_READ_MARKER],
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
+
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toEqual({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            });
+                        });
+                    } else {
+                        it('should reject the request if record keys are not allowed', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId: otherUserId,
+                                item: createInputItem({
+                                    address: 'address',
+                                    markers: [PUBLIC_READ_MARKER],
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'create',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toBeFalsy();
+                        });
+
+                        it('should reject the request if subjectless keys are not allowed', async () => {
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId: otherUserId,
+                                item: createInputItem({
+                                    address: 'address',
+                                    markers: [PUBLIC_READ_MARKER],
+                                }),
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'create',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toBeFalsy();
+                        });
+                    }
                 });
+            }
 
-                it('should be able to use subjectless keys', async () => {
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: subjectlessKey,
-                        userId: otherUserId,
-                        item: createInputItem({
+            if (allowedActions.includes('update')) {
+                describe('update', () => {
+                    beforeEach(async () => {
+                        await manager.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            item: createInputItem({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            }),
+                            instances: [],
+                        });
+                    });
+
+                    it('should update the markers in the store', async () => {
+                        const item = createInputItem({
+                            address: 'address',
+                            markers: [PRIVATE_MARKER],
+                        });
+                        const result = (await manager.recordItem({
+                            recordKeyOrRecordName: recordName,
+                            userId,
+                            item,
+                            instances: [],
+                        })) as CrudRecordItemSuccess;
+
+                        expect(result).toEqual({
+                            success: true,
+                            recordName: recordName,
+                            address: 'address',
+                        });
+
+                        await expect(
+                            itemsStore.getItemByAddress(recordName, 'address')
+                        ).resolves.toMatchObject(
+                            createStoreItem({
+                                address: 'address',
+                                markers: [PRIVATE_MARKER],
+                            })
+                        );
+                    });
+
+                    it('should reject the request if given an invalid key', async () => {
+                        const item = createInputItem({
                             address: 'address',
                             markers: [PUBLIC_READ_MARKER],
-                        }),
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
+                        });
+                        const result = (await manager.recordItem({
+                            recordKeyOrRecordName: 'not_a_key',
+                            userId,
+                            item,
+                            instances: [],
+                        })) as CrudRecordItemSuccess;
 
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        address: 'address',
+                        expect(result).toEqual({
+                            success: false,
+                            errorCode: 'record_not_found',
+                            errorMessage: expect.any(String),
+                        });
+
+                        await expect(
+                            itemsStore.getItemByAddress(recordName, 'address')
+                        ).resolves.toMatchObject(
+                            createStoreItem({
+                                address: 'address',
+                                markers: [PUBLIC_READ_MARKER],
+                            })
+                        );
                     });
 
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toEqual({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    });
-                });
-            } else {
-                it('should reject the request if record keys are not allowed', async () => {
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: key,
-                        userId: otherUserId,
-                        item: createInputItem({
-                            address: 'address',
-                            markers: [PUBLIC_READ_MARKER],
-                        }),
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
+                    if (allowRecordKeys) {
+                        it('should support using a record key', async () => {
+                            const item = createInputItem({
+                                address: 'address',
+                                markers: [PRIVATE_MARKER],
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
 
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: expect.any(String),
-                        reason: {
-                            type: 'missing_permission',
-                            recordName,
-                            action: 'create',
-                            resourceKind,
-                            resourceId: 'address',
-                            subjectType: 'user',
-                            subjectId: otherUserId,
-                        },
-                    });
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
 
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toBeFalsy();
-                });
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toMatchObject(
+                                createStoreItem({
+                                    address: 'address',
+                                    markers: [PRIVATE_MARKER],
+                                })
+                            );
+                        });
 
-                it('should reject the request if subjectless keys are not allowed', async () => {
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: subjectlessKey,
-                        userId: otherUserId,
-                        item: createInputItem({
-                            address: 'address',
-                            markers: [PUBLIC_READ_MARKER],
-                        }),
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
+                        it('should be able to use subjectless keys', async () => {
+                            const item = createInputItem({
+                                address: 'address',
+                                markers: [PRIVATE_MARKER],
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
 
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: expect.any(String),
-                        reason: {
-                            type: 'missing_permission',
-                            recordName,
-                            action: 'create',
-                            resourceKind,
-                            resourceId: 'address',
-                            subjectType: 'user',
-                            subjectId: otherUserId,
-                        },
-                    });
+                            expect(result).toEqual({
+                                success: true,
+                                recordName: recordName,
+                                address: 'address',
+                            });
 
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toBeFalsy();
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toMatchObject(
+                                createStoreItem({
+                                    address: 'address',
+                                    markers: [PRIVATE_MARKER],
+                                })
+                            );
+                        });
+                    } else {
+                        it('should reject the request if record keys are not allowed', async () => {
+                            const item = createInputItem({
+                                address: 'address',
+                                markers: [PRIVATE_MARKER],
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: key,
+                                userId: otherUserId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'update',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toMatchObject(
+                                createStoreItem({
+                                    address: 'address',
+                                    markers: [PUBLIC_READ_MARKER],
+                                })
+                            );
+                        });
+
+                        it('should reject the request if subjectless keys are not allowed', async () => {
+                            const item = createInputItem({
+                                address: 'address',
+                                markers: [PRIVATE_MARKER],
+                            });
+                            const result = (await manager.recordItem({
+                                recordKeyOrRecordName: subjectlessKey,
+                                userId: otherUserId,
+                                item,
+                                instances: [],
+                            })) as CrudRecordItemSuccess;
+
+                            expect(result).toEqual({
+                                success: false,
+                                errorCode: 'not_authorized',
+                                errorMessage: expect.any(String),
+                                reason: {
+                                    type: 'missing_permission',
+                                    recordName,
+                                    action: 'update',
+                                    resourceKind,
+                                    resourceId: 'address',
+                                    subjectType: 'user',
+                                    subjectId: otherUserId,
+                                },
+                            });
+
+                            await expect(
+                                itemsStore.getItemByAddress(
+                                    recordName,
+                                    'address'
+                                )
+                            ).resolves.toMatchObject(
+                                createStoreItem({
+                                    address: 'address',
+                                    markers: [PUBLIC_READ_MARKER],
+                                })
+                            );
+                        });
+                    }
                 });
             }
         });
+    }
 
-        describe('update', () => {
+    if (allowedActions.includes('read')) {
+        describe('getItem()', () => {
             beforeEach(async () => {
-                await manager.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    userId,
-                    item: createInputItem({
-                        address: 'address',
-                        markers: [PUBLIC_READ_MARKER],
-                    }),
-                    instances: [],
-                });
-            });
-
-            it('should update the markers in the store', async () => {
-                const item = createInputItem({
-                    address: 'address',
-                    markers: [PRIVATE_MARKER],
-                });
-                const result = (await manager.recordItem({
-                    recordKeyOrRecordName: recordName,
-                    userId,
-                    item,
-                    instances: [],
-                })) as CrudRecordItemSuccess;
-
-                expect(result).toEqual({
-                    success: true,
-                    recordName: recordName,
-                    address: 'address',
-                });
-
-                await expect(
-                    itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toMatchObject(
-                    createStoreItem({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    })
-                );
-            });
-
-            it('should reject the request if given an invalid key', async () => {
-                const item = createInputItem({
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                });
-                const result = (await manager.recordItem({
-                    recordKeyOrRecordName: 'not_a_key',
-                    userId,
-                    item,
-                    instances: [],
-                })) as CrudRecordItemSuccess;
-
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'record_not_found',
-                    errorMessage: expect.any(String),
-                });
-
-                await expect(
-                    itemsStore.getItemByAddress(recordName, 'address')
-                ).resolves.toMatchObject(
+                await itemsStore.createItem(
+                    recordName,
                     createStoreItem({
                         address: 'address',
                         markers: [PUBLIC_READ_MARKER],
                     })
                 );
-            });
 
-            if (allowRecordKeys) {
-                it('should support using a record key', async () => {
-                    const item = createInputItem({
-                        address: 'address',
+                await itemsStore.createItem(
+                    recordName,
+                    createStoreItem({
+                        address: 'address2',
                         markers: [PRIVATE_MARKER],
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: key,
-                        userId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
+                    })
+                );
 
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        address: 'address',
-                    });
-
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toMatchObject(item);
-                });
-
-                it('should be able to use subjectless keys', async () => {
-                    const item = createInputItem({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: subjectlessKey,
-                        userId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: true,
-                        recordName: recordName,
-                        address: 'address',
-                    });
-
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toMatchObject(item);
-                });
-            } else {
-                it('should reject the request if record keys are not allowed', async () => {
-                    const item = createInputItem({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: key,
-                        userId: otherUserId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: expect.any(String),
-                        reason: {
-                            type: 'missing_permission',
-                            recordName,
-                            action: 'update',
-                            resourceKind,
-                            resourceId: 'address',
-                            subjectType: 'user',
-                            subjectId: otherUserId,
-                        },
-                    });
-
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toMatchObject(
-                        createStoreItem({
-                            address: 'address',
-                            markers: [PUBLIC_READ_MARKER],
-                        })
-                    );
-                });
-
-                it('should reject the request if subjectless keys are not allowed', async () => {
-                    const item = createInputItem({
-                        address: 'address',
-                        markers: [PRIVATE_MARKER],
-                    });
-                    const result = (await manager.recordItem({
-                        recordKeyOrRecordName: subjectlessKey,
-                        userId: otherUserId,
-                        item,
-                        instances: [],
-                    })) as CrudRecordItemSuccess;
-
-                    expect(result).toEqual({
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: expect.any(String),
-                        reason: {
-                            type: 'missing_permission',
-                            recordName,
-                            action: 'update',
-                            resourceKind,
-                            resourceId: 'address',
-                            subjectType: 'user',
-                            subjectId: otherUserId,
-                        },
-                    });
-
-                    await expect(
-                        itemsStore.getItemByAddress(recordName, 'address')
-                    ).resolves.toMatchObject(
-                        createStoreItem({
-                            address: 'address',
-                            markers: [PUBLIC_READ_MARKER],
-                        })
-                    );
-                });
-            }
-        });
-    });
-
-    describe('getItem()', () => {
-        beforeEach(async () => {
-            await itemsStore.createItem(
-                recordName,
-                createStoreItem({
-                    address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                })
-            );
-
-            await itemsStore.createItem(
-                recordName,
-                createStoreItem({
-                    address: 'address2',
-                    markers: [PRIVATE_MARKER],
-                })
-            );
-
-            await itemsStore.createItem(
-                recordName,
-                createStoreItem({
-                    address: 'address3',
-                    markers: [PUBLIC_READ_MARKER],
-                })
-            );
-        });
-
-        it('should return the item if the user has access', async () => {
-            const result = await manager.getItem({
-                recordName: recordName,
-                userId,
-                address: 'address2',
-                instances: [],
+                await itemsStore.createItem(
+                    recordName,
+                    createStoreItem({
+                        address: 'address3',
+                        markers: [PUBLIC_READ_MARKER],
+                    })
+                );
             });
 
-            expect(result).toMatchObject({
-                success: true,
-                item: createOutputItem({
-                    address: 'address2',
-                    markers: [PRIVATE_MARKER],
-                }),
-            });
-        });
-
-        it('should return data_not_found if the item was not found', async () => {
-            const result = await manager.getItem({
-                recordName: recordName,
-                userId,
-                address: 'missing',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'data_not_found',
-                errorMessage: expect.any(String),
-            });
-        });
-
-        it('should return record_not_found if the record doesnt exist', async () => {
-            const result = await manager.getItem({
-                recordName: 'missing',
-                userId,
-                address: 'address',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'record_not_found',
-                errorMessage: expect.any(String),
-            });
-        });
-
-        if (allowRecordKeys) {
-            it('should be able to use a record key to access the item', async () => {
+            it('should return the item if the user has access', async () => {
                 const result = await manager.getItem({
-                    recordName: key,
+                    recordName: recordName,
                     userId,
                     address: 'address2',
                     instances: [],
                 });
 
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                     success: true,
-                    item: createStoreItem({
+                    item: createOutputItem({
                         address: 'address2',
                         markers: [PRIVATE_MARKER],
                     }),
                 });
             });
-        } else {
-            it('should return not_authorized if record keys are not allowed', async () => {
+
+            it('should return data_not_found if the item was not found', async () => {
                 const result = await manager.getItem({
-                    recordName: key,
-                    userId: otherUserId,
-                    address: 'address2',
+                    recordName: recordName,
+                    userId,
+                    address: 'missing',
                     instances: [],
                 });
 
                 expect(result).toEqual({
                     success: false,
-                    errorCode: 'not_authorized',
+                    errorCode: 'data_not_found',
                     errorMessage: expect.any(String),
-                    reason: {
-                        type: 'missing_permission',
-                        recordName,
-                        action: 'read',
-                        resourceKind,
-                        resourceId: 'address2',
-                        subjectType: 'user',
-                        subjectId: otherUserId,
-                    },
                 });
             });
-        }
-    });
 
-    describe('eraseItem()', () => {
-        beforeEach(async () => {
-            await manager.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: createInputItem({
+            it('should return record_not_found if the record doesnt exist', async () => {
+                const result = await manager.getItem({
+                    recordName: 'missing',
+                    userId,
                     address: 'address',
-                    markers: [PUBLIC_READ_MARKER],
-                }),
-                userId,
-                instances: [],
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: expect.any(String),
+                });
             });
 
-            await manager.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: createInputItem({
-                    address: 'address2',
-                    markers: [PUBLIC_READ_MARKER],
-                }),
-                userId,
-                instances: [],
-            });
+            if (allowRecordKeys) {
+                it('should be able to use a record key to access the item', async () => {
+                    const result = await manager.getItem({
+                        recordName: key,
+                        userId,
+                        address: 'address2',
+                        instances: [],
+                    });
 
-            await manager.recordItem({
-                recordKeyOrRecordName: recordName,
-                item: createInputItem({
-                    address: 'address3',
-                    markers: [PUBLIC_READ_MARKER],
-                }),
-                userId,
-                instances: [],
-            });
+                    expect(result).toEqual({
+                        success: true,
+                        item: createStoreItem({
+                            address: 'address2',
+                            markers: [PRIVATE_MARKER],
+                        }),
+                    });
+                });
+            } else {
+                it('should return not_authorized if record keys are not allowed', async () => {
+                    const result = await manager.getItem({
+                        recordName: key,
+                        userId: otherUserId,
+                        address: 'address2',
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: expect.any(String),
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            action: 'read',
+                            resourceKind,
+                            resourceId: 'address2',
+                            subjectType: 'user',
+                            subjectId: otherUserId,
+                        },
+                    });
+                });
+            }
         });
+    }
 
-        it('should erase the item if the user has access', async () => {
-            const result = await manager.eraseItem({
-                recordName: recordName,
-                userId,
-                address: 'address2',
-                instances: [],
+    if (allowedActions.includes('delete')) {
+        describe('eraseItem()', () => {
+            beforeEach(async () => {
+                await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: createInputItem({
+                        address: 'address',
+                        markers: [PUBLIC_READ_MARKER],
+                    }),
+                    userId,
+                    instances: [],
+                });
+
+                await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: createInputItem({
+                        address: 'address2',
+                        markers: [PUBLIC_READ_MARKER],
+                    }),
+                    userId,
+                    instances: [],
+                });
+
+                await manager.recordItem({
+                    recordKeyOrRecordName: recordName,
+                    item: createInputItem({
+                        address: 'address3',
+                        markers: [PUBLIC_READ_MARKER],
+                    }),
+                    userId,
+                    instances: [],
+                });
             });
 
-            expect(result).toEqual({
-                success: true,
-            });
-
-            await expect(
-                itemsStore.getItemByAddress(recordName, 'address2')
-            ).resolves.toBeFalsy();
-        });
-
-        it('should return data_not_found if the item doesnt exist', async () => {
-            const result = await manager.eraseItem({
-                recordName: recordName,
-                userId,
-                address: 'missing',
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'data_not_found',
-                errorMessage: 'The item was not found.',
-            });
-        });
-
-        if (allowRecordKeys) {
-            it('should erase the item if the record key has access', async () => {
+            it('should erase the item if the user has access', async () => {
                 const result = await manager.eraseItem({
-                    recordName: key,
-                    userId: otherUserId,
+                    recordName: recordName,
+                    userId,
                     address: 'address2',
                     instances: [],
                 });
@@ -793,102 +813,114 @@ export function testCrudRecordsController<
                     itemsStore.getItemByAddress(recordName, 'address2')
                 ).resolves.toBeFalsy();
             });
-        } else {
-            it('should return not_authorized if the controller doesnt allow record keys', async () => {
+
+            it('should return data_not_found if the item doesnt exist', async () => {
                 const result = await manager.eraseItem({
-                    recordName: key,
-                    userId: otherUserId,
+                    recordName: recordName,
+                    userId,
+                    address: 'missing',
+                    instances: [],
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The item was not found.',
+                });
+            });
+
+            if (allowRecordKeys) {
+                it('should erase the item if the record key has access', async () => {
+                    const result = await manager.eraseItem({
+                        recordName: key,
+                        userId: otherUserId,
+                        address: 'address2',
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+
+                    await expect(
+                        itemsStore.getItemByAddress(recordName, 'address2')
+                    ).resolves.toBeFalsy();
+                });
+            } else {
+                it('should return not_authorized if the controller doesnt allow record keys', async () => {
+                    const result = await manager.eraseItem({
+                        recordName: key,
+                        userId: otherUserId,
+                        address: 'address2',
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: expect.any(String),
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            action: 'delete',
+                            resourceKind,
+                            resourceId: 'address2',
+                            subjectType: 'user',
+                            subjectId: otherUserId,
+                        },
+                    });
+
+                    await expect(
+                        itemsStore.getItemByAddress(recordName, 'address2')
+                    ).resolves.toBeTruthy();
+                });
+            }
+
+            it('should return record_not_found if the record doesnt exist', async () => {
+                const result = await manager.eraseItem({
+                    recordName: 'missing',
+                    userId,
                     address: 'address2',
                     instances: [],
                 });
 
                 expect(result).toEqual({
                     success: false,
-                    errorCode: 'not_authorized',
+                    errorCode: 'record_not_found',
                     errorMessage: expect.any(String),
-                    reason: {
-                        type: 'missing_permission',
-                        recordName,
-                        action: 'delete',
-                        resourceKind,
-                        resourceId: 'address2',
-                        subjectType: 'user',
-                        subjectId: otherUserId,
-                    },
                 });
 
                 await expect(
                     itemsStore.getItemByAddress(recordName, 'address2')
                 ).resolves.toBeTruthy();
             });
-        }
+        });
+    }
 
-        it('should return record_not_found if the record doesnt exist', async () => {
-            const result = await manager.eraseItem({
-                recordName: 'missing',
-                userId,
-                address: 'address2',
-                instances: [],
+    if (allowedActions.includes('list')) {
+        describe('listItems()', () => {
+            let items: TResult[];
+            beforeEach(async () => {
+                items = [];
+                for (let i = 0; i < 20; i++) {
+                    const item = createStoreItem({
+                        address: 'address' + i,
+                        markers: [PRIVATE_MARKER],
+                    });
+                    await itemsStore.createItem(recordName, item);
+                    items.push(
+                        createOutputItem({
+                            address: item.address,
+                            markers: item.markers,
+                        })
+                    );
+                }
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'record_not_found',
-                errorMessage: expect.any(String),
-            });
-
-            await expect(
-                itemsStore.getItemByAddress(recordName, 'address2')
-            ).resolves.toBeTruthy();
-        });
-    });
-
-    describe('listItems()', () => {
-        let items: TResult[];
-        beforeEach(async () => {
-            items = [];
-            for (let i = 0; i < 20; i++) {
-                const item = createStoreItem({
-                    address: 'address' + i,
-                    markers: [PRIVATE_MARKER],
-                });
-                await itemsStore.createItem(recordName, item);
-                items.push(
-                    createOutputItem({
-                        address: item.address,
-                        markers: item.markers,
-                    })
-                );
-            }
-        });
-
-        it('should return a list of items', async () => {
-            const result = (await manager.listItems({
-                recordName: recordName,
-                userId,
-                startingAddress: null,
-                instances: [],
-            })) as CrudListItemsSuccess<any>;
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: expect.any(Array),
-                totalCount: 20,
-            });
-
-            const expectedItems = items.slice(0, 10);
-            expect(result.items.length).toBe(expectedItems.length);
-            for (let i = 0; i < expectedItems.length; i++) {
-                expect(result.items[i]).toMatchObject(expectedItems[i]);
-            }
-        });
-
-        if (allowRecordKeys) {
-            it('should be able to use a record key', async () => {
+            it('should return a list of items', async () => {
                 const result = (await manager.listItems({
-                    recordName: key,
-                    userId: otherUserId,
+                    recordName: recordName,
+                    userId,
                     startingAddress: null,
                     instances: [],
                 })) as CrudListItemsSuccess<any>;
@@ -906,12 +938,81 @@ export function testCrudRecordsController<
                     expect(result.items[i]).toMatchObject(expectedItems[i]);
                 }
             });
-        } else {
-            it('should return not_authorized if record keys are not allowed', async () => {
+
+            if (allowRecordKeys) {
+                it('should be able to use a record key', async () => {
+                    const result = (await manager.listItems({
+                        recordName: key,
+                        userId: otherUserId,
+                        startingAddress: null,
+                        instances: [],
+                    })) as CrudListItemsSuccess<any>;
+
+                    expect(result).toEqual({
+                        success: true,
+                        recordName: recordName,
+                        items: expect.any(Array),
+                        totalCount: 20,
+                    });
+
+                    const expectedItems = items.slice(0, 10);
+                    expect(result.items.length).toBe(expectedItems.length);
+                    for (let i = 0; i < expectedItems.length; i++) {
+                        expect(result.items[i]).toMatchObject(expectedItems[i]);
+                    }
+                });
+            } else {
+                it('should return not_authorized if record keys are not allowed', async () => {
+                    const result = await manager.listItems({
+                        recordName: key,
+                        userId: otherUserId,
+                        startingAddress: null,
+                        instances: [],
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: expect.any(String),
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            action: 'list',
+                            resourceKind,
+                            subjectType: 'user',
+                            subjectId: otherUserId,
+                        },
+                    });
+                });
+            }
+
+            it('should return items after the given starting address', async () => {
+                const result = (await manager.listItems({
+                    recordName: recordName,
+                    userId,
+                    startingAddress: 'address3',
+                    instances: [],
+                })) as CrudListItemsSuccess<any>;
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName: recordName,
+                    items: expect.any(Array),
+                    totalCount: 20,
+                });
+
+                const expectedItems = items.slice(4, 10);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
+            });
+
+            it('should return not_authorized if the user does not have access to the account marker', async () => {
                 const result = await manager.listItems({
-                    recordName: key,
+                    recordName: recordName,
                     userId: otherUserId,
-                    startingAddress: null,
+                    startingAddress: 'address3',
                     instances: [],
                 });
 
@@ -920,140 +1021,43 @@ export function testCrudRecordsController<
                     errorCode: 'not_authorized',
                     errorMessage: expect.any(String),
                     reason: {
-                        type: 'missing_permission',
-                        recordName,
                         action: 'list',
-                        resourceKind,
-                        subjectType: 'user',
+                        recordName: recordName,
+                        resourceId: undefined,
+                        resourceKind: resourceKind,
                         subjectId: otherUserId,
+                        subjectType: 'user',
+                        type: 'missing_permission',
                     },
                 });
             });
-        }
-
-        it('should return items after the given starting address', async () => {
-            const result = (await manager.listItems({
-                recordName: recordName,
-                userId,
-                startingAddress: 'address3',
-                instances: [],
-            })) as CrudListItemsSuccess<any>;
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: expect.any(Array),
-                totalCount: 20,
-            });
-
-            const expectedItems = items.slice(4, 10);
-            expect(result.items.length).toBe(expectedItems.length);
-            for (let i = 0; i < expectedItems.length; i++) {
-                expect(result.items[i]).toMatchObject(expectedItems[i]);
-            }
         });
 
-        it('should return not_authorized if the user does not have access to the account marker', async () => {
-            const result = await manager.listItems({
-                recordName: recordName,
-                userId: otherUserId,
-                startingAddress: 'address3',
-                instances: [],
+        describe('listItemsByMarker()', () => {
+            let items: TResult[];
+            beforeEach(async () => {
+                items = [];
+                for (let i = 0; i < 40; i++) {
+                    const item = createStoreItem({
+                        address: 'address' + i,
+                        markers: [
+                            i % 2 === 0 ? PRIVATE_MARKER : PUBLIC_READ_MARKER,
+                        ],
+                    });
+                    await itemsStore.createItem(recordName, item);
+                    items.push(
+                        createOutputItem({
+                            address: item.address,
+                            markers: item.markers,
+                        })
+                    );
+                }
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage: expect.any(String),
-                reason: {
-                    action: 'list',
-                    recordName: recordName,
-                    resourceId: undefined,
-                    resourceKind: resourceKind,
-                    subjectId: otherUserId,
-                    subjectType: 'user',
-                    type: 'missing_permission',
-                },
-            });
-        });
-    });
-
-    describe('listItemsByMarker()', () => {
-        let items: TResult[];
-        beforeEach(async () => {
-            items = [];
-            for (let i = 0; i < 40; i++) {
-                const item = createStoreItem({
-                    address: 'address' + i,
-                    markers: [
-                        i % 2 === 0 ? PRIVATE_MARKER : PUBLIC_READ_MARKER,
-                    ],
-                });
-                await itemsStore.createItem(recordName, item);
-                items.push(
-                    createOutputItem({
-                        address: item.address,
-                        markers: item.markers,
-                    })
-                );
-            }
-        });
-
-        it('should return a list of items that have the given marker', async () => {
-            const result = (await manager.listItemsByMarker({
-                recordName: recordName,
-                userId,
-                marker: PRIVATE_MARKER,
-                startingAddress: null,
-                instances: [],
-            })) as CrudListItemsSuccess<any>;
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: expect.any(Array),
-                totalCount: 20,
-            });
-
-            const expectedItems = items
-                .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                .slice(0, 10);
-            expect(result.items.length).toBe(expectedItems.length);
-            for (let i = 0; i < expectedItems.length; i++) {
-                expect(result.items[i]).toMatchObject(expectedItems[i]);
-            }
-        });
-
-        it('should return a list of items that are after the starting address', async () => {
-            const result = (await manager.listItemsByMarker({
-                recordName: recordName,
-                userId,
-                marker: PRIVATE_MARKER,
-                startingAddress: 'address1',
-                instances: [],
-            })) as CrudListItemsSuccess<any>;
-
-            expect(result).toEqual({
-                success: true,
-                recordName: recordName,
-                items: expect.any(Array),
-                totalCount: 20,
-            });
-
-            const expectedItems = items
-                .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
-                .slice(1, 11);
-            expect(result.items.length).toBe(expectedItems.length);
-            for (let i = 0; i < expectedItems.length; i++) {
-                expect(result.items[i]).toMatchObject(expectedItems[i]);
-            }
-        });
-
-        if (allowRecordKeys) {
-            it('should be able to use a record key', async () => {
+            it('should return a list of items that have the given marker', async () => {
                 const result = (await manager.listItemsByMarker({
-                    recordName: key,
-                    userId: otherUserId,
+                    recordName: recordName,
+                    userId,
                     marker: PRIVATE_MARKER,
                     startingAddress: null,
                     instances: [],
@@ -1074,55 +1078,107 @@ export function testCrudRecordsController<
                     expect(result.items[i]).toMatchObject(expectedItems[i]);
                 }
             });
-        } else {
-            it('should return not_authorized if record keys are not allowed', async () => {
+
+            it('should return a list of items that are after the starting address', async () => {
                 const result = (await manager.listItemsByMarker({
-                    recordName: key,
+                    recordName: recordName,
+                    userId,
+                    marker: PRIVATE_MARKER,
+                    startingAddress: 'address1',
+                    instances: [],
+                })) as CrudListItemsSuccess<any>;
+
+                expect(result).toEqual({
+                    success: true,
+                    recordName: recordName,
+                    items: expect.any(Array),
+                    totalCount: 20,
+                });
+
+                const expectedItems = items
+                    .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                    .slice(1, 11);
+                expect(result.items.length).toBe(expectedItems.length);
+                for (let i = 0; i < expectedItems.length; i++) {
+                    expect(result.items[i]).toMatchObject(expectedItems[i]);
+                }
+            });
+
+            if (allowRecordKeys) {
+                it('should be able to use a record key', async () => {
+                    const result = (await manager.listItemsByMarker({
+                        recordName: key,
+                        userId: otherUserId,
+                        marker: PRIVATE_MARKER,
+                        startingAddress: null,
+                        instances: [],
+                    })) as CrudListItemsSuccess<any>;
+
+                    expect(result).toEqual({
+                        success: true,
+                        recordName: recordName,
+                        items: expect.any(Array),
+                        totalCount: 20,
+                    });
+
+                    const expectedItems = items
+                        .filter((i) => i.markers.indexOf(PRIVATE_MARKER) >= 0)
+                        .slice(0, 10);
+                    expect(result.items.length).toBe(expectedItems.length);
+                    for (let i = 0; i < expectedItems.length; i++) {
+                        expect(result.items[i]).toMatchObject(expectedItems[i]);
+                    }
+                });
+            } else {
+                it('should return not_authorized if record keys are not allowed', async () => {
+                    const result = (await manager.listItemsByMarker({
+                        recordName: key,
+                        userId: otherUserId,
+                        marker: PRIVATE_MARKER,
+                        startingAddress: null,
+                        instances: [],
+                    })) as CrudListItemsSuccess<any>;
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: expect.any(String),
+                        reason: {
+                            type: 'missing_permission',
+                            recordName,
+                            action: 'list',
+                            resourceKind,
+                            subjectType: 'user',
+                            subjectId: otherUserId,
+                        },
+                    });
+                });
+            }
+
+            it('should return not_authorized if the user does not have access to the marker', async () => {
+                const result = await manager.listItemsByMarker({
+                    recordName: recordName,
                     userId: otherUserId,
                     marker: PRIVATE_MARKER,
                     startingAddress: null,
                     instances: [],
-                })) as CrudListItemsSuccess<any>;
+                });
 
                 expect(result).toEqual({
                     success: false,
                     errorCode: 'not_authorized',
                     errorMessage: expect.any(String),
                     reason: {
-                        type: 'missing_permission',
-                        recordName,
                         action: 'list',
-                        resourceKind,
-                        subjectType: 'user',
+                        recordName: recordName,
+                        resourceId: undefined,
+                        resourceKind: resourceKind,
                         subjectId: otherUserId,
+                        subjectType: 'user',
+                        type: 'missing_permission',
                     },
                 });
             });
-        }
-
-        it('should return not_authorized if the user does not have access to the marker', async () => {
-            const result = await manager.listItemsByMarker({
-                recordName: recordName,
-                userId: otherUserId,
-                marker: PRIVATE_MARKER,
-                startingAddress: null,
-                instances: [],
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_authorized',
-                errorMessage: expect.any(String),
-                reason: {
-                    action: 'list',
-                    recordName: recordName,
-                    resourceId: undefined,
-                    resourceKind: resourceKind,
-                    subjectId: otherUserId,
-                    subjectType: 'user',
-                    type: 'missing_permission',
-                },
-            });
         });
-    });
+    }
 }

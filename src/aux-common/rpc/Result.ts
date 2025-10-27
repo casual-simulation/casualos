@@ -231,13 +231,22 @@ export function logResult<T, E extends ErrorType>(
 
 export function wrap<T>(fn: () => Promise<T>): Promise<Result<T, WrappedError>>;
 export function wrap<T>(fn: () => T): Result<T, WrappedError>;
+export function wrap<T>(promise: Promise<T>): Promise<Result<T, WrappedError>>;
+export function wrap<T>(value: T): Result<T, WrappedError>;
 export function wrap<T>(
-    fn: () => T | Promise<T>
+    fnOrPromise: (() => T | Promise<T>) | Promise<T> | T
 ): Result<T, WrappedError> | Promise<Result<T, WrappedError>> {
     try {
-        const result = fn();
-        if (result instanceof Promise) {
-            return result
+        let p: T | Promise<T>;
+        if (fnOrPromise instanceof Promise) {
+            p = fnOrPromise;
+        } else if (typeof fnOrPromise !== 'function') {
+            return success(fnOrPromise);
+        } else {
+            p = (fnOrPromise as () => T | Promise<T>)();
+        }
+        if (p instanceof Promise) {
+            return p
                 .then((value) => success(value))
                 .catch((error) =>
                     failure({
@@ -247,7 +256,7 @@ export function wrap<T>(
                     })
                 );
         } else {
-            return success(result);
+            return success(p);
         }
     } catch (error) {
         return failure({

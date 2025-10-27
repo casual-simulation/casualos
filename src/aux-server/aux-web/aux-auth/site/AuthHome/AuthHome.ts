@@ -29,12 +29,19 @@ import Security from '../AuthSecurity/AuthSecurity';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
 import type { PrivacyFeatures } from '@casual-simulation/aux-common';
 import PrivacyItem from '../PrivacyItem/PrivacyItem';
+import type {
+    ContractFeaturesConfiguration,
+    StripeAccountRequirements,
+    StripeAccountStatus,
+} from '@casual-simulation/aux-records';
+import AuthAccountBalances from '../AccountBalances/AccountBalances';
 
 @Component({
     components: {
         security: Security,
         subscription: AuthSubscription,
         'privacy-item': PrivacyItem,
+        'account-balances': AuthAccountBalances,
     },
 })
 export default class AuthHome extends Vue {
@@ -55,10 +62,21 @@ export default class AuthHome extends Vue {
     requestPrivacyFeaturesMessage: string = '';
     processingPrivacyFeaturesRequest: boolean = false;
 
+    contractFeatures: ContractFeaturesConfiguration = null;
+    stripeAccountId: string = null;
+    stripeAccountStatus: StripeAccountStatus = null;
+    stripeRequirementsStatus: StripeAccountRequirements = null;
+    isManagingXpAccount: boolean = false;
+    userId: string = null;
+
     private _sub: Subscription;
 
     get showPrivacyFeatures() {
         return authManager.usePrivoLogin && !!this.privacyFeatures;
+    }
+
+    get showXpFeatures() {
+        return !!this.contractFeatures;
     }
 
     created() {
@@ -67,6 +85,12 @@ export default class AuthHome extends Vue {
         this.updated = false;
         this.privacyFeatures = null;
         this.subscriptionsSupported = authManager.subscriptionsSupported;
+        this.stripeAccountId = null;
+        this.stripeAccountStatus = null;
+        this.stripeRequirementsStatus = null;
+        this.contractFeatures = null;
+        this.isManagingXpAccount = false;
+        this.userId = authManager.userId;
 
         this._updateMetadata = this._updateMetadata.bind(this);
         this._updateMetadata = debounce(this._updateMetadata, 500);
@@ -74,6 +98,7 @@ export default class AuthHome extends Vue {
 
     mounted() {
         this._sub = authManager.loginState.subscribe((state) => {
+            this.userId = authManager.userId;
             this.originalEmail = authManager.email;
             this.originalName = authManager.name;
             this.originalAvatarUrl = authManager.avatarUrl;
@@ -84,6 +109,16 @@ export default class AuthHome extends Vue {
             this.privacyFeatures = {
                 ...authManager.privacyFeatures,
             };
+            this.contractFeatures = authManager.contractFeatures
+                ? {
+                      ...authManager.contractFeatures,
+                  }
+                : null;
+            this.stripeAccountId = authManager.metadata?.stripeAccountId;
+            this.stripeAccountStatus =
+                authManager.metadata?.stripeAccountStatus;
+            this.stripeRequirementsStatus =
+                authManager.metadata?.stripeAccountRequirementsStatus;
 
             this.metadata = {
                 email: authManager.email,
@@ -176,6 +211,21 @@ export default class AuthHome extends Vue {
             this.requestPrivacyFeaturesMessage = 'Failed to send request.';
         } finally {
             this.processingPrivacyFeaturesRequest = false;
+        }
+    }
+
+    async manageXpAccount() {
+        this.isManagingXpAccount = true;
+        try {
+            const result = this.stripeAccountStatus
+                ? await authManager.client.getStripeLoginLink({})
+                : await authManager.client.getManageXpAccountLink({});
+
+            if (result.success === true) {
+                location.href = result.url;
+            }
+        } finally {
+            this.isManagingXpAccount = false;
         }
     }
 }

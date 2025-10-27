@@ -18,3 +18,4 @@
 export * from './RecordKeys';
 export * from './AuthUtils';
 export * from './WebPush';
+export * from './AccountBalance';

@@ -16,6 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import type { PrivacyFeatures } from '@casual-simulation/aux-common';
+import type {
+    ContractFeaturesConfiguration,
+    StripeAccountRequirements,
+    StripeAccountStatus,
+} from '@casual-simulation/aux-records';
 
 export interface UserMetadata {
     email: string;
@@ -35,6 +40,11 @@ export interface AppMetadata {
     hasActiveSubscription: boolean;
     subscriptionTier: string;
     privacyFeatures: PrivacyFeatures;
+    contractFeatures?: ContractFeaturesConfiguration;
+
+    stripeAccountId?: string;
+    stripeAccountStatus?: StripeAccountStatus;
+    stripeAccountRequirementsStatus?: StripeAccountRequirements;
 }
 
 export interface AppService {

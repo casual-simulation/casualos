@@ -962,7 +962,7 @@ export class PrismaPolicyStore implements PolicyStore {
         role: AssignedRole
     ): Promise<UpdateUserRolesResult> {
         const expireTime =
-            role.expireTimeMs === Infinity ? null : new Date(role.expireTimeMs);
+            role.expireTimeMs === Infinity || !role.expireTimeMs ? null : new Date(role.expireTimeMs);
 
         await this._client.roleAssignment.upsert({
             where: {

@@ -80,7 +80,7 @@ describe('.rejects', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -103,7 +103,7 @@ describe('.rejects', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -115,7 +115,7 @@ describe('.rejects', () => {
             error = e;
         }
         expect(error).toBeDefined();
-        expect(error.message).toMatchSnapshot();
+        expect((error as any).message).toMatchSnapshot();
     });
 });
 
@@ -151,7 +151,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
 
         it(`fails non-promise value ${stringify(value)}`, async () => {
@@ -162,7 +162,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -175,7 +175,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
 
         it(`fails non-promise value ${stringify(value)}`, async () => {
@@ -186,7 +186,7 @@ describe('.resolves', () => {
                 error = e;
             }
             expect(error).toBeDefined();
-            expect(error.message).toMatchSnapshot();
+            expect((error as any).message).toMatchSnapshot();
         });
     });
 
@@ -198,7 +198,7 @@ describe('.resolves', () => {
             error = e;
         }
         expect(error).toBeDefined();
-        expect(error.message).toMatchSnapshot();
+        expect((error as any).message).toMatchSnapshot();
     });
 });
 
@@ -253,7 +253,7 @@ describe('.toBe()', () => {
         [{ a: BigInt(1) }, { a: BigInt(1) }],
     ].forEach(([a, b]) => {
         it(`fails for: ${stringify(a)} and ${stringify(b)}`, () => {
-            expect(() => jestExpect(a).toBe(b)).toThrowError('toBe');
+            expect(() => jestExpect(a).toBe(b)).toThrow('toBe');
         });
     });
 
@@ -267,7 +267,7 @@ describe('.toBe()', () => {
 
     [BigInt(1), BigInt('1')].forEach((v) => {
         it(`fails for '${stringify(v)}' with '.not'`, () => {
-            expect(() => jestExpect(v).not.toBe(v)).toThrowError('toBe');
+            expect(() => jestExpect(v).not.toBe(v)).toThrow('toBe');
         });
     });
 
@@ -284,7 +284,7 @@ describe('.toBe()', () => {
         try {
             jestExpect(actual).toBe(expected);
         } catch (error) {
-            expect(error.matcherResult).toEqual(
+            expect((error as any).matcherResult).toEqual(
                 expect.objectContaining({
                     actual,
                     expected,
@@ -672,7 +672,7 @@ describe('.toEqual()', () => {
         test(`{pass: false} expect(${stringify(a)}).toEqual(${stringify(
             b
         )})`, () => {
-            expect(() => jestExpect(a).toEqual(b)).toThrowError('toEqual');
+            expect(() => jestExpect(a).toEqual(b)).toThrow('toEqual');
             jestExpect(a).not.toEqual(b);
         });
     });
@@ -889,7 +889,7 @@ describe('.toEqual()', () => {
             b
         )})`, () => {
             jestExpect(a).toEqual(b);
-            expect(() => jestExpect(a).not.toEqual(b)).toThrowError('toEqual');
+            expect(() => jestExpect(a).not.toEqual(b)).toThrow('toEqual');
         });
     });
 
@@ -899,7 +899,7 @@ describe('.toEqual()', () => {
         try {
             jestExpect(actual).toEqual(expected);
         } catch (error) {
-            expect(error.matcherResult).toEqual(
+            expect((error as any).matcherResult).toEqual(
                 expect.objectContaining({
                     actual,
                     expected,
@@ -1113,11 +1113,9 @@ describe('.toBeTruthy(), .toBeFalsy()', () => {
             jestExpect(v).toBeTruthy();
             jestExpect(v).not.toBeFalsy();
 
-            expect(() => jestExpect(v).not.toBeTruthy()).toThrowError(
-                'toBeTruthy'
-            );
+            expect(() => jestExpect(v).not.toBeTruthy()).toThrow('toBeTruthy');
 
-            expect(() => jestExpect(v).toBeFalsy()).toThrowError('toBeFalsy');
+            expect(() => jestExpect(v).toBeFalsy()).toThrow('toBeFalsy');
         });
     });
 
@@ -1141,11 +1139,9 @@ describe('.toBeTruthy(), .toBeFalsy()', () => {
             jestExpect(v).toBeFalsy();
             jestExpect(v).not.toBeTruthy();
 
-            expect(() => jestExpect(v).toBeTruthy()).toThrowError('toBeTruthy');
+            expect(() => jestExpect(v).toBeTruthy()).toThrow('toBeTruthy');
 
-            expect(() => jestExpect(v).not.toBeFalsy()).toThrowError(
-                'toBeFalsy'
-            );
+            expect(() => jestExpect(v).not.toBeFalsy()).toThrow('toBeFalsy');
         });
     });
 });
@@ -1217,11 +1213,11 @@ describe('.toBeDefined(), .toBeUndefined()', () => {
             jestExpect(v).toBeDefined();
             jestExpect(v).not.toBeUndefined();
 
-            expect(() => jestExpect(v).not.toBeDefined()).toThrowError(
+            expect(() => jestExpect(v).not.toBeDefined()).toThrow(
                 'toBeDefined'
             );
 
-            expect(() => jestExpect(v).toBeUndefined()).toThrowError(
+            expect(() => jestExpect(v).toBeUndefined()).toThrow(
                 'toBeUndefined'
             );
         });
@@ -1383,37 +1379,37 @@ describe(
             });
 
             it(`throws: [${stringify(small)}, ${stringify(big)}]`, () => {
-                expect(() =>
-                    jestExpect(small).toBeGreaterThan(big)
-                ).toThrowError('toBeGreaterThan');
+                expect(() => jestExpect(small).toBeGreaterThan(big)).toThrow(
+                    'toBeGreaterThan'
+                );
 
-                expect(() =>
-                    jestExpect(small).not.toBeLessThan(big)
-                ).toThrowError('toBeLessThan');
+                expect(() => jestExpect(small).not.toBeLessThan(big)).toThrow(
+                    'toBeLessThan'
+                );
 
                 expect(() =>
                     jestExpect(big).not.toBeGreaterThan(small)
-                ).toThrowError('toBeGreaterThan');
+                ).toThrow('toBeGreaterThan');
 
-                expect(() => jestExpect(big).toBeLessThan(small)).toThrowError(
+                expect(() => jestExpect(big).toBeLessThan(small)).toThrow(
                     'toBeLessThan'
                 );
 
                 expect(() =>
                     jestExpect(small).toBeGreaterThanOrEqual(big)
-                ).toThrowError('toBeGreaterThanOrEqual');
+                ).toThrow('toBeGreaterThanOrEqual');
 
                 expect(() =>
                     jestExpect(small).not.toBeLessThanOrEqual(big)
-                ).toThrowError('toBeLessThanOrEqual');
+                ).toThrow('toBeLessThanOrEqual');
 
                 expect(() =>
                     jestExpect(big).not.toBeGreaterThanOrEqual(small)
-                ).toThrowError('toBeGreaterThanOrEqual');
+                ).toThrow('toBeGreaterThanOrEqual');
 
                 expect(() =>
                     jestExpect(big).toBeLessThanOrEqual(small)
-                ).toThrowError('toBeLessThanOrEqual');
+                ).toThrow('toBeLessThanOrEqual');
             });
         });
 
@@ -1448,11 +1444,11 @@ describe(
 
                 expect(() =>
                     jestExpect(n1).not.toBeGreaterThanOrEqual(n2)
-                ).toThrowError('toBeGreaterThanOrEqual');
+                ).toThrow('toBeGreaterThanOrEqual');
 
                 expect(() =>
                     jestExpect(n1).not.toBeLessThanOrEqual(n2)
-                ).toThrowError('toBeLessThanOrEqual');
+                ).toThrow('toBeLessThanOrEqual');
             });
         });
     }
@@ -1476,10 +1472,10 @@ describe('.toContain(), .toContainEqual()', () => {
 
         jestExpect(iterable).toContain(2);
         jestExpect(iterable).toContainEqual(2);
-        expect(() => jestExpect(iterable).not.toContain(1)).toThrowError(
+        expect(() => jestExpect(iterable).not.toContain(1)).toThrow(
             'toContain'
         );
-        expect(() => jestExpect(iterable).not.toContainEqual(1)).toThrowError(
+        expect(() => jestExpect(iterable).not.toContainEqual(1)).toThrow(
             'toContainEqual'
         );
     });
@@ -1511,7 +1507,7 @@ describe('.toContain(), .toContainEqual()', () => {
         it(`'${stringify(list)}' contains '${stringify(v)}'`, () => {
             jestExpect(list).toContain(v);
 
-            expect(() => jestExpect(list).not.toContain(v)).toThrowError(
+            expect(() => jestExpect(list).not.toContain(v)).toThrow(
                 'toContain'
             );
         });
@@ -1536,9 +1532,7 @@ describe('.toContain(), .toContainEqual()', () => {
         it(`'${stringify(list)}' does not contain '${stringify(v)}'`, () => {
             jestExpect(list).not.toContain(v);
 
-            expect(() => jestExpect(list).toContain(v)).toThrowError(
-                'toContain'
-            );
+            expect(() => jestExpect(list).toContain(v)).toThrow('toContain');
         });
     });
 
@@ -1558,9 +1552,7 @@ describe('.toContain(), .toContainEqual()', () => {
         expect(() =>
             jestExpect('false').toContain(false)
         ).toThrowErrorMatchingSnapshot();
-        expect(() => jestExpect('1').toContain(BigInt(1))).toThrowError(
-            'toContain'
-        );
+        expect(() => jestExpect('1').toContain(BigInt(1))).toThrow('toContain');
     });
 
     [
@@ -2284,7 +2276,7 @@ describe('toMatchObject()', () => {
             n2
         )})`, () => {
             expect(() =>
-                jestExpect(n1).toMatchObject(n2)
+                jestExpect(n1).toMatchObject(n2 as any)
             ).toThrowErrorMatchingSnapshot();
         });
     });

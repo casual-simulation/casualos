@@ -34,6 +34,7 @@ import type {
     MetricsStore,
     RecordSubscriptionMetrics,
     SubscriptionFilter,
+    StripeAccountStatus,
 } from '@casual-simulation/aux-records';
 import { isActiveSubscription } from '@casual-simulation/aux-records';
 import type { PrismaClient, Prisma } from '../generated-sqlite';
@@ -219,6 +220,12 @@ export class SqliteMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
+
             subscriptionType: result.owner ? 'user' : 'studio',
             totalInsts: totalInsts,
             ...(await this._getSubscriptionPeriod(
@@ -405,6 +412,10 @@ export class SqliteMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
             totalItems: totalItems,
             ...(await this._getSubscriptionPeriod(
@@ -455,6 +466,10 @@ export class SqliteMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
             totalFiles: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
@@ -503,6 +518,10 @@ export class SqliteMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
             totalEventNames: stats._count._all,
             ...(await this._getSubscriptionPeriod(
@@ -537,6 +556,8 @@ export class SqliteMetricsStore implements MetricsStore {
                     subscriptionStatus: true,
                     subscriptionPeriodEnd: true,
                     subscriptionPeriodStart: true,
+                    stripeAccountId: true,
+                    stripeAccountStatus: true,
                 },
             });
 
@@ -545,6 +566,9 @@ export class SqliteMetricsStore implements MetricsStore {
                 studioId: null,
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
+                stripeAccountId: user.stripeAccountId,
+                stripeAccountStatus:
+                    user.stripeAccountStatus as StripeAccountStatus,
                 subscriptionType: 'user',
                 totalRecords: user._count.records,
                 ...(await this._getSubscriptionPeriod(
@@ -569,6 +593,8 @@ export class SqliteMetricsStore implements MetricsStore {
                     subscriptionStatus: true,
                     subscriptionPeriodEnd: true,
                     subscriptionPeriodStart: true,
+                    stripeAccountId: true,
+                    stripeAccountStatus: true,
                 },
             });
 
@@ -577,6 +603,9 @@ export class SqliteMetricsStore implements MetricsStore {
                 studioId: studio.id,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                stripeAccountId: studio.stripeAccountId,
+                stripeAccountStatus:
+                    studio.stripeAccountStatus as StripeAccountStatus,
                 subscriptionType: 'studio',
                 totalRecords: studio._count.records,
                 ...(await this._getSubscriptionPeriod(
@@ -640,6 +669,8 @@ export class SqliteMetricsStore implements MetricsStore {
                         subscriptionStatus: true,
                         subscriptionPeriodStart: true,
                         subscriptionPeriodEnd: true,
+                        stripeAccountId: true,
+                        stripeAccountStatus: true,
                     },
                 },
                 studio: {
@@ -649,6 +680,8 @@ export class SqliteMetricsStore implements MetricsStore {
                         subscriptionStatus: true,
                         subscriptionPeriodStart: true,
                         subscriptionPeriodEnd: true,
+                        stripeAccountId: true,
+                        stripeAccountStatus: true,
                     },
                 },
             },

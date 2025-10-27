@@ -33,6 +33,7 @@ import type {
     InstSubscriptionMetrics,
     MetricsStore,
     RecordSubscriptionMetrics,
+    StripeAccountStatus,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
 import { isActiveSubscription } from '@casual-simulation/aux-records';
@@ -220,6 +221,10 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
             totalInsts: totalInsts,
             ...(await this._getSubscriptionPeriod(
@@ -410,6 +415,10 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             totalItems: totalItems,
             ...(await this._getSubscriptionPeriod(
                 result.owner?.subscriptionStatus ||
@@ -462,6 +471,10 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
             totalFiles: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
@@ -513,6 +526,10 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
+            stripeAccountId:
+                result.owner?.stripeAccountId || result.studio?.stripeAccountId,
+            stripeAccountStatus: (result.owner?.stripeAccountStatus ||
+                result.studio?.stripeAccountStatus) as StripeAccountStatus,
             subscriptionType: result.owner ? 'user' : 'studio',
             totalEventNames: stats._count._all,
             ...(await this._getSubscriptionPeriod(
@@ -550,6 +567,8 @@ export class PrismaMetricsStore implements MetricsStore {
                     subscriptionStatus: true,
                     subscriptionPeriodEnd: true,
                     subscriptionPeriodStart: true,
+                    stripeAccountId: true,
+                    stripeAccountStatus: true,
                 },
             });
 
@@ -558,6 +577,9 @@ export class PrismaMetricsStore implements MetricsStore {
                 studioId: null,
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
+                stripeAccountId: user.stripeAccountId,
+                stripeAccountStatus:
+                    user.stripeAccountStatus as StripeAccountStatus,
                 subscriptionType: 'user',
                 totalRecords: user._count.records,
                 ...(await this._getSubscriptionPeriod(
@@ -582,6 +604,8 @@ export class PrismaMetricsStore implements MetricsStore {
                     subscriptionStatus: true,
                     subscriptionPeriodEnd: true,
                     subscriptionPeriodStart: true,
+                    stripeAccountId: true,
+                    stripeAccountStatus: true,
                 },
             });
 
@@ -590,6 +614,9 @@ export class PrismaMetricsStore implements MetricsStore {
                 studioId: studio.id,
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
+                stripeAccountId: studio.stripeAccountId,
+                stripeAccountStatus:
+                    studio.stripeAccountStatus as StripeAccountStatus,
                 subscriptionType: 'studio',
                 totalRecords: studio._count.records,
                 ...(await this._getSubscriptionPeriod(
@@ -599,6 +626,16 @@ export class PrismaMetricsStore implements MetricsStore {
                 )),
             };
         }
+    }
+
+    /**
+     * Gets the period for a subscription with the given status, start time, and end time.
+     * @param status The status of the subscription.
+     * @param startMs The start time of the subscription in unix time in miliseconds.
+     * @param endMs The end time of the subscription in unix time in miliseconds.
+     */
+    getSubscriptionPeriod(status: string, startMs: number, endMs: number) {
+        return this._getSubscriptionPeriod(status, startMs, endMs);
     }
 
     @traced(TRACE_NAME)
@@ -639,6 +676,10 @@ export class PrismaMetricsStore implements MetricsStore {
         };
     }
 
+    findSubscriptionInfoByRecordName(recordName: string) {
+        return this._findSubscriptionInfoByRecordName(recordName);
+    }
+
     @traced(TRACE_NAME)
     private async _findSubscriptionInfoByRecordName(recordName: string) {
         return await this._client.record.findUnique({
@@ -653,6 +694,8 @@ export class PrismaMetricsStore implements MetricsStore {
                         subscriptionStatus: true,
                         subscriptionPeriodStart: true,
                         subscriptionPeriodEnd: true,
+                        stripeAccountId: true,
+                        stripeAccountStatus: true,
                     },
                 },
                 studio: {
@@ -662,6 +705,8 @@ export class PrismaMetricsStore implements MetricsStore {
                         subscriptionStatus: true,
                         subscriptionPeriodStart: true,
                         subscriptionPeriodEnd: true,
+                        stripeAccountId: true,
+                        stripeAccountStatus: true,
                     },
                 },
             },

@@ -219,6 +219,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
         builder.usePrismaAndRedisInstRecords();
     }
 
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
+    }
+
     if (config.ai) {
         builder.useAI();
     }
@@ -249,6 +253,10 @@ export function constructServerBuilder(dynamicConfig: ServerConfig = {}) {
 
     if (config.rekognition?.moderation && config.s3) {
         builder.useRekognitionModeration();
+    }
+
+    if (config.tigerBeetle) {
+        builder.useTigerBeetle();
     }
 
     if (config.webhooks) {

@@ -45,7 +45,9 @@ import type { AuthMessenger } from './AuthMessenger';
 import type { RegexRule } from './Utils';
 import { cleanupObject, isActiveSubscription, isStringValid } from './Utils';
 import { randomCode } from './CryptoUtils';
+import type { ContractFeaturesConfiguration } from './SubscriptionConfiguration';
 import {
+    getContractFeatures,
     getSubscription,
     type SubscriptionConfiguration,
 } from './SubscriptionConfiguration';
@@ -91,6 +93,10 @@ import {
 import { traced } from './tracing/TracingDecorators';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { SEMATTRS_ENDUSER_ID } from '@opentelemetry/semantic-conventions';
+import type {
+    StripeAccountStatus,
+    StripeRequirementsStatus,
+} from './StripeInterface';
 
 const TRACE_NAME = 'AuthController';
 
@@ -2515,115 +2521,30 @@ export class AuthController {
      */
     @traced(TRACE_NAME)
     async getUserInfo(request: GetUserInfoRequest): Promise<GetUserInfoResult> {
-        if (typeof request.userId !== 'string' || request.userId === '') {
-            return {
-                success: false,
-                errorCode: 'unacceptable_user_id',
-                errorMessage:
-                    'The given userId is invalid. It must be a string.',
-            };
-        } else if (
-            typeof request.sessionKey !== 'string' ||
-            request.sessionKey === ''
-        ) {
-            return {
-                success: false,
-                errorCode: 'unacceptable_session_key',
-                errorMessage:
-                    'The given session key is invalid. It must be a string.',
-            };
-        }
-
         try {
-            const keyResult = await this.validateSessionKey(request.sessionKey);
-            if (keyResult.success === false) {
-                return keyResult;
-            } else if (
-                !isSuperUserRole(keyResult.role) &&
-                keyResult.userId !== request.userId
+            const requestedUserId = request.requestedUserId ?? request.userId;
+            if (
+                !isSuperUserRole(request.userRole) &&
+                request.userId !== requestedUserId
             ) {
-                console.log(
-                    '[AuthController] [getUserInfo] Request User ID doesnt match session key User ID!'
-                );
                 return {
                     success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 };
             }
 
-            const result = await this._store.findUser(request.userId);
+            const result = await this._store.findUser(requestedUserId);
 
             if (!result) {
-                throw new Error(
-                    'Unable to find user even though a valid session key was presented!'
-                );
-            }
-
-            const { hasActiveSubscription, subscriptionTier: tier } =
-                await this._getSubscriptionInfo(result);
-
-            let privacyFeatures: PrivacyFeatures;
-            let displayName: string = null;
-            let email: string = result.email;
-            let name: string = result.name;
-            const privoConfig = await this._config.getPrivoConfiguration();
-            if (privoConfig && result.privoServiceId) {
-                const userInfo = await this._privoClient.getUserInfo(
-                    result.privoServiceId
-                );
-                privacyFeatures = getPrivacyFeaturesFromPermissions(
-                    privoConfig.featureIds,
-                    userInfo.permissions
-                );
-                displayName = userInfo.displayName;
-                email = userInfo.email;
-                name = userInfo.givenName;
-
-                if (
-                    result.privacyFeatures?.publishData !==
-                        privacyFeatures.publishData ||
-                    result.privacyFeatures?.allowPublicData !==
-                        privacyFeatures.allowPublicData ||
-                    result.privacyFeatures?.allowAI !==
-                        privacyFeatures.allowAI ||
-                    result.privacyFeatures?.allowPublicInsts !==
-                        privacyFeatures.allowPublicInsts
-                ) {
-                    await this._store.saveUser({
-                        ...result,
-                        privacyFeatures: {
-                            ...privacyFeatures,
-                        },
-                    });
-                }
-            } else if (result.privacyFeatures) {
-                privacyFeatures = {
-                    ...result.privacyFeatures,
-                };
-            } else {
-                privacyFeatures = {
-                    publishData: true,
-                    allowPublicData: true,
-                    allowAI: true,
-                    allowPublicInsts: true,
+                return {
+                    success: false,
+                    errorCode: 'user_not_found',
+                    errorMessage: 'The user was not found.',
                 };
             }
-
-            return {
-                success: true,
-                userId: result.id,
-                name: name,
-                displayName,
-                email: email,
-                phoneNumber: result.phoneNumber,
-                avatarPortraitUrl: result.avatarPortraitUrl,
-                avatarUrl: result.avatarUrl,
-                hasActiveSubscription: hasActiveSubscription,
-                subscriptionTier: tier ?? null,
-                privacyFeatures: privacyFeatures,
-                role: result.role ?? 'none',
-            };
+            return await this.getPrivateInfoForUser(result);
         } catch (err) {
             const span = trace.getActiveSpan();
             span?.recordException(err);
@@ -2639,6 +2560,130 @@ export class AuthController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    /**
+     * Gets the user info for the given auth user.
+     *
+     * Not for public use.
+     * @param user The user to get the info for.
+     * @returns
+     */
+    async getPrivateInfoForUser(user: AuthUser): Promise<GetUserInfoSuccess> {
+        const { hasActiveSubscription, subscriptionTier: tier } =
+            await this._getSubscriptionInfo(user);
+        const { privacyFeatures, displayName, email, name } =
+            await this._getUserPrivoInfo(user);
+
+        // let accountBalance: number | null = undefined;
+        // let accountCurrency: string | null = undefined;
+        // if (this._financialController && user.accountId) {
+        //     const account = await this._financialController.getAccount(
+        //         user.accountId
+        //     );
+
+        //     if (isSuccess(account)) {
+        //         accountBalance = getAccountBalance(account.value);
+        //         accountCurrency = getAccountCurrency(account.value);
+        //     } else {
+        //         console.error(
+        //             '[AuthController] Error getting account balance for user',
+        //             account.error
+        //         );
+        //     }
+        // }
+
+        const subscriptionConfig: SubscriptionConfiguration =
+            await this._config.getSubscriptionConfiguration();
+        const contractFeatures = getContractFeatures(
+            subscriptionConfig,
+            user.subscriptionStatus,
+            user.subscriptionId,
+            'user',
+            user.subscriptionPeriodStartMs,
+            user.subscriptionPeriodEndMs
+        );
+
+        return {
+            success: true,
+            userId: user.id,
+            name: name,
+            displayName,
+            email: email,
+            phoneNumber: user.phoneNumber,
+            avatarPortraitUrl: user.avatarPortraitUrl,
+            avatarUrl: user.avatarUrl,
+            hasActiveSubscription: hasActiveSubscription,
+            subscriptionTier: tier ?? null,
+            privacyFeatures: privacyFeatures,
+            role: user.role ?? 'none',
+            // accountId: user.accountId,
+            // accountBalance,
+            // accountCurrency,
+            requestedRate: user.requestedRate,
+            stripeAccountId: user.stripeAccountId,
+            stripeAccountRequirementsStatus:
+                user.stripeAccountRequirementsStatus,
+            stripeAccountStatus: user.stripeAccountStatus,
+            contractFeatures: contractFeatures.allowed
+                ? contractFeatures
+                : undefined,
+        };
+    }
+
+    private async _getUserPrivoInfo(user: AuthUser) {
+        let privacyFeatures: PrivacyFeatures;
+        let displayName: string = null;
+        let email: string = user.email;
+        let name: string = user.name;
+        const privoConfig = await this._config.getPrivoConfiguration();
+        if (privoConfig && user.privoServiceId) {
+            const userInfo = await this._privoClient.getUserInfo(
+                user.privoServiceId
+            );
+            privacyFeatures = getPrivacyFeaturesFromPermissions(
+                privoConfig.featureIds,
+                userInfo.permissions
+            );
+            displayName = userInfo.displayName;
+            email = userInfo.email;
+            name = userInfo.givenName;
+
+            if (
+                user.privacyFeatures?.publishData !==
+                    privacyFeatures.publishData ||
+                user.privacyFeatures?.allowPublicData !==
+                    privacyFeatures.allowPublicData ||
+                user.privacyFeatures?.allowAI !== privacyFeatures.allowAI ||
+                user.privacyFeatures?.allowPublicInsts !==
+                    privacyFeatures.allowPublicInsts
+            ) {
+                await this._store.saveUser({
+                    ...user,
+                    privacyFeatures: {
+                        ...privacyFeatures,
+                    },
+                });
+            }
+        } else if (user.privacyFeatures) {
+            privacyFeatures = {
+                ...user.privacyFeatures,
+            };
+        } else {
+            privacyFeatures = {
+                publishData: true,
+                allowPublicData: true,
+                allowAI: true,
+                allowPublicInsts: true,
+            };
+        }
+
+        return {
+            privacyFeatures,
+            displayName,
+            email,
+            name,
+        };
     }
 
     /**
@@ -2730,6 +2775,17 @@ export class AuthController {
             subscriptionId: sub?.id,
             subscriptionTier: tier,
         };
+    }
+
+    /**
+     * Gets the subscription information for a user.
+     *
+     * Not for public use.
+     * @param user The user to get the subscription information for.
+     * @returns
+     */
+    getUserSubscriptionInfo(user: AuthUser) {
+        return this._getSubscriptionInfo(user);
     }
 
     /**
@@ -3991,20 +4047,23 @@ export interface ReplaceSessionFailure {
  */
 export interface GetUserInfoRequest {
     /**
-     * The session key that should be used to authenticate the request.
-     */
-    sessionKey: string;
-
-    /**
-     * The ID of the user whose info should be retrieved.
+     * The ID of the currently logged in user.
      */
     userId: string;
+
+    /**
+     * The role of the currently logged in user.
+     */
+    userRole?: UserRole;
+
+    /**
+     * The ID of the user that should be retrieved.
+     * If omitted, then the logged in user info will be retrieved.
+     */
+    requestedUserId?: string;
 }
 
-export type GetUserInfoResult = GetUserInfoSuccess | GetUserInfoFailure;
-
-export interface GetUserInfoSuccess {
-    success: true;
+export interface UserInfo {
     /**
      * The ID of the user that was retrieved.
      */
@@ -4059,14 +4118,59 @@ export interface GetUserInfoSuccess {
      * The role that the user has in the system.
      */
     role: UserRole;
+
+    /**
+     * The contracting features that the user has access to.
+     */
+    contractFeatures?: ContractFeaturesConfiguration;
+
+    // /**
+    //  * The ID of the associated financial account.
+    //  */
+    // accountId: string | null;
+
+    // /**
+    //  * The balance of the user's financial account.
+    //  * Denominated in the smallest unit of the account's currency (e.g., cents for credits/usd).
+    //  * Null if the user does not have a financial account.
+    //  */
+    // accountBalance: number | null;
+
+    // /**
+    //  * The currency code that the user's financial account is in.
+    //  */
+    // accountCurrency: string | null;
+
+    /**
+     * The rate at which the user is requesting payment (null if not yet specified)
+     */
+    requestedRate: number | null;
+
+    /**
+     * The user's connected stripe account ID.
+     */
+    stripeAccountId: string | null;
+
+    /**
+     * The user's connected stripe account requirements status.
+     */
+    stripeAccountRequirementsStatus: StripeRequirementsStatus | null;
+
+    /**
+     * The user's connected stripe account status.
+     */
+    stripeAccountStatus: StripeAccountStatus | null;
+}
+
+export type GetUserInfoResult = GetUserInfoSuccess | GetUserInfoFailure;
+
+export interface GetUserInfoSuccess extends UserInfo {
+    success: true;
 }
 
 export interface GetUserInfoFailure {
     success: false;
-    errorCode:
-        | 'unacceptable_user_id'
-        | ValidateSessionKeyFailure['errorCode']
-        | ServerError;
+    errorCode: 'user_not_found' | NotAuthorizedError | ServerError;
     errorMessage: string;
 }
 

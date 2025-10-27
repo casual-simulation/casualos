@@ -47,12 +47,31 @@ Make sure you have all the prerequisite tools installed:
             ```
             127.0.0.1 casualos.localhost
             ```
-6. Start related services:
+6. (Optional) Start TigerBeetle
+   _This is used to enable financial features within casualos_
+
+    - You can install and start the tigerbeetle server by following the quick start guide linked below.
+    - Before jumping in, please take note that the guide (as of documenting) recommends starting the replica addresses at port 3000.
+    - However, due to the default configurations of the casualos environment, it is **highly recommended** to start development replica addresses from port 3100 (or in another non-conflicting port range); and increment/decrement away from commonly used ports if additional replicas are needed.
+    - The guide may cover more than what is necessary, following along until a cluster is started, is all this step requires to continue.
+    - With that in mind, the guide can be found [here][tigerbeetle].
+    - To configure the connection details from casualos to the tigerbeetle server, visit the [development server config](./src/aux-server/aux-backend/server/.dev.env.json).
+    - Be sure to set the `_enabled` property in `tigerBeetle` to `true` as it defaults to `false`.
+    - All other property keys are their camelcase equivalent in the tigerbeetle CLI.
+        ```json
+        "tigerBeetle": {
+            "_enabled": true,
+            "clusterId": "0",
+            "replicaAddresses": ["3100"]
+        },
+        ```
+
+7. Start related services:
     - If using `nerdctl`: `npm run nerdctl:dev`
     - If using `docker`: `npm run docker:dev`
-7. Bootstrap the project.
+8. Bootstrap the project.
     - `npm run bootstrap`
-8. Install commit hooks.
+9. Install commit hooks.
     - `npx husky install`
 
 ## Commands
@@ -267,3 +286,4 @@ If you're using Visual Studio Code, I recommend getting the Jest extension. It m
 [nvm-mac]: https://github.com/creationix/nvm
 [nvm-windows]: https://github.com/coreybutler/nvm-windows
 [hosts-file]: https://en.wikipedia.org/wiki/Hosts_(file)
+[tigerbeetle]: https://docs.tigerbeetle.com/quick-start

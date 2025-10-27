@@ -959,6 +959,21 @@ export function getPublicReadPermission(
                 action,
             };
         }
+    } else if (resourceKind === 'purchasableItem') {
+        // purchasableItem.read and purchasableItem.list
+        if (action === 'read' || action === 'list' || action === 'purchase') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'contract') {
+        if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
     }
 
     // All other actions are not allowed.
@@ -1055,6 +1070,21 @@ export function getPublicWritePermission(
         }
     } else if (resourceKind === 'database') {
         if (action === 'read' || action === 'list') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'purchasableItem') {
+        // purchasableItem.read and purchasableItem.list
+        if (action === 'read' || action === 'list' || action === 'purchase') {
+            return {
+                resourceKind,
+                action,
+            };
+        }
+    } else if (resourceKind === 'contract') {
+        if (action === 'read' || action === 'list' || action === 'purchase') {
             return {
                 resourceKind,
                 action,

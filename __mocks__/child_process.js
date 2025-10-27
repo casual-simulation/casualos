@@ -1,6 +1,6 @@
 'use strict';
 
-const child_process = jest.genMockFromModule('child_process');
+const child_process = jest.createMockFromModule('child_process');
 
 let err = null;
 let mockOutput = {};

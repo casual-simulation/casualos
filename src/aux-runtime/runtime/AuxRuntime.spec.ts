@@ -12266,13 +12266,13 @@ describe('AuxRuntime', () => {
 
                 jest.advanceTimersByTime(200);
 
-                expect(test).toBeCalledTimes(2);
+                expect(test).toHaveBeenCalledTimes(2);
 
                 runtime.unsubscribe();
 
                 jest.advanceTimersByTime(200);
 
-                expect(test).toBeCalledTimes(2);
+                expect(test).toHaveBeenCalledTimes(2);
             });
         });
 

@@ -1385,7 +1385,7 @@ describe('Interpreter', () => {
                 NormalCompletion(new Value('my string'))
             );
 
-            expect(obj.func).toBeCalledTimes(1);
+            expect(obj.func).toHaveBeenCalledTimes(1);
             expect(obj.func).toHaveBeenCalledWith(777, true);
 
             const deleteResult = EnsureCompletion(

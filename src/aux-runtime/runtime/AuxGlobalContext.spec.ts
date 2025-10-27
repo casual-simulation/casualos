@@ -199,12 +199,12 @@ describe('AuxGlobalContext', () => {
 
                 removeFromContext(context, [bot1]);
 
-                expect(fn).not.toBeCalled();
+                expect(fn).not.toHaveBeenCalled();
                 expect(context.getBotTimers(bot1.id)).toEqual([]);
 
                 jest.advanceTimersByTime(500);
 
-                expect(fn).not.toBeCalled();
+                expect(fn).not.toHaveBeenCalled();
                 expect(context.getBotTimers(bot1.id)).toEqual([]);
             });
 
@@ -222,12 +222,12 @@ describe('AuxGlobalContext', () => {
 
                 removeFromContext(context, [bot1]);
 
-                expect(fn).not.toBeCalled();
+                expect(fn).not.toHaveBeenCalled();
                 expect(context.getBotTimers(bot1.id)).toEqual([]);
 
                 jest.advanceTimersByTime(500);
 
-                expect(fn).not.toBeCalled();
+                expect(fn).not.toHaveBeenCalled();
                 expect(context.getBotTimers(bot1.id)).toEqual([]);
             });
 
@@ -245,7 +245,7 @@ describe('AuxGlobalContext', () => {
 
                 removeFromContext(context, [bot1], false);
 
-                expect(fn).not.toBeCalled();
+                expect(fn).not.toHaveBeenCalled();
                 expect(context.getBotTimers(bot1.id)).toEqual([
                     {
                         timerId: timer,
@@ -268,7 +268,7 @@ describe('AuxGlobalContext', () => {
 
                 removeFromContext(context, [bot1], false);
 
-                expect(fn).not.toBeCalled();
+                expect(fn).not.toHaveBeenCalled();
                 expect(context.getBotTimers(bot1.id)).toEqual([
                     {
                         timerId: timer,
@@ -355,7 +355,7 @@ describe('AuxGlobalContext', () => {
                 })
             );
 
-            expect(notifier.notifyChange).toBeCalledTimes(1);
+            expect(notifier.notifyChange).toHaveBeenCalledTimes(1);
         });
 
         it('should record listeners for new bots', () => {
@@ -447,7 +447,7 @@ describe('AuxGlobalContext', () => {
 
             context.destroyBot(bot1);
 
-            expect(notifier.notifyChange).toBeCalledTimes(1);
+            expect(notifier.notifyChange).toHaveBeenCalledTimes(1);
         });
 
         it('should remove listeners for the bot', () => {
@@ -505,7 +505,7 @@ describe('AuxGlobalContext', () => {
             const err = new Error();
             context.enqueueError(err);
 
-            expect(notifier.notifyChange).toBeCalledTimes(1);
+            expect(notifier.notifyChange).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -607,8 +607,8 @@ describe('AuxGlobalContext', () => {
 
             await waitAsync();
 
-            expect(fn).toBeCalledWith('abc');
-            expect(fn).not.toBeCalledWith('def');
+            expect(fn).toHaveBeenCalledWith('abc');
+            expect(fn).not.toHaveBeenCalledWith('def');
         });
 
         it('should do nothing by default when resolving from a remote', async () => {
@@ -621,8 +621,8 @@ describe('AuxGlobalContext', () => {
 
             await waitAsync();
 
-            expect(fn).not.toBeCalledWith('abc');
-            expect(fn).toBeCalledWith('def');
+            expect(fn).not.toHaveBeenCalledWith('abc');
+            expect(fn).toHaveBeenCalledWith('def');
         });
 
         it('should allow resolving from a remote when the task is expected to be resolved that way', async () => {
@@ -634,7 +634,7 @@ describe('AuxGlobalContext', () => {
 
             await waitAsync();
 
-            expect(fn).toBeCalledWith('abc');
+            expect(fn).toHaveBeenCalledWith('abc');
         });
     });
 
@@ -649,8 +649,8 @@ describe('AuxGlobalContext', () => {
 
             await waitAsync();
 
-            expect(fn).toBeCalledWith('abc');
-            expect(fn).not.toBeCalledWith('def');
+            expect(fn).toHaveBeenCalledWith('abc');
+            expect(fn).not.toHaveBeenCalledWith('def');
         });
 
         it('should do nothing by default when rejecting from a remote', async () => {
@@ -663,8 +663,8 @@ describe('AuxGlobalContext', () => {
 
             await waitAsync();
 
-            expect(fn).not.toBeCalledWith('abc');
-            expect(fn).toBeCalledWith('def');
+            expect(fn).not.toHaveBeenCalledWith('abc');
+            expect(fn).toHaveBeenCalledWith('def');
         });
 
         it('should allow rejecting from a remote when the task is expected to be resolved that way', async () => {
@@ -676,7 +676,7 @@ describe('AuxGlobalContext', () => {
 
             await waitAsync();
 
-            expect(fn).toBeCalledWith('abc');
+            expect(fn).toHaveBeenCalledWith('abc');
         });
     });
 
@@ -802,16 +802,16 @@ describe('AuxGlobalContext', () => {
 
             context.cancelAllBotTimers();
 
-            expect(fn1).not.toBeCalled();
+            expect(fn1).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot1.id)).toEqual([]);
-            expect(fn2).not.toBeCalled();
+            expect(fn2).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot2.id)).toEqual([]);
 
             jest.advanceTimersByTime(500);
 
-            expect(fn1).not.toBeCalled();
+            expect(fn1).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot1.id)).toEqual([]);
-            expect(fn2).not.toBeCalled();
+            expect(fn2).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot2.id)).toEqual([]);
         });
 
@@ -837,16 +837,16 @@ describe('AuxGlobalContext', () => {
 
             context.cancelAllBotTimers();
 
-            expect(fn1).not.toBeCalled();
+            expect(fn1).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot1.id)).toEqual([]);
-            expect(fn2).not.toBeCalled();
+            expect(fn2).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot2.id)).toEqual([]);
 
             jest.advanceTimersByTime(500);
 
-            expect(fn1).not.toBeCalled();
+            expect(fn1).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot1.id)).toEqual([]);
-            expect(fn2).not.toBeCalled();
+            expect(fn2).not.toHaveBeenCalled();
             expect(context.getBotTimers(bot2.id)).toEqual([]);
         });
     });
@@ -1042,7 +1042,7 @@ describe('AuxGlobalContext', () => {
                     'wrong',
                     'also wrong',
                 ]);
-            }).toThrowError(
+            }).toThrow(
                 'No mask data for function (no matching input): func("wrong", "also wrong")'
             );
         });
@@ -1055,7 +1055,7 @@ describe('AuxGlobalContext', () => {
                     'wrong',
                     { abc: 'def' },
                 ]);
-            }).toThrowError(
+            }).toThrow(
                 'No mask data for function: func("wrong", {\n  "abc": "def"\n})'
             );
         });
@@ -1068,7 +1068,7 @@ describe('AuxGlobalContext', () => {
                     'wrong',
                     { abc: 'def', [DEBUG_STRING]: 'abc()' },
                 ]);
-            }).toThrowError('No mask data for function: func("wrong", abc())');
+            }).toThrow('No mask data for function: func("wrong", abc())');
         });
 
         it('should fail when getting mocks for a function that has nothing set', () => {
@@ -1076,7 +1076,7 @@ describe('AuxGlobalContext', () => {
 
             expect(() => {
                 context.getNextMockReturn(func, 'func', []);
-            }).toThrowError('No mask data for function: func()');
+            }).toThrow('No mask data for function: func()');
         });
 
         it('should fail when the return value list has been exhausted', () => {
@@ -1087,7 +1087,7 @@ describe('AuxGlobalContext', () => {
             expect(context.getNextMockReturn(func, 'func', [])).toBe('abc');
             expect(() => {
                 context.getNextMockReturn(func, 'func', []);
-            }).toThrowError(
+            }).toThrow(
                 'No mask data for function (out of return values): func()'
             );
         });
@@ -1109,7 +1109,7 @@ describe('AuxGlobalContext', () => {
             const generator = gen();
             context.processBotTimerResult(generator as any);
 
-            expect(processor.processGenerator).toBeCalledTimes(1);
+            expect(processor.processGenerator).toHaveBeenCalledTimes(1);
             expect(
                 (processor.processGenerator as any).mock.calls[0][0] ===
                     generator

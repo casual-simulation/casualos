@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`CoordinateSystem latLonToCartesian() should return a Vector3 for the given latitude and longitude and altitude 1`] = `
 Vector3 {

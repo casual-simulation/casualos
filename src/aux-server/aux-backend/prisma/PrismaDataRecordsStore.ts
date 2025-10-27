@@ -184,8 +184,17 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
             recordName: request.recordName,
             markers: { has: request.marker },
         };
-        if (!!request.startingAddress) {
-            query.address = { gt: request.startingAddress };
+
+        if (request.startingAddress) {
+            if (request.sort === 'descending') {
+                query.address = {
+                    lt: request.startingAddress,
+                };
+            } else {
+                query.address = {
+                    gt: request.startingAddress,
+                };
+            }
         }
 
         const [count, records] = await Promise.all([
@@ -201,7 +210,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
             )({
                 where: query,
                 orderBy: {
-                    address: 'asc',
+                    address: request.sort === 'descending' ? 'desc' : 'asc',
                 },
                 select: {
                     address: true,

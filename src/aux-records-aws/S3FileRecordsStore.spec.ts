@@ -733,7 +733,7 @@ describe('S3FileRecordsStore', () => {
             expect(
                 await lookup.getFileRecord('test-record', 'test file.xml')
             ).toBe(null);
-            expect(s3.deleteObject).toBeCalledWith({
+            expect(s3.deleteObject).toHaveBeenCalledWith({
                 Bucket: 'test-bucket',
                 Key: 'test-record/test file.xml',
             });

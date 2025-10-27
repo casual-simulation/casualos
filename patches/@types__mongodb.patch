@@ -1,0 +1,13 @@
+diff --git a/index.d.ts b/index.d.ts
+index d37f518dd645945193de473874cd1fecc4f68d11..437f271c56f932590fe99ac46e76acd7edceeb65 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -3955,7 +3955,7 @@ type DefaultSchema = any;
+  * @see https://mongodb.github.io/node-mongodb-native/3.6/api/Cursor.html
+  */
+ export class Cursor<T = Default> extends Readable {
+-    [Symbol.asyncIterator](): AsyncIterableIterator<T>;
++    // [Symbol.asyncIterator](): AsyncIterableIterator<T>;
+     sortValue: string;
+     timeout: boolean;
+     readPreference: ReadPreference;

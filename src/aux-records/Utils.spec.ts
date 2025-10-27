@@ -32,6 +32,7 @@ import {
     byteLengthOfString,
     getRootMarker,
     getPathMarker,
+    getISO4217CurrencyCode,
 } from './Utils';
 
 describe('signRequest()', () => {
@@ -461,6 +462,17 @@ describe('encodeHexUtf8()', () => {
             expect(result).toBe(expected);
         }
     );
+});
+
+describe('getISO4217CurrencyCode()', () => {
+    it('should get an ISO4217 currency code and meta', () => {
+        // Expected currency code meta
+        const expected: ['USD', 840, 2] = ['USD', 840, 2];
+        // Test with Alphabetical currency code
+        expect(getISO4217CurrencyCode(expected[0])).toEqual(expected);
+        // Test with Numeric currency code
+        expect(getISO4217CurrencyCode(expected[1])).toEqual(expected);
+    });
 });
 
 describe('parseInstancesList()', () => {

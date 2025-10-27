@@ -1,6 +1,6 @@
 'use strict';
 
-const os = jest.genMockFromModule('os');
+const os = jest.createMockFromModule('os');
 
 let hostname = 'hostname';
 
