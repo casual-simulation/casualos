@@ -118,6 +118,11 @@ export interface SharedDocument extends SubscriptionLike {
     createArray<T = any>(): SharedArray<T>;
 
     /**
+     * Creates a new text object that can be shared between multiple clients.
+     */
+    createText(): SharedText;
+
+    /**
      * Batches changes that occur within the given callback function into a single transaction.
      * This makes multiple updates more efficient.
      * @param callback The function to execute.
