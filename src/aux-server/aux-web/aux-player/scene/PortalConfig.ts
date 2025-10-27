@@ -408,12 +408,35 @@ export class PortalConfig implements SubscriptionLike {
             'portalHDRAddress',
             null
         );
-        const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
-        const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);
-        this._panMinX = panMin.x;
-        this._panMaxX = panMax.x;
-        this._panMinY = panMin.y;
-        this._panMaxY = panMax.y;
+
+        // Check if pannable min/max tags actually exist before setting constraints
+        const panMinValue = calculateBotValue(
+            calc,
+            bot,
+            'auxPortalPannableMin'
+        );
+        if (hasValue(panMinValue)) {
+            const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
+            this._panMinX = panMin.x;
+            this._panMinY = panMin.y;
+        } else {
+            this._panMinX = null;
+            this._panMinY = null;
+        }
+
+        const panMaxValue = calculateBotValue(
+            calc,
+            bot,
+            'auxPortalPannableMax'
+        );
+        if (hasValue(panMaxValue)) {
+            const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);
+            this._panMaxX = panMax.x;
+            this._panMaxY = panMax.y;
+        } else {
+            this._panMaxX = null;
+            this._panMaxY = null;
+        }
 
         this._zoomable = calculateBooleanTagValue(
             calc,
