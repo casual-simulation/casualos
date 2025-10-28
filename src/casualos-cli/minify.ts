@@ -19,12 +19,15 @@
 import type { StoredAux } from '@casual-simulation/aux-common';
 import {
     constructInitializationUpdate,
+    DNA_TAG_PREFIX,
     getBotsStateFromStoredAux,
     isFormula,
     isModule,
     isScript,
+    parseFormula,
     parseModule,
     parseScript,
+    tryParseJson,
 } from '@casual-simulation/aux-common';
 import * as esbuild from 'esbuild';
 import { cloneDeep } from 'es-toolkit';
@@ -86,6 +89,12 @@ export async function transformAux(
                         bot.tags[tag] = prefix
                             ? `${prefix}${result.code}`
                             : result.code;
+                    })
+                    .catch((err) => {
+                        console.error(
+                            `Failed to transform tag ${tag} on bot ${botId}:`,
+                            err
+                        );
                     });
 
             if (isScript(value)) {
@@ -93,13 +102,38 @@ export async function transformAux(
             } else if (isModule(value)) {
                 promises.push(transformTag('tsx', parseModule(value), '📄'));
             } else if (isFormula(value)) {
-                promises.push(transformTag('json', value, '🧬'));
+                const parsed = parseFormula(value);
+                let failed = false;
+                if (!parsed) {
+                    failed = true;
+                } else {
+                    const result = tryParseJson(parsed);
+                    if (result.success === false) {
+                        failed = true;
+                    } else {
+                        bot.tags[tag] =
+                            DNA_TAG_PREFIX + JSON.stringify(result.value);
+                    }
+                }
+
+                if (failed) {
+                    console.error(
+                        `Failed to parse JSON tag ${tag} on bot ${botId}:`
+                    );
+                }
             } else if (tag.endsWith('.js')) {
                 promises.push(transformTag('js', value));
             } else if (tag.endsWith('.css')) {
                 promises.push(transformTag('css', value));
             } else if (tag.endsWith('.json')) {
-                promises.push(transformTag('json', value));
+                const result = tryParseJson(value);
+                if (result.success === false) {
+                    console.error(
+                        `Failed to parse JSON tag ${tag} on bot ${botId}:`
+                    );
+                } else {
+                    bot.tags[tag] = JSON.stringify(result.value);
+                }
             }
         }
     }
