@@ -18,6 +18,7 @@
 
 import type { StoredAux } from '@casual-simulation/aux-common';
 import {
+    constructInitializationUpdate,
     getBotsStateFromStoredAux,
     isFormula,
     isModule,
@@ -105,8 +106,20 @@ export async function transformAux(
 
     await Promise.all(promises);
 
-    return {
-        version: 1,
-        state,
-    };
+    if (aux.version === 1) {
+        return {
+            version: 1,
+            state,
+        };
+    } else {
+        return {
+            version: 2,
+            updates: [
+                constructInitializationUpdate({
+                    type: 'create_initialization_update',
+                    bots: Object.values(state),
+                }),
+            ],
+        };
+    }
 }
