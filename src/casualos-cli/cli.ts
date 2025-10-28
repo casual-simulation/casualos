@@ -33,6 +33,7 @@ import type {
     Bot,
     BotsState,
     BotTags,
+    StoredAux,
     StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
 import {
@@ -50,6 +51,7 @@ import {
     parseSessionKey,
     ROTATION_TAG_PREFIX,
     STRING_TAG_PREFIX,
+    tryParseJson,
     VECTOR_TAG_PREFIX,
     willExpire,
 } from '@casual-simulation/aux-common';
@@ -58,7 +60,10 @@ import type {
     CompleteLoginSuccess,
     CompleteOpenIDLoginSuccess,
 } from '@casual-simulation/aux-records';
-import { serverConfigSchema } from '@casual-simulation/aux-records';
+import {
+    serverConfigSchema,
+    STORED_AUX_SCHEMA,
+} from '@casual-simulation/aux-records';
 import { PassThrough } from 'node:stream';
 import { getSchemaMetadata } from '@casual-simulation/aux-common';
 import path from 'path';
@@ -70,6 +75,7 @@ import { existsSync, statSync } from 'node:fs';
 import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import { v4 as uuid } from 'uuid';
 import fastJsonStableStringify from '../fast-json-stable-stringify';
+import { minifyAux } from './minify';
 
 const REFRESH_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -287,6 +293,39 @@ program
                 break;
             default:
                 break;
+        }
+    });
+
+program
+    .command('minify-aux')
+    .argument('[input]', 'The aux file to minify.')
+    .option('-t, --target <...targets>', 'The targets to minify for.')
+    .action(async (input, options) => {
+        const targets = options.target || ['chrome100'];
+        const inputPath = path.resolve(input);
+        const auxJson = tryParseJson(await readFile(inputPath, 'utf-8'));
+
+        if (auxJson.success === false) {
+            throw new Error(`Could not parse aux file: ${auxJson.error}`);
+        } else {
+            const originalStat = await stat(inputPath);
+
+            const aux = STORED_AUX_SCHEMA.safeParse(auxJson.value);
+
+            if (aux.success === false) {
+                throw new Error(
+                    `Aux file is not a valid stored aux: ${aux.error.toString()}`
+                );
+            }
+
+            const minified = await minifyAux(aux.data as StoredAux, targets);
+
+            await writeFile(inputPath, JSON.stringify(minified));
+
+            const newStat = await stat(inputPath);
+            console.log(`Minified aux file: ${inputPath}`);
+            console.log(`Original Size: ${originalStat.size} bytes`);
+            console.log(`New Size: ${newStat.size} bytes`);
         }
     });
 
