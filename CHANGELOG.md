@@ -20,6 +20,7 @@
 -   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
 -   Reduced the amount of code that gets cached on first load.
 -   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.
+-   Fixed several issues where `export` statements wouldn't be compiled properly.
 
 ## V3.8.0
 
