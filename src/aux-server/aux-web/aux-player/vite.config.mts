@@ -145,6 +145,11 @@ export default defineConfig(({ command, mode }) => ({
                           'preact/jsx-runtime':
                               './aux-web/shared/public/import-map/preact.jsx-runtime',
                           three: './aux-web/shared/public/import-map/three',
+                          rxjs: './aux-web/shared/public/import-map/rxjs',
+                          'rxjs/operators':
+                              './aux-web/shared/public/import-map/rxjs-operators',
+                          'es-toolkit':
+                              './aux-web/shared/public/import-map/es-toolkit',
                       },
         }),
         {

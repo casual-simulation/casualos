@@ -12,6 +12,9 @@
     -   Useful for displaying important information that requires user acknowledgment
 -   Increased the number of segments on `skybox` form spheres.
 -   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
+-   Added the following importable libraries:
+    -   [`rxjs` and `rxjs/operators`](https://rxjs.dev/)
+    -   [`es-toolkit`](https://es-toolkit.dev/)
 
 ### :bug: Bug Fixes
 
