@@ -69,7 +69,7 @@ export default class ClipboardModal extends Vue {
     }
 
     async doCopy() {
-        await (this as any).$copyText(this.text);
+        await writeTextToClipboard(this.text);
         this.closeDialog();
     }
 
