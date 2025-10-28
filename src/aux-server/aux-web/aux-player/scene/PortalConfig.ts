@@ -410,13 +410,8 @@ export class PortalConfig implements SubscriptionLike {
         );
 
         // Check if pannable min/max tags actually exist before setting constraints
-        const panMinValue = calculateBotValue(
-            calc,
-            bot,
-            'auxPortalPannableMin'
-        );
-        if (hasValue(panMinValue)) {
-            const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
+        const panMin = getTagPosition(bot, 'auxPortalPannableMin', null);
+        if (hasValue(panMin.x) || hasValue(panMin.y)) {
             this._panMinX = panMin.x;
             this._panMinY = panMin.y;
         } else {
@@ -424,13 +419,8 @@ export class PortalConfig implements SubscriptionLike {
             this._panMinY = null;
         }
 
-        const panMaxValue = calculateBotValue(
-            calc,
-            bot,
-            'auxPortalPannableMax'
-        );
-        if (hasValue(panMaxValue)) {
-            const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);
+        const panMax = getTagPosition(bot, 'auxPortalPannableMax', null);
+        if (hasValue(panMax.x) || hasValue(panMax.y)) {
             this._panMaxX = panMax.x;
             this._panMaxY = panMax.y;
         } else {
