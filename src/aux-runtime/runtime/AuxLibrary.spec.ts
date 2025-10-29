@@ -7066,6 +7066,40 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.signOut()', () => {
+            it('should emit a recordsCallProcedure action with revokeSession', () => {
+                const action: any = library.api.os.signOut();
+                const expected = recordsCallProcedure(
+                    {
+                        revokeSession: {
+                            input: {},
+                        },
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should emit a recordsCallProcedure action with revokeSession and options', () => {
+                const action: any = library.api.os.signOut({
+                    endpoint: 'custom-endpoint',
+                });
+                const expected = recordsCallProcedure(
+                    {
+                        revokeSession: {
+                            input: {},
+                        },
+                    },
+                    { endpoint: 'custom-endpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.createRecord()', () => {
             it('should emit a recordsCallProcedure action with createRecord', async () => {
                 const action: any = library.api.os.createRecord('myRecord');

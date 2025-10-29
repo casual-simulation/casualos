@@ -3758,6 +3758,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 reportInst,
                 requestAuthBot,
                 requestAuthBotInBackground,
+                signOut,
 
                 createRecord,
                 getPublicRecordKey,
@@ -9435,6 +9436,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function defineGlobalBot(name: string, botId: string): Promise<void> {
         const task = context.createTask();
         const event = calcDefineGlobalBot(name, botId, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Signs out the current user by revoking their session.
+     * Returns a promise that resolves when the sign out request has been processed.
+     *
+     * @param options The options for the request.
+     *
+     * @example Sign out the current user
+     * await os.signOut();
+     * os.toast("Signed out!");
+     *
+     * @dochash actions/os/records
+     * @docgroup 01-records
+     * @docname os.signOut
+     */
+    function signOut(options?: RecordActionOptions): Promise<void> {
+        const task = context.createTask();
+        const event = recordsCallProcedure(
+            {
+                revokeSession: {
+                    input: {},
+                },
+            },
+            options ?? {},
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

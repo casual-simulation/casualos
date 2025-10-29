@@ -7670,6 +7670,18 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
+                [
+                    'revokeSession',
+                    recordsCallProcedure(
+                        {
+                            revokeSession: {
+                                input: {},
+                            },
+                        },
+                        {},
+                        1
+                    ),
+                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {

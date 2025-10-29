@@ -262,6 +262,7 @@ export class RecordsManager {
         ['listDatabases', false],
         ['getDatabase', true],
         ['queryDatabase', true],
+        ['revokeSession', true],
     ]);
 
     /**
