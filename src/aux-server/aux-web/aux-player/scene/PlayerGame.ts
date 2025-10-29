@@ -2525,20 +2525,8 @@ export class PlayerGame extends Game {
 
             mainControls.controls.minPanX = this.getPanMinX();
             mainControls.controls.maxPanX = this.getPanMaxX();
-
             mainControls.controls.minPanY = this.getPanMinY();
-
-            if (this.getPanMinY() != null) {
-                mainControls.controls.minPanY = this.getPanMinY() * -1;
-            } else {
-                mainControls.controls.minPanY = null;
-            }
-
-            if (this.getPanMaxY() != null) {
-                mainControls.controls.maxPanY = this.getPanMaxY() * -1;
-            } else {
-                mainControls.controls.maxPanY = null;
-            }
+            mainControls.controls.maxPanY = this.getPanMaxY();
 
             const showFocus = this.getPlayerShowFocusPoint();
             if (showFocus && !this.xrSession) {
@@ -2601,21 +2589,10 @@ export class PlayerGame extends Game {
                 this.getMiniPortalPanMinX();
             this.miniPortalControls.controls.maxPanX =
                 this.getMiniPortalPanMaxX();
-
-            //this.invController.controls.minPanY = this.getPanMinY();
-            if (this.getMiniPortalPanMinY() != null) {
-                this.miniPortalControls.controls.minPanY =
-                    this.getMiniPortalPanMinY() * -1;
-            } else {
-                this.miniPortalControls.controls.minPanY = null;
-            }
-
-            if (this.getMiniPortalPanMaxY() != null) {
-                this.miniPortalControls.controls.maxPanY =
-                    this.getMiniPortalPanMaxY() * -1;
-            } else {
-                this.miniPortalControls.controls.maxPanY = null;
-            }
+            this.miniPortalControls.controls.minPanY =
+                this.getMiniPortalPanMinY();
+            this.miniPortalControls.controls.maxPanY =
+                this.getMiniPortalPanMaxY();
 
             const showFocus = this.getMiniPortalShowFocusPoint();
             if (showFocus && !this.xrSession) {

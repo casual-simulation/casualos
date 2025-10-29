@@ -20,6 +20,9 @@
 
 -   Fixed an issue where `ai.listChatModels()` wouldn't work unless an options object was provided.
 -   Fixed an issue where empty JSX expressions with comments weren't supported.
+-   Fixed an issue where `portalPannableMin` and `portalPannableMax` constraints did not properly restrict camera movement when the camera was rotated. The fix includes:
+    -   Removed camera-relative constraint checking that failed at different rotation angles
+    -   Added world-space clamping after camera target updates
 -   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
 -   Reduced the amount of code that gets cached on first load.
 -   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.
