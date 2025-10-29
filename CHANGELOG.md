@@ -7,9 +7,14 @@
 ### :rocket: Features
 
 -   Added `os.showAlert()` function to display informational alert dialogs with a single dismiss button
--   Accepts `title`, `content`, and optional `dismissText` parameters
--   Returns a promise that resolves when the dialog is dismissed
--   Useful for displaying important information that requires user acknowledgment
+    -   Accepts `title`, `content`, and optional `dismissText` parameters
+    -   Returns a promise that resolves when the dialog is dismissed
+    -   Useful for displaying important information that requires user acknowledgment
+-   Increased the number of segments on `skybox` form spheres.
+-   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
+-   Added the following importable libraries:
+    -   [`rxjs` and `rxjs/operators`](https://rxjs.dev/)
+    -   [`es-toolkit`](https://es-toolkit.dev/)
 
 ### :bug: Bug Fixes
 
@@ -18,6 +23,10 @@
 -   Fixed an issue where `portalPannableMin` and `portalPannableMax` constraints did not properly restrict camera movement when the camera was rotated. The fix includes:
     -   Removed camera-relative constraint checking that failed at different rotation angles
     -   Added world-space clamping after camera target updates
+-   Fixed an issue where CasualOS wasn't able to properly reload shared documents with nested maps or arrays.
+-   Reduced the amount of code that gets cached on first load.
+-   Changed the QR and Barcode components to load lazily to reduce the size of the initial load.
+-   Fixed several issues where `export` statements wouldn't be compiled properly.
 
 ## V3.8.0
 

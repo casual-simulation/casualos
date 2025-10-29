@@ -1,0 +1,19 @@
+@const{createContext:Q,useContext:V,useState:e,useEffect:u,useRef:q,useLayoutEffect:F}=os.appHooks;import{getStyleOf as G}from"app.styles.styler";const z=Q();export function SideBarProvider({children:c}){const[P,f]=e({}),[r,l]=e("default"),[g,t]=e(!1),[a,y]=e(!1),[h,x]=e({x:0,y:0}),[W,m]=e(!1),[M,T]=e({x:0,y:0}),[w,b]=e(null),[j,v]=e(280),[R,N]=e(),[U,B]=e(),[X,Y]=e(null),[$,k]=e([]),[C,D]=e(!1),[H,J]=e(!1),S=q(window.innerWidth);u(()=>{const n=()=>{const o=window.innerWidth<768;S.current=window.innerWidth,J(o),window.innerWidth<=940&&!o&&S.current>940&&(t(!0),v(60)),window.innerWidth>940&&o&&S.current<940&&(t(!1),v(280))};return window.addEventListener("resize",n),()=>window.removeEventListener("resize",n)},[]),globalThis.SetPackageAddingOptions=k,u(()=>{},[C]),u(()=>{const n=o=>{T({x:o.clientX,y:o.clientY})};return document.addEventListener("mousemove",n),()=>{document.removeEventListener("mousemove",n)}},[]);function O(n,o,p,E=230){if(m(o),a){d();return}const I=M.x,L=M.y,s=A(I,L,E);x(s),setTimeout(()=>{p?b(n):y(n)},100)}function A(n,o,p=230){let s=n+10,i=o+10;return s+250>window.innerWidth-10&&(s=n-250-10,s<10&&(s=window.innerWidth-250-10)),i+p>window.innerHeight-10&&(i=o-p-10,i<10&&(i=window.innerHeight-p-10)),s=Math.max(10,Math.min(s,window.innerWidth-250-10)),i=Math.max(10,Math.min(i,window.innerHeight-p-10)),{x:s,y:i}}globalThis.openPopupSettings=O;function d(){if(W){m(!1);return}y(!1),b(!1),os.unregisterApp("PopupSettings")}return globalThis.closePopupSettings=d,u(()=>{if(a){const n=A(h.x,h.y);x(n)}},[a]),F(()=>{a||w?K({...a,sidebarContext:{closePopupSettings:d,position:h,popupComponent:w}}):os.unregisterApp("PopupSettings")},[a,w]),<z.Provider value={{userURL:U,packageAddingOptions:$,setPackageAddingOptions:k,customIcon:X,setCustomIcon:Y,setUserURL:B,themeColors:R,setThemeColors:N,vars:P,setVars:f,wait:W,setWait:m,sidebarMode:r,setSideBarMode:l,collapsed:g,setCollapsed:t,openPopupSettings:O,sidebarWidth:j,setSidebarWidth:v,openOnMobile:C,setOpenOnMobile:D,closePopupSettings:d,isMobile:H}}>
+      {c}
+    </z.Provider>}export function PopupSettings({items:c,type:P,disabled:f,sidebarContext:r}){const[l,g]=e(!1);return<div onClick={r.closePopupSettings}style={{position:"fixed",left:`${r.position.x}px`,top:`${r.position.y}px`,zIndex:"10000",pointerEvents:"auto"}}>
+      <link rel="preconnect"href="https://fonts.googleapis.com"/>
+      <link rel="preconnect"href="https://fonts.gstatic.com"crossorigin/>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"rel="stylesheet"/>
+      <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400&display=swap"rel="stylesheet"/>
+      {r.popupComponent||<div className={`popupSettings ${f?"disabled":null}`}>
+          {l&&<div className=" externalPopupSettings">{l}</div>}
+          {null}
+          {c.map(t=>{if(t.active!==!1)return t?.type==="line"?<div style={{width:"100%",height:"1px",backgroundColor:"#cdcccc3b"}}/>:<div onClick={()=>{t.onClick(),t.external&&g(t.external)}}className={"itemSettings"}style={{cursor:t?.disabled?"not-allowed":"pointer",color:t?.disabled?"#929292":""}}>
+                  <div>{t.icon}</div>
+                  <div>
+                    {typeof t.title=="function"?t.title():t.title}
+                  </div>
+                </div>})}
+          <style>{G("sidebar.css")}</style>
+        </div>}
+    </div>}async function K({...c}){await os.unregisterApp("PopupSettings"),await os.registerApp("PopupSettings"),os.compileApp("PopupSettings",<PopupSettings{...c}/>)}export function useSideBarContext(){return V(z)}
