@@ -147,7 +147,7 @@ export class Text3D extends Object3D {
 
         this.add(this._mesh);
 
-        this._mesh.position.set(0, 0, 0);
+        this._mesh.position.set(0, -0.01, 0);
 
         this.updateBoundingBox();
     }
