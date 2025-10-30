@@ -1169,6 +1169,66 @@ describe('Transpiler', () => {
                     `await myExport("test", [['value', 'example'], 'value2', ]);`
                 );
             });
+
+            it('should properly transpile exports with statements directly after them', () => {
+                const result = transpiler.transpile(
+                    `const abc = 12;export {abc};callFunction();`
+                );
+
+                expect(result).toBe(
+                    `const abc = 12;await exports({ abc, });callFunction();`
+                );
+            });
+
+            it('should properly transpile empty exports with statements directly after them', () => {
+                const result = transpiler.transpile(
+                    `const abc = 12;export {};callFunction();`
+                );
+
+                expect(result).toBe(
+                    `const abc = 12;await exports({});callFunction();`
+                );
+            });
+
+            it('should properly transpile empty exports from source with statements directly after them', () => {
+                const result = transpiler.transpile(
+                    `const abc = 12;export {} from "test";callFunction();`
+                );
+
+                expect(result).toBe(
+                    `const abc = 12;await exports({});callFunction();`
+                );
+            });
+
+            it('should properly transpile function exports with statements immediately afterwards', () => {
+                const result = transpiler.transpile(
+                    `export function func1() {return 123;}async function A(){}`
+                );
+
+                expect(result).toBe(
+                    `function func1() {return 123;}\nawait exports({ func1, });async function A(){}`
+                );
+            });
+
+            it('should properly transpile variable exports with statements immediately afterwards', () => {
+                const result = transpiler.transpile(
+                    `export var abc=123;async function A(){}`
+                );
+
+                expect(result).toBe(
+                    `var abc=123;\nawait exports({ abc, });async function A(){}`
+                );
+            });
+
+            it('should properly transpile variable exports without semicolons', () => {
+                const result = transpiler.transpile(
+                    `export var abc=123\nasync function A(){}`
+                );
+
+                expect(result).toBe(
+                    `var abc=123\nawait exports({ abc, });\nasync function A(){}`
+                );
+            });
         });
 
         it('should support return statements outside of functions', () => {

@@ -909,7 +909,7 @@ export class Transpiler {
 
         exportCall += `});`;
 
-        text.insert(absoluteDeclarationEnd.index + 1, exportCall);
+        text.insert(absoluteDeclarationEnd.index, exportCall);
     }
 
     private _replaceExportSpecifiersDeclaration(
@@ -929,7 +929,7 @@ export class Transpiler {
             text,
             version,
             node.start,
-            undefined,
+            -1,
             true
         );
 
@@ -964,7 +964,7 @@ export class Transpiler {
                 doc
             );
 
-            text.delete(currentIndex, absoluteEnd.index);
+            text.delete(currentIndex, absoluteEnd.index - currentIndex);
         } else {
             let exportCall = `await ${this._exportFactory}({});`;
             let currentIndex = absoluteStart.index;
@@ -977,7 +977,7 @@ export class Transpiler {
                 doc
             );
 
-            text.delete(currentIndex, absoluteEnd.index);
+            text.delete(currentIndex, absoluteEnd.index - currentIndex);
         }
     }
 
@@ -1083,7 +1083,7 @@ export class Transpiler {
                 doc
             );
 
-            text.delete(currentIndex, absoluteEnd.index);
+            text.delete(currentIndex, absoluteEnd.index - currentIndex);
         }
     }
 

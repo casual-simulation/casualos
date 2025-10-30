@@ -73,6 +73,13 @@ export default defineConfig(({ command, mode }) => ({
                         'cleanup-indexeddb.html'
                     ),
                 },
+                output: {
+                    manualChunks: {
+                        'loom-supported': ['@loomhq/record-sdk/is-supported'],
+                        loom: ['@loomhq/record-sdk'],
+                        tfjs: ['@teachablemachine/image', '@tensorflow/tfjs'],
+                    },
+                },
             },
             sourcemap: true,
             target: ['chrome100', 'firefox100', 'safari14', 'ios14', 'edge100'],
@@ -138,6 +145,11 @@ export default defineConfig(({ command, mode }) => ({
                           'preact/jsx-runtime':
                               './aux-web/shared/public/import-map/preact.jsx-runtime',
                           three: './aux-web/shared/public/import-map/three',
+                          rxjs: './aux-web/shared/public/import-map/rxjs',
+                          'rxjs/operators':
+                              './aux-web/shared/public/import-map/rxjs-operators',
+                          'es-toolkit':
+                              './aux-web/shared/public/import-map/es-toolkit',
                       },
         }),
         {
@@ -189,6 +201,25 @@ export default defineConfig(({ command, mode }) => ({
                               '**/*.map*',
                               '**/NotoSansKR*',
                               '**/*.md',
+                              '**/MonacoHelpers*.js',
+                              '**/MonacoHelpers*.css',
+                              '**/MonacoTag*.js',
+                              '**/MonacoTag*.css',
+                              '**/MonacoTag*.css',
+                              '**/*.worker*.js',
+                              '**/vm*.js',
+                              '**/jsqr*.js',
+                              '**/livekit-client*.js',
+                              '**/tfjs*.js',
+                              '**/loom*.js',
+                              '**/ClassifierStream*.js',
+                              '**/cssMode*.js',
+                              '**/htmlMode*.js',
+                              '**/jsonMode*.js',
+                              '**/tsMode*.js',
+                              '**/interpreter.js',
+                              '**/typesense.js',
+                              '**/dependency-graph.json',
                           ],
                       },
                       devOptions: {

@@ -1175,6 +1175,19 @@ describe('RuntimeBot', () => {
                 expect(getListenerMock).toHaveBeenCalledWith(precalc, 'abc');
             });
 
+            it('should not call __energyCheck() when calling a shortcut listener', () => {
+                context.energy = 1;
+
+                let func = jest.fn();
+                getListenerMock.mockReturnValueOnce(func);
+                const listener = script.abc;
+
+                listener();
+
+                expect(func).toHaveBeenCalled();
+                expect(context.energy).toBe(1);
+            });
+
             it('should return undefined if the listener doesnt exist', () => {
                 const listener = script.abc;
 

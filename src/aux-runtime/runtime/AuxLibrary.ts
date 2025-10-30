@@ -17463,6 +17463,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param keypair the keypair that was used to create the signature.
      * @param signature the signature that was returned from {@link crypto.sign}.
      * @param data the data that was used in the call to {@link crypto.sign}.
+     *
+     * @dochash actions/crypto
+     * @docname crypto.verify
      */
     function verify(keypair: string, signature: string, data: string): boolean {
         if (typeof data === 'string') {
@@ -17476,6 +17479,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets performance stats from the runtime.
+     *
+     * @dochash actions/debuggers
+     * @docname perf.getStats
      */
     function getStats(): PerformanceStats {
         return {
