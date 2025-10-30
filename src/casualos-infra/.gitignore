@@ -7,3 +7,6 @@
 docs
 package-lock.json
 dist/
+dev.tfstate
+.terraform/
+data/
