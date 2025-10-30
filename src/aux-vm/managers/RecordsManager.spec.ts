@@ -39,6 +39,7 @@ import {
     DEFAULT_BRANCH_NAME,
     action,
     iterableThrow,
+    signOut,
 } from '@casual-simulation/aux-common';
 import {
     aiChat,
@@ -118,6 +119,7 @@ describe('RecordsManager', () => {
         createPublicRecordKey: jest.fn(),
         provideSmsNumber: jest.fn(),
         getRecordKeyPolicy: jest.fn(),
+        logout: jest.fn(),
     };
     let customAuth: AuthHelperInterface;
     let customAuthMock = {
@@ -288,6 +290,7 @@ describe('RecordsManager', () => {
             },
             helper,
             getEndpointInfo,
+            (endpoint) => authMock as any,
             true
         );
     });
@@ -1514,6 +1517,7 @@ describe('RecordsManager', () => {
                         recordsOrigin: null,
                     },
                     helper,
+                    () => null,
                     () => null
                 );
 
@@ -2704,6 +2708,7 @@ describe('RecordsManager', () => {
                         recordsOrigin: null,
                     },
                     helper,
+                    () => null,
                     () => null
                 );
 
@@ -6046,6 +6051,7 @@ describe('RecordsManager', () => {
                         versionHash: '1234567890abcdef',
                     },
                     helper,
+                    () => null,
                     () => null
                 );
 
@@ -6228,6 +6234,7 @@ describe('RecordsManager', () => {
                         versionHash: '1234567890abcdef',
                     },
                     helper,
+                    () => null,
                     () => null
                 );
 
@@ -6383,6 +6390,7 @@ describe('RecordsManager', () => {
                         versionHash: '1234567890abcdef',
                     },
                     helper,
+                    () => null,
                     () => null
                 );
 
@@ -7167,6 +7175,72 @@ describe('RecordsManager', () => {
             });
         });
 
+        describe('sign_out', () => {
+            it('should call logout on the auth helper', async () => {
+                authMock.logout.mockResolvedValueOnce(undefined);
+
+                records.handleEvents([signOut(1)]);
+
+                await waitAsync();
+
+                expect(authMock.logout).toHaveBeenCalled();
+                expect(vm.events).toEqual([asyncResult(1, null)]);
+            });
+
+            it('should return an error if no auth helper is available', async () => {
+                const getAuthHelper = jest.fn(
+                    (): AuthHelperInterface | null => null
+                );
+                records = new RecordsManager(
+                    {
+                        version: '1.0.0',
+                        versionHash: '1234567890abcdef',
+                        recordsOrigin: 'http://localhost:3002',
+                        authOrigin: 'http://localhost:3302',
+                    },
+                    helper,
+                    (endpoint, authenticate) => {
+                        return Promise.resolve({
+                            recordsOrigin: 'http://localhost:3002',
+                            headers: {},
+                            token: null,
+                            error: false,
+                        });
+                    },
+                    getAuthHelper,
+                    false
+                );
+
+                records.handleEvents([signOut(1)]);
+
+                await waitAsync();
+
+                expect(getAuthHelper).toHaveBeenCalledWith(
+                    'http://localhost:3302'
+                );
+                expect(vm.events).toEqual([
+                    asyncError(
+                        1,
+                        new Error(
+                            'Unable to sign out: No auth helper available.'
+                        )
+                    ),
+                ]);
+            });
+
+            it('should return an error if logout fails', async () => {
+                const error = new Error('Logout failed');
+                authMock.logout.mockRejectedValueOnce(error);
+
+                records.handleEvents([signOut(1)]);
+
+                await waitAsync();
+
+                expect(authMock.logout).toHaveBeenCalled();
+                expect(vm.events).toEqual([asyncError(1, error)]);
+            });
+        });
+
         describe('records_call_procedure', () => {
             let fetch: jest.Mock<
                 Promise<{
@@ -7670,18 +7744,6 @@ describe('RecordsManager', () => {
                         1
                     ),
                 ] as const,
-                [
-                    'revokeSession',
-                    recordsCallProcedure(
-                        {
-                            revokeSession: {
-                                input: {},
-                            },
-                        },
-                        {},
-                        1
-                    ),
-                ] as const,
             ];
 
             describe.each(allowedProcedures)('%s', (name, event) => {
@@ -7869,6 +7931,7 @@ describe('RecordsManager', () => {
                             recordsOrigin: null,
                         },
                         helper,
+                        () => null,
                         () => null
                     );
 
@@ -8644,6 +8707,7 @@ describe('RecordsManager', () => {
                     },
                     helper,
                     getEndpointInfo,
+                    (endpoint) => authMock as any,
                     true,
                     connectionClientFactory
                 );
@@ -8772,6 +8836,7 @@ describe('RecordsManager', () => {
                     },
                     helper,
                     getEndpointInfo,
+                    (endpoint) => authMock as any,
                     true,
                     connectionClientFactory
                 );
@@ -9885,6 +9950,7 @@ describe('RecordsManager', () => {
                     },
                     helper,
                     getEndpointInfo,
+                    (endpoint) => authMock as any,
                     true,
                     connectionClientFactory
                 );
@@ -9978,6 +10044,7 @@ describe('RecordsManager', () => {
                     },
                     helper,
                     getEndpointInfo,
+                    (endpoint) => authMock as any,
                     true,
                     connectionClientFactory
                 );
@@ -10299,6 +10366,7 @@ describe('RecordsManager', () => {
                     },
                     helper,
                     getEndpointInfo,
+                    (endpoint) => authMock as any,
                     true
                 );
 
@@ -12399,7 +12467,8 @@ describe('RecordsManager', () => {
                             recordsOrigin: 'https://localhost:145',
                         },
                         helper,
-                        factory
+                        factory,
+                        () => null
                     );
 
                     factory.mockReturnValueOnce(null);
@@ -12432,7 +12501,8 @@ describe('RecordsManager', () => {
                             authOrigin: null,
                         },
                         helper,
-                        factory
+                        factory,
+                        () => null
                     );
 
                     factory.mockReturnValueOnce(null);
@@ -12462,7 +12532,8 @@ describe('RecordsManager', () => {
                             authOrigin: null,
                         },
                         helper,
-                        factory
+                        factory,
+                        () => null
                     );
 
                     let e = {

@@ -10,9 +10,9 @@
     -   Accepts `title`, `content`, and optional `dismissText` parameters
     -   Returns a promise that resolves when the dialog is dismissed
     -   Useful for displaying important information that requires user acknowledgment
--   Added `os.signOut(options?)` function to sign out the current user by revoking their session
-    -   Accepts an optional `options` parameter for specifying custom endpoints
+-   Added `os.signOut()` function to sign out the current user
     -   Returns a promise that resolves when the sign out request has been processed
+    -   Uses the auth helper's logout method to properly sign out the user
 -   Increased the number of segments on `skybox` form spheres.
 -   Changed the "Connection lost" and "Connection regained" toast messages to be simpler.
 -   Added the following importable libraries:

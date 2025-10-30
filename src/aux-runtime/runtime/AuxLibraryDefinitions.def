@@ -14819,9 +14819,8 @@ interface Os {
 
     /**
      * Signs out the current user by revoking their session.
-     * @param options The options for the request.
      */
-    signOut(options?: RecordActionOptions): Promise<void>;
+    signOut(): Promise<void>;
 
     /**
      * Gets an access key for the given public record.

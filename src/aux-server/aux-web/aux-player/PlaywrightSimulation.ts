@@ -272,7 +272,8 @@ export class PlaywrightSimulation
                 this._getRecordsEndpointInfo(
                     endpoint,
                     authenticateIfNotLoggedIn
-                )
+                ),
+            (endpoint) => this._getAuthEndpointHelper(endpoint)
         );
         this._livekitManager = new LivekitManager(this._helper);
 

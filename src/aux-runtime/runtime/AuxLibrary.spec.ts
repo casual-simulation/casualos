@@ -118,6 +118,7 @@ import {
     setAppOutput,
     unregisterCustomApp,
     requestAuthData,
+    signOut,
     defineGlobalBot,
     TEMPORARY_BOT_PARTITION_ID,
     TEMPORARY_SHARED_PARTITION_ID,
@@ -7067,34 +7068,9 @@ describe('AuxLibrary', () => {
         });
 
         describe('os.signOut()', () => {
-            it('should emit a recordsCallProcedure action with revokeSession', () => {
+            it('should emit a sign_out action', () => {
                 const action: any = library.api.os.signOut();
-                const expected = recordsCallProcedure(
-                    {
-                        revokeSession: {
-                            input: {},
-                        },
-                    },
-                    {},
-                    context.tasks.size
-                );
-                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
-                expect(context.actions).toEqual([expected]);
-            });
-
-            it('should emit a recordsCallProcedure action with revokeSession and options', () => {
-                const action: any = library.api.os.signOut({
-                    endpoint: 'custom-endpoint',
-                });
-                const expected = recordsCallProcedure(
-                    {
-                        revokeSession: {
-                            input: {},
-                        },
-                    },
-                    { endpoint: 'custom-endpoint' },
-                    context.tasks.size
-                );
+                const expected = signOut(context.tasks.size);
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
                 expect(context.actions).toEqual([expected]);
             });

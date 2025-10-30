@@ -171,6 +171,7 @@ export type AsyncActions =
     | RegisterHtmlAppAction
     | ReportInstAction
     | RequestAuthDataAction
+    | SignOutAction
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
     | ARSupportedAction
@@ -3335,6 +3336,16 @@ export interface RequestAuthDataAction extends AsyncAction {
 }
 
 /**
+ * Defines an event that requests the user be signed out.
+ *
+ * @dochash types/os/records
+ * @docname SignOutAction
+ */
+export interface SignOutAction extends AsyncAction {
+    type: 'sign_out';
+}
+
+/**
  * Defines an interface that represents a authenticated user.
  *
  * @dochash types/os/records
@@ -6006,6 +6017,17 @@ export function requestAuthData(
     return {
         type: 'request_auth_data',
         requestInBackground,
+        taskId,
+    };
+}
+
+/**
+ * Creates a SignOutAction.
+ * @param taskId The ID of the async task.
+ */
+export function signOut(taskId?: string | number): SignOutAction {
+    return {
+        type: 'sign_out',
         taskId,
     };
 }

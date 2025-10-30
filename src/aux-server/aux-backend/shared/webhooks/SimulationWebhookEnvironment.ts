@@ -194,6 +194,7 @@ export class SimulationWebhookEnvironment implements WebhookEnvironment {
                         websocketProtocol,
                     };
                 },
+                () => null,
                 undefined
             );
 
