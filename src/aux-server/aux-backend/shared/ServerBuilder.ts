@@ -233,6 +233,7 @@ import {
 } from '@casual-simulation/aux-records/database';
 import { SqliteDatabaseRecordsStore } from '../prisma/sqlite/SqliteDatabaseRecordsStore';
 import { PrismaDatabaseRecordsStore } from '../prisma/PrismaDatabaseRecordsStore';
+import path from 'node:path';
 import type { ViewTemplateRenderer } from '@casual-simulation/aux-records/ViewTemplateRenderer';
 
 const automaticPlugins: ServerPlugin[] = [
@@ -2318,6 +2319,23 @@ export class ServerBuilder implements SubscriptionLike {
     private _ensurePrisma(options: Pick<ServerConfig, 'prisma'>): PrismaClient {
         if (!this._prismaClient) {
             if (options.prisma.db === 'sqlite') {
+                function formatPath(p: string): string {
+                    const filePath = p.replace('file:', '');
+                    console.log(
+                        `[ServerBuilder] Using SQLite database at: ${filePath}`
+                    );
+                    return `file:${path.resolve(filePath)}`;
+                }
+
+                const prismaOptions = options.prisma.options as any;
+                if (prismaOptions?.datasources?.db?.url) {
+                    const dbUrl: string = prismaOptions.datasources.db.url;
+                    prismaOptions.datasources.db.url = formatPath(dbUrl);
+                } else if (prismaOptions?.datasourceUrl) {
+                    const dbUrl: string = prismaOptions.datasourceUrl;
+                    prismaOptions.datasourceUrl = formatPath(dbUrl);
+                }
+
                 this._prismaClient = new SqlitePrismaClient(
                     options.prisma.options as any
                 ) as any;

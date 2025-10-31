@@ -5712,6 +5712,8 @@ export class RecordsServer {
         }
     )
     async handleWebsocketRequest(request: GenericWebsocketRequest) {
+        // TODO: Add error handling
+
         if (!this._websocketController) {
             return;
         }
