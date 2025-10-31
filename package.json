@@ -85,6 +85,8 @@
         "lint:undom": "eslint src/undom",
         "lint:shortkey": "eslint src/vue-shortkey",
         "prisma:migrate:dev": "pnpm --filter @casual-simulation/aux-server exec prisma migrate dev",
+        "k8s:port-forward": "node ./script/port-forward.mjs",
+        "k8s:apply-dev": "pnpm --filter @casual-simulation/infra k8s:apply-dev",
         "prepare": "husky"
     },
     "devDependencies": {

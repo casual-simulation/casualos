@@ -8,13 +8,22 @@
     "license": "AGPL-3.0-only",
     "main": "index.js",
     "types": "index.d.ts",
+    "scripts": {
+        "start": "node ./dist/cli.js",
+        "dev": "npm run build && npm start",
+        "build": "node ./script/build-cli.mjs",
+        "test": "jest",
+        "test:watch": "jest --watchAll",
+        "k8s:apply-dev": "cd dev && tofu apply -auto-approve"
+    },
     "dependencies": {
         "@pulumi/aws": "^6.0.0",
         "@pulumi/aws-apigateway": "^2.0.0",
         "@pulumi/aws-native": "^0.116.0",
         "@pulumi/awsx": "^2.0.2",
         "@pulumi/pulumi": "^3.113.0",
-        "es-toolkit": "1.39.10"
+        "es-toolkit": "1.39.10",
+        "commander": "12.0.0"
     },
     "repository": {
         "type": "git",

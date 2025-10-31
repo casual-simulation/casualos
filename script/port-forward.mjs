@@ -15,20 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { setupWatch } from '../../../script/build-helpers.mjs';
-import { createConfigs, cleanDirectories } from './server-configs.mjs';
-import { createConfigs as interpreterConfigs } from './interpreter-configs.mjs';
-import { portForward } from './port-forward.mjs';
 
-cleanDirectories();
+import { portForward } from '../src/aux-server/script/port-forward.mjs';
 
 async function init() {
     await portForward();
-
-    setupWatch([
-        ...createConfigs(true, 'v9.9.9-dev:alpha'),
-        ...interpreterConfigs(true, 'v9.9.9-dev:alpha'),
-    ]);
 }
 
 init();
