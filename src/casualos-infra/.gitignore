@@ -7,6 +7,9 @@
 docs
 package-lock.json
 dist/
-dev.tfstate
 .terraform/
+.terraform.lock.hcl
 data/
+.helm
+*.tfstate
+*.tfstate.backup
