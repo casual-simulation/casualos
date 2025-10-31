@@ -23,7 +23,8 @@
         "@pulumi/awsx": "^2.0.2",
         "@pulumi/pulumi": "^3.113.0",
         "es-toolkit": "1.39.10",
-        "commander": "12.0.0"
+        "commander": "12.0.0",
+        "@casual-simulation/aux-common": "workspace:*"
     },
     "repository": {
         "type": "git",

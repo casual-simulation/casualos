@@ -1723,6 +1723,9 @@ importers:
 
   src/casualos-infra:
     dependencies:
+      '@casual-simulation/aux-common':
+        specifier: workspace:*
+        version: link:../aux-common
       '@pulumi/aws':
         specifier: ^6.0.0
         version: 6.80.0(typescript@5.8.3)
@@ -1738,6 +1741,9 @@ importers:
       '@pulumi/pulumi':
         specifier: ^3.113.0
         version: 3.168.0(typescript@5.8.3)
+      commander:
+        specifier: 12.0.0
+        version: 12.0.0
       es-toolkit:
         specifier: 1.39.10
         version: 1.39.10
