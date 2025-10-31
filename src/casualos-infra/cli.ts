@@ -18,6 +18,7 @@
 
 import { Command } from 'commander';
 import path from 'node:path';
+import type { ChildProcess } from 'node:child_process';
 import { spawn, exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -68,6 +69,10 @@ program
     .description('Apply the development Kubernetes configuration')
     .option('--destroy', 'Destroy the development Kubernetes configuration')
     .option('--auto-approve', 'Auto-approve the changes')
+    .option(
+        '--no-port-forward',
+        'Do not port forward microk8s services after applying the configuration'
+    )
     .action(async (options) => {
         console.log('Applying development Kubernetes configuration...');
 
@@ -87,17 +92,20 @@ program
                 stdio: 'inherit',
             });
 
-            proc.on('exit', () => {
-                if (proc.exitCode !== 0) {
-                    console.error(
-                        'Failed to apply development Kubernetes configuration.'
+            await new Promise<void>((resolve, reject) => {
+                proc.on('exit', () => {
+                    if (proc.exitCode !== 0) {
+                        console.error(
+                            'Failed to apply development Kubernetes configuration.'
+                        );
+                        reject();
+                        // process.exit(proc.exitCode || 1);
+                    }
+                    console.log(
+                        'Development Kubernetes configuration applied successfully.'
                     );
-                    process.exit(proc.exitCode || 1);
-                }
-                console.log(
-                    'Development Kubernetes configuration applied successfully.'
-                );
-                process.exit(proc.exitCode || 0);
+                    resolve();
+                });
             });
         } catch (err) {
             console.error(
@@ -106,9 +114,17 @@ program
             );
             process.exit(1);
         }
-    });
 
-// program.
+        if (options.portForward) {
+            const { kill, promise } = portForward();
+
+            process.on('SIGTERM', () => {
+                kill();
+            });
+
+            await promise;
+        }
+    });
 
 async function main() {
     try {
@@ -116,6 +132,62 @@ async function main() {
     } catch (err) {
         console.error(err);
     }
+}
+
+const ports = [
+    ['pod/minio', 9000],
+    ['pod/minio', 9001],
+    ['pod/valkey', 6379],
+    ['pod/typesense', 8108],
+    ['pod/livekit', 7880],
+    ['pod/livekit', 7881],
+];
+
+/**
+ * Port forward microk8s services for development.
+ */
+export function portForward(): {
+    promise: Promise<unknown>;
+    kill: () => void;
+} {
+    const processes: ChildProcess[] = [];
+    const promises: Promise<void>[] = [];
+    for (const [pod, port] of ports) {
+        console.log('Port forwarding microk8s service:', pod, '->', port);
+        const proc = spawn(
+            `microk8s`,
+            [
+                `kubectl`,
+                `port-forward`,
+                `-n`,
+                `casualos-dev`,
+                `${pod}`,
+                `${port}`,
+            ],
+            {
+                stdio: 'inherit',
+            }
+        );
+
+        processes.push(proc);
+
+        promises.push(
+            new Promise((resolve, reject) => {
+                proc.on('exit', () => {
+                    resolve();
+                });
+            })
+        );
+    }
+
+    return {
+        promise: Promise.all(promises),
+        kill: () => {
+            for (const proc of processes) {
+                proc.kill();
+            }
+        },
+    };
 }
 
 main();
