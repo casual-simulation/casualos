@@ -13,3 +13,4 @@ data/
 .helm
 *.tfstate
 *.tfstate.backup
+*.s3.tfbackend

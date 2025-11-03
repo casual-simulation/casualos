@@ -1,0 +1,11 @@
+# configuration for init node of cluster
+# see https://microk8s.io/docs/add-launch-config
+---
+version: 0.1.0
+persistentClusterToken: ${ token }
+addons:
+    - name: dns
+    - name: hostpath-storage
+    - name: ingress
+    - name: cert-manager
+    - name: dashboard

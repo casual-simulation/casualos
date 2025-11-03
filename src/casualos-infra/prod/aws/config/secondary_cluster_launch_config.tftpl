@@ -1,0 +1,13 @@
+# configuration for init node of cluster
+# see https://microk8s.io/docs/add-launch-config
+---
+version: 0.1.0
+join:
+    url: "10.10.10.10:25000/${token}"
+    worker: ${worker}
+addons:
+    - name: dns
+    - name: hostpath-storage
+    - name: ingress
+    - name: cert-manager
+    - name: dashboard
