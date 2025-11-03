@@ -47,6 +47,8 @@ export interface Text3DFont {
 }
 
 export class Text3D extends Object3D {
+    name = 'Text3D';
+    
     // Map of loaded font textures.
     public static FontTextures: {
         [texturePath: string]: Texture;

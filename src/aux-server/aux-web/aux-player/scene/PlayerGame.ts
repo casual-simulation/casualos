@@ -1881,6 +1881,7 @@ export class PlayerGame extends Game {
 
     protected setupMiniScene() {
         this.miniScene = new Scene();
+        this.miniScene.name = 'MiniScene';
         this.miniScene.autoUpdate = false;
 
         // miniGridPortal camera.
@@ -1916,6 +1917,7 @@ export class PlayerGame extends Game {
 
     protected setupMapScene() {
         this.mapScene = new Scene();
+        this.mapScene.name = 'MapScene';
         this.mapScene.autoUpdate = false;
 
         this._mapGlobeMask = this._createGlobeMask();
@@ -1941,6 +1943,7 @@ export class PlayerGame extends Game {
 
     protected setupMiniMapScene() {
         this.miniMapScene = new Scene();
+        this.miniMapScene.name = 'MiniMapScene';
         this.miniMapScene.autoUpdate = false;
 
         this._miniMapGlobeMask = this._createGlobeMask();

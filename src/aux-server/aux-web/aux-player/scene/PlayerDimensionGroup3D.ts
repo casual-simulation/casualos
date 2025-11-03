@@ -21,6 +21,8 @@ import type { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/Aux
 import type { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 
 export class PlayerDimensionGroup3D extends DimensionGroup3D {
+    name = 'PlayerDimensionGroup3D';
+
     simulation3D: PlayerPageSimulation3D; // Override base class type.
 
     constructor(

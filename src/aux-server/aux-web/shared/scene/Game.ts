@@ -887,6 +887,7 @@ export abstract class Game {
         // [Main scene]
         //
         this.mainScene = new Scene();
+        this.mainScene.name = 'MainScene';
         this.mainScene.autoUpdate = false;
 
         // Main scene camera.
