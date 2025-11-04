@@ -32,7 +32,7 @@
         "postinstall": "npm run prisma:generate && npm run prisma:generate:sqlite",
         "prisma:generate": "prisma generate",
         "prisma:generate:sqlite": "prisma --config ./prisma.sqlite.config.ts generate",
-        "docker:start": "prisma migrate deploy && npm start"
+        "docker:start": "prisma migrate deploy --schema ${PRISMA_SCHEMA_PATH:-./aux-backend/schemas/auth.prisma} && npm start"
     },
     "repository": {
         "type": "git",
