@@ -48,11 +48,11 @@ output "k8s_bootstrap_token" {
 
 // The bucket for storing file records
 resource "aws_s3_bucket" "files_bucket" {
-    bucket = "${local.project_name}-files-bucket"
+    bucket = "${lower(local.project_name)}-files-bucket"
 
-    lifecycle {
-      prevent_destroy = true
-    }
+    # lifecycle {
+    #   prevent_destroy = true
+    # }
 
     tags = {
       Name = "${local.project_name}-files-bucket"
@@ -95,27 +95,88 @@ resource "tls_private_key" "cluster_key" {
     algorithm = "ED25519"
 }
 
+output "cluster_ssh_private_key" {
+    value     = tls_private_key.cluster_key.private_key_pem
+    sensitive = true
+}
 
 resource "aws_key_pair" "cluster_key_pair" {
     key_name   = "${local.project_name}-key"
-    public_key = tls_private_key.cluster_key.public_key_pem
+    public_key = tls_private_key.cluster_key.public_key_openssh
 }
 
-resource "aws_vpc" "cluster_vpc" {
-    cidr_block = "10.0.0.0/16"
-    instance_tenancy = "default"
+# TODO: Add VPC, Subnets, and NAT Gateway resources
+# resource "aws_vpc" "cluster_vpc" {
+#     cidr_block = "10.0.0.0/16"
+#     instance_tenancy = "default"
+#     enable_dns_hostnames = true
+#     enable_dns_support = true
 
-    tags = {
-        Name = "${local.project_name}-vpc"
-        Environment = var.environment
-        Project = var.project_name
-        Customer = var.customer
-    }
+#     tags = {
+#         Name = "${local.project_name}-vpc"
+#         Environment = var.environment
+#         Project = var.project_name
+#         Customer = var.customer
+#     }
+# }
+
+# resource "aws_subnet" "cluster_subnet" {
+#     vpc_id            = aws_vpc.cluster_vpc.id
+#     cidr_block        = "10.0.0.0/24"
+#     # map_public_ip_on_launch = true
+# }
+
+# resource "aws_subnet" "private_subnet" {
+#     vpc_id            = aws_vpc.cluster_vpc.id
+#     cidr_block        = "10.0.1.0/24"
+#     map_public_ip_on_launch = false
+# }
+
+resource "aws_security_group" "cluster_security_group" {
+    name        = "${lower(local.project_name)}-sg"
+    description = "Security group for the ${local.project_name} cluster"
 }
 
-resource "aws_subnet" "cluster_subnet" {
-    vpc_id            = aws_vpc.cluster_vpc.id
-    cidr_block        = "10.0.0.0/24"
+resource "aws_security_group_rule" "allow_tls" {
+    security_group_id = aws_security_group.cluster_security_group.id
+    type                     = "ingress"
+    from_port                = 443
+    to_port                  = 443
+    protocol                 = "tcp"
+    cidr_blocks              = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "allow_http" {
+    security_group_id = aws_security_group.cluster_security_group.id
+    type                     = "ingress"
+    from_port                = 80
+    to_port                  = 80
+    protocol                 = "tcp"
+    cidr_blocks              = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "allow_ssh_inbound" {
+    security_group_id = aws_security_group.cluster_security_group.id
+    type                     = "ingress"
+    from_port                = 22
+    to_port                  = 22
+    protocol                 = "tcp"
+    cidr_blocks              = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "allow_k8s_api" {
+    security_group_id = aws_security_group.cluster_security_group.id
+    type                     = "ingress"
+    from_port                = 16443
+    to_port                  = 16443
+    protocol                 = "tcp"
+    cidr_blocks              = ["0.0.0.0/0"]
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
+  security_group_id = aws_security_group.cluster_security_group.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1" # semantically equivalent to all ports
 }
 
 # The primary cluster node
@@ -125,7 +186,7 @@ resource "aws_instance" "cluster_primary" {
     instance_type = var.primary_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
     associate_public_ip_address = true
-    subnet_id = aws_subnet.cluster_subnet.id
+    security_groups = [ aws_security_group.cluster_security_group.name ]
 
     tags = {
       Name        = "${local.project_name}-primary"
@@ -159,6 +220,7 @@ resource "aws_launch_configuration" "cluster_secondary_launch_configuration" {
     image_id      = var.ami_id
     instance_type = var.secondary_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
+    security_groups = [ aws_security_group.cluster_security_group.name ]
 
     lifecycle {
         create_before_destroy = true
@@ -183,6 +245,7 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
     image_id      = var.ami_id
     instance_type = var.worker_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
+    security_groups = [ aws_security_group.cluster_security_group.name ]
 
     lifecycle {
         create_before_destroy = true
@@ -207,7 +270,7 @@ resource "aws_autoscaling_group" "cluster_asg" {
     min_size             = var.min_secondary_nodes
     desired_capacity     = var.desired_secondary_nodes
     launch_configuration = aws_launch_configuration.cluster_secondary_launch_configuration.name
-    vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
+    # vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
 
     tag {
         key                 = "Name"
@@ -241,7 +304,7 @@ resource "aws_autoscaling_group" "worker_asg" {
     min_size             = var.min_worker_nodes
     desired_capacity     = var.desired_worker_nodes
     launch_configuration = aws_launch_configuration.cluster_worker_launch_configuration.name
-    vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
+    # vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
 
     tag {
         key                 = "Name"
@@ -269,80 +332,80 @@ resource "aws_autoscaling_group" "worker_asg" {
 }
 
 locals {
-    cluster_endpoint = "https://${aws_instance.cluster_primary.public_ip}"
+    cluster_endpoint = "https://${aws_instance.cluster_primary.public_ip}:16443"
 }
 
-# provider "kubernetes" {
-#     host = local.cluster_endpoint
-#     token = local.k8s_bootstrap_token
-#     insecure = true
-# }
+provider "kubernetes" {
+    host = local.cluster_endpoint
+    token = local.k8s_bootstrap_token
+    insecure = true
+}
 
-# resource "kubernetes_namespace" "prod" {
-#     metadata {
-#         name = "prod"
-#         labels = {
-#             environment = "prod"
-#         }
-#     }
-# }
+resource "kubernetes_namespace" "prod" {
+    metadata {
+        name = "prod"
+        labels = {
+            environment = "prod"
+        }
+    }
+}
 
-# resource "kubernetes_pod" "test" {
-#   metadata {
-#     name = "terraform-example"
-#     namespace = kubernetes_namespace.prod.metadata[0].name
-#   }
+resource "kubernetes_pod" "test" {
+  metadata {
+    name = "terraform-example"
+    namespace = kubernetes_namespace.prod.metadata[0].name
+  }
 
-#   spec {
-#     container {
-#       image = "nginx:1.21.6"
-#       name  = "example"
+  spec {
+    container {
+      image = "nginx:1.21.6"
+      name  = "example"
 
-#       env {
-#         name  = "environment"
-#         value = "test"
-#       }
+      env {
+        name  = "environment"
+        value = "test"
+      }
 
-#       port {
-#         container_port = 80
-#       }
+      port {
+        container_port = 80
+      }
 
-#       liveness_probe {
-#         http_get {
-#           path = "/"
-#           port = 80
+      liveness_probe {
+        http_get {
+          path = "/"
+          port = 80
 
-#           http_header {
-#             name  = "X-Custom-Header"
-#             value = "Awesome"
-#           }
-#         }
+          http_header {
+            name  = "X-Custom-Header"
+            value = "Awesome"
+          }
+        }
 
-#         initial_delay_seconds = 3
-#         period_seconds        = 3
-#       }
-#     }
-#   }
-# }
+        initial_delay_seconds = 3
+        period_seconds        = 3
+      }
+    }
+  }
+}
 
-# resource "kubernetes_service" "test_service" {
-#   metadata {
-#     name      = "terraform-example-service"
-#     namespace = kubernetes_namespace.prod.metadata[0].name
-#   }
+resource "kubernetes_service" "test_service" {
+  metadata {
+    name      = "terraform-example-service"
+    namespace = kubernetes_namespace.prod.metadata[0].name
+  }
 
-#   spec {
-#     selector = {
-#       app = kubernetes_pod.test.metadata[0].name
-#     }
+  spec {
+    selector = {
+      app = kubernetes_pod.test.metadata[0].name
+    }
 
-#     port {
-#       port        = 80
-#       target_port = 80
-#     }
+    port {
+      port        = 80
+      target_port = 80
+    }
 
-#     type = "LoadBalancer"
+    type = "LoadBalancer"
 
-#     external_ips = [aws_instance.cluster_primary.public_ip]
-#   }
-# }
+    external_ips = [aws_instance.cluster_primary.public_ip]
+  }
+}
