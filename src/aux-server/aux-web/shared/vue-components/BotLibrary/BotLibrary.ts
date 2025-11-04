@@ -18,20 +18,42 @@
 import type { Bot } from '@casual-simulation/aux-common';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Prop } from 'vue-property-decorator';
-import FileSystemPanel from '../FileSystemPanel/FileSystemPanel.vue';
+import { Prop, Watch } from 'vue-property-decorator';
 
+/**
+ * Vue component that displays a bot library capable of showing available bots
+ * allowing users to select / interact with them.
+ */
 @Component({
-    name: 'default-panel',
-    components: {
-        'file-system-panel': FileSystemPanel,
-    },
+    name: 'bot-library',
 })
-export default class DefaultPanel extends Vue {
-    @Prop({ required: true }) readonly botId: string | null;
-    @Prop({ required: true }) readonly botSystem: string | null;
-    repoBots: Bot[] = [];
+export default class BotLibrary extends Vue {
+    @Prop({ required: true }) searchBotsBySystemOrId: (
+        idOrSystem: string
+    ) => Bot[];
+    @Prop({ required: false }) onBotSelected: (bot: Bot) => void;
+    queryResultBots: Bot[] = [];
+    searchQuery: string = '';
+
+    @Watch('searchQuery')
+    searchBotsInput(query: string) {
+        if (!this.searchBotsBySystemOrId) {
+            return;
+        }
+        this.queryResultBots.length = 0;
+        this.queryResultBots.push(...this.searchBotsBySystemOrId(query));
+    }
+
+    get botCount() {
+        return this.queryResultBots?.length ?? 0;
+    }
+
+    get bots() {
+        return this.queryResultBots;
+    }
+
     constructor() {
         super();
+        this.queryResultBots = [];
     }
 }

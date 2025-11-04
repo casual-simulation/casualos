@@ -15,6 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * Basic POSIX-like file system interface.
+ */
 export interface AuxFileSystem {
     readFile(path: string, opts?: any): Promise<string>;
     writeFile(path: string, content: string, opts?: any): Promise<void>;

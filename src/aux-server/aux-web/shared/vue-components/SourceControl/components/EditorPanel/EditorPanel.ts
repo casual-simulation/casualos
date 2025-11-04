@@ -19,18 +19,20 @@ import type { Bot } from '@casual-simulation/aux-common';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import FileSystemPanel from '../FileSystemPanel/FileSystemPanel.vue';
+import BotLibrary from '../../../BotLibrary/BotLibrary.vue';
 
 @Component({
-    name: 'default-panel',
+    name: 'editor-panel',
     components: {
-        'file-system-panel': FileSystemPanel,
+        'search-bot-library': BotLibrary,
     },
 })
-export default class DefaultPanel extends Vue {
-    @Prop({ required: true }) readonly botId: string | null;
-    @Prop({ required: true }) readonly botSystem: string | null;
-    repoBots: Bot[] = [];
+export default class EditorPanel extends Vue {
+    @Prop({ required: true }) searchBotsBySystemOrId: (
+        idOrSystem: string
+    ) => Promise<Bot[]>;
+    @Prop({ required: true }) readonly selectedBot: Bot | null;
+
     constructor() {
         super();
     }

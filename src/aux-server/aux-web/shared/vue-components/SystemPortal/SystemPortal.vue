@@ -236,7 +236,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="areas" v-else-if="selectedPane === 'source'">
+                    <div class="areas" v-else-if="selectedPane === 'source'" ref="areas">
                         <source-control />
                     </div>
                     <div class="areas" v-else ref="areas">
@@ -429,7 +429,7 @@
                             </system-portal-diff-tag>
                         </div>
                     </div>
-                    <div class="editor">
+                    <div v-if="selectedPane !== 'source'" class="editor">
                         <div class="editor-recents">
                             <md-button
                                 class="editor-recents-item md-raised md-dense"
@@ -505,6 +505,12 @@
                             >
                             </tag-value-editor>
                         </div>
+                    </div>
+                    <div v-else-if="selectedPane === 'source'" class="editor">
+                        <source-control-editor
+                            :selectedBot="selectedBot"
+                            :searchBotsBySystemOrId="findBotsBySystemOrId"
+                        ></source-control-editor>
                     </div>
                 </div>
             </md-card-content>

@@ -97,11 +97,13 @@ import type { Simulation } from '@casual-simulation/aux-vm';
 import { calculateIndexFromLocation } from '@casual-simulation/aux-runtime/runtime/TranspilerUtils';
 import TagDiffEditor from '../TagDiffEditor/TagDiffEditor';
 import SourceControl from '../SourceControl/SourceControl';
+import SourceControlEditorPanel from '../SourceControl/components/EditorPanel/EditorPanel.vue';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
         'tag-diff-editor': TagDiffEditor,
+        'source-control-editor': SourceControlEditorPanel,
         'bot-tag': BotTag,
         'bot-id': BotID,
         // hotkey: Hotkey,
@@ -1265,6 +1267,17 @@ export default class SystemPortal extends Vue {
         this.isMakingNewBot = false;
     }
 
+    getUserSystemTag() {
+        const primarySim = appManager.simulationManager.primary;
+
+        return calculateStringTagValue(
+            null,
+            primarySim.helper.userBot,
+            SYSTEM_TAG_NAME,
+            SYSTEM_TAG
+        );
+    }
+
     getBotSystems() {
         const primarySim = appManager.simulationManager.primary;
 
@@ -1284,6 +1297,60 @@ export default class SystemPortal extends Vue {
                 .filter((s) => hasValue(s))
                 .map((s) => getSystemArea(s))
         );
+    }
+
+    getBotById(botId: string) {
+        for (let item of this.items) {
+            for (let area of item.areas) {
+                for (let bot of area.bots) {
+                    if (bot.bot.id === botId) {
+                        return bot.bot;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    getBotsBySystem(system: string, startsWith: boolean = true) {
+        let bots: Bot[] = [];
+        const systemTag = this.getUserSystemTag();
+        const filter = startsWith
+            ? (s: string) => s.startsWith(system)
+            : (s: string) => s === system;
+        for (let item of this.items) {
+            for (let area of item.areas) {
+                for (let bot of area.bots) {
+                    if (
+                        filter(
+                            calculateStringTagValue(
+                                null,
+                                bot.bot,
+                                systemTag,
+                                null
+                            )
+                        )
+                    ) {
+                        bots.push(bot.bot);
+                    }
+                }
+            }
+        }
+        return bots;
+    }
+
+    findBotsBySystemOrId(
+        systemOrId: string,
+        systemStartsWith: boolean = true
+    ): Bot[] {
+        let bots: Bot[] = [];
+        const idLookup = this.getBotById(systemOrId);
+        if (idLookup) {
+            bots.push(idLookup);
+        } else {
+            bots.push(...this.getBotsBySystem(systemOrId, systemStartsWith));
+        }
+        return bots;
     }
 
     getShortId(bot: Bot) {

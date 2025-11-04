@@ -16,185 +16,130 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { AuxFileSystem } from '@casual-simulation/aux-common/bots/AuxFileSystem';
-import { AuxFSLightningFS } from '@casual-simulation/aux-vm-browser/fs/AuxFSLightningFS';
-import { AuxIsomorphicGit } from '@casual-simulation/aux-vm-browser/git/AuxIsomorphicGit';
+import type { Bot } from '@casual-simulation/aux-common';
+import type { SimulationManager } from '@casual-simulation/aux-vm';
+import type { BotManager } from '@casual-simulation/aux-vm-browser';
+import type {
+    GitRepoSCP,
+    GitSCPProvider,
+} from '@casual-simulation/aux-vm-browser/git/AuxIsomorphicGit';
+import Vue from 'vue';
 
-/**
- * Represents a source control provider for Git.
- */
-export interface GitSCP {
-    /**
-     * Adds a file to staging area.
-     * @param path The path of the file to add.
-     * @param opts Options for the add operation.
-     */
-    add(
-        path: string,
-        opts?: { cache?: object; force?: boolean; parallel?: boolean }
-    ): Promise<void>;
-
-    /**
-     * Clones a repository from the given URL to the specified directory.
-     * @param url The URL of the repository to clone.
-     * @param dir The directory where the repository should be cloned.
-     * @param opts Options for the clone operation.
-     */
-    clone(
-        url: string,
-        dir: string,
-        opts?: { ref?: string; singleBranch?: boolean; depth?: number }
-    ): Promise<void>;
-
-    /**
-     * Commits staged changes to the repository.
-     * @param message The commit message.
-     * @returns A promise that resolves to the commit hash.
-     */
-    commit(message: string): Promise<string>;
-
-    /**
-     * Returns commit history for the specified path.
-     * @param path The path to the file or directory for which to retrieve commit history.
-     * @param opts Options for the log operation.
-     */
-    log(opts: { depth?: number }): Promise<Record<any, any>[]>;
-
-    /**
-     * Removes a file from tracking / deletes it from the repository.
-     * * This should not delete the file from the file system.
-     * @param path The path of the file to remove.
-     * @param opts Options for the remove operation.
-     */
-    remove(path: string, opts?: { cache?: object }): Promise<void>;
-
-    /**
-     * Gets the status of the file at the specified path.
-     * @param path The path of the file to check status.
-     * @param opts Options for the status operation.
-     */
-    status(path: string, opts?: { cache?: object }): Promise<string>;
+export enum VFileExt {
+    LISTENER = '.tsx',
+    MOD = '.json',
+    PLAIN = '.txt',
 }
 
-/**
- * Represents a Git author with a name and email.
- */
-export interface GitAuthor {
-    /** The name of the author. */
-    name: string;
-    /** The email of the author. */
-    email: string;
+export class VFile {
+    constructor(
+        /**
+         * The file contents represented as a string.
+         * * Effectively tag values.
+         */
+        public contents: string,
+        /**
+         * The name of the file (tag name).
+         */
+        public name: string,
+        /**
+         * The type / extension of the file.
+         */
+        public extension: VFileExt,
+        /**
+         * The directory which holds this file.
+         */
+        public parentDir: VDir | null,
+        /**
+         * The bot which holds this file (tag).
+         */
+        public bot: Bot
+    ) {}
 }
 
-/** The IDB store name LightningFS will use. */
-export const LIGHTNING_FS_NAME = 'git_scp_fs' as const;
+type Is<a, b> = a extends b ? true : false;
 
-/** An implementation of GitSCP using IsomorphicGit */
-export class IsomorphicGitSCP implements GitSCP {
-    private _fs: AuxFileSystem;
-    private _gitHelper: AuxIsomorphicGit;
-    /** The author config to use in git actions (e.g. commits). */
-    private _gitAuthor: GitAuthor;
+export class VRoot {
+    /**
+     * Instance of VRoot is also useful.
+     */
+    public readonly isRoot: boolean = true;
+    constructor(
+        /**
+         * Child items (nested dirs and files).
+         * * All nested dirs should inheret the bot from this.
+         */
+        public items: Set<VDir | VFile>,
+        /**
+         * The path to this directory as if it were working directory in a CLI.
+         */
+        public pwd: string,
+        /**
+         * The root directory name.
+         */
+        public dirName: string
+    ) {}
+}
+
+export class VDir extends VRoot {
+    public readonly isRoot: false = false as const;
+    constructor(
+        /**
+         * Child items (nested dirs and files).
+         * * All nested dirs should inheret the bot from this.
+         */
+        public items: Set<VDir | VFile>,
+        /**
+         * The path to this directory as if it were working directory in a CLI.
+         */
+        public pwd: string,
+        /**
+         * The directory name (part of system tag).
+         */
+        public dirName: string,
+        /**
+         * The directory
+         */
+        public parentDir: VDir
+    ) {
+        super(items, pwd, dirName);
+    }
+
+    /**
+     * Adds an item to this directory as a child item.
+     * @param i The item to add to the directory.
+     */
+    // addItem(i: VDir | VFile) {
+    //     if (i instanceof VFile) {
+    //         if (i.bot !== this.bot) {
+    //             throw new Error("[VDir]: A sub file (tag) should be on the same bot containing it.");
+    //         }
+    //     }
+    //     i.parentDir = this;
+    //     this.items.add(i);
+    // }
+
+    /**
+     * Gets directory items as an Array for easy array operations.
+     */
+    get childItems(): Array<VDir | VFile> {
+        return Array.from(this.items);
+    }
+}
+
+export class SourceControlController {
+    private _currentRepoSCP: GitRepoSCP;
+    reactiveStore = Vue.observable({
+        /** The working directory inside the selected repo where source control concerns are rooted. */
+        instanceWorkingDirectory: undefined,
+    });
 
     constructor(
-        /** The directory the git repository is working from. */
-        private _dir: string
+        private _gitSCP: GitSCPProvider,
+        private _sim: SimulationManager<BotManager>
     ) {}
 
-    get gitAuthor(): GitAuthor {
-        return this._gitAuthor;
-    }
-
-    set gitAuthor(author: GitAuthor) {
-        this._gitAuthor = author;
-    }
-
-    get fs(): AuxFileSystem {
-        if (!this._fs) {
-            return (this._fs = new AuxFSLightningFS());
-        }
-        return this._fs;
-    }
-
-    get gitHelper(): AuxIsomorphicGit {
-        if (!this._gitHelper) {
-            return (this._gitHelper = new AuxIsomorphicGit(this.fs));
-        }
-        return this._gitHelper;
-    }
-
-    get git(): AuxIsomorphicGit['git'] {
-        return this.gitHelper.git;
-    }
-
-    async add(
-        path: string,
-        opts?: { cache?: object; force?: boolean; parallel?: boolean }
-    ): Promise<void> {
-        return await this.git.add({
-            fs: this._fs,
-            dir: this._dir,
-            filepath: path,
-            cache: opts.cache,
-            force: opts.force,
-            parallel: opts.parallel,
-        });
-    }
-
-    async commit(message: string): Promise<string> {
-        return await this.git.commit({
-            fs: this._fs,
-            dir: this._dir,
-            message,
-            author: this._gitAuthor,
-        });
-    }
-
-    async log(opts?: { depth?: number }): Promise<Record<any, any>[]> {
-        return await this.git.log({
-            fs: this._fs,
-            dir: this._dir,
-            depth: opts.depth,
-        });
-    }
-
-    async remove(path: string, opts?: { cache?: object }): Promise<void> {
-        return await this.git.remove({
-            fs: this._fs,
-            dir: this._dir,
-            filepath: path,
-            cache: opts.cache,
-        });
-    }
-
-    async status(path: string, opts?: { cache?: object }): Promise<string> {
-        return await this.git.status({
-            fs: this._fs,
-            dir: this._dir,
-            filepath: path,
-            cache: opts.cache,
-        });
-    }
-
-    async clone(
-        url: string,
-        dir: string,
-        opts: {
-            corsProxy?: string;
-            depth?: number;
-            ref?: string;
-            singleBranch?: boolean;
-        }
-    ): Promise<void> {
-        return await this.git.clone({
-            fs: this._fs,
-            http: AuxIsomorphicGit.http,
-            dir: dir,
-            url: url,
-            corsProxy: opts.corsProxy,
-            ref: opts.ref,
-            singleBranch: opts.singleBranch,
-            depth: opts.depth,
-        });
+    async init(): Promise<void> {
+        console.log(await this._gitSCP.gitStore.listLocalRepoEntries());
     }
 }

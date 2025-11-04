@@ -23,6 +23,7 @@ import DefaultPanel from './components/DefaultPanel/DefaultPanel.vue';
 import type { SubscriptionLike } from 'rxjs';
 import type { Bot } from '@casual-simulation/aux-common';
 import type { SystemPortalSelectionUpdate } from '@casual-simulation/aux-vm-browser';
+import { appManager } from '../../AppManager';
 
 @Component({
     name: 'source-control',
@@ -34,6 +35,15 @@ export default class SourceControl extends Vue {
     private _subs: SubscriptionLike[] = [];
     private _selectedBot: Bot | null = null;
     currentPanel: string = 'default-panel';
+
+    get botId() {
+        return this._selectedBot ? this._selectedBot.id : null;
+    }
+    get botSystem() {
+        return this._selectedBot
+            ? this._selectedBot.tags['system'] || null
+            : null;
+    }
 
     get selectedBot() {
         return this._selectedBot;
@@ -56,27 +66,26 @@ export default class SourceControl extends Vue {
         if (e.bot.id === this.selectedBotId) return;
         console.log('selection updated', e, this.selectedBot);
         const b = (this.selectedBot = e.bot);
-        if (b.tags['.git']) {
-            this.loadGitConfig(b.tags['.git']);
-            if (this.currentPanel !== 'git-panel') {
-                this.currentPanel = 'git-panel';
-            }
-        }
     }
 
     constructor() {
         super();
-        this._subs
-            .push
-            // appManager.systemPortal.onSelectionUpdated.subscribe(
-            //     this.onSelectionUpdated
-            // )
-            ();
+        this._subs.push(
+            appManager.systemPortal.onSelectionUpdated.subscribe(
+                this.onSelectionUpdated
+            )
+        );
     }
     initRepo() {
-        console.log('init repo');
+        appManager.sourceControlController.init();
     }
     cloneRepo() {
         console.log('clone repo');
+    }
+    loadRepo() {
+        console.log('load repo');
+    }
+    selectBot() {
+        //TODO: implement or rem.
     }
 }

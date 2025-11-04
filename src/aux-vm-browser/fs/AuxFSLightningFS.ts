@@ -18,8 +18,13 @@
 import type { AuxFileSystem } from '../../aux-common/bots/AuxFileSystem';
 import LightningFS from '@isomorphic-git/lightning-fs';
 
+/** The IDB store name LightningFS will use. */
+export const LIGHTNING_FS_NAME = 'AuxLightningFS' as const;
+
 export class AuxFSLightningFS implements AuxFileSystem {
-    constructor(private _fs: LightningFS = new LightningFS('fs')) {}
+    constructor(
+        private _fs: LightningFS = new LightningFS(LIGHTNING_FS_NAME)
+    ) {}
     readFile(path: string, opts?: any): Promise<string> {
         return this._fs.promises.readFile(path, opts ?? { encoding: 'utf8' });
     }
@@ -58,5 +63,61 @@ export class AuxFSLightningFS implements AuxFileSystem {
     }
     async lstat(path: string): Promise<any> {
         return this._fs.promises.lstat(path);
+    }
+}
+
+/**
+ * Represents a Git author with a name and email.
+ */
+export interface GitAuthor {
+    /** The name of the author. */
+    name: string;
+    /** The email of the author. */
+    email: string;
+}
+
+/**
+ * The location where the current git author configuration is stored.
+ */
+export const CURRENT_GIT_AUTHOR_FILE = '/.aux_config/gitAuthor.json' as const;
+
+/**
+ * The root directory to store all repos in a file system.
+ * * Useful when looking up existing local repos.
+ */
+const ROOT_GIT_LOCAL_REPO_DIR = '/git/repos/' as const;
+
+/**
+ * A store for git-related information.
+ */
+export interface AuxGitStore {
+    getGitAuthor(): Promise<GitAuthor | undefined>;
+    setGitAuthor(author: GitAuthor): Promise<void>;
+    listLocalRepoEntries(): Promise<string[]>;
+}
+
+/**
+ * An implementation of AuxGitStore that uses LightningFS as the storage backend.
+ */
+export class LightningFSAuxGitStore implements AuxGitStore {
+    constructor(private _fs: AuxFileSystem) {}
+    async getGitAuthor(): Promise<GitAuthor | undefined> {
+        try {
+            const authorJSON = await this._fs.readFile(CURRENT_GIT_AUTHOR_FILE);
+            const author = JSON.parse(authorJSON);
+            if (author && author.name && author.email) {
+                return author;
+            }
+        } catch (_) {
+            return undefined;
+        }
+        return undefined;
+    }
+    async setGitAuthor(author: GitAuthor): Promise<void> {
+        const authorJSON = JSON.stringify(author);
+        await this._fs.writeFile(CURRENT_GIT_AUTHOR_FILE, authorJSON);
+    }
+    async listLocalRepoEntries(): Promise<string[]> {
+        return await this._fs.ls(ROOT_GIT_LOCAL_REPO_DIR);
     }
 }

@@ -15,22 +15,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import type { Bot } from '@casual-simulation/aux-common';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import FileSystemPanel from '../FileSystemPanel/FileSystemPanel.vue';
 
 @Component({
-    name: 'default-panel',
-    components: {
-        'file-system-panel': FileSystemPanel,
-    },
+    name: 'file-system-panel',
 })
-export default class DefaultPanel extends Vue {
-    @Prop({ required: true }) readonly botId: string | null;
-    @Prop({ required: true }) readonly botSystem: string | null;
-    repoBots: Bot[] = [];
+export default class FileSystemPanel extends Vue {
+    @Prop({ required: true, default: {} }) readonly fs: unknown; //TODO: implement.
+
     constructor() {
         super();
     }
