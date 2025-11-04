@@ -54,7 +54,7 @@ export class Text3D extends Object3D {
         [texturePath: string]: Texture;
     } = {};
 
-    public static readonly extraSpace: number = 0.001;
+    public static readonly extraSpace: number = 0.01;
     public static readonly floatingExtraSpace: number = 0.4;
     public static readonly floatingBillboardExtraSpace: number = 0.2;
 
@@ -184,9 +184,6 @@ export class Text3D extends Object3D {
         // bot's scale container.
         this.parent.matrixWorld.decompose(tempPos, tempRot, worldScale);
         pos.divide(worldScale);
-
-        const worldPos = pos.clone();
-        this.parent.localToWorld(worldPos);
 
         this.position.copy(pos);
         let changed = this._mesh.anchorX !== anchor;
