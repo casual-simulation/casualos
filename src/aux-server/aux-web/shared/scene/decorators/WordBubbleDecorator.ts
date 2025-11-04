@@ -90,8 +90,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let botBoundingBox = this.bot3D.boundingBox;
-        if (!botBoundingBox) {
+        if (!this.bot3D.boundingBox) {
             this.wordBubble.removeFromParent();
             this.wordBubble.visible = false;
             return;

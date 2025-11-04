@@ -142,6 +142,7 @@ import { LDrawLoader } from '../../shared/public/ldraw-loader/LDrawLoader';
 import { Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { loadModules as loadEsriModules } from 'esri-loader';
+import { DebugObjectManager } from '../../shared/scene/debugobjectmanager/DebugObjectManager';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -1664,9 +1665,6 @@ export class PlayerGame extends Game {
             super.renderMainViewport(true);
         } else {
             this.renderMapViewport();
-            // super.renderMainViewport(false);
-            // this.renderer.clear();
-            // this.renderMapToMainViewport();
         }
 
         //
@@ -1763,6 +1761,14 @@ export class PlayerGame extends Game {
 
         // Render the map portal scene with the map portal main camera.
         this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mapCameraRig.mainCamera
+            );
+        }
     }
 
     /**

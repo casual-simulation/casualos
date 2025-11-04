@@ -135,7 +135,7 @@ export class LabelDecorator
                 targetContainer = this.bot3D.container;
             }
             if (this.text3D.parent !== targetContainer) {
-                this.text3D.parent?.remove(this.text3D);
+                this.text3D.removeFromParent();
                 targetContainer.add(this.text3D);
             }
 
