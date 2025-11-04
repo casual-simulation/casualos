@@ -33,14 +33,13 @@ import {
     calculateLabelFontSize,
     calculateLabelWordWrapMode,
     getBotLabelPadding,
-    getBotOrientationMode,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import type { Object3D } from '@casual-simulation/three';
 import {
     Color,
     Vector3,
     Vector2,
+    Quaternion,
     PerspectiveCamera,
 } from '@casual-simulation/three';
 import type { WordBubbleElement } from '../WordBubbleElement';
@@ -116,27 +115,9 @@ export class LabelDecorator
                 this._initialSetup = true;
             }
 
-            // Parent the labels directly to the bot.
-            // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
-            // without worrying about what the AuxBot3D scale is etc.
-            // For billboarded bots and floating labels, we need to parent the label directly to the bot so that it does not rotate with the bot.
-            const orientationMode = getBotOrientationMode(calc, this.bot3D.bot);
-            let targetContainer: Object3D;
-            if (
-                anchor === 'floating' &&
-                (orientationMode === 'billboard' ||
-                    orientationMode === 'billboardTop' ||
-                    orientationMode === 'billboardFront')
-            ) {
-                targetContainer = this.bot3D;
-            } else if (anchor === 'floatingBillboard') {
-                targetContainer = this.bot3D;
-            } else {
-                targetContainer = this.bot3D.container;
-            }
-            if (this.text3D.parent !== targetContainer) {
+            if (this.text3D.parent !== this.bot3D.container) {
                 this.text3D.removeFromParent();
-                targetContainer.add(this.text3D);
+                this.bot3D.container.add(this.text3D);
             }
 
             const labelPadding = getBotLabelPadding(calc, this.bot3D.bot);
@@ -286,12 +267,19 @@ export class LabelDecorator
                     errorHandling: 'nudge',
                 });
 
-                this.text3D.quaternion.set(
+                const desiredWorldRotation = new Quaternion(
                     lookRotation.quaternion.x,
                     lookRotation.quaternion.y,
                     lookRotation.quaternion.z,
                     lookRotation.quaternion.w
-                );
+                )
+
+                const parentWorldRotation = new Quaternion();
+                this.text3D.parent?.getWorldQuaternion(parentWorldRotation);
+
+                const localRotation = parentWorldRotation.invert().multiply(desiredWorldRotation);
+                
+                this.text3D.quaternion.copy(localRotation);
                 this.text3D.updateMatrixWorld();
             }
         }
