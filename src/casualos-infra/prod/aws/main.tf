@@ -34,6 +34,8 @@ resource "random_password" "k8s_bootstrap_token_secret" {
 resource "random_string" "k8s_bootstrap_token_id" {
     length = 6
     special = false
+    upper = false
+    lower = true
 }
 
 locals {
@@ -204,10 +206,10 @@ resource "aws_instance" "cluster_primary" {
                 token = random_password.cluster_token.result
                 encryption_secret = base64encode(random_password.k8s_encryption_secret.result)
             })
-            bootstrap = templatefile("${path.module}/config/bootstrap.tftpl", {
+            bootstrap = base64encode(templatefile("${path.module}/config/bootstrap.tftpl", {
                 token_id = random_string.k8s_bootstrap_token_id.result
                 token_secret = random_password.k8s_bootstrap_token_secret.result
-            })
+            }))
         })
     )
 }
@@ -341,6 +343,7 @@ locals {
 provider "kubernetes" {
     host = local.cluster_endpoint
     token = local.k8s_bootstrap_token
+    username = "system:bootstrap:${random_string.k8s_bootstrap_token_id.result}"
     insecure = true
 }
 

@@ -13,9 +13,10 @@ until microk8s.status --wait-ready; do
 done
 
 echo "Microk8s is ready!"
-if [ -n "${bootstrap}" ]; then
+BOOTSTRAP=$(echo "${bootstrap}" | base64 -d)
+if [ -n "$BOOTSTRAP" ]; then
     echo "Applying bootstrap..."
-    echo "${bootstrap}" > /var/snap/microk8s/common/bootstrap.yaml
+    echo "$BOOTSTRAP" > /var/snap/microk8s/common/bootstrap.yaml
     microk8s kubectl apply -f /var/snap/microk8s/common/bootstrap.yaml
     echo "Bootstrap applied!"
 fi

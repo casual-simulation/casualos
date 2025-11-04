@@ -30,17 +30,17 @@ variable "ami_id" {
 
 variable "primary_instance_type" {
     type = string
-    default = "t3.micro"
+    default = "t3.medium"
 }
 
 variable "secondary_instance_type" {
     type = string
-    default = "t3.micro"
+    default = "t3.medium"
 }
 
 variable "worker_instance_type" {
     type = string
-    default = "t3.micro"
+    default = "t3.medium"
 }
 
 variable "min_secondary_nodes" {
