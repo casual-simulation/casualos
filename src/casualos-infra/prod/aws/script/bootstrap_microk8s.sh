@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
+mkdir -p /var/snap/microk8s/common/
 echo "${launch_config}" > "/var/snap/microk8s/common/.microk8s.yaml"
 
 sudo snap install microk8s --classic --channel 1.32/stable

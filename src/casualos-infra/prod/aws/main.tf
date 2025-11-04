@@ -137,40 +137,36 @@ resource "aws_security_group" "cluster_security_group" {
     description = "Security group for the ${local.project_name} cluster"
 }
 
-resource "aws_security_group_rule" "allow_tls" {
+resource "aws_vpc_security_group_ingress_rule" "allow_tls" {
     security_group_id = aws_security_group.cluster_security_group.id
-    type                     = "ingress"
     from_port                = 443
     to_port                  = 443
-    protocol                 = "tcp"
-    cidr_blocks              = ["0.0.0.0/0"]
+    ip_protocol = "tcp"
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
-resource "aws_security_group_rule" "allow_http" {
+resource "aws_vpc_security_group_ingress_rule" "allow_http" {
     security_group_id = aws_security_group.cluster_security_group.id
-    type                     = "ingress"
     from_port                = 80
     to_port                  = 80
-    protocol                 = "tcp"
-    cidr_blocks              = ["0.0.0.0/0"]
+    ip_protocol = "tcp"
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
-resource "aws_security_group_rule" "allow_ssh_inbound" {
+resource "aws_vpc_security_group_ingress_rule" "allow_ssh_inbound" {
     security_group_id = aws_security_group.cluster_security_group.id
-    type                     = "ingress"
     from_port                = 22
     to_port                  = 22
-    protocol                 = "tcp"
-    cidr_blocks              = ["0.0.0.0/0"]
+    ip_protocol = "tcp"
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
-resource "aws_security_group_rule" "allow_k8s_api" {
+resource "aws_vpc_security_group_ingress_rule" "allow_k8s_api" {
     security_group_id = aws_security_group.cluster_security_group.id
-    type                     = "ingress"
     from_port                = 16443
     to_port                  = 16443
-    protocol                 = "tcp"
-    cidr_blocks              = ["0.0.0.0/0"]
+    ip_protocol = "tcp"
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
@@ -182,6 +178,13 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 # The primary cluster node
 # This is the first node that is created in the cluster
 resource "aws_instance" "cluster_primary" {
+    depends_on = [ 
+        aws_vpc_security_group_ingress_rule.allow_tls,
+        aws_vpc_security_group_ingress_rule.allow_http,
+        aws_vpc_security_group_ingress_rule.allow_ssh_inbound,
+        aws_vpc_security_group_ingress_rule.allow_k8s_api,
+        aws_vpc_security_group_egress_rule.allow_all_traffic_ipv4
+    ]
     ami           = var.ami_id
     instance_type = var.primary_instance_type
     key_name      = aws_key_pair.cluster_key_pair.key_name
@@ -264,72 +267,72 @@ resource "aws_launch_configuration" "cluster_worker_launch_configuration" {
 }
 
 # The autoscaling group for secondary cluster nodes
-resource "aws_autoscaling_group" "cluster_asg" {
-    name_prefix          = "${local.project_name}-cluster-asg-"
-    max_size             = var.max_secondary_nodes
-    min_size             = var.min_secondary_nodes
-    desired_capacity     = var.desired_secondary_nodes
-    launch_configuration = aws_launch_configuration.cluster_secondary_launch_configuration.name
-    # vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
+# resource "aws_autoscaling_group" "cluster_asg" {
+#     name_prefix          = "${local.project_name}-cluster-asg-"
+#     max_size             = var.max_secondary_nodes
+#     min_size             = var.min_secondary_nodes
+#     desired_capacity     = var.desired_secondary_nodes
+#     launch_configuration = aws_launch_configuration.cluster_secondary_launch_configuration.name
+#     # vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
 
-    tag {
-        key                 = "Name"
-        value               = "${local.project_name}-cluster-asg"
-        propagate_at_launch = true
-    }
+#     tag {
+#         key                 = "Name"
+#         value               = "${local.project_name}-cluster-asg"
+#         propagate_at_launch = true
+#     }
 
-    tag {
-        key                 = "Environment"
-        value               = var.environment
-        propagate_at_launch = true
-    }
+#     tag {
+#         key                 = "Environment"
+#         value               = var.environment
+#         propagate_at_launch = true
+#     }
 
-    tag {
-        key                 = "Project"
-        value               = var.project_name
-        propagate_at_launch = true
-    }
+#     tag {
+#         key                 = "Project"
+#         value               = var.project_name
+#         propagate_at_launch = true
+#     }
 
-    tag {
-        key                 = "Customer"
-        value               = var.customer
-        propagate_at_launch = true
-    }
-}
+#     tag {
+#         key                 = "Customer"
+#         value               = var.customer
+#         propagate_at_launch = true
+#     }
+# }
 
-# The autoscaling group for worker nodes
-resource "aws_autoscaling_group" "worker_asg" {
-    name_prefix          = "${local.project_name}-worker-asg-"
-    max_size             = var.max_worker_nodes
-    min_size             = var.min_worker_nodes
-    desired_capacity     = var.desired_worker_nodes
-    launch_configuration = aws_launch_configuration.cluster_worker_launch_configuration.name
-    # vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
+# # The autoscaling group for worker nodes
+# resource "aws_autoscaling_group" "worker_asg" {
+#     name_prefix          = "${local.project_name}-worker-asg-"
+#     max_size             = var.max_worker_nodes
+#     min_size             = var.min_worker_nodes
+#     desired_capacity     = var.desired_worker_nodes
+#     launch_configuration = aws_launch_configuration.cluster_worker_launch_configuration.name
+#     # vpc_zone_identifier  = [aws_subnet.cluster_subnet.id]
 
-    tag {
-        key                 = "Name"
-        value               = "${local.project_name}-worker-asg"
-        propagate_at_launch = true
-    }
+#     tag {
+#         key                 = "Name"
+#         value               = "${local.project_name}-worker-asg"
+#         propagate_at_launch = true
+#     }
 
-    tag {
-        key                 = "Environment"
-        value               = var.environment
-        propagate_at_launch = true
-    }
+#     tag {
+#         key                 = "Environment"
+#         value               = var.environment
+#         propagate_at_launch = true
+#     }
 
-    tag {
-        key                 = "Project"
-        value               = var.project_name
-        propagate_at_launch = true
-    }
+#     tag {
+#         key                 = "Project"
+#         value               = var.project_name
+#         propagate_at_launch = true
+#     }
 
-    tag {
-        key                 = "Customer"
-        value               = var.customer
-        propagate_at_launch = true
-    }
-}
+#     tag {
+#         key                 = "Customer"
+#         value               = var.customer
+#         propagate_at_launch = true
+#     }
+# }
 
 locals {
     cluster_endpoint = "https://${aws_instance.cluster_primary.public_ip}:16443"

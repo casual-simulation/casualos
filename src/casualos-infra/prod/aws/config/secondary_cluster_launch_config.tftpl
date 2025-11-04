@@ -13,7 +13,7 @@ addons:
     - name: cert-manager
     - name: dashboard
 extraKubeAPIServerArgs:
-  --encryption-provider-config: "$SNAP_DATA/args/encryption-config.yaml"
+  --encryption-provider-config: "/var/snap/microk8s/current/args/encryption-config.yaml"
 extraConfigFiles:
   encryption-config.yaml: |
     apiVersion: apiserver.config.k8s.io/v1
