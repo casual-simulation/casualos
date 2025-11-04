@@ -20,6 +20,7 @@ import type { AuxBot3D } from '../AuxBot3D';
 import type { BotCalculationContext } from '@casual-simulation/aux-common';
 import {
     calculateBotValue,
+    calculateFormattedBotValue,
     getBotLabelAnchor,
     isFloatingAnchor,
 } from '@casual-simulation/aux-common';
@@ -60,33 +61,38 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
 
     dispose(): void {
         this.wordBubble.dispose();
-        this.bot3D.container.remove(this.wordBubble);
+        this.wordBubble.removeFromParent();
     }
 
     private _updateWorldBubble(calc: BotCalculationContext): void {
-        let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
-        const wasVisible = this.wordBubble.visible;
+        const anchor = getBotLabelAnchor(calc, this.bot3D.bot);
+        const label = calculateFormattedBotValue(
+            calc,
+            this.bot3D.bot,
+            'auxLabel'
+        );
 
-        const hasBubble = (this.wordBubble.visible = isFloatingAnchor(anchor));
-        if (wasVisible && !this.wordBubble.visible) {
-            this.wordBubble.parent?.remove(this.wordBubble);
-        } else if (!wasVisible && this.wordBubble.visible) {
+        const prevVisible = this.wordBubble.visible;
+        const nowVisible = (this.wordBubble.visible = isFloatingAnchor(anchor) && !!label);
+
+        if (prevVisible && !nowVisible) {
+            this.wordBubble.removeFromParent();
+        } else if (!prevVisible && nowVisible) {
             if (anchor === 'floatingBillboard') {
                 this._label.text3D.add(this.wordBubble);
-                this.wordBubble.updateMatrixWorld(true);
             } else {
                 this.bot3D.container.add(this.wordBubble);
-                this.wordBubble.updateMatrixWorld(true);
             }
+            this.wordBubble.updateMatrixWorld(true);
         }
 
-        if (!hasBubble || !this._label || !this._label.text3D) {
+        if (!nowVisible || !this._label || !this._label.text3D) {
             return;
         }
 
         let botBoundingBox = this.bot3D.boundingBox;
         if (!botBoundingBox) {
-            this.bot3D.remove(this.wordBubble);
+            this.wordBubble.removeFromParent();
             this.wordBubble.visible = false;
             return;
         }

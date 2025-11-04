@@ -85,7 +85,7 @@ export class LabelDecorator
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        let label = calculateFormattedBotValue(
+        const label = calculateFormattedBotValue(
             calc,
             this.bot3D.bot,
             'auxLabel'
@@ -304,7 +304,7 @@ export class LabelDecorator
     disposeText3D(): void {
         if (this.text3D) {
             this.text3D.dispose();
-            this.bot3D.container.remove(this.text3D);
+            this.text3D.removeFromParent();
             this.text3D = null;
         }
     }
